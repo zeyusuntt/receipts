@@ -28,7 +28,7 @@ from pathlib import Path
 from receipts.junit import parse_junit
 from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
 from receipts.patchscope import default_protected_modules, filter_patch, summarize_patch
-from receipts.sandbox.protocol import PYTEST_FLAGS, RepoAtCommit, Source
+from receipts.sandbox.protocol import PYTEST_BOOTSTRAP, PYTEST_FLAGS, RepoAtCommit, Source
 from receipts.sandbox.sink import ReceiptSink
 
 TAIL = 6000
@@ -54,6 +54,10 @@ class LocalExecutor:
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "reports").mkdir(exist_ok=True)
         (self.root / "patches").mkdir(exist_ok=True)
+        tools = self.root / "tools"
+        tools.mkdir(exist_ok=True)
+        self._pytest_runner = tools / "receipts_pytest.py"
+        self._pytest_runner.write_text(PYTEST_BOOTSTRAP)
 
     # ----- helpers -----
 
@@ -177,7 +181,8 @@ class LocalExecutor:
     async def run_pytest(self, branch: Branch, args: str, timeout_s: int, kind: ReceiptKind = "command") -> Receipt:
         seq = self._seq.get(branch.id, 0) + 1
         report = self.root / "reports" / f"{branch.id}-{seq}.xml"
-        cmd = f"python -m pytest {args} {PYTEST_FLAGS} --junitxml={shlex.quote(str(report))}"
+        runner = shlex.quote(str(self._pytest_runner))
+        cmd = f"python -I {runner} {args} {PYTEST_FLAGS} --junitxml={shlex.quote(str(report))}"
         stdout, stderr, code, timed_out, started, duration = await self._execute(self.workdir(branch), cmd, timeout_s)
         junit = parse_junit(report if report.exists() else None)
         return self._emit(branch, kind=kind, cmd=cmd, exit_code=code,

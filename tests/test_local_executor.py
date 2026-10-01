@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 from receipts.models import Receipt
@@ -93,6 +94,44 @@ async def test_run_pytest_fills_junit_and_writes_it_complete(tmp_path):
     written = sink.receipts[-1]
     assert written is r or written.model_dump() == r.model_dump()
     assert not any(p.suffix == ".xml" for p in ex.workdir(base).rglob("*"))
+
+
+async def test_run_pytest_ignores_worktree_pytest_module(tmp_path):
+    ex, base = await _executor(tmp_path)
+    imported = tmp_path / "fake-pytest-imported"
+    await ex.write_file(
+        base,
+        "pytest.py",
+        f"from pathlib import Path\nPath({str(imported)!r}).write_text('imported')\n",
+    )
+
+    r = await ex.run_pytest(base, "tests", timeout_s=60)
+
+    assert r.exit_code == 1 and r.junit is not None and r.junit.collected == 4
+    assert not imported.exists()
+    assert not any(path.suffix == ".pyc" for path in ex.workdir(base).rglob("*"))
+    assert r.cmd.startswith("python -I ")
+
+
+def test_pytest_bootstrap_rejects_untrusted_origin(tmp_path):
+    fake_package = tmp_path / "fake-package"
+    fake_package.mkdir()
+    fake_pytest = fake_package / "pytest.py"
+    fake_pytest.write_text("def main(args):\n    return 0\n")
+    ex = LocalExecutor(root=tmp_path / "work", sink=MemorySink(), run_id="run-1")
+    bootstrap = ex.root / "tools" / "receipts_pytest.py"
+
+    completed = subprocess.run(
+        [sys.executable, str(bootstrap)],
+        cwd=fake_package,
+        env={"PATH": os.environ.get("PATH", ""), "PYTHONPATH": str(fake_package)},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 4
+    assert completed.stderr == f"receipts: untrusted pytest at {fake_pytest.resolve()}\n"
 
 
 async def test_snapshot_then_patch_captures_modified_added_and_deleted_files(tmp_path):

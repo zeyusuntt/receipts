@@ -1,9 +1,6 @@
-import pytest
-
 from .helpers import FAKE_PYTEST, setup_attack, verify
 
 
-@pytest.mark.xfail(strict=True, reason="closed by Task H2")
 async def test_root_sourceless_pytest_bytecode_forges_green_junit_and_passes(tmp_path):
     attack = await setup_attack(tmp_path)
     await attack.ex.write_file(attack.agent, "payload.py", FAKE_PYTEST)

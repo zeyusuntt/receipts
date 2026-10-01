@@ -45,3 +45,24 @@ class Executor(Protocol):
 
 
 PYTEST_FLAGS = "-o junit_family=xunit1 -p no:cacheprovider -q"
+
+PYTEST_BOOTSTRAP = """\
+import os
+import sys
+
+sys.dont_write_bytecode = True
+
+import pytest
+
+pytest_path = os.path.realpath(pytest.__file__)
+worktree = os.path.realpath(os.getcwd())
+try:
+    untrusted = os.path.commonpath((worktree, pytest_path)) == worktree
+except ValueError:
+    untrusted = False
+if untrusted:
+    print(f"receipts: untrusted pytest at {pytest_path}", file=sys.stderr)
+    raise SystemExit(4)
+sys.path.insert(0, worktree)
+raise SystemExit(pytest.main(sys.argv[1:]))
+"""

@@ -1,9 +1,6 @@
-import pytest
-
 from .helpers import predicate, setup_attack, verify
 
 
-@pytest.mark.xfail(strict=True, reason="closed by Task H2")
 async def test_agent_created_pytest_shadow_failure_is_classified_error(tmp_path):
     attack = await setup_attack(tmp_path)
     await attack.ex.write_file(attack.agent, "pytest.py", "raise SystemExit(3)\n")
