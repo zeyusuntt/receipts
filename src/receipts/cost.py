@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
@@ -10,6 +11,13 @@ from pydantic import BaseModel, Field
 
 SUPER_MODEL = "nvidia/nemotron-3-super-120b-a12b"
 NANO_MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+
+# Published Daytona rates recorded in docs/research/2026-10-01-daytona-spike.md.
+DAYTONA_PRICING_READ_DATE = "2026-10-01"
+DAYTONA_VCPU_DOLLARS_PER_HOUR = 0.0504
+DAYTONA_MEMORY_GIB_DOLLARS_PER_HOUR = 0.0162
+DAYTONA_DISK_GIB_DOLLARS_PER_HOUR = 0.000108
+DAYTONA_INCLUDED_DISK_GIB = 5
 
 # USD per one million tokens. These third-party rates are estimates from the
 # Token Factory spike, not prices verified against a Nebius pricing page.
@@ -25,6 +33,31 @@ price_table: dict[str, dict[str, float | bool]] = {
         "estimated": True,
     },
 }
+
+
+def estimate_daytona_sandbox_dollars(
+    usage: Sequence[Mapping[str, Any]],
+) -> float:
+    """Estimate Daytona compute cost from per-sandbox lifetime records."""
+
+    total = Decimal("0")
+    for item in usage:
+        resources = item["resources"]
+        seconds = Decimal(str(item["seconds"]))
+        cpu = Decimal(str(resources["cpu"]))
+        memory = Decimal(str(resources["memory"]))
+        disk = Decimal(str(resources["disk"]))
+        billable_disk = max(
+            Decimal("0"),
+            disk - Decimal(DAYTONA_INCLUDED_DISK_GIB),
+        )
+        hourly = (
+            cpu * Decimal(str(DAYTONA_VCPU_DOLLARS_PER_HOUR))
+            + memory * Decimal(str(DAYTONA_MEMORY_GIB_DOLLARS_PER_HOUR))
+            + billable_disk * Decimal(str(DAYTONA_DISK_GIB_DOLLARS_PER_HOUR))
+        )
+        total += seconds * hourly / Decimal(3_600)
+    return float(total)
 
 
 class TokenUsage(BaseModel):

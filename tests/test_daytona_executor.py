@@ -305,6 +305,14 @@ def _executor(tmp_path, module, api=None, **kwargs):
     return executor, fake, sink
 
 
+class ManualClock:
+    def __init__(self, value=0.0):
+        self.value = value
+
+    def __call__(self):
+        return self.value
+
+
 def _symlink_repository(path):
     (path / "real-dir").mkdir(parents=True)
     (path / "target.txt").write_text("target before\n")
@@ -387,6 +395,32 @@ async def test_resources_and_auto_stop_are_configurable(tmp_path):
     assert call["resources"] == resources
     assert call["auto_stop_minutes"] == 30
     assert call["ttl_minutes"] == 240
+
+
+async def test_sandbox_usage_reports_lifetimes_and_resources_from_injected_clock(
+    tmp_path,
+):
+    module = _daytona_module()
+    clock = ManualClock(10.0)
+    resources = module.DaytonaResources(cpu=4, memory=8, disk=10)
+    executor, _, _ = _executor(
+        tmp_path,
+        module,
+        resources=resources,
+        clock=clock,
+    )
+
+    await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    clock.value = 25.5
+    await executor.close()
+
+    assert executor.sandbox_usage() == [
+        {
+            "sandbox_id": "sandbox-1",
+            "seconds": 15.5,
+            "resources": {"cpu": 4, "memory": 8, "disk": 10},
+        },
+    ]
 
 
 async def test_run_write_read_and_snapshot_form_one_complete_provenance_chain(tmp_path):

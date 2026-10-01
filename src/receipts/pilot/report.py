@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from receipts.cost import DAYTONA_PRICING_READ_DATE
 from receipts.models import VerdictStatus
 from receipts.pilot.runner import InstanceRecord, PilotCost
 from receipts.swerebench import Agreement
@@ -58,8 +59,10 @@ class ConfigurationA(BaseModel):
 
 class CostPerVerifiedFix(BaseModel):
     tokens: float | None
-    dollars: float | None
-    sandbox_seconds: float | None
+    model_dollars: float | None
+    sandbox_dollars_estimate: float | None
+    total_dollars_estimate: float | None
+    sandbox_lifetime_seconds: float | None
     wall_time_s: float | None
 
 
@@ -77,6 +80,7 @@ class Disagreement(BaseModel):
     attempt: int
     agreement: Agreement
     failed_predicate_ids: list[str]
+    gate_error: str | None
 
 
 class AgreementReport(BaseModel):
@@ -159,19 +163,38 @@ def _cost_per_verified_fix(
     if verified_fixes == 0:
         return CostPerVerifiedFix(
             tokens=None,
-            dollars=None,
-            sandbox_seconds=None,
+            model_dollars=None,
+            sandbox_dollars_estimate=None,
+            total_dollars_estimate=None,
+            sandbox_lifetime_seconds=None,
             wall_time_s=None,
         )
-    dollars = [record.cost.dollars for record in records]
-    total_dollars = None if any(value is None for value in dollars) else sum(dollars)
+    model_dollars = [record.cost.model_dollars for record in records]
+    total_model_dollars = (
+        None
+        if any(value is None for value in model_dollars)
+        else sum(model_dollars)
+    )
+    sandbox_dollars = sum(
+        record.cost.sandbox_dollars_estimate
+        for record in records
+    )
     return CostPerVerifiedFix(
         tokens=sum(record.cost.tokens for record in records) / verified_fixes,
-        dollars=(
-            None if total_dollars is None else total_dollars / verified_fixes
+        model_dollars=(
+            None
+            if total_model_dollars is None
+            else total_model_dollars / verified_fixes
         ),
-        sandbox_seconds=(
-            sum(record.cost.sandbox_seconds for record in records) / verified_fixes
+        sandbox_dollars_estimate=sandbox_dollars / verified_fixes,
+        total_dollars_estimate=(
+            None
+            if total_model_dollars is None
+            else (total_model_dollars + sandbox_dollars) / verified_fixes
+        ),
+        sandbox_lifetime_seconds=(
+            sum(record.cost.sandbox_lifetime_seconds for record in records)
+            / verified_fixes
         ),
         wall_time_s=sum(record.wall_time_s for record in records) / verified_fixes,
     )
@@ -265,7 +288,7 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
             matrix[attempt.gate_status][
                 _official_result(attempt.official_resolved)
             ] += 1
-            if attempt.agreement in {
+            if attempt.gate_status == "ERROR" or attempt.agreement in {
                 "gate_looser",
                 "gate_stricter",
                 "gate_error",
@@ -274,8 +297,13 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
                     Disagreement(
                         instance_id=record.instance_id,
                         attempt=attempt_number,
-                        agreement=attempt.agreement,
+                        agreement=(
+                            "gate_error"
+                            if attempt.gate_status == "ERROR"
+                            else attempt.agreement
+                        ),
                         failed_predicate_ids=list(attempt.failed_predicate_ids),
+                        gate_error=attempt.gate_error,
                     ),
                 )
 
@@ -463,12 +491,27 @@ def render(report: Report) -> str:
             "",
             "### Cost per verified fix",
             "",
-            "| Tokens | Dollars | Sandbox seconds | Wall seconds |",
-            "| ---: | ---: | ---: | ---: |",
             (
-                f"| {_format_number(cost.tokens)} | "
-                f"{_format_number(cost.dollars)} | "
-                f"{_format_number(cost.sandbox_seconds)} | "
+                "Model dollars estimate Token Factory token usage. Sandbox dollars "
+                "estimate Daytona vCPU, memory and billable disk over measured "
+                "sandbox lifetimes. Total dollars combines both estimates."
+            ),
+            "",
+            (
+                "Snapshot storage is not included because Daytona had not published "
+                f"its price when the rates were read on {DAYTONA_PRICING_READ_DATE}."
+            ),
+            "",
+            "| Model dollars (estimated) | Sandbox dollars (estimated) | "
+            "Total dollars (estimated) | Tokens | Sandbox lifetime seconds | "
+            "Wall seconds |",
+            "| ---: | ---: | ---: | ---: | ---: | ---: |",
+            (
+                f"| {_format_number(cost.model_dollars)} | "
+                f"{_format_number(cost.sandbox_dollars_estimate)} | "
+                f"{_format_number(cost.total_dollars_estimate)} | "
+                f"{_format_number(cost.tokens)} | "
+                f"{_format_number(cost.sandbox_lifetime_seconds)} | "
                 f"{_format_number(cost.wall_time_s)} |"
             ),
             "",
@@ -489,13 +532,15 @@ def render(report: Report) -> str:
     if report.agreement.disagreements:
         lines.extend(
             [
-                "| Instance | Attempt | Classification | Failed predicates |",
-                "| --- | ---: | --- | --- |",
+                "| Instance | Attempt | Classification | Failed predicates | "
+                "Gate error |",
+                "| --- | ---: | --- | --- | --- |",
             ],
         )
         lines.extend(
             f"| {_cell(item.instance_id)} | {item.attempt} | {item.agreement} | "
-            f"{_cell(', '.join(item.failed_predicate_ids) or 'none')} |"
+            f"{_cell(', '.join(item.failed_predicate_ids) or 'none')} | "
+            f"{_cell(item.gate_error or 'none')} |"
             for item in report.agreement.disagreements
         )
     else:
@@ -517,14 +562,24 @@ def render(report: Report) -> str:
         ],
     )
     for row in report.instances:
-        dollars = (
+        model_dollars = (
             "not available"
-            if row.cost.dollars is None
-            else f"${_format_number(row.cost.dollars)}"
+            if row.cost.model_dollars is None
+            else f"${_format_number(row.cost.model_dollars)}"
+        )
+        total_dollars = (
+            "not available"
+            if row.cost.model_dollars is None
+            else "$"
+            + _format_number(
+                row.cost.model_dollars + row.cost.sandbox_dollars_estimate,
+            )
         )
         rendered_cost = (
-            f"{row.cost.tokens} tokens; {dollars}; "
-            f"{_format_number(row.cost.sandbox_seconds)} sandbox s; "
+            f"{row.cost.tokens} tokens; {model_dollars} model estimated; "
+            f"${_format_number(row.cost.sandbox_dollars_estimate)} sandbox estimated; "
+            f"{total_dollars} total estimated; "
+            f"{_format_number(row.cost.sandbox_lifetime_seconds)} sandbox lifetime s; "
             f"{_format_number(row.wall_time_s)} wall s"
         )
         lines.append(

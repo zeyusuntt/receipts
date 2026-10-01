@@ -150,6 +150,20 @@ class _ImageLocalExecutor:
         if self.inner.root.exists():
             shutil.rmtree(self.inner.root)
 
+    def sandbox_usage(self) -> list[dict]:
+        return [
+            {
+                "sandbox_id": "sandbox-a",
+                "seconds": 3_600.0,
+                "resources": {"cpu": 2, "memory": 2, "disk": 5},
+            },
+            {
+                "sandbox_id": "sandbox-b",
+                "seconds": 1_800.0,
+                "resources": {"cpu": 4, "memory": 8, "disk": 10},
+            },
+        ]
+
 
 def _executor_factory(
     tmp_path: Path,
@@ -216,8 +230,9 @@ async def test_honest_agent_writes_atomic_ran_record_with_official_agreement(
     assert record.final.verified_fix is True
     assert record.final.official_resolved is True
     assert record.cost.tokens == 36
-    assert record.cost.dollars is None
-    assert record.cost.sandbox_seconds > 0
+    assert record.cost.model_dollars is None
+    assert record.cost.sandbox_lifetime_seconds == 5_400.0
+    assert record.cost.sandbox_dollars_estimate == pytest.approx(0.29907)
     assert record.wall_time_s > 0
     assert created[0].closed is True
 
@@ -252,6 +267,16 @@ async def test_honest_agent_writes_atomic_ran_record_with_official_agreement(
         (Path(record.run_dir) / "official/records.json").read_text(encoding="utf-8"),
     )
     assert official_records[0]["log_sha256"] == attempt.official.log_sha256
+
+
+def test_daytona_price_constants_record_published_rates_and_read_date():
+    import receipts.cost as cost
+
+    assert cost.DAYTONA_PRICING_READ_DATE == "2026-10-01"
+    assert cost.DAYTONA_VCPU_DOLLARS_PER_HOUR == 0.0504
+    assert cost.DAYTONA_MEMORY_GIB_DOLLARS_PER_HOUR == 0.0162
+    assert cost.DAYTONA_DISK_GIB_DOLLARS_PER_HOUR == 0.000108
+    assert cost.DAYTONA_INCLUDED_DISK_GIB == 5
 
 
 async def test_test_edit_is_rejected_but_naive_green_is_recorded(tmp_path: Path):
@@ -489,7 +514,12 @@ async def test_run_pilot_skips_finished_records_without_calling_model(tmp_path: 
             run_dir=str(record_dir / "run"),
             attempts=[],
             final=None,
-            cost=runner.PilotCost(tokens=0, dollars=None, sandbox_seconds=0),
+            cost=runner.PilotCost(
+                tokens=0,
+                model_dollars=None,
+                sandbox_lifetime_seconds=0,
+                sandbox_dollars_estimate=0,
+            ),
             wall_time_s=0,
         )
         (record_dir / "record.json").write_text(
@@ -584,7 +614,12 @@ async def test_run_pilot_bounds_concurrency_and_stops_at_requested_ran_count(
             run_dir=str(tmp_path / "runs" / instance.instance_id),
             attempts=[],
             final=None,
-            cost=runner.PilotCost(tokens=0, dollars=None, sandbox_seconds=0),
+            cost=runner.PilotCost(
+                tokens=0,
+                model_dollars=None,
+                sandbox_lifetime_seconds=0,
+                sandbox_dollars_estimate=0,
+            ),
             wall_time_s=0,
         )
 

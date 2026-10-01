@@ -15,9 +15,10 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from receipts.agent.worker import WorkerOutcome
+from receipts.cost import estimate_daytona_sandbox_dollars
 from receipts.llm import ModelClient
 from receipts.models import ClaimAudit, Claims, Receipt, VerdictStatus
 from receipts.orchestrate import RunBudgets, RunResult, fix
@@ -47,6 +48,7 @@ class AttemptRecord(BaseModel):
     official_resolved: bool | None
     agreement: Agreement | None
     filtered_patch_sha256: str
+    gate_error: str | None = None
     official: OfficialRecord | None = None
 
 
@@ -58,8 +60,12 @@ class FinalRecord(BaseModel):
 
 class PilotCost(BaseModel):
     tokens: int = Field(ge=0)
-    dollars: float | None
-    sandbox_seconds: float = Field(ge=0)
+    model_dollars: float | None = Field(
+        default=None,
+        validation_alias=AliasChoices("model_dollars", "dollars"),
+    )
+    sandbox_lifetime_seconds: float = Field(default=0, ge=0)
+    sandbox_dollars_estimate: float = Field(default=0, ge=0)
 
 
 class InstanceRecord(BaseModel):
@@ -156,13 +162,12 @@ def _run_id(instance_id: str) -> str:
     return f"pilot-{prefix}-{uuid.uuid4().hex[:10]}"
 
 
-def _zero_cost() -> PilotCost:
-    return PilotCost(tokens=0, dollars=None, sandbox_seconds=0)
-
-
-def _pilot_cost(result: RunResult) -> PilotCost:
+def _pilot_cost(
+    result: RunResult | None,
+    sandbox_usage: Sequence[dict[str, Any]],
+) -> PilotCost:
     tokens = 0
-    models = result.cost.get("models")
+    models = result.cost.get("models") if result is not None else None
     if isinstance(models, dict):
         for values in models.values():
             if not isinstance(values, dict):
@@ -172,20 +177,26 @@ def _pilot_cost(result: RunResult) -> PilotCost:
                 if isinstance(value, int) and not isinstance(value, bool):
                     tokens += value
 
-    dollars = result.cost.get("estimated_dollars")
+    dollars = result.cost.get("estimated_dollars") if result is not None else None
     if not isinstance(dollars, (int, float)) or isinstance(dollars, bool):
         dollars = None
-    sandbox_seconds = result.cost.get("sandbox_seconds")
-    if not isinstance(sandbox_seconds, (int, float)) or isinstance(
-        sandbox_seconds,
-        bool,
-    ):
-        sandbox_seconds = 0.0
+    sandbox_lifetime_seconds = sum(
+        float(item["seconds"])
+        for item in sandbox_usage
+    )
     return PilotCost(
         tokens=tokens,
-        dollars=float(dollars) if dollars is not None else None,
-        sandbox_seconds=float(sandbox_seconds),
+        model_dollars=float(dollars) if dollars is not None else None,
+        sandbox_lifetime_seconds=sandbox_lifetime_seconds,
+        sandbox_dollars_estimate=estimate_daytona_sandbox_dollars(sandbox_usage),
     )
+
+
+def _sandbox_usage(executor: Any) -> list[dict[str, Any]]:
+    usage = getattr(executor, "sandbox_usage", None)
+    if usage is None:
+        return []
+    return list(usage())
 
 
 def _agent_receipts(run_dir: Path) -> list[Receipt]:
@@ -240,6 +251,7 @@ def _ran_record(
     result: RunResult,
     official_records: Sequence[OfficialRecord],
     wall_time_s: float,
+    sandbox_usage: Sequence[dict[str, Any]],
 ) -> InstanceRecord:
     official_by_attempt = {record.attempt: record for record in official_records}
     receipts = _agent_receipts(run_dir)
@@ -279,6 +291,7 @@ def _ran_record(
                     run_dir,
                     attempt.filtered_patch_path,
                 ),
+                gate_error=attempt.verdict.error,
                 official=official,
             ),
         )
@@ -305,7 +318,7 @@ def _ran_record(
             ),
             official_resolved=final_attempt.official_resolved,
         ),
-        cost=_pilot_cost(result),
+        cost=_pilot_cost(result, sandbox_usage),
         wall_time_s=wall_time_s,
     )
 
@@ -363,6 +376,8 @@ async def run_instance(
     sink_replaced = False
     original_run_pytest: Any = None
     pytest_replaced = False
+    result: RunResult | None = None
+    sandbox_usage: list[dict[str, Any]] = []
 
     try:
         try:
@@ -411,6 +426,8 @@ async def run_instance(
                 if executor is not None:
                     await _close_executor(executor)
             finally:
+                if executor is not None:
+                    sandbox_usage = _sandbox_usage(executor)
                 if executor is not None and sink_replaced:
                     setattr(executor, "sink", original_sink)
                 if executor is not None and pytest_replaced:
@@ -421,6 +438,7 @@ async def run_instance(
             result,
             official_records,
             time.monotonic() - started,
+            sandbox_usage,
         )
     except (BaselineBroken, BaselineTooSlow, TargetNotFailing) as exc:
         record = InstanceRecord(
@@ -430,7 +448,7 @@ async def run_instance(
             run_dir=str(run_dir),
             attempts=[],
             final=None,
-            cost=_zero_cost(),
+            cost=_pilot_cost(result, sandbox_usage),
             wall_time_s=time.monotonic() - started,
         )
     except Exception as exc:
@@ -443,7 +461,7 @@ async def run_instance(
             run_dir=str(run_dir),
             attempts=[],
             final=None,
-            cost=_zero_cost(),
+            cost=_pilot_cost(result, sandbox_usage),
             wall_time_s=time.monotonic() - started,
         )
 

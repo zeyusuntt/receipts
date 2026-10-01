@@ -28,7 +28,9 @@ import shlex
 import shutil
 import signal
 import stat
+import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
@@ -465,6 +467,7 @@ class DaytonaExecutor:
         fork_timeout_s: int = 300,
         snapshot_timeout_s: int = 900,
         file_timeout_s: int = 120,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self.root = root
         self.sink = sink
@@ -477,6 +480,7 @@ class DaytonaExecutor:
         self.fork_timeout_s = fork_timeout_s
         self.snapshot_timeout_s = snapshot_timeout_s
         self.file_timeout_s = file_timeout_s
+        self._clock = clock
         self._validate_configuration()
 
         self._seq: dict[str, int] = {}
@@ -484,6 +488,7 @@ class DaytonaExecutor:
         self._sandboxes: dict[str, str] = {}
         self._specs: dict[str, _BranchSpec] = {}
         self._created_sandboxes: list[str] = []
+        self._sandbox_lifetimes: dict[str, tuple[float, float | None]] = {}
         self._snapshots: dict[str, DaytonaSnapshot] = {}
         self._snapshot_specs: dict[str, _BranchSpec] = {}
         self._checkpoint_trees: dict[str, Path] = {}
@@ -553,6 +558,36 @@ class DaytonaExecutor:
             "receipts_run": self.run_id,
             "receipts_branch": branch_id,
         }
+
+    def _record_sandbox_created(self, sandbox_id: str) -> None:
+        self._sandbox_lifetimes[sandbox_id] = (self._clock(), None)
+
+    def _record_sandbox_deleted(self, sandbox_id: str) -> None:
+        lifetime = self._sandbox_lifetimes.get(sandbox_id)
+        if lifetime is None or lifetime[1] is not None:
+            return
+        self._sandbox_lifetimes[sandbox_id] = (lifetime[0], self._clock())
+
+    def sandbox_usage(self) -> list[dict]:
+        """Return measured lifetime and resources for each created sandbox."""
+
+        now = self._clock()
+        resources = {
+            "cpu": self.resources.cpu,
+            "memory": self.resources.memory,
+            "disk": self.resources.disk,
+        }
+        return [
+            {
+                "sandbox_id": sandbox_id,
+                "seconds": max(
+                    0.0,
+                    (deleted_at if deleted_at is not None else now) - created_at,
+                ),
+                "resources": dict(resources),
+            }
+            for sandbox_id, (created_at, deleted_at) in self._sandbox_lifetimes.items()
+        ]
 
     def _sandbox_id(self, branch: Branch) -> str:
         if branch.id in self._released_branches:
@@ -840,6 +875,7 @@ class DaytonaExecutor:
             ttl_minutes=self.ttl_minutes,
             timeout_s=self.create_timeout_s,
         )
+        self._record_sandbox_created(sandbox.id)
         self._created_sandboxes.append(sandbox.id)
         branch = Branch(
             id="base",
@@ -1080,6 +1116,7 @@ class DaytonaExecutor:
                 ttl_minutes=self.ttl_minutes,
                 timeout_s=self.fork_timeout_s,
             )
+            self._record_sandbox_created(sandbox.id)
             self._created_sandboxes.append(sandbox.id)
             branch = Branch(
                 id=branch_id,
@@ -1254,6 +1291,7 @@ class DaytonaExecutor:
         except Exception as exc:
             if self._status_code(exc) != 404:
                 raise
+        self._record_sandbox_deleted(sandbox_id)
         self._created_sandboxes = [
             created_id
             for created_id in self._created_sandboxes
@@ -1284,6 +1322,7 @@ class DaytonaExecutor:
                 if self._status_code(exc) != 404:
                     failures[f"sandbox {sandbox_id}"] = str(exc)
                     return
+            self._record_sandbox_deleted(sandbox_id)
             failures.pop(f"sandbox {sandbox_id}", None)
             deleted.add(sandbox_id)
 

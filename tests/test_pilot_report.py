@@ -29,6 +29,7 @@ def _attempt(
     claim_audit: str = "honest",
     official_resolved: bool | None = False,
     agreement: str | None = "agree_fail",
+    gate_error: str | None = None,
 ) -> AttemptRecord:
     return AttemptRecord(
         end="finished",
@@ -41,6 +42,7 @@ def _attempt(
         official_resolved=official_resolved,
         agreement=agreement,
         filtered_patch_sha256="a" * 64,
+        gate_error=gate_error,
     )
 
 
@@ -52,8 +54,9 @@ def _record(
     status: str = "ran",
     reason: str | None = None,
     tokens: int = 10,
-    dollars: float | None = 1.0,
-    sandbox_seconds: float = 20.0,
+    model_dollars: float | None = 1.0,
+    sandbox_lifetime_seconds: float = 20.0,
+    sandbox_dollars_estimate: float = 0.0,
     wall_time_s: float = 30.0,
 ) -> InstanceRecord:
     final = None
@@ -73,8 +76,9 @@ def _record(
         final=final,
         cost=PilotCost(
             tokens=tokens,
-            dollars=dollars,
-            sandbox_seconds=sandbox_seconds,
+            model_dollars=model_dollars,
+            sandbox_lifetime_seconds=sandbox_lifetime_seconds,
+            sandbox_dollars_estimate=sandbox_dollars_estimate,
         ),
         wall_time_s=wall_time_s,
     )
@@ -178,8 +182,8 @@ def test_report_computes_all_sections_from_records():
         ],
         verified_fix=True,
         tokens=100,
-        dollars=2.0,
-        sandbox_seconds=40.0,
+        model_dollars=2.0,
+        sandbox_lifetime_seconds=40.0,
         wall_time_s=60.0,
     )
     shipped_false_done = _record(
@@ -193,8 +197,8 @@ def test_report_computes_all_sections_from_records():
             ),
         ],
         tokens=20,
-        dollars=1.0,
-        sandbox_seconds=10.0,
+        model_dollars=1.0,
+        sandbox_lifetime_seconds=10.0,
         wall_time_s=20.0,
     )
     verified_first = _record(
@@ -208,8 +212,8 @@ def test_report_computes_all_sections_from_records():
         ],
         verified_fix=True,
         tokens=40,
-        dollars=1.0,
-        sandbox_seconds=20.0,
+        model_dollars=1.0,
+        sandbox_lifetime_seconds=20.0,
         wall_time_s=40.0,
     )
     gate_stricter = _record(
@@ -224,8 +228,8 @@ def test_report_computes_all_sections_from_records():
             ),
         ],
         tokens=20,
-        dollars=0.0,
-        sandbox_seconds=10.0,
+        model_dollars=0.0,
+        sandbox_lifetime_seconds=10.0,
         wall_time_s=20.0,
     )
     gate_error = _record(
@@ -240,8 +244,8 @@ def test_report_computes_all_sections_from_records():
             ),
         ],
         tokens=20,
-        dollars=0.0,
-        sandbox_seconds=10.0,
+        model_dollars=0.0,
+        sandbox_lifetime_seconds=10.0,
         wall_time_s=20.0,
     )
     excluded = _record(
@@ -250,8 +254,8 @@ def test_report_computes_all_sections_from_records():
         status="excluded",
         reason="target already passes",
         tokens=0,
-        dollars=None,
-        sandbox_seconds=0,
+        model_dollars=None,
+        sandbox_lifetime_seconds=0,
         wall_time_s=1.0,
     )
     infra_error = _record(
@@ -260,8 +264,8 @@ def test_report_computes_all_sections_from_records():
         status="infra_error",
         reason="RuntimeError: sandbox failed",
         tokens=0,
-        dollars=None,
-        sandbox_seconds=0,
+        model_dollars=None,
+        sandbox_lifetime_seconds=0,
         wall_time_s=2.0,
     )
     records = [
@@ -292,8 +296,13 @@ def test_report_computes_all_sections_from_records():
     assert report.configuration_b.appeal == 1
     assert report.configuration_b.shipped_false_dones == 1
     assert report.configuration_b.cost_per_verified_fix.tokens == 100
-    assert report.configuration_b.cost_per_verified_fix.dollars == 2.0
-    assert report.configuration_b.cost_per_verified_fix.sandbox_seconds == 45.0
+    assert report.configuration_b.cost_per_verified_fix.model_dollars == 2.0
+    assert report.configuration_b.cost_per_verified_fix.sandbox_dollars_estimate == 0
+    assert report.configuration_b.cost_per_verified_fix.total_dollars_estimate == 2.0
+    assert (
+        report.configuration_b.cost_per_verified_fix.sandbox_lifetime_seconds
+        == 45.0
+    )
     assert report.configuration_b.cost_per_verified_fix.wall_time_s == 80.0
     assert report.agreement.matrix == {
         "PASS": {"resolved": 2, "not_resolved": 1, "unavailable": 0},
@@ -330,3 +339,77 @@ def test_same_records_produce_byte_identical_reports():
 
     assert report_module.render(first).encode() == report_module.render(second).encode()
     assert first.model_dump_json() == second.model_dump_json()
+
+
+def test_infrastructure_record_gate_error_is_listed_with_error_text():
+    report_module = _report_module()
+    attempt = _attempt(
+        claimed_done=False,
+        gate_status="ERROR",
+        official_resolved=None,
+        agreement=None,
+        gate_error="witness verification exited 3",
+    )
+    record = _record(
+        "project__infra-gate-error",
+        [attempt],
+        status="infra_error",
+        reason="official grading failed after gate error",
+        tokens=0,
+        model_dollars=None,
+        sandbox_lifetime_seconds=0,
+    )
+
+    markdown = report_module.render(report_module.build_report([record]))
+
+    section = markdown.split("### Disagreements and gate errors", 1)[1].split(
+        "## Exclusions",
+        1,
+    )[0]
+    assert "project__infra-gate-error" in section
+    assert "witness verification exited 3" in section
+
+
+def test_cost_columns_are_computed_from_separate_model_and_sandbox_costs():
+    report_module = _report_module()
+    first = _record(
+        "project__first",
+        [_attempt(gate_status="PASS", official_resolved=True, agreement="agree_pass")],
+        verified_fix=True,
+        wall_time_s=300,
+    )
+    first.cost = PilotCost(
+        tokens=100,
+        model_dollars=1.25,
+        sandbox_lifetime_seconds=120,
+        sandbox_dollars_estimate=0.50,
+    )
+    second = _record(
+        "project__second",
+        [_attempt()],
+        wall_time_s=100,
+    )
+    second.cost = PilotCost(
+        tokens=300,
+        model_dollars=0.75,
+        sandbox_lifetime_seconds=60,
+        sandbox_dollars_estimate=0.25,
+    )
+
+    report = report_module.build_report([first, second])
+
+    cost = report.configuration_b.cost_per_verified_fix
+    assert cost.model_dollars == 2.0
+    assert cost.sandbox_dollars_estimate == 0.75
+    assert cost.total_dollars_estimate == 2.75
+    assert cost.tokens == 400
+    assert cost.sandbox_lifetime_seconds == 180
+    assert cost.wall_time_s == 400
+    markdown = report_module.render(report)
+    assert (
+        "| Model dollars (estimated) | Sandbox dollars (estimated) | "
+        "Total dollars (estimated) | Tokens | Sandbox lifetime seconds | "
+        "Wall seconds |"
+    ) in markdown
+    assert "Model dollars estimate Token Factory token usage." in markdown
+    assert "Snapshot storage is not included" in markdown
