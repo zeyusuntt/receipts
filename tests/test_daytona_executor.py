@@ -357,7 +357,7 @@ async def test_prepare_uses_default_resources_labels_bootstrap_and_setup(tmp_pat
             "image": "swerebench/example:1",
             "resources": module.DaytonaResources(cpu=2, memory=2, disk=5),
             "labels": {"receipts_run": "run-1", "receipts_branch": "base"},
-            "auto_stop_minutes": 15,
+            "auto_stop_minutes": 60,
             "ttl_minutes": None,
             "timeout_s": 900,
         },
@@ -1177,3 +1177,13 @@ async def test_command_duration_ignores_wall_clock_jumps_such_as_host_sleep(tmp_
     receipt = await executor.run(base, "true", timeout_s=30)
 
     assert receipt.duration_s < 60
+
+
+def test_default_auto_stop_outlasts_a_long_witness_phase(tmp_path):
+    """Seen on qiskit-12528: the agent sandbox idles while the witness is forked, patched
+    and tested, which took over 13 minutes on a large repository, and a 15-minute idle
+    auto-stop stopped it before the appeal. The default must outlast that phase."""
+    module = _daytona_module()
+    executor, _, _ = _executor(tmp_path, module)
+
+    assert executor.auto_stop_minutes >= 60

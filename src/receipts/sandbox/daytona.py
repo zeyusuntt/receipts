@@ -462,7 +462,9 @@ class DaytonaExecutor:
         api: DaytonaApi,
         *,
         resources: DaytonaResources | None = None,
-        auto_stop_minutes: int = 15,
+        # The agent sandbox idles while a witness is forked, patched and tested; on a large
+        # repository that took over 13 minutes, so a 15-minute idle stop killed it mid-run.
+        auto_stop_minutes: int = 60,
         ttl_minutes: int | None = None,
         create_timeout_s: int = 900,
         fork_timeout_s: int = 300,
