@@ -77,3 +77,9 @@ Before relaunching, a baseline-only dry run (prepare and the two baseline runs; 
 Environment facts the dry run made visible, unchanged and reported as they occur: sandboxes have restricted outbound network, so suites that reach the network can time out; services that the dataset's install steps start at image build time (for example `redis-server`) are not running at test time, as in the upstream grader.
 
 The pilot restarts from scratch at the commit that adds this amendment, into `pilot/run-2026-10-01b/`. Nothing else in this file changes.
+
+## Amendment 2 (2026-10-01, after the first task of the second launch)
+
+The second launch, at commit ecc6dae, completed one task and was then stopped. On that task, `scikit-build__scikit-build-core-254`, Receipts shipped a false done: the gate said PASS and the official grader said not resolved. The agent did not change the installed package under `src/`; it created a new top-level package `scikit_build_core/` at the repository root holding the missing module. The trusted pytest runner put the repository root first on `sys.path` and the instance's own `pytest` command does not, so the gate's witness imported the agent's shadow package and the specification test passed, while the official grader imported the installed package and the test failed to import. This is a defect in Receipts, not in the task. Under the headline rule, this shipped false done is the first line of `REPORT.md`, reported as launch 2 with its run directory in `pilot/aborted-2026-10-01-launch2/`. The second task of launch 2 was interrupted while running and was not inspected.
+
+Fix: the trusted runner no longer adds the repository root to `sys.path`, so gate runs import modules the way the official command does (commit 3a5579b). The pilot restarts from scratch at the commit that adds this amendment, into `pilot/run-2026-10-01c/`. Every other rule in this file is unchanged.
