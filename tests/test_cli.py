@@ -9,6 +9,7 @@ from receipts.cli import main
 from receipts.llm import AssistantTurn, FakeModel, ToolCall
 from receipts.models import (
     Baseline,
+    Checkpoint,
     Claims,
     JunitSummary,
     PredicateResult,
@@ -216,6 +217,11 @@ def _sample_result() -> RunResult:
         wall_time_s=2.5,
         disclosure=disclosure,
         snapshot_receipt_id="base-5",
+        checkpoint=Checkpoint(
+            id="checkpoint-1",
+            parent="base-image",
+            digest="checkpoint-digest",
+        ),
         checkpoint_id="checkpoint-1",
         agent_branch_id="agent1",
     )

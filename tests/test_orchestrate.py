@@ -206,6 +206,7 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     assert [verdict.status for verdict in result.verdict_history] == ["PASS"]
     assert result.verified_fix is True
     assert result.selected_patch_path == "attempts/1/filtered.diff"
+    assert result.checkpoint.id == result.checkpoint_id
     worker_request = next(
         request for request in model.requests if request["kind"] == "chat"
     )
@@ -240,6 +241,7 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     assert persisted["final_verdict"]["status"] == "PASS"
     assert [item["status"] for item in persisted["verdict_history"]] == ["PASS"]
     assert persisted["selected_patch_path"] == "attempts/1/filtered.diff"
+    assert persisted["checkpoint"]["id"] == persisted["checkpoint_id"]
     assert persisted["cost"] == json.loads((run_dir / "cost.json").read_text())
     assert persisted["wall_time_s"] > 0
     assert "return a - b" in (run_dir / persisted["selected_patch_path"]).read_text()

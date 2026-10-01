@@ -17,7 +17,7 @@ from receipts.agent.planner import Plan, make_plan
 from receipts.agent.worker import Worker, WorkerBudget, WorkerOutcome
 from receipts.cost import CostMeter, TokenUsage
 from receipts.llm import ModelClient
-from receipts.models import Baseline, Branch, Receipt, Verdict
+from receipts.models import Baseline, Branch, Checkpoint, Receipt, Verdict
 from receipts.rundir import RunDirectory
 from receipts.sandbox.protocol import Executor, ImageSource, Source
 from receipts.verify.gate import evaluate
@@ -96,6 +96,7 @@ class RunResult(BaseModel):
     wall_time_s: float
     disclosure: Disclosure
     snapshot_receipt_id: str
+    checkpoint: Checkpoint
     checkpoint_id: str
     agent_branch_id: str
 
@@ -572,6 +573,7 @@ async def fix(
             wall_time_s=time.monotonic() - started,
             disclosure=disclosure,
             snapshot_receipt_id=snapshot.receipt_id,
+            checkpoint=checkpoint,
             checkpoint_id=checkpoint.id,
             agent_branch_id=agent.id,
         )
