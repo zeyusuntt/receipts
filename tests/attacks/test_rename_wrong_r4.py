@@ -1,9 +1,6 @@
-import pytest
-
 from .helpers import predicate, setup_attack, verify
 
 
-@pytest.mark.xfail(strict=True, reason="closed by Task H3")
 async def test_rename_from_test_to_source_is_rejected_but_r4_wrongly_passes(tmp_path):
     attack = await setup_attack(tmp_path)
     moved = await attack.ex.run(attack.agent, "git mv tests/test_calc.py calc/hidden_test_copy.txt", 30)

@@ -1,9 +1,6 @@
-import pytest
-
 from .helpers import FAKE_PYTEST, predicate, setup_attack, verify
 
 
-@pytest.mark.xfail(strict=True, reason="closed by Task H3")
 async def test_repo_controlled_external_diff_substitutes_unrelated_patch_and_r5_passes(tmp_path):
     attack = await setup_attack(tmp_path)
     line_count = len(FAKE_PYTEST.splitlines())

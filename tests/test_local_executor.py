@@ -169,6 +169,126 @@ async def test_patch_includes_untracked_non_ignored_file(tmp_path):
     assert "new file mode" in Path(r.diff.patch_path).read_text()
 
 
+async def test_patch_ignores_agent_external_diff_config(tmp_path):
+    ex, base = await _executor(tmp_path)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    await ex.write_file(agent, "fake-diff.sh", "#!/bin/sh\nexit 99\n")
+    await ex.write_file(agent, "notes.txt", "real patch content\n")
+    configured = await ex.run(
+        agent,
+        "chmod +x fake-diff.sh && git config diff.external ./fake-diff.sh",
+        timeout_s=30,
+    )
+    assert configured.exit_code == 0
+
+    receipt = await ex.patch(agent, snapshot.snapshot_sha)
+
+    assert receipt.exit_code == 0 and receipt.diff is not None
+    assert {item.path for item in receipt.diff.files} == {"fake-diff.sh", "notes.txt"}
+    assert "real patch content" in Path(receipt.diff.patch_path).read_text()
+    assert "staging" in receipt.cmd
+
+
+async def test_patch_ignores_agent_clean_filter_config(tmp_path):
+    ex, base = await _executor(tmp_path)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    await ex.write_file(agent, ".gitattributes", "calc/__init__.py filter=poison\n")
+    await ex.write_file(agent, "poison-filter.sh", "#!/bin/sh\nprintf 'FILTERED\\n'\n")
+    configured = await ex.run(
+        agent,
+        "chmod +x poison-filter.sh && git config filter.poison.clean ./poison-filter.sh",
+        timeout_s=30,
+    )
+    assert configured.exit_code == 0
+    await ex.write_file(
+        agent,
+        "calc/__init__.py",
+        "def add(a, b):\n    return a + b\n\n\ndef sub(a, b):\n    return a - b\n",
+    )
+
+    receipt = await ex.patch(agent, snapshot.snapshot_sha)
+    patch_text = Path(receipt.diff.patch_path).read_text()
+
+    assert receipt.exit_code == 0
+    assert "+    return a - b" in patch_text
+    assert "\n+FILTERED\n" not in patch_text
+
+
+async def test_patch_does_not_run_worktree_git_executable(tmp_path):
+    ex, base = await _executor(tmp_path)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    marker = tmp_path / "worktree-git-ran"
+    await ex.write_file(
+        agent,
+        ".venv/bin/git",
+        f"#!/bin/sh\nprintf ran > {str(marker)!r}\nexit 73\n",
+    )
+    made_executable = await ex.run(agent, "chmod +x .venv/bin/git", timeout_s=30)
+    assert made_executable.exit_code == 0
+    await ex.write_file(agent, "notes.txt", "real patch content\n")
+
+    receipt = await ex.patch(agent, snapshot.snapshot_sha)
+
+    assert receipt.exit_code == 0
+    assert not marker.exists()
+    assert "real patch content" in Path(receipt.diff.patch_path).read_text()
+
+
+async def test_patch_does_not_run_worktree_bash_executable(tmp_path):
+    ex, base = await _executor(tmp_path)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    marker = tmp_path / "worktree-bash-ran"
+    await ex.write_file(
+        agent,
+        ".venv/bin/bash",
+        "#!/bin/sh\n"
+        f"printf ran > {str(marker)!r}\n"
+        "printf '%s\\n' "
+        "'diff --git a/forged.txt b/forged.txt' "
+        "'new file mode 100644' "
+        "'index 0000000..ce01362' "
+        "'--- /dev/null' "
+        "'+++ b/forged.txt' "
+        "'@@ -0,0 +1 @@' "
+        "'+forged'\n",
+    )
+    (ex.workdir(agent) / ".venv/bin/bash").chmod(0o755)
+    await ex.write_file(agent, "notes.txt", "real patch content\n")
+
+    receipt = await ex.patch(agent, snapshot.snapshot_sha)
+
+    assert receipt.exit_code == 0 and receipt.diff is not None
+    assert not marker.exists()
+    assert {item.path for item in receipt.diff.files} == {".venv/bin/bash", "notes.txt"}
+    assert "real patch content" in Path(receipt.diff.patch_path).read_text()
+
+
+async def test_patch_disables_rename_detection(tmp_path):
+    ex, base = await _executor(tmp_path)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    moved = await ex.run(agent, "git mv tests/test_calc.py calc/hidden_test_copy.txt", timeout_s=30)
+    assert moved.exit_code == 0
+
+    receipt = await ex.patch(agent, snapshot.snapshot_sha)
+
+    assert receipt.exit_code == 0 and receipt.diff is not None
+    assert [(item.path, item.added, item.deleted) for item in receipt.diff.files] == [
+        ("calc/hidden_test_copy.txt", 20, 0),
+        ("tests/test_calc.py", 0, 20),
+    ]
+    assert "similarity index" not in Path(receipt.diff.patch_path).read_text()
+
+
 async def test_patch_then_apply_on_fresh_fork_reproduces_source(tmp_path):
     ex, base = await _executor(tmp_path)
     snapshot = await ex.snapshot(base)

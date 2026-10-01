@@ -20,6 +20,7 @@ import os
 import shlex
 import shutil
 import signal
+import stat
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -42,6 +43,59 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _remove_path(path: Path) -> None:
+    mode = path.lstat().st_mode
+    if stat.S_ISDIR(mode):
+        path.chmod(stat.S_IMODE(mode) | stat.S_IRWXU, follow_symlinks=False)
+        for child in path.iterdir():
+            _remove_path(child)
+        path.rmdir()
+    else:
+        path.unlink()
+
+
+def _mirror_entry(source: Path, destination: Path) -> None:
+    source_mode = source.lstat().st_mode
+    destination_exists = os.path.lexists(destination)
+    if stat.S_ISLNK(source_mode):
+        if destination_exists:
+            _remove_path(destination)
+        destination.symlink_to(os.readlink(source))
+        shutil.copystat(source, destination, follow_symlinks=False)
+        return
+    if stat.S_ISDIR(source_mode):
+        if destination_exists and not stat.S_ISDIR(destination.lstat().st_mode):
+            _remove_path(destination)
+            destination_exists = False
+        if not destination_exists:
+            destination.mkdir()
+        destination.chmod(destination.lstat().st_mode | stat.S_IRWXU, follow_symlinks=False)
+        source_names = {child.name for child in source.iterdir()}
+        for child in destination.iterdir():
+            if child.name not in source_names:
+                _remove_path(child)
+        for child in source.iterdir():
+            _mirror_entry(child, destination / child.name)
+        shutil.copystat(source, destination, follow_symlinks=False)
+        return
+    if stat.S_ISREG(source_mode):
+        if destination_exists:
+            _remove_path(destination)
+        shutil.copy2(source, destination, follow_symlinks=False)
+        return
+    raise OSError(f"unsupported worktree entry: {source}")
+
+
+def _mirror_worktree(source: Path, destination: Path) -> None:
+    source_names = {child.name for child in source.iterdir() if child.name != ".git"}
+    for child in destination.iterdir():
+        if child.name != ".git" and child.name not in source_names:
+            _remove_path(child)
+    for child in source.iterdir():
+        if child.name != ".git":
+            _mirror_entry(child, destination / child.name)
+
+
 class LocalExecutor:
     def __init__(self, root: Path, sink: ReceiptSink, run_id: str) -> None:
         self.root = root
@@ -51,6 +105,14 @@ class LocalExecutor:
         self._dirs: dict[str, Path] = {}  # branch id or checkpoint id -> directory
         self._fork_next: dict[str, int] = {}
         self._protected_modules = default_protected_modules()
+        git_path = shutil.which("git")
+        if git_path is None:
+            raise RuntimeError("git executable not found")
+        self._git = Path(git_path).resolve()
+        bash_path = shutil.which("bash", path=os.defpath)
+        if bash_path is None:
+            raise RuntimeError("bash executable not found")
+        self._bash = Path(bash_path).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "reports").mkdir(exist_ok=True)
         (self.root / "patches").mkdir(exist_ok=True)
@@ -85,14 +147,22 @@ class LocalExecutor:
         target = (base / path).resolve()
         return target if target == base or base in target.parents else None
 
-    async def _execute(self, workdir: Path, cmd: str, timeout_s: int) -> tuple[bytes, bytes, int | None, bool, datetime, float]:
+    async def _execute(
+        self,
+        workdir: Path,
+        cmd: str,
+        timeout_s: int,
+        env_overrides: dict[str, str] | None = None,
+    ) -> tuple[bytes, bytes, int | None, bool, datetime, float]:
         env = {
             "PATH": f"{workdir / '.venv' / 'bin'}:{Path(sys.executable).parent}:{os.environ.get('PATH', '')}",
             "HOME": str(self.root), "PYTHONDONTWRITEBYTECODE": "1", "LANG": "C.UTF-8",
         }
+        if env_overrides:
+            env.update(env_overrides)
         started = _now()
         proc = await asyncio.create_subprocess_exec(
-            "bash", "-c", cmd, cwd=workdir, env=env,
+            str(self._bash), "-c", cmd, cwd=workdir, env=env,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, start_new_session=True,
         )
         timed_out = False
@@ -210,13 +280,54 @@ class LocalExecutor:
                           started_at=started, duration_s=(_now() - started).total_seconds())
 
     async def patch(self, branch: Branch, snapshot_sha: str) -> Receipt:
-        cmd = f"git add -A && git -c core.quotePath=false diff --cached --binary {shlex.quote(snapshot_sha)}"
-        stdout, stderr, code, timed_out, started, duration = await self._execute(self.workdir(branch), cmd, 120)
+        started = _now()
+        staging = self.root / "staging" / f"{branch.id}-{uuid.uuid4().hex[:12]}"
+        origin = self._dirs.get(branch.origin, self.workdir(branch))
+        try:
+            await asyncio.to_thread(shutil.copytree, origin, staging, symlinks=True)
+            await asyncio.to_thread(_mirror_worktree, self.workdir(branch), staging)
+        except (OSError, shutil.Error) as exc:
+            if staging.exists():
+                await asyncio.to_thread(_remove_path, staging)
+            message = f"trusted patch staging failed: {exc}".encode()
+            return self._emit(
+                branch,
+                kind="diff",
+                cmd="compute patch in executor staging",
+                exit_code=1,
+                stderr_tail=_tail(message),
+                stdout_sha256=hashlib.sha256(b"").hexdigest(),
+                started_at=started,
+                duration_s=(_now() - started).total_seconds(),
+            )
+        git = (
+            f"{shlex.quote(str(self._git))} -c core.hooksPath=/dev/null "
+            "-c core.attributesFile=/dev/null "
+            "-c diff.external= -c core.quotePath=false"
+        )
+        command = (
+            f"{git} add -A && {git} diff --cached --binary --no-ext-diff "
+            f"--no-textconv --no-renames {shlex.quote(snapshot_sha)}"
+        )
+        display_cmd = f"compute patch in executor staging {staging.name}: {command}"
+        git_env = {
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "HOME": str(self.root),
+            "PATH": os.defpath,
+        }
+        stdout, stderr, code, timed_out, command_started, duration = await self._execute(
+            staging,
+            command,
+            120,
+            env_overrides=git_env,
+        )
+        await asyncio.to_thread(_remove_path, staging)
         if code != 0:
-            return self._emit(branch, kind="diff", cmd=cmd, exit_code=1,
+            return self._emit(branch, kind="diff", cmd=display_cmd, exit_code=1,
                               stdout_tail=_tail(stdout), stderr_tail=_tail(stderr),
                               stdout_sha256=hashlib.sha256(stdout).hexdigest(),
-                              started_at=started, duration_s=duration, timed_out=timed_out)
+                              started_at=command_started, duration_s=duration, timed_out=timed_out)
         patch_text = stdout.decode(errors="replace")
         seq = self._seq.get(branch.id, 0) + 1
         patch_path = self.root / "patches" / f"{branch.id}-{seq}-full.diff"
@@ -225,9 +336,9 @@ class LocalExecutor:
             update={"patch_path": str(patch_path)},
         )
         _, dropped = filter_patch(patch_text, self._protected_modules)
-        return self._emit(branch, kind="diff", cmd=cmd, exit_code=0,
+        return self._emit(branch, kind="diff", cmd=display_cmd, exit_code=0,
                           stdout_tail=patch_text[-TAIL:], stderr_tail=_tail(stderr),
-                          stdout_sha256=summary.patch_sha256, started_at=started,
+                          stdout_sha256=summary.patch_sha256, started_at=command_started,
                           duration_s=duration, timed_out=timed_out, diff=summary,
                           dropped_paths=dropped)
 
