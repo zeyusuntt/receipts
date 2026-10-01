@@ -67,15 +67,29 @@ def mirror_worktree(source: Path, destination: Path) -> None:
             _mirror_entry(child, destination / child.name)
 
 
-def patch_command(git: Path, snapshot_sha: str) -> str:
+def git_command(git: Path, *args: str) -> str:
     hardened_git = (
         f"{shlex.quote(str(git))} -c core.hooksPath=/dev/null "
         "-c core.attributesFile=/dev/null "
         "-c diff.external= -c core.quotePath=false"
     )
+    return " ".join((hardened_git, *(shlex.quote(arg) for arg in args)))
+
+
+def patch_command(git: Path, snapshot_sha: str) -> str:
+    diff = git_command(
+        git,
+        "diff",
+        "--cached",
+        "--binary",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--no-renames",
+        snapshot_sha,
+    )
     return (
-        f"{hardened_git} add -A && {hardened_git} diff --cached --binary "
-        f"--no-ext-diff --no-textconv --no-renames {shlex.quote(snapshot_sha)}"
+        f"{git_command(git, 'add', '-A')} && "
+        f"{diff}"
     )
 
 
@@ -86,4 +100,3 @@ def git_environment(root: Path) -> dict[str, str]:
         "HOME": str(root),
         "PATH": os.defpath,
     }
-

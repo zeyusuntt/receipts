@@ -45,7 +45,7 @@ class MemoryDaytonaApi:
         self._sandbox_number = 0
         self._snapshot_number = 0
 
-    def _new_sandbox(self, labels, files=None, modes=None):
+    def _new_sandbox(self, labels, files=None, modes=None, directories=None):
         if self.max_sandboxes is not None and len(self.sandboxes) >= self.max_sandboxes:
             raise RuntimeError(f"sandbox cap exceeded: {self.max_sandboxes}")
         self._sandbox_number += 1
@@ -54,6 +54,7 @@ class MemoryDaytonaApi:
             "labels": dict(labels),
             "files": deepcopy(files or {}),
             "modes": deepcopy(modes or {}),
+            "directories": deepcopy(directories or {}),
         }
         self.max_active_sandboxes = max(self.max_active_sandboxes, len(self.sandboxes))
         return self.module.DaytonaSandbox(id=sandbox_id)
@@ -61,14 +62,26 @@ class MemoryDaytonaApi:
     def replace_tree(self, sandbox_id, source, remote_root="/repo"):
         files = {}
         modes = {}
-        for path in source.rglob("*"):
-            if not path.is_file():
-                continue
-            remote_path = f"{remote_root}/{path.relative_to(source).as_posix()}"
-            files[remote_path] = path.read_bytes()
-            modes[remote_path] = stat.S_IMODE(path.stat().st_mode)
+        directories = {}
+        for directory, names, filenames in os.walk(source, followlinks=False):
+            directory_path = Path(directory)
+            for name in names:
+                path = directory_path / name
+                remote_path = f"{remote_root}/{path.relative_to(source).as_posix()}"
+                if path.is_symlink():
+                    directories[remote_path] = 0o777
+                else:
+                    directories[remote_path] = stat.S_IMODE(path.stat().st_mode)
+            for name in filenames:
+                path = directory_path / name
+                if path.is_symlink() and not path.exists():
+                    continue
+                remote_path = f"{remote_root}/{path.relative_to(source).as_posix()}"
+                files[remote_path] = path.read_bytes()
+                modes[remote_path] = stat.S_IMODE(path.stat().st_mode)
         self.sandboxes[sandbox_id]["files"] = files
         self.sandboxes[sandbox_id]["modes"] = modes
+        self.sandboxes[sandbox_id]["directories"] = directories
 
     def set_file(self, sandbox_id, path, content, mode=0o644):
         self.sandboxes[sandbox_id]["files"][path] = content
@@ -124,6 +137,7 @@ class MemoryDaytonaApi:
             labels,
             self.snapshots[snapshot]["files"],
             self.snapshots[snapshot]["modes"],
+            self.snapshots[snapshot]["directories"],
         )
 
     async def exec(self, sandbox_id, command, *, cwd, timeout_s, env=None):
@@ -205,7 +219,20 @@ class MemoryDaytonaApi:
 
     async def list_files(self, sandbox_id, path, *, depth):
         prefix = path.rstrip("/") + "/"
-        return [
+        directories = [
+            self.module.DaytonaFile(
+                path=directory_path,
+                is_dir=True,
+                mode="drwxr-xr-x",
+                permissions=f"{mode:04o}",
+                size=0,
+            )
+            for directory_path, mode in sorted(
+                self.sandboxes[sandbox_id]["directories"].items(),
+            )
+            if directory_path.startswith(prefix)
+        ]
+        files = [
             self.module.DaytonaFile(
                 path=file_path,
                 is_dir=False,
@@ -220,6 +247,7 @@ class MemoryDaytonaApi:
             for file_path, content in self.sandboxes[sandbox_id]["files"].items()
             if file_path.startswith(prefix)
         ]
+        return directories + files
 
     async def create_snapshot(self, sandbox_id, name, *, timeout_s):
         self._snapshot_number += 1
@@ -232,6 +260,7 @@ class MemoryDaytonaApi:
             "snapshot": snapshot,
             "files": deepcopy(self.sandboxes[sandbox_id]["files"]),
             "modes": deepcopy(self.sandboxes[sandbox_id]["modes"]),
+            "directories": deepcopy(self.sandboxes[sandbox_id]["directories"]),
         }
         return snapshot
 
@@ -274,6 +303,32 @@ def _executor(tmp_path, module, api=None, **kwargs):
         **kwargs,
     )
     return executor, fake, sink
+
+
+def _symlink_repository(path):
+    (path / "real-dir").mkdir(parents=True)
+    (path / "target.txt").write_text("target before\n")
+    (path / "unrelated.txt").write_text("unrelated before\n")
+    (path / "real-dir" / "nested.txt").write_text("nested\n")
+    (path / "file-link").symlink_to("target.txt")
+    (path / "directory-link").symlink_to("real-dir", target_is_directory=True)
+    (path / "dangling-link").symlink_to("missing.txt")
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=path, check=True)
+    subprocess.run(["git", "config", "user.name", "Fixture"], cwd=path, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "fixture@example.com"],
+        cwd=path,
+        check=True,
+    )
+    subprocess.run(["git", "add", "-A"], cwd=path, check=True)
+    subprocess.run(["git", "commit", "-qm", "base"], cwd=path, check=True)
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=path,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
 
 
 async def test_prepare_uses_default_resources_labels_bootstrap_and_setup(tmp_path):
@@ -484,6 +539,29 @@ async def test_fork_rejects_a_changed_snapshot_ref(tmp_path):
         await executor.fork(checkpoint, 1)
 
 
+async def test_checkpoint_restores_downloaded_symlinks_from_the_trusted_index(tmp_path):
+    module = _daytona_module()
+    repository = tmp_path / "repository"
+    snapshot_sha = _symlink_repository(repository)
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    api.replace_tree("sandbox-1", repository)
+    api.snapshot_sha = snapshot_sha
+    await executor.snapshot(base)
+    sandbox_commands = list(api.exec_calls)
+
+    checkpoint = await executor.checkpoint(base)
+
+    assert api.exec_calls == sandbox_commands
+    checkpoint_tree = executor._checkpoint_trees[checkpoint.id]
+    assert (checkpoint_tree / "file-link").is_symlink()
+    assert os.readlink(checkpoint_tree / "file-link") == "target.txt"
+    assert (checkpoint_tree / "directory-link").is_symlink()
+    assert os.readlink(checkpoint_tree / "directory-link") == "real-dir"
+    assert (checkpoint_tree / "dangling-link").is_symlink()
+    assert os.readlink(checkpoint_tree / "dangling-link") == "missing.txt"
+
+
 async def test_patch_downloads_tree_preserves_exec_bits_and_static_copies_symlinks(
     tmp_path,
 ):
@@ -514,6 +592,7 @@ async def test_patch_downloads_tree_preserves_exec_bits_and_static_copies_symlin
     api.replace_tree("sandbox-1", repository)
     api.snapshot_sha = snapshot_sha
     snapshot = await executor.snapshot(base)
+    sandbox_commands = list(api.exec_calls)
     checkpoint = await executor.checkpoint(base)
     (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
     agent_id = api.create_calls[-1]["labels"]["receipts_branch"]
@@ -539,12 +618,80 @@ async def test_patch_downloads_tree_preserves_exec_bits_and_static_copies_symlin
     assert "diff --git a/src/app.py b/src/app.py" in patch_text
     assert "diff --git a/bin/tool b/bin/tool" in patch_text
     assert "new file mode 100755" in patch_text
-    assert "diff --git a/link.py b/link.py" in patch_text
-    assert "link.py" in receipt.dropped_paths
+    assert "diff --git a/link.py b/link.py" not in patch_text
+    assert "link.py" not in receipt.dropped_paths
     assert receipt.tree_digest is not None
     assert not marker.exists()
+    assert api.exec_calls == sandbox_commands
     assert receipt.image_before == checkpoint.id
     assert receipt.image_after == agent.head == f"{checkpoint.id}#1"
+
+
+async def test_patch_keeps_checkpoint_symlinks_and_applies_to_fresh_repositories(tmp_path):
+    module = _daytona_module()
+    repository = tmp_path / "repository"
+    snapshot_sha = _symlink_repository(repository)
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    api.replace_tree("sandbox-1", repository)
+    api.snapshot_sha = snapshot_sha
+    snapshot = await executor.snapshot(base)
+    sandbox_commands = list(api.exec_calls)
+    checkpoint = await executor.checkpoint(base)
+    unrelated_agent, target_agent = await executor.fork(
+        checkpoint,
+        2,
+        prefix="agent",
+    )
+
+    unrelated_sandbox = executor._sandboxes[unrelated_agent.id]
+    api.set_file(unrelated_sandbox, "/repo/unrelated.txt", b"unrelated after\n")
+    unrelated_receipt = await executor.patch(unrelated_agent, snapshot.snapshot_sha)
+
+    assert unrelated_receipt.exit_code == 0 and unrelated_receipt.diff is not None
+    unrelated_patch = Path(unrelated_receipt.diff.patch_path).read_text()
+    assert unrelated_patch.count("diff --git ") == 1
+    assert "diff --git a/unrelated.txt b/unrelated.txt" in unrelated_patch
+    assert "file-link" not in unrelated_patch
+    assert "directory-link" not in unrelated_patch
+    assert "dangling-link" not in unrelated_patch
+
+    target_sandbox = executor._sandboxes[target_agent.id]
+    api.set_file(target_sandbox, "/repo/target.txt", b"target after\n")
+    api.set_file(target_sandbox, "/repo/file-link", b"target after\n")
+    target_receipt = await executor.patch(target_agent, snapshot.snapshot_sha)
+
+    assert target_receipt.exit_code == 0 and target_receipt.diff is not None
+    target_patch = Path(target_receipt.diff.patch_path).read_text()
+    assert target_patch.count("diff --git ") == 1
+    assert "diff --git a/target.txt b/target.txt" in target_patch
+    assert "file-link" not in target_patch
+    assert "directory-link" not in target_patch
+    assert "dangling-link" not in target_patch
+    assert api.exec_calls == sandbox_commands
+
+    for name, receipt in (
+        ("fresh-unrelated", unrelated_receipt),
+        ("fresh-target", target_receipt),
+    ):
+        fresh = tmp_path / name
+        subprocess.run(
+            ["git", "clone", "-q", "--no-hardlinks", str(repository), str(fresh)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "apply", "--index", receipt.diff.patch_path],
+            cwd=fresh,
+            check=True,
+        )
+        assert (fresh / "file-link").is_symlink()
+        assert (fresh / "directory-link").is_symlink()
+        assert (fresh / "dangling-link").is_symlink()
+
+    assert (tmp_path / "fresh-unrelated" / "unrelated.txt").read_text() == (
+        "unrelated after\n"
+    )
+    assert (tmp_path / "fresh-target" / "target.txt").read_text() == "target after\n"
 
 
 async def test_apply_patch_uploads_exact_bytes_and_runs_in_the_witness(tmp_path):

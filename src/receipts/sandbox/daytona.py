@@ -7,6 +7,12 @@ shape. Unit tests replace that boundary with an in-memory implementation.
 Daytona does not create an image for each command. Branch provenance therefore
 uses the immutable branch root followed by a local sequence number. A prepared
 branch starts at its sandbox id, and a fork starts at its snapshot ref.
+
+Daytona downloads file symlinks as regular files, directory symlinks as empty
+directories, and omits dangling symlinks. The executor reconstructs checkpoint
+symlinks from the trusted Git index and carries them unchanged into patch
+staging. Agent changes to a symlink itself are not captured. Changes to the
+link's target file are captured through the target file's own path.
 """
 
 from __future__ import annotations
@@ -51,7 +57,13 @@ from receipts.sandbox.protocol import (
     Source,
 )
 from receipts.sandbox.sink import ReceiptSink
-from receipts.sandbox.staging import git_environment, mirror_worktree, patch_command, remove_path
+from receipts.sandbox.staging import (
+    git_command,
+    git_environment,
+    mirror_worktree,
+    patch_command,
+    remove_path,
+)
 
 TAIL = 6000
 _LOG = logging.getLogger(__name__)
@@ -88,6 +100,25 @@ def _tree_digest(root: Path) -> str:
             )
     serialized = json.dumps(entries, ensure_ascii=True, separators=(",", ":")).encode()
     return hashlib.sha256(serialized).hexdigest()
+
+
+def _set_symlink(path: Path, target: str) -> None:
+    if os.path.lexists(path):
+        remove_path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.symlink_to(target)
+
+
+def _copy_checkpoint_symlinks(
+    checkpoint_tree: Path,
+    agent_tree: Path,
+    symlink_paths: tuple[Path, ...],
+) -> None:
+    for relative in symlink_paths:
+        source = checkpoint_tree / relative
+        if not source.is_symlink():
+            raise OSError(f"checkpoint symlink is unavailable: {relative.as_posix()}")
+        _set_symlink(agent_tree / relative, os.readlink(source))
 
 
 @dataclass(frozen=True)
@@ -456,6 +487,7 @@ class DaytonaExecutor:
         self._snapshots: dict[str, DaytonaSnapshot] = {}
         self._snapshot_specs: dict[str, _BranchSpec] = {}
         self._checkpoint_trees: dict[str, Path] = {}
+        self._checkpoint_symlinks: dict[str, tuple[Path, ...]] = {}
         self._fork_next: dict[str, int] = {}
         self._released_branches: set[str] = set()
         self._closed = False
@@ -669,6 +701,66 @@ class DaytonaExecutor:
             if missing:
                 rendered = ", ".join(sorted(missing))
                 raise OSError(f"Daytona omitted downloads: {rendered}")
+
+    async def _trusted_git(self, root: Path, *args: str) -> bytes:
+        command = git_command(self._git, *args)
+        stdout, stderr, code, timed_out, _, _ = await self._execute_host(
+            root,
+            command,
+            120,
+            env_overrides=git_environment(self.root),
+        )
+        if timed_out or code != 0:
+            detail = _tail(stderr) or _tail(stdout) or "no output"
+            raise OSError(f"trusted git command failed: {detail}")
+        return stdout
+
+    async def _restore_checkpoint_symlinks(self, checkpoint_tree: Path) -> tuple[Path, ...]:
+        if not os.path.lexists(checkpoint_tree / ".git"):
+            return ()
+        index = await self._trusted_git(checkpoint_tree, "ls-files", "-s", "-z")
+        symlink_paths: list[Path] = []
+        seen: set[Path] = set()
+        for record in index.split(b"\0"):
+            if not record:
+                continue
+            metadata, separator, path_bytes = record.partition(b"\t")
+            fields = metadata.split()
+            if not separator or not path_bytes or len(fields) != 3:
+                raise OSError("trusted git returned a malformed index entry")
+            mode, object_id, stage = fields
+            if mode != b"120000":
+                continue
+            if stage != b"0" or re.fullmatch(
+                rb"(?:[0-9a-f]{40}|[0-9a-f]{64})",
+                object_id,
+            ) is None:
+                raise OSError("trusted git returned an invalid symlink index entry")
+            relative = Path(os.fsdecode(path_bytes))
+            if relative.is_absolute() or any(
+                part in ("", ".", "..") for part in relative.parts
+            ):
+                raise OSError("trusted git returned an invalid symlink path")
+            if relative in seen:
+                raise OSError("trusted git returned a duplicate symlink path")
+            seen.add(relative)
+            target_bytes = await self._trusted_git(
+                checkpoint_tree,
+                "cat-file",
+                "blob",
+                object_id.decode("ascii"),
+            )
+            if not target_bytes or b"\0" in target_bytes:
+                raise OSError(
+                    f"trusted git returned an invalid symlink target: {relative.as_posix()}",
+                )
+            await asyncio.to_thread(
+                _set_symlink,
+                checkpoint_tree / relative,
+                os.fsdecode(target_bytes),
+            )
+            symlink_paths.append(relative)
+        return tuple(symlink_paths)
 
     async def _tree_digest(self, branch: Branch) -> str:
         destination = self.root / "staging" / f"digest-{branch.id}-{uuid.uuid4().hex[:12]}"
@@ -954,7 +1046,9 @@ class DaytonaExecutor:
             snapshot.ref.encode(),
         ).hexdigest()
         await self._download_tree(branch, checkpoint_tree)
+        symlink_paths = await self._restore_checkpoint_symlinks(checkpoint_tree)
         self._checkpoint_trees[snapshot.ref] = checkpoint_tree
+        self._checkpoint_symlinks[snapshot.ref] = symlink_paths
         return Checkpoint(id=snapshot.ref, parent=branch.head, digest=snapshot.ref)
 
     async def fork(
@@ -1003,7 +1097,8 @@ class DaytonaExecutor:
     async def patch(self, branch: Branch, snapshot_sha: str) -> Receipt:
         started = _now()
         checkpoint_tree = self._checkpoint_trees.get(branch.origin)
-        if checkpoint_tree is None:
+        checkpoint_symlinks = self._checkpoint_symlinks.get(branch.origin)
+        if checkpoint_tree is None or checkpoint_symlinks is None:
             message = f"trusted checkpoint tree is unavailable: {branch.origin}".encode()
             return self._emit(
                 branch,
@@ -1027,6 +1122,12 @@ class DaytonaExecutor:
                 symlinks=True,
             )
             await self._download_tree(branch, agent_tree)
+            await asyncio.to_thread(
+                _copy_checkpoint_symlinks,
+                checkpoint_tree,
+                agent_tree,
+                checkpoint_symlinks,
+            )
             tree_digest = await asyncio.to_thread(_tree_digest, agent_tree)
             await asyncio.to_thread(mirror_worktree, agent_tree, staging)
         except (OSError, shutil.Error) as exc:
