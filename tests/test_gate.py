@@ -119,3 +119,21 @@ def test_failing_rerun_does_not_clear_r2():
                     started_at=datetime(2026, 9, 30, tzinfo=timezone.utc), duration_s=0.1,
                     junit=gate_cases._junit([], failed=[gate_cases.P2]))
     assert evaluate(**kwargs, reruns=[rerun]).failed_predicate_ids() == ["R2_pass_to_pass"]
+
+
+def test_failed_apply_takes_precedence_and_reason_is_one_short_line():
+    kwargs, _ = gate_cases.honest_pass()
+    long_line = "checkpoint ckpt-x was modified after prepare " + "y" * 400
+    kwargs["apply"] = kwargs["apply"].model_copy(update={"exit_code": 1, "stderr_tail": long_line + "\nsecond line from the agent"})
+    kwargs["patch"] = kwargs["patch"].model_copy(update={"exit_code": 1})
+    v = evaluate(**kwargs)
+    assert v.status == "ERROR"
+    assert v.error == long_line[:200]
+    assert "second line" not in v.error
+
+
+def test_failed_apply_without_stderr_uses_constant_reason():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["apply"] = kwargs["apply"].model_copy(update={"exit_code": 1, "stderr_tail": "   "})
+    v = evaluate(**kwargs)
+    assert v.status == "ERROR" and v.error == "apply receipt is not a successful apply on the witness branch"

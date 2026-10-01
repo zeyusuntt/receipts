@@ -156,10 +156,11 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
              reruns: Sequence[Receipt] = (),
              allow_test_edits: bool = False, allow_config_edits: bool = False) -> Verdict:
     err = lambda reason: _error(branch_id, reason, claims, baseline, receipts)  # noqa: E731
+    if apply.branch_id != witness_id or apply.kind != "apply" or apply.exit_code != 0:
+        first_line = (apply.stderr_tail or "").strip().splitlines()[0][:200] if (apply.stderr_tail or "").strip() else ""
+        return err(first_line or "apply receipt is not a successful apply on the witness branch")
     if patch.branch_id != branch_id or patch.kind != "diff" or patch.exit_code != 0 or patch.diff is None:
         return err("patch receipt is not a successful diff on the agent branch")
-    if apply.branch_id != witness_id or apply.kind != "apply" or apply.exit_code != 0:
-        return err("apply receipt is not a successful apply on the witness branch")
     if verification is None:
         return err("verification receipt is missing")
     if verification.branch_id != witness_id or verification.kind != "verification":

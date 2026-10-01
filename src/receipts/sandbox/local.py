@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import os
 import shlex
 import shutil
@@ -35,12 +36,46 @@ from receipts.sandbox.sink import ReceiptSink
 TAIL = 6000
 
 
+class CheckpointTampered(Exception):
+    def __init__(self, checkpoint_id: str) -> None:
+        super().__init__(f"checkpoint {checkpoint_id} was modified after prepare")
+        self.checkpoint_id = checkpoint_id
+        self.patch_receipt: Receipt | None = None
+
+
 def _tail(data: bytes) -> str:
     return data.decode(errors="replace")[-TAIL:]
 
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _checkpoint_manifest_digest(entries: list[tuple[str, int, str]]) -> str:
+    serialized = json.dumps(sorted(entries), ensure_ascii=True, separators=(",", ":")).encode()
+    return hashlib.sha256(serialized).hexdigest()
+
+
+def _checkpoint_digest(root: Path) -> str:
+    entries: list[tuple[str, int, str]] = []
+
+    def visit(directory: Path) -> None:
+        for path in directory.iterdir():
+            mode = path.lstat().st_mode
+            if stat.S_ISLNK(mode):
+                content = os.fsencode(os.readlink(path))
+            elif stat.S_ISREG(mode):
+                content = path.read_bytes()
+            elif stat.S_ISDIR(mode):
+                content = b""
+            else:
+                raise OSError(f"unsupported checkpoint entry: {path}")
+            entries.append((path.relative_to(root).as_posix(), mode, hashlib.sha256(content).hexdigest()))
+            if stat.S_ISDIR(mode):
+                visit(path)
+
+    visit(root)
+    return _checkpoint_manifest_digest(entries)
 
 
 def _remove_path(path: Path) -> None:
@@ -103,6 +138,7 @@ class LocalExecutor:
         self.run_id = run_id
         self._seq: dict[str, int] = {}
         self._dirs: dict[str, Path] = {}  # branch id or checkpoint id -> directory
+        self._checkpoint_digests: dict[str, str] = {}
         self._fork_next: dict[str, int] = {}
         self._protected_modules = default_protected_modules()
         git_path = shutil.which("git")
@@ -146,6 +182,18 @@ class LocalExecutor:
         base = self.workdir(branch).resolve()
         target = (base / path).resolve()
         return target if target == base or base in target.parents else None
+
+    def _assert_checkpoint_intact(self, checkpoint_id: str, claimed_digest: str | None = None) -> None:
+        expected = self._checkpoint_digests.get(checkpoint_id)
+        checkpoint_dir = self._dirs.get(checkpoint_id)
+        if expected is None or checkpoint_dir is None or claimed_digest not in (None, expected):
+            raise CheckpointTampered(checkpoint_id)
+        try:
+            actual = _checkpoint_digest(checkpoint_dir)
+        except OSError as exc:
+            raise CheckpointTampered(checkpoint_id) from exc
+        if actual != expected:
+            raise CheckpointTampered(checkpoint_id)
 
     async def _execute(
         self,
@@ -226,10 +274,13 @@ class LocalExecutor:
         cp_id = f"ckpt-{uuid.uuid4().hex[:12]}"
         dest = self.root / cp_id
         await asyncio.to_thread(shutil.copytree, self.workdir(branch), dest, symlinks=True)
+        digest = await asyncio.to_thread(_checkpoint_digest, dest)
         self._dirs[cp_id] = dest
-        return Checkpoint(id=cp_id, parent=branch.head)
+        self._checkpoint_digests[cp_id] = digest
+        return Checkpoint(id=cp_id, parent=branch.head, digest=digest)
 
     async def fork(self, checkpoint: Checkpoint, n: int, prefix: str = "b") -> list[Branch]:
+        await asyncio.to_thread(self._assert_checkpoint_intact, checkpoint.id, checkpoint.digest)
         branches: list[Branch] = []
         first = self._fork_next.get(prefix, 1)
         for i in range(first, first + n):
@@ -283,6 +334,22 @@ class LocalExecutor:
         started = _now()
         staging = self.root / "staging" / f"{branch.id}-{uuid.uuid4().hex[:12]}"
         origin = self._dirs.get(branch.origin, self.workdir(branch))
+        if branch.origin in self._checkpoint_digests:
+            try:
+                await asyncio.to_thread(self._assert_checkpoint_intact, branch.origin)
+            except CheckpointTampered as exc:
+                message = str(exc).encode()
+                exc.patch_receipt = self._emit(
+                    branch,
+                    kind="diff",
+                    cmd="compute patch in executor staging",
+                    exit_code=1,
+                    stderr_tail=_tail(message),
+                    stdout_sha256=hashlib.sha256(b"").hexdigest(),
+                    started_at=started,
+                    duration_s=(_now() - started).total_seconds(),
+                )
+                raise
         try:
             await asyncio.to_thread(shutil.copytree, origin, staging, symlinks=True)
             await asyncio.to_thread(_mirror_worktree, self.workdir(branch), staging)
@@ -344,10 +411,24 @@ class LocalExecutor:
 
     async def apply_patch(self, branch: Branch, patch_text: str) -> Receipt:
         started = _now()
+        digest = hashlib.sha256(patch_text.encode()).hexdigest()
+        if branch.origin in self._checkpoint_digests:
+            try:
+                await asyncio.to_thread(self._assert_checkpoint_intact, branch.origin)
+            except CheckpointTampered as exc:
+                return self._emit(
+                    branch,
+                    kind="apply",
+                    cmd="apply filtered patch to witness",
+                    exit_code=1,
+                    stderr_tail=str(exc),
+                    patch_sha256=digest,
+                    started_at=started,
+                    duration_s=(_now() - started).total_seconds(),
+                )
         seq = self._seq.get(branch.id, 0) + 1
         patch_path = self.root / "patches" / f"{branch.id}-{seq}-apply.diff"
         patch_path.write_text(patch_text)
-        digest = hashlib.sha256(patch_text.encode()).hexdigest()
         # Checkpoints and forks are directory copies, so the copied git index carries stale
         # stat data and `git apply --index` refuses with "does not match index". Refresh first.
         # Found by the Sep 30 dry run of this plan; Token Factory images are copies too.

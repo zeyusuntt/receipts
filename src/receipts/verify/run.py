@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 from receipts.models import Baseline, Branch, Checkpoint, JunitSummary, Receipt
 from receipts.patchscope import default_protected_modules, filter_patch
+from receipts.sandbox.local import CheckpointTampered
 from receipts.sandbox.protocol import Executor
 
 
@@ -41,6 +42,36 @@ class BaselineTooSlow(Exception):
 
 class BaselineBroken(Exception):
     pass
+
+
+async def _checkpoint_error_attempt(
+    ex: Executor,
+    agent: Branch,
+    c0: Checkpoint,
+    attempt: int,
+    error: CheckpointTampered,
+    patch: Receipt | None,
+    filtered_patch: str,
+    filtered_sha256: str,
+    dropped: list[str],
+) -> Attempt:
+    if patch is None:
+        patch = error.patch_receipt
+    if patch is None:
+        raise RuntimeError("checkpoint tampering was raised without a patch receipt")
+    witness = Branch(id=f"w{attempt}", run_id=agent.run_id, head=c0.id, origin=c0.id)
+    apply = await ex.apply_patch(witness, filtered_patch)
+    if apply.exit_code != 1 or apply.stderr_tail != str(error):
+        raise RuntimeError("executor did not preserve the checkpoint tampering failure")
+    return Attempt(
+        patch=patch,
+        filtered_patch=filtered_patch,
+        filtered_sha256=filtered_sha256,
+        dropped=dropped,
+        witness=witness,
+        apply=apply,
+        verification=None,
+    )
 
 
 async def establish_baseline(ex: Executor, base: Branch, suite_scope: str, target: list[str], limit_s: int) -> Baseline:
@@ -72,15 +103,32 @@ async def establish_baseline(ex: Executor, base: Branch, suite_scope: str, targe
 
 async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_sha: str,
                          suite_scope: str, timeout_s: int, attempt: int) -> Attempt:
-    patch = await ex.patch(agent, snapshot_sha)
+    patch = None
     patch_text = ""
-    if patch.exit_code == 0 and patch.diff is not None and patch.diff.patch_path is not None:
-        patch_text = Path(patch.diff.patch_path).read_text()
-    protected_modules = default_protected_modules()
-    filtered_patch, dropped = filter_patch(patch_text, protected_modules)
-    filtered_sha256 = hashlib.sha256(filtered_patch.encode()).hexdigest()
+    filtered_patch = ""
+    dropped: list[str] = []
+    filtered_sha256 = hashlib.sha256(b"").hexdigest()
 
-    (witness,) = await ex.fork(c0, 1, prefix="w")
+    try:
+        patch = await ex.patch(agent, snapshot_sha)
+        if patch.exit_code == 0 and patch.diff is not None and patch.diff.patch_path is not None:
+            patch_text = Path(patch.diff.patch_path).read_text()
+        protected_modules = default_protected_modules()
+        filtered_patch, dropped = filter_patch(patch_text, protected_modules)
+        filtered_sha256 = hashlib.sha256(filtered_patch.encode()).hexdigest()
+        (witness,) = await ex.fork(c0, 1, prefix="w")
+    except CheckpointTampered as error:
+        return await _checkpoint_error_attempt(
+            ex,
+            agent,
+            c0,
+            attempt,
+            error,
+            patch,
+            filtered_patch,
+            filtered_sha256,
+            dropped,
+        )
     if witness.id != f"w{attempt}":
         raise RuntimeError(f"witness sequence mismatch: expected w{attempt}, got {witness.id}")
     apply = await ex.apply_patch(witness, filtered_patch)

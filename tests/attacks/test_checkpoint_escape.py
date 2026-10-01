@@ -1,9 +1,6 @@
-import pytest
-
 from .helpers import setup_attack, verify
 
 
-@pytest.mark.xfail(strict=True, reason="closed by Task H4")
 async def test_agent_mutates_checkpoint_test_and_gate_passes(tmp_path):
     attack = await setup_attack(tmp_path)
     command = '''python -c "from pathlib import Path; p=next(Path('..').glob('ckpt-*/tests/test_calc.py')); p.write_text(p.read_text().replace('== 2', '== 8'))"'''

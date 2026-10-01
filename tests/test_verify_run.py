@@ -107,6 +107,28 @@ async def test_gitignored_agent_edit_never_reaches_witness(tmp_path):
     assert result.verification.junit.failed == [T]
 
 
+async def test_checkpoint_tampering_returns_failed_witness_apply(tmp_path):
+    ex, base, sink = await _setup(tmp_path)
+    snapshot = await ex.snapshot(base)
+    c0 = await ex.checkpoint(base)
+    (agent,) = await ex.fork(c0, 1)
+    escaped = await ex.run(
+        agent,
+        "python -c \"from pathlib import Path; p=next(Path('..').glob('ckpt-*/tests/test_calc.py')); p.write_text('tampered\\n')\"",
+        timeout_s=30,
+    )
+    assert escaped.exit_code == 0
+
+    result = await verify_attempt(ex, agent, c0, snapshot.snapshot_sha, "tests", timeout_s=60, attempt=1)
+
+    assert result.witness.id == "w1"
+    assert result.apply.branch_id == "w1" and result.apply.kind == "apply"
+    assert result.apply.exit_code == 1
+    assert result.apply.stderr_tail == f"checkpoint {c0.id} was modified after prepare"
+    assert result.verification is None
+    assert sink.receipts[-1].model_dump() == result.apply.model_dump()
+
+
 async def test_rerun_one_targets_a_single_node_with_brackets_and_spaces(tmp_path):
     ex, base, _ = await _setup(tmp_path)
     snapshot = await ex.snapshot(base)

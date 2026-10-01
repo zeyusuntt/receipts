@@ -28,6 +28,7 @@ class Checkpoint(BaseModel):
     """An immutable filesystem state. On Token Factory this is an image uuid."""
     id: str
     parent: str | None = None
+    digest: str | None = None
 
 
 class Branch(BaseModel):

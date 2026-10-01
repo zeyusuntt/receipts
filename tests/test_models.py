@@ -68,5 +68,7 @@ def test_baseline_and_claims_construct():
                  protected=["t.py::a"], unstable=[], target=["t.py::b"])
     c = Claims(tests_run=True, target_tests_pass=True, full_suite_pass=False, files_changed=["src/x.py"])
     assert b.target == ["t.py::b"] and c.files_changed == ["src/x.py"]
-    Checkpoint(id="img-0", parent=None)
+    checkpoint = Checkpoint(id="img-0", parent=None)
+    assert checkpoint.digest is None
+    assert Checkpoint(id="img-1", parent="img-0", digest="abc").digest == "abc"
     Branch(id="b1", run_id="run-1", head="img-0", origin="img-0")

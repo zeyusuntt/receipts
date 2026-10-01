@@ -5,8 +5,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+import receipts.sandbox.local as local_sandbox
 from receipts.models import Receipt
-from receipts.sandbox.local import LocalExecutor
+from receipts.sandbox.local import CheckpointTampered, LocalExecutor
 from receipts.sandbox.protocol import RepoAtCommit
 from receipts.sandbox.sink import MemorySink, RunSink
 from tests.fixtures.repo_factory import make_repo
@@ -303,6 +306,59 @@ async def test_patch_then_apply_on_fresh_fork_reproduces_source(tmp_path):
     assert witness.id == "w1" and applied.kind == "apply" and applied.exit_code == 0
     assert applied.patch_sha256 == patch.diff.patch_sha256
     assert await ex.read_file(witness, "calc/__init__.py", 10_000) == fixed
+
+
+async def test_checkpoint_digest_is_stable_for_identical_copies(tmp_path):
+    ex, base = await _executor(tmp_path)
+
+    first = await ex.checkpoint(base)
+    second = await ex.checkpoint(base)
+
+    assert first.digest is not None and len(first.digest) == 64
+    assert second.digest == first.digest
+
+
+def test_checkpoint_digest_handles_surrogateescaped_path():
+    undecodable = os.fsdecode(b"invalid-\xff.py")
+
+    digest = local_sandbox._checkpoint_manifest_digest([(undecodable, 0o100644, "abc")])
+
+    assert len(digest) == 64
+
+
+async def test_fork_rejects_checkpoint_modified_from_agent_branch(tmp_path):
+    ex, base = await _executor(tmp_path)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    escaped = await ex.run(
+        agent,
+        "python -c \"from pathlib import Path; p=next(Path('..').glob('ckpt-*/tests/test_calc.py')); p.write_text('tampered\\n')\"",
+        timeout_s=30,
+    )
+    assert escaped.exit_code == 0
+
+    with pytest.raises(CheckpointTampered) as error:
+        await ex.fork(checkpoint, 1, prefix="w")
+
+    assert error.value.checkpoint_id == checkpoint.id
+
+
+async def test_patch_rejects_tampered_origin_checkpoint(tmp_path):
+    ex, base = await _executor(tmp_path)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    escaped = await ex.run(
+        agent,
+        "python -c \"from pathlib import Path; p=next(Path('..').glob('ckpt-*/calc/__init__.py')); p.chmod(0o755)\"",
+        timeout_s=30,
+    )
+    assert escaped.exit_code == 0
+
+    with pytest.raises(CheckpointTampered) as error:
+        await ex.patch(agent, snapshot.snapshot_sha)
+
+    assert error.value.checkpoint_id == checkpoint.id
 
 
 async def test_apply_garbage_patch_fails_without_changing_tree(tmp_path):
