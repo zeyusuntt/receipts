@@ -626,6 +626,41 @@ async def test_close_retains_failed_container_for_retry(tmp_path):
     assert executor._created_containers == []
 
 
+async def test_release_removes_container_once_and_refuses_run(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+
+    class ReleaseExecutor(docker_module.DockerExecutor):
+        def __init__(self):
+            super().__init__(tmp_path / "executor", MemorySink(), "release")
+            self.remove_calls = []
+
+        async def _docker(self, *args, **kwargs):
+            self.remove_calls.append(args)
+            return b"", b"", 0, False, None, 0.0
+
+    executor = ReleaseExecutor()
+    branch = Branch(
+        id="b1",
+        run_id="release",
+        head="sha256:" + "1" * 64,
+        origin="sha256:" + "0" * 64,
+    )
+    container = "release-b1"
+    executor._containers[branch.id] = container
+    executor._created_containers = [container]
+    executor._checkpoint_specs[branch.origin] = object()
+
+    await executor.release(branch)
+    await executor.release(branch)
+
+    assert executor.remove_calls == [("rm", "-f", container)]
+    assert branch.id not in executor._containers
+    assert executor._created_containers == []
+    assert branch.origin in executor._checkpoint_specs
+    with pytest.raises(RuntimeError, match="released Docker branch: b1"):
+        await executor.run(branch, "true", timeout_s=5)
+
+
 async def test_run_persists_full_stdout_log_without_a_docker_daemon(tmp_path):
     docker_module = importlib.import_module("receipts.sandbox.docker")
     expected = b"x" * 7000 + b"\xff"

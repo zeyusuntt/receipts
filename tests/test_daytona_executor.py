@@ -27,8 +27,10 @@ def _daytona_module():
 class MemoryDaytonaApi:
     """In-memory Daytona fake. No method reaches the network or a local shell."""
 
-    def __init__(self, module):
+    def __init__(self, module, max_sandboxes=None):
         self.module = module
+        self.max_sandboxes = max_sandboxes
+        self.max_active_sandboxes = 0
         self.sandboxes = {}
         self.snapshots = {}
         self.create_calls = []
@@ -44,6 +46,8 @@ class MemoryDaytonaApi:
         self._snapshot_number = 0
 
     def _new_sandbox(self, labels, files=None, modes=None):
+        if self.max_sandboxes is not None and len(self.sandboxes) >= self.max_sandboxes:
+            raise RuntimeError(f"sandbox cap exceeded: {self.max_sandboxes}")
         self._sandbox_number += 1
         sandbox_id = f"sandbox-{self._sandbox_number}"
         self.sandboxes[sandbox_id] = {
@@ -51,6 +55,7 @@ class MemoryDaytonaApi:
             "files": deepcopy(files or {}),
             "modes": deepcopy(modes or {}),
         }
+        self.max_active_sandboxes = max(self.max_active_sandboxes, len(self.sandboxes))
         return self.module.DaytonaSandbox(id=sandbox_id)
 
     def replace_tree(self, sandbox_id, source, remote_root="/repo"):
@@ -573,6 +578,44 @@ async def test_apply_patch_uploads_exact_bytes_and_runs_in_the_witness(tmp_path)
     assert receipt.tree_digest is not None
     assert receipt.image_before == checkpoint.id
     assert receipt.image_after == witness.head == f"{checkpoint.id}#1"
+
+
+async def test_release_deletes_sandbox_once_preserves_snapshot_and_refuses_run(tmp_path):
+    module = _daytona_module()
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    checkpoint = await executor.checkpoint(base)
+    (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
+    sandbox_id = executor._sandboxes[agent.id]
+
+    await executor.release(agent)
+    await executor.release(agent)
+
+    assert api.deleted_sandboxes.count(sandbox_id) == 1
+    assert agent.id not in executor._sandboxes
+    assert checkpoint.id in executor._snapshots
+    with pytest.raises(RuntimeError, match="released Daytona branch: agent1"):
+        await executor.run(agent, "true", timeout_s=5)
+
+
+async def test_release_stays_within_three_sandbox_cap_across_two_witnesses(tmp_path):
+    module = _daytona_module()
+    api = MemoryDaytonaApi(module, max_sandboxes=3)
+    executor, _, _ = _executor(tmp_path, module, api=api)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    checkpoint = await executor.checkpoint(base)
+
+    await executor.release(base)
+    (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
+    (first_witness,) = await executor.fork(checkpoint, 1, prefix="w")
+    await executor.release(first_witness)
+    (second_witness,) = await executor.fork(checkpoint, 1, prefix="w")
+    await executor.release(second_witness)
+    await executor.release(agent)
+
+    assert [first_witness.id, second_witness.id] == ["w1", "w2"]
+    assert api.max_active_sandboxes <= 3
+    assert api.sandboxes == {}
 
 
 async def test_close_deletes_tracked_and_label_swept_sandboxes_and_logs_snapshot_403(

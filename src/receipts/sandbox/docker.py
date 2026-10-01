@@ -243,6 +243,7 @@ class DockerExecutor:
         self._checkpoint_trees: dict[str, Path] = {}
         self._checkpoint_tree_locks: dict[str, asyncio.Lock] = {}
         self._fork_next: dict[str, int] = {}
+        self._released_branches: set[str] = set()
         self._created_containers: list[str] = []
         self._owner = uuid.uuid4().hex
         self._protected_modules = default_protected_modules()
@@ -469,18 +470,24 @@ class DockerExecutor:
             pass
 
     def _container(self, branch: Branch) -> str:
+        if branch.id in self._released_branches:
+            raise RuntimeError(f"released Docker branch: {branch.id}")
         try:
             return self._containers[branch.id]
         except KeyError as exc:
             raise RuntimeError(f"unknown Docker branch: {branch.id}") from exc
 
     def _spec(self, branch: Branch) -> _ContainerSpec:
+        if branch.id in self._released_branches:
+            raise RuntimeError(f"released Docker branch: {branch.id}")
         try:
             return self._specs[branch.id]
         except KeyError as exc:
             raise RuntimeError(f"unknown Docker branch: {branch.id}") from exc
 
     def _anchor(self, branch: Branch) -> _WorkdirAnchor:
+        if branch.id in self._released_branches:
+            raise RuntimeError(f"released Docker branch: {branch.id}")
         try:
             return self._anchors[branch.id]
         except KeyError as exc:
@@ -998,6 +1005,16 @@ class DockerExecutor:
             branches.append(branch)
         self._fork_next[prefix] = first + n
         return branches
+
+    async def release(self, branch: Branch) -> None:
+        if branch.id in self._released_branches:
+            return
+        container = self._container(branch)
+        await self._remove_created_container(container)
+        self._containers.pop(branch.id, None)
+        self._specs.pop(branch.id, None)
+        self._anchors.pop(branch.id, None)
+        self._released_branches.add(branch.id)
 
     async def patch(self, branch: Branch, snapshot_sha: str) -> Receipt:
         started = _now()

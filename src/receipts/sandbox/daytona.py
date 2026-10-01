@@ -457,6 +457,7 @@ class DaytonaExecutor:
         self._snapshot_specs: dict[str, _BranchSpec] = {}
         self._checkpoint_trees: dict[str, Path] = {}
         self._fork_next: dict[str, int] = {}
+        self._released_branches: set[str] = set()
         self._closed = False
         self._protected_modules = default_protected_modules()
 
@@ -522,12 +523,16 @@ class DaytonaExecutor:
         }
 
     def _sandbox_id(self, branch: Branch) -> str:
+        if branch.id in self._released_branches:
+            raise RuntimeError(f"released Daytona branch: {branch.id}")
         try:
             return self._sandboxes[branch.id]
         except KeyError as exc:
             raise RuntimeError(f"unknown Daytona branch: {branch.id}") from exc
 
     def _spec(self, branch: Branch) -> _BranchSpec:
+        if branch.id in self._released_branches:
+            raise RuntimeError(f"released Daytona branch: {branch.id}")
         try:
             return self._specs[branch.id]
         except KeyError as exc:
@@ -1138,6 +1143,25 @@ class DaytonaExecutor:
             timed_out=timed_out,
             tree_digest=tree_digest,
         )
+
+    async def release(self, branch: Branch) -> None:
+        if branch.id in self._released_branches:
+            return
+        sandbox_id = self._sandbox_id(branch)
+        try:
+            await self.api.delete_sandbox(sandbox_id, timeout_s=120)
+        except Exception as exc:
+            if self._status_code(exc) != 404:
+                raise
+        self._created_sandboxes = [
+            created_id
+            for created_id in self._created_sandboxes
+            if created_id != sandbox_id
+        ]
+        self._sandboxes.pop(branch.id, None)
+        self._specs.pop(branch.id, None)
+        self._roots.pop(branch.id, None)
+        self._released_branches.add(branch.id)
 
     @staticmethod
     def _status_code(exc: BaseException) -> int | None:

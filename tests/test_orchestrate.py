@@ -106,12 +106,34 @@ class _ImageSourceLocalExecutor:
         )
 
 
+class _ReleaseRecordingExecutor:
+    def __init__(self, inner, released: list[str]) -> None:
+        self.inner = inner
+        self.released = released
+
+    @property
+    def sink(self):
+        return self.inner.sink
+
+    @sink.setter
+    def sink(self, value):
+        self.inner.sink = value
+
+    def __getattr__(self, name: str):
+        return getattr(self.inner, name)
+
+    async def release(self, branch):
+        self.released.append(branch.id)
+        await self.inner.release(branch)
+
+
 async def _run(
     tmp_path: Path,
     model: FakeModel,
     *,
     appeals: int = 1,
     image_workdir: str | None = None,
+    released: list[str] | None = None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
@@ -127,6 +149,8 @@ async def _run(
     else:
         executor = _ImageSourceLocalExecutor(local, repo)
         source = ImageSource(image="fixture", workdir=image_workdir)
+    if released is not None:
+        executor = _ReleaseRecordingExecutor(executor, released)
     result = await orchestrate.fix(
         executor,
         model,
@@ -347,7 +371,8 @@ async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path)
         ],
     )
 
-    result, run_dir, _, model = await _run(tmp_path, model)
+    released: list[str] = []
+    result, run_dir, _, model = await _run(tmp_path, model, released=released)
 
     assert result.final_verdict.status == "PASS"
     assert [verdict.status for verdict in result.verdict_history] == [
@@ -359,8 +384,13 @@ async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path)
     assert r4.passed is False
     assert "tests/test_calc.py" in r4.evidence
     assert result.selected_patch_path == "attempts/2/filtered.diff"
+    assert released == ["base", "w1", "w2", "agent1"]
     assert (run_dir / "attempts" / "1" / "verdict.json").is_file()
     assert (run_dir / "attempts" / "2" / "verdict.json").is_file()
+    assert (run_dir / "attempts" / "1" / "witness" / "receipts.jsonl").is_file()
+    assert (run_dir / "attempts" / "2" / "witness" / "receipts.jsonl").is_file()
+    assert (run_dir / "agent" / "receipts.jsonl").is_file()
+    assert (run_dir / "result.json").is_file()
 
     appeal_request = next(
         request
@@ -438,3 +468,41 @@ async def test_no_fix_after_one_appeal_selects_no_verified_patch(tmp_path: Path)
     markdown = render(result)
     assert "**Verdict: NO VERIFIED FIX**" in markdown
     assert markdown.count("REJECTED") >= 2
+
+
+async def test_checkpoint_tampering_does_not_release_a_synthetic_witness(tmp_path: Path):
+    command = (
+        "python -c \"from pathlib import Path; "
+        "p=next(Path('..').glob('ckpt-*/tests/test_calc.py')); "
+        "p.write_text('tampered\\n')\""
+    )
+    model = _model(
+        [
+            _turn(
+                _call(
+                    "run_command",
+                    {"command": command},
+                    "tamper-checkpoint",
+                ),
+            ),
+            _finish(
+                "finish",
+                summary="No verified fix.",
+                changed=[],
+                green=False,
+            ),
+        ],
+    )
+    released: list[str] = []
+
+    result, run_dir, _, _ = await _run(
+        tmp_path,
+        model,
+        appeals=0,
+        released=released,
+    )
+
+    assert result.final_verdict.status == "ERROR"
+    assert released == ["base", "agent1"]
+    assert (run_dir / "attempts" / "1" / "verdict.json").is_file()
+    assert (run_dir / "result.json").is_file()

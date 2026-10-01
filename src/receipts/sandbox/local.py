@@ -115,6 +115,7 @@ class LocalExecutor:
         self._dirs: dict[str, Path] = {}  # branch id or checkpoint id -> directory
         self._checkpoint_digests: dict[str, str] = {}
         self._fork_next: dict[str, int] = {}
+        self._released_branches: set[str] = set()
         self._protected_modules = default_protected_modules()
         git_path = shutil.which("git")
         if git_path is None:
@@ -136,7 +137,12 @@ class LocalExecutor:
     # ----- helpers -----
 
     def workdir(self, branch: Branch) -> Path:
-        return self._dirs[branch.id]
+        if branch.id in self._released_branches:
+            raise RuntimeError(f"released Local branch: {branch.id}")
+        try:
+            return self._dirs[branch.id]
+        except KeyError as exc:
+            raise RuntimeError(f"unknown Local branch: {branch.id}") from exc
 
     @staticmethod
     def _new_image() -> str:
@@ -274,6 +280,16 @@ class LocalExecutor:
             branches.append(Branch(id=bid, run_id=self.run_id, head=checkpoint.id, origin=checkpoint.id))
         self._fork_next[prefix] = first + n
         return branches
+
+    async def release(self, branch: Branch) -> None:
+        if branch.id in self._released_branches:
+            return
+        if branch.id in self._checkpoint_digests:
+            raise RuntimeError(f"refusing to release Local checkpoint: {branch.id}")
+        workdir = self.workdir(branch)
+        await asyncio.to_thread(remove_path, workdir)
+        self._dirs.pop(branch.id, None)
+        self._released_branches.add(branch.id)
 
     async def run(self, branch: Branch, cmd: str, timeout_s: int) -> Receipt:
         stdout, stderr, code, timed_out, started, duration = await self._execute(self.workdir(branch), cmd, timeout_s)

@@ -456,6 +456,7 @@ async def fix(
                 f"(exit {snapshot.exit_code}, timed_out={snapshot.timed_out})",
             )
         checkpoint = await recording.checkpoint(base)
+        await recording.release(base)
         (agent,) = await recording.fork(checkpoint, 1, prefix="agent")
 
         plan, _ = await make_plan(
@@ -542,6 +543,8 @@ async def fix(
                     "agent/receipts.jsonl",
                     collector.for_branch(agent.id),
                 )
+                if verified.witness_provisioned:
+                    await recording.release(verified.witness)
 
                 if verdict.status == "PASS":
                     selected_patch_path = filtered_path
@@ -573,6 +576,7 @@ async def fix(
             agent_branch_id=agent.id,
         )
         run_directory.write_json("result.json", result)
+        await recording.release(agent)
         return result
     finally:
         if sink_replaced:

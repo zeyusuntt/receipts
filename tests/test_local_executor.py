@@ -435,6 +435,22 @@ async def test_fork_isolates_branches(tmp_path):
     assert [witness1.id, witness2.id] == ["w1", "w2"]
 
 
+async def test_release_removes_branch_but_preserves_checkpoint_and_refuses_run(tmp_path):
+    ex, base = await _executor(tmp_path)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    branch_dir = ex.workdir(agent)
+    checkpoint_dir = ex._dirs[checkpoint.id]
+
+    await ex.release(agent)
+    await ex.release(agent)
+
+    assert not branch_dir.exists()
+    assert checkpoint_dir.is_dir()
+    with pytest.raises(RuntimeError, match="released Local branch: b1"):
+        await ex.run(agent, "true", timeout_s=5)
+
+
 async def test_run_sink_routes_by_branch(tmp_path):
     run_dir = tmp_path / "run"
     ex, base = await _executor(tmp_path, RunSink(run_dir))

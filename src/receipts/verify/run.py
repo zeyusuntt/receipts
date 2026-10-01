@@ -23,6 +23,7 @@ class Attempt(BaseModel):
     filtered_sha256: str
     dropped: list[str]
     witness: Branch
+    witness_provisioned: bool
     apply: Receipt
     verification: Receipt | None
 
@@ -68,6 +69,7 @@ async def _checkpoint_error_attempt(
         filtered_sha256=filtered_sha256,
         dropped=dropped,
         witness=witness,
+        witness_provisioned=False,
         apply=apply,
         verification=None,
     )
@@ -135,7 +137,8 @@ async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_s
     if apply.exit_code == 0:
         verification = await ex.run_pytest(witness, suite_scope, timeout_s=timeout_s, kind="verification")
     return Attempt(patch=patch, filtered_patch=filtered_patch, filtered_sha256=filtered_sha256,
-                   dropped=dropped, witness=witness, apply=apply, verification=verification)
+                   dropped=dropped, witness=witness, witness_provisioned=True,
+                   apply=apply, verification=verification)
 
 
 async def rerun_one(ex: Executor, witness: Branch, node_id: str, timeout_s: int) -> Receipt:
