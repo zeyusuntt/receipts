@@ -231,6 +231,75 @@ async def test_timeout_is_infrastructure_error_even_if_log_looks_resolved(
     )
 
 
+class _UnavailableLogExecutor:
+    def __init__(self, inner: LocalExecutor, log_path: Path | None) -> None:
+        self.inner = inner
+        self.log_path = log_path
+
+    def __getattr__(self, name: str):
+        return getattr(self.inner, name)
+
+    async def run(self, branch, cmd: str, timeout_s: int) -> Receipt:
+        output = f"PASSED {TARGET}\nPASSED {PROTECTED}\n".encode()
+        started = datetime.now(timezone.utc)
+        before = branch.head
+        branch.head = "unavailable-log-image"
+        return Receipt(
+            receipt_id=f"{branch.id}-2",
+            seq=2,
+            branch_id=branch.id,
+            kind="command",
+            cmd=cmd,
+            exit_code=0,
+            stdout_tail=output.decode(),
+            stdout_sha256=hashlib.sha256(output).hexdigest(),
+            log_path=str(self.log_path) if self.log_path is not None else None,
+            started_at=started,
+            duration_s=0.1,
+            timed_out=False,
+            image_before=before,
+            image_after=branch.head,
+        )
+
+
+async def test_missing_full_log_is_infrastructure_error_and_tail_is_not_graded(
+    tmp_path: Path,
+):
+    executor, result, run_dir, instance = await _grading_case(
+        tmp_path,
+        [_source_patch(FIXED_CALC)],
+    )
+    unavailable = _UnavailableLogExecutor(executor, None)
+
+    (record,) = await grade_attempts(unavailable, result, run_dir, instance)
+
+    assert record.test_exit_code == 0
+    assert record.infra_error == "full log unavailable: receipt has no log_path"
+    assert record.judgement.resolved is False
+
+
+async def test_deleted_full_log_is_infrastructure_error_and_tail_is_not_graded(
+    tmp_path: Path,
+):
+    executor, result, run_dir, instance = await _grading_case(
+        tmp_path,
+        [_source_patch(FIXED_CALC)],
+    )
+    deleted_log = tmp_path / "deleted" / "full.log"
+    deleted_log.parent.mkdir(parents=True)
+    deleted_log.write_text("deleted", encoding="utf-8")
+    deleted_log.unlink()
+    unavailable = _UnavailableLogExecutor(executor, deleted_log)
+
+    (record,) = await grade_attempts(unavailable, result, run_dir, instance)
+
+    assert record.test_exit_code == 0
+    assert record.infra_error is not None
+    assert record.infra_error.startswith("full log unavailable: ")
+    assert str(deleted_log) in record.infra_error
+    assert record.judgement.resolved is False
+
+
 class _ReleaseRecordingExecutor:
     def __init__(self, inner: LocalExecutor, run_dir: Path) -> None:
         self.inner = inner

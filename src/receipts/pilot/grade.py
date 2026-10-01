@@ -30,17 +30,19 @@ class OfficialRecord(BaseModel):
     infra_error: str | None = None
 
 
-def _full_stdout(receipt: Receipt) -> bytes:
-    if receipt.log_path is not None:
-        try:
-            return Path(receipt.log_path).read_bytes()
-        except OSError:
-            pass
-    return receipt.stdout_tail.encode()
+def _full_stdout(receipt: Receipt) -> tuple[bytes | None, str | None]:
+    if receipt.log_path is None:
+        return None, "receipt has no log_path"
+    try:
+        return Path(receipt.log_path).read_bytes(), None
+    except OSError as exc:
+        return None, str(exc)
 
 
 def _apply_failure_output(receipt: Receipt) -> bytes:
-    output = _full_stdout(receipt)
+    output, _ = _full_stdout(receipt)
+    if output is None:
+        output = receipt.stdout_tail.encode()
     stderr = receipt.stderr_tail.encode()
     if not stderr:
         return output
@@ -103,11 +105,16 @@ async def grade_attempts(
                 official_command(instance),
                 timeout_s=timeout_s,
             )
-            output = _full_stdout(tested)
+            output, log_error = _full_stdout(tested)
+            if output is None:
+                output = b""
             log_path, log_sha256 = _write_log(run_dir, attempt.number, output)
             judgement = official_resolved(instance, output.decode(errors="replace"))
             infra_error = None
-            if tested.timed_out:
+            if log_error is not None:
+                judgement = judgement.model_copy(update={"resolved": False})
+                infra_error = f"full log unavailable: {log_error}"
+            elif tested.timed_out:
                 judgement = judgement.model_copy(update={"resolved": False})
                 infra_error = f"official test timed out after {timeout_s} seconds"
             records.append(
