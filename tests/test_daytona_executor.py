@@ -1,6 +1,11 @@
 import hashlib
 import importlib
 import logging
+import os
+import shlex
+import stat
+import subprocess
+import uuid
 from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
@@ -38,14 +43,31 @@ class MemoryDaytonaApi:
         self._sandbox_number = 0
         self._snapshot_number = 0
 
-    def _new_sandbox(self, labels, files=None):
+    def _new_sandbox(self, labels, files=None, modes=None):
         self._sandbox_number += 1
         sandbox_id = f"sandbox-{self._sandbox_number}"
         self.sandboxes[sandbox_id] = {
             "labels": dict(labels),
             "files": deepcopy(files or {}),
+            "modes": deepcopy(modes or {}),
         }
         return self.module.DaytonaSandbox(id=sandbox_id)
+
+    def replace_tree(self, sandbox_id, source, remote_root="/repo"):
+        files = {}
+        modes = {}
+        for path in source.rglob("*"):
+            if not path.is_file():
+                continue
+            remote_path = f"{remote_root}/{path.relative_to(source).as_posix()}"
+            files[remote_path] = path.read_bytes()
+            modes[remote_path] = stat.S_IMODE(path.stat().st_mode)
+        self.sandboxes[sandbox_id]["files"] = files
+        self.sandboxes[sandbox_id]["modes"] = modes
+
+    def set_file(self, sandbox_id, path, content, mode=0o644):
+        self.sandboxes[sandbox_id]["files"][path] = content
+        self.sandboxes[sandbox_id]["modes"][path] = mode
 
     async def create_from_image(
         self,
@@ -68,7 +90,11 @@ class MemoryDaytonaApi:
                 "timeout_s": timeout_s,
             },
         )
-        return self._new_sandbox(labels, {"/repo/original.txt": b"original\n"})
+        return self._new_sandbox(
+            labels,
+            {"/repo/original.txt": b"original\n"},
+            {"/repo/original.txt": 0o644},
+        )
 
     async def create_from_snapshot(
         self,
@@ -89,7 +115,11 @@ class MemoryDaytonaApi:
                 "timeout_s": timeout_s,
             },
         )
-        return self._new_sandbox(labels, self.snapshots[snapshot]["files"])
+        return self._new_sandbox(
+            labels,
+            self.snapshots[snapshot]["files"],
+            self.snapshots[snapshot]["modes"],
+        )
 
     async def exec(self, sandbox_id, command, *, cwd, timeout_s, env=None):
         self.exec_calls.append(
@@ -105,13 +135,36 @@ class MemoryDaytonaApi:
             raise self.module.DaytonaCommandTimeout(command)
         if command in self.command_results:
             return self.command_results[command]
+        if "/opt/receipts/receipts_pytest.py" in command:
+            report_arg = next(
+                token
+                for token in shlex.split(command)
+                if token.startswith("--junitxml=")
+            )
+            report_path = report_arg.split("=", 1)[1]
+            self.set_file(
+                sandbox_id,
+                report_path,
+                (
+                    b'<?xml version="1.0"?><testsuites><testsuite>'
+                    b'<testcase classname="tests.test_sample" name="test_ok" '
+                    b'file="tests/test_sample.py" />'
+                    b"</testsuite></testsuites>"
+                ),
+            )
+            return self.module.DaytonaCommandResult(
+                exit_code=0,
+                output="tests/test_sample.py::test_ok PASSED\n",
+            )
         if "git rev-parse HEAD" in command:
-            return self.module.DaytonaCommandResult(exit_code=0, output="a" * 40 + "\n")
+            snapshot_sha = getattr(self, "snapshot_sha", "a" * 40)
+            return self.module.DaytonaCommandResult(exit_code=0, output=snapshot_sha + "\n")
         return self.module.DaytonaCommandResult(exit_code=0, output=f"ran:{command}")
 
     async def upload_file(self, sandbox_id, content, remote_path, *, timeout_s):
         self.upload_calls.append((sandbox_id, content, remote_path, timeout_s))
         self.sandboxes[sandbox_id]["files"][remote_path] = bytes(content)
+        self.sandboxes[sandbox_id]["modes"][remote_path] = 0o644
 
     async def download_file(self, sandbox_id, remote_path, *, timeout_s):
         return self.sandboxes[sandbox_id]["files"].get(remote_path)
@@ -130,7 +183,9 @@ class MemoryDaytonaApi:
                 )
             else:
                 if request.destination is not None:
-                    Path(request.destination).write_bytes(content)
+                    destination = Path(request.destination)
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_bytes(content)
                     result = request.destination
                 else:
                     result = content
@@ -149,8 +204,12 @@ class MemoryDaytonaApi:
             self.module.DaytonaFile(
                 path=file_path,
                 is_dir=False,
-                mode="-rw-r--r--",
-                permissions="0644",
+                mode=(
+                    "-rwxr-xr-x"
+                    if self.sandboxes[sandbox_id]["modes"].get(file_path, 0o644) & 0o111
+                    else "-rw-r--r--"
+                ),
+                permissions=f"{self.sandboxes[sandbox_id]['modes'].get(file_path, 0o644):04o}",
                 size=len(content),
             )
             for file_path, content in self.sandboxes[sandbox_id]["files"].items()
@@ -167,6 +226,7 @@ class MemoryDaytonaApi:
         self.snapshots[name] = {
             "snapshot": snapshot,
             "files": deepcopy(self.sandboxes[sandbox_id]["files"]),
+            "modes": deepcopy(self.sandboxes[sandbox_id]["modes"]),
         }
         return snapshot
 
@@ -316,6 +376,38 @@ async def test_timeout_becomes_a_receipt_and_passes_the_explicit_timeout(tmp_pat
     assert receipt.image_after == "sandbox-1#1"
 
 
+async def test_run_pytest_uses_trusted_runner_and_reads_junit_through_fs(tmp_path):
+    module = _daytona_module()
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(
+        ImageSource(image="example:1", workdir="/repo", python="python3"),
+    )
+
+    receipt = await executor.run_pytest(
+        base,
+        "tests/test_sample.py::test_ok",
+        timeout_s=37,
+        kind="verification",
+    )
+
+    call = api.exec_calls[-1]
+    assert call["command"] == (
+        "python3 -I /opt/receipts/receipts_pytest.py "
+        "tests/test_sample.py::test_ok "
+        "-o junit_family=xunit1 -p no:cacheprovider -q -rA "
+        "--junitxml=/opt/receipts/reports/base-1.xml"
+    )
+    assert call["timeout_s"] == 37
+    assert call["env"] == {"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""}
+    assert receipt.kind == "verification" and receipt.exit_code == 0
+    assert receipt.junit is not None
+    assert receipt.junit.passed == ["tests/test_sample.py::test_ok"]
+    assert receipt.tree_digest is not None
+    assert receipt.image_before == "sandbox-1"
+    assert receipt.image_after == base.head == "sandbox-1#1"
+    assert Path(receipt.log_path).read_text() == "tests/test_sample.py::test_ok PASSED\n"
+
+
 @pytest.mark.parametrize("path", ["", ".", "../escape.py", "a/../escape.py", "/escape.py"])
 async def test_write_refuses_paths_outside_the_repository(tmp_path, path):
     module = _daytona_module()
@@ -385,6 +477,102 @@ async def test_fork_rejects_a_changed_snapshot_ref(tmp_path):
 
     with pytest.raises(CheckpointTampered, match="modified after prepare"):
         await executor.fork(checkpoint, 1)
+
+
+async def test_patch_downloads_tree_preserves_exec_bits_and_static_copies_symlinks(
+    tmp_path,
+):
+    module = _daytona_module()
+    repository = tmp_path / "repository"
+    (repository / "src").mkdir(parents=True)
+    (repository / "src" / "app.py").write_text("VALUE = 1\n")
+    (repository / "link.py").symlink_to("src/app.py")
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=repository, check=True)
+    subprocess.run(["git", "config", "user.name", "Fixture"], cwd=repository, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "fixture@example.com"],
+        cwd=repository,
+        check=True,
+    )
+    subprocess.run(["git", "add", "-A"], cwd=repository, check=True)
+    subprocess.run(["git", "commit", "-qm", "base"], cwd=repository, check=True)
+    snapshot_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repository,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    api.replace_tree("sandbox-1", repository)
+    api.snapshot_sha = snapshot_sha
+    snapshot = await executor.snapshot(base)
+    checkpoint = await executor.checkpoint(base)
+    (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
+    agent_id = api.create_calls[-1]["labels"]["receipts_branch"]
+    assert agent_id == agent.id
+    sandbox_id = executor._sandboxes[agent.id]
+    api.set_file(sandbox_id, "/repo/src/app.py", b"VALUE = 2\n")
+    api.set_file(sandbox_id, "/repo/link.py", b"VALUE = 2\n")
+    api.set_file(sandbox_id, "/repo/bin/tool", b"#!/bin/sh\nexit 0\n", 0o755)
+    marker = tmp_path / "hostile-diff-ran"
+    api.set_file(
+        sandbox_id,
+        "/repo/.git/config",
+        (
+            repository.joinpath(".git/config").read_bytes()
+            + f"\n[diff]\n\texternal = printf ran > {marker}\n".encode()
+        ),
+    )
+
+    receipt = await executor.patch(agent, snapshot.snapshot_sha)
+
+    assert receipt.exit_code == 0 and receipt.diff is not None
+    patch_text = Path(receipt.diff.patch_path).read_text()
+    assert "diff --git a/src/app.py b/src/app.py" in patch_text
+    assert "diff --git a/bin/tool b/bin/tool" in patch_text
+    assert "new file mode 100755" in patch_text
+    assert "diff --git a/link.py b/link.py" in patch_text
+    assert "link.py" in receipt.dropped_paths
+    assert receipt.tree_digest is not None
+    assert not marker.exists()
+    assert receipt.image_before == checkpoint.id
+    assert receipt.image_after == agent.head == f"{checkpoint.id}#1"
+
+
+async def test_apply_patch_uploads_exact_bytes_and_runs_in_the_witness(tmp_path):
+    module = _daytona_module()
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    checkpoint = await executor.checkpoint(base)
+    (witness,) = await executor.fork(checkpoint, 1, prefix="w")
+    patch_text = (
+        "diff --git a/original.txt b/original.txt\n"
+        "--- a/original.txt\n"
+        "+++ b/original.txt\n"
+        "@@ -1 +1 @@\n"
+        "-original\n"
+        "+changed\n"
+    )
+
+    receipt = await executor.apply_patch(witness, patch_text)
+
+    uploaded = api.upload_calls[-1]
+    assert uploaded[1] == patch_text.encode()
+    assert uploaded[2] == "/opt/receipts/w1-1-apply.diff"
+    call = api.exec_calls[-1]
+    assert call["command"] == (
+        "git update-index -q --refresh; "
+        "git apply --index /opt/receipts/w1-1-apply.diff"
+    )
+    assert call["cwd"] == "/repo"
+    assert receipt.kind == "apply" and receipt.exit_code == 0
+    assert receipt.patch_sha256 == hashlib.sha256(patch_text.encode()).hexdigest()
+    assert receipt.tree_digest is not None
+    assert receipt.image_before == checkpoint.id
+    assert receipt.image_after == witness.head == f"{checkpoint.id}#1"
 
 
 async def test_close_deletes_tracked_and_label_swept_sandboxes_and_logs_snapshot_403(
@@ -599,3 +787,56 @@ async def test_async_daytona_adapter_uses_the_installed_sdk_signatures(tmp_path)
     assert client.snapshot.deleted == [snapshot.id]
     await adapter.close()
     assert client.closed is True
+
+
+def test_tree_digest_ignores_git_file_and_tracks_content_and_exec_mode(tmp_path):
+    module = _daytona_module()
+    tree = tmp_path / "tree"
+    tree.mkdir()
+    git_pointer = tree / ".git"
+    git_pointer.write_text("gitdir: /first\n")
+    source = tree / "tool.py"
+    source.write_text("VALUE = 1\n")
+
+    initial = module._tree_digest(tree)
+    git_pointer.write_text("gitdir: /second\n")
+    git_changed = module._tree_digest(tree)
+    source.write_text("VALUE = 2\n")
+    content_changed = module._tree_digest(tree)
+    source.chmod(0o755)
+    mode_changed = module._tree_digest(tree)
+
+    assert git_changed == initial
+    assert content_changed != initial
+    assert mode_changed != content_changed
+
+
+@pytest.mark.live
+async def test_live_daytona_prepare_checkpoint_fork_isolation_and_cleanup(tmp_path):
+    api_key = os.environ.get("DAYTONA_API_KEY")
+    if os.environ.get("RECEIPTS_LIVE") != "1" or not api_key:
+        pytest.skip("set RECEIPTS_LIVE=1 and DAYTONA_API_KEY to run Daytona live")
+
+    module = _daytona_module()
+    from daytona import AsyncDaytona, DaytonaConfig
+
+    client = AsyncDaytona(DaytonaConfig(api_key=api_key))
+    api = module.AsyncDaytonaApi(client)
+    executor = module.DaytonaExecutor(
+        tmp_path / "executor",
+        MemorySink(),
+        f"live-{uuid.uuid4().hex[:12]}",
+        api,
+        ttl_minutes=30,
+    )
+    try:
+        base = await executor.prepare(
+            ImageSource(image="python:3.12-slim", workdir="/tmp", python="python"),
+        )
+        checkpoint = await executor.checkpoint(base)
+        first, second = await executor.fork(checkpoint, 2)
+        await executor.write_file(first, "receipts-only-first.txt", "first\n")
+        assert await executor.read_file(first, "receipts-only-first.txt", 100) == "first\n"
+        assert await executor.read_file(second, "receipts-only-first.txt", 100) == ""
+    finally:
+        await executor.close()

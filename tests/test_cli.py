@@ -21,6 +21,7 @@ from receipts.orchestrate import (
     RunInput,
     RunResult,
 )
+from receipts.sandbox.protocol import ImageSource
 from tests.fixtures.repo_factory import make_repo
 
 
@@ -258,6 +259,85 @@ def test_fix_runs_offline_with_fake_model_and_local_executor(
     assert result["final_verdict"]["status"] == "PASS"
     assert "**Verdict: VERIFIED**" in output
     assert TARGET in output
+
+
+def test_fix_builds_daytona_executor_for_an_image_source(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+):
+    import receipts.cli as cli
+
+    issue_file = tmp_path / "issue.txt"
+    issue_file.write_text("Repair the formatter.\n", encoding="utf-8")
+    run_dir = tmp_path / "run"
+    captured = {}
+
+    class FakeDaytonaClient:
+        def __init__(self, config):
+            captured["config"] = config
+
+    class FakeDaytonaExecutor:
+        def __init__(self, root, sink, run_id, api):
+            captured["executor"] = self
+            captured["root"] = root
+            captured["sink"] = sink
+            captured["run_id"] = run_id
+            captured["api"] = api
+            self.closed = False
+
+        async def close(self):
+            self.closed = True
+
+    async def fake_fix(executor, model, source, issue, tests, suite, out):
+        captured["source"] = source
+        captured["issue"] = issue
+        captured["tests"] = tests
+        captured["suite"] = suite
+        captured["out"] = out
+        return _sample_result()
+
+    monkeypatch.setenv("DAYTONA_API_KEY", "test-daytona-key")
+    monkeypatch.setattr(cli, "AsyncDaytona", FakeDaytonaClient)
+    monkeypatch.setattr(cli, "DaytonaExecutor", FakeDaytonaExecutor)
+    monkeypatch.setattr(cli, "fix", fake_fix)
+
+    status = main(
+        [
+            "fix",
+            "--image",
+            "swerebench/example:1",
+            "--workdir",
+            "/example",
+            "--python",
+            "python3",
+            "--test",
+            TARGET,
+            "--issue-file",
+            str(issue_file),
+            "--suite",
+            "tests/test_calc.py",
+            "--executor",
+            "daytona",
+            "--out",
+            str(run_dir),
+        ],
+        model=_honest_model(),
+    )
+
+    assert status == 0
+    assert captured["config"].api_key == "test-daytona-key"
+    assert captured["source"] == ImageSource(
+        image="swerebench/example:1",
+        workdir="/example",
+        python="python3",
+    )
+    assert captured["issue"] == "Repair the formatter."
+    assert captured["tests"] == [TARGET]
+    assert captured["suite"] == "tests/test_calc.py"
+    assert captured["out"] == run_dir
+    assert captured["executor"].closed is True
+    assert "**Verdict: VERIFIED**" in capsys.readouterr().out
 
 
 def test_show_prints_the_serialized_run_receipt(tmp_path: Path, capsys):

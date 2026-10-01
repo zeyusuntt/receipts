@@ -11,10 +11,17 @@ branch starts at its sandbox id, and a fork starts at its snapshot ref.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import json
 import logging
+import os
 import posixpath
 import re
+import shlex
+import shutil
+import signal
+import stat
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -32,14 +39,18 @@ from daytona import (
     Resources,
 )
 
-from receipts.models import Branch, Checkpoint, Receipt
+from receipts.junit import parse_junit
+from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
+from receipts.patchscope import default_protected_modules, filter_patch, summarize_patch
 from receipts.sandbox.protocol import (
     PYTEST_BOOTSTRAP,
+    PYTEST_FLAGS,
     CheckpointTampered,
     ImageSource,
     Source,
 )
 from receipts.sandbox.sink import ReceiptSink
+from receipts.sandbox.staging import git_environment, mirror_worktree, patch_command, remove_path
 
 TAIL = 6000
 _LOG = logging.getLogger(__name__)
@@ -51,6 +62,31 @@ def _now() -> datetime:
 
 def _tail(data: bytes) -> str:
     return data.decode(errors="replace")[-TAIL:]
+
+
+def _tree_digest(root: Path) -> str:
+    entries: list[tuple[str, int, str]] = []
+    for directory, names, filenames in os.walk(root, followlinks=False):
+        names[:] = sorted(name for name in names if name != ".git")
+        directory_path = Path(directory)
+        for filename in sorted(name for name in filenames if name != ".git"):
+            path = directory_path / filename
+            mode = path.lstat().st_mode
+            if stat.S_ISLNK(mode):
+                content = os.fsencode(os.readlink(path))
+            elif stat.S_ISREG(mode):
+                content = path.read_bytes()
+            else:
+                content = b""
+            entries.append(
+                (
+                    path.relative_to(root).as_posix(),
+                    stat.S_IMODE(mode),
+                    hashlib.sha256(content).hexdigest(),
+                ),
+            )
+    serialized = json.dumps(entries, ensure_ascii=True, separators=(",", ":")).encode()
+    return hashlib.sha256(serialized).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -413,14 +449,26 @@ class DaytonaExecutor:
         self._created_sandboxes: list[str] = []
         self._snapshots: dict[str, DaytonaSnapshot] = {}
         self._snapshot_specs: dict[str, _BranchSpec] = {}
+        self._checkpoint_trees: dict[str, Path] = {}
         self._fork_next: dict[str, int] = {}
         self._closed = False
+        self._protected_modules = default_protected_modules()
+
+        git_path = shutil.which("git")
+        if git_path is None:
+            raise RuntimeError("git executable not found")
+        self._git = Path(git_path).resolve()
+        bash_path = shutil.which("bash", path=os.defpath)
+        if bash_path is None:
+            raise RuntimeError("bash executable not found")
+        self._bash = Path(bash_path).resolve()
 
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "logs").mkdir(exist_ok=True)
         (self.root / "reports").mkdir(exist_ok=True)
         (self.root / "patches").mkdir(exist_ok=True)
         (self.root / "staging").mkdir(exist_ok=True)
+        (self.root / "checkpoints").mkdir(exist_ok=True)
 
     def _validate_configuration(self) -> None:
         if min(self.resources.cpu, self.resources.memory, self.resources.disk) <= 0:
@@ -533,6 +581,145 @@ class DaytonaExecutor:
             timed_out = False
         return output, exit_code, timed_out, started, (_now() - started).total_seconds()
 
+    def _relative_remote_path(self, branch: Branch, remote_path: str) -> Path | None:
+        normalized = PurePosixPath(posixpath.normpath(remote_path))
+        workdir = PurePosixPath(self._spec(branch).workdir)
+        try:
+            relative = normalized.relative_to(workdir)
+        except ValueError as exc:
+            raise OSError(f"Daytona listed a path outside the repository: {remote_path}") from exc
+        if not relative.parts:
+            return None
+        if any(part in ("", ".", "..") for part in relative.parts):
+            raise OSError(f"Daytona listed an invalid repository path: {remote_path}")
+        return Path(*relative.parts)
+
+    async def _download_tree(self, branch: Branch, destination: Path) -> None:
+        if destination.exists():
+            await asyncio.to_thread(remove_path, destination)
+        destination.mkdir(parents=True)
+        entries = await self.api.list_files(
+            self._sandbox_id(branch),
+            self._spec(branch).workdir,
+            depth=64,
+        )
+        files: list[tuple[DaytonaFile, Path]] = []
+        seen: set[Path] = set()
+        for entry in entries:
+            relative = self._relative_remote_path(branch, entry.path)
+            if relative is None:
+                continue
+            if relative in seen:
+                raise OSError(f"Daytona listed a duplicate repository path: {entry.path}")
+            seen.add(relative)
+            target = destination / relative
+            if entry.is_dir:
+                target.mkdir(parents=True, exist_ok=True)
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                files.append((entry, target))
+
+        for offset in range(0, len(files), 500):
+            batch = files[offset : offset + 500]
+            requests = [
+                DaytonaDownloadRequest(entry.path, str(target))
+                for entry, target in batch
+            ]
+            responses = await self.api.download_files(
+                self._sandbox_id(branch),
+                requests,
+                timeout_s=self.file_timeout_s,
+            )
+            expected = {entry.path: (entry, target) for entry, target in batch}
+            completed: set[str] = set()
+            for response in responses:
+                item = expected.get(response.source)
+                if item is None or response.source in completed:
+                    raise OSError(f"Daytona returned an unexpected download: {response.source}")
+                completed.add(response.source)
+                entry, target = item
+                if response.error is not None:
+                    raise OSError(
+                        f"Daytona could not download {response.source}: {response.error}",
+                    )
+                if isinstance(response.result, bytes):
+                    target.write_bytes(response.result)
+                if not target.is_file() or target.is_symlink():
+                    raise OSError(f"Daytona did not download a regular file: {response.source}")
+                try:
+                    remote_mode = int(entry.permissions, 8)
+                except ValueError as exc:
+                    raise OSError(
+                        f"Daytona returned invalid permissions for {entry.path}: {entry.permissions}",
+                    ) from exc
+                local_mode = stat.S_IMODE(target.stat().st_mode)
+                target.chmod((local_mode & ~0o111) | (remote_mode & 0o111))
+            missing = set(expected) - completed
+            if missing:
+                rendered = ", ".join(sorted(missing))
+                raise OSError(f"Daytona omitted downloads: {rendered}")
+
+    async def _tree_digest(self, branch: Branch) -> str:
+        destination = self.root / "staging" / f"digest-{branch.id}-{uuid.uuid4().hex[:12]}"
+        try:
+            await self._download_tree(branch, destination)
+            return await asyncio.to_thread(_tree_digest, destination)
+        finally:
+            if destination.exists():
+                await asyncio.to_thread(remove_path, destination)
+
+    async def _execute_host(
+        self,
+        workdir: Path,
+        command: str,
+        timeout_s: int,
+        *,
+        env_overrides: dict[str, str] | None = None,
+    ) -> tuple[bytes, bytes, int | None, bool, datetime, float]:
+        env = {
+            "PATH": os.defpath,
+            "HOME": str(self.root),
+            "LANG": "C.UTF-8",
+        }
+        if env_overrides:
+            env.update(env_overrides)
+        started = _now()
+        process = await asyncio.create_subprocess_exec(
+            str(self._bash),
+            "-c",
+            command,
+            cwd=workdir,
+            env=env,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            start_new_session=True,
+        )
+        timed_out = False
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout_s)
+            exit_code: int | None = process.returncode
+        except asyncio.TimeoutError:
+            timed_out = True
+            exit_code = None
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            stdout, stderr = await process.communicate()
+        else:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        return (
+            stdout,
+            stderr,
+            exit_code,
+            timed_out,
+            started,
+            (_now() - started).total_seconds(),
+        )
+
     async def prepare(self, source: Source) -> Branch:
         if self._sandboxes:
             raise RuntimeError("DaytonaExecutor.prepare may only be called once")
@@ -610,6 +797,54 @@ class DaytonaExecutor:
             started_at=started,
             duration_s=duration,
             timed_out=timed_out,
+        )
+
+    async def run_pytest(
+        self,
+        branch: Branch,
+        args: str,
+        timeout_s: int,
+        kind: ReceiptKind = "command",
+    ) -> Receipt:
+        seq = self._seq.get(branch.id, 0) + 1
+        spec = self._spec(branch)
+        remote_report = f"/opt/receipts/reports/{branch.id}-{seq}.xml"
+        local_report = self.root / "reports" / f"{branch.id}-{seq}.xml"
+        local_report.unlink(missing_ok=True)
+        command = (
+            f"{shlex.quote(spec.python)} -I /opt/receipts/receipts_pytest.py "
+            f"{args} {PYTEST_FLAGS} --junitxml={shlex.quote(remote_report)}"
+        )
+        output, code, timed_out, started, duration = await self._execute(
+            branch,
+            command,
+            timeout_s,
+            env={"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""},
+        )
+        report = await self.api.download_file(
+            self._sandbox_id(branch),
+            remote_report,
+            timeout_s=self.file_timeout_s,
+        )
+        if report is not None:
+            local_report.write_bytes(report)
+        junit = parse_junit(local_report if local_report.exists() else None)
+        log_path = self._write_log(branch, output)
+        tree_digest = await self._tree_digest(branch)
+        return self._emit(
+            branch,
+            kind=kind,
+            cmd=command,
+            exit_code=code,
+            stdout_tail=_tail(output),
+            stderr_tail="",
+            stdout_sha256=hashlib.sha256(output).hexdigest(),
+            log_path=str(log_path),
+            started_at=started,
+            duration_s=duration,
+            timed_out=timed_out,
+            junit=junit,
+            tree_digest=tree_digest,
         )
 
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:
@@ -704,6 +939,11 @@ class DaytonaExecutor:
             raise RuntimeError("Daytona returned a snapshot without a ref")
         self._snapshots[snapshot.ref] = snapshot
         self._snapshot_specs[snapshot.ref] = self._spec(branch)
+        checkpoint_tree = self.root / "checkpoints" / hashlib.sha256(
+            snapshot.ref.encode(),
+        ).hexdigest()
+        await self._download_tree(branch, checkpoint_tree)
+        self._checkpoint_trees[snapshot.ref] = checkpoint_tree
         return Checkpoint(id=snapshot.ref, parent=branch.head, digest=snapshot.ref)
 
     async def fork(
@@ -748,6 +988,150 @@ class DaytonaExecutor:
             branches.append(branch)
             self._fork_next[prefix] = index + 1
         return branches
+
+    async def patch(self, branch: Branch, snapshot_sha: str) -> Receipt:
+        started = _now()
+        checkpoint_tree = self._checkpoint_trees.get(branch.origin)
+        if checkpoint_tree is None:
+            message = f"trusted checkpoint tree is unavailable: {branch.origin}".encode()
+            return self._emit(
+                branch,
+                kind="diff",
+                cmd="compute patch in executor staging",
+                exit_code=1,
+                stderr_tail=_tail(message),
+                stdout_sha256=hashlib.sha256(b"").hexdigest(),
+                started_at=started,
+                duration_s=(_now() - started).total_seconds(),
+            )
+
+        token = uuid.uuid4().hex[:12]
+        staging = self.root / "staging" / f"{branch.id}-{token}"
+        agent_tree = self.root / "staging" / f"{branch.id}-{token}-agent"
+        try:
+            await asyncio.to_thread(
+                shutil.copytree,
+                checkpoint_tree,
+                staging,
+                symlinks=True,
+            )
+            await self._download_tree(branch, agent_tree)
+            tree_digest = await asyncio.to_thread(_tree_digest, agent_tree)
+            await asyncio.to_thread(mirror_worktree, agent_tree, staging)
+        except (OSError, shutil.Error) as exc:
+            for path in (agent_tree, staging):
+                if path.exists():
+                    await asyncio.to_thread(remove_path, path)
+            message = f"trusted patch staging failed: {exc}".encode()
+            return self._emit(
+                branch,
+                kind="diff",
+                cmd="compute patch in executor staging",
+                exit_code=1,
+                stderr_tail=_tail(message),
+                stdout_sha256=hashlib.sha256(b"").hexdigest(),
+                started_at=started,
+                duration_s=(_now() - started).total_seconds(),
+            )
+
+        command = patch_command(self._git, snapshot_sha)
+        display_command = f"compute patch in executor staging {staging.name}: {command}"
+        try:
+            stdout, stderr, code, timed_out, command_started, duration = (
+                await self._execute_host(
+                    staging,
+                    command,
+                    120,
+                    env_overrides=git_environment(self.root),
+                )
+            )
+        finally:
+            for path in (agent_tree, staging):
+                if path.exists():
+                    await asyncio.to_thread(remove_path, path)
+        if code != 0:
+            return self._emit(
+                branch,
+                kind="diff",
+                cmd=display_command,
+                exit_code=1,
+                stdout_tail=_tail(stdout),
+                stderr_tail=_tail(stderr),
+                stdout_sha256=hashlib.sha256(stdout).hexdigest(),
+                started_at=command_started,
+                duration_s=duration,
+                timed_out=timed_out,
+                tree_digest=tree_digest,
+            )
+
+        patch_text = stdout.decode(errors="replace")
+        seq = self._seq.get(branch.id, 0) + 1
+        patch_path = self.root / "patches" / f"{branch.id}-{seq}-full.diff"
+        patch_path.write_text(patch_text)
+        summary = summarize_patch(patch_text, self._protected_modules).model_copy(
+            update={"patch_path": str(patch_path)},
+        )
+        _, dropped = filter_patch(patch_text, self._protected_modules)
+        return self._emit(
+            branch,
+            kind="diff",
+            cmd=display_command,
+            exit_code=0,
+            stdout_tail=patch_text[-TAIL:],
+            stderr_tail=_tail(stderr),
+            stdout_sha256=summary.patch_sha256,
+            started_at=command_started,
+            duration_s=duration,
+            timed_out=timed_out,
+            tree_digest=tree_digest,
+            diff=summary,
+            dropped_paths=dropped,
+        )
+
+    async def apply_patch(self, branch: Branch, patch_text: str) -> Receipt:
+        started = _now()
+        digest = hashlib.sha256(patch_text.encode()).hexdigest()
+        seq = self._seq.get(branch.id, 0) + 1
+        local_patch = self.root / "patches" / f"{branch.id}-{seq}-apply.diff"
+        local_patch.write_text(patch_text)
+        remote_patch = f"/opt/receipts/{branch.id}-{seq}-apply.diff"
+        await self.api.upload_file(
+            self._sandbox_id(branch),
+            patch_text.encode(),
+            remote_patch,
+            timeout_s=self.file_timeout_s,
+        )
+        command = (
+            "git update-index -q --refresh; "
+            f"git apply --index {shlex.quote(remote_patch)}"
+        )
+        if patch_text:
+            output, code, timed_out, command_started, duration = await self._execute(
+                branch,
+                command,
+                120,
+            )
+        else:
+            output = b""
+            code = 0
+            timed_out = False
+            command_started = started
+            duration = (_now() - started).total_seconds()
+        tree_digest = await self._tree_digest(branch)
+        return self._emit(
+            branch,
+            kind="apply",
+            cmd=command,
+            exit_code=code,
+            stdout_tail=_tail(output),
+            stderr_tail="",
+            stdout_sha256=hashlib.sha256(output).hexdigest(),
+            patch_sha256=digest,
+            started_at=command_started,
+            duration_s=duration,
+            timed_out=timed_out,
+            tree_digest=tree_digest,
+        )
 
     @staticmethod
     def _status_code(exc: BaseException) -> int | None:

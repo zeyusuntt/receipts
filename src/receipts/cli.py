@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import shutil
 import tempfile
 import uuid
@@ -12,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
+from daytona import AsyncDaytona, DaytonaConfig
 
 from receipts.llm import (
     ModelClient,
@@ -21,9 +23,10 @@ from receipts.llm import (
 )
 from receipts.orchestrate import RunResult, fix
 from receipts.receipt_text import render
+from receipts.sandbox.daytona import AsyncDaytonaApi, DaytonaExecutor
 from receipts.sandbox.docker import DockerExecutor
 from receipts.sandbox.local import LocalExecutor
-from receipts.sandbox.protocol import RepoAtCommit
+from receipts.sandbox.protocol import ImageSource, RepoAtCommit
 from receipts.sandbox.sink import RunSink
 
 
@@ -39,8 +42,11 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     fix_parser = commands.add_parser("fix", help="run an agent and verify its patch")
-    fix_parser.add_argument("--repo", required=True, help="repository path or URL")
-    fix_parser.add_argument("--commit", required=True, help="commit to check out")
+    fix_parser.add_argument("--repo", help="repository path or URL")
+    fix_parser.add_argument("--commit", help="commit to check out")
+    fix_parser.add_argument("--image", help="container image for the Daytona executor")
+    fix_parser.add_argument("--workdir", help="repository path inside the Daytona image")
+    fix_parser.add_argument("--python", default="python", help="Python executable in the image")
     fix_parser.add_argument(
         "--test",
         action="append",
@@ -53,7 +59,7 @@ def _parser() -> argparse.ArgumentParser:
     fix_parser.add_argument("--suite", default="tests", help="pytest suite arguments")
     fix_parser.add_argument(
         "--executor",
-        choices=("local", "docker"),
+        choices=("local", "docker", "daytona"),
         default="local",
     )
     fix_parser.add_argument("--out", required=True, type=Path)
@@ -133,11 +139,22 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
         load_config(env_path=Path(".env")),
         env_path=Path(".env"),
     )
-    source = RepoAtCommit(
-        url=args.repo,
-        commit=args.commit,
-        install_cmd=args.install,
-    )
+    if args.executor == "daytona":
+        if not args.image or not args.workdir:
+            raise ValueError("--image and --workdir are required for the Daytona executor")
+        source = ImageSource(
+            image=args.image,
+            workdir=args.workdir,
+            python=args.python,
+        )
+    else:
+        if not args.repo or not args.commit:
+            raise ValueError("--repo and --commit are required for local and Docker executors")
+        source = RepoAtCommit(
+            url=args.repo,
+            commit=args.commit,
+            install_cmd=args.install,
+        )
     run_id = f"receipts-{uuid.uuid4().hex[:12]}"
 
     with tempfile.TemporaryDirectory(prefix="receipts-executor-") as executor_root:
@@ -153,8 +170,27 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
                 args.suite,
                 args.out,
             )
-        else:
+        elif args.executor == "docker":
             executor = DockerExecutor(Path(executor_root), sink, run_id)
+            try:
+                result = await fix(
+                    executor,
+                    selected_model,
+                    source,
+                    issue,
+                    args.tests,
+                    args.suite,
+                    args.out,
+                )
+            finally:
+                await executor.close()
+        else:
+            dotenv = _parse_dotenv(Path(".env"))
+            api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY")
+            if not api_key:
+                raise ValueError("DAYTONA_API_KEY is required for the Daytona executor")
+            api = AsyncDaytonaApi(AsyncDaytona(DaytonaConfig(api_key=api_key)))
+            executor = DaytonaExecutor(Path(executor_root), sink, run_id, api)
             try:
                 result = await fix(
                     executor,
