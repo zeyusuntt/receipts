@@ -464,3 +464,25 @@ async def test_run_sink_routes_by_branch(tmp_path):
     assert [Receipt.model_validate_json(l).seq for l in lines1] == [1, 2]
     assert [json.loads(l)["branch_id"] for l in lines2] == ["b2"]
     assert (run_dir / "branches" / "base" / "receipts.jsonl").exists()
+
+
+async def test_run_pytest_reports_invocation_relative_ids_when_the_rootdir_is_nested(tmp_path):
+    import subprocess
+
+    from receipts.sandbox.local import LocalExecutor
+    from receipts.sandbox.protocol import RepoAtCommit
+    from receipts.sandbox.sink import MemorySink
+
+    repo = tmp_path / "nested"
+    (repo / "pkg" / "tests").mkdir(parents=True)
+    (repo / "pkg" / "setup.cfg").write_text("[tool:pytest]\naddopts =\n")
+    (repo / "pkg" / "tests" / "test_k.py").write_text("def test_a():\n    assert True\n")
+    for args in (["init", "-q"], ["add", "-A"], ["-c", "user.email=f@x", "-c", "user.name=f", "commit", "-q", "-m", "nested"]):
+        subprocess.run(["git", *args], cwd=repo, check=True)
+    ex = LocalExecutor(root=tmp_path / "work", sink=MemorySink(), run_id="run-1")
+    base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"))
+
+    receipt = await ex.run_pytest(base, "pkg/tests/test_k.py", timeout_s=120)
+
+    assert receipt.exit_code == 0
+    assert receipt.junit.passed == ["pkg/tests/test_k.py::test_a"]

@@ -80,5 +80,47 @@ if untrusted:
     print(f"receipts: untrusted pytest at {pytest_path}", file=sys.stderr)
     raise SystemExit(4)
 sys.path.insert(0, worktree)
-raise SystemExit(pytest.main(sys.argv[1:]))
+
+
+class _ReceiptsDirs:
+    # Records pytest's rootdir and invocation dir, which junit xml leaves out.
+
+    rootdir = None
+    invocation = None
+
+    def pytest_configure(self, config):
+        root = getattr(config, "rootpath", None) or getattr(config, "rootdir", None)
+        params = getattr(config, "invocation_params", None)
+        invocation = getattr(params, "dir", None) if params is not None else getattr(config, "invocation_dir", None)
+        self.rootdir = os.path.realpath(str(root)) if root is not None else None
+        self.invocation = os.path.realpath(str(invocation)) if invocation is not None else worktree
+
+
+dirs = _ReceiptsDirs()
+code = pytest.main(sys.argv[1:], plugins=[dirs])
+
+xml_path = None
+args = sys.argv[1:]
+for index, arg in enumerate(args):
+    for option in ("--junitxml", "--junit-xml"):
+        if arg.startswith(option + "="):
+            xml_path = arg.split("=", 1)[1]
+        elif arg == option and index + 1 < len(args):
+            xml_path = args[index + 1]
+if xml_path and dirs.rootdir and os.path.isfile(xml_path):
+    try:
+        import xml.etree.ElementTree as ET
+
+        tree = ET.parse(xml_path)
+        for suite in tree.getroot().iter("testsuite"):
+            properties = suite.find("properties")
+            if properties is None:
+                properties = ET.Element("properties")
+                suite.insert(0, properties)
+            ET.SubElement(properties, "property", name="receipts_rootdir", value=dirs.rootdir)
+            ET.SubElement(properties, "property", name="receipts_invocation_dir", value=dirs.invocation)
+        tree.write(xml_path, encoding="utf-8", xml_declaration=True)
+    except Exception as exc:
+        print(f"receipts: could not annotate junit: {exc}", file=sys.stderr)
+raise SystemExit(code)
 """

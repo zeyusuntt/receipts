@@ -7,6 +7,7 @@ remaining dotted components are the class chain.
 
 from __future__ import annotations
 
+import posixpath
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -33,14 +34,30 @@ def parse_junit(path: Path | None) -> JunitSummary | None:
     errors: list[str] = []
     skipped: list[str] = []
     collection_errors: list[str] = []
+    # The trusted runner records where pytest's rootdir and invocation dir are. pytest
+    # writes junit paths relative to the rootdir but prints node ids (and SWE-rebench
+    # records them) relative to the invocation dir, so rebase to the printed form.
+    properties = {prop.get("name"): prop.get("value") for prop in root.iter("property")}
+    rootdir = properties.get("receipts_rootdir")
+    invocation = properties.get("receipts_invocation_dir")
+
+    def rebase(file: str) -> str:
+        if not file or not rootdir or not invocation or rootdir == invocation:
+            return file
+        return posixpath.relpath(posixpath.join(rootdir, file), invocation)
+
     for case in root.iter("testcase"):
         error = case.find("error")
         if error is not None and error.get("message") == "collection failure" and not case.get("classname"):
             # pytest reports a test file that failed to import as one pseudo test case named
             # after the file. It is a file-level error, never a test id.
-            collection_errors.append(case.get("file") or case.get("name", "").replace(".", "/") + ".py")
+            collection_errors.append(rebase(case.get("file") or case.get("name", "").replace(".", "/") + ".py"))
             continue
-        nid = node_id(case.get("file", ""), case.get("classname", ""), case.get("name", ""))
+        file = case.get("file", "")
+        nid = node_id(file, case.get("classname", ""), case.get("name", ""))
+        rebased = rebase(file)
+        if rebased != file and nid.startswith(file + "::"):
+            nid = rebased + nid[len(file):]
         if case.find("failure") is not None:
             failed.append(nid)
         elif case.find("error") is not None:

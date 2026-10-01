@@ -63,3 +63,20 @@ def test_collection_failure_is_a_file_level_error_not_a_test(tmp_path):
     assert j.outcome("tests/test_new.py::TestNew::test_case[1]") == "error"
     # A test in a file that collected fine but is absent is still missing.
     assert j.outcome("tests/test_old.py::test_gone") == "missing"
+
+
+NESTED_ROOTDIR_XML = """<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="1" skipped="0" tests="3"><properties><property name="receipts_rootdir" value="/repo/pkg" /><property name="receipts_invocation_dir" value="/repo" /></properties><testcase classname="tests.test_k" name="test_a" file="tests/test_k.py" time="0.001" /><testcase classname="tests.test_k.TestK" name="test_b" file="tests/test_k.py" time="0.001"><failure message="boom">x</failure></testcase><testcase classname="" name="tests.test_new" file="tests/test_new.py" time="0.000"><error message="collection failure">ImportError</error></testcase></testsuite></testsuites>"""
+
+
+def test_ids_are_relative_to_the_invocation_dir_like_pytest_terminal_output(tmp_path):
+    """pytest writes junit paths relative to its rootdir but prints node ids relative
+    to where it was invoked; SWE-rebench ids come from the printed form."""
+    path = tmp_path / "junit.xml"
+    path.write_text(NESTED_ROOTDIR_XML)
+
+    j = parse_junit(path)
+
+    assert j.passed == ["pkg/tests/test_k.py::test_a"]
+    assert j.failed == ["pkg/tests/test_k.py::TestK::test_b"]
+    assert j.collection_errors == ["pkg/tests/test_new.py"]
+    assert j.outcome("pkg/tests/test_new.py::test_new") == "error"
