@@ -5,6 +5,7 @@ import importlib
 import importlib.util
 import io
 import json
+import re
 import subprocess
 from pathlib import Path
 from types import ModuleType
@@ -182,7 +183,18 @@ async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path
 
     first_request = model.requests[0]
     tool_names = [tool["function"]["name"] for tool in first_request["tools"]]
-    assert tool_names == ["read_file", "write_file", "run_command", "finish"]
+    assert tool_names == [
+        "read_file",
+        "edit_file",
+        "write_file",
+        "run_command",
+        "finish",
+    ]
+    assert (
+        "Use read_file to inspect files (by line range for long files), "
+        "edit_file to change existing files, write_file to create new files, "
+        "and run_command to run tests and other commands."
+    ) in first_request["messages"][0]["content"]
     finish_schema = first_request["tools"][-1]["function"]["parameters"]
     assert set(finish_schema["properties"]["claims"]["properties"]) == {
         "tests_run",
@@ -282,7 +294,7 @@ async def test_unsupported_tool_argument_is_ignored_with_a_note(tmp_path: Path):
         _turn(
             _call(
                 "read_file",
-                {"path": "calc/__init__.py", "view_range": [1, 20]},
+                {"path": "calc/__init__.py", "unsupported": True},
                 "read-extra",
             ),
         ),
@@ -319,9 +331,222 @@ async def test_unsupported_tool_argument_is_ignored_with_a_note(tmp_path: Path):
         if message.get("tool_call_id") == "read-extra"
     )
     assert result.splitlines()[0] == (
-        "note: ignored unsupported argument(s): view_range"
+        "note: ignored unsupported argument(s): unsupported"
     )
     assert "def add" in result
+
+
+def _large_file_repo(tmp_path: Path) -> tuple[Path, list[str]]:
+    repo = make_repo(tmp_path / "source")
+    lines = [f"line {number:03d} " + ("x" * 32) + "\n" for number in range(1, 601)]
+    (repo / "large.txt").write_text("".join(lines))
+    subprocess.run(["git", "add", "large.txt"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "large line fixture"],
+        cwd=repo,
+        check=True,
+    )
+    return repo, lines
+
+
+async def test_read_file_without_range_reports_and_continues_truncated_file(
+    tmp_path: Path,
+):
+    repo, _ = _large_file_repo(tmp_path)
+    turns = [_turn(_call("read_file", {"path": "large.txt"}, "read-large"))]
+    worker, instance, _, _, _, _, _ = await _fixture_worker(
+        tmp_path / "run",
+        turns,
+        repo=repo,
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    result = next(
+        message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id") == "read-large"
+    )
+    assert len(result.encode()) <= 12_000
+    header = result.splitlines()[0]
+    match = re.fullmatch(r"\[large\.txt: lines 1-(\d+) of 600\]", header)
+    assert match is not None
+    last_line = int(match.group(1))
+    assert 1 <= last_line < 600
+    assert f"line {last_line:03d} " in result
+    assert f"line {last_line + 1:03d} " not in result
+    assert result.endswith(
+        f"[truncated: call read_file with start_line={last_line + 1} to continue]",
+    )
+
+
+async def test_read_file_range_returns_only_requested_lines(tmp_path: Path):
+    repo, lines = _large_file_repo(tmp_path)
+    turns = [
+        _turn(
+            _call(
+                "read_file",
+                {"path": "large.txt", "start_line": 200, "end_line": 202},
+                "read-range",
+            ),
+        ),
+    ]
+    worker, instance, _, _, _, _, _ = await _fixture_worker(
+        tmp_path / "run",
+        turns,
+        repo=repo,
+    )
+
+    await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    result = next(
+        message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id") == "read-range"
+    )
+    assert result == (
+        "[large.txt: lines 200-202 of 600]\n"
+        + "".join(lines[199:202])
+        + "[truncated: call read_file with start_line=203 to continue]"
+    )
+
+
+@pytest.mark.parametrize("view_range", [[200, 202], "[200, 202]"])
+async def test_read_file_accepts_view_range_alias_without_note(
+    tmp_path: Path,
+    view_range: list[int] | str,
+):
+    repo, lines = _large_file_repo(tmp_path)
+    turns = [
+        _turn(
+            _call(
+                "read_file",
+                {"path": "large.txt", "view_range": view_range},
+                "read-range",
+            ),
+        ),
+    ]
+    worker, instance, _, _, _, _, _ = await _fixture_worker(
+        tmp_path / "run",
+        turns,
+        repo=repo,
+    )
+
+    await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    result = next(
+        message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id") == "read-range"
+    )
+    assert not result.startswith("note:")
+    assert result == (
+        "[large.txt: lines 200-202 of 600]\n"
+        + "".join(lines[199:202])
+        + "[truncated: call read_file with start_line=203 to continue]"
+    )
+
+
+async def test_read_file_missing_path_returns_not_found_header(tmp_path: Path):
+    turns = [_turn(_call("read_file", {"path": "missing.py"}, "read-missing"))]
+    worker, instance, _, _, _, _, _ = await _fixture_worker(tmp_path, turns)
+
+    await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    result = next(
+        message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id") == "read-missing"
+    )
+    assert result == "[missing.py: not found]"
+
+
+async def test_edit_file_writes_only_for_one_exact_occurrence(tmp_path: Path):
+    turns = [
+        _turn(
+            _call(
+                "edit_file",
+                {
+                    "path": "calc/__init__.py",
+                    "old_text": (
+                        "def sub(a, b):\n"
+                        "    return a + b  # bug: should be a - b\n"
+                    ),
+                    "new_text": "def sub(a, b):\n    return a - b\n",
+                },
+                "edit-one",
+            ),
+        ),
+        _turn(
+            _call(
+                "edit_file",
+                {
+                    "path": "calc/__init__.py",
+                    "old_text": "not present",
+                    "new_text": "unused",
+                },
+                "edit-zero",
+            ),
+        ),
+        _turn(
+            _call(
+                "edit_file",
+                {
+                    "path": "calc/__init__.py",
+                    "old_text": "def ",
+                    "new_text": "function ",
+                },
+                "edit-two",
+            ),
+        ),
+        _turn(
+            _call(
+                "finish",
+                {
+                    "summary": "Made one targeted edit.",
+                    "claims": _claims(changed=["calc/__init__.py"], green=False),
+                },
+                "finish",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, branch, sink, _ = await _fixture_worker(
+        tmp_path,
+        turns,
+    )
+
+    outcome = await instance.attempt(worker.WorkerBudget(max_completion_tokens=100))
+
+    assert outcome.end == "finished"
+    content = await executor.read_file(branch, "calc/__init__.py", 2_000_000)
+    assert "return a - b" in content
+    assert "function " not in content
+    results = {
+        message["tool_call_id"]: message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id", "").startswith("edit-")
+    }
+    assert results == {
+        "edit-one": "ok",
+        "edit-zero": "edit refused: old_text not found",
+        "edit-two": "edit refused: old_text occurs 2 times; include more context",
+    }
+    write_receipts = [
+        receipt
+        for receipt in sink.receipts
+        if receipt.branch_id == branch.id and receipt.kind == "write"
+    ]
+    assert len(write_receipts) == 1
+    assert outcome.receipt_ids == [write_receipts[0].receipt_id]
 
 
 async def test_only_first_of_two_tool_calls_runs(tmp_path: Path):
@@ -386,7 +611,10 @@ async def test_three_consecutive_protocol_errors_end_the_attempt(tmp_path: Path)
     assert outcome.turns == 3
     repair = model.requests[1]["messages"][-1]
     assert repair["role"] == "user"
-    assert "one tool call" in repair["content"].lower()
+    assert repair["content"] == (
+        "Respond with exactly one tool call. The available tools are "
+        "read_file, edit_file, write_file, run_command, finish."
+    )
     invalid_result = next(
         message["content"]
         for message in instance.messages
@@ -489,7 +717,8 @@ async def test_unknown_tool_gets_tool_list_and_worker_recovers(tmp_path: Path):
     assert unknown_result["role"] == "tool"
     assert unknown_result["tool_call_id"] == "unknown-1"
     assert unknown_result["content"] == (
-        "unknown tool, the tools are read_file, write_file, run_command, finish"
+        "unknown tool, the tools are read_file, edit_file, write_file, "
+        "run_command, finish"
     )
 
 

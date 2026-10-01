@@ -11,7 +11,7 @@ import shlex
 import time
 from typing import Any, Literal, TextIO
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from receipts.llm import AssistantTurn, ModelClient, ToolCall
 from receipts.models import Branch, Claims, Receipt
@@ -22,7 +22,7 @@ SYSTEM_PROMPT = """\
 You are an autonomous coding agent operating on a git repository.
 Act only by calling the supplied tools, exactly one tool per turn.
 Do not ask the user questions. Tests and pytest configuration are read-only.
-Use read_file to inspect files, write_file to make source changes, and run_command to test them.
+Use read_file to inspect files (by line range for long files), edit_file to change existing files, write_file to create new files, and run_command to run tests and other commands.
 When the task is done, call finish with a concise summary and accurate claims.
 """
 
@@ -32,16 +32,18 @@ APPEAL_INSTRUCTION = (
 )
 
 _READ_MAX_BYTES = 12_000
+_READ_FETCH_MAX_BYTES = 2_000_000
 _COMMAND_OUTPUT_CHARS = 6_000
 _COMMAND_TIMEOUT_S = 300
-_TOOL_NAMES = ("read_file", "write_file", "run_command", "finish")
+_TOOL_NAMES = ("read_file", "edit_file", "write_file", "run_command", "finish")
 _ONE_CALL_REPLY = "one tool call per turn; only the first was run"
 _FREE_TEXT_REPAIR = (
     "Respond with exactly one tool call. The available tools are "
-    "read_file, write_file, run_command, finish."
+    "read_file, edit_file, write_file, run_command, finish."
 )
 _UNKNOWN_TOOL_REPLY = (
-    "unknown tool, the tools are read_file, write_file, run_command, finish"
+    "unknown tool, the tools are read_file, edit_file, write_file, "
+    "run_command, finish"
 )
 
 
@@ -50,11 +52,43 @@ TOOLS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Read a repository-relative file.",
+            "description": "Read all or a line range of a repository-relative file.",
             "parameters": {
                 "type": "object",
-                "properties": {"path": {"type": "string"}},
+                "properties": {
+                    "path": {"type": "string"},
+                    "start_line": {"type": "integer", "minimum": 1},
+                    "end_line": {"type": "integer", "minimum": 1},
+                    "view_range": {
+                        "anyOf": [
+                            {
+                                "type": "array",
+                                "items": {"type": "integer"},
+                                "minItems": 2,
+                                "maxItems": 2,
+                            },
+                            {"type": "string"},
+                        ],
+                    },
+                },
                 "required": ["path"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "edit_file",
+            "description": "Replace one exact text occurrence in an existing file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "old_text": {"type": "string"},
+                    "new_text": {"type": "string"},
+                },
+                "required": ["path", "old_text", "new_text"],
                 "additionalProperties": False,
             },
         },
@@ -147,6 +181,45 @@ class WorkerOutcome(BaseModel):
 class _ReadFileArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     path: str
+    start_line: int | None = Field(default=None, ge=1)
+    end_line: int | None = Field(default=None, ge=1)
+    view_range: list[int] | str | None = None
+
+    @model_validator(mode="after")
+    def resolve_view_range(self) -> _ReadFileArgs:
+        if self.view_range is not None:
+            if isinstance(self.view_range, str):
+                match = re.fullmatch(
+                    r"\[\s*(\d+)\s*,\s*(\d+)\s*\]",
+                    self.view_range,
+                )
+                if match is None:
+                    raise ValueError("view_range must look like '[start, end]'")
+                start, end = (int(value) for value in match.groups())
+            else:
+                if len(self.view_range) != 2:
+                    raise ValueError("view_range must contain two line numbers")
+                start, end = self.view_range
+            if start < 1 or end < 1:
+                raise ValueError("line numbers must be at least 1")
+            if self.start_line is None:
+                self.start_line = start
+            if self.end_line is None:
+                self.end_line = end
+        if (
+            self.start_line is not None
+            and self.end_line is not None
+            and self.end_line < self.start_line
+        ):
+            raise ValueError("end_line must not be before start_line")
+        return self
+
+
+class _EditFileArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    path: str
+    old_text: str
+    new_text: str
 
 
 class _WriteFileArgs(BaseModel):
@@ -225,6 +298,54 @@ def _cap_bytes(content: str, maximum: int) -> str:
     if len(encoded) <= maximum:
         return content
     return encoded[:maximum].decode(errors="ignore")
+
+
+def _read_file_result(
+    path: str,
+    content: str,
+    *,
+    start_line: int | None,
+    end_line: int | None,
+) -> str:
+    if content == "":
+        return f"[{path}: not found]"
+
+    lines = content.splitlines(keepends=True)
+    total = len(lines)
+    start = start_line or 1
+    selected_end = min(end_line or total, total)
+    selected = lines[start - 1 : selected_end]
+    kept: list[str] = []
+
+    def render(last: int, body: str) -> str:
+        result = f"[{path}: lines {start}-{last} of {total}]\n{body}"
+        if last < total:
+            if body and not body.endswith(("\n", "\r")):
+                result += "\n"
+            result += (
+                "[truncated: call read_file with "
+                f"start_line={last + 1} to continue]"
+            )
+        return result
+
+    for line_number, line in enumerate(selected, start=start):
+        candidate = render(line_number, "".join([*kept, line]))
+        if len(candidate.encode()) > _READ_MAX_BYTES:
+            break
+        kept.append(line)
+
+    if kept:
+        return render(start + len(kept) - 1, "".join(kept))
+    if selected:
+        last = start
+        header = f"[{path}: lines {start}-{last} of {total}]\n"
+        footer = (
+            "\n[truncated: call read_file with "
+            f"start_line={last + 1} to continue]"
+        )
+        available = _READ_MAX_BYTES - len((header + footer).encode())
+        return header + _cap_bytes(selected[0], max(available, 0)) + footer
+    return f"[{path}: lines {start}-{selected_end} of {total}]"
 
 
 def _shell_tokens(command: str) -> list[str] | None:
@@ -606,11 +727,52 @@ class Worker:
                 self.executor.read_file(
                     self.branch,
                     arguments.path,
-                    max_bytes=_READ_MAX_BYTES,
+                    max_bytes=_READ_FETCH_MAX_BYTES,
                 ),
                 timeout=remaining_s,
             )
-            return _with_note(note, _cap_bytes(content, _READ_MAX_BYTES)), None
+            result = _read_file_result(
+                arguments.path,
+                content,
+                start_line=arguments.start_line,
+                end_line=arguments.end_line,
+            )
+            return _with_note(note, result), None
+
+        if call.name == "edit_file":
+            arguments, note = _tool_arguments(call, _EditFileArgs)
+            content = await asyncio.wait_for(
+                self.executor.read_file(
+                    self.branch,
+                    arguments.path,
+                    max_bytes=_READ_FETCH_MAX_BYTES,
+                ),
+                timeout=remaining_s,
+            )
+            occurrences = content.count(arguments.old_text)
+            if occurrences == 0:
+                return _with_note(note, "edit refused: old_text not found"), None
+            if occurrences > 1:
+                result = (
+                    "edit refused: old_text occurs "
+                    f"{occurrences} times; include more context"
+                )
+                return _with_note(note, result), None
+            receipt = await asyncio.wait_for(
+                self.executor.write_file(
+                    self.branch,
+                    arguments.path,
+                    content.replace(arguments.old_text, arguments.new_text, 1),
+                ),
+                timeout=remaining_s,
+            )
+            self._record_receipt(receipt)
+            if receipt.exit_code == 0:
+                self._successful_write = True
+                return _with_note(note, "ok"), None
+            refusal = receipt.stderr_tail or receipt.stdout_tail
+            result = refusal or f"refused (exit {receipt.exit_code})"
+            return _with_note(note, result), None
 
         if call.name == "write_file":
             arguments, note = _tool_arguments(call, _WriteFileArgs)

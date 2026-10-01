@@ -178,9 +178,16 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
         [
             _turn(
                 _call(
-                    "write_file",
-                    {"path": "calc/__init__.py", "content": FIXED_CALC},
-                    "write-source",
+                    "edit_file",
+                    {
+                        "path": "calc/__init__.py",
+                        "old_text": (
+                            "def sub(a, b):\n"
+                            "    return a + b  # bug: should be a - b\n"
+                        ),
+                        "new_text": "def sub(a, b):\n    return a - b\n",
+                    },
+                    "edit-source",
                 ),
             ),
             _turn(
@@ -290,6 +297,14 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
         ).read_text().splitlines()
     ]
     assert [row["kind"] for row in witness_rows] == ["apply", "verification"]
+
+
+def test_default_worker_budget_supports_realistic_repair_attempts():
+    budget = _orchestrate_module().RunBudgets().worker
+
+    assert budget.max_turns == 40
+    assert budget.max_wall_seconds == 1_200
+    assert budget.max_completion_tokens == 64_000
 
 
 async def test_image_source_workdir_reaches_worker_prompt(tmp_path: Path):

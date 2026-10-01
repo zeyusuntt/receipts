@@ -51,7 +51,11 @@ class RunBudgets(BaseModel):
     baseline_limit_s: int = Field(default=600, gt=0)
     verification_timeout_s: int = Field(default=600, gt=0)
     worker: WorkerBudget = Field(
-        default_factory=lambda: WorkerBudget(max_completion_tokens=8_000),
+        default_factory=lambda: WorkerBudget(
+            max_turns=40,
+            max_wall_seconds=1_200,
+            max_completion_tokens=64_000,
+        ),
     )
 
 
