@@ -507,3 +507,39 @@ async def test_local_command_duration_ignores_wall_clock_jumps(tmp_path, monkeyp
     receipt = await ex.run(base, "true", timeout_s=30)
 
     assert receipt.duration_s < 60
+
+
+async def test_trusted_runner_import_path_matches_the_plain_pytest_command(tmp_path):
+    """The official grader runs the instance's `pytest` command, which does not put the
+    repository root on sys.path. If the trusted runner did, a new top-level package in a
+    patch could shadow the installed one and pass the gate while failing the grader."""
+    import os
+    import subprocess
+    import sys
+
+    from receipts.sandbox.local import LocalExecutor
+    from receipts.sandbox.protocol import RepoAtCommit
+    from receipts.sandbox.sink import MemorySink
+
+    repo = tmp_path / "rootpath"
+    (repo / "tests").mkdir(parents=True)
+    (repo / "tests" / "test_path.py").write_text(
+        "import os, sys\n\n\n"
+        "def test_repository_root_is_not_importable():\n"
+        "    root = os.path.realpath(os.getcwd())\n"
+        "    assert root not in {os.path.realpath(p or os.getcwd()) for p in sys.path}\n"
+    )
+    for args in (["init", "-q"], ["add", "-A"], ["-c", "user.email=f@x", "-c", "user.name=f", "commit", "-q", "-m", "path"]):
+        subprocess.run(["git", *args], cwd=repo, check=True)
+    plain = subprocess.run(
+        [os.path.join(os.path.dirname(sys.executable), "pytest"), "-q", "-p", "no:cacheprovider", "tests/test_path.py"],
+        cwd=repo, capture_output=True, text=True,
+    )
+    assert plain.returncode == 0, plain.stdout
+    ex = LocalExecutor(root=tmp_path / "work", sink=MemorySink(), run_id="run-1")
+    base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"))
+
+    receipt = await ex.run_pytest(base, "tests/test_path.py", timeout_s=120)
+
+    assert receipt.exit_code == 0
+    assert receipt.junit.passed == ["tests/test_path.py::test_repository_root_is_not_importable"]

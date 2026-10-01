@@ -79,7 +79,8 @@ except ValueError:
 if untrusted:
     print(f"receipts: untrusted pytest at {pytest_path}", file=sys.stderr)
     raise SystemExit(4)
-sys.path.insert(0, worktree)
+# Like the instance's own `pytest` command, do not put the repository root on
+# sys.path: a new top-level package in a patch must not shadow the installed one.
 
 
 class _ReceiptsDirs:
