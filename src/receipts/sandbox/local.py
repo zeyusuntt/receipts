@@ -30,17 +30,17 @@ from pathlib import Path
 from receipts.junit import parse_junit
 from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
 from receipts.patchscope import default_protected_modules, filter_patch, summarize_patch
-from receipts.sandbox.protocol import PYTEST_BOOTSTRAP, PYTEST_FLAGS, RepoAtCommit, Source
+from receipts.sandbox.protocol import (
+    PYTEST_BOOTSTRAP,
+    PYTEST_FLAGS,
+    CheckpointTampered,
+    RepoAtCommit,
+    Source,
+)
 from receipts.sandbox.sink import ReceiptSink
+from receipts.sandbox.staging import git_environment, mirror_worktree, patch_command, remove_path
 
 TAIL = 6000
-
-
-class CheckpointTampered(Exception):
-    def __init__(self, checkpoint_id: str) -> None:
-        super().__init__(f"checkpoint {checkpoint_id} was modified after prepare")
-        self.checkpoint_id = checkpoint_id
-        self.patch_receipt: Receipt | None = None
 
 
 def _tail(data: bytes) -> str:
@@ -76,59 +76,6 @@ def _checkpoint_digest(root: Path) -> str:
 
     visit(root)
     return _checkpoint_manifest_digest(entries)
-
-
-def _remove_path(path: Path) -> None:
-    mode = path.lstat().st_mode
-    if stat.S_ISDIR(mode):
-        path.chmod(stat.S_IMODE(mode) | stat.S_IRWXU, follow_symlinks=False)
-        for child in path.iterdir():
-            _remove_path(child)
-        path.rmdir()
-    else:
-        path.unlink()
-
-
-def _mirror_entry(source: Path, destination: Path) -> None:
-    source_mode = source.lstat().st_mode
-    destination_exists = os.path.lexists(destination)
-    if stat.S_ISLNK(source_mode):
-        if destination_exists:
-            _remove_path(destination)
-        destination.symlink_to(os.readlink(source))
-        shutil.copystat(source, destination, follow_symlinks=False)
-        return
-    if stat.S_ISDIR(source_mode):
-        if destination_exists and not stat.S_ISDIR(destination.lstat().st_mode):
-            _remove_path(destination)
-            destination_exists = False
-        if not destination_exists:
-            destination.mkdir()
-        destination.chmod(destination.lstat().st_mode | stat.S_IRWXU, follow_symlinks=False)
-        source_names = {child.name for child in source.iterdir()}
-        for child in destination.iterdir():
-            if child.name not in source_names:
-                _remove_path(child)
-        for child in source.iterdir():
-            _mirror_entry(child, destination / child.name)
-        shutil.copystat(source, destination, follow_symlinks=False)
-        return
-    if stat.S_ISREG(source_mode):
-        if destination_exists:
-            _remove_path(destination)
-        shutil.copy2(source, destination, follow_symlinks=False)
-        return
-    raise OSError(f"unsupported worktree entry: {source}")
-
-
-def _mirror_worktree(source: Path, destination: Path) -> None:
-    source_names = {child.name for child in source.iterdir() if child.name != ".git"}
-    for child in destination.iterdir():
-        if child.name != ".git" and child.name not in source_names:
-            _remove_path(child)
-    for child in source.iterdir():
-        if child.name != ".git":
-            _mirror_entry(child, destination / child.name)
 
 
 class LocalExecutor:
@@ -352,10 +299,10 @@ class LocalExecutor:
                 raise
         try:
             await asyncio.to_thread(shutil.copytree, origin, staging, symlinks=True)
-            await asyncio.to_thread(_mirror_worktree, self.workdir(branch), staging)
+            await asyncio.to_thread(mirror_worktree, self.workdir(branch), staging)
         except (OSError, shutil.Error) as exc:
             if staging.exists():
-                await asyncio.to_thread(_remove_path, staging)
+                await asyncio.to_thread(remove_path, staging)
             message = f"trusted patch staging failed: {exc}".encode()
             return self._emit(
                 branch,
@@ -367,29 +314,16 @@ class LocalExecutor:
                 started_at=started,
                 duration_s=(_now() - started).total_seconds(),
             )
-        git = (
-            f"{shlex.quote(str(self._git))} -c core.hooksPath=/dev/null "
-            "-c core.attributesFile=/dev/null "
-            "-c diff.external= -c core.quotePath=false"
-        )
-        command = (
-            f"{git} add -A && {git} diff --cached --binary --no-ext-diff "
-            f"--no-textconv --no-renames {shlex.quote(snapshot_sha)}"
-        )
+        command = patch_command(self._git, snapshot_sha)
         display_cmd = f"compute patch in executor staging {staging.name}: {command}"
-        git_env = {
-            "GIT_CONFIG_NOSYSTEM": "1",
-            "GIT_CONFIG_GLOBAL": os.devnull,
-            "HOME": str(self.root),
-            "PATH": os.defpath,
-        }
+        git_env = git_environment(self.root)
         stdout, stderr, code, timed_out, command_started, duration = await self._execute(
             staging,
             command,
             120,
             env_overrides=git_env,
         )
-        await asyncio.to_thread(_remove_path, staging)
+        await asyncio.to_thread(remove_path, staging)
         if code != 0:
             return self._emit(branch, kind="diff", cmd=display_cmd, exit_code=1,
                               stdout_tail=_tail(stdout), stderr_tail=_tail(stderr),

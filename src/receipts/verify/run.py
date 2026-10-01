@@ -14,8 +14,7 @@ from pydantic import BaseModel
 
 from receipts.models import Baseline, Branch, Checkpoint, JunitSummary, Receipt
 from receipts.patchscope import default_protected_modules, filter_patch
-from receipts.sandbox.local import CheckpointTampered
-from receipts.sandbox.protocol import Executor
+from receipts.sandbox.protocol import CheckpointTampered, Executor
 
 
 class Attempt(BaseModel):

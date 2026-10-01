@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
 
@@ -28,7 +28,22 @@ class RepoAtCommit(BaseModel):
     install_cmd: str
 
 
-Source = RepoAtCommit
+class ImageSource(BaseModel):
+    image: str
+    workdir: str
+    python: str = "python"
+    platform: str | None = None
+    setup: list[str] = Field(default_factory=list)
+
+
+Source = RepoAtCommit | ImageSource
+
+
+class CheckpointTampered(Exception):
+    def __init__(self, checkpoint_id: str) -> None:
+        super().__init__(f"checkpoint {checkpoint_id} was modified after prepare")
+        self.checkpoint_id = checkpoint_id
+        self.patch_receipt: Receipt | None = None
 
 
 class Executor(Protocol):
