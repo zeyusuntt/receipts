@@ -97,6 +97,7 @@ class LocalExecutor:
             raise RuntimeError("bash executable not found")
         self._bash = Path(bash_path).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
+        (self.root / "logs").mkdir(exist_ok=True)
         (self.root / "reports").mkdir(exist_ok=True)
         (self.root / "patches").mkdir(exist_ok=True)
         tools = self.root / "tools"
@@ -124,6 +125,12 @@ class LocalExecutor:
                     image_before=before, image_after=after, **fields)
         self.sink.write(r)
         return r
+
+    def _write_log(self, branch: Branch, stdout: bytes) -> Path:
+        seq = self._seq.get(branch.id, 0) + 1
+        log_path = self.root / "logs" / f"{branch.id}-{seq}.log"
+        log_path.write_bytes(stdout)
+        return log_path
 
     def _safe_path(self, branch: Branch, path: str) -> Path | None:
         base = self.workdir(branch).resolve()
@@ -241,9 +248,11 @@ class LocalExecutor:
 
     async def run(self, branch: Branch, cmd: str, timeout_s: int) -> Receipt:
         stdout, stderr, code, timed_out, started, duration = await self._execute(self.workdir(branch), cmd, timeout_s)
+        log_path = self._write_log(branch, stdout)
         return self._emit(branch, kind="command", cmd=cmd, exit_code=code,
                           stdout_tail=_tail(stdout), stderr_tail=_tail(stderr),
                           stdout_sha256=hashlib.sha256(stdout).hexdigest(),
+                          log_path=str(log_path),
                           started_at=started, duration_s=duration, timed_out=timed_out)
 
     async def run_pytest(self, branch: Branch, args: str, timeout_s: int, kind: ReceiptKind = "command") -> Receipt:
@@ -253,9 +262,11 @@ class LocalExecutor:
         cmd = f"python -I {runner} {args} {PYTEST_FLAGS} --junitxml={shlex.quote(str(report))}"
         stdout, stderr, code, timed_out, started, duration = await self._execute(self.workdir(branch), cmd, timeout_s)
         junit = parse_junit(report if report.exists() else None)
+        log_path = self._write_log(branch, stdout)
         return self._emit(branch, kind=kind, cmd=cmd, exit_code=code,
                           stdout_tail=_tail(stdout), stderr_tail=_tail(stderr),
                           stdout_sha256=hashlib.sha256(stdout).hexdigest(),
+                          log_path=str(log_path),
                           started_at=started, duration_s=duration, timed_out=timed_out, junit=junit)
 
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:

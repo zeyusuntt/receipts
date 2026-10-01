@@ -9,18 +9,32 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import io
 import json
+import os
 import posixpath
 import re
 import shlex
+import shutil
+import signal
+import tarfile
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
-from receipts.models import Branch, Checkpoint, Receipt
-from receipts.sandbox.protocol import ImageSource, PYTEST_BOOTSTRAP, RepoAtCommit, Source
+from receipts.junit import parse_junit
+from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
+from receipts.patchscope import default_protected_modules, filter_patch, summarize_patch
+from receipts.sandbox.protocol import (
+    ImageSource,
+    PYTEST_BOOTSTRAP,
+    PYTEST_FLAGS,
+    RepoAtCommit,
+    Source,
+)
 from receipts.sandbox.sink import ReceiptSink
+from receipts.sandbox.staging import git_environment, mirror_worktree, patch_command, remove_path
 
 TAIL = 6000
 _IMAGE_ID = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -187,10 +201,26 @@ class DockerExecutor:
         self._anchors: dict[str, _WorkdirAnchor] = {}
         self._checkpoint_specs: dict[str, _ContainerSpec] = {}
         self._checkpoint_anchors: dict[str, _WorkdirAnchor] = {}
+        self._checkpoint_trees: dict[str, Path] = {}
+        self._checkpoint_tree_locks: dict[str, asyncio.Lock] = {}
         self._fork_next: dict[str, int] = {}
         self._created_containers: list[str] = []
         self._owner = uuid.uuid4().hex
+        self._protected_modules = default_protected_modules()
+        git_path = shutil.which("git")
+        if git_path is None:
+            raise RuntimeError("git executable not found")
+        self._git = Path(git_path).resolve()
+        bash_path = shutil.which("bash", path=os.defpath)
+        if bash_path is None:
+            raise RuntimeError("bash executable not found")
+        self._bash = Path(bash_path).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
+        (self.root / "logs").mkdir(exist_ok=True)
+        (self.root / "reports").mkdir(exist_ok=True)
+        (self.root / "patches").mkdir(exist_ok=True)
+        (self.root / "staging").mkdir(exist_ok=True)
+        (self.root / "checkpoints").mkdir(exist_ok=True)
         tools = self.root / "tools"
         tools.mkdir(exist_ok=True)
         self._pytest_runner = tools / "receipts_pytest.py"
@@ -249,6 +279,51 @@ class DockerExecutor:
                 f"{operation} failed (exit {code}, timed_out={timed_out}): {detail}",
             )
         return stdout
+
+    async def _execute_host(
+        self,
+        workdir: Path,
+        cmd: str,
+        timeout_s: int,
+        env_overrides: dict[str, str] | None = None,
+    ) -> tuple[bytes, bytes, int | None, bool, datetime, float]:
+        env = {
+            "HOME": str(self.root),
+            "LANG": "C.UTF-8",
+            "PATH": os.defpath,
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
+        if env_overrides:
+            env.update(env_overrides)
+        started = _now()
+        proc = await asyncio.create_subprocess_exec(
+            str(self._bash),
+            "-c",
+            cmd,
+            cwd=workdir,
+            env=env,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            start_new_session=True,
+        )
+        timed_out = False
+        try:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout_s)
+            code: int | None = proc.returncode
+        except asyncio.TimeoutError:
+            timed_out = True
+            code = None
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            stdout, stderr = await proc.communicate()
+        else:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        return stdout, stderr, code, timed_out, started, (_now() - started).total_seconds()
 
     @staticmethod
     def _validate_workdir(workdir: str) -> str:
@@ -336,6 +411,24 @@ class DockerExecutor:
             raise
         self._created_containers.append(name)
 
+    async def _remove_created_container(self, container: str) -> None:
+        _, stderr, code, timed_out, _, _ = await self._docker(
+            "rm",
+            "-f",
+            container,
+            timeout_s=60,
+        )
+        message = stderr.decode(errors="replace")
+        if (timed_out or code != 0) and "No such container" not in message:
+            raise RuntimeError(
+                f"failed to remove Docker container {container} "
+                f"(exit {code}, timed_out={timed_out}): {message.strip()}",
+            )
+        try:
+            self._created_containers.remove(container)
+        except ValueError:
+            pass
+
     def _container(self, branch: Branch) -> str:
         try:
             return self._containers[branch.id]
@@ -370,6 +463,12 @@ class DockerExecutor:
         self.sink.write(receipt)
         return receipt
 
+    def _write_log(self, branch: Branch, stdout: bytes) -> Path:
+        seq = self._seq.get(branch.id, 0) + 1
+        log_path = self.root / "logs" / f"{branch.id}-{seq}.log"
+        log_path.write_bytes(stdout)
+        return log_path
+
     async def _copy_bootstrap(self, container: str) -> None:
         await self._checked_docker(
             "exec",
@@ -377,6 +476,7 @@ class DockerExecutor:
             "mkdir",
             "-p",
             "/opt/receipts",
+            "/opt/receipts/reports",
             operation="create trusted runner directory",
         )
         await self._checked_docker(
@@ -405,6 +505,47 @@ class DockerExecutor:
             raise RuntimeError("container returned malformed workdir metadata")
         return _WorkdirAnchor(path=path, device=device, inode=inode)
 
+    async def _workdir_archive(self, container: str, spec: _ContainerSpec) -> bytes:
+        return await self._checked_docker(
+            "cp",
+            f"{container}:{spec.workdir}/.",
+            "-",
+            timeout_s=300,
+            operation="copy container workdir",
+        )
+
+    @staticmethod
+    def _extract_archive(archive_bytes: bytes, destination: Path) -> None:
+        destination.mkdir(parents=True)
+        with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:*") as archive:
+            archive.extractall(destination, filter="data")
+
+    async def _checkpoint_tree(self, checkpoint_id: str) -> Path:
+        cached = self._checkpoint_trees.get(checkpoint_id)
+        if cached is not None:
+            return cached
+        lock = self._checkpoint_tree_locks.setdefault(checkpoint_id, asyncio.Lock())
+        async with lock:
+            cached = self._checkpoint_trees.get(checkpoint_id)
+            if cached is not None:
+                return cached
+            try:
+                spec = self._checkpoint_specs[checkpoint_id]
+            except KeyError as exc:
+                raise RuntimeError(f"unknown Docker checkpoint: {checkpoint_id}") from exc
+            container = f"{self.run_id}-patch-{uuid.uuid4().hex[:12]}"
+            await self._start_container(checkpoint_id, container, spec)
+            try:
+                archive_bytes = await self._workdir_archive(container, spec)
+            finally:
+                await self._remove_created_container(container)
+            destination = self.root / "checkpoints" / checkpoint_id.removeprefix("sha256:")
+            if destination.exists():
+                await asyncio.to_thread(remove_path, destination)
+            await asyncio.to_thread(self._extract_archive, archive_bytes, destination)
+            self._checkpoint_trees[checkpoint_id] = destination
+            return destination
+
     async def _kill_surviving_processes(self, container: str) -> None:
         await self._checked_docker(
             "exec",
@@ -429,11 +570,12 @@ class DockerExecutor:
         branch: Branch,
         cmd: str,
         timeout_s: int,
+        env_overrides: dict[str, str] | None = None,
     ) -> tuple[bytes, bytes, int | None, bool, datetime, float]:
         if timeout_s <= 0:
             raise ValueError("timeout_s must be positive")
         spec = self._spec(branch)
-        stdout, stderr, code, host_timed_out, started, duration = await self._docker(
+        docker_args = [
             "exec",
             "--workdir",
             spec.workdir,
@@ -441,6 +583,10 @@ class DockerExecutor:
             "PYTHONDONTWRITEBYTECODE=1",
             "--env",
             "LANG=C.UTF-8",
+        ]
+        for name, value in (env_overrides or {}).items():
+            docker_args.extend(["--env", f"{name}={value}"])
+        docker_args.extend([
             self._container(branch),
             "timeout",
             "-s",
@@ -449,6 +595,9 @@ class DockerExecutor:
             "sh",
             "-c",
             cmd,
+        ])
+        stdout, stderr, code, host_timed_out, started, duration = await self._docker(
+            *docker_args,
             timeout_s=timeout_s + 5,
         )
         container = self._container(branch)
@@ -572,6 +721,7 @@ class DockerExecutor:
             timeout_s,
         )
         image_after = await self._commit(self._container(branch))
+        log_path = self._write_log(branch, stdout)
         return self._emit(
             branch,
             image_after,
@@ -581,9 +731,60 @@ class DockerExecutor:
             stdout_tail=_tail(stdout),
             stderr_tail=_tail(stderr),
             stdout_sha256=hashlib.sha256(stdout).hexdigest(),
+            log_path=str(log_path),
             started_at=started,
             duration_s=duration,
             timed_out=timed_out,
+        )
+
+    async def run_pytest(
+        self,
+        branch: Branch,
+        args: str,
+        timeout_s: int,
+        kind: ReceiptKind = "command",
+    ) -> Receipt:
+        seq = self._seq.get(branch.id, 0) + 1
+        spec = self._spec(branch)
+        report_in_container = f"/opt/receipts/reports/{branch.id}-{seq}.xml"
+        report_on_host = self.root / "reports" / f"{branch.id}-{seq}.xml"
+        report_on_host.unlink(missing_ok=True)
+        cmd = (
+            f"{shlex.quote(spec.python)} -I /opt/receipts/receipts_pytest.py "
+            f"{args} -rA --junitxml={shlex.quote(report_in_container)} {PYTEST_FLAGS}"
+        )
+        stdout, stderr, code, timed_out, started, duration = await self._execute(
+            branch,
+            cmd,
+            timeout_s,
+            env_overrides={"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""},
+        )
+        report_bytes, _, report_code, report_timed_out, _, _ = await self._docker(
+            "exec",
+            self._container(branch),
+            "cat",
+            report_in_container,
+            timeout_s=30,
+        )
+        if not report_timed_out and report_code == 0:
+            report_on_host.write_bytes(report_bytes)
+        junit = parse_junit(report_on_host if report_on_host.exists() else None)
+        image_after = await self._commit(self._container(branch))
+        log_path = self._write_log(branch, stdout)
+        return self._emit(
+            branch,
+            image_after,
+            kind=kind,
+            cmd=cmd,
+            exit_code=code,
+            stdout_tail=_tail(stdout),
+            stderr_tail=_tail(stderr),
+            stdout_sha256=hashlib.sha256(stdout).hexdigest(),
+            log_path=str(log_path),
+            started_at=started,
+            duration_s=duration,
+            timed_out=timed_out,
+            junit=junit,
         )
 
     async def write_file(self, branch: Branch, path: str, content: str) -> Receipt:
@@ -741,6 +942,139 @@ class DockerExecutor:
             branches.append(branch)
         self._fork_next[prefix] = first + n
         return branches
+
+    async def patch(self, branch: Branch, snapshot_sha: str) -> Receipt:
+        started = _now()
+        token = uuid.uuid4().hex[:12]
+        staging = self.root / "staging" / f"{branch.id}-{token}"
+        agent_tree = self.root / "staging" / f"{branch.id}-{token}-agent"
+        try:
+            checkpoint_tree = await self._checkpoint_tree(branch.origin)
+            await asyncio.to_thread(shutil.copytree, checkpoint_tree, staging, symlinks=True)
+            archive_bytes = await self._workdir_archive(
+                self._container(branch),
+                self._spec(branch),
+            )
+            await asyncio.to_thread(self._extract_archive, archive_bytes, agent_tree)
+            await asyncio.to_thread(mirror_worktree, agent_tree, staging)
+        except (OSError, RuntimeError, shutil.Error, tarfile.TarError) as exc:
+            for path in (agent_tree, staging):
+                if path.exists():
+                    await asyncio.to_thread(remove_path, path)
+            message = f"trusted patch staging failed: {exc}".encode()
+            return self._emit(
+                branch,
+                branch.head,
+                kind="diff",
+                cmd="compute patch in executor staging",
+                exit_code=1,
+                stderr_tail=_tail(message),
+                stdout_sha256=hashlib.sha256(b"").hexdigest(),
+                started_at=started,
+                duration_s=(_now() - started).total_seconds(),
+            )
+
+        command = patch_command(self._git, snapshot_sha)
+        display_cmd = f"compute patch in executor staging {staging.name}: {command}"
+        stdout, stderr, code, timed_out, command_started, duration = await self._execute_host(
+            staging,
+            command,
+            120,
+            env_overrides=git_environment(self.root),
+        )
+        await asyncio.to_thread(remove_path, agent_tree)
+        await asyncio.to_thread(remove_path, staging)
+        if code != 0:
+            return self._emit(
+                branch,
+                branch.head,
+                kind="diff",
+                cmd=display_cmd,
+                exit_code=1,
+                stdout_tail=_tail(stdout),
+                stderr_tail=_tail(stderr),
+                stdout_sha256=hashlib.sha256(stdout).hexdigest(),
+                started_at=command_started,
+                duration_s=duration,
+                timed_out=timed_out,
+            )
+
+        patch_text = stdout.decode(errors="replace")
+        seq = self._seq.get(branch.id, 0) + 1
+        patch_path = self.root / "patches" / f"{branch.id}-{seq}-full.diff"
+        patch_path.write_text(patch_text)
+        summary = summarize_patch(patch_text, self._protected_modules).model_copy(
+            update={"patch_path": str(patch_path)},
+        )
+        _, dropped = filter_patch(patch_text, self._protected_modules)
+        return self._emit(
+            branch,
+            branch.head,
+            kind="diff",
+            cmd=display_cmd,
+            exit_code=0,
+            stdout_tail=patch_text[-TAIL:],
+            stderr_tail=_tail(stderr),
+            stdout_sha256=summary.patch_sha256,
+            started_at=command_started,
+            duration_s=duration,
+            timed_out=timed_out,
+            diff=summary,
+            dropped_paths=dropped,
+        )
+
+    async def apply_patch(self, branch: Branch, patch_text: str) -> Receipt:
+        started = _now()
+        digest = hashlib.sha256(patch_text.encode()).hexdigest()
+        seq = self._seq.get(branch.id, 0) + 1
+        patch_path = self.root / "patches" / f"{branch.id}-{seq}-apply.diff"
+        patch_path.write_text(patch_text)
+        container_patch = f"/opt/receipts/{branch.id}-{seq}-apply.diff"
+        _, copy_stderr, copy_code, copy_timed_out, _, _ = await self._docker(
+            "cp",
+            str(patch_path),
+            f"{self._container(branch)}:{container_patch}",
+            timeout_s=120,
+        )
+        cmd = (
+            "git update-index -q --refresh; "
+            f"git apply --index {shlex.quote(container_patch)}"
+        )
+        if copy_timed_out or copy_code != 0:
+            stdout = b""
+            stderr = copy_stderr
+            code = None if copy_timed_out else copy_code
+            timed_out = copy_timed_out
+            command_started = started
+            duration = (_now() - started).total_seconds()
+        elif not patch_text:
+            stdout = b""
+            stderr = b""
+            code = 0
+            timed_out = False
+            command_started = started
+            duration = (_now() - started).total_seconds()
+        else:
+            stdout, stderr, code, timed_out, command_started, duration = await self._execute(
+                branch,
+                cmd,
+                120,
+            )
+        image_after = await self._commit(self._container(branch))
+        return self._emit(
+            branch,
+            image_after,
+            kind="apply",
+            cmd=cmd,
+            exit_code=code,
+            stdout_tail=_tail(stdout),
+            stderr_tail=_tail(stderr),
+            stdout_sha256=hashlib.sha256(stdout).hexdigest(),
+            patch_sha256=digest,
+            started_at=command_started,
+            duration_s=duration,
+            timed_out=timed_out,
+        )
 
     async def close(self) -> None:
         failures: list[str] = []

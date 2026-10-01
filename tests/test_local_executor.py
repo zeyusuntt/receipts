@@ -49,6 +49,22 @@ async def test_run_records_receipt_and_advances_image(tmp_path):
     assert r.seq == 2 and r.receipt_id == "base-2"
 
 
+async def test_run_persists_full_stdout_log_outside_worktree(tmp_path):
+    ex, base = await _executor(tmp_path)
+    expected = b"x" * 7000 + b"\xff"
+
+    r = await ex.run(
+        base,
+        "python -c \"import sys; sys.stdout.buffer.write(b'x' * 7000 + b'\\xff')\"",
+        timeout_s=10,
+    )
+
+    assert r.log_path is not None
+    assert Path(r.log_path).read_bytes() == expected
+    assert Path(r.log_path).parent == ex.root / "logs"
+    assert ex.workdir(base) not in Path(r.log_path).parents
+
+
 async def test_run_timeout_kills_children(tmp_path):
     ex, base = await _executor(tmp_path)
     pidfile = tmp_path / "child.pid"
@@ -97,6 +113,18 @@ async def test_run_pytest_fills_junit_and_writes_it_complete(tmp_path):
     written = sink.receipts[-1]
     assert written is r or written.model_dump() == r.model_dump()
     assert not any(p.suffix == ".xml" for p in ex.workdir(base).rglob("*"))
+
+
+async def test_run_pytest_persists_full_stdout_log(tmp_path):
+    ex, base = await _executor(tmp_path)
+
+    r = await ex.run_pytest(base, "tests", timeout_s=60)
+
+    assert r.log_path is not None
+    log_path = Path(r.log_path)
+    assert log_path.parent == ex.root / "logs"
+    assert log_path.read_bytes().endswith(r.stdout_tail.encode())
+    assert b"test_sub" in log_path.read_bytes()
 
 
 async def test_run_pytest_ignores_worktree_pytest_module(tmp_path):

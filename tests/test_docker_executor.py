@@ -1,10 +1,15 @@
 import asyncio
+import hashlib
 import importlib
+import io
 import json
 import re
+import shutil
 import subprocess
 import sys
+import tarfile
 import uuid
+from pathlib import Path
 
 import pytest
 
@@ -50,6 +55,14 @@ def _docker(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
 
 def _run_id() -> str:
     return f"receipts-{uuid.uuid4().hex[:12]}"
+
+
+def _tar_bytes(root: Path) -> bytes:
+    output = io.BytesIO()
+    with tarfile.open(fileobj=output, mode="w") as archive:
+        for path in sorted(root.iterdir(), key=lambda item: item.name):
+            archive.add(path, arcname=path.name, recursive=True)
+    return output.getvalue()
 
 
 def test_image_source_has_independent_setup_lists():
@@ -270,6 +283,134 @@ async def test_stdout_tail_is_capped_hashed_and_non_utf8_safe(tmp_path):
 
 @pytest.mark.docker
 @requires_docker
+async def test_run_pytest_uses_trusted_runner_and_advances_image(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    executor = docker_module.DockerExecutor(tmp_path / "executor", MemorySink(), _run_id())
+    try:
+        base = await executor.prepare(
+            protocol.ImageSource(image=TEST_IMAGE, workdir="/workspace"),
+        )
+        await executor.write_file(
+            base,
+            "tests/test_sample.py",
+            "def test_ok():\n    assert True\n\ndef test_bad():\n    assert False\n",
+        )
+        await executor.write_file(base, "pytest.py", "raise RuntimeError('untrusted pytest imported')\n")
+        before = base.head
+
+        receipt = await executor.run_pytest(
+            base,
+            "tests",
+            timeout_s=60,
+            kind="verification",
+        )
+
+        assert receipt.exit_code == 1 and receipt.kind == "verification"
+        assert receipt.junit is not None
+        assert receipt.junit.passed == ["tests/test_sample.py::test_ok"]
+        assert receipt.junit.failed == ["tests/test_sample.py::test_bad"]
+        assert receipt.image_before == before
+        assert receipt.image_after == base.head and receipt.image_after != before
+        assert SHA256_IMAGE.fullmatch(receipt.image_after)
+        assert receipt.log_path is not None
+        assert b"test_bad" in Path(receipt.log_path).read_bytes()
+        assert not await executor.read_file(base, "__pycache__/pytest.pyc", 100)
+    finally:
+        await executor.close()
+
+
+@pytest.mark.docker
+@requires_docker
+async def test_patch_ignores_hostile_git_config_and_apply_reproduces_tree(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    executor = docker_module.DockerExecutor(tmp_path / "executor", MemorySink(), _run_id())
+    try:
+        base = await executor.prepare(
+            protocol.ImageSource(image=TEST_IMAGE, workdir="/workspace"),
+        )
+        await executor.write_file(base, "calc.py", "VALUE = 1\n")
+        await executor.write_file(base, "doomed.py", "DELETE = True\n")
+        await executor.write_file(base, ".gitignore", "ignored.log\n")
+        snapshot = await executor.snapshot(base)
+        checkpoint = await executor.checkpoint(base)
+        (agent,) = await executor.fork(checkpoint, 1)
+        await executor.write_file(agent, "calc.py", "VALUE = 2\n")
+        await executor.write_file(agent, "ignored.log", "not evidence\n")
+        await executor.write_file(
+            agent,
+            "fake-diff.sh",
+            "#!/bin/sh\nprintf ran > /tmp/receipts-fake-diff-ran\nexit 99\n",
+        )
+        configured = await executor.run(
+            agent,
+            "rm doomed.py && chmod +x fake-diff.sh && git config diff.external ./fake-diff.sh",
+            30,
+        )
+        assert configured.exit_code == 0
+        before_patch = agent.head
+
+        patch_receipt = await executor.patch(agent, snapshot.snapshot_sha)
+
+        assert patch_receipt.exit_code == 0 and patch_receipt.diff is not None
+        assert {item.path for item in patch_receipt.diff.files} == {
+            "calc.py",
+            "doomed.py",
+            "fake-diff.sh",
+        }
+        patch_text = Path(patch_receipt.diff.patch_path).read_text()
+        assert "+VALUE = 2" in patch_text
+        assert patch_receipt.image_before == patch_receipt.image_after == before_patch
+        marker_absent = await executor.run(agent, "test ! -e /tmp/receipts-fake-diff-ran", 10)
+        assert marker_absent.exit_code == 0
+
+        (witness,) = await executor.fork(checkpoint, 1, prefix="w")
+        before_apply = witness.head
+        applied = await executor.apply_patch(witness, patch_text)
+
+        assert applied.exit_code == 0 and applied.kind == "apply"
+        assert applied.patch_sha256 == patch_receipt.diff.patch_sha256
+        assert applied.image_before == before_apply
+        assert applied.image_after == witness.head and applied.image_after != before_apply
+        assert SHA256_IMAGE.fullmatch(applied.image_after)
+        assert await executor.read_file(witness, "calc.py", 100) == "VALUE = 2\n"
+        assert await executor.read_file(witness, "doomed.py", 100) == ""
+        before_empty = witness.head
+        empty = await executor.apply_patch(witness, "")
+        assert empty.exit_code == 0
+        assert empty.patch_sha256 == hashlib.sha256(b"").hexdigest()
+        assert empty.image_before == before_empty
+        assert empty.image_after == witness.head and empty.image_after != before_empty
+    finally:
+        await executor.close()
+
+
+@pytest.mark.docker
+@requires_docker
+async def test_apply_garbage_patch_fails_without_changing_worktree(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    executor = docker_module.DockerExecutor(tmp_path / "executor", MemorySink(), _run_id())
+    try:
+        base = await executor.prepare(
+            protocol.ImageSource(image=TEST_IMAGE, workdir="/workspace"),
+        )
+        await executor.write_file(base, "calc.py", "VALUE = 1\n")
+        await executor.snapshot(base)
+        checkpoint = await executor.checkpoint(base)
+        (witness,) = await executor.fork(checkpoint, 1, prefix="w")
+        before = await executor.read_file(witness, "calc.py", 100)
+
+        applied = await executor.apply_patch(witness, "this is not a patch\n")
+
+        assert applied.exit_code != 0
+        assert await executor.read_file(witness, "calc.py", 100) == before
+        clean = await executor.run(witness, "test -z \"$(git status --short)\"", 10)
+        assert clean.exit_code == 0
+    finally:
+        await executor.close()
+
+
+@pytest.mark.docker
+@requires_docker
 async def test_file_paths_are_confined_to_workdir_including_symlinks(tmp_path):
     docker_module = importlib.import_module("receipts.sandbox.docker")
     executor = docker_module.DockerExecutor(tmp_path / "executor", MemorySink(), _run_id())
@@ -478,6 +619,233 @@ async def test_close_retains_failed_container_for_retry(tmp_path):
 
     assert executor.remove_attempts == 2
     assert executor._created_containers == []
+
+
+async def test_run_persists_full_stdout_log_without_a_docker_daemon(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    expected = b"x" * 7000 + b"\xff"
+
+    class FakeRunExecutor(docker_module.DockerExecutor):
+        async def _execute(self, branch, cmd, timeout_s):
+            return expected, b"", 0, False, docker_module._now(), 0.1
+
+        async def _commit(self, container):
+            return "sha256:" + "1" * 64
+
+    executor = FakeRunExecutor(tmp_path / "executor", MemorySink(), "offline-run")
+    branch = Branch(
+        id="b1",
+        run_id="offline-run",
+        head="sha256:" + "0" * 64,
+        origin="sha256:" + "0" * 64,
+    )
+    executor._containers[branch.id] = "offline-run-b1"
+
+    receipt = await executor.run(branch, "print output", 10)
+
+    assert receipt.log_path is not None
+    assert (tmp_path / "executor" / "logs" / "b1-1.log").read_bytes() == expected
+    assert receipt.log_path == str(tmp_path / "executor" / "logs" / "b1-1.log")
+    assert receipt.stdout_tail.endswith("�")
+
+
+async def test_run_pytest_reads_junit_logs_stdout_and_advances_image_offline(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    junit_xml = tmp_path / "junit.xml"
+    junit_xml.write_text(
+        '<?xml version="1.0"?><testsuites><testsuite>'
+        '<testcase classname="tests.test_sample" name="test_ok" '
+        'file="tests/test_sample.py" />'
+        '</testsuite></testsuites>',
+    )
+    stdout = b"tests/test_sample.py::test_ok PASSED\n"
+
+    class FakePytestExecutor(docker_module.DockerExecutor):
+        def __init__(self):
+            super().__init__(tmp_path / "executor", MemorySink(), "offline-pytest")
+            self.command = ""
+            self.environment = None
+
+        async def _execute(self, branch, cmd, timeout_s, env_overrides=None):
+            self.command = cmd
+            self.environment = env_overrides
+            return stdout, b"", 0, False, docker_module._now(), 0.1
+
+        async def _docker(self, *args, **kwargs):
+            return junit_xml.read_bytes(), b"", 0, False, docker_module._now(), 0.1
+
+        async def _commit(self, container):
+            return "sha256:" + "2" * 64
+
+    executor = FakePytestExecutor()
+    branch = Branch(
+        id="b1",
+        run_id="offline-pytest",
+        head="sha256:" + "1" * 64,
+        origin="sha256:" + "0" * 64,
+    )
+    executor._containers[branch.id] = "offline-pytest-b1"
+    executor._specs[branch.id] = docker_module._ContainerSpec("/workspace", "python", None)
+
+    receipt = await executor.run_pytest(
+        branch,
+        "tests",
+        timeout_s=60,
+        kind="verification",
+    )
+
+    assert executor.command == (
+        "python -I /opt/receipts/receipts_pytest.py tests -rA "
+        "--junitxml=/opt/receipts/reports/b1-1.xml "
+        "-o junit_family=xunit1 -p no:cacheprovider -q"
+    )
+    assert executor.environment == {"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""}
+    assert receipt.kind == "verification" and receipt.exit_code == 0
+    assert receipt.junit is not None
+    assert receipt.junit.passed == ["tests/test_sample.py::test_ok"]
+    assert receipt.image_after == branch.head == "sha256:" + "2" * 64
+    assert receipt.log_path is not None
+    assert Path(receipt.log_path).read_bytes() == stdout
+
+
+async def test_run_pytest_rejects_stale_host_junit_when_container_report_is_missing(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+
+    class MissingReportExecutor(docker_module.DockerExecutor):
+        async def _execute(self, branch, cmd, timeout_s, env_overrides=None):
+            return b"pytest failed before collection\n", b"", 4, False, docker_module._now(), 0.1
+
+        async def _docker(self, *args, **kwargs):
+            return b"", b"missing", 1, False, docker_module._now(), 0.1
+
+        async def _commit(self, container):
+            return "sha256:" + "2" * 64
+
+    executor = MissingReportExecutor(tmp_path / "executor", MemorySink(), "stale-junit")
+    stale_report = tmp_path / "executor" / "reports" / "b1-1.xml"
+    stale_report.write_text(
+        '<?xml version="1.0"?><testsuites><testsuite>'
+        '<testcase classname="tests.test_stale" name="test_fake" file="tests/test_stale.py" />'
+        '</testsuite></testsuites>',
+    )
+    branch = Branch(
+        id="b1",
+        run_id="stale-junit",
+        head="sha256:" + "1" * 64,
+        origin="sha256:" + "0" * 64,
+    )
+    executor._containers[branch.id] = "stale-junit-b1"
+    executor._specs[branch.id] = docker_module._ContainerSpec("/workspace", "python", None)
+
+    receipt = await executor.run_pytest(branch, "tests", timeout_s=60)
+
+    assert receipt.exit_code == 4
+    assert receipt.junit is None
+    assert not stale_report.exists()
+
+
+async def test_patch_uses_checkpoint_git_metadata_not_agent_config_offline(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    source_repo = make_repo(tmp_path / "source")
+    checkpoint_tree = tmp_path / "checkpoint"
+    agent_tree = tmp_path / "agent"
+    shutil.copytree(source_repo, checkpoint_tree, symlinks=True)
+    shutil.copytree(source_repo, agent_tree, symlinks=True)
+    marker = tmp_path / "hostile-diff-ran"
+    hostile = agent_tree / "fake-diff.sh"
+    hostile.write_text(f"#!/bin/sh\nprintf ran > {str(marker)!r}\nexit 99\n")
+    hostile.chmod(0o755)
+    subprocess.run(
+        ["git", "config", "diff.external", "./fake-diff.sh"],
+        cwd=agent_tree,
+        check=True,
+    )
+    (agent_tree / "notes.txt").write_text("real patch content\n")
+    snapshot_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=checkpoint_tree,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    checkpoint_archive = _tar_bytes(checkpoint_tree)
+    agent_archive = _tar_bytes(agent_tree)
+    checkpoint_id = "sha256:" + "0" * 64
+
+    class FakePatchExecutor(docker_module.DockerExecutor):
+        async def _checked_docker(self, *args, **kwargs):
+            if args[0] == "cp":
+                return agent_archive if args[1].startswith("agent-container:") else checkpoint_archive
+            if args[0] in {"run", "create"}:
+                return b"staging-container\n"
+            raise AssertionError(f"unexpected docker command: {args}")
+
+        async def _docker(self, *args, **kwargs):
+            if args[0] == "rm":
+                return b"", b"", 0, False, docker_module._now(), 0.1
+            raise AssertionError(f"unexpected docker command: {args}")
+
+    executor = FakePatchExecutor(tmp_path / "executor", MemorySink(), "offline-patch")
+    branch = Branch(
+        id="b1",
+        run_id="offline-patch",
+        head="sha256:" + "1" * 64,
+        origin=checkpoint_id,
+    )
+    spec = docker_module._ContainerSpec("/workspace", "python", None)
+    executor._containers[branch.id] = "agent-container"
+    executor._specs[branch.id] = spec
+    executor._checkpoint_specs[checkpoint_id] = spec
+
+    receipt = await executor.patch(branch, snapshot_sha)
+
+    assert receipt.exit_code == 0 and receipt.diff is not None
+    assert {item.path for item in receipt.diff.files} == {"fake-diff.sh", "notes.txt"}
+    assert "real patch content" in Path(receipt.diff.patch_path).read_text()
+    assert not marker.exists()
+    assert receipt.image_before == receipt.image_after == branch.head
+
+
+async def test_apply_patch_copies_exact_bytes_and_advances_image_offline(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    patch_text = "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-old\n+new\n"
+
+    class FakeApplyExecutor(docker_module.DockerExecutor):
+        def __init__(self):
+            super().__init__(tmp_path / "executor", MemorySink(), "offline-apply")
+            self.copied = b""
+            self.command = ""
+
+        async def _docker(self, *args, **kwargs):
+            if args[0] == "cp":
+                self.copied = Path(args[1]).read_bytes()
+                return b"", b"", 0, False, docker_module._now(), 0.1
+            raise AssertionError(f"unexpected docker command: {args}")
+
+        async def _execute(self, branch, cmd, timeout_s, env_overrides=None):
+            self.command = cmd
+            return b"", b"", 0, False, docker_module._now(), 0.1
+
+        async def _commit(self, container):
+            return "sha256:" + "3" * 64
+
+    executor = FakeApplyExecutor()
+    branch = Branch(
+        id="w1",
+        run_id="offline-apply",
+        head="sha256:" + "2" * 64,
+        origin="sha256:" + "1" * 64,
+    )
+    executor._containers[branch.id] = "offline-apply-w1"
+    executor._specs[branch.id] = docker_module._ContainerSpec("/workspace", "python", None)
+
+    receipt = await executor.apply_patch(branch, patch_text)
+
+    assert executor.copied == patch_text.encode()
+    assert executor.command.startswith("git update-index -q --refresh; git apply --index ")
+    assert receipt.kind == "apply" and receipt.exit_code == 0
+    assert receipt.patch_sha256 == hashlib.sha256(patch_text.encode()).hexdigest()
+    assert receipt.image_after == branch.head == "sha256:" + "3" * 64
 
 
 async def test_start_container_overrides_entrypoint(tmp_path):

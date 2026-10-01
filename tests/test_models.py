@@ -20,9 +20,13 @@ def _receipt(**overrides) -> Receipt:
 
 
 def test_receipt_round_trips_through_json():
-    r = _receipt(junit=JunitSummary(passed=["t.py::a"], failed=["t.py::b"], errors=[], skipped=[]))
+    r = _receipt(
+        log_path="/executor/logs/b1-1.log",
+        junit=JunitSummary(passed=["t.py::a"], failed=["t.py::b"], errors=[], skipped=[]),
+    )
     again = Receipt.model_validate_json(r.model_dump_json())
     assert again == r
+    assert again.log_path == "/executor/logs/b1-1.log"
     assert again.junit.failed == ["t.py::b"]
 
 
