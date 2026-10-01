@@ -10,7 +10,7 @@ from types import ModuleType
 from receipts.llm import AssistantTurn, FakeModel, ToolCall
 from receipts.receipt_text import render
 from receipts.sandbox.local import LocalExecutor
-from receipts.sandbox.protocol import RepoAtCommit
+from receipts.sandbox.protocol import ImageSource, RepoAtCommit
 from receipts.sandbox.sink import RunSink
 from tests.fixtures.repo_factory import CALC, TEST_CALC, make_repo
 
@@ -83,24 +83,54 @@ def _model(turns: list[AssistantTurn]) -> FakeModel:
     )
 
 
+class _ImageSourceLocalExecutor:
+    def __init__(self, inner: LocalExecutor, repo: Path) -> None:
+        self.inner = inner
+        self.repo = repo
+
+    @property
+    def sink(self):
+        return self.inner.sink
+
+    @sink.setter
+    def sink(self, value):
+        self.inner.sink = value
+
+    def __getattr__(self, name: str):
+        return getattr(self.inner, name)
+
+    async def prepare(self, source):
+        assert isinstance(source, ImageSource)
+        return await self.inner.prepare(
+            RepoAtCommit(url=str(self.repo), commit="HEAD", install_cmd="true"),
+        )
+
+
 async def _run(
     tmp_path: Path,
     model: FakeModel,
     *,
     appeals: int = 1,
+    image_workdir: str | None = None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
     run_dir = tmp_path / "run"
-    executor = LocalExecutor(
+    local = LocalExecutor(
         tmp_path / "executor",
         RunSink(run_dir),
         run_id="orchestrate-test",
     )
+    if image_workdir is None:
+        executor = local
+        source = RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true")
+    else:
+        executor = _ImageSourceLocalExecutor(local, repo)
+        source = ImageSource(image="fixture", workdir=image_workdir)
     result = await orchestrate.fix(
         executor,
         model,
-        RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"),
+        source,
         issue="calc.sub(5, 3) must return 2",
         spec_tests=[TARGET],
         suite_scope="tests",
@@ -145,13 +175,19 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
         ],
     )
 
-    result, run_dir, repo, _ = await _run(tmp_path, model)
+    result, run_dir, repo, model = await _run(tmp_path, model)
 
     assert result.final_verdict.status == "PASS"
     assert result.final_verdict.claim_audit == "honest"
     assert [verdict.status for verdict in result.verdict_history] == ["PASS"]
     assert result.verified_fix is True
     assert result.selected_patch_path == "attempts/1/filtered.diff"
+    worker_request = next(
+        request for request in model.requests if request["kind"] == "chat"
+    )
+    assert "Commands run in the repository root (" not in (
+        worker_request["messages"][0]["content"]
+    )
 
     expected_files = {
         "input.json",
@@ -228,6 +264,40 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
         ).read_text().splitlines()
     ]
     assert [row["kind"] for row in witness_rows] == ["apply", "verification"]
+
+
+async def test_image_source_workdir_reaches_worker_prompt(tmp_path: Path):
+    model = _model(
+        [
+            _turn(
+                _call(
+                    "write_file",
+                    {"path": "calc/__init__.py", "content": FIXED_CALC},
+                    "write-source",
+                ),
+            ),
+            _finish(
+                "finish",
+                summary="Corrected subtraction.",
+                changed=["calc/__init__.py"],
+                green=False,
+            ),
+        ],
+    )
+
+    _, _, _, model = await _run(
+        tmp_path,
+        model,
+        appeals=0,
+        image_workdir="/repo",
+    )
+
+    worker_request = next(
+        request for request in model.requests if request["kind"] == "chat"
+    )
+    assert worker_request["messages"][0]["content"].endswith(
+        "Commands run in the repository root (/repo).\n",
+    )
 
 
 async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path):

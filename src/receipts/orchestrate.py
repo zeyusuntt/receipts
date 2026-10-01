@@ -19,7 +19,7 @@ from receipts.cost import CostMeter, TokenUsage
 from receipts.llm import ModelClient
 from receipts.models import Baseline, Branch, Receipt, Verdict
 from receipts.rundir import RunDirectory
-from receipts.sandbox.protocol import Executor, Source
+from receipts.sandbox.protocol import Executor, ImageSource, Source
 from receipts.verify.gate import evaluate
 from receipts.verify.run import Attempt, establish_baseline, verify_attempt
 
@@ -484,6 +484,7 @@ async def fix(
                     suite_scope,
                 ),
                 writer=writer,
+                repo_root=source.workdir if isinstance(source, ImageSource) else None,
             )
             outcome = await worker.attempt(budget.worker)
 

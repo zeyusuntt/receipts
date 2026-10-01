@@ -57,6 +57,7 @@ async def _fixture_worker(
     turns: list[AssistantTurn],
     *,
     repo: Path | None = None,
+    repo_root: str | None = None,
 ):
     worker_module = _worker_module()
     source = repo if repo is not None else make_repo(tmp_path / "source")
@@ -76,6 +77,7 @@ async def _fixture_worker(
         branch=branch,
         initial_message="Fix calc.sub and prove the repository is green.",
         writer=writer,
+        repo_root=repo_root,
     )
     return worker_module, instance, model, executor, branch, sink, writer
 
@@ -107,6 +109,28 @@ def test_pytest_args_recognizes_only_plain_pytest_invocations(
     expected: str | None,
 ):
     assert _worker_module().pytest_args(command) == expected
+
+
+@pytest.mark.parametrize(
+    ("command", "repo_root", "expected"),
+    [
+        ("cd /repo && python -m pytest -q", "/repo", "-q"),
+        ("cd /repo/./ && pytest", "/repo", ""),
+        ("cd . && pytest tests", "/repo", "tests"),
+        ("cd . && pytest tests", None, "tests"),
+        ("cd tests && pytest", "/repo", None),
+        ("cd /other && pytest", "/repo", None),
+        ("cd /repo && pytest", None, None),
+        ("cd /repo && pytest | tail -5", "/repo", None),
+        ("cd /repo && cd . && pytest", "/repo", None),
+    ],
+)
+def test_pytest_args_allows_one_trusted_leading_cd(
+    command: str,
+    repo_root: str | None,
+    expected: str | None,
+):
+    assert _worker_module().pytest_args(command, repo_root=repo_root) == expected
 
 
 async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path):
@@ -185,7 +209,7 @@ async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path
     assert "api_key" not in writer.getvalue().lower()
 
 
-async def test_plain_pytest_command_carries_junit_but_shell_composition_does_not(
+async def test_trusted_repo_root_cd_carries_junit_but_other_cd_commands_do_not(
     tmp_path: Path,
 ):
     turns = [
@@ -205,23 +229,35 @@ async def test_plain_pytest_command_carries_junit_but_shell_composition_does_not
             ),
         ),
         _turn(
-            _call("run_command", {"command": "python -m pytest -q"}, "run-pytest"),
+            _call(
+                "run_command",
+                {"command": "cd /repo && python -m pytest -q"},
+                "run-pytest",
+            ),
         ),
         _turn(
             _call(
                 "run_command",
-                {"command": "cd . && python -m pytest -q"},
-                "run-shell",
+                {"command": "cd tests && pytest"},
+                "run-relative-cd",
+            ),
+        ),
+        _turn(
+            _call(
+                "run_command",
+                {"command": "cd /other && pytest"},
+                "run-other-cd",
             ),
         ),
     ]
     worker, instance, _, _, branch, sink, writer = await _fixture_worker(
         tmp_path,
         turns,
+        repo_root="/repo",
     )
 
     outcome = await instance.attempt(
-        worker.WorkerBudget(max_turns=3, max_completion_tokens=100),
+        worker.WorkerBudget(max_turns=4, max_completion_tokens=100),
     )
 
     assert outcome.end == "budget_exhausted"
@@ -230,14 +266,62 @@ async def test_plain_pytest_command_carries_junit_but_shell_composition_does_not
         for receipt in sink.receipts
         if receipt.branch_id == branch.id and receipt.kind == "command"
     ]
-    assert len(command_receipts) == 2
+    assert len(command_receipts) == 3
     assert command_receipts[0].junit is not None
     assert command_receipts[0].tree_digest is not None
     assert command_receipts[1].junit is None
+    assert command_receipts[2].junit is None
     rows = [json.loads(line) for line in writer.getvalue().splitlines()]
     assert rows[1]["tool_calls"][0]["arguments"]["command"] == (
-        "python -m pytest -q"
+        "cd /repo && python -m pytest -q"
     )
+
+
+async def test_unsupported_tool_argument_is_ignored_with_a_note(tmp_path: Path):
+    turns = [
+        _turn(
+            _call(
+                "read_file",
+                {"path": "calc/__init__.py", "view_range": [1, 20]},
+                "read-extra",
+            ),
+        ),
+        _turn(
+            _call(
+                "write_file",
+                {"path": "note.txt", "content": "continued\n"},
+                "write-1",
+            ),
+        ),
+        _turn(
+            _call(
+                "finish",
+                {
+                    "summary": "Ignored an unsupported argument and continued.",
+                    "claims": _claims(changed=["note.txt"], green=False),
+                },
+                "finish-1",
+            ),
+        ),
+    ]
+    worker, instance, model, executor, branch, _, _ = await _fixture_worker(
+        tmp_path,
+        turns,
+    )
+
+    outcome = await instance.attempt(worker.WorkerBudget(max_completion_tokens=100))
+
+    assert outcome.end == "finished"
+    assert await executor.read_file(branch, "note.txt", 100) == "continued\n"
+    result = next(
+        message["content"]
+        for message in model.requests[1]["messages"]
+        if message.get("tool_call_id") == "read-extra"
+    )
+    assert result.splitlines()[0] == (
+        "note: ignored unsupported argument(s): view_range"
+    )
+    assert "def add" in result
 
 
 async def test_only_first_of_two_tool_calls_runs(tmp_path: Path):
@@ -287,10 +371,11 @@ async def test_only_first_of_two_tool_calls_runs(tmp_path: Path):
     )
 
 
-async def test_free_text_gets_one_repair_then_protocol_error(tmp_path: Path):
+async def test_three_consecutive_protocol_errors_end_the_attempt(tmp_path: Path):
     turns = [
         _turn(content="I will inspect the repository first."),
-        _turn(content="The fix is straightforward."),
+        _turn(_call("delete_repository", {}, "unknown-1")),
+        _turn(_call("read_file", {"path": ["not", "a", "string"]}, "invalid-1")),
     ]
     worker, instance, model, _, _, _, writer = await _fixture_worker(tmp_path, turns)
 
@@ -298,12 +383,79 @@ async def test_free_text_gets_one_repair_then_protocol_error(tmp_path: Path):
 
     assert outcome.end == "protocol_error"
     assert outcome.claims is None
-    assert outcome.turns == 2
+    assert outcome.turns == 3
     repair = model.requests[1]["messages"][-1]
     assert repair["role"] == "user"
     assert "one tool call" in repair["content"].lower()
+    invalid_result = next(
+        message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id") == "invalid-1"
+    )
+    assert invalid_result.startswith("invalid tool arguments:")
     rows = [json.loads(line) for line in writer.getvalue().splitlines()]
     assert rows[-1]["end_reason"] == "protocol_error"
+
+
+async def test_valid_tool_call_resets_consecutive_protocol_errors(tmp_path: Path):
+    turns = [
+        _turn(content="I will inspect first."),
+        _turn(_call("delete_repository", {}, "unknown-1")),
+        _turn(_call("read_file", {"path": "calc/__init__.py"}, "read-1")),
+        _turn(content="I will now edit."),
+        _turn(_call("read_file", {}, "invalid-read")),
+        _turn(
+            _call(
+                "write_file",
+                {"path": "note.txt", "content": "safe\n"},
+                "write-1",
+            ),
+        ),
+        _turn(
+            _call(
+                "finish",
+                {
+                    "summary": "Recovered after separated protocol errors.",
+                    "claims": _claims(changed=["note.txt"], green=False),
+                },
+                "finish-1",
+            ),
+        ),
+    ]
+    worker, instance, model, executor, branch, _, _ = await _fixture_worker(
+        tmp_path,
+        turns,
+    )
+
+    outcome = await instance.attempt(worker.WorkerBudget(max_completion_tokens=100))
+
+    assert outcome.end == "finished"
+    assert outcome.turns == 7
+    assert await executor.read_file(branch, "note.txt", 100) == "safe\n"
+    invalid_result = next(
+        message["content"]
+        for message in model.requests[5]["messages"]
+        if message.get("tool_call_id") == "invalid-read"
+    )
+    assert invalid_result.startswith("invalid tool arguments:")
+
+
+async def test_worker_prompt_names_known_repository_root(tmp_path: Path):
+    turns = [_turn(_call("read_file", {"path": "calc/__init__.py"}, "read-1"))]
+    worker, instance, model, _, _, _, _ = await _fixture_worker(
+        tmp_path,
+        turns,
+        repo_root="/repo",
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    assert model.requests[0]["messages"][0]["content"] == (
+        worker.SYSTEM_PROMPT + "Commands run in the repository root (/repo).\n"
+    )
 
 
 async def test_unknown_tool_gets_tool_list_and_worker_recovers(tmp_path: Path):
