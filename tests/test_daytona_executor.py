@@ -1138,3 +1138,25 @@ async def test_async_daytona_adapter_treats_an_already_deleted_sandbox_as_delete
 
     await module.AsyncDaytonaApi(GoneOnGet()).delete_sandbox("sandbox-9", timeout_s=5)
     await module.AsyncDaytonaApi(GoneOnDelete()).delete_sandbox("sandbox-9", timeout_s=5)
+
+
+async def test_patch_digest_matches_the_digest_recorded_for_test_runs_with_symlinks(tmp_path):
+    """The claim audit compares the patch receipt's tree digest with the digest a
+    test run recorded; both must hash the same view of the tree, symlinks included."""
+    module = _daytona_module()
+    repository = tmp_path / "repository"
+    snapshot_sha = _symlink_repository(repository)
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    api.replace_tree("sandbox-1", repository)
+    api.snapshot_sha = snapshot_sha
+    snapshot = await executor.snapshot(base)
+    checkpoint = await executor.checkpoint(base)
+    (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
+    api.set_file(executor._sandboxes[agent.id], "/repo/unrelated.txt", b"unrelated after\n")
+
+    tested_digest = await executor._tree_digest(agent)
+    receipt = await executor.patch(agent, snapshot.snapshot_sha)
+
+    assert receipt.exit_code == 0
+    assert receipt.tree_digest == tested_digest

@@ -1159,13 +1159,16 @@ class DaytonaExecutor:
                 symlinks=True,
             )
             await self._download_tree(branch, agent_tree)
+            # Hash the tree as downloaded, the same view every test-run receipt
+            # hashes, so the claim audit can compare the two; symlinks are put
+            # back only for the patch itself.
+            tree_digest = await asyncio.to_thread(_tree_digest, agent_tree)
             await asyncio.to_thread(
                 _copy_checkpoint_symlinks,
                 checkpoint_tree,
                 agent_tree,
                 checkpoint_symlinks,
             )
-            tree_digest = await asyncio.to_thread(_tree_digest, agent_tree)
             await asyncio.to_thread(mirror_worktree, agent_tree, staging)
         except (OSError, shutil.Error) as exc:
             for path in (agent_tree, staging):
