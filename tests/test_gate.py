@@ -223,3 +223,33 @@ def test_failed_apply_without_stderr_uses_constant_reason():
     kwargs["apply"] = kwargs["apply"].model_copy(update={"exit_code": 1, "stderr_tail": "   "})
     v = evaluate(**kwargs)
     assert v.status == "ERROR" and v.error == "apply receipt is not a successful apply on the witness branch"
+
+
+def test_target_in_a_file_that_still_fails_to_import_is_rejected_with_the_file_named():
+    from receipts.models import JunitSummary
+
+    broken = JunitSummary(passed=[], failed=[], errors=[], skipped=[], collection_errors=["tests/test_calc.py"])
+    kwargs = gate_cases.build([gate_cases.WRITE_SRC], broken, gate_cases._diff(gate_cases.SRC), None, ver_exit=1)
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "REJECTED"
+    r1 = next(p for p in verdict.predicates if p.id == "R1_fail_to_pass")
+    assert not r1.passed
+    assert "tests/test_calc.py" in r1.evidence and "failed to import" in r1.evidence
+
+
+def test_green_claim_over_an_own_run_with_a_collection_error_is_contradicted():
+    from receipts.models import JunitSummary
+
+    own = JunitSummary(
+        passed=[gate_cases.P1, gate_cases.P2, gate_cases.T], failed=[], errors=[], skipped=[],
+        collection_errors=["tests/test_extra.py"],
+    )
+    run = ("command", dict(cmd="python -m pytest tests", exit_code=1, junit=own))
+    kwargs = gate_cases.build([gate_cases.WRITE_SRC, run], gate_cases.ALL_GREEN, gate_cases._diff(gate_cases.SRC), gate_cases.GREEN)
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.claim_audit == "contradicted"
+    assert "tests/test_extra.py" in verdict.claim_evidence

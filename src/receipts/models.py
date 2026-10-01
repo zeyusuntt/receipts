@@ -44,6 +44,10 @@ class JunitSummary(BaseModel):
     failed: list[str]
     errors: list[str]
     skipped: list[str]
+    collection_errors: list[str] = Field(
+        default_factory=list,
+        description="test files that failed to import; their tests count as errors but are not collected ids",
+    )
 
     @property
     def collected(self) -> int:
@@ -77,6 +81,8 @@ class JunitSummary(BaseModel):
             return "error"
         if node_id in self.skipped:
             return "skipped"
+        if node_id.split("::", 1)[0] in self.collection_errors:
+            return "error"
         return "missing"
 
 

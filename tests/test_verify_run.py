@@ -4,7 +4,7 @@ from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import RepoAtCommit
 from receipts.sandbox.sink import MemorySink
 from receipts.verify.run import BaselineTooSlow, TargetNotFailing, establish_baseline, rerun_one, verify_attempt
-from tests.fixtures.repo_factory import make_repo
+from tests.fixtures.repo_factory import _git, make_repo
 
 T = "tests/test_calc.py::test_sub"
 
@@ -139,3 +139,26 @@ async def test_rerun_one_targets_a_single_node_with_brackets_and_spaces(tmp_path
     assert r.kind == "verification"
     assert r.branch_id == result.witness.id and r.image_before == result.verification.image_after
     assert r.junit.collected == 1 and r.junit.passed == ["tests/test_calc.py::test_param[a b]"]
+
+
+NEW_SPEC = "tests/test_new_feature.py::test_new_feature"
+
+
+async def test_baseline_accepts_a_spec_test_whose_module_does_not_exist_yet(tmp_path):
+    """A new-feature task: the failing test imports a module the fix will create, so
+    collecting its file fails at baseline. That is a failing target, not a broken suite."""
+    repo = make_repo(tmp_path / "src")
+    (repo / "tests" / "test_new_feature.py").write_text(
+        "from calc.feature import double\n\n\ndef test_new_feature():\n    assert double(2) == 4\n"
+    )
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "add spec test for a module that does not exist yet")
+    ex = LocalExecutor(root=tmp_path / "work", sink=MemorySink(), run_id="run-1")
+    base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"))
+
+    b = await establish_baseline(ex, base, "tests", [NEW_SPEC], limit_s=600)
+
+    assert b.target == [NEW_SPEC]
+    assert NEW_SPEC not in b.collected_ids
+    assert "tests/test_calc.py::test_add" in b.protected
+    assert all(run.collection_errors == ["tests/test_new_feature.py"] for run in b.runs)

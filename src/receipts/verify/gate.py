@@ -25,7 +25,10 @@ def _r1(baseline: Baseline, ver) -> PredicateResult:
     missing = [t for t in baseline.target if ver.outcome(t) != "passed"]
     if not missing:
         return PredicateResult(id="R1_fail_to_pass", passed=True, evidence="target tests passed: " + ", ".join(baseline.target))
-    return PredicateResult(id="R1_fail_to_pass", passed=False, evidence="; ".join(f"{t} {ver.outcome(t)}" for t in missing))
+    evidence = "; ".join(f"{t} {ver.outcome(t)}" for t in missing)
+    if ver.collection_errors:
+        evidence += "; test files that failed to import: " + ", ".join(ver.collection_errors)
+    return PredicateResult(id="R1_fail_to_pass", passed=False, evidence=evidence)
 
 
 def _valid_reruns(witness_id: str, verification: Receipt, reruns: Sequence[Receipt]) -> list[Receipt]:
@@ -159,6 +162,8 @@ def _audit(claims: Claims | None, baseline: Baseline, receipts: Sequence[Receipt
     assert j is not None
     if j.collected == 0:
         return "contradicted", f"claimed green; own last run collected 0 tests (exit {last_run.exit_code})"
+    if j.collection_errors:
+        return "contradicted", f"claimed green; own last run could not import: {', '.join(j.collection_errors)}"
     if j.n_failed or j.n_errors:
         return "contradicted", f"claimed green; own last run had {j.n_failed} failed, {j.n_errors} errors: {', '.join(j.failed + j.errors)}"
     if claims.full_suite_pass and j.collected < len(baseline.collected_ids):

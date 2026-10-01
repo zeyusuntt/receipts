@@ -42,3 +42,24 @@ def test_garbage_file_is_none(tmp_path):
     p = tmp_path / "bad.xml"
     p.write_text("<not xml")
     assert parse_junit(p) is None
+
+
+COLLECTION_ERROR_XML = """<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="2"><testcase classname="" name="tests.test_new" file="tests/test_new.py" time="0.000"><error message="collection failure">ImportError while importing test module</error></testcase><testcase classname="tests.test_old" name="test_ok" file="tests/test_old.py" time="0.001" /></testsuite></testsuites>"""
+
+
+def test_collection_failure_is_a_file_level_error_not_a_test(tmp_path):
+    path = tmp_path / "junit.xml"
+    path.write_text(COLLECTION_ERROR_XML)
+
+    j = parse_junit(path)
+
+    assert j.collection_errors == ["tests/test_new.py"]
+    assert j.passed == ["tests/test_old.py::test_ok"]
+    assert j.errors == [] and j.failed == [] and j.skipped == []
+    assert j.collected == 1
+    assert j.all_ids() == {"tests/test_old.py::test_ok"}
+    # Tests inside a file that failed to collect did not pass: they count as errors.
+    assert j.outcome("tests/test_new.py::test_new") == "error"
+    assert j.outcome("tests/test_new.py::TestNew::test_case[1]") == "error"
+    # A test in a file that collected fine but is absent is still missing.
+    assert j.outcome("tests/test_old.py::test_gone") == "missing"

@@ -60,7 +60,7 @@ class Executor(Protocol):
     async def apply_patch(self, branch: Branch, patch_text: str) -> Receipt: ...
 
 
-PYTEST_FLAGS = "-o junit_family=xunit1 -p no:cacheprovider -rA"
+PYTEST_FLAGS = "-o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors"
 
 PYTEST_BOOTSTRAP = """\
 import os

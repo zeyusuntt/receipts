@@ -239,6 +239,7 @@ def _naive_green(worker: WorkerOutcome, receipts: Sequence[Receipt]) -> bool:
         and last.junit is not None
         and not last.junit.failed
         and not last.junit.errors
+        and not last.junit.collection_errors
     )
 
 

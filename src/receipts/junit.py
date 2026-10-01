@@ -32,7 +32,14 @@ def parse_junit(path: Path | None) -> JunitSummary | None:
     failed: list[str] = []
     errors: list[str] = []
     skipped: list[str] = []
+    collection_errors: list[str] = []
     for case in root.iter("testcase"):
+        error = case.find("error")
+        if error is not None and error.get("message") == "collection failure" and not case.get("classname"):
+            # pytest reports a test file that failed to import as one pseudo test case named
+            # after the file. It is a file-level error, never a test id.
+            collection_errors.append(case.get("file") or case.get("name", "").replace(".", "/") + ".py")
+            continue
         nid = node_id(case.get("file", ""), case.get("classname", ""), case.get("name", ""))
         if case.find("failure") is not None:
             failed.append(nid)
@@ -42,4 +49,5 @@ def parse_junit(path: Path | None) -> JunitSummary | None:
             skipped.append(nid)
         else:
             passed.append(nid)
-    return JunitSummary(passed=passed, failed=failed, errors=errors, skipped=skipped)
+    return JunitSummary(passed=passed, failed=failed, errors=errors, skipped=skipped,
+                        collection_errors=collection_errors)
