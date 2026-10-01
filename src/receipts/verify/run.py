@@ -1,0 +1,94 @@
+"""The executor's own baseline and witness verification runs.
+
+The worker's pytest runs on the agent branch are feedback for the model. The
+gate believes only canonical verification on a fresh witness forked from C0.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import shlex
+from pathlib import Path
+
+from pydantic import BaseModel
+
+from receipts.models import Baseline, Branch, Checkpoint, JunitSummary, Receipt
+from receipts.patchscope import filter_patch
+from receipts.sandbox.protocol import Executor
+
+
+class Attempt(BaseModel):
+    patch: Receipt
+    filtered_patch: str
+    filtered_sha256: str
+    dropped: list[str]
+    witness: Branch
+    apply: Receipt
+    verification: Receipt | None
+
+
+class TargetNotFailing(Exception):
+    def __init__(self, node_ids: list[str]) -> None:
+        super().__init__(f"target tests did not fail in every baseline run: {node_ids}")
+        self.node_ids = node_ids
+
+
+class BaselineTooSlow(Exception):
+    def __init__(self, seconds: float) -> None:
+        super().__init__(f"baseline suite took {seconds:.0f}s, over the limit")
+        self.seconds = seconds
+
+
+class BaselineBroken(Exception):
+    pass
+
+
+async def establish_baseline(ex: Executor, base: Branch, suite_scope: str, target: list[str], limit_s: int) -> Baseline:
+    first = await ex.run_pytest(base, suite_scope, timeout_s=max(limit_s, 1))
+    if first.timed_out or first.duration_s > limit_s:
+        raise BaselineTooSlow(first.duration_s)
+    if first.exit_code not in (0, 1, 5) or first.junit is None:
+        raise BaselineBroken(f"first baseline run is not a valid pytest run (exit {first.exit_code}, junit={'present' if first.junit else 'missing'})")
+    receipts = [first]
+    if first.duration_s < limit_s / 2:
+        second = await ex.run_pytest(base, suite_scope, timeout_s=limit_s)
+        if second.timed_out or second.exit_code not in (0, 1, 5) or second.junit is None:
+            raise BaselineBroken(f"second baseline run failed (timed_out={second.timed_out}, exit {second.exit_code})")
+        receipts.append(second)
+    runs: list[JunitSummary] = [r.junit for r in receipts]  # type: ignore[misc]
+
+    # Every target must be failed or errored in every run; anything else cannot anchor a verdict.
+    bad_targets = [t for t in target if any(j.outcome(t) not in ("failed", "error") for j in runs)]
+    if bad_targets:
+        raise TargetNotFailing(bad_targets)
+
+    seen = sorted(set().union(*(j.all_ids() for j in runs)))
+    unstable = sorted(n for n in seen if len({j.outcome(n) for j in runs}) > 1)
+    protected = sorted(n for n in seen if all(j.outcome(n) == "passed" for j in runs))
+    skipped = sorted(n for n in seen if any(j.outcome(n) == "skipped" for j in runs))
+    return Baseline(runs=runs, run_receipt_ids=[r.receipt_id for r in receipts], collected_ids=seen,
+                    skipped_ids=skipped, protected=protected, unstable=unstable, target=list(target))
+
+
+async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_sha: str,
+                         suite_scope: str, timeout_s: int, attempt: int) -> Attempt:
+    patch = await ex.patch(agent, snapshot_sha)
+    patch_text = ""
+    if patch.exit_code == 0 and patch.diff is not None and patch.diff.patch_path is not None:
+        patch_text = Path(patch.diff.patch_path).read_text()
+    filtered_patch, dropped = filter_patch(patch_text)
+    filtered_sha256 = hashlib.sha256(filtered_patch.encode()).hexdigest()
+
+    (witness,) = await ex.fork(c0, 1, prefix="w")
+    if witness.id != f"w{attempt}":
+        raise RuntimeError(f"witness sequence mismatch: expected w{attempt}, got {witness.id}")
+    apply = await ex.apply_patch(witness, filtered_patch)
+    verification = None
+    if apply.exit_code == 0:
+        verification = await ex.run_pytest(witness, suite_scope, timeout_s=timeout_s, kind="verification")
+    return Attempt(patch=patch, filtered_patch=filtered_patch, filtered_sha256=filtered_sha256,
+                   dropped=dropped, witness=witness, apply=apply, verification=verification)
+
+
+async def rerun_one(ex: Executor, witness: Branch, node_id: str, timeout_s: int) -> Receipt:
+    return await ex.run_pytest(witness, shlex.quote(node_id), timeout_s=timeout_s, kind="verification")
