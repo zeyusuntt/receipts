@@ -20,5 +20,8 @@ packages = ["src/receipts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Import from src directly: on macOS uv marks .venv files hidden and Python 3.13+
+# skips hidden .pth files, so the editable install alone is not importable.
+pythonpath = ["src"]
 addopts = "-q"
 asyncio_mode = "auto"
