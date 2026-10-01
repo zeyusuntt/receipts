@@ -1160,3 +1160,20 @@ async def test_patch_digest_matches_the_digest_recorded_for_test_runs_with_symli
 
     assert receipt.exit_code == 0
     assert receipt.tree_digest == tested_digest
+
+
+async def test_command_duration_ignores_wall_clock_jumps_such_as_host_sleep(tmp_path, monkeypatch):
+    """Durations decide the baseline time limit; a host that sleeps mid-command makes the
+    wall clock jump, so durations must come from a monotonic clock."""
+    from datetime import datetime, timedelta, timezone
+
+    module = _daytona_module()
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    start = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    ticks = iter([start, start + timedelta(seconds=1000)] * 10)
+    monkeypatch.setattr(module, "_now", lambda: next(ticks))
+
+    receipt = await executor.run(base, "true", timeout_s=30)
+
+    assert receipt.duration_s < 60

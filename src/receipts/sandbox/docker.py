@@ -12,6 +12,7 @@ ignored and untracked files and does not trust Git inside the worker container.
 from __future__ import annotations
 
 import asyncio
+import time
 import hashlib
 import io
 import json
@@ -279,6 +280,7 @@ class DockerExecutor:
         timeout_s: float = 120,
     ) -> tuple[bytes, bytes, int | None, bool, datetime, float]:
         started = _now()
+        started_monotonic = time.monotonic()
         proc = await asyncio.create_subprocess_exec(
             "docker",
             *args,
@@ -298,7 +300,7 @@ class DockerExecutor:
             code = None
             proc.kill()
             stdout, stderr = await proc.communicate()
-        duration = (_now() - started).total_seconds()
+        duration = time.monotonic() - started_monotonic
         return stdout, stderr, code, host_timed_out, started, duration
 
     async def _checked_docker(

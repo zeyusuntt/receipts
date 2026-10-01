@@ -641,6 +641,7 @@ class DaytonaExecutor:
         if timeout_s <= 0:
             raise ValueError("timeout_s must be positive")
         started = _now()
+        started_monotonic = time.monotonic()
         try:
             result = await self.api.exec(
                 self._sandbox_id(branch),
@@ -657,7 +658,7 @@ class DaytonaExecutor:
             output = result.output.encode()
             exit_code = result.exit_code
             timed_out = False
-        return output, exit_code, timed_out, started, (_now() - started).total_seconds()
+        return output, exit_code, timed_out, started, time.monotonic() - started_monotonic
 
     def _relative_remote_path(self, branch: Branch, remote_path: str) -> Path | None:
         normalized = PurePosixPath(posixpath.normpath(remote_path))

@@ -486,3 +486,24 @@ async def test_run_pytest_reports_invocation_relative_ids_when_the_rootdir_is_ne
 
     assert receipt.exit_code == 0
     assert receipt.junit.passed == ["pkg/tests/test_k.py::test_a"]
+
+
+async def test_local_command_duration_ignores_wall_clock_jumps(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    import receipts.sandbox.local as local_module
+    from receipts.sandbox.local import LocalExecutor
+    from receipts.sandbox.protocol import RepoAtCommit
+    from receipts.sandbox.sink import MemorySink
+    from tests.fixtures.repo_factory import make_repo
+
+    repo = make_repo(tmp_path / "src")
+    ex = LocalExecutor(root=tmp_path / "work", sink=MemorySink(), run_id="run-1")
+    base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"))
+    start = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    ticks = iter([start, start + timedelta(seconds=1000)] * 10)
+    monkeypatch.setattr(local_module, "_now", lambda: next(ticks))
+
+    receipt = await ex.run(base, "true", timeout_s=30)
+
+    assert receipt.duration_s < 60

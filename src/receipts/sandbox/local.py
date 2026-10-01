@@ -15,6 +15,7 @@ process behind that later tampers with verification.
 from __future__ import annotations
 
 import asyncio
+import time
 import hashlib
 import json
 import os
@@ -197,6 +198,7 @@ class LocalExecutor:
         if env_overrides:
             env.update(env_overrides)
         started = _now()
+        started_monotonic = time.monotonic()
         proc = await asyncio.create_subprocess_exec(
             str(self._bash), "-c", cmd, cwd=workdir, env=env,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, start_new_session=True,
@@ -218,7 +220,7 @@ class LocalExecutor:
                 os.killpg(proc.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
-        return stdout, stderr, code, timed_out, started, (_now() - started).total_seconds()
+        return stdout, stderr, code, timed_out, started, time.monotonic() - started_monotonic
 
     # ----- protocol -----
 
