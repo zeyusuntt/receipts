@@ -172,7 +172,7 @@ async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path
         if message.get("tool_call_id") == "run-1"
     )
     assert run_result.startswith("exit 0\n")
-    assert "[100%]" in run_result
+    assert "4 passed" in run_result
     assert branch_receipts[-1].junit is not None
     assert branch_receipts[-1].junit.n_passed == 4
 

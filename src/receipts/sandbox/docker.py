@@ -799,7 +799,7 @@ class DockerExecutor:
         report_on_host.unlink(missing_ok=True)
         cmd = (
             f"{shlex.quote(spec.python)} -I /opt/receipts/receipts_pytest.py "
-            f"{args} -rA --junitxml={shlex.quote(report_in_container)} {PYTEST_FLAGS}"
+            f"{args} --junitxml={shlex.quote(report_in_container)} {PYTEST_FLAGS}"
         )
         stdout, stderr, code, timed_out, started, duration = await self._execute(
             branch,

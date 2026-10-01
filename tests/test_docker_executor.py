@@ -707,9 +707,9 @@ async def test_run_pytest_reads_junit_logs_stdout_and_advances_image_offline(tmp
     )
 
     assert executor.command == (
-        "python -I /opt/receipts/receipts_pytest.py tests -rA "
+        "python -I /opt/receipts/receipts_pytest.py tests "
         "--junitxml=/opt/receipts/reports/b1-1.xml "
-        "-o junit_family=xunit1 -p no:cacheprovider -q -rA"
+        "-o junit_family=xunit1 -p no:cacheprovider -rA"
     )
     assert executor.environment == {"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""}
     assert receipt.kind == "verification" and receipt.exit_code == 0

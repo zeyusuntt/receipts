@@ -394,7 +394,7 @@ async def test_run_pytest_uses_trusted_runner_and_reads_junit_through_fs(tmp_pat
     assert call["command"] == (
         "python3 -I /opt/receipts/receipts_pytest.py "
         "tests/test_sample.py::test_ok "
-        "-o junit_family=xunit1 -p no:cacheprovider -q -rA "
+        "-o junit_family=xunit1 -p no:cacheprovider -rA "
         "--junitxml=/opt/receipts/reports/base-1.xml"
     )
     assert call["timeout_s"] == 37
