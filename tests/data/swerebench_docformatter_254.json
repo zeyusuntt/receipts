@@ -1,0 +1,63 @@
+{
+ "instance_id": "pycqa__docformatter-254",
+ "repo": "PyCQA/docformatter",
+ "base_commit": "5c9744e98098dd9a092b591b196df7e133d51117",
+ "image_name": "docker.io/swerebenchv2/pycqa-docformatter:254-5c9744e",
+ "test_patch": "diff --git a/tests/_data/string_files/format_sphinx.toml b/tests/_data/string_files/format_sphinx.toml\nindex e2e566e..38eefaa 100644\n--- a/tests/_data/string_files/format_sphinx.toml\n+++ b/tests/_data/string_files/format_sphinx.toml\n@@ -236,3 +236,17 @@ outstring='''\"\"\"CC.\n \n     c c :math:`[0, 1]`.\n     \"\"\"'''\n+\n+[issue_253]\n+instring='''\"\"\"\n+    My test fixture.\n+\n+    :param caplog: Pytest caplog fixture.\n+    :yield: Until test complete, then run cleanup.\n+    \"\"\"'''\n+outstring='''\"\"\"\n+    My test fixture.\n+\n+    :param caplog: Pytest caplog fixture.\n+    :yield: Until test complete, then run cleanup.\n+    \"\"\"'''\ndiff --git a/tests/formatter/test_format_sphinx.py b/tests/formatter/test_format_sphinx.py\nindex 297d682..03480db 100644\n--- a/tests/formatter/test_format_sphinx.py\n+++ b/tests/formatter/test_format_sphinx.py\n@@ -433,3 +433,42 @@ class TestFormatWrapSphinx:\n             INDENTATION,\n             instring,\n         )\n+\n+    @pytest.mark.unit\n+    @pytest.mark.parametrize(\n+        \"args\",\n+        [\n+            [\n+                \"--wrap-descriptions\",\n+                \"120\",\n+                \"--wrap-summaries\",\n+                \"120\",\n+                \"--pre-summary-newline\",\n+                \"--black\",\n+                \"\",\n+            ]\n+        ],\n+    )\n+    def test_format_docstring_sphinx_style_recognize_yield(\n+        self,\n+        test_args,\n+        args,\n+    ):\n+        \"\"\"Should identify `yield` as sphinx field name.\n+\n+        See issue #253.\n+        \"\"\"\n+        uut = Formatter(\n+            test_args,\n+            sys.stderr,\n+            sys.stdin,\n+            sys.stdout,\n+        )\n+\n+        instring = self.TEST_STRINGS[\"issue_253\"][\"instring\"]\n+        outstring = self.TEST_STRINGS[\"issue_253\"][\"outstring\"]\n+\n+        assert outstring == uut._do_format_docstring(\n+            INDENTATION,\n+            instring,\n+        )\n",
+ "FAIL_TO_PASS": [
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style_recognize_yield[args0]"
+ ],
+ "PASS_TO_PASS": [
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style[args0]",
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_non_sphinx_style[args0]",
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style_remove_excess_whitespace[args0]",
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style_two_directives_in_row[args0]",
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style_field_body_is_blank[args0]",
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style_field_name_included_wrap_length[args0]",
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style_field_body_is_a_link[args0]",
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style_field_name_has_periods[args0]",
+  "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::test_format_docstring_sphinx_style_ignore_directive[args0]"
+ ],
+ "problem_statement": "Wrapping yield tag\nHi,\r\nWith the latest docformatter (1.7.4) any yield tags in my docstrings are being wrapped into the line above.\r\n```\r\n    \"\"\"\r\n    My test fixture.\r\n\r\n    :param caplog: Pytest caplog fixture.\r\n    :yield: Until test complete, then run cleanup.\r\n    \"\"\"\r\n```\r\nTurns into\r\n```\r\n    \"\"\"\r\n    My test fixture.\r\n\r\n    :param caplog: Pytest caplog fixture. :yield: Until test complete, then run cleanup.\r\n    \"\"\"\r\n```\r\n\r\nI understand that `yield` is not part of the official Sphinx docstring spec, but we have adopted them as we use darglint to lint our docstrings and that flags a `DAR301 Missing \"Yields\" in Docstring\" if we do not document our yield.\r\nPlus it is good to be able to document what functions yield within their docstring.\r\n\r\nI am running docformatter in a pre-commit hook with the following configuration:\r\n```\r\n  - repo: https://github.com/pycqa/docformatter\r\n    rev: v1.7.4\r\n    hooks:\r\n      - id: docformatter\r\n        args:\r\n          - --black\r\n          - --in-place\r\n          - --pre-summary-newline\r\n          - --wrap-summaries=120\r\n          - --wrap-descriptions=120\r\n```",
+ "install_config": {
+  "base_image_name": "python_base_310",
+  "docker_specs": {
+   "_variant": null,
+   "bazel_version": null,
+   "bun_version": null,
+   "cargo_version": null,
+   "deno_version": null,
+   "docker_version": null,
+   "erlang_version": null,
+   "gcc_version": null,
+   "go_version": null,
+   "helm_version": null,
+   "java_version": null,
+   "jdk_version": null,
+   "llvm_version": null,
+   "lua_version": null,
+   "luajit_version": null,
+   "neovim_version": null,
+   "node_version": null,
+   "npm_version": null,
+   "nvim_version": null,
+   "pnpm_version": null,
+   "python_image": "python_base_310",
+   "python_version": null,
+   "redis_version": null,
+   "ruby_version": null,
+   "rust_version": null,
+   "rustc_version": null,
+   "solana_version": null,
+   "sqlite_version": null
+  },
+  "install": [
+   "export VIRTUAL_ENV=\"/tmp/venv\"",
+   "pip install -q -e .",
+   "pip install -q pytest pytest-cov mock"
+  ],
+  "log_parser": "parse_log_pytest",
+  "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/formatter/test_format_sphinx.py"
+ },
+ "language": "python"
+}
