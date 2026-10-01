@@ -604,6 +604,61 @@ async def test_close_deletes_tracked_and_label_swept_sandboxes_and_logs_snapshot
     assert len(api.deleted_snapshots) == 1
 
 
+class LaggingDeleteDaytonaApi(MemoryDaytonaApi):
+    """Models the live service: a deleted sandbox stays listed while it is torn
+    down, and deleting an id that is already gone raises a 404."""
+
+    def __init__(self, module):
+        super().__init__(module)
+        self.destroying: set[str] = set()
+
+    async def list_sandboxes(self, labels):
+        listed = await super().list_sandboxes(labels)
+        return listed + [
+            self.module.DaytonaSandbox(id=sandbox_id)
+            for sandbox_id in sorted(self.destroying)
+        ]
+
+    async def delete_sandbox(self, sandbox_id, *, timeout_s):
+        self.deleted_sandboxes.append(sandbox_id)
+        if sandbox_id not in self.sandboxes:
+            error = RuntimeError(f"Sandbox with ID or name {sandbox_id} not found")
+            error.status_code = 404
+            raise error
+        self.sandboxes.pop(sandbox_id)
+        self.destroying.add(sandbox_id)
+
+
+async def test_close_tolerates_sandboxes_still_listed_while_being_deleted(tmp_path):
+    module = _daytona_module()
+    api = LaggingDeleteDaytonaApi(module)
+    executor, _, _ = _executor(tmp_path, module, api=api)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    checkpoint = await executor.checkpoint(base)
+    await executor.fork(checkpoint, 2)
+    orphan = api._new_sandbox({"receipts_run": "run-1", "receipts_branch": "leaked"})
+
+    await executor.close()
+
+    assert api.sandboxes == {}
+    assert sorted(set(api.deleted_sandboxes)) == sorted(
+        {"sandbox-1", "sandbox-2", "sandbox-3", orphan.id},
+    )
+    assert api.closed is True
+
+
+async def test_close_counts_a_404_on_a_tracked_sandbox_as_deleted(tmp_path):
+    module = _daytona_module()
+    api = LaggingDeleteDaytonaApi(module)
+    executor, _, _ = _executor(tmp_path, module, api=api)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    api.sandboxes.pop("sandbox-1")
+
+    await executor.close()
+
+    assert api.closed is True
+
+
 async def test_close_retains_a_nonpermission_snapshot_failure_for_retry(tmp_path):
     module = _daytona_module()
     executor, api, _ = _executor(tmp_path, module)
@@ -840,3 +895,22 @@ async def test_live_daytona_prepare_checkpoint_fork_isolation_and_cleanup(tmp_pa
         assert await executor.read_file(second, "receipts-only-first.txt", 100) == ""
     finally:
         await executor.close()
+
+
+async def test_async_daytona_adapter_treats_an_already_deleted_sandbox_as_deleted():
+    module = _daytona_module()
+    from daytona import DaytonaNotFoundError
+
+    class GoneOnGet:
+        async def get(self, sandbox_id):
+            raise DaytonaNotFoundError(f"Sandbox with ID or name {sandbox_id} not found")
+
+    class GoneOnDelete:
+        async def get(self, sandbox_id):
+            return object()
+
+        async def delete(self, sandbox, timeout=60, wait=False):
+            raise DaytonaNotFoundError("Failed to remove sandbox: not found")
+
+    await module.AsyncDaytonaApi(GoneOnGet()).delete_sandbox("sandbox-9", timeout_s=5)
+    await module.AsyncDaytonaApi(GoneOnDelete()).delete_sandbox("sandbox-9", timeout_s=5)

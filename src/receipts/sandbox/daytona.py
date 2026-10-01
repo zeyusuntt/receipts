@@ -33,6 +33,7 @@ from daytona import (
     CreateSandboxFromImageParams,
     CreateSandboxFromSnapshotParams,
     DaytonaFileNotFoundError,
+    DaytonaNotFoundError,
     DaytonaProcessExecutionTimeoutError,
     FileDownloadRequest,
     ListSandboxesQuery,
@@ -395,8 +396,13 @@ class AsyncDaytonaApi:
         return sandboxes
 
     async def delete_sandbox(self, sandbox_id: str, *, timeout_s: int) -> None:
-        sandbox = await self._sandbox(sandbox_id)
-        await self.client.delete(sandbox, timeout=timeout_s, wait=True)
+        # A sandbox that is already gone counts as deleted: the live service
+        # keeps listing a sandbox while it is torn down.
+        try:
+            sandbox = await self._sandbox(sandbox_id)
+            await self.client.delete(sandbox, timeout=timeout_s, wait=True)
+        except DaytonaNotFoundError:
+            return
         self._sandboxes.pop(sandbox_id, None)
 
     async def delete_snapshot(self, snapshot: str, *, timeout_s: int) -> None:
@@ -1145,13 +1151,16 @@ class DaytonaExecutor:
         deleted: set[str] = set()
 
         async def delete_sandbox(sandbox_id: str) -> None:
+            if sandbox_id in deleted:
+                return
             try:
                 await self.api.delete_sandbox(sandbox_id, timeout_s=120)
             except Exception as exc:  # Cleanup must continue after one provider failure.
-                failures[f"sandbox {sandbox_id}"] = str(exc)
-            else:
-                failures.pop(f"sandbox {sandbox_id}", None)
-                deleted.add(sandbox_id)
+                if self._status_code(exc) != 404:
+                    failures[f"sandbox {sandbox_id}"] = str(exc)
+                    return
+            failures.pop(f"sandbox {sandbox_id}", None)
+            deleted.add(sandbox_id)
 
         for sandbox_id in reversed(list(dict.fromkeys(self._created_sandboxes))):
             await delete_sandbox(sandbox_id)
