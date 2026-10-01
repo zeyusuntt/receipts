@@ -8,6 +8,7 @@ from pathlib import Path
 from types import ModuleType
 
 from receipts.llm import AssistantTurn, FakeModel, ToolCall
+from receipts.receipt_text import render
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import RepoAtCommit
 from receipts.sandbox.sink import RunSink
@@ -200,6 +201,15 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     assert disclosure["executor_kind"] == "local"
     assert disclosure["model"]["client"] == "FakeModel"
 
+    markdown = render(result)
+    assert "**Verdict: VERIFIED**" in markdown
+    assert TARGET in markdown
+    assert "Corrected subtraction and ran the full suite." in markdown
+    assert "calc/__init__.py" in markdown
+    for predicate in result.final_verdict.predicates:
+        assert predicate.id in markdown
+        assert predicate.evidence in markdown
+
     agent_rows = [
         json.loads(line)
         for line in (run_dir / "agent" / "receipts.jsonl").read_text().splitlines()
@@ -300,6 +310,13 @@ async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path)
     assert first.claim_evidence in appeal_text
     assert "Fix the source so these checks pass." in appeal_text
 
+    markdown = render(result)
+    assert "**Verdict: VERIFIED**" in markdown
+    assert "REJECTED" in markdown
+    assert "tests/test_calc.py" in markdown
+    assert "Changed the test and claimed success." in markdown
+    assert "Restored the test, fixed the source, and ran the suite." in markdown
+
 
 async def test_no_fix_after_one_appeal_selects_no_verified_patch(tmp_path: Path):
     model = _model(
@@ -346,3 +363,7 @@ async def test_no_fix_after_one_appeal_selects_no_verified_patch(tmp_path: Path)
     assert persisted["verified_fix"] is False
     assert persisted["selected_patch_path"] is None
     assert len(persisted["attempts"]) == 2
+
+    markdown = render(result)
+    assert "**Verdict: NO VERIFIED FIX**" in markdown
+    assert markdown.count("REJECTED") >= 2
