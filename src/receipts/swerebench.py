@@ -139,6 +139,8 @@ def parse_log_pytest(log: str) -> dict[str, str]:
             if line.startswith("FAILED"):
                 line = line.replace(" - ", " ")
             test_case = line.split()
+            if len(test_case) <= 1:
+                continue
             test_status_map[test_case[1]] = test_case[0]
     return test_status_map
 

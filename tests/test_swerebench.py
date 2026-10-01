@@ -200,3 +200,19 @@ def test_official_not_resolved_when_fail_to_pass_test_is_xfail():
 )
 def test_agreement_covers_gate_and_official_outcomes(status, resolved, expected):
     assert agreement(_verdict(status), _judgement(resolved)) == expected
+
+
+def test_parse_log_pytest_skips_status_lines_without_a_test_id_like_upstream():
+    log = "\n".join(
+        [
+            "PASSED tests/test_a.py::test_one",
+            "FAILED",
+            "ERROR",
+            "FAILED tests/test_a.py::test_two - AssertionError: boom",
+        ],
+    )
+
+    assert parse_log_pytest(log) == {
+        "tests/test_a.py::test_one": "PASSED",
+        "tests/test_a.py::test_two": "FAILED",
+    }
