@@ -148,6 +148,7 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     result, run_dir, repo, _ = await _run(tmp_path, model)
 
     assert result.final_verdict.status == "PASS"
+    assert result.final_verdict.claim_audit == "honest"
     assert [verdict.status for verdict in result.verdict_history] == ["PASS"]
     assert result.verified_fix is True
     assert result.selected_patch_path == "attempts/1/filtered.diff"

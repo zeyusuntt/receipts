@@ -9,6 +9,8 @@ import subprocess
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 from receipts.llm import AssistantTurn, FakeModel, ToolCall
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import RepoAtCommit
@@ -78,6 +80,35 @@ async def _fixture_worker(
     return worker_module, instance, model, executor, branch, sink, writer
 
 
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("pytest", ""),
+        ("pytest -q tests/test_calc.py::test_sub", "-q tests/test_calc.py::test_sub"),
+        ("python -m pytest -v tests/", "-v tests/"),
+        ("python3 -m pytest", ""),
+        ("python3.12 -m pytest -k \"a and b\"", "-k 'a and b'"),
+        ("/usr/bin/python3 -m pytest", ""),
+        ("py.test tests/x.py::T::t[args0]", "'tests/x.py::T::t[args0]'"),
+        ("cd tests && pytest", None),
+        ("pytest | tail -5", None),
+        ("pytest > out.txt", None),
+        ("pytest; echo done", None),
+        ("echo pytest", None),
+        ("python -c \"import pytest\"", None),
+        ("pip install pytest", None),
+        ("pytest $(ls tests)", None),
+        ("pytest \"unbalanced", None),
+        ("python -m pip install pytest", None),
+    ],
+)
+def test_pytest_args_recognizes_only_plain_pytest_invocations(
+    command: str,
+    expected: str | None,
+):
+    assert _worker_module().pytest_args(command) == expected
+
+
 async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path):
     turns = [
         _turn(_call("read_file", {"path": "calc/__init__.py"}, "read-1")),
@@ -141,7 +172,9 @@ async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path
         if message.get("tool_call_id") == "run-1"
     )
     assert run_result.startswith("exit 0\n")
-    assert "4 passed" in run_result
+    assert "[100%]" in run_result
+    assert branch_receipts[-1].junit is not None
+    assert branch_receipts[-1].junit.n_passed == 4
 
     rows = [json.loads(line) for line in writer.getvalue().splitlines()]
     assert len(rows) == 4
@@ -150,6 +183,61 @@ async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path
     assert rows[-1]["usage"] == {"prompt": 10, "completion": 1, "reasoning": 0}
     assert rows[-1]["tool_calls"][0]["name"] == "finish"
     assert "api_key" not in writer.getvalue().lower()
+
+
+async def test_plain_pytest_command_carries_junit_but_shell_composition_does_not(
+    tmp_path: Path,
+):
+    turns = [
+        _turn(
+            _call(
+                "write_file",
+                {
+                    "path": "calc/__init__.py",
+                    "content": (
+                        "def add(a, b):\n"
+                        "    return a + b\n\n\n"
+                        "def sub(a, b):\n"
+                        "    return a - b\n"
+                    ),
+                },
+                "write-1",
+            ),
+        ),
+        _turn(
+            _call("run_command", {"command": "python -m pytest -q"}, "run-pytest"),
+        ),
+        _turn(
+            _call(
+                "run_command",
+                {"command": "cd . && python -m pytest -q"},
+                "run-shell",
+            ),
+        ),
+    ]
+    worker, instance, _, _, branch, sink, writer = await _fixture_worker(
+        tmp_path,
+        turns,
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=3, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    command_receipts = [
+        receipt
+        for receipt in sink.receipts
+        if receipt.branch_id == branch.id and receipt.kind == "command"
+    ]
+    assert len(command_receipts) == 2
+    assert command_receipts[0].junit is not None
+    assert command_receipts[0].tree_digest is not None
+    assert command_receipts[1].junit is None
+    rows = [json.loads(line) for line in writer.getvalue().splitlines()]
+    assert rows[1]["tool_calls"][0]["arguments"]["command"] == (
+        "python -m pytest -q"
+    )
 
 
 async def test_only_first_of_two_tool_calls_runs(tmp_path: Path):

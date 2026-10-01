@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import re
+import shlex
 import time
 from typing import Any, Literal, TextIO
 
@@ -195,6 +198,24 @@ def _cap_bytes(content: str, maximum: int) -> str:
     if len(encoded) <= maximum:
         return content
     return encoded[:maximum].decode(errors="ignore")
+
+
+def pytest_args(command: str) -> str | None:
+    if any(token in command for token in ("|", "&", ";", "<", ">", "`", "$(", "\n", "\r")):
+        return None
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return None
+    if tokens and tokens[0] in {"pytest", "py.test"}:
+        return shlex.join(tokens[1:])
+    if (
+        len(tokens) >= 3
+        and re.fullmatch(r"python(?:3(?:\.\d+)?)?", os.path.basename(tokens[0]))
+        and tokens[1:3] == ["-m", "pytest"]
+    ):
+        return shlex.join(tokens[3:])
+    return None
 
 
 class Worker:
@@ -539,11 +560,19 @@ class Worker:
             timeout_s = min(_COMMAND_TIMEOUT_S, int(remaining_s))
             if timeout_s < 1:
                 raise TimeoutError
-            receipt = await self.executor.run(
-                self.branch,
-                arguments.command,
-                timeout_s=timeout_s,
-            )
+            args = pytest_args(arguments.command)
+            if args is None:
+                receipt = await self.executor.run(
+                    self.branch,
+                    arguments.command,
+                    timeout_s=timeout_s,
+                )
+            else:
+                receipt = await self.executor.run_pytest(
+                    self.branch,
+                    args,
+                    timeout_s=timeout_s,
+                )
             self._record_receipt(receipt)
             combined = (receipt.stdout_tail + receipt.stderr_tail)[
                 -_COMMAND_OUTPUT_CHARS:
@@ -565,4 +594,5 @@ __all__ = [
     "Worker",
     "WorkerBudget",
     "WorkerOutcome",
+    "pytest_args",
 ]
