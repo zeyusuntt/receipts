@@ -36,13 +36,20 @@ _PYTEST_CONFIG_NAMES = {
 _DISCLOSURE_TIMEOUT_S = 120
 _RECEIPTS_VERSION_FALLBACK = "0.0.1"
 _FREEZE_SCRIPT = """\
-import importlib.metadata
+# Runs inside the task sandbox, so it must work on Python 3.7.
+packages = set()
+try:
+    import importlib.metadata as metadata
+except ImportError:
+    import pkg_resources
 
-packages = {
-    f"{name}=={distribution.version}"
-    for distribution in importlib.metadata.distributions()
-    if (name := distribution.metadata.get("Name"))
-}
+    for dist in pkg_resources.working_set:
+        packages.add(dist.project_name + "==" + dist.version)
+else:
+    for distribution in metadata.distributions():
+        name = distribution.metadata.get("Name")
+        if name:
+            packages.add(name + "==" + distribution.version)
 print("\\n".join(sorted(packages, key=str.casefold)))
 """
 
@@ -293,7 +300,8 @@ for directory, names, filenames in os.walk('.', followlinks=False):
         if filename not in payload['config_names']:
             continue
         path = Path(directory, filename)
-        rendered = path.as_posix().removeprefix('./')
+        rendered = path.as_posix()
+        rendered = rendered[2:] if rendered.startswith('./') else rendered
         configs[rendered] = digest(path)
 
 print(json.dumps({{'test_digests': tests, 'pytest_config_digests': configs}}, sort_keys=True))
