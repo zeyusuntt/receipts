@@ -370,6 +370,46 @@ def test_infrastructure_record_gate_error_is_listed_with_error_text():
     assert "witness verification exited 3" in section
 
 
+def test_report_lists_every_prior_infrastructure_error_for_retried_instance():
+    report_module = _report_module()
+    record = _record(
+        "project__retried",
+        [_attempt(gate_status="PASS", official_resolved=True, agreement="agree_pass")],
+        verified_fix=True,
+    )
+    record = InstanceRecord.model_validate(
+        {
+            **record.model_dump(mode="json"),
+            "prior_infrastructure_errors": [
+                {
+                    "reason": "RuntimeError: sandbox did not start",
+                    "run_dir": "pilot/project__retried/runs/run-1",
+                },
+                {
+                    "reason": "ConnectionError: model request failed",
+                    "run_dir": "pilot/project__retried/runs/run-2",
+                },
+            ],
+        },
+    )
+
+    report = report_module.build_report([record])
+
+    assert [problem.reason for problem in report.infrastructure_errors] == [
+        "RuntimeError: sandbox did not start",
+        "ConnectionError: model request failed",
+    ]
+    markdown = report_module.render(report)
+    section = markdown.split("## Infrastructure errors", 1)[1].split(
+        "## Per instance",
+        1,
+    )[0]
+    assert "sandbox did not start" in section
+    assert "model request failed" in section
+    assert "pilot/project__retried/runs/run-1" in section
+    assert "pilot/project__retried/runs/run-2" in section
+
+
 def test_cost_columns_are_computed_from_separate_model_and_sandbox_costs():
     report_module = _report_module()
     first = _record(

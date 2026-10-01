@@ -109,6 +109,37 @@ def _budgets() -> RunBudgets:
     )
 
 
+def _pilot_record(
+    runner,
+    instance_id: str,
+    status: str,
+    run_dir: Path,
+    reason: str | None = None,
+):
+    return runner.InstanceRecord(
+        instance_id=instance_id,
+        status=status,
+        reason=reason,
+        run_dir=str(run_dir),
+        attempts=[],
+        final=None,
+        cost=runner.PilotCost(
+            tokens=0,
+            model_dollars=None,
+            sandbox_lifetime_seconds=0,
+            sandbox_dollars_estimate=0,
+        ),
+        wall_time_s=0,
+    )
+
+
+def _persist_record(pilot_dir: Path, record) -> None:
+    record_path = pilot_dir / record.instance_id / "record.json"
+    record_path.parent.mkdir(parents=True, exist_ok=True)
+    Path(record.run_dir).mkdir(parents=True, exist_ok=True)
+    record_path.write_text(record.model_dump_json(), encoding="utf-8")
+
+
 class _ImageLocalExecutor:
     def __init__(
         self,
@@ -548,6 +579,216 @@ async def test_run_pilot_skips_finished_records_without_calling_model(tmp_path: 
         "fixture__calc-one",
         "fixture__calc-two",
     ]
+
+
+async def test_run_pilot_retries_infrastructure_error_then_keeps_archive(
+    tmp_path: Path,
+    monkeypatch,
+):
+    runner = _runner_module()
+    pilot_dir = tmp_path / "pilot"
+    instance = _instance("fixture__calc-retry")
+    started: list[str] = []
+    previous = _pilot_record(
+        runner,
+        instance.instance_id,
+        "infra_error",
+        pilot_dir / instance.instance_id / "runs" / "run-1",
+        "RuntimeError: temporary outage",
+    )
+    _persist_record(pilot_dir, previous)
+
+    async def fake_run_instance(
+        make_executor,
+        model,
+        current_instance,
+        current_pilot_dir,
+        budgets,
+    ):
+        del make_executor, model, budgets
+        started.append(current_instance.instance_id)
+        record = _pilot_record(
+            runner,
+            current_instance.instance_id,
+            "ran",
+            current_pilot_dir
+            / current_instance.instance_id
+            / "runs"
+            / "run-2",
+        )
+        _persist_record(current_pilot_dir, record)
+        return record
+
+    monkeypatch.setattr(runner, "run_instance", fake_run_instance)
+
+    records = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"unexpected executor construction: {run_id}"),
+        FakeModel(),
+        [instance],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    assert started == [instance.instance_id]
+    assert [record.status for record in records] == ["ran"]
+    final = records[0]
+    assert [failure.reason for failure in final.prior_infrastructure_errors] == [
+        "RuntimeError: temporary outage",
+    ]
+    archive_path = pilot_dir / instance.instance_id / "record.infra-1.json"
+    archived = runner.InstanceRecord.model_validate_json(
+        archive_path.read_text(encoding="utf-8"),
+    )
+    assert archived.status == "infra_error"
+    assert Path(archived.run_dir).is_dir()
+    persisted = runner.InstanceRecord.model_validate_json(
+        (pilot_dir / instance.instance_id / "record.json").read_text(
+            encoding="utf-8",
+        ),
+    )
+    assert persisted == final
+
+
+async def test_run_pilot_recovers_archived_history_without_rerunning_terminal_record(
+    tmp_path: Path,
+):
+    runner = _runner_module()
+    pilot_dir = tmp_path / "pilot"
+    instance = _instance("fixture__calc-recovered")
+    instance_dir = pilot_dir / instance.instance_id
+    archived = _pilot_record(
+        runner,
+        instance.instance_id,
+        "infra_error",
+        instance_dir / "runs" / "run-1",
+        "RuntimeError: temporary outage",
+    )
+    Path(archived.run_dir).mkdir(parents=True)
+    (instance_dir / "record.infra-1.json").write_text(
+        archived.model_dump_json(),
+        encoding="utf-8",
+    )
+    terminal = _pilot_record(
+        runner,
+        instance.instance_id,
+        "ran",
+        instance_dir / "runs" / "run-2",
+    )
+    _persist_record(pilot_dir, terminal)
+    model = FakeModel()
+
+    records = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"executor created for terminal record {run_id}"),
+        model,
+        [instance],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    assert model.requests == []
+    assert [failure.reason for failure in records[0].prior_infrastructure_errors] == [
+        "RuntimeError: temporary outage",
+    ]
+
+
+async def test_run_pilot_stops_after_three_infrastructure_errors_then_moves_on(
+    tmp_path: Path,
+    monkeypatch,
+):
+    runner = _runner_module()
+    pilot_dir = tmp_path / "pilot"
+    failing = _instance("fixture__calc-always-infra")
+    succeeding = _instance("fixture__calc-next")
+    calls: list[str] = []
+    per_instance_runs: dict[str, int] = {}
+
+    async def fake_run_instance(
+        make_executor,
+        model,
+        instance,
+        current_pilot_dir,
+        budgets,
+    ):
+        del make_executor, model, budgets
+        calls.append(instance.instance_id)
+        run_number = per_instance_runs.get(instance.instance_id, 0) + 1
+        per_instance_runs[instance.instance_id] = run_number
+        status = "infra_error" if instance is failing else "ran"
+        record = _pilot_record(
+            runner,
+            instance.instance_id,
+            status,
+            current_pilot_dir
+            / instance.instance_id
+            / "runs"
+            / f"run-{run_number}",
+            f"RuntimeError: outage {run_number}" if status == "infra_error" else None,
+        )
+        _persist_record(current_pilot_dir, record)
+        return record
+
+    monkeypatch.setattr(runner, "run_instance", fake_run_instance)
+
+    records = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"unexpected executor construction: {run_id}"),
+        FakeModel(),
+        [failing, succeeding],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    assert calls == [
+        failing.instance_id,
+        failing.instance_id,
+        failing.instance_id,
+        succeeding.instance_id,
+    ]
+    assert [record.status for record in records] == ["infra_error", "ran"]
+    failed = records[0]
+    assert [failure.reason for failure in failed.prior_infrastructure_errors] == [
+        "RuntimeError: outage 1",
+        "RuntimeError: outage 2",
+    ]
+    assert failed.reason == "RuntimeError: outage 3"
+    instance_dir = pilot_dir / failing.instance_id
+    assert (instance_dir / "record.infra-1.json").is_file()
+    assert (instance_dir / "record.infra-2.json").is_file()
+
+
+async def test_run_pilot_never_reruns_existing_excluded_record(tmp_path: Path):
+    runner = _runner_module()
+    pilot_dir = tmp_path / "pilot"
+    excluded = _pilot_record(
+        runner,
+        "fixture__calc-excluded",
+        "excluded",
+        pilot_dir / "fixture__calc-excluded" / "runs" / "run-1",
+        "target already passes",
+    )
+    ran = _pilot_record(
+        runner,
+        "fixture__calc-ran",
+        "ran",
+        pilot_dir / "fixture__calc-ran" / "runs" / "run-1",
+    )
+    _persist_record(pilot_dir, excluded)
+    _persist_record(pilot_dir, ran)
+    model = FakeModel()
+
+    records = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"executor created for terminal record {run_id}"),
+        model,
+        [_instance(excluded.instance_id), _instance(ran.instance_id)],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    assert [record.status for record in records] == ["excluded", "ran"]
+    assert model.requests == []
 
 
 async def test_prepare_failure_is_infra_error_and_executor_is_closed(tmp_path: Path):

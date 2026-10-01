@@ -68,6 +68,11 @@ class PilotCost(BaseModel):
     sandbox_dollars_estimate: float = Field(default=0, ge=0)
 
 
+class PriorInfrastructureError(BaseModel):
+    reason: str
+    run_dir: str
+
+
 class InstanceRecord(BaseModel):
     instance_id: str
     status: PilotStatus
@@ -77,10 +82,14 @@ class InstanceRecord(BaseModel):
     final: FinalRecord | None
     cost: PilotCost
     wall_time_s: float = Field(ge=0)
+    prior_infrastructure_errors: list[PriorInfrastructureError] = Field(
+        default_factory=list,
+    )
 
 
 ExecutorFactory = Callable[[str], Executor]
 _PREREGISTERED_BASELINE_LIMIT_S = 300
+_MAX_INFRASTRUCTURE_RUNS = 3
 
 
 class _BaselineGuard:
@@ -477,6 +486,38 @@ def _read_record(path: Path) -> InstanceRecord:
     return InstanceRecord.model_validate_json(path.read_text(encoding="utf-8"))
 
 
+def _archived_infrastructure_errors(
+    instance_dir: Path,
+) -> list[PriorInfrastructureError]:
+    errors: list[PriorInfrastructureError] = []
+    for path in sorted(instance_dir.glob("record.infra-*.json")):
+        record = _read_record(path)
+        errors.append(
+            PriorInfrastructureError(
+                reason=record.reason or "reason unavailable",
+                run_dir=record.run_dir,
+            ),
+        )
+    return errors
+
+
+def _archive_infrastructure_record(
+    record_path: Path,
+    record: InstanceRecord,
+    prior_errors: Sequence[PriorInfrastructureError],
+) -> list[PriorInfrastructureError]:
+    archive_number = len(prior_errors) + 1
+    archive_path = record_path.with_name(f"record.infra-{archive_number}.json")
+    record_path.replace(archive_path)
+    return [
+        *prior_errors,
+        PriorInfrastructureError(
+            reason=record.reason or "reason unavailable",
+            run_dir=record.run_dir,
+        ),
+    ]
+
+
 def _append_progress(pilot_dir: Path, record: InstanceRecord) -> None:
     pilot_dir.mkdir(parents=True, exist_ok=True)
     row = {
@@ -527,13 +568,40 @@ async def run_pilot(
     index = 0
 
     async def run_and_log(instance: Instance) -> InstanceRecord:
-        record = await run_instance(
-            make_executor,
-            model,
-            instance,
-            pilot_dir,
-            budget,
-        )
+        instance_dir = pilot_dir / instance.instance_id
+        record_path = instance_dir / "record.json"
+        prior_errors = _archived_infrastructure_errors(instance_dir)
+        record = _read_record(record_path) if record_path.is_file() else None
+
+        if (
+            record is not None
+            and record.status != "infra_error"
+            and record.prior_infrastructure_errors != prior_errors
+        ):
+            record.prior_infrastructure_errors = list(prior_errors)
+            _atomic_write_record(record_path, record)
+
+        while record is None or record.status == "infra_error":
+            if record is not None:
+                if len(prior_errors) + 1 >= _MAX_INFRASTRUCTURE_RUNS:
+                    record.prior_infrastructure_errors = list(prior_errors)
+                    _atomic_write_record(record_path, record)
+                    break
+                prior_errors = _archive_infrastructure_record(
+                    record_path,
+                    record,
+                    prior_errors,
+                )
+            record = await run_instance(
+                make_executor,
+                model,
+                instance,
+                pilot_dir,
+                budget,
+            )
+            record.prior_infrastructure_errors = list(prior_errors)
+            _atomic_write_record(record_path, record)
+
         if record.instance_id not in progress_ids:
             _append_progress(pilot_dir, record)
             progress_ids.add(record.instance_id)
@@ -548,16 +616,6 @@ async def run_pilot(
         ):
             instance = candidates[index]
             index += 1
-            record_path = pilot_dir / instance.instance_id / "record.json"
-            if record_path.is_file():
-                record = _read_record(record_path)
-                records.append(record)
-                if record.instance_id not in progress_ids:
-                    _append_progress(pilot_dir, record)
-                    progress_ids.add(record.instance_id)
-                if record.status == "ran":
-                    ran += 1
-                continue
             batch.append(instance)
 
         if not batch:
@@ -578,6 +636,7 @@ __all__ = [
     "FinalRecord",
     "InstanceRecord",
     "PilotCost",
+    "PriorInfrastructureError",
     "run_instance",
     "run_pilot",
 ]

@@ -316,15 +316,24 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
         for record in ordered
         if record.status == "excluded"
     ]
-    infrastructure_errors = [
-        ReportedProblem(
-            instance_id=record.instance_id,
-            reason=record.reason or "reason unavailable",
-            run_dir=record.run_dir,
+    infrastructure_errors = []
+    for record in ordered:
+        infrastructure_errors.extend(
+            ReportedProblem(
+                instance_id=record.instance_id,
+                reason=prior.reason,
+                run_dir=prior.run_dir,
+            )
+            for prior in record.prior_infrastructure_errors
         )
-        for record in ordered
-        if record.status == "infra_error"
-    ]
+        if record.status == "infra_error":
+            infrastructure_errors.append(
+                ReportedProblem(
+                    instance_id=record.instance_id,
+                    reason=record.reason or "reason unavailable",
+                    run_dir=record.run_dir,
+                ),
+            )
     instances = []
     for record in ordered:
         first = record.attempts[0] if record.attempts else None
