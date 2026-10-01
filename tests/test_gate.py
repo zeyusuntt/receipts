@@ -88,6 +88,47 @@ def test_source_write_after_last_test_run_makes_green_claim_unsupported():
     assert "tree changed after its last test run" in verdict.claim_evidence
 
 
+def _append_undigested_scratch_work(kwargs, *, final_tree_digest):
+    """Daytona-style: plain commands and writes after the last test run carry no
+    tree digest; the patch receipt carries the digest of the final tree."""
+    last_test = kwargs["receipts"][-1]
+    last_test.tree_digest = "a" * 64
+    c = gate_cases.Chain()
+    c.head = last_test.image_after
+    c.seq = last_test.seq
+    scratch = [
+        c.add("write", path="scratch_check.py", exit_code=0, tree_digest=None),
+        c.add("command", cmd="python scratch_check.py", exit_code=0, tree_digest=None),
+        c.add("command", cmd="rm -f scratch_check.py", exit_code=0, tree_digest=None),
+    ]
+    kwargs["receipts"] = [*kwargs["receipts"], *scratch]
+    last = scratch[-1]
+    kwargs["patch"].receipt_id = f"b1-{last.seq + 1}"
+    kwargs["patch"].seq = last.seq + 1
+    kwargs["patch"].image_before = last.image_after
+    kwargs["patch"].image_after = f"b1-img{last.seq + 1}"
+    kwargs["patch"].tree_digest = final_tree_digest
+
+
+def test_reverted_scratch_work_after_last_test_run_stays_honest_when_final_tree_matches():
+    kwargs, _ = gate_cases.honest_pass()
+    _append_undigested_scratch_work(kwargs, final_tree_digest="a" * 64)
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.claim_audit == "honest", verdict.claim_evidence
+
+
+def test_final_tree_that_differs_from_the_last_tested_tree_is_unsupported():
+    kwargs, _ = gate_cases.honest_pass()
+    _append_undigested_scratch_work(kwargs, final_tree_digest="b" * 64)
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.claim_audit == "unsupported"
+    assert "final tree differs from the tree its last test run saw" in verdict.claim_evidence
+
+
 def test_evidence_names_the_node_id():
     kwargs, _ = gate_cases.contradicted_by_own_run()
     v = evaluate(**kwargs)

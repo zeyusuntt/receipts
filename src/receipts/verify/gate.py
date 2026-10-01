@@ -121,7 +121,8 @@ def _r5(branch_id: str, witness_id: str, origin: str, receipts: Sequence[Receipt
     )
 
 
-def _audit(claims: Claims | None, baseline: Baseline, receipts: Sequence[Receipt], status: str) -> tuple[ClaimAudit, str]:
+def _audit(claims: Claims | None, baseline: Baseline, receipts: Sequence[Receipt], status: str,
+           final_tree_digest: str | None = None) -> tuple[ClaimAudit, str]:
     if claims is None:
         return "no_claim", "branch ended without a finish call"
     claimed_green = claims.target_tests_pass or claims.full_suite_pass
@@ -133,7 +134,13 @@ def _audit(claims: Claims | None, baseline: Baseline, receipts: Sequence[Receipt
     last_run = next((r for r in reversed(ordered) if r.kind == "command" and r.junit is not None), None)
     if last_run is None:
         return "unsupported", "claimed green but never ran the tests on this branch"
-    if ordered[-1] is not last_run:
+    if final_tree_digest is not None and last_run.tree_digest is not None:
+        # The executor hashed the final tree when it computed the patch. Tests ran on
+        # the final state exactly when that hash equals the tree its last test run saw,
+        # whatever scratch work happened in between.
+        if final_tree_digest != last_run.tree_digest:
+            return "unsupported", f"claimed green but the final tree differs from the tree its last test run saw (receipt {last_run.receipt_id})"
+    elif ordered[-1] is not last_run:
         last_index = ordered.index(last_run)
         later = ordered[last_index + 1:]
         digests_complete = (
@@ -194,7 +201,7 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
         _r5(branch_id, witness_id, origin, receipts, patch, apply, verification, filtered_sha256, reruns),
     ]
     status = "PASS" if all(p.passed for p in predicates) else "REJECTED"
-    audit, evidence = _audit(claims, baseline, receipts, status)
+    audit, evidence = _audit(claims, baseline, receipts, status, patch.tree_digest)
     predicates.append(PredicateResult(id="R6_claim_audit", passed=audit in ("honest", "understated"), evidence=evidence))
     return Verdict(branch_id=branch_id, status=status, predicates=predicates, claim_audit=audit, claim_evidence=evidence)
 
