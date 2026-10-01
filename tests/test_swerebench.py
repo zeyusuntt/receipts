@@ -92,10 +92,14 @@ def test_docformatter_row_converts_to_expected_task():
         "tests/formatter/test_format_sphinx.py::TestFormatWrapSphinx::"
         "test_format_docstring_sphinx_style_recognize_yield[args0]",
     ]
-    assert task.suite_scope == "tests/formatter/test_format_sphinx.py"
+    # The gate runs the instance's own pytest arguments, as the official grader does.
+    assert task.suite_scope == (
+        "--no-header -rA --tb=line --color=no -p no:cacheprovider "
+        "-W ignore::DeprecationWarning tests/formatter/test_format_sphinx.py"
+    )
 
 
-def test_to_task_uses_test_files_from_patch_when_command_names_none():
+def test_to_task_runs_the_whole_suite_when_the_command_names_no_paths():
     instance = Instance(
         instance_id="owner__repo-1",
         repo="owner/repo",
@@ -115,7 +119,7 @@ def test_to_task_uses_test_files_from_patch_when_command_names_none():
         problem_statement="Fix it",
     )
 
-    assert to_task(instance).suite_scope == "tests/test_one.py"
+    assert to_task(instance).suite_scope == "-q"
 
 
 def test_official_command_preserves_docformatter_command_with_report_flag():

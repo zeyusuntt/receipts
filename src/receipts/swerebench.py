@@ -110,9 +110,18 @@ def _test_files_from_patch(patch: str) -> list[str]:
 def to_task(instance: Instance) -> SweTask:
     """Convert one dataset row into the inputs accepted by orchestrate.fix."""
 
-    files = _test_files_from_command(instance.test_cmd)
-    if not files:
-        files = _test_files_from_patch(instance.test_patch)
+    # The gate runs the instance's own pytest arguments (the suite named by test_cmd,
+    # with its warning filters and options), so its runs match the official grader's.
+    try:
+        tokens = shlex.split(instance.test_cmd)
+    except ValueError:
+        tokens = instance.test_cmd.split()
+    if tokens[:1] == ["pytest"]:
+        suite = tokens[1:]
+    elif tokens[1:3] == ["-m", "pytest"]:
+        suite = tokens[3:]
+    else:
+        suite = _test_files_from_command(instance.test_cmd) or _test_files_from_patch(instance.test_patch)
     return SweTask(
         source=ImageSource(
             image=instance.image_name,
@@ -123,7 +132,7 @@ def to_task(instance: Instance) -> SweTask:
         ),
         issue=instance.problem_statement,
         spec_tests=list(instance.fail_to_pass),
-        suite_scope=shlex.join(files),
+        suite_scope=shlex.join(suite),
     )
 
 
