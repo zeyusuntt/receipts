@@ -70,7 +70,7 @@ def _r4(patch: Receipt, allow_test_edits: bool, allow_config_edits: bool) -> Pre
     files = patch.diff.files if patch.diff else []
     bad = []
     for f in files:
-        if f.category in ("outside", "symlink"):
+        if f.category in ("outside", "symlink", "executable_artifact", "shadow"):
             bad.append(f"{f.path} ({f.category})")
         elif f.category == "pytest_config" and not allow_config_edits:
             bad.append(f"{f.path} (pytest config)")

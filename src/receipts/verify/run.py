@@ -13,7 +13,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from receipts.models import Baseline, Branch, Checkpoint, JunitSummary, Receipt
-from receipts.patchscope import filter_patch
+from receipts.patchscope import default_protected_modules, filter_patch
 from receipts.sandbox.protocol import Executor
 
 
@@ -76,7 +76,8 @@ async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_s
     patch_text = ""
     if patch.exit_code == 0 and patch.diff is not None and patch.diff.patch_path is not None:
         patch_text = Path(patch.diff.patch_path).read_text()
-    filtered_patch, dropped = filter_patch(patch_text)
+    protected_modules = default_protected_modules()
+    filtered_patch, dropped = filter_patch(patch_text, protected_modules)
     filtered_sha256 = hashlib.sha256(filtered_patch.encode()).hexdigest()
 
     (witness,) = await ex.fork(c0, 1, prefix="w")

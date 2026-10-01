@@ -12,7 +12,10 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 ReceiptKind = Literal["command", "write", "diff", "apply", "verification"]
-FileCategory = Literal["source", "test", "pytest_config", "symlink", "other", "outside"]
+FileCategory = Literal[
+    "source", "test", "pytest_config", "executable_artifact", "shadow",
+    "symlink", "other", "outside",
+]
 PredicateId = Literal[
     "R1_fail_to_pass", "R2_pass_to_pass", "R3_no_shrink", "R4_patch_scope", "R5_provenance", "R6_claim_audit",
 ]

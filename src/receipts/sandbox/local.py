@@ -27,7 +27,7 @@ from pathlib import Path
 
 from receipts.junit import parse_junit
 from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
-from receipts.patchscope import filter_patch, summarize_patch
+from receipts.patchscope import default_protected_modules, filter_patch, summarize_patch
 from receipts.sandbox.protocol import PYTEST_FLAGS, RepoAtCommit, Source
 from receipts.sandbox.sink import ReceiptSink
 
@@ -50,6 +50,7 @@ class LocalExecutor:
         self._seq: dict[str, int] = {}
         self._dirs: dict[str, Path] = {}  # branch id or checkpoint id -> directory
         self._fork_next: dict[str, int] = {}
+        self._protected_modules = default_protected_modules()
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "reports").mkdir(exist_ok=True)
         (self.root / "patches").mkdir(exist_ok=True)
@@ -215,8 +216,10 @@ class LocalExecutor:
         seq = self._seq.get(branch.id, 0) + 1
         patch_path = self.root / "patches" / f"{branch.id}-{seq}-full.diff"
         patch_path.write_text(patch_text)
-        summary = summarize_patch(patch_text).model_copy(update={"patch_path": str(patch_path)})
-        _, dropped = filter_patch(patch_text)
+        summary = summarize_patch(patch_text, self._protected_modules).model_copy(
+            update={"patch_path": str(patch_path)},
+        )
+        _, dropped = filter_patch(patch_text, self._protected_modules)
         return self._emit(branch, kind="diff", cmd=cmd, exit_code=0,
                           stdout_tail=patch_text[-TAIL:], stderr_tail=_tail(stderr),
                           stdout_sha256=summary.patch_sha256, started_at=started,

@@ -1,6 +1,7 @@
 import hashlib
 import subprocess
 
+import receipts.patchscope as patchscope
 from receipts.patchscope import categorize, filter_patch, summarize_patch
 
 
@@ -12,12 +13,36 @@ def test_categorize_paths():
     assert categorize("conftest.py") == "pytest_config"
     assert categorize("pkg/deep/conftest.py") == "pytest_config"
     assert categorize("pytest.ini") == "pytest_config"
+    assert categorize("pytest.toml") == "pytest_config"
+    assert categorize(".pytest.toml") == "pytest_config"
     assert categorize("tox.ini") == "pytest_config"
     assert categorize("pyproject.toml") == "pytest_config"
     assert categorize("setup.cfg") == "pytest_config"
     assert categorize("README.md") == "other"
     assert categorize("../escape.py") == "outside"
     assert categorize("/etc/passwd") == "outside"
+
+
+def test_categorize_executable_artifacts():
+    for suffix in (".pyc", ".pyo", ".so", ".pyd", ".dylib", ".pth"):
+        assert categorize(f"build/payload{suffix}") == "executable_artifact"
+
+
+def test_categorize_top_level_protected_module_shadows():
+    protected = frozenset({"pytest", "json"})
+
+    assert categorize("pytest.py", protected) == "shadow"
+    assert categorize("pytest.pyc", protected) == "shadow"
+    assert categorize("pytest.so", protected) == "shadow"
+    assert categorize("json/__init__.py", protected) == "shadow"
+    assert categorize("pkg/pytest.py", protected) == "source"
+    assert categorize("pkg/json/__init__.py", protected) == "source"
+
+
+def test_default_protected_modules_include_runtime_import_surfaces():
+    protected = patchscope.default_protected_modules()
+
+    assert {"json", "pytest", "_pytest", "py", "pluggy", "conftest"} <= protected
 
 
 PATCH = """diff --git a/src/pkg/core.py b/src/pkg/core.py
@@ -157,6 +182,30 @@ index 0000000..1234567
 \\ No newline at end of file
 """
     assert filter_patch(patch) == ("", ["calc/link.py"])
+
+
+def test_filter_drops_executable_artifacts_and_protected_shadows():
+    patch = """diff --git a/build/payload.pyc b/build/payload.pyc
+new file mode 100644
+index 0000000..1234567
+GIT binary patch
+literal 1
+IcmZPo000310RR91
+
+literal 0
+HcmV?d00001
+
+diff --git a/pytest.py b/pytest.py
+new file mode 100644
+--- /dev/null
++++ b/pytest.py
+@@ -0,0 +1 @@
++raise SystemExit(0)
+"""
+
+    assert filter_patch(patch, frozenset({"pytest"})) == (
+        "", ["build/payload.pyc", "pytest.py"],
+    )
 
 
 def test_filter_empty_patch():
