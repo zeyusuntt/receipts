@@ -549,6 +549,106 @@ async def test_edit_file_writes_only_for_one_exact_occurrence(tmp_path: Path):
     assert outcome.receipt_ids == [write_receipts[0].receipt_id]
 
 
+async def test_edit_file_refuses_content_at_fetch_limit_without_writing(
+    tmp_path: Path,
+):
+    repo = make_repo(tmp_path / "source")
+    original = b"target" + (b"x" * (2_000_000 - len(b"target")))
+    (repo / "too-large.txt").write_bytes(original)
+    subprocess.run(["git", "add", "too-large.txt"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "large edit fixture"],
+        cwd=repo,
+        check=True,
+    )
+    turns = [
+        _turn(
+            _call(
+                "edit_file",
+                {
+                    "path": "too-large.txt",
+                    "old_text": "target",
+                    "new_text": "changed",
+                },
+                "edit-large",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, branch, sink, _ = await _fixture_worker(
+        tmp_path / "run",
+        turns,
+        repo=repo,
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    result = next(
+        message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id") == "edit-large"
+    )
+    assert result == "edit refused: file is too large to edit safely; use run_command"
+    assert (executor.workdir(branch) / "too-large.txt").read_bytes() == original
+    assert not [
+        receipt
+        for receipt in sink.receipts
+        if receipt.branch_id == branch.id and receipt.kind == "write"
+    ]
+    assert outcome.receipt_ids == []
+
+
+async def test_edit_file_refuses_invalid_utf8_without_writing(tmp_path: Path):
+    repo = make_repo(tmp_path / "source")
+    original = b"before\xffafter\n"
+    (repo / "invalid.txt").write_bytes(original)
+    subprocess.run(["git", "add", "invalid.txt"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "invalid utf8 edit fixture"],
+        cwd=repo,
+        check=True,
+    )
+    turns = [
+        _turn(
+            _call(
+                "edit_file",
+                {
+                    "path": "invalid.txt",
+                    "old_text": "before",
+                    "new_text": "changed",
+                },
+                "edit-invalid",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, branch, sink, _ = await _fixture_worker(
+        tmp_path / "run",
+        turns,
+        repo=repo,
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    result = next(
+        message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id") == "edit-invalid"
+    )
+    assert result == (
+        "edit refused: file is not valid UTF-8 text; use write_file or run_command"
+    )
+    assert (executor.workdir(branch) / "invalid.txt").read_bytes() == original
+    assert not [
+        receipt
+        for receipt in sink.receipts
+        if receipt.branch_id == branch.id and receipt.kind == "write"
+    ]
+    assert outcome.receipt_ids == []
+
+
 async def test_only_first_of_two_tool_calls_runs(tmp_path: Path):
     first_content = "FIRST = True\n"
     turns = [

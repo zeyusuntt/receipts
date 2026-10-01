@@ -749,6 +749,18 @@ class Worker:
                 ),
                 timeout=remaining_s,
             )
+            if len(content.encode()) >= _READ_FETCH_MAX_BYTES:
+                result = (
+                    "edit refused: file is too large to edit safely; "
+                    "use run_command"
+                )
+                return _with_note(note, result), None
+            if "\ufffd" in content:
+                result = (
+                    "edit refused: file is not valid UTF-8 text; "
+                    "use write_file or run_command"
+                )
+                return _with_note(note, result), None
             occurrences = content.count(arguments.old_text)
             if occurrences == 0:
                 return _with_note(note, "edit refused: old_text not found"), None
