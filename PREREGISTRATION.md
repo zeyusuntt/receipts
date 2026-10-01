@@ -62,3 +62,18 @@ Ground truth is the official judgement, following SWE-rebench-V2 `scripts/eval.p
 - H3, added to either, if B verifies fewer than 15 percent of tasks: "Knowing when not to ship: every unverified patch was refused, with the evidence published."
 
 If B ships any false done, that fact is the first line of the report, before any headline.
+
+## Amendment 1 (2026-10-01, before any pilot outcome was observed)
+
+The first pilot launch, at commit e4ca71c, was stopped after one record. Its first candidate, `scikit-build__scikit-build-core-254`, was excluded under rule 4 because its FAIL_TO_PASS test file imports a module that the fix creates: pytest stopped at the collection error with exit code 2, and the code treated that as a broken suite. Rule 4 counts such a test as failing, so the code contradicted this file. The second candidate was interrupted while running; its partial run directory was not inspected. No agent outcome from the pilot was observed. Both are kept in `pilot/aborted-2026-10-01-launch1/` and published.
+
+Before relaunching, a baseline-only dry run (prepare and the two baseline runs; no model and no agent) over the first 20 candidates checked rule 4 against the real images. Its results are published in `pilot/baseline-dryrun-2026-10-01.jsonl`. The code was changed where it disagreed with this file or with the official grader:
+
+1. A test file that fails to import counts as failing tests, not as a broken suite; pytest runs with `--continue-on-collection-errors` (commit 7b91fa1).
+2. Node ids are reported relative to the pytest invocation directory, as pytest prints them and as SWE-rebench records them. Before, a repository with a nested pytest configuration had its tests reported under different ids and was wrongly excluded (commit fa0ccad).
+3. The gate runs the instance's own pytest arguments, the suite named by `test_cmd` with its warning filters, instead of only its test files, so gate runs match the official grader's (commit 167a6a9).
+4. Command durations come from a monotonic clock, because the host slept during the dry run and the wall clock made a 90-second task look like a 928-second one; the five-minute limit itself is still enforced by the sandbox's command timeout (commit ffcc178).
+
+Environment facts the dry run made visible, unchanged and reported as they occur: sandboxes have restricted outbound network, so suites that reach the network can time out; services that the dataset's install steps start at image build time (for example `redis-server`) are not running at test time, as in the upstream grader.
+
+The pilot restarts from scratch at the commit that adds this amendment, into `pilot/run-2026-10-01b/`. Nothing else in this file changes.
