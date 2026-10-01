@@ -241,6 +241,7 @@ async def test_run_and_write_advance_sha256_images(tmp_path):
         command = await executor.run(base, "printf hello; printf err >&2; exit 3", 10)
         before_write = base.head
         written = await executor.write_file(base, "pkg/new.py", "VALUE = 1\n")
+        read_only = await executor.run(base, "cat pkg/new.py >/dev/null", 10)
 
         assert command.exit_code == 3
         assert command.stdout_tail == "hello" and command.stderr_tail == "err"
@@ -249,9 +250,13 @@ async def test_run_and_write_advance_sha256_images(tmp_path):
         assert command.image_after != before_run
         assert SHA256_IMAGE.fullmatch(command.image_after)
         assert written.image_before == before_write
-        assert written.image_after == base.head
+        assert written.image_after == read_only.image_before
         assert written.image_after != before_write
         assert SHA256_IMAGE.fullmatch(written.image_after)
+        assert read_only.image_after == base.head
+        assert command.tree_digest is not None
+        assert written.tree_digest != command.tree_digest
+        assert read_only.tree_digest == written.tree_digest
         assert await executor.read_file(base, "pkg/new.py", 5) == "VALUE"
     finally:
         await executor.close()
@@ -632,6 +637,9 @@ async def test_run_persists_full_stdout_log_without_a_docker_daemon(tmp_path):
         async def _commit(self, container):
             return "sha256:" + "1" * 64
 
+        async def _tree_digest(self, branch):
+            return "a" * 64
+
     executor = FakeRunExecutor(tmp_path / "executor", MemorySink(), "offline-run")
     branch = Branch(
         id="b1",
@@ -647,6 +655,7 @@ async def test_run_persists_full_stdout_log_without_a_docker_daemon(tmp_path):
     assert (tmp_path / "executor" / "logs" / "b1-1.log").read_bytes() == expected
     assert receipt.log_path == str(tmp_path / "executor" / "logs" / "b1-1.log")
     assert receipt.stdout_tail.endswith("�")
+    assert receipt.tree_digest == "a" * 64
 
 
 async def test_run_pytest_reads_junit_logs_stdout_and_advances_image_offline(tmp_path):
@@ -677,6 +686,9 @@ async def test_run_pytest_reads_junit_logs_stdout_and_advances_image_offline(tmp
         async def _commit(self, container):
             return "sha256:" + "2" * 64
 
+        async def _tree_digest(self, branch):
+            return "b" * 64
+
     executor = FakePytestExecutor()
     branch = Branch(
         id="b1",
@@ -706,6 +718,7 @@ async def test_run_pytest_reads_junit_logs_stdout_and_advances_image_offline(tmp
     assert receipt.image_after == branch.head == "sha256:" + "2" * 64
     assert receipt.log_path is not None
     assert Path(receipt.log_path).read_bytes() == stdout
+    assert receipt.tree_digest == "b" * 64
 
 
 async def test_run_pytest_rejects_stale_host_junit_when_container_report_is_missing(tmp_path):
@@ -720,6 +733,9 @@ async def test_run_pytest_rejects_stale_host_junit_when_container_report_is_miss
 
         async def _commit(self, container):
             return "sha256:" + "2" * 64
+
+        async def _tree_digest(self, branch):
+            return "c" * 64
 
     executor = MissingReportExecutor(tmp_path / "executor", MemorySink(), "stale-junit")
     stale_report = tmp_path / "executor" / "reports" / "b1-1.xml"
@@ -829,6 +845,9 @@ async def test_apply_patch_copies_exact_bytes_and_advances_image_offline(tmp_pat
         async def _commit(self, container):
             return "sha256:" + "3" * 64
 
+        async def _tree_digest(self, branch):
+            return "d" * 64
+
     executor = FakeApplyExecutor()
     branch = Branch(
         id="w1",
@@ -846,6 +865,29 @@ async def test_apply_patch_copies_exact_bytes_and_advances_image_offline(tmp_pat
     assert receipt.kind == "apply" and receipt.exit_code == 0
     assert receipt.patch_sha256 == hashlib.sha256(patch_text.encode()).hexdigest()
     assert receipt.image_after == branch.head == "sha256:" + "3" * 64
+    assert receipt.tree_digest == "d" * 64
+
+
+def test_tree_digest_from_archive_tracks_content_and_mode_but_ignores_git(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    workdir = tmp_path / "workdir"
+    (workdir / ".git").mkdir(parents=True)
+    (workdir / "src").mkdir()
+    source = workdir / "src" / "app.py"
+    source.write_text("VALUE = 1\n")
+    (workdir / ".git" / "config").write_text("first\n")
+
+    initial = docker_module._tree_digest_from_archive(_tar_bytes(workdir))
+    (workdir / ".git" / "config").write_text("second\n")
+    git_changed = docker_module._tree_digest_from_archive(_tar_bytes(workdir))
+    source.write_text("VALUE = 2\n")
+    content_changed = docker_module._tree_digest_from_archive(_tar_bytes(workdir))
+    source.chmod(0o755)
+    mode_changed = docker_module._tree_digest_from_archive(_tar_bytes(workdir))
+
+    assert git_changed == initial
+    assert content_changed != initial
+    assert mode_changed != content_changed
 
 
 async def test_start_container_overrides_entrypoint(tmp_path):

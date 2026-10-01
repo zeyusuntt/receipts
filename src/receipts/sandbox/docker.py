@@ -3,6 +3,10 @@
 Each branch owns one long-running container. Mutating protocol actions commit
 that container and record the resulting content-addressed image id. Checkpoints
 are committed images, so forks start from an immutable filesystem state.
+
+Tree digests use a Docker workdir archive and compute the canonical manifest on
+the host. This costs one workdir transfer per mutating action, but it includes
+ignored and untracked files and does not trust Git inside the worker container.
 """
 
 from __future__ import annotations
@@ -17,6 +21,7 @@ import re
 import shlex
 import shutil
 import signal
+import stat
 import tarfile
 import uuid
 from dataclasses import dataclass
@@ -165,6 +170,40 @@ def _now() -> datetime:
 
 def _tail(data: bytes) -> str:
     return data.decode(errors="replace")[-TAIL:]
+
+
+def _tree_manifest_digest(entries: list[tuple[str, int, str]]) -> str:
+    serialized = json.dumps(sorted(entries), ensure_ascii=True, separators=(",", ":")).encode()
+    return hashlib.sha256(serialized).hexdigest()
+
+
+def _tree_digest_from_archive(archive_bytes: bytes) -> str:
+    entries: list[tuple[str, int, str]] = []
+    with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:*") as archive:
+        for member in archive:
+            raw_path = PurePosixPath(member.name)
+            parts = tuple(part for part in raw_path.parts if part not in ("", "."))
+            if not parts or raw_path.is_absolute() or ".." in parts or ".git" in parts:
+                continue
+            if member.isdir():
+                continue
+            if member.issym():
+                mode = stat.S_IFLNK | member.mode
+                content_digest = hashlib.sha256(os.fsencode(member.linkname)).hexdigest()
+            elif member.isfile() or member.islnk():
+                mode = stat.S_IFREG | member.mode
+                source = archive.extractfile(member)
+                if source is None:
+                    raise tarfile.ExtractError(f"could not read archive member: {member.name}")
+                content_hash = hashlib.sha256()
+                while chunk := source.read(1024 * 1024):
+                    content_hash.update(chunk)
+                content_digest = content_hash.hexdigest()
+            else:
+                mode = member.mode
+                content_digest = hashlib.sha256(b"").hexdigest()
+            entries.append((PurePosixPath(*parts).as_posix(), mode, content_digest))
+    return _tree_manifest_digest(entries)
 
 
 @dataclass(frozen=True)
@@ -514,6 +553,13 @@ class DockerExecutor:
             operation="copy container workdir",
         )
 
+    async def _tree_digest(self, branch: Branch) -> str:
+        archive_bytes = await self._workdir_archive(
+            self._container(branch),
+            self._spec(branch),
+        )
+        return await asyncio.to_thread(_tree_digest_from_archive, archive_bytes)
+
     @staticmethod
     def _extract_archive(archive_bytes: bytes, destination: Path) -> None:
         destination.mkdir(parents=True)
@@ -722,6 +768,7 @@ class DockerExecutor:
         )
         image_after = await self._commit(self._container(branch))
         log_path = self._write_log(branch, stdout)
+        tree_digest = await self._tree_digest(branch)
         return self._emit(
             branch,
             image_after,
@@ -735,6 +782,7 @@ class DockerExecutor:
             started_at=started,
             duration_s=duration,
             timed_out=timed_out,
+            tree_digest=tree_digest,
         )
 
     async def run_pytest(
@@ -771,6 +819,7 @@ class DockerExecutor:
         junit = parse_junit(report_on_host if report_on_host.exists() else None)
         image_after = await self._commit(self._container(branch))
         log_path = self._write_log(branch, stdout)
+        tree_digest = await self._tree_digest(branch)
         return self._emit(
             branch,
             image_after,
@@ -785,12 +834,14 @@ class DockerExecutor:
             duration_s=duration,
             timed_out=timed_out,
             junit=junit,
+            tree_digest=tree_digest,
         )
 
     async def write_file(self, branch: Branch, path: str, content: str) -> Receipt:
         started = _now()
         parts = self._path_parts(path)
         if parts is None:
+            tree_digest = await self._tree_digest(branch)
             return self._emit(
                 branch,
                 branch.head,
@@ -800,6 +851,7 @@ class DockerExecutor:
                 stderr_tail="refused: path is outside the repository",
                 started_at=started,
                 duration_s=(_now() - started).total_seconds(),
+                tree_digest=tree_digest,
             )
         spec = self._spec(branch)
         anchor = self._anchor(branch)
@@ -821,6 +873,7 @@ class DockerExecutor:
         if timed_out:
             code = None
         image_after = await self._commit(self._container(branch))
+        tree_digest = await self._tree_digest(branch)
         return self._emit(
             branch,
             image_after,
@@ -833,6 +886,7 @@ class DockerExecutor:
             started_at=started,
             duration_s=(_now() - started).total_seconds(),
             timed_out=timed_out,
+            tree_digest=tree_digest,
         )
 
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:
@@ -881,6 +935,7 @@ class DockerExecutor:
             lines = stdout.decode(errors="replace").splitlines()
             snapshot_sha = lines[-1].strip() if lines else None
         image_after = await self._commit(self._container(branch))
+        tree_digest = await self._tree_digest(branch)
         return self._emit(
             branch,
             image_after,
@@ -894,6 +949,7 @@ class DockerExecutor:
             duration_s=duration,
             timed_out=timed_out,
             snapshot_sha=snapshot_sha,
+            tree_digest=tree_digest,
         )
 
     async def checkpoint(self, branch: Branch) -> Checkpoint:
@@ -1061,6 +1117,7 @@ class DockerExecutor:
                 120,
             )
         image_after = await self._commit(self._container(branch))
+        tree_digest = await self._tree_digest(branch)
         return self._emit(
             branch,
             image_after,
@@ -1074,6 +1131,7 @@ class DockerExecutor:
             started_at=command_started,
             duration_s=duration,
             timed_out=timed_out,
+            tree_digest=tree_digest,
         )
 
     async def close(self) -> None:

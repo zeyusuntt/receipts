@@ -127,6 +127,20 @@ async def test_run_pytest_persists_full_stdout_log(tmp_path):
     assert b"test_sub" in log_path.read_bytes()
 
 
+async def test_tree_digest_tracks_worktree_changes_and_ignores_git_metadata(tmp_path):
+    ex, base = await _executor(tmp_path)
+
+    tested = await ex.run_pytest(base, "tests", timeout_s=60)
+    read_only = await ex.run(base, "cat calc/__init__.py >/dev/null", timeout_s=10)
+    changed = await ex.write_file(base, "calc/new.py", "VALUE = 1\n")
+    git_only = await ex.run(base, "printf metadata > .git/claim-audit-probe", timeout_s=10)
+
+    assert tested.tree_digest is not None
+    assert read_only.tree_digest == tested.tree_digest
+    assert changed.tree_digest != tested.tree_digest
+    assert git_only.tree_digest == changed.tree_digest
+
+
 async def test_run_pytest_ignores_worktree_pytest_module(tmp_path):
     ex, base = await _executor(tmp_path)
     imported = tmp_path / "fake-pytest-imported"

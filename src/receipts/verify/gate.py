@@ -134,7 +134,20 @@ def _audit(claims: Claims | None, baseline: Baseline, receipts: Sequence[Receipt
     if last_run is None:
         return "unsupported", "claimed green but never ran the tests on this branch"
     if ordered[-1] is not last_run:
-        return "unsupported", f"claimed green but ran {ordered[-1].kind} receipts after its last test run (receipt {last_run.receipt_id}); the tests did not run on the final state"
+        last_index = ordered.index(last_run)
+        later = ordered[last_index + 1:]
+        digests_complete = (
+            last_run.tree_digest is not None
+            and all(receipt.tree_digest is not None for receipt in later)
+        )
+        if not digests_complete:
+            return "unsupported", f"claimed green but ran {ordered[-1].kind} receipts after its last test run (receipt {last_run.receipt_id}); the tests did not run on the final state"
+        changed = next(
+            (receipt for receipt in later if receipt.tree_digest != last_run.tree_digest),
+            None,
+        )
+        if changed is not None:
+            return "unsupported", f"claimed green but the tree changed after its last test run (receipt {last_run.receipt_id}); receipt {changed.receipt_id} has a different tree digest"
     j = last_run.junit
     assert j is not None
     if j.collected == 0:

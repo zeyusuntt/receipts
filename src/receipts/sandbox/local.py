@@ -78,6 +78,34 @@ def _checkpoint_digest(root: Path) -> str:
     return _checkpoint_manifest_digest(entries)
 
 
+def _tree_digest(root: Path) -> str:
+    """Hash every worktree file and symlink while excluding Git metadata."""
+    entries: list[tuple[str, int, str]] = []
+
+    def visit(directory: Path) -> None:
+        for path in directory.iterdir():
+            if path.name == ".git":
+                continue
+            mode = path.lstat().st_mode
+            if stat.S_ISDIR(mode):
+                visit(path)
+                continue
+            if stat.S_ISLNK(mode):
+                content = os.fsencode(os.readlink(path))
+            elif stat.S_ISREG(mode):
+                content = path.read_bytes()
+            else:
+                content = b""
+            entries.append((
+                path.relative_to(root).as_posix(),
+                mode,
+                hashlib.sha256(content).hexdigest(),
+            ))
+
+    visit(root)
+    return _checkpoint_manifest_digest(entries)
+
+
 class LocalExecutor:
     def __init__(self, root: Path, sink: ReceiptSink, run_id: str) -> None:
         self.root = root
@@ -218,11 +246,12 @@ class LocalExecutor:
         if code == 0:
             lines = stdout.decode(errors="replace").splitlines()
             snapshot_sha = lines[-1].strip() if lines else None
+        tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
         return self._emit(branch, kind="command", cmd=cmd, exit_code=code,
                           stdout_tail=_tail(stdout), stderr_tail=_tail(stderr),
                           stdout_sha256=hashlib.sha256(stdout).hexdigest(),
                           started_at=started, duration_s=duration, timed_out=timed_out,
-                          snapshot_sha=snapshot_sha)
+                          snapshot_sha=snapshot_sha, tree_digest=tree_digest)
 
     async def checkpoint(self, branch: Branch) -> Checkpoint:
         cp_id = f"ckpt-{uuid.uuid4().hex[:12]}"
@@ -249,11 +278,13 @@ class LocalExecutor:
     async def run(self, branch: Branch, cmd: str, timeout_s: int) -> Receipt:
         stdout, stderr, code, timed_out, started, duration = await self._execute(self.workdir(branch), cmd, timeout_s)
         log_path = self._write_log(branch, stdout)
+        tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
         return self._emit(branch, kind="command", cmd=cmd, exit_code=code,
                           stdout_tail=_tail(stdout), stderr_tail=_tail(stderr),
                           stdout_sha256=hashlib.sha256(stdout).hexdigest(),
                           log_path=str(log_path),
-                          started_at=started, duration_s=duration, timed_out=timed_out)
+                          started_at=started, duration_s=duration, timed_out=timed_out,
+                          tree_digest=tree_digest)
 
     async def run_pytest(self, branch: Branch, args: str, timeout_s: int, kind: ReceiptKind = "command") -> Receipt:
         seq = self._seq.get(branch.id, 0) + 1
@@ -263,11 +294,13 @@ class LocalExecutor:
         stdout, stderr, code, timed_out, started, duration = await self._execute(self.workdir(branch), cmd, timeout_s)
         junit = parse_junit(report if report.exists() else None)
         log_path = self._write_log(branch, stdout)
+        tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
         return self._emit(branch, kind=kind, cmd=cmd, exit_code=code,
                           stdout_tail=_tail(stdout), stderr_tail=_tail(stderr),
                           stdout_sha256=hashlib.sha256(stdout).hexdigest(),
                           log_path=str(log_path),
-                          started_at=started, duration_s=duration, timed_out=timed_out, junit=junit)
+                          started_at=started, duration_s=duration, timed_out=timed_out,
+                          junit=junit, tree_digest=tree_digest)
 
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:
         target = self._safe_path(branch, path)
@@ -279,14 +312,18 @@ class LocalExecutor:
         started = _now()
         target = self._safe_path(branch, path)
         if target is None:
+            tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
             return self._emit(branch, kind="write", path=path, exit_code=1,
                               stderr_tail="refused: path is outside the repository",
-                              started_at=started, duration_s=0.0)
+                              started_at=started, duration_s=0.0,
+                              tree_digest=tree_digest)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content)
+        tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
         return self._emit(branch, kind="write", path=path, exit_code=0,
                           stdout_sha256=hashlib.sha256(content.encode()).hexdigest(),
-                          started_at=started, duration_s=(_now() - started).total_seconds())
+                          started_at=started, duration_s=(_now() - started).total_seconds(),
+                          tree_digest=tree_digest)
 
     async def patch(self, branch: Branch, snapshot_sha: str) -> Receipt:
         started = _now()
@@ -379,14 +416,18 @@ class LocalExecutor:
         # Found by the Sep 30 dry run of this plan; Token Factory images are copies too.
         cmd = f"git update-index -q --refresh; git apply --index {shlex.quote(str(patch_path))}"
         if not patch_text:
+            tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
             return self._emit(branch, kind="apply", cmd=cmd, exit_code=0,
                               patch_sha256=digest, started_at=started,
-                              duration_s=(_now() - started).total_seconds())
+                              duration_s=(_now() - started).total_seconds(),
+                              tree_digest=tree_digest)
         stdout, stderr, code, timed_out, command_started, duration = await self._execute(
             self.workdir(branch), cmd, 120,
         )
+        tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
         return self._emit(branch, kind="apply", cmd=cmd, exit_code=code,
                           stdout_tail=_tail(stdout), stderr_tail=_tail(stderr),
                           stdout_sha256=hashlib.sha256(stdout).hexdigest(),
                           patch_sha256=digest, started_at=command_started,
-                          duration_s=duration, timed_out=timed_out)
+                          duration_s=duration, timed_out=timed_out,
+                          tree_digest=tree_digest)

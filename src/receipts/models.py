@@ -109,6 +109,7 @@ class Receipt(BaseModel):
     stderr_tail: str = ""
     stdout_sha256: str | None = None
     log_path: str | None = None
+    tree_digest: str | None = None
     started_at: datetime
     duration_s: float
     timed_out: bool = False

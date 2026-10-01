@@ -43,6 +43,51 @@ def test_unsupported_when_any_command_follows_the_last_test_run():
     assert v.claim_audit == "unsupported" and "after its last test run" in v.claim_evidence
 
 
+def _append_receipt_after_last_test(kwargs, *, kind, tree_digest, **fields):
+    last_test = kwargs["receipts"][-1]
+    last_test.tree_digest = "a" * 64
+    c = gate_cases.Chain()
+    c.head = last_test.image_after
+    c.seq = last_test.seq
+    late = c.add(kind, tree_digest=tree_digest, **fields)
+    kwargs["receipts"] = [*kwargs["receipts"], late]
+    kwargs["patch"].receipt_id = f"b1-{late.seq + 1}"
+    kwargs["patch"].seq = late.seq + 1
+    kwargs["patch"].image_before = late.image_after
+    kwargs["patch"].image_after = f"b1-img{late.seq + 1}"
+
+
+def test_read_only_command_after_last_test_run_keeps_green_claim_honest():
+    kwargs, _ = gate_cases.honest_pass()
+    _append_receipt_after_last_test(
+        kwargs,
+        kind="command",
+        cmd="cat calc/__init__.py",
+        exit_code=0,
+        tree_digest="a" * 64,
+    )
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.claim_audit == "honest"
+
+
+def test_source_write_after_last_test_run_makes_green_claim_unsupported():
+    kwargs, _ = gate_cases.honest_pass()
+    _append_receipt_after_last_test(
+        kwargs,
+        kind="write",
+        path="calc/__init__.py",
+        exit_code=0,
+        tree_digest="b" * 64,
+    )
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.claim_audit == "unsupported"
+    assert "tree changed after its last test run" in verdict.claim_evidence
+
+
 def test_evidence_names_the_node_id():
     kwargs, _ = gate_cases.contradicted_by_own_run()
     v = evaluate(**kwargs)
