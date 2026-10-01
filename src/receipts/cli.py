@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib
+import json
 import os
 import shutil
 import tempfile
@@ -15,19 +17,22 @@ from typing import Any
 from pydantic import BaseModel
 from daytona import AsyncDaytona, DaytonaConfig
 
+from receipts.agent.worker import WorkerBudget
 from receipts.llm import (
     ModelClient,
     TokenFactoryClient,
     _parse_dotenv,
     load_config,
 )
-from receipts.orchestrate import RunResult, fix
+from receipts.orchestrate import RunBudgets, RunResult, fix
+from receipts.pilot.runner import InstanceRecord, run_pilot
 from receipts.receipt_text import render
 from receipts.sandbox.daytona import AsyncDaytonaApi, DaytonaExecutor
 from receipts.sandbox.docker import DockerExecutor
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import ImageSource, RepoAtCommit
-from receipts.sandbox.sink import RunSink
+from receipts.sandbox.sink import MemorySink, RunSink
+from receipts.swerebench import Instance
 
 
 _REQUIRED_ENV = ("OPENAI_API_KEY", "OPENAI_BASE_URL", "NEMOTRON_MODEL")
@@ -73,6 +78,35 @@ def _parser() -> argparse.ArgumentParser:
 
     show_parser = commands.add_parser("show", help="print a run's Markdown receipt")
     show_parser.add_argument("run_dir", type=Path)
+
+    pilot_parser = commands.add_parser("pilot", help="run or report on the pilot")
+    pilot_commands = pilot_parser.add_subparsers(
+        dest="pilot_command",
+        required=True,
+    )
+    pilot_run = pilot_commands.add_parser("run", help="run pilot instances")
+    pilot_run.add_argument(
+        "--candidates",
+        required=True,
+        type=Path,
+        help="ordered candidate id file",
+    )
+    pilot_run.add_argument(
+        "--rows",
+        required=True,
+        type=Path,
+        help="SWE-rebench row JSONL",
+    )
+    pilot_run.add_argument("--n", type=int, default=50)
+    pilot_run.add_argument("--executor", choices=("daytona",), default="daytona")
+    pilot_run.add_argument("--out", required=True, type=Path)
+    pilot_run.add_argument("--concurrency", type=int, default=1)
+
+    pilot_report = pilot_commands.add_parser(
+        "report",
+        help="build the report from pilot records",
+    )
+    pilot_report.add_argument("pilot_dir", type=Path)
     return parser
 
 
@@ -215,6 +249,116 @@ def _show(run_dir: Path) -> int:
     return 0
 
 
+def _load_pilot_candidates(candidates_path: Path, rows_path: Path) -> list[Instance]:
+    candidate_ids = [
+        line.strip()
+        for line in candidates_path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    if len(candidate_ids) != len(set(candidate_ids)):
+        raise ValueError("candidate ids must be unique")
+
+    wanted = set(candidate_ids)
+    by_id: dict[str, Instance] = {}
+    for line_number, line in enumerate(
+        rows_path.read_text(encoding="utf-8").splitlines(),
+        start=1,
+    ):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if not isinstance(row, dict):
+            raise ValueError(f"row {line_number} is not a JSON object")
+        row.pop("patch", None)
+        instance_id = row.get("instance_id")
+        if instance_id not in wanted:
+            continue
+        if instance_id in by_id:
+            raise ValueError(f"duplicate dataset row for {instance_id}")
+        by_id[instance_id] = Instance.model_validate(row)
+
+    missing = [instance_id for instance_id in candidate_ids if instance_id not in by_id]
+    if missing:
+        raise ValueError("candidate ids missing from rows: " + ", ".join(missing))
+    return [by_id[instance_id] for instance_id in candidate_ids]
+
+
+async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int:
+    if args.n < 0:
+        raise ValueError("--n must be non-negative")
+    if args.concurrency < 1:
+        raise ValueError("--concurrency must be at least 1")
+    candidates = _load_pilot_candidates(args.candidates, args.rows)
+    selected_model = model or TokenFactoryClient(
+        load_config(env_path=Path(".env")),
+        env_path=Path(".env"),
+    )
+    dotenv = _parse_dotenv(Path(".env"))
+    api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY")
+    if not api_key:
+        raise ValueError("DAYTONA_API_KEY is required for the Daytona executor")
+
+    with tempfile.TemporaryDirectory(prefix="receipts-pilot-executor-") as root:
+        executor_root = Path(root)
+
+        def make_executor(run_id: str) -> DaytonaExecutor:
+            client = AsyncDaytona(DaytonaConfig(api_key=api_key))
+            api = AsyncDaytonaApi(client)
+            return DaytonaExecutor(
+                executor_root / run_id,
+                MemorySink(),
+                run_id,
+                api,
+            )
+
+        records = await run_pilot(
+            make_executor,
+            selected_model,
+            candidates,
+            args.out,
+            n=args.n,
+            concurrency=args.concurrency,
+            budgets=RunBudgets(
+                baseline_limit_s=600,
+                verification_timeout_s=600,
+                worker=WorkerBudget(
+                    max_turns=40,
+                    max_wall_seconds=1_200,
+                    max_completion_tokens=64_000,
+                ),
+            ),
+        )
+
+    ran = sum(record.status == "ran" for record in records)
+    excluded = sum(record.status == "excluded" for record in records)
+    infra_errors = sum(record.status == "infra_error" for record in records)
+    print(f"PILOT ran={ran} excluded={excluded} infra_error={infra_errors}")
+    return 0
+
+
+def _run_pilot_report(pilot_dir: Path) -> int:
+    try:
+        report_module = importlib.import_module("receipts.pilot.report")
+    except ModuleNotFoundError as exc:
+        if exc.name == "receipts.pilot.report":
+            raise RuntimeError("pilot reporting is not available until Task P4") from exc
+        raise
+
+    records = [
+        InstanceRecord.model_validate_json(path.read_text(encoding="utf-8"))
+        for path in sorted(pilot_dir.glob("*/record.json"))
+    ]
+    report = report_module.build_report(records)
+    markdown = report_module.render(report)
+    (pilot_dir / "REPORT.md").write_text(markdown, encoding="utf-8")
+    (pilot_dir / "report.json").write_text(
+        report.model_dump_json(indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(pilot_dir / "REPORT.md")
+    return 0
+
+
 async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
     if args.command == "doctor":
         return await _doctor(args.live, model)
@@ -222,6 +366,10 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
         return await _run_fix(args, model)
     if args.command == "show":
         return _show(args.run_dir)
+    if args.command == "pilot" and args.pilot_command == "run":
+        return await _run_pilot(args, model)
+    if args.command == "pilot" and args.pilot_command == "report":
+        return _run_pilot_report(args.pilot_dir)
     raise AssertionError(f"unknown command: {args.command}")
 
 
