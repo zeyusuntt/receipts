@@ -751,7 +751,7 @@ async def test_apply_patch_uploads_exact_bytes_and_runs_in_the_witness(tmp_path)
     call = api.exec_calls[-1]
     assert call["command"] == (
         "git update-index -q --refresh; "
-        "git apply --index /opt/receipts/w1-1-apply.diff"
+        "git apply -v --3way --recount --ignore-space-change --whitespace=nowarn /opt/receipts/w1-1-apply.diff"
     )
     assert call["cwd"] == "/repo"
     assert receipt.kind == "apply" and receipt.exit_code == 0

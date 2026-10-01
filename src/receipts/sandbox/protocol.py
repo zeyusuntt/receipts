@@ -62,6 +62,11 @@ class Executor(Protocol):
 
 PYTEST_FLAGS = "-o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors"
 
+# The flags SWE-rebench-V2 scripts/eval.py uses to apply a model patch. Witnesses and
+# official grading apply patches the same way, so line-ending and whitespace differences
+# between a patch and a file are tolerated exactly as the upstream grader tolerates them.
+GIT_APPLY_FLAGS = "-v --3way --recount --ignore-space-change --whitespace=nowarn"
+
 PYTEST_BOOTSTRAP = """\
 import os
 import sys

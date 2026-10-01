@@ -53,6 +53,7 @@ from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
 from receipts.patchscope import default_protected_modules, filter_patch, summarize_patch
 from receipts.sandbox.protocol import (
     PYTEST_BOOTSTRAP,
+    GIT_APPLY_FLAGS,
     PYTEST_FLAGS,
     CheckpointTampered,
     ImageSource,
@@ -1256,7 +1257,7 @@ class DaytonaExecutor:
         )
         command = (
             "git update-index -q --refresh; "
-            f"git apply --index {shlex.quote(remote_patch)}"
+            f"git apply {GIT_APPLY_FLAGS} {shlex.quote(remote_patch)}"
         )
         if patch_text:
             output, code, timed_out, command_started, duration = await self._execute(

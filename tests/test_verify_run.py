@@ -162,3 +162,28 @@ async def test_baseline_accepts_a_spec_test_whose_module_does_not_exist_yet(tmp_
     assert NEW_SPEC not in b.collected_ids
     assert "tests/test_calc.py::test_add" in b.protected
     assert all(run.collection_errors == ["tests/test_new_feature.py"] for run in b.runs)
+
+
+async def test_patch_applies_to_a_witness_whose_files_have_crlf_line_endings(tmp_path):
+    """Some SWE-rebench repositories keep CRLF files while git normalizes line endings on
+    commit, so the extracted patch has LF lines. The witness must still take the patch, as
+    the upstream grader does with its whitespace-tolerant apply flags."""
+    repo = make_repo(tmp_path / "src")
+    to_crlf = (
+        "git config core.autocrlf input && python -c \"import pathlib; "
+        "p = pathlib.Path('calc/__init__.py'); "
+        "p.write_bytes(p.read_bytes().replace(b'\\\\n', b'\\\\r\\\\n'))\""
+    )
+    ex = LocalExecutor(root=tmp_path / "work", sink=MemorySink(), run_id="run-1")
+    base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd=to_crlf))
+    assert "\r\n" in await ex.read_file(base, "calc/__init__.py", 10_000)
+    snapshot = await ex.snapshot(base)
+    c0 = await ex.checkpoint(base)
+    (agent,) = await ex.fork(c0, 1)
+    original = await ex.read_file(agent, "calc/__init__.py", 10_000)
+    await ex.write_file(agent, "calc/__init__.py", original.replace("return a + b  # bug: should be a - b", "return a - b"))
+
+    result = await verify_attempt(ex, agent, c0, snapshot.snapshot_sha, "tests", timeout_s=60, attempt=1)
+
+    assert result.apply.exit_code == 0, result.apply.stdout_tail + result.apply.stderr_tail
+    assert "tests/test_calc.py::test_sub" in result.verification.junit.passed

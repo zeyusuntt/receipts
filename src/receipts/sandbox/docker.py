@@ -35,6 +35,7 @@ from receipts.patchscope import default_protected_modules, filter_patch, summari
 from receipts.sandbox.protocol import (
     ImageSource,
     PYTEST_BOOTSTRAP,
+    GIT_APPLY_FLAGS,
     PYTEST_FLAGS,
     RepoAtCommit,
     Source,
@@ -1113,7 +1114,7 @@ class DockerExecutor:
         )
         cmd = (
             "git update-index -q --refresh; "
-            f"git apply --index {shlex.quote(container_patch)}"
+            f"git apply {GIT_APPLY_FLAGS} {shlex.quote(container_patch)}"
         )
         if copy_timed_out or copy_code != 0:
             stdout = b""

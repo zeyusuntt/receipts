@@ -896,7 +896,9 @@ async def test_apply_patch_copies_exact_bytes_and_advances_image_offline(tmp_pat
     receipt = await executor.apply_patch(branch, patch_text)
 
     assert executor.copied == patch_text.encode()
-    assert executor.command.startswith("git update-index -q --refresh; git apply --index ")
+    assert executor.command.startswith(
+        "git update-index -q --refresh; git apply -v --3way --recount --ignore-space-change --whitespace=nowarn "
+    )
     assert receipt.kind == "apply" and receipt.exit_code == 0
     assert receipt.patch_sha256 == hashlib.sha256(patch_text.encode()).hexdigest()
     assert receipt.image_after == branch.head == "sha256:" + "3" * 64

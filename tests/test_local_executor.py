@@ -543,3 +543,41 @@ async def test_trusted_runner_import_path_matches_the_plain_pytest_command(tmp_p
 
     assert receipt.exit_code == 0
     assert receipt.junit.passed == ["tests/test_path.py::test_repository_root_is_not_importable"]
+
+
+async def test_apply_patch_tolerates_line_ending_differences_like_the_upstream_grader(tmp_path):
+    """Observed on pennylane-2834: the file is CRLF on disk, the extracted patch is LF.
+    SWE-rebench-V2's grader applies with --ignore-space-change and takes such a patch."""
+    import subprocess
+
+    from receipts.sandbox.local import LocalExecutor
+    from receipts.sandbox.protocol import RepoAtCommit
+    from receipts.sandbox.sink import MemorySink
+
+    repo = tmp_path / "crlf"
+    (repo / "calc").mkdir(parents=True)
+    (repo / "calc" / "__init__.py").write_bytes(
+        b"def add(a, b):\r\n    return a + b\r\n\r\n\r\ndef sub(a, b):\r\n    return a + b  # bug\r\n"
+    )
+    for args in (["init", "-q"], ["config", "core.autocrlf", "false"], ["add", "-A"],
+                 ["-c", "user.email=f@x", "-c", "user.name=f", "commit", "-q", "-m", "crlf"]):
+        subprocess.run(["git", *args], cwd=repo, check=True)
+    ex = LocalExecutor(root=tmp_path / "work", sink=MemorySink(), run_id="run-1")
+    base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"))
+    await ex.snapshot(base)
+    c0 = await ex.checkpoint(base)
+    (witness,) = await ex.fork(c0, 1, prefix="w")
+    lf_patch = (
+        "diff --git a/calc/__init__.py b/calc/__init__.py\n"
+        "--- a/calc/__init__.py\n"
+        "+++ b/calc/__init__.py\n"
+        "@@ -5,2 +5,2 @@\n"
+        " def sub(a, b):\n"
+        "-    return a + b  # bug\n"
+        "+    return a - b\n"
+    )
+
+    receipt = await ex.apply_patch(witness, lf_patch)
+
+    assert receipt.exit_code == 0, receipt.stdout_tail + receipt.stderr_tail
+    assert "return a - b" in await ex.read_file(witness, "calc/__init__.py", 10_000)

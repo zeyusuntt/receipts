@@ -33,6 +33,7 @@ from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
 from receipts.patchscope import default_protected_modules, filter_patch, summarize_patch
 from receipts.sandbox.protocol import (
     PYTEST_BOOTSTRAP,
+    GIT_APPLY_FLAGS,
     PYTEST_FLAGS,
     CheckpointTampered,
     RepoAtCommit,
@@ -432,7 +433,7 @@ class LocalExecutor:
         # Checkpoints and forks are directory copies, so the copied git index carries stale
         # stat data and `git apply --index` refuses with "does not match index". Refresh first.
         # Found by the Sep 30 dry run of this plan; Token Factory images are copies too.
-        cmd = f"git update-index -q --refresh; git apply --index {shlex.quote(str(patch_path))}"
+        cmd = f"git update-index -q --refresh; git apply {GIT_APPLY_FLAGS} {shlex.quote(str(patch_path))}"
         if not patch_text:
             tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
             return self._emit(branch, kind="apply", cmd=cmd, exit_code=0,
