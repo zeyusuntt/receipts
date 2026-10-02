@@ -23,6 +23,7 @@ from receipts.orchestrate import (
     RunResult,
 )
 from receipts.sandbox.protocol import ImageSource
+from receipts.swerebench import Instance
 from tests.fixtures.repo_factory import make_repo
 
 
@@ -417,3 +418,113 @@ def test_preflight_subcommand_parses_optional_output_path(tmp_path: Path):
     assert default_args.out is None
     assert custom_args.command == "preflight"
     assert custom_args.out == output_path
+
+
+def test_pilot_screen_arguments_parse(tmp_path: Path):
+    candidates = tmp_path / "candidates.txt"
+    exclusions = tmp_path / "exclude.txt"
+    output = tmp_path / "screen.jsonl"
+
+    args = _parser().parse_args(
+        [
+            "pilot",
+            "screen",
+            "--candidates",
+            str(candidates),
+            "--start",
+            "59",
+            "--exclude",
+            str(exclusions),
+            "--want",
+            "110",
+            "--out",
+            str(output),
+            "--concurrency",
+            "2",
+        ],
+    )
+
+    assert args.command == "pilot"
+    assert args.pilot_command == "screen"
+    assert args.candidates == candidates
+    assert args.start == 59
+    assert args.exclude == exclusions
+    assert args.want == 110
+    assert args.out == output
+    assert args.concurrency == 2
+
+
+def test_pilot_screen_never_constructs_a_model(tmp_path: Path, monkeypatch, capsys):
+    import receipts.cli as cli
+
+    candidates_path = tmp_path / "candidates.txt"
+    exclusions_path = tmp_path / "exclude.txt"
+    output = tmp_path / "screen.jsonl"
+    candidates_path.write_text("candidate-1 metadata\n", encoding="utf-8")
+    exclusions_path.write_text("# none\n", encoding="utf-8")
+    candidate = Instance(
+        instance_id="candidate-1",
+        repo="fixture/calc",
+        base_commit="HEAD",
+        image_name="fixture/calc:latest",
+        test_patch="",
+        fail_to_pass=[TARGET],
+        pass_to_pass=[],
+        test_cmd="pytest tests -rA",
+        problem_statement="Fix subtraction.",
+    )
+    captured = {}
+
+    def fail_model(*args, **kwargs):
+        raise AssertionError("screening must not construct a model")
+
+    async def fake_screen(
+        make_executor,
+        candidates,
+        ledger_path,
+        *,
+        start,
+        exclude,
+        want,
+        concurrency,
+    ):
+        captured.update(
+            candidates=candidates,
+            ledger_path=ledger_path,
+            start=start,
+            exclude=exclude,
+            want=want,
+            concurrency=concurrency,
+        )
+        return ["candidate-1"]
+
+    monkeypatch.setenv("DAYTONA_API_KEY", "test-key")
+    monkeypatch.setattr(cli, "TokenFactoryClient", fail_model)
+    monkeypatch.setattr(cli, "_load_pilot_candidates", lambda *args: [candidate])
+    monkeypatch.setattr(cli, "screen_candidates", fake_screen, raising=False)
+
+    status = main(
+        [
+            "pilot",
+            "screen",
+            "--candidates",
+            str(candidates_path),
+            "--start",
+            "1",
+            "--exclude",
+            str(exclusions_path),
+            "--want",
+            "1",
+            "--out",
+            str(output),
+        ],
+    )
+
+    assert status == 0
+    assert captured["candidates"] == [candidate]
+    assert captured["ledger_path"] == output
+    assert captured["start"] == 1
+    assert captured["exclude"] == set()
+    assert captured["want"] == 1
+    assert captured["concurrency"] == 1
+    assert capsys.readouterr().out == "SCREEN included=1\n"

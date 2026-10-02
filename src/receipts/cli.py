@@ -26,6 +26,7 @@ from receipts.llm import (
 )
 from receipts.orchestrate import RunBudgets, RunResult, fix
 from receipts.pilot.runner import InstanceRecord, run_pilot
+from receipts.pilot.screen import screen_candidates
 from receipts.preflight import run_preflight
 from receipts.receipt_text import render
 from receipts.sandbox.daytona import AsyncDaytonaApi, DaytonaExecutor
@@ -37,6 +38,7 @@ from receipts.swerebench import Instance
 
 
 _REQUIRED_ENV = ("OPENAI_API_KEY", "OPENAI_BASE_URL", "NEMOTRON_MODEL")
+_PILOT_ROWS_PATH = Path("data/rebench-v2-python.jsonl")
 
 
 class _DoctorResponse(BaseModel):
@@ -108,6 +110,17 @@ def _parser() -> argparse.ArgumentParser:
     pilot_run.add_argument("--executor", choices=("daytona",), default="daytona")
     pilot_run.add_argument("--out", required=True, type=Path)
     pilot_run.add_argument("--concurrency", type=int, default=1)
+
+    pilot_screen = pilot_commands.add_parser(
+        "screen",
+        help="screen pilot candidates without running a model",
+    )
+    pilot_screen.add_argument("--candidates", required=True, type=Path)
+    pilot_screen.add_argument("--start", required=True, type=int)
+    pilot_screen.add_argument("--exclude", required=True, type=Path)
+    pilot_screen.add_argument("--want", required=True, type=int)
+    pilot_screen.add_argument("--out", required=True, type=Path)
+    pilot_screen.add_argument("--concurrency", type=int, default=1)
 
     pilot_report = pilot_commands.add_parser(
         "report",
@@ -258,7 +271,7 @@ def _show(run_dir: Path) -> int:
 
 def _load_pilot_candidates(candidates_path: Path, rows_path: Path) -> list[Instance]:
     candidate_ids = [
-        line.strip()
+        line.strip().split(maxsplit=1)[0]
         for line in candidates_path.read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.lstrip().startswith("#")
     ]
@@ -290,6 +303,28 @@ def _load_pilot_candidates(candidates_path: Path, rows_path: Path) -> list[Insta
     return [by_id[instance_id] for instance_id in candidate_ids]
 
 
+def _load_id_file(path: Path) -> list[str]:
+    return [
+        line.strip().split(maxsplit=1)[0]
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+
+
+def _daytona_executor_factory(executor_root: Path, api_key: str):
+    def make_executor(run_id: str) -> DaytonaExecutor:
+        client = AsyncDaytona(DaytonaConfig(api_key=api_key))
+        api = AsyncDaytonaApi(client)
+        return DaytonaExecutor(
+            executor_root / run_id,
+            MemorySink(),
+            run_id,
+            api,
+        )
+
+    return make_executor
+
+
 async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int:
     if args.n < 0:
         raise ValueError("--n must be non-negative")
@@ -307,19 +342,8 @@ async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int
 
     with tempfile.TemporaryDirectory(prefix="receipts-pilot-executor-") as root:
         executor_root = Path(root)
-
-        def make_executor(run_id: str) -> DaytonaExecutor:
-            client = AsyncDaytona(DaytonaConfig(api_key=api_key))
-            api = AsyncDaytonaApi(client)
-            return DaytonaExecutor(
-                executor_root / run_id,
-                MemorySink(),
-                run_id,
-                api,
-            )
-
         records = await run_pilot(
-            make_executor,
+            _daytona_executor_factory(executor_root, api_key),
             selected_model,
             candidates,
             args.out,
@@ -340,6 +364,29 @@ async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int
     excluded = sum(record.status == "excluded" for record in records)
     infra_errors = sum(record.status == "infra_error" for record in records)
     print(f"PILOT ran={ran} excluded={excluded} infra_error={infra_errors}")
+    return 0
+
+
+async def _run_pilot_screen(args: argparse.Namespace) -> int:
+    candidates = _load_pilot_candidates(args.candidates, _PILOT_ROWS_PATH)
+    exclusions = set(_load_id_file(args.exclude))
+    dotenv = _parse_dotenv(Path(".env"))
+    api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY")
+    if not api_key:
+        raise ValueError("DAYTONA_API_KEY is required for the Daytona executor")
+
+    with tempfile.TemporaryDirectory(prefix="receipts-screen-executor-") as root:
+        included = await screen_candidates(
+            _daytona_executor_factory(Path(root), api_key),
+            candidates,
+            args.out,
+            start=args.start,
+            exclude=exclusions,
+            want=args.want,
+            concurrency=args.concurrency,
+        )
+
+    print(f"SCREEN included={len(included)}")
     return 0
 
 
@@ -377,6 +424,8 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
         return _show(args.run_dir)
     if args.command == "pilot" and args.pilot_command == "run":
         return await _run_pilot(args, model)
+    if args.command == "pilot" and args.pilot_command == "screen":
+        return await _run_pilot_screen(args)
     if args.command == "pilot" and args.pilot_command == "report":
         return _run_pilot_report(args.pilot_dir)
     raise AssertionError(f"unknown command: {args.command}")

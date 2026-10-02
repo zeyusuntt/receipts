@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from difflib import unified_diff
 from pathlib import Path
 
+import receipts.pilot.grade as pilot_grade
 from receipts.models import Receipt
 from receipts.orchestrate import AttemptResult, RunResult
 from receipts.pilot.grade import grade_attempts
@@ -386,3 +387,32 @@ async def test_releases_official_branches_in_attempt_order_after_logs_are_writte
 
     assert [record.branch_id for record in records] == ["official1", "official2"]
     assert recording.released == [("official1", True), ("official2", True)]
+
+
+async def test_grade_patch_empty_patch_uses_fresh_fork_and_releases_it(
+    tmp_path: Path,
+):
+    executor, result, run_dir, instance = await _grading_case(tmp_path, [])
+
+    record = await pilot_grade.grade_patch(
+        executor,
+        result.checkpoint,
+        instance,
+        "",
+        run_dir,
+        "screen/official.log",
+    )
+
+    assert record.attempt == 0
+    assert record.branch_id == "official1"
+    assert record.apply_exit_code == 0
+    assert record.test_exit_code == 1
+    assert record.infra_error is None
+    assert record.read_sha256 == hashlib.sha256(b"").hexdigest()
+    assert record.applied_sha256 == record.read_sha256
+    assert record.judgement.resolved is False
+    assert record.log_path == "screen/official.log"
+    content = (run_dir / record.log_path).read_bytes()
+    assert content
+    assert hashlib.sha256(content).hexdigest() == record.log_sha256
+    assert "official1" in executor._released_branches
