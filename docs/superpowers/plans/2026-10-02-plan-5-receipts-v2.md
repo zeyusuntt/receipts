@@ -375,3 +375,25 @@ Design, keeping every trust property of the Daytona executor:
 Cards: TF-1 REST client and fake (in progress), TF-2 executor core, TF-3 pytest, digests, patch and apply, CLI and preflight, TF-4 live smoke test and rehearsal on the five D2 tasks.
 
 Decision gate: if the Token Factory rehearsal meets every D2 criterion by Oct 6, 23:59 PT, v2 freezes on Token Factory Sandboxes. Otherwise v2 freezes on Daytona, which passed rehearsal 2 (`docs/results/`), and Token Factory Sandboxes is used for re-verify and the demo only. The Oct 12 stop rule for P is unchanged.
+
+## 11. Pre-freeze review (Oct 2)
+
+A final adversarial review of the freeze candidate returned NO-GO with 13 findings. One did not apply (every one of the 600 candidates' test commands starts with `pytest`, so the `python -m pytest` import difference cannot occur in this sample). Two are stated as known limits in the pre-registration instead of fixed: output over Token Factory's 10 MiB cap fails closed (screening removes tasks whose suite alone exceeds it), and the advisory tree digest ignores directory symlinks (R4 still rejects any shipped symlink). The other ten were fixed in three cards, each reviewed in the main thread, plus four gaps found in that review:
+
+| Commit | What changed |
+| --- | --- |
+| `292ef59` | Token Factory executor: trusted busybox and pytest runner at a fresh random path per run; a client timeout above each run's own timeout, raised as infrastructure; archive caps on size (512 MiB), members (200,000, read one at a time) and member path length; a run that must return an image and does not fails. Found in review: the worktree download now stops streaming at the size cap instead of reading the whole archive into memory. |
+| `f9896ff` | Runner and grading: interrupted runs are archived with their partial spend and rerun from scratch; cleanup failures no longer change outcomes; official grading refuses an apply-digest mismatch and a witness-apply mismatch; an official timeout is an agent outcome when the witness also timed out. Found in review: the watchdog's budget now counts interrupted runs. |
+| `398bc18` | Report and CLI: spend over every run class, cost per verified fix over all spend, screening ledgers in the report, `pilot run --model`. Found in review: `--model` refuses a model with no listed price (its spend would be invisible to the budget), and Token Factory's per-run sandbox cost is shown as reported, not as dollars, because its unit is not published. |
+| `500b9af` | Pre-registration draft: the hang, interruption and spend-stop rules, and the known limits. |
+
+Checks on `500b9af`: the full suite passes with Docker (only the two live-network tests skip). The D1 replay gives the same verdict on all 80 v1 attempts as the committed D1 result, with no new gate-looser attempt.
+
+### Smoke test on Token Factory (Oct 2)
+
+Two seen rehearsal tasks ran at `500b9af` (`pilot/v2-smoke-tf/`): `pypa__twine-1066` with `--model nvidia/Nemotron-3_5-Lightning` and `pysmt__pysmt-812` with Super. Lightning verified on its third run, with the gate and the official grade agreeing; its first two runs were infrastructure errors, each a status poll that got no answer within 30 seconds. The Super run showed stalls of 13 and 9.5 minutes with no activity and was stopped by the session's one-hour limit after 47 turns; it left `record.interrupted-1.json` with its partial spend (1.04 million tokens, $0.32), which exercised the interrupted-run path live. The cause of the stalls and timeouts was this Mac, not Token Factory: the power log shows repeated sleep ("Dark Wake Thermal Emergency", "Maintenance Sleep") during the run, which was not started under `caffeinate`, and direct probes on a wake answered in about 2 seconds (model) and under 1 second (downloads). Sleep also stops `time.monotonic()` on macOS, so the worker's wall budget did not see it (951 seconds recorded against about an hour of clock time). Every v2 run is therefore launched under `caffeinate -i -s` on AC power with the lid open, as v1 was. Probing found two live-only defects that the fake did not model. Both are fixed test-first, with the fake changed to answer as the live API does:
+
+- Transport errors were never retried, so one slow poll discarded a whole task. Reads (GET, HEAD, DELETE) are now retried with the same backoff as 429 and 5xx; other requests are retried only when the connection failed, so a run is never spawned twice.
+- Reading a directory failed: the live API answers 422 to a directory download and names listed entries relative to the directory. `read_file` now lists the directory, as on Daytona, and still refuses an entry outside it. Checked on the live API.
+
+The worker's wall budget includes time waiting for the model and the sandbox API, so a slow provider could end an attempt. Rather than change the budget a day before the freeze, records now keep the worker's end summary and the report counts attempts by the budget that ended them; the pre-registration states the limit. In v1, 1 of 79 attempts ended on the wall budget and 28 on turns.

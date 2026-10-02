@@ -47,7 +47,7 @@ Walk `pilot/candidates.txt` from position 59, skipping every id in `pilot/v2-exc
 
 ### Seen sample S (exploratory)
 
-The 50 tasks that v1 ran, screened again under rules 4 and 5 in v1's order, with their own committed ledger (`pilot/v2-screen-S.jsonl`). Every included task is run under v2 and paired with its v1 record. Some v2 changes were motivated by failures on these tasks, so every S result is labelled as seen and exploratory. S runs on Daytona, as v1 did. Expected, and checked before P runs: rule 5 excludes exactly v1's four environment tasks (`py-pdf__pypdf2-1318`, `datadog__guarddog-156`, `giampaolo__psutil-2379`, `altair-viz__altair-3068`); any other outcome is listed and explained.
+The 50 tasks that v1 ran, screened again under rules 4 and 5 in v1's order, with their own committed ledger (`pilot/v2-screen-S.jsonl`). Every included task is run under v2 and paired with its v1 record. Some v2 changes were motivated by failures on these tasks, so every S result is labelled as seen and exploratory. S runs on Daytona, as v1 did. Expected, and checked when S is screened: rule 5 excludes exactly v1's four environment tasks (`py-pdf__pypdf2-1318`, `datadog__guarddog-156`, `giampaolo__psutil-2379`, `altair-viz__altair-3068`); any other outcome is listed and explained.
 
 ### Order and stopping
 
@@ -85,7 +85,7 @@ For P:
 
 - Everything v1 reported: A's false-done rate among claimed dones with a Wilson 95 percent interval and the breakdown by kind; how many of A's false dones a naive check would have accepted; B's verified fixes, split into first verdict and appeal; B's shipped false dones; per verified fix, model tokens and dollars (planner included), estimated sandbox dollars, sandbox seconds and wall time; the full gate and official agreement matrix with every disagreement explained; every task id, run id and trace.
 - Every exclusion under rules 4 and 5 with its reason and failing ids, from the committed ledger.
-- Harness statistics: tool calls by result class, alias calls, the share of edit calls that did not apply, protocol strikes, turns used, context-guard events, model retries by kind, and the peak number of live sandboxes.
+- Harness statistics: tool calls by result class, alias calls, the share of edit calls that did not apply, protocol strikes, turns used, context-guard events, model retries by kind, attempts that ended on each budget (turns, wall time, completion tokens), and the peak number of live sandboxes.
 - The shipped-bytes check: on how many attempts the gate, witness and official digests agree.
 
 For S, labelled exploratory: the v1-versus-v2 paired table for claimed done, false done and verified fix; the discordant counts; the exact McNemar p-value.
@@ -114,4 +114,5 @@ Before this file was committed, v2's code was developed on v1's records (the D1 
 
 - Every candidate's `test_cmd` starts with `pytest` (selection rule 2), so the official command and the gate's trusted runner import modules the same way. A task whose command is `python -m pytest` would put the repository root on the import path for the official run only; such tasks are outside this measurement, and Receipts in product mode does not yet guard against a new root-level module that shadows a dependency installed only in the task's image.
 - Token Factory Sandboxes cap a run's returned output below 10 MiB. A run whose output is truncated writes no full log, so its official grading fails closed as an infrastructure error. Screening grades an empty patch first, so a task whose suite alone exceeds the cap is excluded before any agent runs; a patch that makes the output exceed it would cost its retries.
+- The worker's 1,500-second budget is wall time, so it includes time spent waiting for the model and the sandbox API, and a slow provider could end an attempt. In v1, 1 of 79 attempts ended on the wall budget and 28 on turns. An attempt that ends on the wall budget is an agent outcome and is not run again; the report counts attempts by the budget that ended them, so a period of provider slowness would show. Runs are launched under `caffeinate -i -s` on AC power, because a sleeping host stops the run's clock and breaks its connections.
 - The tree digest behind the claim audit (shared with v1) hashes files and file symlinks but not directory symlinks or entry types, so a change to a directory symlink after the agent's last test run would not be seen by the advisory claim audit. R4 still rejects any shipped symlink.
