@@ -1322,7 +1322,7 @@ async def test_live_daytona_prepare_checkpoint_fork_isolation_and_cleanup(tmp_pa
     )
     try:
         base = await executor.prepare(
-            ImageSource(image="python:3.12-slim", workdir="/root", python="python"),
+            ImageSource(image="python:3.12-slim", workdir="/srv", python="python"),
         )
         checkpoint = await executor.checkpoint(base)
         first, second = await executor.fork(checkpoint, 2)
