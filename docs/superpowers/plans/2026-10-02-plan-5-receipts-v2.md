@@ -201,7 +201,7 @@ The soundness invariant behind B1 is that the witness and the official grader ap
   - `vyper-3261` attempt 1 becomes REJECTED (B2's second run cannot be replayed; the stored exit and tail are taken as reproduced, and the table says so);
   - launch 3's scikit-build patch becomes REJECTED on R4 as shadow;
   - no attempt the official grader did not resolve **newly** becomes PASS. `pypdf2-1318` attempt 2 stays an unresolved PASS; it is the environment case that B4 excludes at screening.
-- Also replay B4's rule from the stored official logs where possible: it should name exactly the four environment tasks.
+- B4's rule cannot be replayed on v1 data (v1 never graded an empty patch); screening S checks it for real (gate 2).
 - Any new gate-looser case blocks the freeze.
 
 **D2. Rehearsal.**
@@ -268,7 +268,7 @@ E runs alongside D. Judges score design, impact and idea as much as implementati
 ## 4. Acceptance gates
 
 1. The full suite passes (337 today plus the new tests), including the attack suite with B0, B1 and B7's new attacks, and the v1 corpus loads under the new models.
-2. D1's replay table shows no new gate-looser case, and B4's rule names exactly v1's four environment tasks.
+2. D1's replay table shows no new gate-looser case, and screening the seen sample S excludes exactly v1's four environment tasks under rule 5 (or every difference is explained before P runs).
 3. The D2 rehearsal meets every criterion it lists, after the last fix, with the full suite and D1 re-run.
 4. C4's preflight artifact passes before D2 and before D4.
 5. `PREREGISTRATION-v2.md` is committed before screening; the exclusion list, the selection ledger, the sample and the reserve are committed before any agent run.
@@ -329,3 +329,31 @@ Rejected or changed:
 - **The full in-image B6 scanner:** deferred, see section 7.
 - **Daytona symlink containment for the scratch path:** not a trust issue. Scratch lives only in the agent's sandbox, where the agent already has an arbitrary shell, and nothing from it reaches C0, a witness or a patch.
 - **`sitecustomize` as a direct route to a false done:** real but adversarial. It needs a patch that detects which runner loads it, the same class as "code that detects it is under test" in v1's limits. It is closed anyway, cheaply, by B6's reserved names.
+
+## 9. Implementation status and deviations (Oct 2)
+
+Each item landed test-first, was reviewed (trust-boundary items in the main session), and was committed on its own after the full suite passed with Docker. Commits are on `build/plan-1`.
+
+| Item | Commit | Note |
+| --- | --- | --- |
+| B0 | `2f8fb60` | As planned. |
+| B7 | `0ba0a2e` | Also: a test patch with an unparseable path (18 dataset rows, all renames, none in `candidates.txt`) excludes the task instead of counting as infrastructure. |
+| B1 | `4cc5eb9` | As planned. |
+| B8 | `9c65215` | Also records the digest of the bytes official grading read, so a patch changed after the gate counts as a mismatch. |
+| B5 | `d1237f3` | Regression tests on the stored qiskit data; the behaviour already existed. |
+| C4 | `035f6a2` | Token Factory settings follow the model client (`.env` overrides the shell). Daytona organization limits are not readable with our key (403), so D2 measures the peak instead. |
+| A1 | `059c532` | As planned, plus review fixes (non-string editor command, view ranges). |
+| B2 | `22f1995` | As planned. |
+| B6 | `9dac934` | `reserved` is narrowed to `sitecustomize.py`, `usercustomize.py` and `entry_points.txt` by file name; other `.dist-info`/`.egg-info` files stay `other`, because reinstalling an editable package rewrites them when they are in C0. |
+| A0 | `c511d9a` | Plus review fixes (malformed-call metadata can no longer raise; tolerant log parsing; edit-failure rate over all edit calls). |
+| B4 | `d02002b` | With `receipts pilot screen`. |
+| B3 | `e3c4991` | FAIL_TO_PASS only: rule 5 is judged by the upstream parser, which truncates PASS_TO_PASS ids exactly as the dataset does. |
+| A5 | `e7ce066` | As planned. |
+| C1 | `55b81d1` | One recursive listing per download is kept; only downloads are skipped. |
+| C3 + D0 | `43eba91` | With `receipts pilot cleanup`. Existing records are never rewritten. |
+| A3 | `2c69576` | As planned. |
+| C2 | `3f04e1f`, `ec4bc5b` | Watchdog is `receipts pilot watch`. |
+| D-a | (gitignored) | `.build/v1_evidence.py`. |
+| B3b | cut | It changes the trusted runner a week before the freeze, for a benefit that is only fewer fail-closed exclusions. Inherited spec ids keep failing closed, and screening lists them. |
+| A4 | in progress | Should tier. |
+| D1 | in progress | B4's rule cannot be replayed on v1 data: v1 never ran an empty-patch official grading. Instead, screening the seen sample S runs rule 5 on v1's tasks for real, and the expectation is that it excludes exactly the four environment tasks. |
