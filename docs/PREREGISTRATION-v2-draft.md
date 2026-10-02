@@ -6,7 +6,7 @@ Open before commit (filled in or removed when the file is committed):
 
 - `<FREEZE_COMMIT>`: the commit that v2 runs.
 - `<D2_IDS>`: the five rehearsal ids, once the D2 rehearsal has run.
-- The exploratory model arm (section "Exploratory arm"): kept or removed by Zeyu's decision.
+- `<EXECUTOR>`: Token Factory Sandboxes or Daytona, from the C5 decision gate.
 
 ## Question
 
@@ -30,7 +30,7 @@ Every v2 run uses the code at `<FREEZE_COMMIT>` on branch `build/plan-1`, run fr
 - Worker budget per attempt: 60 turns, 1,500 seconds, 96,000 completion tokens; command output shown to the model capped at the last 6,000 characters; an attempt also ends after three consecutive protocol errors. Before every model call, a prompt estimated above 160,000 tokens (characters divided by three) has its oldest tool outputs replaced by a one-line note until it fits; the system message, the first user message and the last six messages are never changed.
 - The worker's first message adds the spec tests' failure text from the first baseline run, capped at 6,000 characters in total.
 - Receipts configuration: one agent branch, one witness branch per attempt, one appeal. Unchanged.
-- Executor: Daytona sandboxes in organization `0d3dbc72-...`, 2 vCPU, 2 GiB memory and 5 GiB disk each, 60-minute idle auto-stop; at most two tasks at a time. Token Factory Sandboxes are not used.
+- Executor: `<EXECUTOR>`, decided by the gate in Plan 5, section 10, before this file is committed. Either Token Factory Sandboxes (the instance's preloaded SWE-rebench-V2 image from the Sandboxes catalogue; every command a run from the branch's immutable image; at most eight tasks at a time), or Daytona sandboxes in organization `0d3dbc72-...` (2 vCPU, 2 GiB memory and 5 GiB disk each, 60-minute idle auto-stop; at most two tasks at a time). The sentence that is not chosen is deleted before commit.
 
 ## Task selection
 
@@ -97,9 +97,9 @@ As in v1, with the real counts stated instead of "zero":
 
 If B ships any false done, that fact is the first line of the report, before any headline.
 
-## Exploratory arm (decision pending; removed if Zeyu declines)
+## Exploratory arm (approved by Zeyu on 2026-10-02)
 
-After P and S, the first 30 tasks of P run once more with one newer Nemotron model on Token Factory, chosen before this file is committed by a scripted tool-calling check: `<MODEL_ID>`, thinking off, temperature 1.0, top_p 0.95, with every other setting unchanged. Reported separately, with the same numbers as P, labelled exploratory. It never changes the headline.
+After P and S, the first 30 tasks of P run once more with one newer Nemotron model on Token Factory, chosen before this file was committed by the scripted tool-calling loop of the Sep 30 model spike (ten six-turn loops per model, thinking off, run on 2026-10-02: Nemotron 3 Super 10 of 10, Nemotron 3.5 Lightning 6 of 10, Nemotron 3 Ultra 550B 3 of 10; no invented tools or free-text turns for any): `nvidia/Nemotron-3_5-Lightning`, thinking off, temperature 1.0, top_p 0.95, with every other setting unchanged. Reported separately, with the same numbers as P, labelled exploratory. It never changes the headline.
 
 ## Development runs
 
