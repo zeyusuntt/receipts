@@ -141,6 +141,46 @@ async def test_tree_digest_tracks_worktree_changes_and_ignores_git_metadata(tmp_
     assert git_only.tree_digest == changed.tree_digest
 
 
+async def test_scratch_is_outside_repository_evidence_and_checkpoint(tmp_path):
+    ex, base = await _executor(tmp_path)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1, prefix="agent")
+    scratch = ex.scratch_path(agent)
+    assert not Path(scratch).exists()
+
+    before = await ex.run(agent, "true", timeout_s=10)
+    written = await ex.write_file(agent, f"{scratch}/probe.py", "print('probe')\n")
+    escaped = await ex.write_file(
+        agent,
+        f"{scratch}/../{agent.id}/escaped.py",
+        "escaped = True\n",
+    )
+    aliased_escape = await ex.write_file(
+        agent,
+        f"/{scratch}/../{agent.id}/aliased.py",
+        "escaped = True\n",
+    )
+    patch = await ex.patch(agent, snapshot.snapshot_sha)
+    (witness,) = await ex.fork(checkpoint, 1, prefix="w")
+
+    assert Path(scratch).parent == ex.workdir(agent).parent
+    assert Path(scratch) != ex.workdir(agent)
+    assert written.exit_code == 0
+    assert Path(scratch).is_dir()
+    assert await ex.read_file(agent, f"{scratch}/probe.py", 100) == "print('probe')\n"
+    assert escaped.exit_code == 1 and "outside" in escaped.stderr_tail
+    assert aliased_escape.exit_code == 1 and "outside" in aliased_escape.stderr_tail
+    assert await ex.read_file(agent, f"{scratch}/../{agent.id}/escaped.py", 100) == ""
+    assert not (ex.workdir(agent) / "escaped.py").exists()
+    assert not (ex.workdir(agent) / "aliased.py").exists()
+    assert written.tree_digest == before.tree_digest
+    assert patch.diff is not None and patch.diff.files == []
+    assert Path(patch.diff.patch_path).read_text() == ""
+    assert await ex.read_file(witness, f"{scratch}/probe.py", 100) == ""
+    assert await ex.read_file(witness, f"{ex.scratch_path(witness)}/probe.py", 100) == ""
+
+
 async def test_run_pytest_ignores_worktree_pytest_module(tmp_path):
     ex, base = await _executor(tmp_path)
     imported = tmp_path / "fake-pytest-imported"

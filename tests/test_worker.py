@@ -64,6 +64,7 @@ async def _fixture_worker(
     *,
     repo: Path | None = None,
     repo_root: str | None = None,
+    scratch_path: str | None = None,
 ):
     worker_module = _worker_module()
     source = repo if repo is not None else make_repo(tmp_path / "source")
@@ -77,6 +78,9 @@ async def _fixture_worker(
     branch = (await executor.fork(checkpoint, 1, prefix="agent"))[0]
     model = FakeModel(turns=turns)
     writer = io.StringIO()
+    worker_kwargs = {}
+    if scratch_path is not None:
+        worker_kwargs["scratch_path"] = scratch_path
     instance = worker_module.Worker(
         model=model,
         executor=executor,
@@ -84,6 +88,7 @@ async def _fixture_worker(
         initial_message="Fix calc.sub and prove the repository is green.",
         writer=writer,
         repo_root=repo_root,
+        **worker_kwargs,
     )
     return worker_module, instance, model, executor, branch, sink, writer
 
@@ -1259,6 +1264,75 @@ async def test_worker_prompt_names_known_repository_root(tmp_path: Path):
     assert outcome.end == "budget_exhausted"
     assert model.requests[0]["messages"][0]["content"] == (
         worker.SYSTEM_PROMPT + "Commands run in the repository root (/repo).\n"
+    )
+
+
+async def test_worker_prompt_names_scratch_and_can_run_a_probe_from_it(
+    tmp_path: Path,
+):
+    scratch = str(tmp_path / "executor" / "agent1-scratch")
+    turns = [
+        _turn(
+            _call(
+                "write_file",
+                {
+                    "path": f"{scratch}/probe.py",
+                    "content": "print('scratch probe')\n",
+                },
+                "write-probe",
+            ),
+        ),
+        _turn(
+            _call(
+                "edit_file",
+                {
+                    "path": f"{scratch}/probe.py",
+                    "old_text": "scratch probe",
+                    "new_text": "edited scratch probe",
+                },
+                "edit-probe",
+            ),
+        ),
+        _turn(
+            _call(
+                "run_command",
+                {"command": f"python {shlex.quote(scratch + '/probe.py')}"},
+                "run-probe",
+            ),
+        ),
+        _turn(
+            _call(
+                "finish",
+                {
+                    "summary": "Ran a probe outside the repository.",
+                    "claims": _claims(changed=[], green=False),
+                },
+                "finish",
+            ),
+        ),
+    ]
+    worker, instance, model, executor, branch, _, _ = await _fixture_worker(
+        tmp_path,
+        turns,
+        scratch_path=scratch,
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=4, max_completion_tokens=100),
+    )
+
+    prompt = model.requests[0]["messages"][0]["content"]
+    assert f"Put probe and debug scripts under the scratch path ({scratch})." in prompt
+    assert (
+        "New source files created in the repository ship with the fix, while test "
+        "and configuration files are dropped."
+    ) in prompt
+    assert outcome.end == "finished"
+    assert _result(instance, "write-probe") == "ok"
+    assert _result(instance, "edit-probe") == "ok"
+    assert "edited scratch probe" in _result(instance, "run-probe")
+    assert await executor.read_file(branch, f"{scratch}/probe.py", 100) == (
+        "print('edited scratch probe')\n"
     )
 
 

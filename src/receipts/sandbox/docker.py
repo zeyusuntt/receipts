@@ -164,6 +164,88 @@ finally:
         except OSError:
             pass
 """
+_WRITE_SCRATCH_FILE = """\
+import os
+import stat
+import sys
+
+def refuse():
+    print("refused: path is outside the scratch directory", file=sys.stderr)
+    raise SystemExit(1)
+
+root = sys.argv[1]
+parts = sys.argv[2:]
+if not parts or any(part in ("", ".", "..") or "/" in part for part in parts):
+    refuse()
+target = os.path.normpath(os.path.join(root, *parts))
+if os.path.commonpath((root, target)) != root or target == root:
+    refuse()
+descriptors = []
+try:
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    file_flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NONBLOCK", 0)
+    output = os.open(target, file_flags, 0o666)
+    descriptors.append(output)
+    if not stat.S_ISREG(os.fstat(output).st_mode):
+        refuse()
+    while True:
+        chunk = sys.stdin.buffer.read(65536)
+        if not chunk:
+            break
+        remaining = memoryview(chunk)
+        while remaining:
+            written = os.write(output, remaining)
+            remaining = remaining[written:]
+except OSError:
+    refuse()
+finally:
+    for descriptor in reversed(descriptors):
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+"""
+_READ_SCRATCH_FILE = """\
+import os
+import stat
+import sys
+
+def refuse():
+    print("refused: path is outside the scratch directory", file=sys.stderr)
+    raise SystemExit(1)
+
+root = sys.argv[1]
+remaining = int(sys.argv[2])
+parts = sys.argv[3:]
+if not parts or any(part in ("", ".", "..") or "/" in part for part in parts):
+    refuse()
+target = os.path.normpath(os.path.join(root, *parts))
+if os.path.commonpath((root, target)) != root or target == root:
+    refuse()
+descriptor = None
+try:
+    descriptor = os.open(target, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+    if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+        raise SystemExit(0)
+    while remaining:
+        chunk = os.read(descriptor, min(65536, remaining))
+        if not chunk:
+            break
+        sys.stdout.buffer.write(chunk)
+        remaining -= len(chunk)
+except FileNotFoundError:
+    raise SystemExit(0)
+except OSError:
+    refuse()
+finally:
+    if descriptor is not None:
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+"""
+
+_SCRATCH_ROOT = "/tmp/scratch"
 
 
 def _now() -> datetime:
@@ -371,8 +453,15 @@ class DockerExecutor:
     @staticmethod
     def _validate_workdir(workdir: str) -> str:
         path = PurePosixPath(workdir)
-        if not path.is_absolute() or posixpath.normpath(workdir) != workdir:
+        if (
+            not path.is_absolute()
+            or workdir.startswith("//")
+            or posixpath.normpath(workdir) != workdir
+        ):
             raise ValueError(f"container workdir must be a normalized absolute path: {workdir}")
+        scratch = PurePosixPath(_SCRATCH_ROOT)
+        if path == scratch or path in scratch.parents or scratch in path.parents:
+            raise ValueError(f"container workdir must not overlap scratch: {workdir}")
         return workdir
 
     async def _image_id(self, image: str) -> str:
@@ -479,6 +568,10 @@ class DockerExecutor:
             return self._containers[branch.id]
         except KeyError as exc:
             raise RuntimeError(f"unknown Docker branch: {branch.id}") from exc
+
+    def scratch_path(self, branch: Branch) -> str:
+        self._container(branch)
+        return _SCRATCH_ROOT
 
     def _spec(self, branch: Branch) -> _ContainerSpec:
         if branch.id in self._released_branches:
@@ -681,6 +774,20 @@ class DockerExecutor:
             return None
         return PurePosixPath(normalized).parts
 
+    @staticmethod
+    def _scratch_parts(path: str) -> tuple[str, ...] | None:
+        candidate = PurePosixPath(posixpath.normpath(path))
+        root = PurePosixPath(_SCRATCH_ROOT)
+        if not candidate.is_absolute():
+            return None
+        try:
+            relative = candidate.relative_to(root)
+        except ValueError:
+            return None
+        if not relative.parts or any(part in ("", ".", "..") for part in relative.parts):
+            return None
+        return relative.parts
+
     async def prepare(self, source: Source) -> Branch:
         if "base" in self._containers:
             raise RuntimeError("DockerExecutor.prepare may only be called once")
@@ -850,7 +957,8 @@ class DockerExecutor:
     async def write_file(self, branch: Branch, path: str, content: str) -> Receipt:
         started = _now()
         parts = self._path_parts(path)
-        if parts is None:
+        scratch_parts = self._scratch_parts(path)
+        if parts is None and scratch_parts is None:
             tree_digest = await self._tree_digest(branch)
             return self._emit(
                 branch,
@@ -864,22 +972,37 @@ class DockerExecutor:
                 tree_digest=tree_digest,
             )
         spec = self._spec(branch)
-        anchor = self._anchor(branch)
-        stdout, stderr, code, timed_out, _, _ = await self._docker(
-            "exec",
-            "-i",
-            self._container(branch),
-            spec.python,
-            "-I",
-            "-c",
-            _WRITE_FILE,
-            anchor.path,
-            str(anchor.device),
-            str(anchor.inode),
-            *parts,
-            input_data=content.encode(),
-            timeout_s=120,
-        )
+        if scratch_parts is not None:
+            stdout, stderr, code, timed_out, _, _ = await self._docker(
+                "exec",
+                "-i",
+                self._container(branch),
+                spec.python,
+                "-I",
+                "-c",
+                _WRITE_SCRATCH_FILE,
+                _SCRATCH_ROOT,
+                *scratch_parts,
+                input_data=content.encode(),
+                timeout_s=120,
+            )
+        else:
+            anchor = self._anchor(branch)
+            stdout, stderr, code, timed_out, _, _ = await self._docker(
+                "exec",
+                "-i",
+                self._container(branch),
+                spec.python,
+                "-I",
+                "-c",
+                _WRITE_FILE,
+                anchor.path,
+                str(anchor.device),
+                str(anchor.inode),
+                *parts,
+                input_data=content.encode(),
+                timeout_s=120,
+            )
         if timed_out:
             code = None
         image_after = await self._commit(self._container(branch))
@@ -903,24 +1026,39 @@ class DockerExecutor:
         if max_bytes < 0:
             raise ValueError("max_bytes must be non-negative")
         parts = self._path_parts(path)
-        if parts is None:
+        scratch_parts = self._scratch_parts(path)
+        if parts is None and scratch_parts is None:
             return ""
         spec = self._spec(branch)
-        anchor = self._anchor(branch)
-        stdout, stderr, code, timed_out, _, _ = await self._docker(
-            "exec",
-            self._container(branch),
-            spec.python,
-            "-I",
-            "-c",
-            _READ_FILE,
-            anchor.path,
-            str(anchor.device),
-            str(anchor.inode),
-            str(max_bytes),
-            *parts,
-            timeout_s=30,
-        )
+        if scratch_parts is not None:
+            stdout, stderr, code, timed_out, _, _ = await self._docker(
+                "exec",
+                self._container(branch),
+                spec.python,
+                "-I",
+                "-c",
+                _READ_SCRATCH_FILE,
+                _SCRATCH_ROOT,
+                str(max_bytes),
+                *scratch_parts,
+                timeout_s=30,
+            )
+        else:
+            anchor = self._anchor(branch)
+            stdout, stderr, code, timed_out, _, _ = await self._docker(
+                "exec",
+                self._container(branch),
+                spec.python,
+                "-I",
+                "-c",
+                _READ_FILE,
+                anchor.path,
+                str(anchor.device),
+                str(anchor.inode),
+                str(max_bytes),
+                *parts,
+                timeout_s=30,
+            )
         if code == 1 and not timed_out:
             return ""
         if timed_out or code != 0:

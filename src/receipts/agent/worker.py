@@ -698,6 +698,7 @@ class Worker:
         initial_message: str,
         writer: TextIO,
         repo_root: str | None = None,
+        scratch_path: str | None = None,
     ) -> None:
         self.model = model
         self.executor = executor
@@ -706,6 +707,12 @@ class Worker:
         system_prompt = SYSTEM_PROMPT
         if repo_root is not None:
             system_prompt += f"Commands run in the repository root ({repo_root}).\n"
+        if scratch_path is not None:
+            system_prompt += (
+                f"Put probe and debug scripts under the scratch path ({scratch_path}).\n"
+                "New source files created in the repository ship with the fix, while test "
+                "and configuration files are dropped.\n"
+            )
         self.messages: list[dict[str, Any]] = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": initial_message},

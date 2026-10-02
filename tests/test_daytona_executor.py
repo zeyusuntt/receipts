@@ -356,6 +356,24 @@ def _symlink_repository(path):
     ).stdout.strip()
 
 
+@pytest.mark.parametrize(
+    "workdir",
+    [
+        "/tmp",
+        "/tmp/scratch",
+        "/tmp/scratch/repo",
+        "//tmp",
+        "//tmp/scratch",
+        "//tmp/scratch/repo",
+    ],
+)
+def test_workdir_must_not_overlap_scratch(workdir):
+    module = _daytona_module()
+
+    with pytest.raises(ValueError):
+        module.DaytonaExecutor._validate_workdir(workdir)
+
+
 async def test_prepare_uses_default_resources_labels_bootstrap_and_setup(tmp_path):
     module = _daytona_module()
     executor, api, sink = _executor(tmp_path, module)
@@ -593,6 +611,54 @@ async def test_checkpoint_and_fork_use_snapshot_ref_labels_and_isolated_files(tm
     assert await executor.read_file(second, "only-first.txt", 100) == ""
     (witness,) = await executor.fork(checkpoint, 1, prefix="w")
     assert witness.id == "w1"
+
+
+async def test_scratch_is_outside_repository_evidence_and_checkpoint(tmp_path):
+    module = _daytona_module()
+    repository = tmp_path / "repository"
+    snapshot_sha = _symlink_repository(repository)
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    api.replace_tree("sandbox-1", repository)
+    api.snapshot_sha = snapshot_sha
+    snapshot = await executor.snapshot(base)
+    checkpoint = await executor.checkpoint(base)
+    (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
+    scratch = executor.scratch_path(agent)
+    assert await executor.read_file(agent, f"{scratch}/probe.py", 100) == ""
+
+    before_digest = await executor._tree_digest(agent)
+    written = await executor.write_file(
+        agent,
+        f"{scratch}/probe.py",
+        "print('probe')\n",
+    )
+    escaped = await executor.write_file(
+        agent,
+        f"{scratch}/../../repo/escaped.py",
+        "escaped = True\n",
+    )
+    after_digest = await executor._tree_digest(agent)
+    patch = await executor.patch(agent, snapshot.snapshot_sha)
+    (witness,) = await executor.fork(checkpoint, 1, prefix="w")
+
+    assert scratch == "/tmp/scratch"
+    assert written.exit_code == 0
+    assert await executor.read_file(agent, f"{scratch}/probe.py", 100) == (
+        "print('probe')\n"
+    )
+    assert escaped.exit_code == 1 and "outside" in escaped.stderr_tail
+    assert await executor.read_file(
+        agent,
+        f"{scratch}/../../repo/escaped.py",
+        100,
+    ) == ""
+    assert await executor.read_file(agent, "escaped.py", 100) == ""
+    assert after_digest == before_digest
+    assert patch.tree_digest == before_digest
+    assert patch.diff is not None and patch.diff.files == []
+    assert Path(patch.diff.patch_path).read_text() == ""
+    assert await executor.read_file(witness, f"{scratch}/probe.py", 100) == ""
 
 
 async def test_checkpoint_persists_cleanup_manifest_and_close_marks_snapshot_deleted(
@@ -1256,7 +1322,7 @@ async def test_live_daytona_prepare_checkpoint_fork_isolation_and_cleanup(tmp_pa
     )
     try:
         base = await executor.prepare(
-            ImageSource(image="python:3.12-slim", workdir="/tmp", python="python"),
+            ImageSource(image="python:3.12-slim", workdir="/root", python="python"),
         )
         checkpoint = await executor.checkpoint(base)
         first, second = await executor.fork(checkpoint, 2)

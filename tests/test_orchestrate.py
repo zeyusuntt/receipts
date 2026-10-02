@@ -414,6 +414,42 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     assert [row["kind"] for row in witness_rows] == ["apply", "verification"]
 
 
+async def test_scratch_path_reaches_worker_and_scratch_only_run_has_empty_patch(
+    tmp_path: Path,
+):
+    scratch = str(tmp_path / "executor" / "agent1-scratch")
+    model = _model(
+        [
+            _turn(
+                _call(
+                    "write_file",
+                    {
+                        "path": f"{scratch}/probe.py",
+                        "content": "print('scratch only')\n",
+                    },
+                    "write-scratch",
+                ),
+            ),
+            _finish(
+                "finish",
+                summary="Stored a probe outside the repository.",
+                changed=[],
+                green=False,
+            ),
+        ],
+    )
+
+    result, run_dir, _, model = await _run(tmp_path, model, appeals=0)
+
+    worker_request = next(
+        request for request in model.requests if request["kind"] == "chat"
+    )
+    assert f"scratch path ({scratch})" in worker_request["messages"][0]["content"]
+    assert (run_dir / result.attempts[0].patch_path).read_text() == ""
+    assert (run_dir / result.attempts[0].filtered_patch_path).read_text() == ""
+    assert result.attempts[0].dropped_paths == []
+
+
 async def test_cost_includes_planner_usage_retries_and_worker_retries(tmp_path: Path):
     first = _turn(
         _call(
@@ -653,9 +689,9 @@ async def test_image_source_workdir_reaches_worker_prompt(tmp_path: Path):
     worker_request = next(
         request for request in model.requests if request["kind"] == "chat"
     )
-    assert worker_request["messages"][0]["content"].endswith(
-        "Commands run in the repository root (/repo).\n",
-    )
+    prompt = worker_request["messages"][0]["content"]
+    assert "Commands run in the repository root (/repo).\n" in prompt
+    assert "Put probe and debug scripts under the scratch path (" in prompt
 
 
 async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path):

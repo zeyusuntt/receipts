@@ -68,6 +68,7 @@ from receipts.sandbox.staging import (
 )
 
 TAIL = 6000
+_SCRATCH_ROOT = "/tmp/scratch"
 
 
 def _now() -> datetime:
@@ -572,8 +573,15 @@ class DaytonaExecutor:
     @staticmethod
     def _validate_workdir(workdir: str) -> str:
         path = PurePosixPath(workdir)
-        if not path.is_absolute() or posixpath.normpath(workdir) != workdir:
+        if (
+            not path.is_absolute()
+            or workdir.startswith("//")
+            or posixpath.normpath(workdir) != workdir
+        ):
             raise ValueError(f"Daytona workdir must be a normalized absolute path: {workdir}")
+        scratch = PurePosixPath(_SCRATCH_ROOT)
+        if path == scratch or path in scratch.parents or scratch in path.parents:
+            raise ValueError(f"Daytona workdir must not overlap scratch: {workdir}")
         return workdir
 
     @staticmethod
@@ -667,6 +675,10 @@ class DaytonaExecutor:
         except KeyError as exc:
             raise RuntimeError(f"unknown Daytona branch: {branch.id}") from exc
 
+    def scratch_path(self, branch: Branch) -> str:
+        self._sandbox_id(branch)
+        return _SCRATCH_ROOT
+
     def _spec(self, branch: Branch) -> _BranchSpec:
         if branch.id in self._released_branches:
             raise RuntimeError(f"released Daytona branch: {branch.id}")
@@ -677,6 +689,29 @@ class DaytonaExecutor:
 
     def _remote_path(self, branch: Branch, parts: tuple[str, ...]) -> str:
         return posixpath.join(self._spec(branch).workdir, *parts)
+
+    @staticmethod
+    def _scratch_remote_path(path: str) -> str | None:
+        candidate = PurePosixPath(posixpath.normpath(path))
+        root = PurePosixPath(_SCRATCH_ROOT)
+        if not candidate.is_absolute():
+            return None
+        try:
+            relative = candidate.relative_to(root)
+        except ValueError:
+            return None
+        if not relative.parts or any(part in ("", ".", "..") for part in relative.parts):
+            return None
+        return posixpath.join(_SCRATCH_ROOT, *relative.parts)
+
+    def _file_path(self, branch: Branch, path: str) -> tuple[str, bool] | None:
+        scratch = self._scratch_remote_path(path)
+        if scratch is not None:
+            return scratch, True
+        parts = self._path_parts(path)
+        if parts is None:
+            return None
+        return self._remote_path(branch, parts), False
 
     def _emit(self, branch: Branch, **fields) -> Receipt:
         seq = self._seq.get(branch.id, 0) + 1
@@ -1088,12 +1123,13 @@ class DaytonaExecutor:
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:
         if max_bytes < 0:
             raise ValueError("max_bytes must be non-negative")
-        parts = self._path_parts(path)
-        if parts is None:
+        target = self._file_path(branch, path)
+        if target is None:
             return ""
+        remote_path, _ = target
         content = await self.api.download_file(
             self._sandbox_id(branch),
-            self._remote_path(branch, parts),
+            remote_path,
             timeout_s=self.file_timeout_s,
         )
         if content is None:
@@ -1102,8 +1138,8 @@ class DaytonaExecutor:
 
     async def write_file(self, branch: Branch, path: str, content: str) -> Receipt:
         started = _now()
-        parts = self._path_parts(path)
-        if parts is None:
+        target = self._file_path(branch, path)
+        if target is None:
             return self._emit(
                 branch,
                 kind="write",
@@ -1113,11 +1149,30 @@ class DaytonaExecutor:
                 started_at=started,
                 duration_s=(_now() - started).total_seconds(),
             )
+        remote_path, is_scratch = target
+        if is_scratch:
+            output, code, timed_out, command_started, duration = await self._execute(
+                branch,
+                f"mkdir -p {shlex.quote(_SCRATCH_ROOT)}",
+                self.file_timeout_s,
+            )
+            if timed_out or code != 0:
+                return self._emit(
+                    branch,
+                    kind="write",
+                    path=path,
+                    exit_code=code,
+                    stdout_tail=_tail(output),
+                    stderr_tail="could not create scratch directory",
+                    started_at=command_started,
+                    duration_s=duration,
+                    timed_out=timed_out,
+                )
         encoded = content.encode()
         await self.api.upload_file(
             self._sandbox_id(branch),
             encoded,
-            self._remote_path(branch, parts),
+            remote_path,
             timeout_s=self.file_timeout_s,
         )
         return self._emit(

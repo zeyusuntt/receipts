@@ -146,6 +146,10 @@ class LocalExecutor:
         except KeyError as exc:
             raise RuntimeError(f"unknown Local branch: {branch.id}") from exc
 
+    def scratch_path(self, branch: Branch) -> str:
+        workdir = self.workdir(branch).resolve()
+        return str(workdir.with_name(f"{branch.id}-scratch"))
+
     @staticmethod
     def _new_image() -> str:
         return f"local-{uuid.uuid4().hex[:12]}"
@@ -172,6 +176,13 @@ class LocalExecutor:
         base = self.workdir(branch).resolve()
         target = (base / path).resolve()
         return target if target == base or base in target.parents else None
+
+    def _file_path(self, branch: Branch, path: str) -> Path | None:
+        scratch = Path(self.scratch_path(branch))
+        if Path(path).is_absolute():
+            target = Path(os.path.normpath(path))
+            return target if scratch in target.parents else None
+        return self._safe_path(branch, path)
 
     def _assert_checkpoint_intact(self, checkpoint_id: str, claimed_digest: str | None = None) -> None:
         expected = self._checkpoint_digests.get(checkpoint_id)
@@ -290,7 +301,10 @@ class LocalExecutor:
         if branch.id in self._checkpoint_digests:
             raise RuntimeError(f"refusing to release Local checkpoint: {branch.id}")
         workdir = self.workdir(branch)
+        scratch = Path(self.scratch_path(branch))
         await asyncio.to_thread(remove_path, workdir)
+        if scratch.exists():
+            await asyncio.to_thread(remove_path, scratch)
         self._dirs.pop(branch.id, None)
         self._released_branches.add(branch.id)
 
@@ -322,14 +336,14 @@ class LocalExecutor:
                           junit=junit, tree_digest=tree_digest)
 
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:
-        target = self._safe_path(branch, path)
+        target = self._file_path(branch, path)
         if target is None or not target.is_file():
             return ""
         return target.read_bytes()[:max_bytes].decode(errors="replace")
 
     async def write_file(self, branch: Branch, path: str, content: str) -> Receipt:
         started = _now()
-        target = self._safe_path(branch, path)
+        target = self._file_path(branch, path)
         if target is None:
             tree_digest = await asyncio.to_thread(_tree_digest, self.workdir(branch))
             return self._emit(branch, kind="write", path=path, exit_code=1,

@@ -83,6 +83,24 @@ def test_checkpoint_tampered_lives_in_protocol_and_is_reexported():
     assert LocalCheckpointTampered is protocol_error
 
 
+@pytest.mark.parametrize(
+    "workdir",
+    [
+        "/tmp",
+        "/tmp/scratch",
+        "/tmp/scratch/repo",
+        "//tmp",
+        "//tmp/scratch",
+        "//tmp/scratch/repo",
+    ],
+)
+def test_workdir_must_not_overlap_scratch(workdir):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+
+    with pytest.raises(ValueError):
+        docker_module.DockerExecutor._validate_workdir(workdir)
+
+
 @pytest.mark.docker
 @requires_docker
 async def test_prepare_image_source_runs_setup_and_initializes_git(tmp_path):
@@ -385,6 +403,59 @@ async def test_patch_ignores_hostile_git_config_and_apply_reproduces_tree(tmp_pa
         assert empty.patch_sha256 == hashlib.sha256(b"").hexdigest()
         assert empty.image_before == before_empty
         assert empty.image_after == witness.head and empty.image_after != before_empty
+    finally:
+        await executor.close()
+
+
+@pytest.mark.docker
+@requires_docker
+async def test_scratch_is_outside_repository_evidence_and_checkpoint(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    executor = docker_module.DockerExecutor(
+        tmp_path / "executor",
+        MemorySink(),
+        _run_id(),
+    )
+    try:
+        base = await executor.prepare(
+            protocol.ImageSource(image=TEST_IMAGE, workdir="/workspace"),
+        )
+        snapshot = await executor.snapshot(base)
+        checkpoint = await executor.checkpoint(base)
+        (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
+        scratch = executor.scratch_path(agent)
+
+        before = await executor.run(agent, f"test ! -e {scratch}", 10)
+        written = await executor.write_file(
+            agent,
+            f"{scratch}/probe.py",
+            "print('probe')\n",
+        )
+        escaped = await executor.write_file(
+            agent,
+            f"{scratch}/../../workspace/escaped.py",
+            "escaped = True\n",
+        )
+        patch = await executor.patch(agent, snapshot.snapshot_sha)
+        (witness,) = await executor.fork(checkpoint, 1, prefix="w")
+
+        assert scratch == "/tmp/scratch"
+        assert before.exit_code == 0
+        assert written.exit_code == 0
+        assert await executor.read_file(agent, f"{scratch}/probe.py", 100) == (
+            "print('probe')\n"
+        )
+        assert escaped.exit_code == 1 and "outside" in escaped.stderr_tail
+        assert await executor.read_file(
+            agent,
+            f"{scratch}/../../workspace/escaped.py",
+            100,
+        ) == ""
+        assert await executor.read_file(agent, "escaped.py", 100) == ""
+        assert written.tree_digest == before.tree_digest
+        assert patch.diff is not None and patch.diff.files == []
+        assert Path(patch.diff.patch_path).read_text() == ""
+        assert await executor.read_file(witness, f"{scratch}/probe.py", 100) == ""
     finally:
         await executor.close()
 

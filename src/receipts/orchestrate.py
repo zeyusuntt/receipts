@@ -628,6 +628,7 @@ async def fix(
         checkpoint = await recording.checkpoint(base)
         await recording.release(base)
         (agent,) = await recording.fork(checkpoint, 1, prefix="agent")
+        scratch_path = recording.scratch_path(agent)
 
         plan, _ = await make_plan(
             model,
@@ -661,6 +662,7 @@ async def fix(
                 ),
                 writer=writer,
                 repo_root=source.workdir if isinstance(source, ImageSource) else None,
+                scratch_path=scratch_path,
             )
             outcome = await worker.attempt(budget.worker)
 
