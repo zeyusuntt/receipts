@@ -625,3 +625,29 @@ async def test_fake_injects_uploaded_files_and_records_calls():
         "preserve_env": False,
         "client_timeout_s": None,
     }
+
+
+async def test_fake_rejects_output_limits_the_live_api_rejects():
+    module = _module()
+    fake = module.FakeTokenFactorySandboxApi(images={IMAGE_UUID: {}}, handlers={"true": lambda tree: (0, "", "", tree)})
+
+    with pytest.raises(module.TokenFactoryApiError) as error:
+        await fake.spawn(command="true", image=IMAGE_UUID, hostname="h", cwd="/", truncate_output_at=10 * 1024 * 1024)
+
+    assert error.value.status_code == 400
+    assert "truncate_output_at" in error.value.detail
+
+
+async def test_truncated_output_is_reported_on_the_run_result():
+    module = _module()
+    fake = module.FakeTokenFactorySandboxApi(
+        images={IMAGE_UUID: {}},
+        handlers={"loud": lambda tree: (0, "x" * 500, "", tree)},
+    )
+
+    result = await fake.run(command="loud", image=IMAGE_UUID, hostname="h", cwd="/", truncate_output_at=100)
+
+    assert result.output_truncated is True
+    assert len(result.stdout) == 100
+    quiet = await fake.run(command="loud", image=IMAGE_UUID, hostname="h", cwd="/", truncate_output_at=1000)
+    assert quiet.output_truncated is False

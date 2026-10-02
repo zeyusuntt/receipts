@@ -61,6 +61,7 @@ class RunResult:
     operation_id: str = ""
     timed_out: bool = False
     has_process_result: bool = True
+    output_truncated: bool = False
 
 
 class TokenFactoryApiError(RuntimeError):
@@ -79,6 +80,9 @@ class TokenFactoryApiError(RuntimeError):
         self.detail = detail
         super().__init__(f"Token Factory sandbox API {method} {path} returned {status_code}: {detail}")
 
+
+# The live API refuses truncate_output_at of 10 MiB or more (checked 2026-10-02).
+MAX_TRUNCATE_OUTPUT_AT = 10 * 1024 * 1024 - 1
 
 FileSpecValue: TypeAlias = InstanceFileSpec | Mapping[str, Any]
 StreamValue: TypeAlias = StreamDescription | Mapping[str, Any] | str | bytes | None
@@ -170,6 +174,10 @@ def _run_result(
         operation_id=operation_id,
         timed_out=bool(state.get("timed_out", False)),
         has_process_result=has_process_result,
+        output_truncated=any(
+            isinstance(stream, Mapping) and bool(stream.get("truncated", False))
+            for stream in (process.get("stdout"), process.get("stderr"))
+        ),
     )
 
 
@@ -850,14 +858,14 @@ class FakeTokenFactorySandboxApi:
                     "resources": resources,
                     "state": state,
                     "stderr": {
-                        "value": stderr,
+                        "value": stderr[:truncate_output_at],
                         "encoding": "ascii",
-                        "truncated": False,
+                        "truncated": len(stderr) > truncate_output_at,
                     },
                     "stdout": {
-                        "value": stdout,
+                        "value": stdout[:truncate_output_at],
                         "encoding": "ascii",
-                        "truncated": False,
+                        "truncated": len(stdout) > truncate_output_at,
                     },
                 },
                 "shell": shell,
@@ -886,6 +894,14 @@ class FakeTokenFactorySandboxApi:
         files: Mapping[str, FileSpecValue] | None = None,
         preserve_env: bool = False,
     ) -> str:
+        if truncate_output_at > MAX_TRUNCATE_OUTPUT_AT:
+            raise TokenFactoryApiError(
+                400,
+                "POST",
+                "/sandboxes/v1/instances",
+                "[{'type': 'value_error', 'loc': ['truncate_output_at'], "
+                "'msg': 'Value error, truncate_output_at must be less than 10MiB'}]",
+            )
         request = TokenFactorySandboxApi._spawn_body(
             command=command,
             image=image,

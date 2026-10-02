@@ -295,7 +295,7 @@ async def test_every_run_injects_trusted_files_and_chains_immutable_images(tmp_p
     assert all(call["disposable"] is False for call in calls)
     assert calls[0]["timeout"] == 17
     assert calls[1]["timeout"] == 3600
-    assert all(call["truncate_output_at"] == 64 * 1024 * 1024 for call in calls)
+    assert all(call["truncate_output_at"] == 10 * 1024 * 1024 - 1 for call in calls)
     for call in calls:
         assert set(call["files"]) == {
             "/opt/receipts-bin/busybox",
@@ -1010,3 +1010,31 @@ async def test_api_key_is_absent_from_executor_receipts_logs_and_reprs(tmp_path)
         if path.is_file()
     )
     assert secret not in rendered
+
+
+def test_default_output_limit_is_below_the_platform_cap(tmp_path):
+    module = importlib.import_module("receipts.sandbox.tokenfactory")
+    executor = module.TokenFactoryExecutor(
+        tmp_path / "executor", MemorySink(), "run", object(), busybox=b"busybox",
+    )
+
+    assert executor.truncate_output_at < 10 * 1024 * 1024
+
+
+async def test_truncated_output_leaves_no_full_log_so_grading_fails_closed(tmp_path):
+    module = importlib.import_module("receipts.sandbox.tokenfactory")
+    api_module = importlib.import_module("receipts.sandbox.tokenfactory_api")
+    api = api_module.FakeTokenFactorySandboxApi(
+        images={"img": {}},
+        tags={"repo/x:1": "img"},
+        handlers={"loud": lambda tree: (0, "PASSED a\n" * 100, "", tree)},
+    )
+    executor = module.TokenFactoryExecutor(
+        tmp_path / "executor", MemorySink(), "run", api, busybox=b"busybox", truncate_output_at=100,
+    )
+    base = await executor.prepare(ImageSource(image="repo/x:1", workdir="/repo"))
+
+    receipt = await executor.run(base, "loud", 30)
+
+    assert receipt.log_path is None
+    assert "truncated" in receipt.stderr_tail

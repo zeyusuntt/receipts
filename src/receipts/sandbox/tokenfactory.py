@@ -38,6 +38,7 @@ from receipts.sandbox.staging import (
     remove_path,
 )
 from receipts.sandbox.tokenfactory_api import (
+    MAX_TRUNCATE_OUTPUT_AT,
     InstanceFileSpec,
     RunResult,
     TokenFactoryApiError,
@@ -270,7 +271,7 @@ class TokenFactoryExecutor:
         api: Any,
         *,
         busybox: bytes,
-        truncate_output_at: int = 64 * 1024 * 1024,
+        truncate_output_at: int = MAX_TRUNCATE_OUTPUT_AT,
         run_timeout_cap_s: int = 3600,
         hostname: str = "receipts",
         archive_size_cap_bytes: int = _DEFAULT_ARCHIVE_SIZE_CAP_BYTES,
@@ -279,8 +280,10 @@ class TokenFactoryExecutor:
             raise TypeError("busybox must be bytes")
         if not busybox:
             raise ValueError("busybox must not be empty")
-        if truncate_output_at <= 0:
-            raise ValueError("truncate_output_at must be positive")
+        if not 0 < truncate_output_at <= MAX_TRUNCATE_OUTPUT_AT:
+            raise ValueError(
+                f"truncate_output_at must be between 1 and {MAX_TRUNCATE_OUTPUT_AT}",
+            )
         if run_timeout_cap_s <= 0:
             raise ValueError("run_timeout_cap_s must be positive")
         if not hostname:
@@ -550,7 +553,18 @@ class TokenFactoryExecutor:
     ) -> Receipt:
         result = execution.result
         output = (result.stdout + result.stderr).encode()
-        log_path = self._write_log(branch, output)
+        stderr_tail = _tail(result.stderr)
+        if result.output_truncated:
+            # The platform cut the output at truncate_output_at. Writing it as the
+            # full log would let official grading parse a partial log, where every
+            # missing test counts as failed; with no log, grading fails closed.
+            log_path = None
+            stderr_tail = _tail(
+                "[output truncated by Token Factory Sandboxes; full log unavailable]\n"
+                + result.stderr,
+            )
+        else:
+            log_path = str(self._write_log(branch, output))
         return self._emit(
             branch,
             before=execution.before,
@@ -560,9 +574,9 @@ class TokenFactoryExecutor:
             path=path,
             exit_code=result.exit_code,
             stdout_tail=_tail(result.stdout),
-            stderr_tail=_tail(result.stderr),
+            stderr_tail=stderr_tail,
             stdout_sha256=stdout_sha256 or hashlib.sha256(output).hexdigest(),
-            log_path=str(log_path),
+            log_path=log_path,
             started_at=execution.started_at,
             duration_s=max(0.0, result.duration_s),
             timed_out=result.timed_out,
