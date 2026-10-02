@@ -365,6 +365,75 @@ async def test_str_replace_editor_aliases_use_real_file_tools_without_strikes(
     assert _result(instance, "editor-create") == "(alias for write_file)\nok"
 
 
+async def test_str_replace_alias_edits_with_text_arguments_without_a_strike(
+    tmp_path: Path,
+):
+    old_text = "    return a + b  # bug: should be a - b\n"
+    new_text = "    return a - b\n"
+    turns = [
+        _turn(content="first protocol error"),
+        _turn(content="second protocol error"),
+        _turn(
+            _call(
+                "str_replace",
+                {
+                    "path": "calc/__init__.py",
+                    "old_text": old_text,
+                    "old_str": "not present",
+                    "new_text": new_text,
+                    "new_str": "not chosen",
+                },
+                "replace",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, branch, _, _ = await _fixture_worker(
+        tmp_path,
+        turns,
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=3, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    content = await executor.read_file(branch, "calc/__init__.py", 2_000_000)
+    assert old_text not in content
+    assert "def sub(a, b):\n" + new_text in content
+    assert _result(instance, "replace") == "(alias for edit_file)\nok"
+
+
+async def test_str_replace_alias_without_path_is_a_bad_arguments_strike(
+    tmp_path: Path,
+):
+    call = _call(
+        "str_replace",
+        {"old_text": "before", "new_text": "after"},
+        "missing-path",
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    reply = _result(instance, call.id)
+    assert outcome.end == "budget_exhausted"
+    assert reply.startswith("(alias for edit_file)\ninvalid tool arguments:")
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name="str_replace",
+        ran_as=None,
+        executed=False,
+        result_class="bad_args",
+        reply=reply,
+    )
+
+
 async def test_editor_alias_with_non_string_command_is_a_strike_not_a_crash(tmp_path: Path):
     turns = [
         _turn(_call("str_replace_editor", {"command": ["view"], "path": "calc/__init__.py"}, "bad-1")),
@@ -950,6 +1019,44 @@ async def test_read_file_missing_path_returns_not_found_header(tmp_path: Path):
     assert result == "[missing.py: not found]"
 
 
+async def test_read_file_directory_is_sorted_capped_and_logged_ok(
+    tmp_path: Path,
+    monkeypatch,
+):
+    call = _call("read_file", {"path": "listing"}, "read-directory")
+    worker, instance, _, executor, branch, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+    listing = executor.workdir(branch) / "listing"
+    (listing / "000-sub").mkdir(parents=True)
+    for number in range(1, 10):
+        (listing / f"{number:03d}-entry-with-a-long-name.py").write_text("x\n")
+    monkeypatch.setattr(worker, "_READ_MAX_BYTES", 180)
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    reply = _result(instance, call.id)
+    assert outcome.end == "budget_exhausted"
+    assert len(reply.encode()) <= 180
+    assert reply.splitlines()[1:3] == [
+        "000-sub/",
+        "001-entry-with-a-long-name.py",
+    ]
+    assert reply.endswith("to continue]")
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name="read_file",
+        ran_as="read_file",
+        executed=True,
+        result_class="ok",
+        reply=reply,
+    )
+
+
 async def test_edit_file_writes_only_for_one_exact_occurrence(tmp_path: Path):
     turns = [
         _turn(
@@ -1322,7 +1429,10 @@ async def test_worker_prompt_names_scratch_and_can_run_a_probe_from_it(
     )
 
     prompt = model.requests[0]["messages"][0]["content"]
-    assert f"Put probe and debug scripts under the scratch path ({scratch})." in prompt
+    assert (
+        f"The branch scratch path is {scratch}; put probe and debug scripts there."
+        in prompt
+    )
     assert (
         "New source files created in the repository ship with the fix, while test "
         "and configuration files are dropped."

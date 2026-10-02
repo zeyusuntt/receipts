@@ -144,9 +144,23 @@ try:
     file_flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
     source = os.open(parts[-1], file_flags, dir_fd=current)
     descriptors.append(source)
-    if not stat.S_ISREG(os.fstat(source).st_mode):
-        raise SystemExit(0)
     remaining = int(sys.argv[4])
+    source_mode = os.fstat(source).st_mode
+    if stat.S_ISDIR(source_mode):
+        for name in sorted(os.listdir(source)):
+            metadata = os.stat(name, dir_fd=source, follow_symlinks=False)
+            line = os.fsencode(name)
+            if stat.S_ISDIR(metadata.st_mode):
+                line += b"/"
+            line += b"\\n"
+            chunk = line[:remaining]
+            sys.stdout.buffer.write(chunk)
+            remaining -= len(chunk)
+            if len(chunk) < len(line):
+                break
+        raise SystemExit(0)
+    if not stat.S_ISREG(source_mode):
+        raise SystemExit(0)
     while remaining:
         chunk = os.read(source, min(65536, remaining))
         if not chunk:
@@ -225,7 +239,21 @@ if os.path.commonpath((root, target)) != root or target == root:
 descriptor = None
 try:
     descriptor = os.open(target, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
-    if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+    source_mode = os.fstat(descriptor).st_mode
+    if stat.S_ISDIR(source_mode):
+        for name in sorted(os.listdir(descriptor)):
+            metadata = os.stat(name, dir_fd=descriptor, follow_symlinks=False)
+            line = os.fsencode(name)
+            if stat.S_ISDIR(metadata.st_mode):
+                line += b"/"
+            line += b"\\n"
+            chunk = line[:remaining]
+            sys.stdout.buffer.write(chunk)
+            remaining -= len(chunk)
+            if len(chunk) < len(line):
+                break
+        raise SystemExit(0)
+    if not stat.S_ISREG(source_mode):
         raise SystemExit(0)
     while remaining:
         chunk = os.read(descriptor, min(65536, remaining))
@@ -245,7 +273,7 @@ finally:
             pass
 """
 
-_SCRATCH_ROOT = "/tmp/scratch"
+_SCRATCH_ROOT = "/tmp"
 
 
 def _now() -> datetime:

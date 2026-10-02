@@ -95,6 +95,17 @@ async def test_write_and_read_file(tmp_path):
     assert await ex.read_file(base, "calc/__init__.py", max_bytes=5) == "def a"
 
 
+async def test_read_file_lists_directory_entries_sorted_with_slashes(tmp_path):
+    ex, base = await _executor(tmp_path)
+    await ex.write_file(base, "listing/z.py", "z\n")
+    await ex.write_file(base, "listing/sub/nested.py", "nested\n")
+    await ex.write_file(base, "listing/a.py", "a\n")
+
+    assert await ex.read_file(base, "listing", max_bytes=100) == (
+        "a.py\nsub/\nz.py\n"
+    )
+
+
 async def test_write_outside_repo_is_refused(tmp_path):
     ex, base = await _executor(tmp_path)
     r = await ex.write_file(base, "../escape.py", "x")

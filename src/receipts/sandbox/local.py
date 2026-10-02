@@ -337,7 +337,15 @@ class LocalExecutor:
 
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:
         target = self._file_path(branch, path)
-        if target is None or not target.is_file():
+        if target is None:
+            return ""
+        if target.is_dir():
+            content = "".join(
+                child.name + ("/" if child.is_dir() else "") + "\n"
+                for child in sorted(target.iterdir(), key=lambda item: item.name)
+            )
+            return content.encode()[:max_bytes].decode(errors="replace")
+        if not target.is_file():
             return ""
         return target.read_bytes()[:max_bytes].decode(errors="replace")
 

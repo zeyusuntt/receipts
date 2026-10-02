@@ -40,6 +40,7 @@ from daytona import (
     CreateSandboxFromImageParams,
     CreateSandboxFromSnapshotParams,
     DaytonaFileNotFoundError,
+    DaytonaFileReadFailedError,
     DaytonaNotFoundError,
     DaytonaProcessExecutionTimeoutError,
     FileDownloadRequest,
@@ -68,7 +69,7 @@ from receipts.sandbox.staging import (
 )
 
 TAIL = 6000
-_SCRATCH_ROOT = "/tmp/scratch"
+_SCRATCH_ROOT = "/tmp"
 
 
 def _now() -> datetime:
@@ -381,6 +382,11 @@ class AsyncDaytonaApi:
         try:
             return await sandbox.fs.download_file(remote_path, timeout_s)
         except DaytonaFileNotFoundError:
+            return None
+        except DaytonaFileReadFailedError:
+            info = await sandbox.fs.get_file_info(remote_path)
+            if not info.is_dir:
+                raise
             return None
 
     async def download_files(
@@ -1132,9 +1138,32 @@ class DaytonaExecutor:
             remote_path,
             timeout_s=self.file_timeout_s,
         )
-        if content is None:
+        if content is not None:
+            return content[:max_bytes].decode(errors="replace")
+        try:
+            entries = await self.api.list_files(
+                self._sandbox_id(branch),
+                remote_path,
+                depth=1,
+            )
+        except DaytonaNotFoundError:
             return ""
-        return content[:max_bytes].decode(errors="replace")
+        root = PurePosixPath(posixpath.normpath(remote_path))
+        listing: list[str] = []
+        for entry in entries:
+            candidate = PurePosixPath(posixpath.normpath(entry.path))
+            try:
+                relative = candidate.relative_to(root)
+            except ValueError as exc:
+                raise OSError(
+                    f"Daytona listed a path outside the requested directory: {entry.path}",
+                ) from exc
+            if len(relative.parts) != 1:
+                continue
+            name = relative.parts[0]
+            listing.append(name + ("/" if entry.is_dir else ""))
+        rendered = "".join(item + "\n" for item in sorted(listing))
+        return rendered.encode()[:max_bytes].decode(errors="replace")
 
     async def write_file(self, branch: Branch, path: str, content: str) -> Receipt:
         started = _now()
@@ -1151,9 +1180,10 @@ class DaytonaExecutor:
             )
         remote_path, is_scratch = target
         if is_scratch:
+            scratch_parent = posixpath.dirname(remote_path)
             output, code, timed_out, command_started, duration = await self._execute(
                 branch,
-                f"mkdir -p {shlex.quote(_SCRATCH_ROOT)}",
+                f"mkdir -p {shlex.quote(scratch_parent)}",
                 self.file_timeout_s,
             )
             if timed_out or code != 0:

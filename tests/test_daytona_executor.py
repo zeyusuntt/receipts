@@ -359,9 +359,11 @@ def _symlink_repository(path):
 @pytest.mark.parametrize(
     "workdir",
     [
+        "/",
         "/tmp",
         "/tmp/scratch",
         "/tmp/scratch/repo",
+        "/tmp/repo",
         "//tmp",
         "//tmp/scratch",
         "//tmp/scratch/repo",
@@ -505,6 +507,32 @@ async def test_run_write_read_and_snapshot_form_one_complete_provenance_chain(tm
     assert [receipt.seq for receipt in sink.receipts] == [1, 2, 3]
 
 
+async def test_read_file_lists_directory_entries_sorted_with_slashes(tmp_path):
+    module = _daytona_module()
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    api.set_file("sandbox-1", "/repo/listing/z.py", b"z\n")
+    api.set_file("sandbox-1", "/repo/listing/sub/nested.py", b"nested\n")
+    api.set_file("sandbox-1", "/repo/listing/a.py", b"a\n")
+
+    assert await executor.read_file(base, "listing", 100) == (
+        "a.py\nsub/\nz.py\n"
+    )
+
+
+async def test_read_file_treats_generic_daytona_not_found_as_missing(tmp_path):
+    module = _daytona_module()
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+
+    async def missing_list(sandbox_id, path, *, depth):
+        raise module.DaytonaNotFoundError("missing directory")
+
+    api.list_files = missing_list
+
+    assert await executor.read_file(base, "missing", 100) == ""
+
+
 async def test_timeout_becomes_a_receipt_and_passes_the_explicit_timeout(tmp_path):
     module = _daytona_module()
     executor, api, _ = _executor(tmp_path, module)
@@ -628,37 +656,45 @@ async def test_scratch_is_outside_repository_evidence_and_checkpoint(tmp_path):
     assert await executor.read_file(agent, f"{scratch}/probe.py", 100) == ""
 
     before_digest = await executor._tree_digest(agent)
-    written = await executor.write_file(
+    first = await executor.write_file(
         agent,
-        f"{scratch}/probe.py",
-        "print('probe')\n",
+        "/tmp/debug_build.py",
+        "print('debug')\n",
     )
-    escaped = await executor.write_file(
+    second = await executor.write_file(
         agent,
-        f"{scratch}/../../repo/escaped.py",
-        "escaped = True\n",
+        "/tmp/x/y.py",
+        "print('nested')\n",
     )
+    refused = [
+        await executor.write_file(agent, path, "refused\n")
+        for path in ("/tmp/../etc/passwd", "/tmpx/a.py", "/tmp")
+    ]
     after_digest = await executor._tree_digest(agent)
     patch = await executor.patch(agent, snapshot.snapshot_sha)
     (witness,) = await executor.fork(checkpoint, 1, prefix="w")
 
-    assert scratch == "/tmp/scratch"
-    assert written.exit_code == 0
-    assert await executor.read_file(agent, f"{scratch}/probe.py", 100) == (
-        "print('probe')\n"
+    assert scratch == "/tmp"
+    assert first.exit_code == second.exit_code == 0
+    assert await executor.read_file(agent, "/tmp/debug_build.py", 100) == (
+        "print('debug')\n"
     )
-    assert escaped.exit_code == 1 and "outside" in escaped.stderr_tail
-    assert await executor.read_file(
-        agent,
-        f"{scratch}/../../repo/escaped.py",
-        100,
-    ) == ""
-    assert await executor.read_file(agent, "escaped.py", 100) == ""
+    assert await executor.read_file(agent, "/tmp/x/y.py", 100) == (
+        "print('nested')\n"
+    )
+    assert all(item.exit_code == 1 for item in refused)
+    assert all("outside" in item.stderr_tail for item in refused)
+    refused_reads = [
+        await executor.read_file(agent, path, 100)
+        for path in ("/tmp/../etc/passwd", "/tmpx/a.py", "/tmp")
+    ]
+    assert refused_reads == ["", "", ""]
     assert after_digest == before_digest
     assert patch.tree_digest == before_digest
     assert patch.diff is not None and patch.diff.files == []
     assert Path(patch.diff.patch_path).read_text() == ""
-    assert await executor.read_file(witness, f"{scratch}/probe.py", 100) == ""
+    assert await executor.read_file(witness, "/tmp/debug_build.py", 100) == ""
+    assert await executor.read_file(witness, "/tmp/x/y.py", 100) == ""
 
 
 async def test_checkpoint_persists_cleanup_manifest_and_close_marks_snapshot_deleted(
@@ -1089,7 +1125,7 @@ async def test_close_retains_a_nonpermission_snapshot_failure_for_retry(tmp_path
 
 async def test_async_daytona_adapter_uses_the_installed_sdk_signatures(tmp_path):
     module = _daytona_module()
-    from daytona import DaytonaProcessExecutionTimeoutError
+    from daytona import DaytonaFileReadFailedError, DaytonaProcessExecutionTimeoutError
 
     class SdkProcess:
         def __init__(self):
@@ -1105,12 +1141,20 @@ async def test_async_daytona_adapter_uses_the_installed_sdk_signatures(tmp_path)
     class SdkFs:
         def __init__(self):
             self.uploads = []
+            self.directory_download = False
+            self.info_calls = []
 
         async def upload_file(self, content, remote_path, timeout=1800):
             self.uploads.append((content, remote_path, timeout))
 
         async def download_file(self, remote_path, timeout=1800):
+            if self.directory_download:
+                raise DaytonaFileReadFailedError("path is a directory")
             return b"downloaded"
+
+        async def get_file_info(self, path):
+            self.info_calls.append(path)
+            return SimpleNamespace(is_dir=True)
 
         async def download_files(self, requests, timeout=1800):
             return [
@@ -1215,6 +1259,10 @@ async def test_async_daytona_adapter_uses_the_installed_sdk_signatures(tmp_path)
 
     await adapter.upload_file(sandbox.id, b"data", "/repo/data", timeout_s=9)
     assert await adapter.download_file(sandbox.id, "/repo/data", timeout_s=9) == b"downloaded"
+    client.sandboxes[sandbox.id].fs.directory_download = True
+    assert await adapter.download_file(sandbox.id, "/repo", timeout_s=9) is None
+    assert client.sandboxes[sandbox.id].fs.info_calls == ["/repo"]
+    client.sandboxes[sandbox.id].fs.directory_download = False
     request = module.DaytonaDownloadRequest("/repo/data", str(tmp_path / "data"))
     downloads = await adapter.download_files(sandbox.id, [request], timeout_s=9)
     assert downloads[0].source == "/repo/data" and downloads[0].error is None

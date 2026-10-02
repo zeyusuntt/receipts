@@ -444,7 +444,10 @@ async def test_scratch_path_reaches_worker_and_scratch_only_run_has_empty_patch(
     worker_request = next(
         request for request in model.requests if request["kind"] == "chat"
     )
-    assert f"scratch path ({scratch})" in worker_request["messages"][0]["content"]
+    assert (
+        f"The branch scratch path is {scratch};"
+        in worker_request["messages"][0]["content"]
+    )
     assert (run_dir / result.attempts[0].patch_path).read_text() == ""
     assert (run_dir / result.attempts[0].filtered_patch_path).read_text() == ""
     assert result.attempts[0].dropped_paths == []
@@ -691,7 +694,7 @@ async def test_image_source_workdir_reaches_worker_prompt(tmp_path: Path):
     )
     prompt = worker_request["messages"][0]["content"]
     assert "Commands run in the repository root (/repo).\n" in prompt
-    assert "Put probe and debug scripts under the scratch path (" in prompt
+    assert "The branch scratch path is " in prompt
 
 
 async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path):

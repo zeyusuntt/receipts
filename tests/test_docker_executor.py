@@ -86,9 +86,11 @@ def test_checkpoint_tampered_lives_in_protocol_and_is_reexported():
 @pytest.mark.parametrize(
     "workdir",
     [
+        "/",
         "/tmp",
         "/tmp/scratch",
         "/tmp/scratch/repo",
+        "/tmp/repo",
         "//tmp",
         "//tmp/scratch",
         "//tmp/scratch/repo",
@@ -99,6 +101,35 @@ def test_workdir_must_not_overlap_scratch(workdir):
 
     with pytest.raises(ValueError):
         docker_module.DockerExecutor._validate_workdir(workdir)
+
+
+def test_read_file_script_lists_directory_sorted_with_slashes(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    root = tmp_path / "root"
+    listing = root / "listing"
+    (listing / "sub").mkdir(parents=True)
+    (listing / "z.py").write_text("z\n")
+    (listing / "a.py").write_text("a\n")
+    metadata = root.stat()
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            "-c",
+            docker_module._READ_FILE,
+            str(root),
+            str(metadata.st_dev),
+            str(metadata.st_ino),
+            "100",
+            "listing",
+        ],
+        capture_output=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr.decode(errors="replace")
+    assert completed.stdout == b"a.py\nsub/\nz.py\n"
 
 
 @pytest.mark.docker
@@ -282,6 +313,30 @@ async def test_run_and_write_advance_sha256_images(tmp_path):
 
 @pytest.mark.docker
 @requires_docker
+async def test_read_file_lists_directory_entries_sorted_with_slashes(tmp_path):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    executor = docker_module.DockerExecutor(
+        tmp_path / "executor",
+        MemorySink(),
+        _run_id(),
+    )
+    try:
+        base = await executor.prepare(
+            protocol.ImageSource(image=TEST_IMAGE, workdir="/workspace"),
+        )
+        await executor.write_file(base, "listing/z.py", "z\n")
+        await executor.write_file(base, "listing/sub/nested.py", "nested\n")
+        await executor.write_file(base, "listing/a.py", "a\n")
+
+        assert await executor.read_file(base, "listing", 100) == (
+            "a.py\nsub/\nz.py\n"
+        )
+    finally:
+        await executor.close()
+
+
+@pytest.mark.docker
+@requires_docker
 async def test_stdout_tail_is_capped_hashed_and_non_utf8_safe(tmp_path):
     docker_module = importlib.import_module("receipts.sandbox.docker")
     executor = docker_module.DockerExecutor(tmp_path / "executor", MemorySink(), _run_id())
@@ -425,37 +480,45 @@ async def test_scratch_is_outside_repository_evidence_and_checkpoint(tmp_path):
         (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
         scratch = executor.scratch_path(agent)
 
-        before = await executor.run(agent, f"test ! -e {scratch}", 10)
-        written = await executor.write_file(
+        before = await executor.run(agent, "true", 10)
+        first = await executor.write_file(
             agent,
-            f"{scratch}/probe.py",
-            "print('probe')\n",
+            "/tmp/debug_build.py",
+            "print('debug')\n",
         )
-        escaped = await executor.write_file(
+        second = await executor.write_file(
             agent,
-            f"{scratch}/../../workspace/escaped.py",
-            "escaped = True\n",
+            "/tmp/x/y.py",
+            "print('nested')\n",
         )
+        refused = [
+            await executor.write_file(agent, path, "refused\n")
+            for path in ("/tmp/../etc/passwd", "/tmpx/a.py", "/tmp")
+        ]
         patch = await executor.patch(agent, snapshot.snapshot_sha)
         (witness,) = await executor.fork(checkpoint, 1, prefix="w")
 
-        assert scratch == "/tmp/scratch"
+        assert scratch == "/tmp"
         assert before.exit_code == 0
-        assert written.exit_code == 0
-        assert await executor.read_file(agent, f"{scratch}/probe.py", 100) == (
-            "print('probe')\n"
+        assert first.exit_code == second.exit_code == 0
+        assert await executor.read_file(agent, "/tmp/debug_build.py", 100) == (
+            "print('debug')\n"
         )
-        assert escaped.exit_code == 1 and "outside" in escaped.stderr_tail
-        assert await executor.read_file(
-            agent,
-            f"{scratch}/../../workspace/escaped.py",
-            100,
-        ) == ""
-        assert await executor.read_file(agent, "escaped.py", 100) == ""
-        assert written.tree_digest == before.tree_digest
+        assert await executor.read_file(agent, "/tmp/x/y.py", 100) == (
+            "print('nested')\n"
+        )
+        assert all(item.exit_code == 1 for item in refused)
+        assert all("outside" in item.stderr_tail for item in refused)
+        refused_reads = [
+            await executor.read_file(agent, path, 100)
+            for path in ("/tmp/../etc/passwd", "/tmpx/a.py", "/tmp")
+        ]
+        assert refused_reads == ["", "", ""]
+        assert first.tree_digest == second.tree_digest == before.tree_digest
         assert patch.diff is not None and patch.diff.files == []
         assert Path(patch.diff.patch_path).read_text() == ""
-        assert await executor.read_file(witness, f"{scratch}/probe.py", 100) == ""
+        assert await executor.read_file(witness, "/tmp/debug_build.py", 100) == ""
+        assert await executor.read_file(witness, "/tmp/x/y.py", 100) == ""
     finally:
         await executor.close()
 
@@ -501,7 +564,7 @@ async def test_file_paths_are_confined_to_workdir_including_symlinks(tmp_path):
         )
 
         parent_escape = await executor.write_file(base, "../escape.py", "x")
-        absolute_escape = await executor.write_file(base, "/tmp/escape.py", "x")
+        absolute_escape = await executor.write_file(base, "/etc/escape.py", "x")
         symlink_escape = await executor.write_file(base, "escape/escape.py", "x")
 
         assert parent_escape.exit_code == 1

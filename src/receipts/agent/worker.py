@@ -319,6 +319,23 @@ class _EditorAliasArgs(BaseModel):
         return self
 
 
+class _StrReplaceAliasArgs(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    path: str
+    old_str: str | None = None
+    old_text: str | None = None
+    new_str: str | None = None
+    new_text: str | None = None
+
+    @model_validator(mode="after")
+    def require_replacement_arguments(self) -> _StrReplaceAliasArgs:
+        if self.old_text is None and self.old_str is None:
+            raise ValueError("str_replace requires old_text or old_str")
+        if self.new_text is None and self.new_str is None:
+            raise ValueError("str_replace requires new_text or new_str")
+        return self
+
+
 class _FinishArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     summary: str
@@ -356,6 +373,8 @@ def _alias_target(call: ToolCall) -> str | None:
         return "run_command"
     if call.name in _LIST_ALIASES:
         return "run_command"
+    if call.name == "str_replace":
+        return "edit_file"
     if call.name == "str_replace_editor":
         command = call.arguments.get("command")
         return _EDITOR_TARGETS.get(command) if isinstance(command, str) else None
@@ -396,6 +415,29 @@ def _rewrite_tool_alias(call: ToolCall) -> tuple[ToolCall | None, str | None]:
             ToolCall(
                 name="run_command",
                 arguments={"command": command},
+                id=call.id,
+            ),
+            None,
+        )
+
+    if call.name == "str_replace":
+        arguments = _StrReplaceAliasArgs.model_validate(call.arguments)
+        return (
+            ToolCall(
+                name="edit_file",
+                arguments={
+                    "path": arguments.path,
+                    "old_text": (
+                        arguments.old_text
+                        if arguments.old_text is not None
+                        else arguments.old_str
+                    ),
+                    "new_text": (
+                        arguments.new_text
+                        if arguments.new_text is not None
+                        else arguments.new_str
+                    ),
+                },
                 id=call.id,
             ),
             None,
@@ -709,7 +751,8 @@ class Worker:
             system_prompt += f"Commands run in the repository root ({repo_root}).\n"
         if scratch_path is not None:
             system_prompt += (
-                f"Put probe and debug scripts under the scratch path ({scratch_path}).\n"
+                f"The branch scratch path is {scratch_path}; "
+                "put probe and debug scripts there.\n"
                 "New source files created in the repository ship with the fix, while test "
                 "and configuration files are dropped.\n"
             )
