@@ -258,6 +258,7 @@ new file mode 100644
     assert len(record.attempts) == 1
     attempt = record.attempts[0]
     assert attempt.end == "finished"
+    assert attempt.end_summary == "Finished the requested repair and ran the tests."
     assert attempt.claimed_done is True
     assert attempt.naive_green is True
     assert attempt.gate_status == "PASS"
@@ -850,6 +851,7 @@ async def test_infrastructure_gate_error_is_recorded_and_retried(
         number=1,
         worker=SimpleNamespace(
             end="finished",
+            summary="finished",
             claims=None,
             receipt_ids=[],
         ),

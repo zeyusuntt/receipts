@@ -635,6 +635,47 @@ def test_report_lists_instances_with_truncated_target_ids_and_counts(
     assert "legacy-without-target-map" not in truncated_line
 
 
+def test_report_counts_budget_endings_by_budget():
+    report_module = _report_module()
+
+    def ended(summary):
+        attempt = _attempt(claimed_done=False, agreement=None, official_resolved=None)
+        return attempt.model_copy(
+            update={"end": "budget_exhausted", "end_summary": summary},
+        )
+
+    records = [
+        _record("project__turns", [ended("turn budget exhausted after 60 turn(s)")]),
+        _record(
+            "project__wall",
+            [
+                ended("wall budget exhausted after 1500.120 second(s)"),
+                ended("wall budget exhausted while waiting for model response"),
+            ],
+        ),
+        _record(
+            "project__tokens",
+            [ended("completion token budget exhausted after 96012 token(s)")],
+        ),
+        _record("project__legacy", [ended(None)]),
+        _record("project__finished", [_attempt()]),
+    ]
+
+    report = report_module.build_report(records)
+
+    assert report.harness.budget_endings == {
+        "completion_tokens": 1,
+        "not_recorded": 1,
+        "turns": 1,
+        "wall_time": 2,
+    }
+    markdown = report_module.render(report)
+    assert (
+        "Attempts that ended on a budget: 1 on turns, 2 on wall time, "
+        "1 on completion tokens, 1 not recorded."
+    ) in markdown
+
+
 def test_harness_keeps_good_rows_counts_bad_ones_and_maps_old_paths(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -82,6 +82,7 @@ class HarnessReport(BaseModel):
     unreadable_rows: int = 0
     context_guard_turns: int = 0
     context_guard_replaced_messages: int = 0
+    budget_endings: dict[str, int] = Field(default_factory=dict)
 
 
 class ConfigurationA(BaseModel):
@@ -567,6 +568,38 @@ def _valid_result(result: object) -> bool:
     )
 
 
+_BUDGET_ENDING_PREFIXES = (
+    ("turn budget exhausted", "turns"),
+    ("wall budget exhausted", "wall_time"),
+    ("completion token budget exhausted", "completion_tokens"),
+)
+
+
+def _budget_endings(records: Sequence[InstanceRecord]) -> dict[str, int]:
+    """Count attempts that ended on a budget, by which budget ran out."""
+
+    counts = {
+        "turns": 0,
+        "wall_time": 0,
+        "completion_tokens": 0,
+        "not_recorded": 0,
+    }
+    for record in records:
+        for attempt in record.attempts:
+            if attempt.end != "budget_exhausted":
+                continue
+            kind = next(
+                (
+                    name
+                    for prefix, name in _BUDGET_ENDING_PREFIXES
+                    if (attempt.end_summary or "").startswith(prefix)
+                ),
+                "not_recorded",
+            )
+            counts[kind] += 1
+    return {name: counts[name] for name in sorted(counts)}
+
+
 def _harness_report(records: Sequence[InstanceRecord]) -> HarnessReport:
     classes = {name: 0 for name in _RESULT_CLASSES}
     aliases: dict[str, int] = {}
@@ -634,6 +667,7 @@ def _harness_report(records: Sequence[InstanceRecord]) -> HarnessReport:
         unreadable_rows=unreadable_rows,
         context_guard_turns=context_guard_turns,
         context_guard_replaced_messages=context_guard_replaced_messages,
+        budget_endings=_budget_endings(records),
     )
 
 
@@ -1065,6 +1099,16 @@ def _has_tokenfactory(report: Report) -> bool:
     return any(row.executor_kind == "tokenfactory" for row in report.instances)
 
 
+def _render_budget_endings(counts: dict[str, int]) -> str:
+    return (
+        "Attempts that ended on a budget: "
+        f"{counts.get('turns', 0)} on turns, "
+        f"{counts.get('wall_time', 0)} on wall time, "
+        f"{counts.get('completion_tokens', 0)} on completion tokens, "
+        f"{counts.get('not_recorded', 0)} not recorded."
+    )
+
+
 def _render_spend(spend: SpendReport, *, tokenfactory: bool = False) -> list[str]:
     if tokenfactory:
         lines = [
@@ -1302,6 +1346,8 @@ def render(report: Report) -> str:
                 f"{'message' if harness.context_guard_replaced_messages == 1 else 'messages'} "
                 "replaced."
             ),
+            "",
+            _render_budget_endings(harness.budget_endings),
             "",
             (
                 f"{harness.not_recorded} "

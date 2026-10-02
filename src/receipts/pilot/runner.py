@@ -51,6 +51,7 @@ class AttemptRecord(BaseModel):
         "protocol_error",
         "model_error",
     ]
+    end_summary: str | None = None
     claimed_done: bool
     claims: Claims | None
     naive_green: bool
@@ -463,6 +464,7 @@ def _ran_record(
         attempts.append(
             AttemptRecord(
                 end=attempt.worker.end,
+                end_summary=attempt.worker.summary,
                 claimed_done=_claimed_done(attempt.worker),
                 claims=attempt.worker.claims,
                 naive_green=_naive_green(attempt.worker, receipts),
