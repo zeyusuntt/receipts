@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from receipts.cost import DAYTONA_PRICING_READ_DATE
 from receipts.models import VerdictStatus
@@ -148,6 +148,12 @@ class InstanceRow(BaseModel):
     run_dir: str
 
 
+class TruncatedTestIds(BaseModel):
+    instance_id: str
+    dataset_ids: int
+    full_ids: int
+
+
 class Report(BaseModel):
     headline: str
     secondary_headline: str | None
@@ -160,6 +166,7 @@ class Report(BaseModel):
     exclusions: list[ReportedProblem]
     infrastructure_errors: list[ReportedProblem]
     instances: list[InstanceRow]
+    truncated_test_ids: list[TruncatedTestIds] = Field(default_factory=list)
 
 
 def _rate(numerator: int, denominator: int) -> Rate:
@@ -280,6 +287,40 @@ def _run_directory(run_dir: str) -> Path:
     if path.exists() or "pilot" not in path.parts:
         return path
     return _REPOSITORY_ROOT.joinpath(*path.parts[path.parts.index("pilot"):])
+
+
+def _truncated_test_ids(
+    records: Sequence[InstanceRecord],
+) -> list[TruncatedTestIds]:
+    found: list[TruncatedTestIds] = []
+    for record in records:
+        path = _run_directory(record.run_dir) / "baseline.json"
+        try:
+            baseline = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(baseline, dict):
+            continue
+        target_map = baseline.get("target_map")
+        if not isinstance(target_map, dict):
+            continue
+        mapped = [
+            (dataset_id, full_ids)
+            for dataset_id, full_ids in target_map.items()
+            if isinstance(dataset_id, str)
+            and isinstance(full_ids, list)
+            and all(isinstance(full_id, str) for full_id in full_ids)
+            and full_ids != [dataset_id]
+        ]
+        if mapped:
+            found.append(
+                TruncatedTestIds(
+                    instance_id=record.instance_id,
+                    dataset_ids=len(mapped),
+                    full_ids=sum(len(full_ids) for _, full_ids in mapped),
+                ),
+            )
+    return found
 
 
 def _valid_result(result: object) -> bool:
@@ -571,6 +612,7 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
         exclusions=exclusions,
         infrastructure_errors=infrastructure_errors,
         instances=instances,
+        truncated_test_ids=_truncated_test_ids(ordered),
     )
 
 
@@ -636,6 +678,15 @@ def render(report: Report) -> str:
     lines.extend([f"# {report.headline}", ""])
     if report.secondary_headline is not None:
         lines.extend([f"## {report.secondary_headline}", ""])
+    if report.truncated_test_ids:
+        rendered = "; ".join(
+            f"{item.instance_id} "
+            f"({item.dataset_ids} dataset "
+            f"{'id' if item.dataset_ids == 1 else 'ids'}, "
+            f"{item.full_ids} full {'id' if item.full_ids == 1 else 'ids'})"
+            for item in report.truncated_test_ids
+        )
+        lines.extend([f"Truncated test ids: {rendered}.", ""])
 
     configuration_a = report.configuration_a
     lines.extend(

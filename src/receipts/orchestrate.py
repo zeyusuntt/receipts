@@ -182,17 +182,32 @@ def worker_initial_message(
     issue: str,
     spec_tests: list[str],
     suite_scope: str,
+    target_map: dict[str, list[str]] | None = None,
 ) -> str:
-    return "\n\n".join(
+    sections = [
+        f"<issue>\n{issue}\n</issue>",
+        "<specification_tests>\n"
+        + "\n".join(spec_tests)
+        + "\n</specification_tests>",
+    ]
+    mapped = {
+        dataset_id: full_ids
+        for dataset_id, full_ids in (target_map or {}).items()
+        if full_ids != [dataset_id]
+    }
+    if mapped:
+        mapping_lines = ["Mapped dataset test ids to full collected ids:"]
+        for dataset_id, full_ids in mapped.items():
+            mapping_lines.append(f"- {dataset_id}")
+            mapping_lines.extend(f"  - {full_id}" for full_id in full_ids)
+        sections.append("<target_id_mapping>\n" + "\n".join(mapping_lines) + "\n</target_id_mapping>")
+    sections.extend(
         [
-            f"<issue>\n{issue}\n</issue>",
-            "<specification_tests>\n"
-            + "\n".join(spec_tests)
-            + "\n</specification_tests>",
             f"<suite_scope>\n{suite_scope}\n</suite_scope>",
             f"<plan>\n{plan.model_dump_json(indent=2)}\n</plan>",
         ],
     )
+    return "\n\n".join(sections)
 
 
 def _full_stdout(receipt: Receipt, *, required: bool = False) -> str:
@@ -559,7 +574,7 @@ async def fix(
             agent,
             issue,
             baseline,
-            spec_tests,
+            baseline.target,
         )
         run_directory.write_json("plan.json", plan)
 
@@ -575,8 +590,9 @@ async def fix(
                 initial_message=worker_initial_message(
                     plan,
                     issue,
-                    spec_tests,
+                    baseline.target,
                     suite_scope,
+                    baseline.target_map,
                 ),
                 writer=writer,
                 repo_root=source.workdir if isinstance(source, ImageSource) else None,

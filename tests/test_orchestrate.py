@@ -16,6 +16,11 @@ from tests.fixtures.repo_factory import CALC, TEST_CALC, _git, make_repo
 
 
 TARGET = "tests/test_calc.py::test_sub"
+DATASET_SIM910_KEY = "tests/test_900_rules.py::test_sim910[d.get(key,"
+FULL_SIM910_KEY = (
+    "tests/test_900_rules.py::test_sim910[d.get(key, None)-"
+    "SIM910 Use 'd.get(key)' instead of 'd.get(key, None)']"
+)
 FIXED_CALC = '''def add(a, b):
     return a + b
 
@@ -137,6 +142,8 @@ async def _run(
     spec_paths: list[str] | None = None,
     root_conftest: str | None = None,
     src_layout: bool = False,
+    spec_tests: list[str] | None = None,
+    extra_files: dict[str, str] | None = None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
@@ -153,6 +160,13 @@ async def _run(
         (repo / "conftest.py").write_text(root_conftest, encoding="utf-8")
         _git(repo, "add", "conftest.py")
         _git(repo, "commit", "-q", "-m", "add root conftest")
+    if extra_files is not None:
+        for relative, content in extra_files.items():
+            path = repo / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-q", "-m", "add extra specification tests")
     run_dir = tmp_path / "run"
     local = LocalExecutor(
         tmp_path / "executor",
@@ -173,7 +187,7 @@ async def _run(
         model,
         source,
         issue="calc.sub(5, 3) must return 2",
-        spec_tests=[TARGET],
+        spec_tests=spec_tests or [TARGET],
         suite_scope="tests",
         run_dir=run_dir,
         appeals=appeals,
@@ -403,14 +417,74 @@ async def test_fix_unions_explicit_and_spec_test_paths_and_loads_v1_result(tmp_p
     old_result["input"].pop("spec_paths")
     old_result["baseline"].pop("spec_paths")
     old_result["baseline"].pop("scope")
+    old_result["baseline"].pop("target_map", None)
     old_result["attempts"][0].pop("filtered_sha256")
     old_result["attempts"][0].pop("witness_apply_sha256")
     loaded = _orchestrate_module().RunResult.model_validate(old_result)
     assert loaded.input.spec_paths == []
     assert loaded.baseline.spec_paths == []
     assert loaded.baseline.scope is None
+    assert loaded.baseline.target_map == {}
     assert loaded.attempts[0].filtered_sha256 is None
     assert loaded.attempts[0].witness_apply_sha256 is None
+
+
+async def test_truncated_dataset_id_uses_full_id_for_planner_and_worker(tmp_path: Path):
+    parameter_id = FULL_SIM910_KEY.split("[", 1)[1][:-1]
+    test_source = (
+        "import pytest\n\n\n"
+        f"@pytest.mark.parametrize('value', [pytest.param(1, id={parameter_id!r})])\n"
+        "def test_sim910(value):\n"
+        "    assert False\n"
+    )
+    model = _model(
+        [
+            _finish(
+                "finish",
+                summary="No fix attempted.",
+                changed=[],
+                green=False,
+            ),
+        ],
+    )
+
+    result, run_dir, _, model = await _run(
+        tmp_path,
+        model,
+        appeals=0,
+        spec_tests=[DATASET_SIM910_KEY],
+        extra_files={"tests/test_900_rules.py": test_source},
+    )
+
+    assert result.input.spec_tests == [DATASET_SIM910_KEY]
+    assert result.baseline.target == [FULL_SIM910_KEY]
+    persisted_input = json.loads((run_dir / "input.json").read_text())
+    assert persisted_input["spec_tests"] == [DATASET_SIM910_KEY]
+
+    planner_request = next(
+        request for request in model.requests if request["kind"] == "complete_json"
+    )
+    planner_tests = planner_request["user"].split(
+        "<specification_tests>\n",
+        1,
+    )[1].split("\n</specification_tests>", 1)[0]
+    assert planner_tests == FULL_SIM910_KEY
+
+    worker_request = next(
+        request for request in model.requests if request["kind"] == "chat"
+    )
+    first_message = next(
+        message["content"]
+        for message in worker_request["messages"]
+        if message["role"] == "user"
+    )
+    worker_tests = first_message.split("<specification_tests>\n", 1)[1].split(
+        "\n</specification_tests>",
+        1,
+    )[0]
+    assert worker_tests == FULL_SIM910_KEY
+    assert "Mapped dataset test ids" in first_message
+    assert DATASET_SIM910_KEY in first_message
 
 
 async def test_image_source_workdir_reaches_worker_prompt(tmp_path: Path):

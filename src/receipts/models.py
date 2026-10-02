@@ -143,6 +143,10 @@ class Baseline(BaseModel):
     protected: list[str] = Field(description="node ids that passed in every baseline run")
     unstable: list[str] = Field(description="node ids whose outcome differed between runs")
     target: list[str] = Field(description="node ids that must go from failing to passing")
+    target_map: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="dataset target ids mapped to the full collected pytest node ids",
+    )
     spec_paths: list[str] = Field(
         default_factory=list,
         description=(

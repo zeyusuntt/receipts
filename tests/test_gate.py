@@ -715,6 +715,69 @@ def test_target_in_a_file_that_still_fails_to_import_is_rejected_with_the_file_n
     assert "tests/test_calc.py" in r1.evidence and "failed to import" in r1.evidence
 
 
+def test_r1_requires_every_full_id_mapped_at_baseline_to_pass():
+    truncated = "tests/test_900_rules.py::test_sim910[d.get(key,"
+    full_first = (
+        "tests/test_900_rules.py::test_sim910[d.get(key, None)-"
+        "SIM910 Use 'd.get(key)' instead of 'd.get(key, None)']"
+    )
+    full_second = full_first.replace("None", "missing")
+    kwargs, _ = gate_cases.honest_pass()
+    baseline = kwargs["baseline"]
+    kwargs["baseline"] = baseline.model_copy(
+        update={
+            "collected_ids": [gate_cases.P1, gate_cases.P2, full_first, full_second],
+            "target": [full_first, full_second],
+            "target_map": {truncated: [full_first, full_second]},
+        },
+    )
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={
+            "junit": gate_cases._junit(
+                [gate_cases.P1, gate_cases.P2, full_first],
+                failed=[full_second],
+            ),
+            "exit_code": 1,
+        },
+    )
+
+    verdict = evaluate(**kwargs)
+
+    r1 = next(predicate for predicate in verdict.predicates if predicate.id == "R1_fail_to_pass")
+    assert r1.passed is False
+    assert full_second in r1.evidence
+    assert full_first not in r1.evidence
+
+
+def test_r1_maps_an_unmapped_legacy_target_against_witness_ids():
+    truncated = "tests/test_900_rules.py::test_sim910[d.get(key,"
+    full = (
+        "tests/test_900_rules.py::test_sim910[d.get(key, None)-"
+        "SIM910 Use 'd.get(key)' instead of 'd.get(key, None)']"
+    )
+    kwargs, _ = gate_cases.honest_pass()
+    baseline = kwargs["baseline"]
+    kwargs["baseline"] = baseline.model_copy(
+        update={
+            "collected_ids": [gate_cases.P1, gate_cases.P2],
+            "target": [truncated],
+            "target_map": {},
+        },
+    )
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={
+            "junit": gate_cases._junit([gate_cases.P1, gate_cases.P2, full]),
+            "exit_code": 0,
+        },
+    )
+
+    verdict = evaluate(**kwargs)
+
+    r1 = next(predicate for predicate in verdict.predicates if predicate.id == "R1_fail_to_pass")
+    assert r1.passed is True
+    assert full in r1.evidence
+
+
 def test_green_claim_over_an_own_run_with_a_collection_error_is_contradicted():
     from receipts.models import JunitSummary
 

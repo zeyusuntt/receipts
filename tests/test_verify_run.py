@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
+from types import SimpleNamespace
 
 import pytest
 
 import receipts.verify.run as verify_run
-from receipts.models import Branch, Checkpoint, Receipt
+from receipts.models import Branch, Checkpoint, JunitSummary, Receipt
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import RepoAtCommit
 from receipts.sandbox.sink import MemorySink
@@ -17,6 +18,69 @@ from receipts.verify.run import (
 from tests.fixtures.repo_factory import _git, make_repo
 
 T = "tests/test_calc.py::test_sub"
+DATASET_SIM910_KEY = "tests/test_900_rules.py::test_sim910[d.get(key,"
+DATASET_SIM910_QUOTED_KEY = "tests/test_900_rules.py::test_sim910[d.get('key',"
+FULL_SIM910_KEY = (
+    "tests/test_900_rules.py::test_sim910[d.get(key, None)-"
+    "SIM910 Use 'd.get(key)' instead of 'd.get(key, None)']"
+)
+FULL_SIM910_QUOTED_KEY = (
+    "tests/test_900_rules.py::test_sim910[d.get('key', None)-"
+    'SIM910 Use \'d.get("key")\' instead of \'d.get(\'key\', None)\']'
+)
+
+
+@pytest.mark.parametrize(
+    ("targets", "collected", "expected"),
+    [
+        pytest.param(
+            [FULL_SIM910_KEY],
+            [FULL_SIM910_KEY],
+            {FULL_SIM910_KEY: [FULL_SIM910_KEY]},
+            id="exact-match",
+        ),
+        pytest.param(
+            [DATASET_SIM910_KEY],
+            [FULL_SIM910_KEY],
+            {DATASET_SIM910_KEY: [FULL_SIM910_KEY]},
+            id="one-truncated-match",
+        ),
+        pytest.param(
+            [DATASET_SIM910_KEY],
+            [
+                FULL_SIM910_KEY.replace("None", "missing"),
+                FULL_SIM910_KEY,
+            ],
+            {
+                DATASET_SIM910_KEY: sorted(
+                    [
+                        FULL_SIM910_KEY.replace("None", "missing"),
+                        FULL_SIM910_KEY,
+                    ],
+                ),
+            },
+            id="many-truncated-matches-are-sorted",
+        ),
+        pytest.param(
+            [DATASET_SIM910_KEY],
+            ["tests/test_other.py::test_other"],
+            {DATASET_SIM910_KEY: [DATASET_SIM910_KEY]},
+            id="no-match-is-unchanged",
+        ),
+        pytest.param(
+            [FULL_SIM910_KEY, DATASET_SIM910_QUOTED_KEY, "tests/test_new.py::test_new"],
+            [FULL_SIM910_QUOTED_KEY, FULL_SIM910_KEY],
+            {
+                FULL_SIM910_KEY: [FULL_SIM910_KEY],
+                DATASET_SIM910_QUOTED_KEY: [FULL_SIM910_QUOTED_KEY],
+                "tests/test_new.py::test_new": ["tests/test_new.py::test_new"],
+            },
+            id="mixed",
+        ),
+    ],
+)
+def test_map_target_ids(targets, collected, expected):
+    assert verify_run.map_target_ids(targets, collected) == expected
 
 
 async def _setup(tmp_path, flaky=False):
@@ -25,6 +89,33 @@ async def _setup(tmp_path, flaky=False):
     ex = LocalExecutor(root=tmp_path / "work", sink=sink, run_id="run-1")
     base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"))
     return ex, base, sink
+
+
+def _add_sim910_tests(repo, cases):
+    rendered = ",\n".join(
+        f"        pytest.param({passes!r}, id={node_id!r})"
+        for node_id, passes in cases
+    )
+    (repo / "tests" / "test_900_rules.py").write_text(
+        "import pytest\n\n\n"
+        "@pytest.mark.parametrize(\"passes\", [\n"
+        f"{rendered}\n"
+        "])\n"
+        "def test_sim910(passes):\n"
+        "    assert passes\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "tests/test_900_rules.py")
+    _git(repo, "commit", "-q", "-m", "add SIM910 specification tests")
+
+
+async def _sim910_executor(tmp_path, cases):
+    repo = make_repo(tmp_path / "src")
+    _add_sim910_tests(repo, cases)
+    sink = MemorySink()
+    ex = LocalExecutor(root=tmp_path / "work", sink=sink, run_id="run-1")
+    base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"))
+    return ex, base
 
 
 async def test_baseline_runs_twice_and_marks_unstable(tmp_path):
@@ -64,6 +155,102 @@ async def test_baseline_rejects_flaky_target(tmp_path):
     with pytest.raises(TargetNotFailing) as info:
         await establish_baseline(ex, base, "tests", ["tests/test_flaky.py::test_flaky"], limit_s=600)
     assert info.value.node_ids == ["tests/test_flaky.py::test_flaky"]
+
+
+async def test_baseline_maps_truncated_targets_and_validates_every_full_id(tmp_path):
+    ex, base = await _sim910_executor(
+        tmp_path,
+        [
+            (FULL_SIM910_KEY.split("[", 1)[1][:-1], False),
+            (FULL_SIM910_QUOTED_KEY.split("[", 1)[1][:-1], False),
+        ],
+    )
+
+    baseline = await establish_baseline(
+        ex,
+        base,
+        "tests",
+        [DATASET_SIM910_KEY, FULL_SIM910_KEY, DATASET_SIM910_QUOTED_KEY],
+        limit_s=600,
+    )
+
+    assert baseline.target_map == {
+        DATASET_SIM910_KEY: [FULL_SIM910_KEY],
+        FULL_SIM910_KEY: [FULL_SIM910_KEY],
+        DATASET_SIM910_QUOTED_KEY: [FULL_SIM910_QUOTED_KEY],
+    }
+    assert baseline.target == [FULL_SIM910_KEY, FULL_SIM910_QUOTED_KEY]
+
+
+async def test_baseline_maps_against_ids_collected_in_either_run():
+    class BaselineExecutor:
+        def __init__(self):
+            self.results = [
+                SimpleNamespace(
+                    timed_out=False,
+                    duration_s=0.1,
+                    exit_code=1,
+                    receipt_id="baseline-1",
+                    junit=JunitSummary(
+                        passed=[],
+                        failed=[],
+                        errors=[],
+                        skipped=[],
+                        collection_errors=["tests/test_900_rules.py"],
+                    ),
+                ),
+                SimpleNamespace(
+                    timed_out=False,
+                    duration_s=0.1,
+                    exit_code=1,
+                    receipt_id="baseline-2",
+                    junit=JunitSummary(
+                        passed=[],
+                        failed=[FULL_SIM910_KEY],
+                        errors=[],
+                        skipped=[],
+                    ),
+                ),
+            ]
+
+        async def run_pytest(self, *args, **kwargs):
+            return self.results.pop(0)
+
+    baseline = await establish_baseline(
+        BaselineExecutor(),
+        object(),
+        "tests",
+        [DATASET_SIM910_KEY],
+        limit_s=600,
+    )
+
+    assert baseline.target_map == {DATASET_SIM910_KEY: [FULL_SIM910_KEY]}
+    assert baseline.target == [FULL_SIM910_KEY]
+
+
+async def test_baseline_rejects_many_match_when_one_full_id_passes(tmp_path):
+    other_full = FULL_SIM910_KEY.replace("None", "missing")
+    ex, base = await _sim910_executor(
+        tmp_path,
+        [
+            (FULL_SIM910_KEY.split("[", 1)[1][:-1], False),
+            (other_full.split("[", 1)[1][:-1], True),
+        ],
+    )
+
+    with pytest.raises(TargetNotFailing) as info:
+        await establish_baseline(
+            ex,
+            base,
+            "tests",
+            [DATASET_SIM910_KEY],
+            limit_s=600,
+        )
+
+    assert info.value.node_ids == [DATASET_SIM910_KEY]
+    assert DATASET_SIM910_KEY in str(info.value)
+    assert FULL_SIM910_KEY in str(info.value)
+    assert other_full in str(info.value)
 
 
 async def test_baseline_too_slow(tmp_path):
@@ -201,6 +388,7 @@ async def test_baseline_accepts_a_spec_test_whose_module_does_not_exist_yet(tmp_
     b = await establish_baseline(ex, base, "tests", [NEW_SPEC], limit_s=600)
 
     assert b.target == [NEW_SPEC]
+    assert b.target_map == {NEW_SPEC: [NEW_SPEC]}
     assert NEW_SPEC not in b.collected_ids
     assert "tests/test_calc.py::test_add" in b.protected
     assert all(run.collection_errors == ["tests/test_new_feature.py"] for run in b.runs)

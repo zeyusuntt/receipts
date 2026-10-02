@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from receipts.models import Baseline, Branch, Checkpoint, JunitSummary, PatchScope, Receipt
 from receipts.patchscope import default_protected_modules, filter_patch
 from receipts.sandbox.protocol import CheckpointTampered, Executor
+from receipts.verify.targets import map_target_ids
 
 
 class Attempt(BaseModel):
@@ -37,9 +38,27 @@ class LoadConfirmation(BaseModel):
 
 
 class TargetNotFailing(Exception):
-    def __init__(self, node_ids: list[str]) -> None:
-        super().__init__(f"target tests did not fail in every baseline run: {node_ids}")
-        self.node_ids = node_ids
+    def __init__(
+        self,
+        node_ids: list[str],
+        target_map: dict[str, list[str]] | None = None,
+    ) -> None:
+        self.node_ids = list(node_ids)
+        self.target_map = {
+            node_id: list(mapped)
+            for node_id, mapped in (target_map or {}).items()
+        }
+        details = (
+            "; ".join(
+                f"{node_id} -> {self.target_map[node_id]}"
+                for node_id in self.node_ids
+            )
+            if self.target_map
+            else str(self.node_ids)
+        )
+        super().__init__(
+            "target tests did not fail in every baseline run: " + details,
+        )
 
 
 class BaselineTooSlow(Exception):
@@ -104,17 +123,38 @@ async def establish_baseline(
         receipts.append(second)
     runs: list[JunitSummary] = [r.junit for r in receipts]  # type: ignore[misc]
 
-    # Every target must be failed or errored in every run; anything else cannot anchor a verdict.
-    bad_targets = [t for t in target if any(j.outcome(t) not in ("failed", "error") for j in runs)]
-    if bad_targets:
-        raise TargetNotFailing(bad_targets)
-
     seen = sorted(set().union(*(j.all_ids() for j in runs)))
+    target_map = map_target_ids(target, seen)
+    mapped_target = list(
+        dict.fromkeys(
+            node_id
+            for dataset_id in target
+            for node_id in target_map[dataset_id]
+        ),
+    )
+
+    # Every mapped target must be failed or errored in every run; anything else
+    # cannot anchor a verdict. Keep dataset ids on the exception for screening.
+    bad_targets = [
+        dataset_id
+        for dataset_id in target
+        if any(
+            any(j.outcome(node_id) not in ("failed", "error") for j in runs)
+            for node_id in target_map[dataset_id]
+        )
+    ]
+    if bad_targets:
+        raise TargetNotFailing(
+            bad_targets,
+            {dataset_id: target_map[dataset_id] for dataset_id in bad_targets},
+        )
+
     unstable = sorted(n for n in seen if len({j.outcome(n) for j in runs}) > 1)
     protected = sorted(n for n in seen if all(j.outcome(n) == "passed" for j in runs))
     skipped = sorted(n for n in seen if any(j.outcome(n) == "skipped" for j in runs))
     return Baseline(runs=runs, run_receipt_ids=[r.receipt_id for r in receipts], collected_ids=seen,
-                    skipped_ids=skipped, protected=protected, unstable=unstable, target=list(target),
+                    skipped_ids=skipped, protected=protected, unstable=unstable, target=mapped_target,
+                    target_map=target_map,
                     spec_paths=sorted(set(spec_paths)))
 
 

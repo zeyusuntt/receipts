@@ -13,6 +13,7 @@ from collections.abc import Sequence
 
 from receipts.models import Baseline, ClaimAudit, Claims, PatchScope, PredicateResult, Receipt, Verdict
 from receipts.patchscope import scope_shadow
+from receipts.verify.targets import map_target_ids
 
 _PYTEST_VALID_EXITS = {0, 1, 5}  # 0 all passed, 1 some failed, 5 nothing collected
 _PYTEST_LOAD_FAILURE_EXITS = {2, 3, 4}
@@ -39,9 +40,17 @@ def _error(
 
 
 def _r1(baseline: Baseline, ver) -> PredicateResult:
-    missing = [t for t in baseline.target if ver.outcome(t) != "passed"]
+    target_map = map_target_ids(baseline.target, ver.all_ids())
+    witness_targets = list(
+        dict.fromkeys(
+            node_id
+            for target in baseline.target
+            for node_id in target_map[target]
+        ),
+    )
+    missing = [target for target in witness_targets if ver.outcome(target) != "passed"]
     if not missing:
-        return PredicateResult(id="R1_fail_to_pass", passed=True, evidence="target tests passed: " + ", ".join(baseline.target))
+        return PredicateResult(id="R1_fail_to_pass", passed=True, evidence="target tests passed: " + ", ".join(witness_targets))
     evidence = "; ".join(f"{t} {ver.outcome(t)}" for t in missing)
     if ver.collection_errors:
         evidence += "; test files that failed to import: " + ", ".join(ver.collection_errors)

@@ -356,6 +356,72 @@ def test_same_records_produce_byte_identical_reports():
     assert first.model_dump_json() == second.model_dump_json()
 
 
+def test_report_lists_instances_with_truncated_target_ids_and_counts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    report_module = _report_module()
+    monkeypatch.setattr(report_module, "_REPOSITORY_ROOT", tmp_path)
+    dataset_key = "tests/test_900_rules.py::test_sim910[d.get(key,"
+    dataset_quoted = "tests/test_900_rules.py::test_sim910[d.get('key',"
+    full_key = (
+        "tests/test_900_rules.py::test_sim910[d.get(key, None)-"
+        "SIM910 Use 'd.get(key)' instead of 'd.get(key, None)']"
+    )
+    full_other = full_key.replace("None", "missing")
+    full_quoted = (
+        "tests/test_900_rules.py::test_sim910[d.get('key', None)-"
+        'SIM910 Use \'d.get("key")\' instead of \'d.get(\'key\', None)\']'
+    )
+
+    mapped_dir = tmp_path / "mapped"
+    mapped_dir.mkdir()
+    (mapped_dir / "baseline.json").write_text(
+        json.dumps(
+            {
+                "target_map": {
+                    dataset_key: [full_key, full_other],
+                    dataset_quoted: [full_quoted],
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+    identity_dir = tmp_path / "identity"
+    identity_dir.mkdir()
+    (identity_dir / "baseline.json").write_text(
+        json.dumps(
+            {
+                "target_map": {
+                    "tests/test_x.py::test_x": ["tests/test_x.py::test_x"],
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+    records = [
+        _record(
+            "martinthoma__flake8-simplify-173",
+            [_attempt()],
+            run_dir="mapped",
+        ),
+        _record("identity", [_attempt()], run_dir="identity"),
+        _record("legacy-without-target-map", [_attempt()], run_dir="legacy"),
+    ]
+
+    markdown = report_module.render(report_module.build_report(records))
+
+    assert (
+        "Truncated test ids: martinthoma__flake8-simplify-173 "
+        "(2 dataset ids, 3 full ids)."
+    ) in markdown
+    truncated_line = next(
+        line for line in markdown.splitlines() if line.startswith("Truncated test ids:")
+    )
+    assert "identity" not in truncated_line
+    assert "legacy-without-target-map" not in truncated_line
+
+
 def test_harness_keeps_good_rows_counts_bad_ones_and_maps_old_paths(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
