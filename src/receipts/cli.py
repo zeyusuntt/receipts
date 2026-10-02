@@ -28,6 +28,8 @@ from receipts.llm import (
 )
 from receipts.orchestrate import RunBudgets, RunResult, fix
 from receipts.pilot.cleanup import cleanup_manifests, render_cleanup
+from receipts.pilot.replay import summary_line as replay_summary_line
+from receipts.pilot.replay import write_replay
 from receipts.pilot.runner import (
     InstanceRecord,
     _complete_shielded,
@@ -149,6 +151,13 @@ def _parser() -> argparse.ArgumentParser:
     )
     pilot_cleanup.add_argument("--root", required=True, type=Path)
     pilot_cleanup.add_argument("--yes", action="store_true")
+    pilot_replay = pilot_commands.add_parser(
+        "replay",
+        help="replay the current gate over stored pilot attempts",
+    )
+    pilot_replay.add_argument("run_dirs", nargs="+", type=Path)
+    pilot_replay.add_argument("--data", required=True, type=Path)
+    pilot_replay.add_argument("--out", required=True, type=Path)
     return parser
 
 
@@ -593,6 +602,10 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
         )
     if args.command == "pilot" and args.pilot_command == "cleanup":
         return await _run_pilot_cleanup(args)
+    if args.command == "pilot" and args.pilot_command == "replay":
+        report = write_replay(args.run_dirs, args.data, args.out)
+        print(replay_summary_line(report))
+        return 1 if report.summary.new_gate_looser else 0
     if args.command == "pilot" and args.pilot_command == "report":
         return _run_pilot_report(args.pilot_dir)
     raise AssertionError(f"unknown command: {args.command}")

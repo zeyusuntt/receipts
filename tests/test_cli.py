@@ -557,6 +557,32 @@ def test_pilot_cleanup_arguments_parse(tmp_path: Path):
     assert confirmed.yes is True
 
 
+def test_pilot_replay_arguments_parse(tmp_path: Path):
+    launch_3 = tmp_path / "launch-3"
+    launch_2 = tmp_path / "launch-2"
+    data_path = tmp_path / "rows.jsonl"
+    output_prefix = tmp_path / "replay"
+
+    args = _parser().parse_args(
+        [
+            "pilot",
+            "replay",
+            str(launch_3),
+            str(launch_2),
+            "--data",
+            str(data_path),
+            "--out",
+            str(output_prefix),
+        ],
+    )
+
+    assert args.command == "pilot"
+    assert args.pilot_command == "replay"
+    assert args.run_dirs == [launch_3, launch_2]
+    assert args.data == data_path
+    assert args.out == output_prefix
+
+
 def test_pilot_screen_never_constructs_a_model(tmp_path: Path, monkeypatch, capsys):
     import receipts.cli as cli
 
