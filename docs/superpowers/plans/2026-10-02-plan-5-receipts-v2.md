@@ -2,7 +2,7 @@
 
 **Status:** approved by Zeyu on Oct 2, with every recommended decision: one commit per reviewed task; A6 dropped; B6 without the in-image scan; P (100 unseen) plus S (v1's 50, seen), P first; rule 5 judged by the official command; `docs/` committed; pilot data published as a sanitized release. v1's leftover snapshots in the old Daytona organization are out of scope, and Tier 2 is not pursued. Revision 3, Oct 2: an adversarial review (three read-only Codex passes against the code and the v1 records) was folded in. Every finding that touches the trust boundary was reproduced or read in the main session before it was accepted. The revision log and the rejected findings are at the end. Revision 2 is kept at `.build/plan-5-rev2-backup.md`.
 **Inputs:** `REPORT.md` (launch 3, 50 tasks), the records in `pilot/run-2026-10-01c/`, `pilot/run-2026-10-01c/environment-artifacts.json`, `data/rebench-v2-python.jsonl`.
-**Evidence:** `.build/v1_evidence.py` recomputes most numbers in section 1. Its F4 segmentation is wrong (it pairs whole two-attempt logs with attempt 1), so F4 below comes from an independent recount; fixing the script is card D-a.
+**Evidence:** `.build/v1_evidence.py` recomputes every number in section 1 from the record-selected runs (50 tasks, 79 attempts). Card D-a fixed its attempt segmentation and read-only rule on Oct 2. If a number here disagrees with the script, the script wins.
 
 ## 1. What v1 measured
 
@@ -12,7 +12,7 @@
 | F2 | Calls to tools that do not exist | 60 (`execute` 46, `execute_grep` 6, `bash` 3, `grep` 2, `think`, `list_dir`, `str_replace_editor`) | Each costs a turn and a protocol strike. These are Nemotron's tool-name priors from other harnesses. |
 | F3 | Model responses with more than one tool call | 0 of 1,875 in the 79 analyzed attempts (0 of 2,084 across all retained logs, which include 5 superseded infrastructure runs) | The model obeys "one tool per turn". Batching would change nothing without changing that contract, so it is not planned. |
 | F4 | Where the turns go | 42% of executed calls are read-only (796 of 1,874). Median first edit: turn 6 in attempt 1. In the 29 budget-exhausted attempts (1,157 calls): reads 33%, edits 25%, shell 15%, test runs 14%, Python probes 11%, invented tools 2%; median 11 edits and 4 test runs; 12.5% of calls exactly repeat an earlier call | No single sink: reads are a third, edits a quarter. The worker log records calls but not results, so we cannot yet say how many edits failed to match (A0). |
-| F5 | What the agent starts with | The worker's first message has the issue, the spec test ids, the suite scope and the planner's plan. No failure output. The planner gets the raw baseline JSON (median 15 KB over the 55 planner calls, max 213 KB) and still no failure output | The single most useful fact, why the spec test fails, costs the agent turns to rediscover. |
+| F5 | What the agent starts with | The worker's first message has the issue, the spec test ids, the suite scope and the planner's plan. No failure output. The planner gets the raw baseline JSON (median 11 KB over the 50 record-selected runs, max 213 KB) and still no failure output | The single most useful fact, why the spec test fails, costs the agent turns to rediscover. |
 | F6 | R4 (patch scope) failures | 22 attempts: 18 touched only new test-named files, 3 modified existing test files, 1 did both. In 4 attempts R4 was the only failed predicate, and all 4 were officially resolved | R4 punishes files that verification never sees, because the filter drops them. |
 | F7 | Junk in shipped patches | 3 of 25 PASS attempts add files a maintainer would refuse: a cached PDF, `debug_tmp.py` at the root, and a root-level copy of the package next to the legitimate edit in `src/scikit_build_core/` | "Verified" is not yet "mergeable". |
 | F8 | Shadow detection | `default_protected_modules()` reads the host's installed distributions, and `categorize` only recognises a root module file or a one-level `__init__.py` | The root-level `scikit_build_core/build/...` copy passed R4 in launch 3. |
@@ -157,7 +157,7 @@ The soundness invariant behind B1 is that the witness and the official grader ap
 
 **A5 (must). Budget and context.** (F1)
 - Change: 60 turns, 1,500 seconds and 96,000 completion tokens per attempt, still with one appeal.
-- Context guard: v1 reached 88,646 prompt tokens at 40 turns, and the whole history is resent each turn. When a request would exceed a fixed prompt budget (set in C4 from the model's real context limit), the oldest tool outputs are replaced by a one-line note. The rule is deterministic and frozen.
+- Context guard: v1 reached 88,646 prompt tokens at 40 turns, and the whole history is resent each turn. When a request would exceed a fixed prompt budget of 160,000 tokens, the oldest tool outputs are replaced by a one-line note. Token Factory reported a 262,144-token context for Super on Oct 2, and completions need headroom; C4 re-checks it before the launch. The rule is deterministic and frozen.
 - Cost: prompt tokens grow with the square of turns. Budget-exhausted attempts were 83% of v1's model cost, so expect model cost per budget-exhausted attempt to roughly double.
 - Files: `orchestrate.py` (`RunBudgets`), `cli.py` (it duplicates the defaults), `agent/worker.py`; `tests/test_orchestrate.py`, `tests/test_pilot_runner.py`, `tests/test_worker.py`.
 
@@ -188,7 +188,7 @@ The soundness invariant behind B1 is that the witness and the official grader ap
 
 ### Workstream D: the v2 measurement (must)
 
-**D-a. Fix the evidence script.** Segment worker logs by `result.json` `attempts[*].worker.turns`, use only record-selected runs, count read-only only for executed calls. Re-check F3 to F5 against it.
+**D-a. Fix the evidence script. Done Oct 2.** Segment worker logs by `result.json` `attempts[*].worker.turns`, use only record-selected runs, count read-only only for executed calls. Re-check F3 to F5 against it.
 
 **D0. Portable records, untouched evidence.** (F14)
 - New runs write every path repository-relative.
@@ -283,7 +283,7 @@ E runs alongside D. Judges score design, impact and idea as much as implementati
 - **B2 misclassifies.** A flaky load failure that reproduces twice becomes an agent outcome. Mitigation: two fresh forks; the report lists every B2 rejection with its tail.
 - **Scope.** Revision 3 adds B0, B7, B8, C4 and D-a and widens C2 and C3. Mitigation: the must and should tiers and the cut line in section 6.
 - **The Daytona caps, snapshot quota or permissions block the run.** C4 and gate 4 cover this.
-- **Token Factory rate limits at concurrency 2.** The rehearsal measures them. Fall back to concurrency 1; that costs wall time, not validity.
+- **Token Factory rate limits at concurrency 2.** Unlikely: Token Factory listed Super's per-request limits as effectively unlimited on Oct 2. The rehearsal measures them anyway. Fall back to concurrency 1; that costs wall time, not validity.
 - **v2 eats the product time.** Hard stop on Oct 12. If v2 slips, v1 stays the headline and v2 is reported as far as it ran.
 - **Disk.** 65 GB free on Oct 2. Staging downloads of large repositories need several GB at a time. C4 checks it.
 
