@@ -29,6 +29,13 @@ class Attempt(BaseModel):
     verification: Receipt | None
 
 
+class LoadConfirmation(BaseModel):
+    attempt: int
+    branch: Branch
+    apply: Receipt
+    verification: Receipt | None
+
+
 class TargetNotFailing(Exception):
     def __init__(self, node_ids: list[str]) -> None:
         super().__init__(f"target tests did not fail in every baseline run: {node_ids}")
@@ -153,6 +160,35 @@ async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_s
     return Attempt(patch=patch, filtered_patch=filtered_patch, filtered_sha256=filtered_sha256,
                    dropped=dropped, witness=witness, witness_provisioned=True,
                    apply=apply, verification=verification)
+
+
+async def confirm_load_failure(
+    ex: Executor,
+    c0: Checkpoint,
+    filtered_patch: str,
+    suite_scope: str,
+    timeout_s: int,
+    attempt: int,
+) -> LoadConfirmation:
+    (branch,) = await ex.fork(c0, 1, prefix="c")
+    try:
+        applied = await ex.apply_patch(branch, filtered_patch)
+        verification = None
+        if applied.exit_code == 0:
+            verification = await ex.run_pytest(
+                branch,
+                suite_scope,
+                timeout_s=timeout_s,
+                kind="verification",
+            )
+        return LoadConfirmation(
+            attempt=attempt,
+            branch=branch,
+            apply=applied,
+            verification=verification,
+        )
+    finally:
+        await ex.release(branch)
 
 
 async def rerun_one(ex: Executor, witness: Branch, node_id: str, timeout_s: int) -> Receipt:

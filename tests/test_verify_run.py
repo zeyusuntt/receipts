@@ -1,9 +1,19 @@
+from datetime import datetime, timezone
+
 import pytest
 
+import receipts.verify.run as verify_run
+from receipts.models import Branch, Checkpoint, Receipt
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import RepoAtCommit
 from receipts.sandbox.sink import MemorySink
-from receipts.verify.run import BaselineTooSlow, TargetNotFailing, establish_baseline, rerun_one, verify_attempt
+from receipts.verify.run import (
+    BaselineTooSlow,
+    TargetNotFailing,
+    establish_baseline,
+    rerun_one,
+    verify_attempt,
+)
 from tests.fixtures.repo_factory import _git, make_repo
 
 T = "tests/test_calc.py::test_sub"
@@ -219,3 +229,97 @@ async def test_patch_applies_to_a_witness_whose_files_have_crlf_line_endings(tmp
 
     assert result.apply.exit_code == 0, result.apply.stdout_tail + result.apply.stderr_tail
     assert "tests/test_calc.py::test_sub" in result.verification.junit.passed
+
+
+class _ConfirmationExecutor:
+    def __init__(self, *, pytest_raises: bool = False) -> None:
+        self.pytest_raises = pytest_raises
+        self.fork_calls = []
+        self.applied = []
+        self.released = []
+
+    async def fork(self, checkpoint, n, prefix="b"):
+        self.fork_calls.append((checkpoint, n, prefix))
+        return [
+            Branch(
+                id="c1",
+                run_id="run-1",
+                head=checkpoint.id,
+                origin=checkpoint.id,
+            ),
+        ]
+
+    async def apply_patch(self, branch, patch_text):
+        self.applied.append((branch.id, patch_text))
+        before = branch.head
+        branch.head = "c1-applied"
+        return Receipt(
+            receipt_id="c1-1",
+            seq=1,
+            branch_id=branch.id,
+            kind="apply",
+            exit_code=0,
+            patch_sha256="patch-digest",
+            image_before=before,
+            image_after=branch.head,
+            started_at=datetime.now(timezone.utc),
+            duration_s=0.1,
+        )
+
+    async def run_pytest(self, branch, args, timeout_s, kind="command"):
+        if self.pytest_raises:
+            raise RuntimeError("pytest transport failed")
+        before = branch.head
+        branch.head = "c1-verified"
+        return Receipt(
+            receipt_id="c1-2",
+            seq=2,
+            branch_id=branch.id,
+            kind=kind,
+            cmd=f"pytest {args}",
+            exit_code=4,
+            image_before=before,
+            image_after=branch.head,
+            started_at=datetime.now(timezone.utc),
+            duration_s=0.1,
+        )
+
+    async def release(self, branch):
+        self.released.append(branch.id)
+
+
+async def test_confirm_load_failure_replays_same_patch_on_a_c_branch():
+    executor = _ConfirmationExecutor()
+    checkpoint = Checkpoint(id="ckpt-1")
+
+    result = await verify_run.confirm_load_failure(
+        executor,
+        checkpoint,
+        "same filtered patch",
+        "tests",
+        timeout_s=60,
+        attempt=1,
+    )
+
+    assert executor.fork_calls == [(checkpoint, 1, "c")]
+    assert executor.applied == [("c1", "same filtered patch")]
+    assert result.branch.id == "c1"
+    assert result.apply.receipt_id == "c1-1"
+    assert result.verification.receipt_id == "c1-2"
+    assert executor.released == ["c1"]
+
+
+async def test_confirm_load_failure_releases_branch_when_pytest_raises():
+    executor = _ConfirmationExecutor(pytest_raises=True)
+
+    with pytest.raises(RuntimeError, match="pytest transport failed"):
+        await verify_run.confirm_load_failure(
+            executor,
+            Checkpoint(id="ckpt-1"),
+            "same filtered patch",
+            "tests",
+            timeout_s=60,
+            attempt=1,
+        )
+
+    assert executor.released == ["c1"]

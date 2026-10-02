@@ -313,14 +313,22 @@ def _ran_record(
     if not attempts:
         raise RuntimeError("orchestration returned no attempts")
     final_attempt = attempts[-1]
-    infrastructure_reason = None
-    if grading_errors:
+    gate_infrastructure_error = next(
+        (
+            attempt.verdict.error
+            for attempt in result.attempts
+            if attempt.verdict.error_kind == "infrastructure"
+        ),
+        None,
+    )
+    infrastructure_reason = gate_infrastructure_error
+    if infrastructure_reason is None and grading_errors:
         infrastructure_reason = "official grading failed: " + "; ".join(
             grading_errors,
         )
     return InstanceRecord(
         instance_id=instance.instance_id,
-        status="infra_error" if grading_errors else "ran",
+        status="infra_error" if infrastructure_reason is not None else "ran",
         reason=infrastructure_reason,
         run_dir=str(run_dir),
         attempts=attempts,

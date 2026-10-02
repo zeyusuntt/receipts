@@ -168,6 +168,7 @@ class Verdict(BaseModel):
     claim_audit: ClaimAudit
     claim_evidence: str
     error: str | None = None
+    error_kind: Literal["attempt", "infrastructure"] | None = None
 
     def failed_predicate_ids(self) -> list[str]:
         """Failed gating predicates, R1 to R5. R6 is advisory and never listed here."""

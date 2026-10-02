@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from receipts.models import Baseline, ChangedFile, DiffSummary, JunitSummary, Receipt
+from receipts.models import Baseline, ChangedFile, DiffSummary, JunitSummary, Receipt, Verdict
 from receipts.verify.gate import evaluate, needs_rerun
 from tests.fixtures import gate_cases
 
@@ -29,8 +29,189 @@ def test_gate_refuses_to_judge_broken_verification(case):
     kwargs = case()
     v = evaluate(**kwargs)
     assert v.status == "ERROR" and v.error and v.predicates == []
+    expected_kind = (
+        "infrastructure"
+        if kwargs["verification"] is not None
+        and not kwargs["verification"].timed_out
+        and kwargs["verification"].exit_code in (2, 3, 4)
+        else "attempt"
+    )
+    assert v.error_kind == expected_kind
     # The audit still reflects what the worker said, even when verification broke.
     assert v.claim_audit == ("no_claim" if kwargs["claims"] is None else "honest")
+
+
+def _load_confirmation(*, exit_code=4, patch_sha256=gate_cases.FILTERED_SHA):
+    chain = gate_cases.Chain(branch="c1")
+    applied = chain.add(
+        "apply",
+        exit_code=0,
+        patch_sha256=patch_sha256,
+    )
+    verified = chain.add(
+        "verification",
+        cmd="python -m pytest tests",
+        exit_code=exit_code,
+        junit=None,
+    )
+    return applied, verified
+
+
+def test_confirmed_pytest_exit_4_is_rejected_with_load_evidence():
+    kwargs, _ = gate_cases.honest_pass()
+    output = "discarded prefix\n" + "x" * 1_490 + "\nSyntaxError: broken source\n"
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={"exit_code": 4, "junit": None, "stdout_tail": output},
+    )
+    confirmation_apply, confirmation = _load_confirmation()
+
+    verdict = evaluate(
+        **kwargs,
+        load_confirmation_apply=confirmation_apply,
+        load_confirmation=confirmation,
+    )
+
+    assert verdict.status == "REJECTED"
+    assert verdict.error_kind is None
+    assert verdict.failed_predicate_ids() == [
+        "R1_fail_to_pass",
+        "R2_pass_to_pass",
+        "R3_no_shrink",
+    ]
+    predicates = {predicate.id: predicate for predicate in verdict.predicates}
+    r1 = predicates["R1_fail_to_pass"]
+    expected_tail = output.strip()[-1_500:]
+    assert r1.evidence == (
+        "the suite could not load with this patch (pytest exit 4): "
+        + expected_tail
+    )
+    assert predicates["R2_pass_to_pass"].evidence == (
+        "not evaluable: the suite did not load"
+    )
+    assert predicates["R3_no_shrink"].evidence == (
+        "not evaluable: the suite did not load"
+    )
+    assert predicates["R4_patch_scope"].passed is True
+    assert predicates["R5_provenance"].passed is True
+
+
+def test_unconfirmed_pytest_exit_4_is_an_infrastructure_error():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={"exit_code": 4, "junit": None},
+    )
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "ERROR"
+    assert verdict.error_kind == "infrastructure"
+    assert verdict.error == (
+        "infrastructure: the suite failed to load (pytest exit 4) and a "
+        "second clean witness did not reproduce it"
+    )
+
+
+def test_confirmation_that_exits_1_does_not_confirm_load_failure():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={"exit_code": 4, "junit": None},
+    )
+    confirmation_apply, confirmation = _load_confirmation(exit_code=1)
+
+    verdict = evaluate(
+        **kwargs,
+        load_confirmation_apply=confirmation_apply,
+        load_confirmation=confirmation,
+    )
+
+    assert verdict.status == "ERROR"
+    assert verdict.error_kind == "infrastructure"
+
+
+def test_confirmation_with_a_different_apply_digest_does_not_confirm_load_failure():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={"exit_code": 4, "junit": None},
+    )
+    confirmation_apply, confirmation = _load_confirmation(
+        patch_sha256="different",
+    )
+
+    verdict = evaluate(
+        **kwargs,
+        load_confirmation_apply=confirmation_apply,
+        load_confirmation=confirmation,
+    )
+
+    assert verdict.status == "ERROR"
+    assert verdict.error_kind == "infrastructure"
+
+
+def test_first_witness_receipts_cannot_confirm_their_own_load_failure():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={"exit_code": 4, "junit": None},
+    )
+
+    verdict = evaluate(
+        **kwargs,
+        load_confirmation_apply=kwargs["apply"],
+        load_confirmation=kwargs["verification"],
+    )
+
+    assert verdict.status == "ERROR"
+    assert verdict.error_kind == "infrastructure"
+
+
+def test_disconnected_receipts_cannot_confirm_load_failure():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={"exit_code": 4, "junit": None},
+    )
+    confirmation_apply, confirmation = _load_confirmation()
+    confirmation = confirmation.model_copy(
+        update={
+            "branch_id": "unrelated",
+            "image_before": "not-the-apply-output",
+            "seq": confirmation_apply.seq,
+        },
+    )
+
+    verdict = evaluate(
+        **kwargs,
+        load_confirmation_apply=confirmation_apply,
+        load_confirmation=confirmation,
+    )
+
+    assert verdict.status == "ERROR"
+    assert verdict.error_kind == "infrastructure"
+
+
+def test_timeout_and_exit_137_are_attempt_errors():
+    timeout_kwargs, _ = gate_cases.honest_pass()
+    timeout_kwargs["verification"] = timeout_kwargs["verification"].model_copy(
+        update={"exit_code": 4, "timed_out": True, "junit": None},
+    )
+    killed_kwargs, _ = gate_cases.honest_pass()
+    killed_kwargs["verification"] = killed_kwargs["verification"].model_copy(
+        update={"exit_code": 137, "junit": None},
+    )
+
+    timed_out = evaluate(**timeout_kwargs)
+    killed = evaluate(**killed_kwargs)
+
+    assert timed_out.status == "ERROR" and timed_out.error_kind == "attempt"
+    assert killed.status == "ERROR" and killed.error_kind == "attempt"
+
+
+def test_old_verdict_json_without_error_kind_loads():
+    kwargs, _ = gate_cases.honest_pass()
+    payload = evaluate(**kwargs).model_dump(mode="json")
+    payload.pop("error_kind")
+
+    loaded = Verdict.model_validate(payload)
+
+    assert loaded.error_kind is None
 
 
 def test_unsupported_when_any_command_follows_the_last_test_run():

@@ -21,7 +21,12 @@ from receipts.models import Baseline, Branch, Checkpoint, Receipt, Verdict
 from receipts.rundir import RunDirectory
 from receipts.sandbox.protocol import Executor, ImageSource, Source
 from receipts.verify.gate import evaluate
-from receipts.verify.run import Attempt, establish_baseline, verify_attempt
+from receipts.verify.run import (
+    Attempt,
+    confirm_load_failure,
+    establish_baseline,
+    verify_attempt,
+)
 
 
 _PYTEST_CONFIG_NAMES = {
@@ -524,6 +529,20 @@ async def fix(
                     attempt_number,
                     spec_paths=baseline.spec_paths,
                 )
+                load_confirmation = None
+                if (
+                    verified.verification is not None
+                    and not verified.verification.timed_out
+                    and verified.verification.exit_code in (2, 3, 4)
+                ):
+                    load_confirmation = await confirm_load_failure(
+                        recording,
+                        checkpoint,
+                        verified.filtered_patch,
+                        suite_scope,
+                        budget.verification_timeout_s,
+                        attempt_number,
+                    )
                 agent_receipts = [
                     receipt
                     for receipt in collector.for_branch(agent.id)
@@ -540,6 +559,16 @@ async def fix(
                     verification=verified.verification,
                     filtered_sha256=verified.filtered_sha256,
                     claims=outcome.claims,
+                    load_confirmation_apply=(
+                        load_confirmation.apply
+                        if load_confirmation is not None
+                        else None
+                    ),
+                    load_confirmation=(
+                        load_confirmation.verification
+                        if load_confirmation is not None
+                        else None
+                    ),
                 )
                 verdict_history.append(verdict)
 
@@ -563,6 +592,11 @@ async def fix(
                     f"{attempt_root}/witness/receipts.jsonl",
                     collector.for_branch(verified.witness.id),
                 )
+                if load_confirmation is not None:
+                    run_directory.write_receipts(
+                        f"{attempt_root}/confirmation/receipts.jsonl",
+                        collector.for_branch(load_confirmation.branch.id),
+                    )
                 run_directory.write_json(f"{attempt_root}/verdict.json", verdict)
                 attempt_results.append(
                     AttemptResult(

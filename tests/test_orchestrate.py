@@ -12,7 +12,7 @@ from receipts.receipt_text import render
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import ImageSource, RepoAtCommit
 from receipts.sandbox.sink import RunSink
-from tests.fixtures.repo_factory import CALC, TEST_CALC, make_repo
+from tests.fixtures.repo_factory import CALC, TEST_CALC, _git, make_repo
 
 
 TARGET = "tests/test_calc.py::test_sub"
@@ -135,9 +135,14 @@ async def _run(
     image_workdir: str | None = None,
     released: list[str] | None = None,
     spec_paths: list[str] | None = None,
+    root_conftest: str | None = None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
+    if root_conftest is not None:
+        (repo / "conftest.py").write_text(root_conftest, encoding="utf-8")
+        _git(repo, "add", "conftest.py")
+        _git(repo, "commit", "-q", "-m", "add root conftest")
     run_dir = tmp_path / "run"
     local = LocalExecutor(
         tmp_path / "executor",
@@ -575,3 +580,100 @@ async def test_checkpoint_tampering_does_not_release_a_synthetic_witness(tmp_pat
     assert released == ["base", "agent1"]
     assert (run_dir / "attempts" / "1" / "verdict.json").is_file()
     assert (run_dir / "result.json").is_file()
+
+
+async def test_reproduced_load_failure_is_rejected_and_appealed(tmp_path: Path):
+    broken_calc = '''def add(a, b):
+    return a + b
+
+
+def sub(a, b):
+    return (
+'''
+    model = _model(
+        [
+            _turn(
+                _call(
+                    "write_file",
+                    {"path": "calc/__init__.py", "content": broken_calc},
+                    "break-source",
+                ),
+            ),
+            _finish(
+                "finish-first",
+                summary="Changed subtraction.",
+                changed=["calc/__init__.py"],
+                green=False,
+            ),
+            _turn(
+                _call(
+                    "write_file",
+                    {"path": "calc/__init__.py", "content": FIXED_CALC},
+                    "repair-source",
+                ),
+            ),
+            _turn(
+                _call(
+                    "run_command",
+                    {"command": "python -m pytest -q"},
+                    "run-suite",
+                ),
+            ),
+            _finish(
+                "finish-second",
+                summary="Corrected the syntax and subtraction.",
+                changed=["calc/__init__.py"],
+                green=True,
+            ),
+        ],
+    )
+
+    result, run_dir, _, model = await _run(
+        tmp_path,
+        model,
+        root_conftest="import calc\n",
+    )
+
+    assert [verdict.status for verdict in result.verdict_history] == [
+        "REJECTED",
+        "PASS",
+    ]
+    first = result.verdict_history[0]
+    r1 = next(
+        predicate
+        for predicate in first.predicates
+        if predicate.id == "R1_fail_to_pass"
+    )
+    assert r1.evidence.startswith(
+        "the suite could not load with this patch (pytest exit 4): ",
+    )
+    confirmation_path = (
+        run_dir / "attempts" / "1" / "confirmation" / "receipts.jsonl"
+    )
+    confirmation = [
+        json.loads(line)
+        for line in confirmation_path.read_text(encoding="utf-8").splitlines()
+    ]
+    assert [receipt["kind"] for receipt in confirmation] == [
+        "apply",
+        "verification",
+    ]
+    assert {receipt["branch_id"] for receipt in confirmation} == {"c1"}
+
+    appeal_request = next(
+        request
+        for request in model.requests
+        if request["kind"] == "chat"
+        and any(
+            message.get("role") == "user"
+            and "the suite could not load with this patch" in message.get(
+                "content",
+                "",
+            )
+            for message in request["messages"]
+        )
+    )
+    assert any(
+        r1.evidence in (message.get("content") or "")
+        for message in appeal_request["messages"]
+    )

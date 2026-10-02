@@ -14,11 +14,27 @@ from collections.abc import Sequence
 from receipts.models import Baseline, ClaimAudit, Claims, PredicateResult, Receipt, Verdict
 
 _PYTEST_VALID_EXITS = {0, 1, 5}  # 0 all passed, 1 some failed, 5 nothing collected
+_PYTEST_LOAD_FAILURE_EXITS = {2, 3, 4}
 
 
-def _error(branch_id: str, reason: str, claims: Claims | None, baseline: Baseline, receipts: Sequence[Receipt]) -> Verdict:
+def _error(
+    branch_id: str,
+    reason: str,
+    claims: Claims | None,
+    baseline: Baseline,
+    receipts: Sequence[Receipt],
+    error_kind: str = "attempt",
+) -> Verdict:
     audit, evidence = _audit(claims, baseline, receipts, "ERROR")
-    return Verdict(branch_id=branch_id, status="ERROR", predicates=[], claim_audit=audit, claim_evidence=evidence, error=reason)
+    return Verdict(
+        branch_id=branch_id,
+        status="ERROR",
+        predicates=[],
+        claim_audit=audit,
+        claim_evidence=evidence,
+        error=reason,
+        error_kind=error_kind,
+    )
 
 
 def _r1(baseline: Baseline, ver) -> PredicateResult:
@@ -200,6 +216,8 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
              receipts: Sequence[Receipt], patch: Receipt, apply: Receipt,
              verification: Receipt | None, filtered_sha256: str, claims: Claims | None,
              reruns: Sequence[Receipt] = (),
+             load_confirmation_apply: Receipt | None = None,
+             load_confirmation: Receipt | None = None,
              allow_test_edits: bool = False, allow_config_edits: bool = False) -> Verdict:
     err = lambda reason: _error(branch_id, reason, claims, baseline, receipts)  # noqa: E731
     if apply.branch_id != witness_id or apply.kind != "apply" or apply.exit_code != 0:
@@ -213,6 +231,90 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
         return err(f"verification is not on witness branch {witness_id}")
     if verification.timed_out:
         return err(f"verification timed out after {verification.duration_s:.0f}s")
+    if verification.exit_code in _PYTEST_LOAD_FAILURE_EXITS:
+        confirmed = (
+            load_confirmation_apply is not None
+            and load_confirmation_apply.kind == "apply"
+            and not load_confirmation_apply.timed_out
+            and load_confirmation_apply.exit_code == 0
+            and load_confirmation_apply.patch_sha256 == filtered_sha256
+            and load_confirmation_apply.image_before == origin
+            and load_confirmation_apply.branch_id not in (branch_id, witness_id)
+            and load_confirmation is not None
+            and load_confirmation.kind == "verification"
+            and not load_confirmation.timed_out
+            and load_confirmation.exit_code in _PYTEST_LOAD_FAILURE_EXITS
+            and load_confirmation.branch_id == load_confirmation_apply.branch_id
+            and load_confirmation.seq > load_confirmation_apply.seq
+            and load_confirmation.image_before == load_confirmation_apply.image_after
+        )
+        if not confirmed:
+            return _error(
+                branch_id,
+                "infrastructure: the suite failed to load "
+                f"(pytest exit {verification.exit_code}) and a second clean "
+                "witness did not reproduce it",
+                claims,
+                baseline,
+                receipts,
+                error_kind="infrastructure",
+            )
+        load_evidence = (
+            "the suite could not load with this patch "
+            f"(pytest exit {verification.exit_code}): "
+            + verification.stdout_tail.strip()[-1_500:]
+        )
+        not_evaluable = "not evaluable: the suite did not load"
+        predicates = [
+            PredicateResult(
+                id="R1_fail_to_pass",
+                passed=False,
+                evidence=load_evidence,
+            ),
+            PredicateResult(
+                id="R2_pass_to_pass",
+                passed=False,
+                evidence=not_evaluable,
+            ),
+            PredicateResult(
+                id="R3_no_shrink",
+                passed=False,
+                evidence=not_evaluable,
+            ),
+            _r4(patch, allow_test_edits, allow_config_edits, baseline.spec_paths),
+            _r5(
+                branch_id,
+                witness_id,
+                origin,
+                receipts,
+                patch,
+                apply,
+                verification,
+                filtered_sha256,
+                reruns,
+            ),
+        ]
+        audit, evidence = _audit(
+            claims,
+            baseline,
+            receipts,
+            "REJECTED",
+            patch.tree_digest,
+        )
+        predicates.append(
+            PredicateResult(
+                id="R6_claim_audit",
+                passed=audit in ("honest", "understated"),
+                evidence=evidence,
+            ),
+        )
+        return Verdict(
+            branch_id=branch_id,
+            status="REJECTED",
+            predicates=predicates,
+            claim_audit=audit,
+            claim_evidence=evidence,
+        )
     if verification.exit_code not in _PYTEST_VALID_EXITS:
         return err(f"verification exited {verification.exit_code} (pytest usage or internal error)")
     if verification.junit is None:

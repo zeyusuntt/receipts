@@ -7,17 +7,18 @@ import json
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from receipts.agent.worker import WorkerBudget
 from receipts.llm import AssistantTurn, FakeModel, ToolCall
-from receipts.models import Branch, JunitSummary, Receipt
+from receipts.models import Branch, JunitSummary, Receipt, Verdict
 from receipts.orchestrate import RunBudgets
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import ImageSource, RepoAtCommit
 from receipts.sandbox.sink import MemorySink
-from receipts.swerebench import Instance
+from receipts.swerebench import Instance, OfficialJudgement
 from tests.fixtures.repo_factory import make_repo
 
 
@@ -695,6 +696,127 @@ async def test_run_pilot_retries_infrastructure_error_then_keeps_archive(
         ),
     )
     assert persisted == final
+
+
+async def test_infrastructure_gate_error_is_recorded_and_retried(
+    tmp_path: Path,
+    monkeypatch,
+):
+    runner = _runner_module()
+    pilot_dir = tmp_path / "pilot"
+    instance = _instance("fixture__calc-gate-infra")
+    run_dir = pilot_dir / instance.instance_id / "runs" / "run-1"
+    filtered_path = run_dir / "attempts" / "1" / "filtered.diff"
+    filtered_path.parent.mkdir(parents=True)
+    filtered_path.write_text("", encoding="utf-8")
+    error = (
+        "infrastructure: the suite failed to load (pytest exit 4) and a "
+        "second clean witness did not reproduce it"
+    )
+    verdict = Verdict(
+        branch_id="agent1",
+        status="ERROR",
+        predicates=[],
+        claim_audit="no_claim",
+        claim_evidence="branch ended without a finish call",
+        error=error,
+        error_kind="infrastructure",
+    )
+    attempt = SimpleNamespace(
+        number=1,
+        worker=SimpleNamespace(
+            end="finished",
+            claims=None,
+            receipt_ids=[],
+        ),
+        verdict=verdict,
+        filtered_patch_path="attempts/1/filtered.diff",
+        filtered_sha256=hashlib.sha256(b"").hexdigest(),
+        witness_apply_sha256=hashlib.sha256(b"").hexdigest(),
+    )
+    result = SimpleNamespace(
+        attempts=[attempt],
+        final_verdict=verdict,
+        verified_fix=False,
+        cost={},
+    )
+    official = runner.OfficialRecord(
+        attempt=1,
+        branch_id="official1",
+        apply_exit_code=0,
+        test_exit_code=4,
+        timed_out=False,
+        log_path="official/attempt-1.log",
+        log_sha256=hashlib.sha256(b"").hexdigest(),
+        judgement=OfficialJudgement(
+            resolved=False,
+            from_fail_to_pass=[],
+            failed_from_fail_to_pass=[TARGET],
+            failed_from_pass_to_pass=[],
+        ),
+    )
+
+    first = runner._ran_record(
+        instance,
+        run_dir,
+        result,
+        [official],
+        wall_time_s=1.0,
+        sandbox_usage=[],
+    )
+
+    assert first.status == "infra_error"
+    assert first.reason == error
+    _persist_record(pilot_dir, first)
+    calls = 0
+
+    async def fake_run_instance(
+        make_executor,
+        model,
+        current_instance,
+        current_pilot_dir,
+        budgets,
+    ):
+        nonlocal calls
+        del make_executor, model, budgets
+        calls += 1
+        recovered = _pilot_record(
+            runner,
+            current_instance.instance_id,
+            "ran",
+            current_pilot_dir
+            / current_instance.instance_id
+            / "runs"
+            / "run-2",
+        )
+        _persist_record(current_pilot_dir, recovered)
+        return recovered
+
+    monkeypatch.setattr(runner, "run_instance", fake_run_instance)
+
+    records = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"unexpected executor construction: {run_id}"),
+        FakeModel(),
+        [instance],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    assert calls == 1
+    assert records[0].status == "ran"
+    assert [
+        prior.reason for prior in records[0].prior_infrastructure_errors
+    ] == [error]
+    archived = runner.InstanceRecord.model_validate_json(
+        (
+            pilot_dir
+            / instance.instance_id
+            / "record.infra-1.json"
+        ).read_text(encoding="utf-8"),
+    )
+    assert archived.status == "infra_error"
+    assert archived.reason == error
 
 
 async def test_run_pilot_recovers_archived_history_without_rerunning_terminal_record(
