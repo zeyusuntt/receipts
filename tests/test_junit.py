@@ -3,6 +3,7 @@ from pathlib import Path
 from receipts.junit import node_id, parse_junit
 
 DATA = Path(__file__).parent / "data"
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_node_id_rebuilds_pytest_ids():
@@ -26,6 +27,15 @@ def test_parse_mixed_file():
         "tests/test_parse.py::test_param[1-2]",
         "tests/test_parse.py::test_param[a b]",
     ]
+
+
+def test_parse_junit_marks_parent_failed_when_a_subtest_fails():
+    parent = "test_subtests.py::test_parent_with_subtests"
+
+    summary = parse_junit(FIXTURES / "subtests_junit.xml")
+
+    assert summary.failed == [parent]
+    assert parent not in summary.passed
 
 
 def test_parse_empty_file_is_zero_collected_not_none():

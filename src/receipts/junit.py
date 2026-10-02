@@ -3,6 +3,10 @@
 pytest must be run with `-o junit_family=xunit1` so each testcase carries a
 `file` attribute; the module part of `classname` is derived from it and the
 remaining dotted components are the class chain.
+
+A testcase with any failure or error child counts as a failed outcome, even if
+another reporting surface describes its parent as passed. Failures and errors
+remain separate in the returned summary.
 """
 
 from __future__ import annotations

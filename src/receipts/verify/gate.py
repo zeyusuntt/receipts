@@ -47,6 +47,12 @@ def _valid_reruns(witness_id: str, verification: Receipt, reruns: Sequence[Recei
 
 
 def _r2(baseline: Baseline, ver, reruns: Sequence[Receipt]) -> PredicateResult:
+    """R2 reads the JUnit report to reject regressions in protected tests.
+
+    A failing subtest makes its protected parent fail R2 even when the text
+    log prints the parent as PASSED and the upstream parser ignores SUBFAILED
+    lines.
+    """
     cleared = {n for r in reruns for n in r.junit.passed}
     regressed = [n for n in baseline.protected if ver.outcome(n) != "passed" and n not in baseline.unstable and n not in cleared]
     if not regressed:

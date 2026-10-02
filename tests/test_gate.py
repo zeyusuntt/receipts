@@ -1,10 +1,15 @@
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
-from receipts.models import Baseline, ChangedFile, DiffSummary, Receipt
+from receipts.models import Baseline, ChangedFile, DiffSummary, JunitSummary, Receipt
 from receipts.verify.gate import evaluate, needs_rerun
 from tests.fixtures import gate_cases
+
+
+QISKIT_FIXTURES = Path(__file__).parent / "fixtures" / "qiskit_ibm_runtime_452"
 
 
 @pytest.mark.parametrize("case", gate_cases.CASES, ids=[c.__name__ for c in gate_cases.CASES])
@@ -135,6 +140,31 @@ def test_evidence_names_the_node_id():
     r1 = next(p for p in v.predicates if p.id == "R1_fail_to_pass")
     assert "tests/test_calc.py::test_sub" in r1.evidence
     assert "claimed" in v.claim_evidence and "failed" in v.claim_evidence
+
+
+def test_r2_rejects_real_qiskit_subtest_regression():
+    baseline_fields = json.loads(
+        (QISKIT_FIXTURES / "baseline.json").read_text(encoding="utf-8"),
+    )
+    verification_junit = JunitSummary.model_validate_json(
+        (QISKIT_FIXTURES / "verification_junit.json").read_text(encoding="utf-8"),
+    )
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["baseline"] = kwargs["baseline"].model_copy(update=baseline_fields)
+    kwargs["verification"] = kwargs["verification"].model_copy(
+        update={"exit_code": 1, "junit": verification_junit},
+    )
+
+    verdict = evaluate(**kwargs)
+
+    r2 = next(item for item in verdict.predicates if item.id == "R2_pass_to_pass")
+    affected = (
+        "test/unit/test_account.py::TestEnableAccount::"
+        "test_enable_account_by_env_pref"
+    )
+    assert verdict.failed_predicate_ids() == ["R2_pass_to_pass"]
+    assert not r2.passed
+    assert affected in r2.evidence
 
 
 def test_r6_row_mirrors_claim_audit():

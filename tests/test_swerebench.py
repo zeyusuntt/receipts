@@ -16,6 +16,7 @@ from receipts.swerebench import (
 
 
 DATA = Path(__file__).parent / "data" / "swerebench_docformatter_254.json"
+QISKIT_FIXTURES = Path(__file__).parent / "fixtures" / "qiskit_ibm_runtime_452"
 
 
 def _docformatter() -> Instance:
@@ -81,6 +82,20 @@ ERROR tests/test_api.py::test_error - RuntimeError: setup failed
         "tests/test_api.py::test_skipped": "SKIPPED",
         "tests/test_api.py::test_error": "ERROR",
     }
+
+
+def test_parse_log_pytest_ignores_real_subfailed_lines():
+    node_id = (
+        "test/unit/test_account.py::TestEnableAccount::"
+        "test_enable_account_by_env_pref"
+    )
+    log = (QISKIT_FIXTURES / "official_attempt_1_excerpt.log").read_text(
+        encoding="utf-8",
+    )
+
+    outcomes = parse_log_pytest(log)
+
+    assert outcomes[node_id] == "PASSED"
 
 
 def test_docformatter_row_converts_to_expected_task():
