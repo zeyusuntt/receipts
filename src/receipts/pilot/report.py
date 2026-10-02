@@ -78,6 +78,8 @@ class HarnessReport(BaseModel):
     not_recorded: int
     unreadable_logs: int
     unreadable_rows: int = 0
+    context_guard_turns: int = 0
+    context_guard_replaced_messages: int = 0
 
 
 class ConfigurationA(BaseModel):
@@ -346,6 +348,8 @@ def _harness_report(records: Sequence[InstanceRecord]) -> HarnessReport:
     not_recorded = 0
     unreadable_logs = 0
     unreadable_rows = 0
+    context_guard_turns = 0
+    context_guard_replaced_messages = 0
 
     for record in records:
         path = _run_directory(record.run_dir) / "agent" / "worker.jsonl"
@@ -365,6 +369,12 @@ def _harness_report(records: Sequence[InstanceRecord]) -> HarnessReport:
             if not isinstance(row, dict):
                 unreadable_rows += 1
                 continue
+            context_guard = row.get("context_guard")
+            if isinstance(context_guard, dict):
+                replaced = context_guard.get("replaced_messages")
+                if type(replaced) is int and replaced >= 0:
+                    context_guard_turns += 1
+                    context_guard_replaced_messages += replaced
             if "results" not in row:
                 not_recorded += 1
                 continue
@@ -394,6 +404,8 @@ def _harness_report(records: Sequence[InstanceRecord]) -> HarnessReport:
         not_recorded=not_recorded,
         unreadable_logs=unreadable_logs,
         unreadable_rows=unreadable_rows,
+        context_guard_turns=context_guard_turns,
+        context_guard_replaced_messages=context_guard_replaced_messages,
     )
 
 
@@ -770,6 +782,14 @@ def render(report: Report) -> str:
             f"Total tool calls: {harness.total_tool_calls}.",
             "",
             f"Edit-failure rate (edit calls that did not apply, over all edit calls): {edit_rate_text}.",
+            "",
+            (
+                f"Context guard: {harness.context_guard_turns} "
+                f"{'turn' if harness.context_guard_turns == 1 else 'turns'}; "
+                f"{harness.context_guard_replaced_messages} "
+                f"{'message' if harness.context_guard_replaced_messages == 1 else 'messages'} "
+                "replaced."
+            ),
             "",
             (
                 f"{harness.not_recorded} "

@@ -42,6 +42,9 @@ _READ_MAX_BYTES = 12_000
 _READ_FETCH_MAX_BYTES = 2_000_000
 _COMMAND_OUTPUT_CHARS = 6_000
 _COMMAND_TIMEOUT_S = 300
+_CONTEXT_GUARD_REPLACEMENT = (
+    "[earlier tool output removed to fit the context budget]"
+)
 _TOOL_NAMES = ("read_file", "edit_file", "write_file", "run_command", "finish")
 ResultClass = Literal[
     "ok",
@@ -203,6 +206,7 @@ class WorkerBudget(BaseModel):
     max_turns: int = Field(default=25, gt=0)
     max_wall_seconds: float = Field(default=900, gt=0)
     max_completion_tokens: int = Field(gt=0)
+    prompt_token_budget: int = Field(default=160_000, gt=0)
 
 
 class WorkerOutcome(BaseModel):
@@ -470,6 +474,53 @@ def _tool_message(call_id: str, content: str) -> dict[str, str]:
     }
 
 
+def _estimated_prompt_tokens(messages: list[dict[str, Any]]) -> int:
+    total_characters = 0
+    for message in messages:
+        content = message.get("content")
+        if isinstance(content, str):
+            total_characters += len(content)
+        if "tool_calls" in message:
+            total_characters += len(
+                json.dumps(message["tool_calls"], ensure_ascii=True),
+            )
+    return (total_characters + 2) // 3
+
+
+def _apply_context_guard(
+    messages: list[dict[str, Any]],
+    prompt_token_budget: int,
+) -> dict[str, int] | None:
+    estimated_before = _estimated_prompt_tokens(messages)
+    if estimated_before <= prompt_token_budget:
+        return None
+
+    replaced_messages = 0
+    eligible_end = max(2, len(messages) - 6)
+    for index in range(2, eligible_end):
+        if _estimated_prompt_tokens(messages) <= prompt_token_budget:
+            break
+        message = messages[index]
+        content = message.get("content")
+        if (
+            message.get("role") != "tool"
+            or not isinstance(content, str)
+            or content == _CONTEXT_GUARD_REPLACEMENT
+            or len(content) <= len(_CONTEXT_GUARD_REPLACEMENT)
+        ):
+            continue
+        message["content"] = _CONTEXT_GUARD_REPLACEMENT
+        replaced_messages += 1
+
+    if replaced_messages == 0:
+        return None
+    return {
+        "replaced_messages": replaced_messages,
+        "estimated_tokens_before": estimated_before,
+        "estimated_tokens_after": _estimated_prompt_tokens(messages),
+    }
+
+
 def _logged_result(
     call: ToolCall,
     *,
@@ -663,6 +714,7 @@ class Worker:
         self._receipt_ids: list[str] = []
         self._successful_write = False
         self._premature_finish_refused = False
+        self._request_context_guard: dict[str, int] | None = None
 
     async def attempt(self, budget: WorkerBudget) -> WorkerOutcome:
         return await self._run(budget)
@@ -712,6 +764,8 @@ class Worker:
             "usage": turn.usage.model_dump(mode="json"),
             "end_reason": end_reason,
         }
+        if self._request_context_guard is not None:
+            row["context_guard"] = self._request_context_guard
         self.writer.write(json.dumps(row, ensure_ascii=True, separators=(",", ":")) + "\n")
         self.writer.flush()
 
@@ -758,6 +812,10 @@ class Worker:
                     turns=turns,
                 )
 
+            self._request_context_guard = _apply_context_guard(
+                self.messages,
+                budget.prompt_token_budget,
+            )
             request_message_count = len(self.messages)
             remaining = budget.max_wall_seconds - elapsed
             try:

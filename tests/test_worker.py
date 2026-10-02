@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import importlib
 import importlib.util
 import io
 import json
+import math
 import re
 import shlex
 import subprocess
@@ -1547,6 +1549,220 @@ async def test_appeal_continues_conversation_and_preserves_evidence(tmp_path: Pa
         ),
     }
     assert appealed.receipt_ids == ["agent1-1"]
+
+
+def _estimated_prompt_tokens(messages: list[dict]) -> int:
+    total_characters = 0
+    for message in messages:
+        content = message.get("content")
+        if isinstance(content, str):
+            total_characters += len(content)
+        if "tool_calls" in message:
+            total_characters += len(json.dumps(message["tool_calls"]))
+    return math.ceil(total_characters / 3)
+
+
+def _long_guard_conversation() -> list[dict]:
+    messages = [
+        {"role": "system", "content": "system stays " + "s" * 30},
+        {"role": "user", "content": "first user stays " + "u" * 30},
+    ]
+    for number, character in enumerate(("A", "B", "C"), start=1):
+        call_id = f"old-{number}"
+        messages.extend(
+            [
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": call_id,
+                            "type": "function",
+                            "function": {
+                                "name": "read_file",
+                                "arguments": json.dumps({"path": f"old-{number}.txt"}),
+                            },
+                        },
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": call_id,
+                    "content": character * 300,
+                },
+            ],
+        )
+    messages.extend(
+        [
+            {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": "protected-tool",
+                        "type": "function",
+                        "function": {
+                            "name": "read_file",
+                            "arguments": json.dumps({"path": "protected.txt"}),
+                        },
+                    },
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "protected-tool",
+                "content": "P" * 300,
+            },
+            {"role": "assistant", "content": "recent assistant"},
+            {"role": "tool", "tool_call_id": "recent-tool", "content": "R" * 300},
+            {"role": "assistant", "content": "most recent assistant"},
+            {"role": "user", "content": "most recent user"},
+        ],
+    )
+    return messages
+
+
+async def test_context_guard_replaces_oldest_eligible_tool_outputs_deterministically(
+    tmp_path: Path,
+):
+    removed = "[earlier tool output removed to fit the context budget]"
+    original = _long_guard_conversation()
+    expected = copy.deepcopy(original)
+    expected[3]["content"] = removed
+    expected[5]["content"] = removed
+    prompt_budget = _estimated_prompt_tokens(expected)
+    observed = []
+
+    for name in ("first", "second"):
+        worker, instance, model, _, _, _, writer = await _fixture_worker(
+            tmp_path / name,
+            [_turn(content="no tool call")],
+        )
+        instance.messages = copy.deepcopy(original)
+
+        await instance.attempt(
+            worker.WorkerBudget(
+                max_turns=1,
+                max_completion_tokens=100,
+                prompt_token_budget=prompt_budget,
+            ),
+        )
+
+        request = model.requests[0]["messages"]
+        row = json.loads(writer.getvalue())
+        observed.append((request, row["context_guard"]))
+        assert request == expected
+        assert request[:2] == original[:2]
+        assert request[-6:] == original[-6:]
+        assert [message["role"] for message in request] == [
+            message["role"] for message in original
+        ]
+        assert [message.get("tool_call_id") for message in request] == [
+            message.get("tool_call_id") for message in original
+        ]
+        assert [message.get("tool_calls") for message in request] == [
+            message.get("tool_calls") for message in original
+        ]
+        assert request[7]["content"] == original[7]["content"]
+        assert row["context_guard"] == {
+            "replaced_messages": 2,
+            "estimated_tokens_before": _estimated_prompt_tokens(original),
+            "estimated_tokens_after": _estimated_prompt_tokens(expected),
+        }
+
+    assert observed[0] == observed[1]
+
+
+async def test_context_guard_leaves_under_budget_request_and_log_unchanged(
+    tmp_path: Path,
+):
+    worker, instance, model, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(content="no tool call")],
+    )
+    original = copy.deepcopy(instance.messages)
+
+    await instance.attempt(
+        worker.WorkerBudget(
+            max_turns=1,
+            max_completion_tokens=100,
+            prompt_token_budget=160_000,
+        ),
+    )
+
+    assert model.requests[0]["messages"] == original
+    assert "context_guard" not in json.loads(writer.getvalue())
+
+
+async def test_context_guard_runs_before_appeal_model_calls(tmp_path: Path):
+    removed = "[earlier tool output removed to fit the context budget]"
+    worker, instance, model, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [
+            _turn(content="initial response without a tool"),
+            _turn(content="appeal response without a tool"),
+        ],
+    )
+    instance.messages = [
+        {"role": "system", "content": "system"},
+        {"role": "user", "content": "first user"},
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": "appeal-old",
+                    "type": "function",
+                    "function": {
+                        "name": "read_file",
+                        "arguments": json.dumps({"path": "large.txt"}),
+                    },
+                },
+            ],
+        },
+        {"role": "tool", "tool_call_id": "appeal-old", "content": "X" * 900},
+        {"role": "assistant", "content": "recent one"},
+        {"role": "tool", "tool_call_id": "recent", "content": "short"},
+        {"role": "assistant", "content": "recent two"},
+        {"role": "user", "content": "recent three"},
+    ]
+
+    await instance.attempt(
+        worker.WorkerBudget(
+            max_turns=1,
+            max_completion_tokens=100,
+            prompt_token_budget=10_000,
+        ),
+    )
+    evidence = "The target test still fails."
+    projected = copy.deepcopy(instance.messages)
+    projected.append(
+        {
+            "role": "user",
+            "content": evidence + "\n\n" + worker.APPEAL_INSTRUCTION,
+        },
+    )
+    expected = copy.deepcopy(projected)
+    expected[3]["content"] = removed
+
+    await instance.appeal(
+        evidence,
+        worker.WorkerBudget(
+            max_turns=1,
+            max_completion_tokens=100,
+            prompt_token_budget=_estimated_prompt_tokens(expected),
+        ),
+    )
+
+    rows = [json.loads(line) for line in writer.getvalue().splitlines()]
+    assert model.requests[0]["messages"][3]["content"] == "X" * 900
+    assert model.requests[1]["messages"] == expected
+    assert "context_guard" not in rows[0]
+    assert rows[1]["context_guard"] == {
+        "replaced_messages": 1,
+        "estimated_tokens_before": _estimated_prompt_tokens(projected),
+        "estimated_tokens_after": _estimated_prompt_tokens(expected),
+    }
 
 
 async def test_model_failure_returns_model_error(tmp_path: Path):

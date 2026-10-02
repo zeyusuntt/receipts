@@ -482,6 +482,11 @@ def test_harness_section_counts_results_aliases_edit_failures_and_legacy_rows(
     invalid_log.parent.mkdir(parents=True)
     absolute_rows = [
         {
+            "context_guard": {
+                "replaced_messages": 2,
+                "estimated_tokens_before": 170_000,
+                "estimated_tokens_after": 150_000,
+            },
             "results": [
                 {
                     "id": "edit-1",
@@ -513,6 +518,11 @@ def test_harness_section_counts_results_aliases_edit_failures_and_legacy_rows(
     ]
     relative_rows = [
         {
+            "context_guard": {
+                "replaced_messages": 3,
+                "estimated_tokens_before": 180_000,
+                "estimated_tokens_after": 140_000,
+            },
             "results": [
                 {
                     "id": "edit-2",
@@ -566,6 +576,8 @@ def test_harness_section_counts_results_aliases_edit_failures_and_legacy_rows(
     assert report.harness.aliases == {"execute": 1, "str_replace_editor": 1}
     assert report.harness.edit_failure_rate.numerator == 2
     assert report.harness.edit_failure_rate.denominator == 3
+    assert report.harness.context_guard_turns == 2
+    assert report.harness.context_guard_replaced_messages == 5
     assert report.harness.not_recorded == 1
     assert report.harness.unreadable_logs == 1
     assert report.harness.unreadable_rows == 1
@@ -578,6 +590,7 @@ def test_harness_section_counts_results_aliases_edit_failures_and_legacy_rows(
     assert "execute | 1" in harness
     assert "str_replace_editor | 1" in harness
     assert "Edit-failure rate (edit calls that did not apply, over all edit calls): 2 of 3" in harness
+    assert "Context guard: 2 turns; 5 messages replaced." in harness
     assert "1 turn not recorded" in harness
     assert "1 worker log unreadable or missing; 1 unreadable row skipped" in harness
 

@@ -296,12 +296,13 @@ def test_fix_builds_daytona_executor_for_an_image_source(
         async def close(self):
             self.closed = True
 
-    async def fake_fix(executor, model, source, issue, tests, suite, out):
+    async def fake_fix(executor, model, source, issue, tests, suite, out, *, budgets):
         captured["source"] = source
         captured["issue"] = issue
         captured["tests"] = tests
         captured["suite"] = suite
         captured["out"] = out
+        captured["budgets"] = budgets
         return _sample_result()
 
     monkeypatch.setenv("DAYTONA_API_KEY", "test-daytona-key")
@@ -343,6 +344,10 @@ def test_fix_builds_daytona_executor_for_an_image_source(
     assert captured["tests"] == [TARGET]
     assert captured["suite"] == "tests/test_calc.py"
     assert captured["out"] == run_dir
+    assert captured["budgets"].worker.max_turns == 60
+    assert captured["budgets"].worker.max_wall_seconds == 1_500
+    assert captured["budgets"].worker.max_completion_tokens == 96_000
+    assert captured["budgets"].worker.prompt_token_budget == 160_000
     assert captured["executor"].closed is True
     assert "**Verdict: VERIFIED**" in capsys.readouterr().out
 

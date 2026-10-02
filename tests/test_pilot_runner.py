@@ -106,6 +106,7 @@ def _budgets() -> RunBudgets:
             max_turns=12,
             max_wall_seconds=60,
             max_completion_tokens=100,
+            prompt_token_budget=123_456,
         ),
     )
 
@@ -285,6 +286,7 @@ new file mode 100644
         "config/fixture.yaml",
         "tests/test_calc.py",
     ]
+    assert run_input["budgets"]["worker"]["prompt_token_budget"] == 123_456
 
     record_path = tmp_path / "pilot" / record.instance_id / "record.json"
     assert json.loads(record_path.read_text(encoding="utf-8")) == record.model_dump(
@@ -1134,6 +1136,7 @@ def test_pilot_run_cli_loads_candidates_in_file_order(tmp_path: Path, monkeypatc
     assert captured["n"] == 2
     assert captured["concurrency"] == 2
     assert captured["budgets"].baseline_limit_s == 600
-    assert captured["budgets"].worker.max_turns == 40
-    assert captured["budgets"].worker.max_wall_seconds == 1_200
-    assert captured["budgets"].worker.max_completion_tokens == 64_000
+    assert captured["budgets"].worker.max_turns == 60
+    assert captured["budgets"].worker.max_wall_seconds == 1_500
+    assert captured["budgets"].worker.max_completion_tokens == 96_000
+    assert captured["budgets"].worker.prompt_token_budget == 160_000

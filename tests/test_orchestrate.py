@@ -198,6 +198,7 @@ async def _run(
                 "max_turns": 12,
                 "max_wall_seconds": 60,
                 "max_completion_tokens": 100,
+                "prompt_token_budget": 123_456,
             },
         ),
         **extra,
@@ -298,6 +299,7 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     assert "src/calc" not in baseline["scope"]["c0_top_level"]
     run_input = json.loads((run_dir / "input.json").read_text())
     assert run_input["spec_paths"] == ["tests/test_calc.py"]
+    assert run_input["budgets"]["worker"]["prompt_token_budget"] == 123_456
     disclosure = json.loads((run_dir / "disclosure.json").read_text())
     expected_test_digest = hashlib.sha256(
         (repo / "tests" / "test_calc.py").read_bytes(),
@@ -344,9 +346,10 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
 def test_default_worker_budget_supports_realistic_repair_attempts():
     budget = _orchestrate_module().RunBudgets().worker
 
-    assert budget.max_turns == 40
-    assert budget.max_wall_seconds == 1_200
-    assert budget.max_completion_tokens == 64_000
+    assert budget.max_turns == 60
+    assert budget.max_wall_seconds == 1_500
+    assert budget.max_completion_tokens == 96_000
+    assert budget.prompt_token_budget == 160_000
 
 
 async def test_fix_stores_checkpoint_scope_for_src_layout(tmp_path: Path):

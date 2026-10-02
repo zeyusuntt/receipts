@@ -65,9 +65,10 @@ class RunBudgets(BaseModel):
     verification_timeout_s: int = Field(default=600, gt=0)
     worker: WorkerBudget = Field(
         default_factory=lambda: WorkerBudget(
-            max_turns=40,
-            max_wall_seconds=1_200,
-            max_completion_tokens=64_000,
+            max_turns=60,
+            max_wall_seconds=1_500,
+            max_completion_tokens=96_000,
+            prompt_token_budget=160_000,
         ),
     )
 

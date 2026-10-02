@@ -210,6 +210,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
             install_cmd=args.install,
         )
     run_id = f"receipts-{uuid.uuid4().hex[:12]}"
+    budgets = _default_run_budgets()
 
     with tempfile.TemporaryDirectory(prefix="receipts-executor-") as executor_root:
         sink = RunSink(args.out)
@@ -223,6 +224,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
                 args.tests,
                 args.suite,
                 args.out,
+                budgets=budgets,
             )
         elif args.executor == "docker":
             executor = DockerExecutor(Path(executor_root), sink, run_id)
@@ -235,6 +237,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
                     args.tests,
                     args.suite,
                     args.out,
+                    budgets=budgets,
                 )
             finally:
                 await executor.close()
@@ -254,6 +257,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
                     args.tests,
                     args.suite,
                     args.out,
+                    budgets=budgets,
                 )
             finally:
                 await executor.close()
@@ -325,6 +329,19 @@ def _daytona_executor_factory(executor_root: Path, api_key: str):
     return make_executor
 
 
+def _default_run_budgets() -> RunBudgets:
+    return RunBudgets(
+        baseline_limit_s=600,
+        verification_timeout_s=600,
+        worker=WorkerBudget(
+            max_turns=60,
+            max_wall_seconds=1_500,
+            max_completion_tokens=96_000,
+            prompt_token_budget=160_000,
+        ),
+    )
+
+
 async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int:
     if args.n < 0:
         raise ValueError("--n must be non-negative")
@@ -349,15 +366,7 @@ async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int
             args.out,
             n=args.n,
             concurrency=args.concurrency,
-            budgets=RunBudgets(
-                baseline_limit_s=600,
-                verification_timeout_s=600,
-                worker=WorkerBudget(
-                    max_turns=40,
-                    max_wall_seconds=1_200,
-                    max_completion_tokens=64_000,
-                ),
-            ),
+            budgets=_default_run_budgets(),
         )
 
     ran = sum(record.status == "ran" for record in records)
