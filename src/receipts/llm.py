@@ -41,6 +41,7 @@ class AssistantTurn(BaseModel):
     content: str | None
     tool_calls: list[ToolCall] = Field(default_factory=list)
     usage: TokenUsage = Field(default_factory=TokenUsage)
+    finish_reason: str | None = None
 
 
 def _metadata_text(source: object, attribute: str) -> str:
@@ -246,10 +247,20 @@ class TokenFactoryClient:
                     continue
                 raise
 
-            self._record_usage(response)
+            usage = self._record_usage(response)
+            raw_finish_reason = getattr(response.choices[0], "finish_reason", None)
+            finish_reason = (
+                raw_finish_reason if isinstance(raw_finish_reason, str) else None
+            )
             content = response.choices[0].message.content or "{}"
             try:
-                return schema.model_validate_json(content)
+                result = schema.model_validate_json(content)
+                metadata: dict[str, Any] = {}
+                if "usage" in schema.model_fields:
+                    metadata["usage"] = usage
+                if "finish_reason" in schema.model_fields:
+                    metadata["finish_reason"] = finish_reason
+                return result.model_copy(update=metadata) if metadata else result
             except ValidationError as exc:
                 last_error = str(exc)
                 validation_attempt += 1
@@ -271,6 +282,8 @@ class TokenFactoryClient:
             tools=tools,
         )
         usage = self._record_usage(response)
+        raw_finish_reason = getattr(response.choices[0], "finish_reason", None)
+        finish_reason = raw_finish_reason if isinstance(raw_finish_reason, str) else None
         message = response.choices[0].message
         raw_calls = list(message.tool_calls or [])
         parsed_calls: list[ToolCall] = []
@@ -325,6 +338,7 @@ class TokenFactoryClient:
                 content=message.content,
                 tool_calls=parsed_calls,
                 usage=usage,
+                finish_reason=finish_reason,
                 tool_name=tool_name,
                 tool_call_id=tool_call_id,
                 raw_arguments=raw_arguments,
@@ -336,6 +350,7 @@ class TokenFactoryClient:
             content=message.content,
             tool_calls=parsed_calls,
             usage=usage,
+            finish_reason=finish_reason,
         )
 
 

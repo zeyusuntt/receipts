@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from receipts.junit import node_id, parse_junit
+from receipts.models import JunitSummary
 
 DATA = Path(__file__).parent / "data"
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -27,6 +28,10 @@ def test_parse_mixed_file():
         "tests/test_parse.py::test_param[1-2]",
         "tests/test_parse.py::test_param[a b]",
     ]
+    assert j.failure_text == {
+        "tests/test_parse.py::test_empty": "assert 1 == 2\nTraceback",
+        "tests/test_other.py::test_boom": "fixture error\nTraceback",
+    }
 
 
 def test_parse_junit_marks_parent_failed_when_a_subtest_fails():
@@ -73,6 +78,9 @@ def test_collection_failure_is_a_file_level_error_not_a_test(tmp_path):
     assert j.outcome("tests/test_new.py::TestNew::test_case[1]") == "error"
     # A test in a file that collected fine but is absent is still missing.
     assert j.outcome("tests/test_old.py::test_gone") == "missing"
+    assert j.failure_text == {
+        "tests/test_new.py": "collection failure\nImportError while importing test module",
+    }
 
 
 NESTED_ROOTDIR_XML = """<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="1" skipped="0" tests="3"><properties><property name="receipts_rootdir" value="/repo/pkg" /><property name="receipts_invocation_dir" value="/repo" /></properties><testcase classname="tests.test_k" name="test_a" file="tests/test_k.py" time="0.001" /><testcase classname="tests.test_k.TestK" name="test_b" file="tests/test_k.py" time="0.001"><failure message="boom">x</failure></testcase><testcase classname="" name="tests.test_new" file="tests/test_new.py" time="0.000"><error message="collection failure">ImportError</error></testcase></testsuite></testsuites>"""
@@ -90,3 +98,85 @@ def test_ids_are_relative_to_the_invocation_dir_like_pytest_terminal_output(tmp_
     assert j.failed == ["pkg/tests/test_k.py::TestK::test_b"]
     assert j.collection_errors == ["pkg/tests/test_new.py"]
     assert j.outcome("pkg/tests/test_new.py::test_new") == "error"
+
+
+def test_failure_text_includes_message_and_body_without_ansi(tmp_path):
+    path = tmp_path / "junit.xml"
+    path.write_text(
+        """<?xml version="1.0"?><testsuite><testcase """
+        """classname="tests.test_failure" name="test_value" file="tests/test_failure.py">"""
+        """<failure message="\x9b31massertion failed\x9b0m">"""
+        """\x9b33mE assert 1 == 2\x9b0m</failure></testcase></testsuite>""",
+    )
+
+    summary = parse_junit(path)
+
+    assert summary.failure_text == {
+        "tests/test_failure.py::test_value": "assertion failed\nE assert 1 == 2",
+    }
+
+
+def test_failure_text_strips_pytest_xml_escape_representation(tmp_path):
+    path = tmp_path / "junit.xml"
+    path.write_text(
+        "<testsuite><testcase classname=\"tests.test_failure\" "
+        "name=\"test_value\" file=\"tests/test_failure.py\">"
+        "<failure message=\"#x1B[31massertion failed#x1B[0m\">"
+        "#x1B[33mE assert 1 == 2#x1B[0m</failure>"
+        "</testcase></testsuite>",
+    )
+
+    summary = parse_junit(path)
+
+    assert summary.failure_text == {
+        "tests/test_failure.py::test_value": "assertion failed\nE assert 1 == 2",
+    }
+
+
+def test_failure_text_entry_cap_keeps_the_end_and_marks_the_cut(tmp_path):
+    path = tmp_path / "junit.xml"
+    path.write_text(
+        "<testsuite><testcase classname=\"tests.test_failure\" "
+        "name=\"test_value\" file=\"tests/test_failure.py\">"
+        f"<failure>{'x' * 3_000}ASSERTION_AT_END</failure>"
+        "</testcase></testsuite>",
+    )
+
+    summary = parse_junit(path)
+    text = summary.failure_text["tests/test_failure.py::test_value"]
+
+    assert len(text) == 2_000
+    assert text.startswith("[...]")
+    assert text.endswith("ASSERTION_AT_END")
+
+
+def test_failure_text_total_cap_prioritizes_collection_errors(tmp_path):
+    failures = "".join(
+        "<testcase classname=\"tests.test_many\" "
+        f"name=\"test_{index}\" file=\"tests/test_many.py\">"
+        f"<failure>{str(index) * 2_000}</failure></testcase>"
+        for index in range(30)
+    )
+    collection = (
+        "<testcase classname=\"\" name=\"tests.test_import\" file=\"tests/test_import.py\">"
+        f"<error message=\"collection failure\">{'c' * 2_000}</error></testcase>"
+    )
+    path = tmp_path / "junit.xml"
+    # Put the collection error last to prove priority is independent of document order.
+    path.write_text(f"<testsuite>{failures}{collection}</testsuite>")
+
+    summary = parse_junit(path)
+
+    assert sum(map(len, summary.failure_text.values())) == 60_000
+    assert next(iter(summary.failure_text)) == "tests/test_import.py"
+    assert "tests/test_many.py::test_28" in summary.failure_text
+    assert "tests/test_many.py::test_29" not in summary.failure_text
+
+
+def test_old_junit_summary_json_loads_with_empty_failure_text():
+    summary = JunitSummary.model_validate_json(
+        '{"passed": [], "failed": ["tests/test_x.py::test_x"], '
+        '"errors": [], "skipped": []}',
+    )
+
+    assert summary.failure_text == {}

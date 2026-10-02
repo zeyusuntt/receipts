@@ -13,7 +13,15 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from receipts.models import Baseline, Branch, Checkpoint, JunitSummary, PatchScope, Receipt
+from receipts.models import (
+    FAILURE_TEXT_NOT_RECORDED,
+    Baseline,
+    Branch,
+    Checkpoint,
+    JunitSummary,
+    PatchScope,
+    Receipt,
+)
 from receipts.patchscope import default_protected_modules, filter_patch
 from receipts.sandbox.protocol import CheckpointTampered, Executor
 from receipts.verify.targets import map_target_ids
@@ -152,8 +160,20 @@ async def establish_baseline(
     unstable = sorted(n for n in seen if len({j.outcome(n) for j in runs}) > 1)
     protected = sorted(n for n in seen if all(j.outcome(n) == "passed" for j in runs))
     skipped = sorted(n for n in seen if any(j.outcome(n) == "skipped" for j in runs))
+    first_summary = runs[0]
+    target_failure_text: dict[str, str] = {}
+    for node_id in mapped_target:
+        text = first_summary.failure_text.get(node_id)
+        if not text and node_id not in first_summary.all_ids():
+            file_path = node_id.split("::", 1)[0]
+            if file_path in first_summary.collection_errors:
+                text = first_summary.failure_text.get(file_path)
+        target_failure_text[node_id] = (
+            text if text else FAILURE_TEXT_NOT_RECORDED
+        )
     return Baseline(runs=runs, run_receipt_ids=[r.receipt_id for r in receipts], collected_ids=seen,
                     skipped_ids=skipped, protected=protected, unstable=unstable, target=mapped_target,
+                    target_failure_text=target_failure_text,
                     target_map=target_map,
                     spec_paths=sorted(set(spec_paths)))
 

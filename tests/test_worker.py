@@ -39,11 +39,13 @@ def _turn(
     *calls: ToolCall,
     content: str | None = None,
     completion_tokens: int = 1,
+    finish_reason: str | None = None,
 ) -> AssistantTurn:
     return AssistantTurn(
         content=content,
         tool_calls=list(calls),
         usage={"prompt": 10, "completion": completion_tokens, "reasoning": 0},
+        finish_reason=finish_reason,
     )
 
 
@@ -677,8 +679,21 @@ async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path
     assert [row["request_message_count"] for row in rows] == [2, 4, 6, 8]
     assert rows[-1]["end_reason"] == "finished"
     assert rows[-1]["usage"] == {"prompt": 10, "completion": 1, "reasoning": 0}
+    assert all("finish_reason" in row for row in rows)
     assert rows[-1]["tool_calls"][0]["name"] == "finish"
     assert "api_key" not in writer.getvalue().lower()
+
+
+async def test_worker_logs_provider_finish_reason(tmp_path: Path):
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(content="I need another turn.", finish_reason="length")],
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    row = json.loads(writer.getvalue().splitlines()[0])
+    assert row["finish_reason"] == "length"
 
 
 async def test_trusted_repo_root_cd_carries_junit_but_other_cd_commands_do_not(

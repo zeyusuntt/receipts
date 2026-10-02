@@ -75,6 +75,63 @@ def _finish(
     )
 
 
+def _plan(orchestrate):
+    return orchestrate.Plan(
+        hypothesis="sub adds instead of subtracting",
+        files_to_edit=["calc/__init__.py"],
+        approach="Change addition to subtraction.",
+    )
+
+
+def test_worker_initial_message_includes_bounded_baseline_failures():
+    orchestrate = _orchestrate_module()
+    first = "tests/test_calc.py::test_sub"
+    second = "tests/test_calc.py::test_zero"
+
+    message = orchestrate.worker_initial_message(
+        _plan(orchestrate),
+        "Fix subtraction",
+        [first, second],
+        "tests",
+        target_failure_text={
+            first: "a" * 8_000 + "FIRST_END",
+            second: "b" * 4_000 + "SECOND_END",
+        },
+    )
+
+    assert message.index("</specification_tests>") < message.index("<baseline_failures>")
+    section = message.split("<baseline_failures>\n", 1)[1].split(
+        "\n</baseline_failures>",
+        1,
+    )[0]
+    assert first in section and second in section
+    assert section.count("[...]") == 2
+    assert "FIRST_END" in section and "SECOND_END" in section
+    assert len(section) <= 6_000 + len(first) + len(second) + 20
+    first_text = section.split(f"Target: {first}\n", 1)[1].split(
+        f"\nTarget: {second}",
+        1,
+    )[0]
+    second_text = section.split(f"Target: {second}\n", 1)[1]
+    assert len(first_text) == 3_998
+    assert len(second_text) == 2_002
+    assert len(first_text) + len(second_text) == 6_000
+
+
+def test_worker_initial_message_omits_baseline_failures_without_targets():
+    orchestrate = _orchestrate_module()
+
+    message = orchestrate.worker_initial_message(
+        _plan(orchestrate),
+        "No specification targets",
+        [],
+        "tests",
+        target_failure_text={"unused": "failure"},
+    )
+
+    assert "<baseline_failures>" not in message
+
+
 def _model(turns: list[AssistantTurn]) -> FakeModel:
     return FakeModel(
         json_objects=[

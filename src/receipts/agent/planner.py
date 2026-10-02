@@ -7,11 +7,13 @@ import json
 import logging
 import posixpath
 from pathlib import Path, PurePosixPath
+from typing import Any
 
 from pydantic import BaseModel
 
+from receipts.cost import TokenUsage
 from receipts.llm import ModelClient
-from receipts.models import Baseline, Branch, Receipt
+from receipts.models import Baseline, Branch, Receipt, bounded_target_failure_text
 from receipts.sandbox.protocol import Executor
 
 
@@ -36,6 +38,18 @@ class Plan(BaseModel):
     hypothesis: str
     files_to_edit: list[str]
     approach: str
+    usage: TokenUsage | None = None
+    finish_reason: str | None = None
+
+    @classmethod
+    def model_json_schema(cls, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        """Keep provider bookkeeping out of the planner's response contract."""
+        schema = super().model_json_schema(*args, **kwargs)
+        properties = schema.get("properties", {})
+        properties.pop("usage", None)
+        properties.pop("finish_reason", None)
+        schema.pop("$defs", None)
+        return schema
 
 
 def _full_stdout(receipt: Receipt) -> str:
@@ -154,10 +168,30 @@ def _prompt(
     test_files: list[tuple[str, str]],
     source_files: list[tuple[str, str]],
 ) -> str:
+    failure_text = bounded_target_failure_text(
+        baseline.target,
+        baseline.target_failure_text,
+    )
+    baseline_summary = {
+        "targets": [
+            {
+                "id": target,
+                "outcomes": [run.outcome(target) for run in baseline.runs],
+                "failure_text": failure_text[target],
+            }
+            for target in baseline.target
+        ],
+        "counts": {
+            "collected": len(baseline.collected_ids),
+            "protected": len(baseline.protected),
+            "unstable": len(baseline.unstable),
+            "skipped": len(baseline.skipped_ids),
+        },
+    }
     sections = [
         f"<issue>\n{issue}\n</issue>",
         "<specification_tests>\n" + "\n".join(spec_tests) + "\n</specification_tests>",
-        f"<baseline>\n{baseline.model_dump_json(indent=2)}\n</baseline>",
+        f"<baseline>\n{json.dumps(baseline_summary, indent=2)}\n</baseline>",
         "<tracked_files>\n" + "\n".join(tree_paths) + "\n</tracked_files>",
     ]
     for path, content in test_files:

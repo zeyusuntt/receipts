@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
@@ -78,3 +79,25 @@ def test_baseline_and_claims_construct():
     assert checkpoint.digest is None
     assert Checkpoint(id="img-1", parent="img-0", digest="abc").digest == "abc"
     Branch(id="b1", run_id="run-1", head="img-0", origin="img-0")
+
+
+def test_v1_pilot_artifacts_load_with_current_models():
+    pilot = Path(__file__).parents[1] / "pilot" / "run-2026-10-01c"
+    if not pilot.is_dir():
+        pytest.skip("v1 pilot directory is absent")
+
+    from receipts.orchestrate import RunResult
+
+    result_paths = sorted(pilot.rglob("result.json"))
+    baseline_paths = sorted(pilot.rglob("baseline.json"))
+    receipt_paths = sorted(pilot.rglob("agent/receipts.jsonl"))
+    assert result_paths and baseline_paths and receipt_paths
+
+    for path in result_paths:
+        RunResult.model_validate_json(path.read_text(encoding="utf-8"))
+    for path in baseline_paths:
+        Baseline.model_validate_json(path.read_text(encoding="utf-8"))
+    for path in receipt_paths:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line:
+                Receipt.model_validate_json(line)

@@ -61,6 +61,7 @@ def _response(
     prompt_tokens: int = 11,
     completion_tokens: int = 7,
     reasoning_tokens: int | None = 3,
+    finish_reason: str | None = None,
 ) -> Any:
     details = SimpleNamespace(reasoning_tokens=reasoning_tokens)
     usage = SimpleNamespace(
@@ -69,7 +70,10 @@ def _response(
         completion_tokens_details=details,
     )
     message = SimpleNamespace(content=content, tool_calls=tool_calls or [])
-    return SimpleNamespace(choices=[SimpleNamespace(message=message)], usage=usage)
+    return SimpleNamespace(
+        choices=[SimpleNamespace(message=message, finish_reason=finish_reason)],
+        usage=usage,
+    )
 
 
 def _sdk_tool_call(name: str, arguments: str, call_id: str = "call-1") -> Any:
@@ -134,12 +138,45 @@ async def test_complete_json_stops_after_two_validation_retries():
     assert len(sdk.completions.calls) == 4
 
 
+async def test_complete_json_attaches_plan_usage_without_changing_output_schema():
+    from receipts.agent.planner import Plan
+
+    sdk = _FakeSDK(
+        [
+            _response(
+                content=(
+                    '{"hypothesis":"broken subtraction",'
+                    '"files_to_edit":["calc/__init__.py"],'
+                    '"approach":"Fix subtraction."}'
+                ),
+                prompt_tokens=123,
+                completion_tokens=45,
+                reasoning_tokens=6,
+                finish_reason="stop",
+            ),
+        ],
+    )
+    client = TokenFactoryClient(_config(), client=sdk)
+
+    plan = await client.complete_json("system", "issue", Plan)
+
+    assert plan.usage == TokenUsage(prompt=123, completion=45, reasoning=6)
+    assert plan.finish_reason == "stop"
+    output_schema = sdk.completions.calls[0]["response_format"]["json_schema"]["schema"]
+    assert set(output_schema["properties"]) == {
+        "hypothesis",
+        "files_to_edit",
+        "approach",
+    }
+
+
 async def test_chat_surfaces_malformed_tool_arguments_as_a_turn():
     sdk = _FakeSDK(
         [
             _response(
                 content="I will inspect the repository.",
                 tool_calls=[_sdk_tool_call("run_command", '{"cmd":')],
+                finish_reason="tool_calls",
             ),
         ],
     )
@@ -155,6 +192,7 @@ async def test_chat_surfaces_malformed_tool_arguments_as_a_turn():
     assert turn.tool_call_id == "call-1"
     assert turn.raw_arguments == '{"cmd":'
     assert turn.usage == TokenUsage(prompt=11, completion=7, reasoning=3)
+    assert turn.finish_reason == "tool_calls"
     call = sdk.completions.calls[0]
     assert call["temperature"] == 1.0
     assert call["top_p"] == 0.95

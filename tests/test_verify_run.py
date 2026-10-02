@@ -228,6 +228,160 @@ async def test_baseline_maps_against_ids_collected_in_either_run():
     assert baseline.target == [FULL_SIM910_KEY]
 
 
+async def test_baseline_keeps_target_failure_text_from_first_run():
+    class BaselineExecutor:
+        def __init__(self):
+            self.results = [
+                SimpleNamespace(
+                    timed_out=False,
+                    duration_s=0.1,
+                    exit_code=1,
+                    receipt_id=f"baseline-{index}",
+                    junit=JunitSummary(
+                        passed=[],
+                        failed=[T],
+                        errors=[],
+                        skipped=[],
+                        failure_text={T: text},
+                    ),
+                )
+                for index, text in enumerate(
+                    ["first run assertion", "second run assertion"],
+                    start=1,
+                )
+            ]
+
+        async def run_pytest(self, *args, **kwargs):
+            return self.results.pop(0)
+
+    baseline = await establish_baseline(
+        BaselineExecutor(),
+        object(),
+        "tests",
+        [T],
+        limit_s=600,
+    )
+
+    assert baseline.target_failure_text == {T: "first run assertion"}
+
+
+async def test_baseline_uses_first_run_collection_error_text_for_target_file():
+    target = "tests/test_new.py::test_new"
+
+    class BaselineExecutor:
+        def __init__(self):
+            self.results = [
+                SimpleNamespace(
+                    timed_out=False,
+                    duration_s=0.1,
+                    exit_code=1,
+                    receipt_id="baseline-1",
+                    junit=JunitSummary(
+                        passed=[],
+                        failed=[],
+                        errors=[],
+                        skipped=[],
+                        collection_errors=["tests/test_new.py"],
+                        failure_text={"tests/test_new.py": "ModuleNotFoundError: feature"},
+                    ),
+                ),
+                SimpleNamespace(
+                    timed_out=False,
+                    duration_s=0.1,
+                    exit_code=1,
+                    receipt_id="baseline-2",
+                    junit=JunitSummary(
+                        passed=[],
+                        failed=[target],
+                        errors=[],
+                        skipped=[],
+                    ),
+                ),
+            ]
+
+        async def run_pytest(self, *args, **kwargs):
+            return self.results.pop(0)
+
+    baseline = await establish_baseline(
+        BaselineExecutor(),
+        object(),
+        "tests",
+        [target],
+        limit_s=600,
+    )
+
+    assert baseline.target_failure_text == {
+        target: "ModuleNotFoundError: feature",
+    }
+
+
+async def test_baseline_marks_unrecorded_target_failure_text():
+    class BaselineExecutor:
+        def __init__(self):
+            self.results = [
+                SimpleNamespace(
+                    timed_out=False,
+                    duration_s=0.1,
+                    exit_code=1,
+                    receipt_id=f"baseline-{index}",
+                    junit=JunitSummary(
+                        passed=[],
+                        failed=[T],
+                        errors=[],
+                        skipped=[],
+                    ),
+                )
+                for index in (1, 2)
+            ]
+
+        async def run_pytest(self, *args, **kwargs):
+            return self.results.pop(0)
+
+    baseline = await establish_baseline(
+        BaselineExecutor(),
+        object(),
+        "tests",
+        [T],
+        limit_s=600,
+    )
+
+    assert baseline.target_failure_text == {T: "(failure text not recorded)"}
+
+
+async def test_baseline_marks_empty_target_failure_text_as_unrecorded():
+    class BaselineExecutor:
+        def __init__(self):
+            self.results = [
+                SimpleNamespace(
+                    timed_out=False,
+                    duration_s=0.1,
+                    exit_code=1,
+                    receipt_id=f"baseline-{index}",
+                    junit=JunitSummary(
+                        passed=[],
+                        failed=[T],
+                        errors=[],
+                        skipped=[],
+                        failure_text={T: ""},
+                    ),
+                )
+                for index in (1, 2)
+            ]
+
+        async def run_pytest(self, *args, **kwargs):
+            return self.results.pop(0)
+
+    baseline = await establish_baseline(
+        BaselineExecutor(),
+        object(),
+        "tests",
+        [T],
+        limit_s=600,
+    )
+
+    assert baseline.target_failure_text == {T: "(failure text not recorded)"}
+
+
 async def test_baseline_rejects_many_match_when_one_full_id_passes(tmp_path):
     other_full = FULL_SIM910_KEY.replace("None", "missing")
     ex, base = await _sim910_executor(

@@ -6,6 +6,7 @@ A Receipt is the executor's record of one action; the model cannot edit it.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import Literal
 
@@ -22,6 +23,55 @@ PredicateId = Literal[
 VerdictStatus = Literal["PASS", "REJECTED", "ERROR"]
 ClaimAudit = Literal["honest", "unsupported", "contradicted", "understated", "no_claim"]
 Outcome = Literal["passed", "failed", "error", "skipped", "missing"]
+FAILURE_TEXT_NOT_RECORDED = "(failure text not recorded)"
+FAILURE_TEXT_PROMPT_LIMIT = 6_000
+_TRUNCATION_MARKER = "[...]"
+
+
+def tail_truncate(text: str, limit: int) -> str:
+    """Keep the diagnostically useful end of text within an exact limit."""
+    if len(text) <= limit:
+        return text
+    if limit <= len(_TRUNCATION_MARKER):
+        return text[-limit:] if limit > 0 else ""
+    return _TRUNCATION_MARKER + text[-(limit - len(_TRUNCATION_MARKER)):]
+
+
+def bounded_target_failure_text(
+    targets: Sequence[str],
+    failure_text: Mapping[str, str],
+    limit: int = FAILURE_TEXT_PROMPT_LIMIT,
+) -> dict[str, str]:
+    """Allocate a shared character budget proportionally across target failures."""
+    ordered_targets = list(dict.fromkeys(targets))
+    values = [
+        failure_text.get(target, FAILURE_TEXT_NOT_RECORDED)
+        for target in ordered_targets
+    ]
+    total = sum(len(value) for value in values)
+    if total <= limit:
+        return dict(zip(ordered_targets, values, strict=True))
+    if limit <= 0:
+        return dict.fromkeys(ordered_targets, "")
+
+    quotas = [len(value) * limit // total for value in values]
+    remainder = limit - sum(quotas)
+    ranked = sorted(
+        range(len(values)),
+        key=lambda index: (-(len(values[index]) * limit % total), index),
+    )
+    for index in ranked[:remainder]:
+        quotas[index] += 1
+
+    return {
+        target: tail_truncate(value, quota)
+        for target, value, quota in zip(
+            ordered_targets,
+            values,
+            quotas,
+            strict=True,
+        )
+    }
 
 
 class Checkpoint(BaseModel):
@@ -47,6 +97,10 @@ class JunitSummary(BaseModel):
     collection_errors: list[str] = Field(
         default_factory=list,
         description="test files that failed to import; their tests count as errors but are not collected ids",
+    )
+    failure_text: dict[str, str] = Field(
+        default_factory=dict,
+        description="bounded failure diagnostics keyed by test id or collection-error file",
     )
 
     @property
@@ -144,6 +198,10 @@ class Baseline(BaseModel):
     protected: list[str] = Field(description="node ids that passed in every baseline run")
     unstable: list[str] = Field(description="node ids whose outcome differed between runs")
     target: list[str] = Field(description="node ids that must go from failing to passing")
+    target_failure_text: dict[str, str] = Field(
+        default_factory=dict,
+        description="first-run failure diagnostics for each mapped target id",
+    )
     target_map: dict[str, list[str]] = Field(
         default_factory=dict,
         description="dataset target ids mapped to the full collected pytest node ids",

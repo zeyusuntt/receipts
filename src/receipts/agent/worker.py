@@ -762,6 +762,7 @@ class Worker:
             "tool_calls": [call.model_dump(mode="json") for call in turn.tool_calls],
             "results": results,
             "usage": turn.usage.model_dump(mode="json"),
+            "finish_reason": turn.finish_reason,
             "end_reason": end_reason,
         }
         if self._request_context_guard is not None:

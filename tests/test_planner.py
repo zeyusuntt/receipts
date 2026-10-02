@@ -7,6 +7,7 @@ from pathlib import Path
 from types import ModuleType
 
 from receipts.llm import FakeModel
+from receipts.cost import TokenUsage
 from receipts.models import Baseline, JunitSummary
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import RepoAtCommit
@@ -38,6 +39,7 @@ def _baseline(target: str) -> Baseline:
         protected=list(run.passed),
         unstable=[],
         target=[target],
+        target_failure_text={target: "assert 7 == 2"},
     )
 
 
@@ -60,11 +62,76 @@ def test_plan_has_the_public_planner_fields():
         approach="Change sub and run the specification test.",
     )
 
-    assert plan.model_dump() == {
+    assert plan.model_dump(exclude_none=True) == {
         "hypothesis": "sub adds instead of subtracting",
         "files_to_edit": ["calc/__init__.py"],
         "approach": "Change sub and run the specification test.",
     }
+    assert set(planner.Plan.model_json_schema()["properties"]) == {
+        "hypothesis",
+        "files_to_edit",
+        "approach",
+    }
+
+
+def test_plan_persists_optional_planner_call_metadata_and_loads_old_json():
+    planner = _planner_module()
+    plan = planner.Plan(
+        hypothesis="broken subtraction",
+        files_to_edit=["calc/__init__.py"],
+        approach="Fix it.",
+        usage=TokenUsage(prompt=123, completion=45, reasoning=6),
+        finish_reason="stop",
+    )
+
+    assert plan.usage == TokenUsage(prompt=123, completion=45, reasoning=6)
+    assert plan.finish_reason == "stop"
+    old = planner.Plan.model_validate_json(
+        '{"hypothesis":"h","files_to_edit":[],"approach":"a"}',
+    )
+    assert old.usage is None and old.finish_reason is None
+
+
+def test_planner_prompt_uses_compact_baseline_summary():
+    planner = _planner_module()
+    target = "tests/test_calc.py::test_sub"
+    baseline = _baseline(target).model_copy(
+        update={
+            "collected_ids": [target, "UNRELATED_RAW_BASELINE_MARKER"],
+            "skipped_ids": ["tests/test_skip.py::test_skip"],
+            "unstable": ["tests/test_flaky.py::test_flaky"],
+        },
+    )
+
+    prompt = planner._prompt("issue", baseline, [target], [], [], [])
+
+    assert target in prompt
+    assert '"outcomes": [\n        "failed"' in prompt
+    assert "assert 7 == 2" in prompt
+    assert '"collected": 2' in prompt
+    assert '"protected": 1' in prompt
+    assert '"unstable": 1' in prompt
+    assert '"skipped": 1' in prompt
+    assert "UNRELATED_RAW_BASELINE_MARKER" not in prompt
+    assert "run_receipt_ids" not in prompt
+
+
+def test_planner_prompt_stays_small_for_a_large_baseline():
+    planner = _planner_module()
+    target = "tests/test_calc.py::test_sub"
+    baseline = _baseline(target).model_copy(
+        update={
+            "collected_ids": [f"tests/test_{index}.py::test_{'x' * 180}" for index in range(1_000)],
+            "target_failure_text": {target: "prefix" * 40_000 + "ASSERTION_END"},
+        },
+    )
+
+    prompt = planner._prompt("issue", baseline, [target], [], [], [])
+
+    assert len(baseline.model_dump_json()) > 200_000
+    assert len(prompt) < 8_000
+    assert "ASSERTION_END" in prompt
+    assert "[...]" in prompt
 
 
 async def test_make_plan_builds_context_filters_files_and_returns_read_receipts(tmp_path: Path):

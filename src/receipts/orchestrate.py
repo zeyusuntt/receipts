@@ -17,7 +17,15 @@ from receipts.agent.planner import Plan, make_plan
 from receipts.agent.worker import Worker, WorkerBudget, WorkerOutcome
 from receipts.cost import CostMeter, TokenUsage
 from receipts.llm import ModelClient
-from receipts.models import Baseline, Branch, Checkpoint, PatchScope, Receipt, Verdict
+from receipts.models import (
+    Baseline,
+    Branch,
+    Checkpoint,
+    PatchScope,
+    Receipt,
+    Verdict,
+    bounded_target_failure_text,
+)
 from receipts.patchscope import default_protected_modules
 from receipts.rundir import RunDirectory
 from receipts.sandbox.protocol import Executor, ImageSource, Source
@@ -184,6 +192,7 @@ def worker_initial_message(
     spec_tests: list[str],
     suite_scope: str,
     target_map: dict[str, list[str]] | None = None,
+    target_failure_text: dict[str, str] | None = None,
 ) -> str:
     sections = [
         f"<issue>\n{issue}\n</issue>",
@@ -191,6 +200,20 @@ def worker_initial_message(
         + "\n".join(spec_tests)
         + "\n</specification_tests>",
     ]
+    if spec_tests:
+        failures = bounded_target_failure_text(
+            spec_tests,
+            target_failure_text or {},
+        )
+        failure_lines = [
+            f"Target: {target}\n{failures[target]}"
+            for target in spec_tests
+        ]
+        sections.append(
+            "<baseline_failures>\n"
+            + "\n".join(failure_lines)
+            + "\n</baseline_failures>",
+        )
     mapped = {
         dataset_id: full_ids
         for dataset_id, full_ids in (target_map or {}).items()
@@ -205,7 +228,7 @@ def worker_initial_message(
     sections.extend(
         [
             f"<suite_scope>\n{suite_scope}\n</suite_scope>",
-            f"<plan>\n{plan.model_dump_json(indent=2)}\n</plan>",
+            f"<plan>\n{plan.model_dump_json(indent=2, exclude={'usage', 'finish_reason'})}\n</plan>",
         ],
     )
     return "\n\n".join(sections)
@@ -594,6 +617,7 @@ async def fix(
                     baseline.target,
                     suite_scope,
                     baseline.target_map,
+                    baseline.target_failure_text,
                 ),
                 writer=writer,
                 repo_root=source.workdir if isinstance(source, ImageSource) else None,
