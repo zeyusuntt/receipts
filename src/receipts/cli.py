@@ -26,6 +26,7 @@ from receipts.llm import (
 )
 from receipts.orchestrate import RunBudgets, RunResult, fix
 from receipts.pilot.runner import InstanceRecord, run_pilot
+from receipts.preflight import run_preflight
 from receipts.receipt_text import render
 from receipts.sandbox.daytona import AsyncDaytonaApi, DaytonaExecutor
 from receipts.sandbox.docker import DockerExecutor
@@ -75,6 +76,12 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="also call the configured model and check Docker",
     )
+
+    preflight_parser = commands.add_parser(
+        "preflight",
+        help="write the launch preflight JSON",
+    )
+    preflight_parser.add_argument("--out", type=Path)
 
     show_parser = commands.add_parser("show", help="print a run's Markdown receipt")
     show_parser.add_argument("run_dir", type=Path)
@@ -362,6 +369,8 @@ def _run_pilot_report(pilot_dir: Path) -> int:
 async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
     if args.command == "doctor":
         return await _doctor(args.live, model)
+    if args.command == "preflight":
+        return await run_preflight(args.out)
     if args.command == "fix":
         return await _run_fix(args, model)
     if args.command == "show":

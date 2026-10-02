@@ -5,7 +5,7 @@ from pathlib import Path
 
 from receipts.agent.planner import Plan
 from receipts.agent.worker import WorkerOutcome
-from receipts.cli import main
+from receipts.cli import _parser, main
 from receipts.llm import AssistantTurn, FakeModel, ToolCall
 from receipts.models import (
     Baseline,
@@ -405,3 +405,15 @@ def test_doctor_reports_the_first_missing_dotenv_value(
 
     assert status == 1
     assert capsys.readouterr().out == "MISSING OPENAI_API_KEY\n"
+
+
+def test_preflight_subcommand_parses_optional_output_path(tmp_path: Path):
+    output_path = tmp_path / "preflight.json"
+
+    default_args = _parser().parse_args(["preflight"])
+    custom_args = _parser().parse_args(["preflight", "--out", str(output_path)])
+
+    assert default_args.command == "preflight"
+    assert default_args.out is None
+    assert custom_args.command == "preflight"
+    assert custom_args.out == output_path
