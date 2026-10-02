@@ -10,6 +10,7 @@ from receipts.pilot.runner import (
     InstanceRecord,
     PilotCost,
 )
+from receipts.pilot.grade import OfficialRecord
 
 
 def _report_module():
@@ -30,6 +31,10 @@ def _attempt(
     official_resolved: bool | None = False,
     agreement: str | None = "agree_fail",
     gate_error: str | None = None,
+    filtered_sha256: str | None = None,
+    witness_apply_sha256: str | None = None,
+    applied_sha256: str | None = None,
+    read_sha256: str | None = None,
 ) -> AttemptRecord:
     return AttemptRecord(
         end="finished",
@@ -42,7 +47,14 @@ def _attempt(
         official_resolved=official_resolved,
         agreement=agreement,
         filtered_patch_sha256="a" * 64,
+        filtered_sha256=filtered_sha256,
+        witness_apply_sha256=witness_apply_sha256,
         gate_error=gate_error,
+        official=(
+            OfficialRecord.model_construct(applied_sha256=applied_sha256, read_sha256=read_sha256)
+            if applied_sha256 is not None or read_sha256 is not None
+            else None
+        ),
     )
 
 
@@ -339,6 +351,68 @@ def test_same_records_produce_byte_identical_reports():
 
     assert report_module.render(first).encode() == report_module.render(second).encode()
     assert first.model_dump_json() == second.model_dump_json()
+
+
+def test_report_lists_shipped_byte_digest_agreement_mismatches_and_old_records():
+    digest = "a" * 64
+    records = [
+        _record(
+            "project__agree",
+            [
+                _attempt(
+                    filtered_sha256=digest,
+                    witness_apply_sha256=digest,
+                    applied_sha256=digest,
+                ),
+            ],
+        ),
+        _record(
+            "project__mismatch",
+            [
+                _attempt(
+                    filtered_sha256=digest,
+                    witness_apply_sha256="b" * 64,
+                    applied_sha256=digest,
+                ),
+            ],
+        ),
+        _record("project__legacy", [_attempt()]),
+    ]
+
+    markdown = _report_module().render(_report_module().build_report(records))
+
+    assert "Shipped bytes: digests agree on 1 of 2 attempts." in markdown
+    assert "1 attempt not recorded (records before this check)." in markdown
+    shipped_bytes = markdown.split("## Shipped bytes", 1)[1].split(
+        "## Gate and official-grader agreement",
+        1,
+    )[0]
+    assert "project__mismatch" in shipped_bytes
+    assert "| 1 |" in shipped_bytes
+    assert "project__agree" not in shipped_bytes
+    assert "project__legacy" not in shipped_bytes
+
+
+def test_report_counts_a_patch_changed_before_grading_as_a_mismatch():
+    digest = "a" * 64
+    records = [
+        _record(
+            "project__changed_after_gate",
+            [
+                _attempt(
+                    filtered_sha256=digest,
+                    witness_apply_sha256=digest,
+                    read_sha256="c" * 64,
+                ),
+            ],
+        ),
+    ]
+
+    report = _report_module().build_report(records)
+
+    assert report.shipped_bytes.recorded == 1
+    assert report.shipped_bytes.not_recorded == 0
+    assert [m.instance_id for m in report.shipped_bytes.mismatches] == ["project__changed_after_gate"]
 
 
 def test_infrastructure_record_gate_error_is_listed_with_error_text():

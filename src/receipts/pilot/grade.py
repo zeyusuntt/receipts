@@ -28,6 +28,8 @@ class OfficialRecord(BaseModel):
     log_sha256: str
     judgement: OfficialJudgement
     infra_error: str | None = None
+    applied_sha256: str | None = None
+    read_sha256: str | None = None
 
 
 def _full_stdout(receipt: Receipt) -> tuple[bytes | None, str | None]:
@@ -72,7 +74,31 @@ async def grade_attempts(
     for attempt in result.attempts:
         (branch,) = await ex.fork(result.checkpoint, 1, prefix="official")
         try:
-            patch = (run_dir / attempt.filtered_patch_path).read_text(encoding="utf-8")
+            patch_bytes = (run_dir / attempt.filtered_patch_path).read_bytes()
+            patch_sha256 = hashlib.sha256(patch_bytes).hexdigest()
+            if (
+                attempt.filtered_sha256 is not None
+                and patch_sha256 != attempt.filtered_sha256
+            ):
+                log_path, log_sha256 = _write_log(run_dir, attempt.number, b"")
+                records.append(
+                    OfficialRecord(
+                        attempt=attempt.number,
+                        branch_id=branch.id,
+                        apply_exit_code=None,
+                        test_exit_code=None,
+                        timed_out=False,
+                        log_path=log_path,
+                        log_sha256=log_sha256,
+                        judgement=official_resolved(instance, ""),
+                        infra_error=(
+                            "filtered.diff does not match the digest recorded at the gate"
+                        ),
+                        read_sha256=patch_sha256,
+                    ),
+                )
+                continue
+            patch = patch_bytes.decode("utf-8")
             applied = await ex.apply_patch(branch, patch)
 
             if applied.timed_out or applied.exit_code != 0:
@@ -96,6 +122,8 @@ async def grade_attempts(
                         log_sha256=log_sha256,
                         judgement=official_resolved(instance, ""),
                         infra_error=infra_error,
+                        applied_sha256=applied.patch_sha256,
+                        read_sha256=patch_sha256,
                     ),
                 )
                 continue
@@ -128,6 +156,8 @@ async def grade_attempts(
                     log_sha256=log_sha256,
                     judgement=judgement,
                     infra_error=infra_error,
+                    applied_sha256=applied.patch_sha256,
+                    read_sha256=patch_sha256,
                 ),
             )
         finally:

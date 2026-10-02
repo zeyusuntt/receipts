@@ -48,6 +48,8 @@ class AttemptRecord(BaseModel):
     official_resolved: bool | None
     agreement: Agreement | None
     filtered_patch_sha256: str
+    filtered_sha256: str | None = None
+    witness_apply_sha256: str | None = None
     gate_error: str | None = None
     official: OfficialRecord | None = None
 
@@ -301,6 +303,8 @@ def _ran_record(
                     run_dir,
                     attempt.filtered_patch_path,
                 ),
+                filtered_sha256=attempt.filtered_sha256,
+                witness_apply_sha256=attempt.witness_apply_sha256,
                 gate_error=attempt.verdict.error,
                 official=official,
             ),

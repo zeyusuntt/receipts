@@ -65,11 +65,13 @@ async def _grading_case(tmp_path: Path, patches: list[str]):
         relative = f"attempts/{number}/filtered.diff"
         path = run_dir / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(patch, encoding="utf-8")
+        patch_bytes = patch.encode("utf-8")
+        path.write_bytes(patch_bytes)
         attempts.append(
             AttemptResult.model_construct(
                 number=number,
                 filtered_patch_path=relative,
+                filtered_sha256=hashlib.sha256(patch_bytes).hexdigest(),
             ),
         )
 
@@ -114,11 +116,64 @@ async def test_honest_patch_grades_resolved_and_writes_hashed_log(tmp_path: Path
     assert record.test_exit_code == 0
     assert record.timed_out is False
     assert record.infra_error is None
+    assert record.applied_sha256 == result.attempts[0].filtered_sha256
+    assert record.read_sha256 == result.attempts[0].filtered_sha256
     assert record.judgement.resolved is True
     assert record.judgement.from_fail_to_pass == [TARGET]
     assert record.judgement.failed_from_fail_to_pass == []
     assert record.judgement.failed_from_pass_to_pass == []
     assert TARGET.encode() in _assert_log_matches(run_dir, record)
+
+
+class _ApplyRecordingExecutor:
+    def __init__(self, inner: LocalExecutor) -> None:
+        self.inner = inner
+        self.apply_calls = 0
+
+    def __getattr__(self, name: str):
+        return getattr(self.inner, name)
+
+    async def apply_patch(self, branch, patch_text):
+        self.apply_calls += 1
+        return await self.inner.apply_patch(branch, patch_text)
+
+
+async def test_mutated_filtered_patch_is_rejected_before_apply(tmp_path: Path):
+    executor, result, run_dir, instance = await _grading_case(
+        tmp_path,
+        [_source_patch(FIXED_CALC)],
+    )
+    filtered_path = run_dir / result.attempts[0].filtered_patch_path
+    filtered_path.write_bytes(filtered_path.read_bytes() + b"# mutated after gate\n")
+    recording = _ApplyRecordingExecutor(executor)
+
+    (record,) = await grade_attempts(recording, result, run_dir, instance)
+
+    assert recording.apply_calls == 0
+    assert record.apply_exit_code is None
+    assert record.test_exit_code is None
+    assert record.applied_sha256 is None
+    assert record.read_sha256 == hashlib.sha256(filtered_path.read_bytes()).hexdigest()
+    assert record.read_sha256 != result.attempts[0].filtered_sha256
+    assert record.infra_error == (
+        "filtered.diff does not match the digest recorded at the gate"
+    )
+    assert record.judgement.resolved is False
+
+
+async def test_attempt_without_recorded_digest_is_graded_as_before(tmp_path: Path):
+    executor, result, run_dir, instance = await _grading_case(
+        tmp_path,
+        [_source_patch(FIXED_CALC)],
+    )
+    result.attempts[0].filtered_sha256 = None
+    recording = _ApplyRecordingExecutor(executor)
+
+    (record,) = await grade_attempts(recording, result, run_dir, instance)
+
+    assert recording.apply_calls == 1
+    assert record.infra_error is None
+    assert record.judgement.resolved is True
 
 
 async def test_patch_that_breaks_protected_test_grades_not_resolved(tmp_path: Path):

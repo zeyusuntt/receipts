@@ -88,6 +88,18 @@ class AgreementReport(BaseModel):
     disagreements: list[Disagreement]
 
 
+class DigestMismatch(BaseModel):
+    instance_id: str
+    attempt: int
+
+
+class ShippedBytesReport(BaseModel):
+    agree: int
+    recorded: int
+    not_recorded: int
+    mismatches: list[DigestMismatch]
+
+
 class ReportedProblem(BaseModel):
     instance_id: str
     reason: str
@@ -111,6 +123,7 @@ class Report(BaseModel):
     ran_tasks: int
     configuration_a: ConfigurationA
     configuration_b: ConfigurationB
+    shipped_bytes: ShippedBytesReport
     agreement: AgreementReport
     exclusions: list[ReportedProblem]
     infrastructure_errors: list[ReportedProblem]
@@ -287,8 +300,42 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
         for gate_status in _GATE_STATUSES
     }
     disagreements: list[Disagreement] = []
+    digest_recorded = 0
+    digest_agree = 0
+    digest_not_recorded = 0
+    digest_mismatches: list[DigestMismatch] = []
     for record in ordered:
         for attempt_number, attempt in enumerate(record.attempts, start=1):
+            # The bytes official grading read must match the gate's digest even when
+            # it refused to apply them, so a patch changed after the gate counts as
+            # a mismatch rather than as not recorded.
+            official = attempt.official
+            graded = [
+                digest
+                for digest in (
+                    official.read_sha256 if official is not None else None,
+                    official.applied_sha256 if official is not None else None,
+                )
+                if digest is not None
+            ]
+            if (
+                attempt.filtered_sha256 is None
+                or attempt.witness_apply_sha256 is None
+                or not graded
+            ):
+                digest_not_recorded += 1
+            else:
+                digest_recorded += 1
+                digests = {attempt.filtered_sha256, attempt.witness_apply_sha256, *graded}
+                if len(digests) == 1:
+                    digest_agree += 1
+                else:
+                    digest_mismatches.append(
+                        DigestMismatch(
+                            instance_id=record.instance_id,
+                            attempt=attempt_number,
+                        ),
+                    )
             matrix[attempt.gate_status][
                 _official_result(attempt.official_resolved)
             ] += 1
@@ -387,6 +434,12 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
             shipped_false_dones=shipped_false_dones,
             verified_rate=verified_rate,
             cost_per_verified_fix=_cost_per_verified_fix(ran, verified_fixes),
+        ),
+        shipped_bytes=ShippedBytesReport(
+            agree=digest_agree,
+            recorded=digest_recorded,
+            not_recorded=digest_not_recorded,
+            mismatches=digest_mismatches,
         ),
         agreement=AgreementReport(
             matrix=matrix,
@@ -527,6 +580,38 @@ def render(report: Report) -> str:
                 f"{_format_number(cost.sandbox_lifetime_seconds)} | "
                 f"{_format_number(cost.wall_time_s)} |"
             ),
+            "",
+            "## Shipped bytes",
+            "",
+            (
+                "Shipped bytes: digests agree on "
+                f"{report.shipped_bytes.agree} of "
+                f"{report.shipped_bytes.recorded} attempts."
+            ),
+            "",
+            (
+                f"{report.shipped_bytes.not_recorded} "
+                f"{'attempt' if report.shipped_bytes.not_recorded == 1 else 'attempts'} "
+                "not recorded (records before this check)."
+            ),
+            "",
+        ],
+    )
+    if report.shipped_bytes.mismatches:
+        lines.extend(
+            [
+                "| Instance | Attempt |",
+                "| --- | ---: |",
+            ],
+        )
+        lines.extend(
+            f"| {_cell(item.instance_id)} | {item.attempt} |"
+            for item in report.shipped_bytes.mismatches
+        )
+    else:
+        lines.append("Mismatches: none.")
+    lines.extend(
+        [
             "",
             "## Gate and official-grader agreement",
             "",

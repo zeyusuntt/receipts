@@ -265,6 +265,9 @@ new file mode 100644
     assert attempt.filtered_patch_sha256 == hashlib.sha256(
         (Path(record.run_dir) / "attempts/1/filtered.diff").read_bytes(),
     ).hexdigest()
+    assert attempt.filtered_sha256 == attempt.filtered_patch_sha256
+    assert attempt.witness_apply_sha256 == attempt.filtered_sha256
+    assert attempt.official.applied_sha256 == attempt.filtered_sha256
     assert record.final.gate_status == "PASS"
     assert record.final.verified_fix is True
     assert record.final.official_resolved is True

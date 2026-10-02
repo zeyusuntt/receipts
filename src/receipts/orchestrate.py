@@ -93,6 +93,8 @@ class AttemptResult(BaseModel):
     filtered_patch_path: str
     witness_branch_id: str
     dropped_paths: list[str]
+    filtered_sha256: str | None = None
+    witness_apply_sha256: str | None = None
 
 
 class RunResult(BaseModel):
@@ -545,7 +547,18 @@ async def fix(
                 patch_path = f"{attempt_root}/patch.diff"
                 filtered_path = f"{attempt_root}/filtered.diff"
                 run_directory.write_text(patch_path, _patch_text(verified))
-                run_directory.write_text(filtered_path, verified.filtered_patch)
+                filtered_bytes = verified.filtered_patch.encode("utf-8")
+                written_filtered = run_directory.write_bytes(
+                    filtered_path,
+                    filtered_bytes,
+                )
+                written_sha256 = hashlib.sha256(
+                    written_filtered.read_bytes(),
+                ).hexdigest()
+                if written_sha256 != verified.filtered_sha256:
+                    raise RuntimeError(
+                        "filtered.diff does not match the verified digest after writing",
+                    )
                 run_directory.write_receipts(
                     f"{attempt_root}/witness/receipts.jsonl",
                     collector.for_branch(verified.witness.id),
@@ -560,6 +573,12 @@ async def fix(
                         filtered_patch_path=filtered_path,
                         witness_branch_id=verified.witness.id,
                         dropped_paths=verified.dropped,
+                        filtered_sha256=verified.filtered_sha256,
+                        witness_apply_sha256=(
+                            verified.apply.patch_sha256
+                            if verified.apply is not None
+                            else None
+                        ),
                     ),
                 )
                 run_directory.write_receipts(

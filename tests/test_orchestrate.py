@@ -255,6 +255,10 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     assert persisted["cost"] == json.loads((run_dir / "cost.json").read_text())
     assert persisted["wall_time_s"] > 0
     assert "return a - b" in (run_dir / persisted["selected_patch_path"]).read_text()
+    filtered_bytes = (run_dir / persisted["selected_patch_path"]).read_bytes()
+    filtered_sha256 = hashlib.sha256(filtered_bytes).hexdigest()
+    assert result.attempts[0].filtered_sha256 == filtered_sha256
+    assert result.attempts[0].witness_apply_sha256 == filtered_sha256
 
     baseline = json.loads((run_dir / "baseline.json").read_text())
     assert len(baseline["runs"]) == 2
@@ -346,9 +350,13 @@ async def test_fix_unions_explicit_and_spec_test_paths_and_loads_v1_result(tmp_p
     old_result = json.loads((run_dir / "result.json").read_text())
     old_result["input"].pop("spec_paths")
     old_result["baseline"].pop("spec_paths")
+    old_result["attempts"][0].pop("filtered_sha256")
+    old_result["attempts"][0].pop("witness_apply_sha256")
     loaded = _orchestrate_module().RunResult.model_validate(old_result)
     assert loaded.input.spec_paths == []
     assert loaded.baseline.spec_paths == []
+    assert loaded.attempts[0].filtered_sha256 is None
+    assert loaded.attempts[0].witness_apply_sha256 is None
 
 
 async def test_image_source_workdir_reaches_worker_prompt(tmp_path: Path):
