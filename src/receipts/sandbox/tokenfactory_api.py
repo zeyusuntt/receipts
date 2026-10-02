@@ -58,6 +58,9 @@ class RunResult:
     status: str
     error: str | None
     retries: dict[str, int] = field(default_factory=dict)
+    operation_id: str = ""
+    timed_out: bool = False
+    has_process_result: bool = True
 
 
 class TokenFactoryApiError(RuntimeError):
@@ -130,11 +133,17 @@ def _decode_stream(value: object) -> str:
     return raw.encode("latin-1", errors="replace").decode(errors="replace")
 
 
-def _run_result(operation: Mapping[str, Any], retries: Mapping[str, int]) -> RunResult:
+def _run_result(
+    operation: Mapping[str, Any],
+    retries: Mapping[str, int],
+    *,
+    operation_id: str = "",
+) -> RunResult:
     metadata = operation.get("metadata")
     metadata = metadata if isinstance(metadata, Mapping) else {}
-    process = metadata.get("result")
-    process = process if isinstance(process, Mapping) else {}
+    raw_process = metadata.get("result")
+    has_process_result = isinstance(raw_process, Mapping)
+    process = raw_process if has_process_result else {}
     state = process.get("state")
     state = state if isinstance(state, Mapping) else {}
     resources = process.get("resources")
@@ -158,6 +167,9 @@ def _run_result(operation: Mapping[str, Any], retries: Mapping[str, int]) -> Run
         status=str(operation.get("status", "")),
         error=str(raw_error) if raw_error is not None else None,
         retries=dict(sorted(retries.items())),
+        operation_id=operation_id,
+        timed_out=bool(state.get("timed_out", False)),
+        has_process_result=has_process_result,
     )
 
 
@@ -575,7 +587,7 @@ class TokenFactorySandboxApi:
             raise TimeoutError(
                 f"Token Factory sandbox operation {operation_id} exceeded the client timeout"
             ) from exc
-        return _run_result(operation, retries)
+        return _run_result(operation, retries, operation_id=operation_id)
 
 
 class FakeTokenFactorySandboxApi:
@@ -966,4 +978,8 @@ class FakeTokenFactorySandboxApi:
             files=files,
             preserve_env=preserve_env,
         )
-        return _run_result(self._operations[operation_id], {})
+        return _run_result(
+            self._operations[operation_id],
+            {},
+            operation_id=operation_id,
+        )

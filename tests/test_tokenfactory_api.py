@@ -299,6 +299,8 @@ async def test_run_polls_to_terminal_and_parses_the_sdk_result_shape():
         status="SUCCESS",
         error=None,
         retries={},
+        operation_id="operation-1",
+        timed_out=False,
     )
     assert sleeps == [0.1, 0.2]
 
