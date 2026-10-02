@@ -25,6 +25,7 @@ from receipts.llm import (
     load_config,
 )
 from receipts.orchestrate import RunBudgets, RunResult, fix
+from receipts.pilot.cleanup import cleanup_manifests, render_cleanup
 from receipts.pilot.runner import InstanceRecord, run_pilot
 from receipts.pilot.screen import screen_candidates
 from receipts.preflight import run_preflight
@@ -127,6 +128,12 @@ def _parser() -> argparse.ArgumentParser:
         help="build the report from pilot records",
     )
     pilot_report.add_argument("pilot_dir", type=Path)
+    pilot_cleanup = pilot_commands.add_parser(
+        "cleanup",
+        help="list or retry pending Daytona snapshot cleanup",
+    )
+    pilot_cleanup.add_argument("--root", required=True, type=Path)
+    pilot_cleanup.add_argument("--yes", action="store_true")
     return parser
 
 
@@ -399,6 +406,28 @@ async def _run_pilot_screen(args: argparse.Namespace) -> int:
     return 0
 
 
+async def _run_pilot_cleanup(args: argparse.Namespace) -> int:
+    api: AsyncDaytonaApi | None = None
+    dotenv = _parse_dotenv(Path(".env"))
+    api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY", "")
+    if args.yes:
+        if not api_key:
+            raise ValueError("DAYTONA_API_KEY is required with --yes")
+        api = AsyncDaytonaApi(AsyncDaytona(DaytonaConfig(api_key=api_key)))
+    try:
+        result = await cleanup_manifests(
+            args.root,
+            api,
+            yes=args.yes,
+            secrets=(api_key,),
+        )
+    finally:
+        if api is not None:
+            await api.close()
+    print(render_cleanup(result), end="")
+    return 1 if result.failed else 0
+
+
 def _run_pilot_report(pilot_dir: Path) -> int:
     try:
         report_module = importlib.import_module("receipts.pilot.report")
@@ -435,6 +464,8 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
         return await _run_pilot(args, model)
     if args.command == "pilot" and args.pilot_command == "screen":
         return await _run_pilot_screen(args)
+    if args.command == "pilot" and args.pilot_command == "cleanup":
+        return await _run_pilot_cleanup(args)
     if args.command == "pilot" and args.pilot_command == "report":
         return _run_pilot_report(args.pilot_dir)
     raise AssertionError(f"unknown command: {args.command}")

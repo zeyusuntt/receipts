@@ -994,6 +994,216 @@ async def test_prepare_failure_is_infra_error_and_executor_is_closed(tmp_path: P
     )
 
 
+async def test_run_instance_sets_cleanup_manifest_only_on_supporting_executor(
+    tmp_path: Path,
+):
+    runner = _runner_module()
+
+    class FailingExecutor:
+        def __init__(self, *, supports_manifest: bool) -> None:
+            self.closed = False
+            if supports_manifest:
+                self.cleanup_manifest = None
+
+        async def prepare(self, source) -> None:
+            raise RuntimeError("stop after executor setup")
+
+        async def close(self) -> None:
+            self.closed = True
+
+    daytona_like = FailingExecutor(supports_manifest=True)
+    local_like = FailingExecutor(supports_manifest=False)
+    daytona_record = await runner.run_instance(
+        lambda run_id: daytona_like,
+        FakeModel(),
+        _instance("fixture__daytona-manifest"),
+        tmp_path / "pilot",
+        _budgets(),
+    )
+    await runner.run_instance(
+        lambda run_id: local_like,
+        FakeModel(),
+        _instance("fixture__local-no-manifest"),
+        tmp_path / "pilot",
+        _budgets(),
+    )
+
+    assert daytona_like.cleanup_manifest == Path(daytona_record.run_dir) / "cleanup.json"
+    assert not hasattr(local_like, "cleanup_manifest")
+
+
+async def test_cleanup_failure_is_recorded_without_changing_agent_outcome(
+    tmp_path: Path,
+):
+    runner = _runner_module()
+    repo = make_repo(tmp_path / "source")
+
+    class CleanupFailingExecutor(_ImageLocalExecutor):
+        async def close(self) -> None:
+            await super().close()
+            raise RuntimeError("snapshot delete denied")
+
+    executor = CleanupFailingExecutor(
+        tmp_path / "executors" / "run",
+        repo,
+        "run",
+    )
+    model = _model(
+        [
+            _turn(
+                "write_file",
+                {"path": "calc/__init__.py", "content": FIXED_CALC},
+                "write-source",
+            ),
+            _turn("run_command", {"command": "pytest -q"}, "run-suite"),
+            _finish("finish", ["calc/__init__.py"]),
+        ],
+    )
+
+    record = await runner.run_instance(
+        lambda run_id: executor,
+        model,
+        _instance("fixture__cleanup-failure"),
+        tmp_path / "pilot",
+        _budgets(),
+    )
+
+    assert record.status == "ran"
+    assert len(record.attempts) == 1
+    assert record.final is not None and record.final.verified_fix is True
+    assert record.cleanup_error == "RuntimeError: snapshot delete denied"
+
+
+async def test_run_instance_writes_repository_relative_run_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    runner = _runner_module()
+    monkeypatch.setattr(runner, "_REPOSITORY_ROOT", tmp_path)
+
+    class FailingExecutor:
+        async def prepare(self, source) -> None:
+            raise RuntimeError("sandbox failed to start")
+
+        async def close(self) -> None:
+            return None
+
+    record = await runner.run_instance(
+        lambda run_id: FailingExecutor(),
+        FakeModel(),
+        _instance("fixture__relative-run"),
+        tmp_path / "pilot",
+        _budgets(),
+    )
+
+    assert record.run_dir.startswith("pilot/fixture__relative-run/runs/")
+    assert not Path(record.run_dir).is_absolute()
+
+
+async def test_run_pilot_relativizes_archived_and_prior_infrastructure_paths(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    runner = _runner_module()
+    monkeypatch.setattr(runner, "_REPOSITORY_ROOT", tmp_path)
+    pilot_dir = tmp_path / "pilot"
+    instance = _instance("fixture__relative-retry")
+    first_run = pilot_dir / instance.instance_id / "runs" / "run-1"
+    previous = _pilot_record(
+        runner,
+        instance.instance_id,
+        "infra_error",
+        first_run,
+        "RuntimeError: temporary outage",
+    )
+    _persist_record(pilot_dir, previous)
+
+    async def fake_run_instance(
+        make_executor,
+        model,
+        current_instance,
+        current_pilot_dir,
+        budgets,
+    ):
+        del make_executor, model, budgets
+        return _pilot_record(
+            runner,
+            current_instance.instance_id,
+            "ran",
+            current_pilot_dir / current_instance.instance_id / "runs" / "run-2",
+        )
+
+    monkeypatch.setattr(runner, "run_instance", fake_run_instance)
+
+    records = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"unexpected executor construction: {run_id}"),
+        FakeModel(),
+        [instance],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    archived = runner.InstanceRecord.model_validate_json(
+        (pilot_dir / instance.instance_id / "record.infra-1.json").read_text(
+            encoding="utf-8",
+        ),
+    )
+    assert archived.run_dir == "pilot/fixture__relative-retry/runs/run-1"
+    assert records[0].run_dir == "pilot/fixture__relative-retry/runs/run-2"
+    assert records[0].prior_infrastructure_errors[0].run_dir == archived.run_dir
+
+
+async def test_old_absolute_record_loads_and_resumes_without_rerunning(
+    tmp_path: Path,
+):
+    runner = _runner_module()
+    pilot_dir = tmp_path / "pilot"
+    instance = _instance("fixture__old-absolute")
+    absolute_run_dir = tmp_path / "old-checkout" / "pilot" / "run-1"
+    record = _pilot_record(
+        runner,
+        instance.instance_id,
+        "ran",
+        absolute_run_dir,
+    )
+    _persist_record(pilot_dir, record)
+
+    records = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"executor created for old record {run_id}"),
+        FakeModel(),
+        [instance],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    assert records[0].run_dir == str(absolute_run_dir)
+
+
+def test_relative_record_path_stays_repository_relative_from_another_cwd(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    runner = _runner_module()
+    repository = tmp_path / "repository"
+    elsewhere = tmp_path / "elsewhere"
+    repository.mkdir()
+    elsewhere.mkdir()
+    monkeypatch.setattr(runner, "_REPOSITORY_ROOT", repository)
+    monkeypatch.chdir(elsewhere)
+    record = _pilot_record(
+        runner,
+        "fixture__portable",
+        "ran",
+        Path("pilot/fixture__portable/runs/run-1"),
+    )
+
+    normalized = runner._normalize_record_paths(record)
+
+    assert normalized.run_dir == "pilot/fixture__portable/runs/run-1"
+
+
 async def test_run_pilot_bounds_concurrency_and_stops_at_requested_ran_count(
     tmp_path: Path,
     monkeypatch,

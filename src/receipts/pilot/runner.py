@@ -30,6 +30,7 @@ from receipts.verify.run import BaselineBroken, BaselineTooSlow, TargetNotFailin
 
 
 PilotStatus = Literal["ran", "excluded", "infra_error"]
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
 class AttemptRecord(BaseModel):
@@ -84,6 +85,7 @@ class InstanceRecord(BaseModel):
     final: FinalRecord | None
     cost: PilotCost
     wall_time_s: float = Field(ge=0)
+    cleanup_error: str | None = None
     prior_infrastructure_errors: list[PriorInfrastructureError] = Field(
         default_factory=list,
     )
@@ -257,6 +259,30 @@ def _filtered_patch_sha256(run_dir: Path, relative_path: str) -> str:
     return hashlib.sha256((run_dir / relative_path).read_bytes()).hexdigest()
 
 
+def _record_run_dir(run_dir: str | Path) -> str:
+    path = Path(run_dir).resolve()
+    try:
+        return path.relative_to(_REPOSITORY_ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def _stored_run_dir(run_dir: str | Path) -> str:
+    path = Path(run_dir)
+    if not path.is_absolute():
+        return path.as_posix()
+    return _record_run_dir(path)
+
+
+def _normalize_record_paths(record: InstanceRecord) -> InstanceRecord:
+    record.run_dir = _stored_run_dir(record.run_dir)
+    record.prior_infrastructure_errors = [
+        prior.model_copy(update={"run_dir": _stored_run_dir(prior.run_dir)})
+        for prior in record.prior_infrastructure_errors
+    ]
+    return record
+
+
 def _ran_record(
     instance: Instance,
     run_dir: Path,
@@ -330,7 +356,7 @@ def _ran_record(
         instance_id=instance.instance_id,
         status="infra_error" if infrastructure_reason is not None else "ran",
         reason=infrastructure_reason,
-        run_dir=str(run_dir),
+        run_dir=_record_run_dir(run_dir),
         attempts=attempts,
         final=FinalRecord(
             gate_status=result.final_verdict.status,
@@ -400,10 +426,13 @@ async def run_instance(
     pytest_replaced = False
     result: RunResult | None = None
     sandbox_usage: list[dict[str, Any]] = []
+    cleanup_errors: list[str] = []
 
     try:
         try:
             executor = make_executor(run_id)
+            if hasattr(executor, "cleanup_manifest"):
+                setattr(executor, "cleanup_manifest", run_dir / "cleanup.json")
             original_sink = getattr(executor, "sink", None)
             if original_sink is not None:
                 setattr(executor, "sink", _DurablePilotSink(original_sink, run_dir))
@@ -447,10 +476,18 @@ async def run_instance(
         finally:
             try:
                 if executor is not None:
-                    await _close_executor(executor)
+                    try:
+                        await _close_executor(executor)
+                    except Exception as exc:
+                        cleanup_errors.append(f"{type(exc).__name__}: {exc}")
             finally:
                 if executor is not None:
-                    sandbox_usage = _sandbox_usage(executor)
+                    try:
+                        sandbox_usage = _sandbox_usage(executor)
+                    except Exception as exc:
+                        cleanup_errors.append(
+                            f"sandbox usage failed: {type(exc).__name__}: {exc}",
+                        )
                 if executor is not None and sink_replaced:
                     setattr(executor, "sink", original_sink)
                 if executor is not None and pytest_replaced:
@@ -468,7 +505,7 @@ async def run_instance(
             instance_id=instance.instance_id,
             status="excluded",
             reason=str(exc),
-            run_dir=str(run_dir),
+            run_dir=_record_run_dir(run_dir),
             attempts=[],
             final=None,
             cost=_pilot_cost(result, sandbox_usage),
@@ -481,13 +518,15 @@ async def run_instance(
             instance_id=instance.instance_id,
             status="infra_error",
             reason=f"{type(exc).__name__}: {exc}",
-            run_dir=str(run_dir),
+            run_dir=_record_run_dir(run_dir),
             attempts=[],
             final=None,
             cost=_pilot_cost(result, sandbox_usage),
             wall_time_s=time.monotonic() - started,
         )
 
+    if cleanup_errors:
+        record.cleanup_error = "; ".join(cleanup_errors)
     if record.status == "infra_error" and record.reason is not None:
         error_path = instance_dir / "error.txt"
         if not error_path.exists():
@@ -509,7 +548,7 @@ def _archived_infrastructure_errors(
         errors.append(
             PriorInfrastructureError(
                 reason=record.reason or "reason unavailable",
-                run_dir=record.run_dir,
+                run_dir=_stored_run_dir(record.run_dir),
             ),
         )
     return errors
@@ -522,9 +561,14 @@ def _archive_infrastructure_record(
 ) -> list[PriorInfrastructureError]:
     archive_number = len(prior_errors) + 1
     archive_path = record_path.with_name(f"record.infra-{archive_number}.json")
+    record = _normalize_record_paths(record.model_copy(deep=True))
+    _atomic_write_record(record_path, record)
     record_path.replace(archive_path)
     return [
-        *prior_errors,
+        *(
+            prior.model_copy(update={"run_dir": _stored_run_dir(prior.run_dir)})
+            for prior in prior_errors
+        ),
         PriorInfrastructureError(
             reason=record.reason or "reason unavailable",
             run_dir=record.run_dir,
@@ -598,6 +642,7 @@ async def run_pilot(
         while record is None or record.status == "infra_error":
             if record is not None:
                 if len(prior_errors) + 1 >= _MAX_INFRASTRUCTURE_RUNS:
+                    _normalize_record_paths(record)
                     record.prior_infrastructure_errors = list(prior_errors)
                     _atomic_write_record(record_path, record)
                     break
@@ -613,6 +658,7 @@ async def run_pilot(
                 pilot_dir,
                 budget,
             )
+            _normalize_record_paths(record)
             record.prior_infrastructure_errors = list(prior_errors)
             _atomic_write_record(record_path, record)
 

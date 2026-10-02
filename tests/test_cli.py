@@ -459,6 +459,21 @@ def test_pilot_screen_arguments_parse(tmp_path: Path):
     assert args.concurrency == 2
 
 
+def test_pilot_cleanup_arguments_parse(tmp_path: Path):
+    root = tmp_path / "pilot"
+
+    dry_run = _parser().parse_args(["pilot", "cleanup", "--root", str(root)])
+    confirmed = _parser().parse_args(
+        ["pilot", "cleanup", "--root", str(root), "--yes"],
+    )
+
+    assert dry_run.command == "pilot"
+    assert dry_run.pilot_command == "cleanup"
+    assert dry_run.root == root
+    assert dry_run.yes is False
+    assert confirmed.yes is True
+
+
 def test_pilot_screen_never_constructs_a_model(tmp_path: Path, monkeypatch, capsys):
     import receipts.cli as cli
 

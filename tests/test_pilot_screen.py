@@ -125,6 +125,7 @@ class _FakeScreenFactory:
         self.plans = plans
         self.delays = delays or {}
         self.created: dict[str, int] = {}
+        self.executors: list[_FakeScreenExecutor] = []
         self.active = 0
         self.max_active = 0
 
@@ -140,13 +141,15 @@ class _FakeScreenFactory:
         self.created[instance_id] = index + 1
         self.active += 1
         self.max_active = max(self.max_active, self.active)
-        return _FakeScreenExecutor(
+        executor = _FakeScreenExecutor(
             self,
             self.root / run_id,
             run_id,
             scenario,
             self.delays.get(instance_id, 0),
         )
+        self.executors.append(executor)
+        return executor
 
 
 class _FakeScreenExecutor:
@@ -166,6 +169,7 @@ class _FakeScreenExecutor:
         self.root.mkdir(parents=True, exist_ok=True)
         self.released: list[str] = []
         self.closed = False
+        self.cleanup_manifest: Path | None = None
         self._seq: dict[str, int] = {}
 
     def _receipt(self, branch: Branch, **fields) -> Receipt:
@@ -453,3 +457,30 @@ async def test_screen_concurrency_preserves_position_selection(
         for row in _read_ledger(ledger)
         if row["outcome"] == "included"
     ) == [1, 2]
+
+
+async def test_screen_sets_cleanup_manifest_in_run_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    screen = _screen_module()
+    monkeypatch.chdir(tmp_path)
+    factory = _FakeScreenFactory(
+        tmp_path / "executors",
+        {"candidate-1": ["included"]},
+    )
+    ledger = Path("pilot/screen.jsonl")
+
+    included = await screen.screen_candidates(
+        factory,
+        [_instance("candidate-1")],
+        ledger,
+        start=1,
+        exclude=set(),
+        want=1,
+    )
+
+    assert included == ["candidate-1"]
+    assert factory.executors[0].cleanup_manifest == (
+        Path("pilot/screen/candidate-1/run-1/cleanup.json")
+    )

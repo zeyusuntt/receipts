@@ -167,6 +167,7 @@ class Report(BaseModel):
     agreement: AgreementReport
     exclusions: list[ReportedProblem]
     infrastructure_errors: list[ReportedProblem]
+    cleanup_errors: list[ReportedProblem]
     instances: list[InstanceRow]
     truncated_test_ids: list[TruncatedTestIds] = Field(default_factory=list)
 
@@ -560,6 +561,15 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
                     run_dir=record.run_dir,
                 ),
             )
+    cleanup_errors = [
+        ReportedProblem(
+            instance_id=record.instance_id,
+            reason=record.cleanup_error,
+            run_dir=record.run_dir,
+        )
+        for record in ordered
+        if record.cleanup_error is not None
+    ]
     instances = []
     for record in ordered:
         first = record.attempts[0] if record.attempts else None
@@ -623,6 +633,7 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
         ),
         exclusions=exclusions,
         infrastructure_errors=infrastructure_errors,
+        cleanup_errors=cleanup_errors,
         instances=instances,
         truncated_test_ids=_truncated_test_ids(ordered),
     )
@@ -895,6 +906,8 @@ def render(report: Report) -> str:
     lines.extend(_render_problem_table(report.exclusions))
     lines.extend(["", "## Infrastructure errors", ""])
     lines.extend(_render_problem_table(report.infrastructure_errors))
+    lines.extend(["", "## Cleanup errors", ""])
+    lines.extend(_render_problem_table(report.cleanup_errors))
 
     lines.extend(
         [

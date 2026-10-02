@@ -20,7 +20,6 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import logging
 import os
 import posixpath
 import re
@@ -69,7 +68,6 @@ from receipts.sandbox.staging import (
 )
 
 TAIL = 6000
-_LOG = logging.getLogger(__name__)
 
 
 def _now() -> datetime:
@@ -493,6 +491,7 @@ class DaytonaExecutor:
         snapshot_timeout_s: int = 900,
         file_timeout_s: int = 120,
         clock: Callable[[], float] = time.monotonic,
+        cleanup_manifest: Path | None = None,
     ) -> None:
         self.root = root
         self.sink = sink
@@ -505,6 +504,7 @@ class DaytonaExecutor:
         self.fork_timeout_s = fork_timeout_s
         self.snapshot_timeout_s = snapshot_timeout_s
         self.file_timeout_s = file_timeout_s
+        self.cleanup_manifest = cleanup_manifest
         self._clock = clock
         self._validate_configuration()
 
@@ -515,6 +515,8 @@ class DaytonaExecutor:
         self._created_sandboxes: list[str] = []
         self._sandbox_lifetimes: dict[str, tuple[float, float | None]] = {}
         self._snapshots: dict[str, DaytonaSnapshot] = {}
+        self._created_snapshots: dict[str, DaytonaSnapshot] = {}
+        self._snapshot_cleanup_entries: dict[str, dict[str, object]] = {}
         self._snapshot_specs: dict[str, _BranchSpec] = {}
         self._checkpoint_trees: dict[str, Path] = {}
         self._checkpoint_symlinks: dict[str, tuple[Path, ...]] = {}
@@ -1121,6 +1123,45 @@ class DaytonaExecutor:
         safe_run = (safe_run or "run")[:40]
         return f"receipts-{safe_run}-{uuid.uuid4().hex[:12]}"
 
+    def _write_cleanup_manifest(self) -> None:
+        if self.cleanup_manifest is None:
+            return
+        self.cleanup_manifest.parent.mkdir(parents=True, exist_ok=True)
+        temporary = self.cleanup_manifest.with_name(
+            self.cleanup_manifest.name + ".tmp",
+        )
+        temporary.write_text(
+            json.dumps(
+                list(self._snapshot_cleanup_entries.values()),
+                ensure_ascii=True,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(self.cleanup_manifest)
+
+    def _record_snapshot_created(self, snapshot: DaytonaSnapshot) -> None:
+        self._snapshot_cleanup_entries[snapshot.id] = {
+            "id": snapshot.id,
+            "name": snapshot.name,
+            "created_at": _now().isoformat(),
+            "status": "created",
+            "error": None,
+        }
+        self._write_cleanup_manifest()
+
+    def _record_snapshot_cleanup(
+        self,
+        snapshot_id: str,
+        status: str,
+        error: str | None,
+    ) -> None:
+        entry = self._snapshot_cleanup_entries[snapshot_id]
+        entry["status"] = status
+        entry["error"] = error
+        self._write_cleanup_manifest()
+
     async def checkpoint(self, branch: Branch) -> Checkpoint:
         sandbox_id = self._sandbox_id(branch)
         snapshot = await self.api.create_snapshot(
@@ -1128,6 +1169,8 @@ class DaytonaExecutor:
             self._snapshot_name(),
             timeout_s=self.snapshot_timeout_s,
         )
+        self._created_snapshots[snapshot.id] = snapshot
+        self._record_snapshot_created(snapshot)
         if not snapshot.ref:
             raise RuntimeError("Daytona returned a snapshot without a ref")
         self._snapshots[snapshot.ref] = snapshot
@@ -1401,20 +1444,26 @@ class DaytonaExecutor:
             for sandbox in swept:
                 await delete_sandbox(sandbox.id)
 
-        retained_snapshot_refs: set[str] = set()
-        for snapshot_ref, snapshot in list(self._snapshots.items()):
+        retained_snapshot_ids: set[str] = set()
+        for snapshot_id, snapshot in list(self._created_snapshots.items()):
             try:
                 await self.api.delete_snapshot(snapshot.id, timeout_s=120)
-            except Exception as exc:  # A known key scope gap must not hide sandbox cleanup.
-                if self._status_code(exc) == 403:
-                    _LOG.warning(
-                        "Daytona snapshot deletion returned 403 for %s: %s",
-                        snapshot.id,
-                        exc,
+            except Exception as exc:  # Cleanup must retain every provider failure for retry.
+                if self._status_code(exc) != 404:
+                    error = str(exc)
+                    self._record_snapshot_cleanup(
+                        snapshot_id,
+                        "delete_failed",
+                        error,
                     )
-                else:
-                    failures[f"snapshot {snapshot.id}"] = str(exc)
-                    retained_snapshot_refs.add(snapshot_ref)
+                    failures[f"snapshot {snapshot.id}"] = error
+                    retained_snapshot_ids.add(snapshot_id)
+                    continue
+            try:
+                self._record_snapshot_cleanup(snapshot_id, "deleted", None)
+            except Exception as exc:
+                failures[f"snapshot manifest {snapshot.id}"] = str(exc)
+                retained_snapshot_ids.add(snapshot_id)
 
         if deleted:
             self._created_sandboxes = [
@@ -1431,6 +1480,16 @@ class DaytonaExecutor:
                 self._sandboxes.pop(branch_id, None)
                 self._specs.pop(branch_id, None)
                 self._roots.pop(branch_id, None)
+        retained_snapshot_refs = {
+            snapshot_ref
+            for snapshot_ref, snapshot in self._snapshots.items()
+            if snapshot.id in retained_snapshot_ids
+        }
+        self._created_snapshots = {
+            snapshot_id: snapshot
+            for snapshot_id, snapshot in self._created_snapshots.items()
+            if snapshot_id in retained_snapshot_ids
+        }
         self._snapshots = {
             snapshot_ref: snapshot
             for snapshot_ref, snapshot in self._snapshots.items()

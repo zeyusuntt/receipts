@@ -104,6 +104,8 @@ async def _screen_once(
 
     try:
         executor = make_executor(_run_id(instance.instance_id))
+        if hasattr(executor, "cleanup_manifest"):
+            setattr(executor, "cleanup_manifest", run_dir / "cleanup.json")
         original_run_pytest = getattr(executor, "run_pytest", None)
         if original_run_pytest is not None:
             setattr(

@@ -1,6 +1,6 @@
 import hashlib
 import importlib
-import logging
+import json
 import os
 import shlex
 import shutil
@@ -8,6 +8,7 @@ import stat
 import subprocess
 import uuid
 from copy import deepcopy
+from datetime import datetime
 from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 
@@ -578,6 +579,40 @@ async def test_checkpoint_and_fork_use_snapshot_ref_labels_and_isolated_files(tm
     assert witness.id == "w1"
 
 
+async def test_checkpoint_persists_cleanup_manifest_and_close_marks_snapshot_deleted(
+    tmp_path,
+):
+    module = _daytona_module()
+    cleanup_manifest = tmp_path / "run" / "cleanup.json"
+    executor, api, _ = _executor(
+        tmp_path,
+        module,
+        cleanup_manifest=cleanup_manifest,
+    )
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+
+    await executor.checkpoint(base)
+
+    snapshot = next(iter(api.snapshots.values()))["snapshot"]
+    created = json.loads(cleanup_manifest.read_text(encoding="utf-8"))
+    assert created == [
+        {
+            "id": snapshot.id,
+            "name": snapshot.name,
+            "created_at": created[0]["created_at"],
+            "status": "created",
+            "error": None,
+        },
+    ]
+    datetime.fromisoformat(created[0]["created_at"])
+
+    await executor.close()
+
+    deleted = json.loads(cleanup_manifest.read_text(encoding="utf-8"))
+    assert deleted[0]["status"] == "deleted"
+    assert deleted[0]["error"] is None
+
+
 async def test_fork_rejects_a_changed_snapshot_ref(tmp_path):
     module = _daytona_module()
     executor, api, _ = _executor(tmp_path, module)
@@ -852,12 +887,16 @@ async def test_release_stays_within_three_sandbox_cap_across_two_witnesses(tmp_p
     assert api.sandboxes == {}
 
 
-async def test_close_deletes_tracked_and_label_swept_sandboxes_and_logs_snapshot_403(
+async def test_close_records_snapshot_403_retains_it_and_retries_after_sandbox_cleanup(
     tmp_path,
-    caplog,
 ):
     module = _daytona_module()
-    executor, api, _ = _executor(tmp_path, module)
+    cleanup_manifest = tmp_path / "run" / "cleanup.json"
+    executor, api, _ = _executor(
+        tmp_path,
+        module,
+        cleanup_manifest=cleanup_manifest,
+    )
     base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
     checkpoint = await executor.checkpoint(base)
     await executor.fork(checkpoint, 1)
@@ -869,16 +908,26 @@ async def test_close_deletes_tracked_and_label_swept_sandboxes_and_logs_snapshot
     )
     api.snapshot_delete_status = 403
 
-    with caplog.at_level(logging.WARNING):
+    with pytest.raises(RuntimeError, match="snapshot delete denied"):
         await executor.close()
 
     assert set(api.deleted_sandboxes) == {"sandbox-1", "sandbox-2", orphan.id}
     assert foreign.id in api.sandboxes
     assert len(api.deleted_snapshots) == 1
-    assert "403" in caplog.text and "snapshot" in caplog.text
-    assert api.closed is True
+    assert checkpoint.id in executor._snapshots
+    failed = json.loads(cleanup_manifest.read_text(encoding="utf-8"))
+    assert failed[0]["status"] == "delete_failed"
+    assert failed[0]["error"] == "snapshot delete denied"
+    assert api.closed is False
+
+    api.snapshot_delete_status = None
     await executor.close()
-    assert len(api.deleted_snapshots) == 1
+
+    assert len(api.deleted_snapshots) == 2
+    deleted = json.loads(cleanup_manifest.read_text(encoding="utf-8"))
+    assert deleted[0]["status"] == "deleted"
+    assert deleted[0]["error"] is None
+    assert api.closed is True
 
 
 class LaggingDeleteDaytonaApi(MemoryDaytonaApi):

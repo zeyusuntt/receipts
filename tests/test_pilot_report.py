@@ -726,6 +726,28 @@ def test_report_lists_every_prior_infrastructure_error_for_retried_instance():
     assert "pilot/project__retried/runs/run-2" in section
 
 
+def test_report_lists_cleanup_errors_without_changing_instance_outcome():
+    report_module = _report_module()
+    record = _record(
+        "project__cleanup-failed",
+        [_attempt(gate_status="PASS", official_resolved=True, agreement="agree_pass")],
+        verified_fix=True,
+    )
+    record.cleanup_error = "RuntimeError: snapshot delete denied"
+
+    report = report_module.build_report([record])
+
+    assert report.configuration_b.verified_fixes == 1
+    assert [problem.instance_id for problem in report.cleanup_errors] == [
+        "project__cleanup-failed",
+    ]
+    assert report.cleanup_errors[0].reason == "RuntimeError: snapshot delete denied"
+    markdown = report_module.render(report)
+    section = markdown.split("## Cleanup errors", 1)[1].split("## Per instance", 1)[0]
+    assert "project__cleanup-failed" in section
+    assert "snapshot delete denied" in section
+
+
 def test_cost_columns_are_computed_from_separate_model_and_sandbox_costs():
     report_module = _report_module()
     first = _record(
