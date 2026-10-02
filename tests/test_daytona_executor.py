@@ -39,6 +39,8 @@ class MemoryDaytonaApi:
         self.exec_calls = []
         self.upload_calls = []
         self.download_calls = []
+        self.file_read_calls = []
+        self.file_info_timeouts = []
         self.list_calls = []
         self.deleted_sandboxes = []
         self.deleted_snapshots = []
@@ -194,7 +196,35 @@ class MemoryDaytonaApi:
         self.sandboxes[sandbox_id]["modes"][remote_path] = 0o644
 
     async def download_file(self, sandbox_id, remote_path, *, timeout_s):
-        return self.sandboxes[sandbox_id]["files"].get(remote_path)
+        self.file_read_calls.append(("download", remote_path))
+        state = self.sandboxes[sandbox_id]
+        if remote_path in state["directories"]:
+            raise RuntimeError("the live service refuses to download a directory")
+        return state["files"].get(remote_path)
+
+    async def get_file_info(self, sandbox_id, remote_path, *, timeout_s):
+        self.file_read_calls.append(("info", remote_path))
+        self.file_info_timeouts.append(timeout_s)
+        state = self.sandboxes[sandbox_id]
+        if remote_path in state["directories"]:
+            mode = state["directories"][remote_path]
+            return self.module.DaytonaFile(
+                path=remote_path,
+                is_dir=True,
+                mode="drwxr-xr-x",
+                permissions=f"{mode:04o}",
+                size=0,
+            )
+        if remote_path in state["files"]:
+            mode = state["modes"].get(remote_path, 0o644)
+            return self.module.DaytonaFile(
+                path=remote_path,
+                is_dir=False,
+                mode="-rwxr-xr-x" if mode & 0o111 else "-rw-r--r--",
+                permissions=f"{mode:04o}",
+                size=len(state["files"][remote_path]),
+            )
+        return None
 
     async def download_files(self, sandbox_id, requests, *, timeout_s):
         self.download_calls.extend(request.source for request in requests)
@@ -518,19 +548,43 @@ async def test_read_file_lists_directory_entries_sorted_with_slashes(tmp_path):
     assert await executor.read_file(base, "listing", 100) == (
         "a.py\nsub/\nz.py\n"
     )
+    assert api.file_read_calls == [("info", "/repo/listing")]
 
 
-async def test_read_file_treats_generic_daytona_not_found_as_missing(tmp_path):
+async def test_read_file_treats_missing_file_info_as_missing(tmp_path):
     module = _daytona_module()
     executor, api, _ = _executor(tmp_path, module)
     base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
 
-    async def missing_list(sandbox_id, path, *, depth):
-        raise module.DaytonaNotFoundError("missing directory")
-
-    api.list_files = missing_list
-
     assert await executor.read_file(base, "missing", 100) == ""
+    assert api.file_read_calls == [("info", "/repo/missing")]
+
+
+async def test_read_file_checks_info_before_downloading_regular_file(tmp_path):
+    module = _daytona_module()
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+
+    assert await executor.read_file(base, "original.txt", 100) == "original\n"
+    assert api.file_read_calls == [
+        ("info", "/repo/original.txt"),
+        ("download", "/repo/original.txt"),
+    ]
+    assert api.file_info_timeouts == [executor.file_timeout_s]
+
+
+async def test_read_file_propagates_non_not_found_file_info_error(tmp_path):
+    module = _daytona_module()
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+
+    async def failed_info(sandbox_id, remote_path, *, timeout_s=None):
+        raise RuntimeError("file info denied")
+
+    api.get_file_info = failed_info
+
+    with pytest.raises(RuntimeError, match="file info denied"):
+        await executor.read_file(base, "original.txt", 100)
 
 
 async def test_timeout_becomes_a_receipt_and_passes_the_explicit_timeout(tmp_path):
@@ -1125,7 +1179,7 @@ async def test_close_retains_a_nonpermission_snapshot_failure_for_retry(tmp_path
 
 async def test_async_daytona_adapter_uses_the_installed_sdk_signatures(tmp_path):
     module = _daytona_module()
-    from daytona import DaytonaFileReadFailedError, DaytonaProcessExecutionTimeoutError
+    from daytona import DaytonaFileNotFoundError, DaytonaProcessExecutionTimeoutError
 
     class SdkProcess:
         def __init__(self):
@@ -1141,20 +1195,31 @@ async def test_async_daytona_adapter_uses_the_installed_sdk_signatures(tmp_path)
     class SdkFs:
         def __init__(self):
             self.uploads = []
-            self.directory_download = False
+            self.downloads = []
             self.info_calls = []
 
         async def upload_file(self, content, remote_path, timeout=1800):
             self.uploads.append((content, remote_path, timeout))
 
         async def download_file(self, remote_path, timeout=1800):
-            if self.directory_download:
-                raise DaytonaFileReadFailedError("path is a directory")
+            self.downloads.append((remote_path, timeout))
+            if remote_path == "/repo":
+                raise RuntimeError("the live service refuses to download a directory")
             return b"downloaded"
 
-        async def get_file_info(self, path):
-            self.info_calls.append(path)
-            return SimpleNamespace(is_dir=True)
+        async def get_file_info(self, path, request_timeout=None):
+            self.info_calls.append((path, request_timeout))
+            if path == "/missing":
+                raise DaytonaFileNotFoundError("missing path")
+            is_dir = path == "/repo"
+            return SimpleNamespace(
+                path=path,
+                name=PurePosixPath(path).name,
+                is_dir=is_dir,
+                mode="drwxr-xr-x" if is_dir else "-rw-r--r--",
+                permissions="0755" if is_dir else "0644",
+                size=0 if is_dir else 10,
+            )
 
         async def download_files(self, requests, timeout=1800):
             return [
@@ -1258,11 +1323,36 @@ async def test_async_daytona_adapter_uses_the_installed_sdk_signatures(tmp_path)
         await adapter.exec(sandbox.id, "sleep", cwd="/repo", timeout_s=1)
 
     await adapter.upload_file(sandbox.id, b"data", "/repo/data", timeout_s=9)
+    assert await adapter.get_file_info(
+        sandbox.id,
+        "/repo/data",
+        timeout_s=9,
+    ) == module.DaytonaFile(
+        path="/repo/data",
+        is_dir=False,
+        mode="-rw-r--r--",
+        permissions="0644",
+        size=10,
+    )
+    assert await adapter.get_file_info(
+        sandbox.id,
+        "/repo",
+        timeout_s=9,
+    ) == module.DaytonaFile(
+        path="/repo",
+        is_dir=True,
+        mode="drwxr-xr-x",
+        permissions="0755",
+        size=0,
+    )
+    assert await adapter.get_file_info(sandbox.id, "/missing", timeout_s=9) is None
     assert await adapter.download_file(sandbox.id, "/repo/data", timeout_s=9) == b"downloaded"
-    client.sandboxes[sandbox.id].fs.directory_download = True
-    assert await adapter.download_file(sandbox.id, "/repo", timeout_s=9) is None
-    assert client.sandboxes[sandbox.id].fs.info_calls == ["/repo"]
-    client.sandboxes[sandbox.id].fs.directory_download = False
+    assert client.sandboxes[sandbox.id].fs.info_calls == [
+        ("/repo/data", 9),
+        ("/repo", 9),
+        ("/missing", 9),
+    ]
+    assert client.sandboxes[sandbox.id].fs.downloads == [("/repo/data", 9)]
     request = module.DaytonaDownloadRequest("/repo/data", str(tmp_path / "data"))
     downloads = await adapter.download_files(sandbox.id, [request], timeout_s=9)
     assert downloads[0].source == "/repo/data" and downloads[0].error is None

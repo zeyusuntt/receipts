@@ -40,7 +40,6 @@ from daytona import (
     CreateSandboxFromImageParams,
     CreateSandboxFromSnapshotParams,
     DaytonaFileNotFoundError,
-    DaytonaFileReadFailedError,
     DaytonaNotFoundError,
     DaytonaProcessExecutionTimeoutError,
     FileDownloadRequest,
@@ -246,6 +245,14 @@ class DaytonaApi(Protocol):
         timeout_s: int,
     ) -> bytes | None: ...
 
+    async def get_file_info(
+        self,
+        sandbox_id: str,
+        remote_path: str,
+        *,
+        timeout_s: int,
+    ) -> DaytonaFile | None: ...
+
     async def download_files(
         self,
         sandbox_id: str,
@@ -383,11 +390,29 @@ class AsyncDaytonaApi:
             return await sandbox.fs.download_file(remote_path, timeout_s)
         except DaytonaFileNotFoundError:
             return None
-        except DaytonaFileReadFailedError:
-            info = await sandbox.fs.get_file_info(remote_path)
-            if not info.is_dir:
-                raise
+
+    async def get_file_info(
+        self,
+        sandbox_id: str,
+        remote_path: str,
+        *,
+        timeout_s: int,
+    ) -> DaytonaFile | None:
+        sandbox = await self._sandbox(sandbox_id)
+        try:
+            info = await sandbox.fs.get_file_info(
+                remote_path,
+                request_timeout=timeout_s,
+            )
+        except DaytonaNotFoundError:
             return None
+        return DaytonaFile(
+            path=remote_path,
+            is_dir=info.is_dir,
+            mode=info.mode,
+            permissions=info.permissions,
+            size=info.size,
+        )
 
     async def download_files(
         self,
@@ -1133,37 +1158,48 @@ class DaytonaExecutor:
         if target is None:
             return ""
         remote_path, _ = target
-        content = await self.api.download_file(
-            self._sandbox_id(branch),
+        sandbox_id = self._sandbox_id(branch)
+        info = await self.api.get_file_info(
+            sandbox_id,
             remote_path,
             timeout_s=self.file_timeout_s,
         )
-        if content is not None:
-            return content[:max_bytes].decode(errors="replace")
-        try:
-            entries = await self.api.list_files(
-                self._sandbox_id(branch),
-                remote_path,
-                depth=1,
-            )
-        except DaytonaNotFoundError:
+        if info is None:
             return ""
-        root = PurePosixPath(posixpath.normpath(remote_path))
-        listing: list[str] = []
-        for entry in entries:
-            candidate = PurePosixPath(posixpath.normpath(entry.path))
+        if info.is_dir:
             try:
-                relative = candidate.relative_to(root)
-            except ValueError as exc:
-                raise OSError(
-                    f"Daytona listed a path outside the requested directory: {entry.path}",
-                ) from exc
-            if len(relative.parts) != 1:
-                continue
-            name = relative.parts[0]
-            listing.append(name + ("/" if entry.is_dir else ""))
-        rendered = "".join(item + "\n" for item in sorted(listing))
-        return rendered.encode()[:max_bytes].decode(errors="replace")
+                entries = await self.api.list_files(
+                    sandbox_id,
+                    remote_path,
+                    depth=1,
+                )
+            except DaytonaNotFoundError:
+                return ""
+            root = PurePosixPath(posixpath.normpath(remote_path))
+            listing: list[str] = []
+            for entry in entries:
+                candidate = PurePosixPath(posixpath.normpath(entry.path))
+                try:
+                    relative = candidate.relative_to(root)
+                except ValueError as exc:
+                    raise OSError(
+                        "Daytona listed a path outside the requested directory: "
+                        f"{entry.path}",
+                    ) from exc
+                if len(relative.parts) != 1:
+                    continue
+                name = relative.parts[0]
+                listing.append(name + ("/" if entry.is_dir else ""))
+            rendered = "".join(item + "\n" for item in sorted(listing))
+            return rendered.encode()[:max_bytes].decode(errors="replace")
+        content = await self.api.download_file(
+            sandbox_id,
+            remote_path,
+            timeout_s=self.file_timeout_s,
+        )
+        if content is None:
+            return ""
+        return content[:max_bytes].decode(errors="replace")
 
     async def write_file(self, branch: Branch, path: str, content: str) -> Receipt:
         started = _now()
