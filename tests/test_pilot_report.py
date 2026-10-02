@@ -453,3 +453,24 @@ def test_cost_columns_are_computed_from_separate_model_and_sandbox_costs():
     ) in markdown
     assert "Model dollars estimate Token Factory token usage." in markdown
     assert "Snapshot storage is not included" in markdown
+
+
+def test_headline_states_the_number_of_shipped_false_dones_when_it_is_not_zero():
+    """Seen in the pilot: the pre-registered H1 and H2 sentences say "zero"; with a shipped
+    false done the headline must state the real count, never "zero"."""
+    report_module = _report_module()
+    shipped = _record(
+        "task-shipped",
+        [_attempt(claimed_done=False, gate_status="PASS", official_resolved=False, agreement="gate_looser")],
+        verified_fix=False,
+    )
+
+    h2 = report_module.build_report(_claimed_records(4, 40) + [shipped])
+    h1 = report_module.build_report(_claimed_records(5, 50) + [shipped])
+
+    assert h2.headline == (
+        "What a verified fix costs: dollars, minutes and 1 shipped failure "
+        "across 41 SWE-rebench tasks."
+    )
+    assert h1.headline.endswith("Receipts shipped 1.")
+    assert "zero" not in h1.headline and "zero" not in h2.headline

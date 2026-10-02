@@ -225,16 +225,20 @@ def _headline(
     false_dones: int,
     claimed_dones: int,
     ran_tasks: int,
+    shipped_false_dones: int = 0,
 ) -> str:
+    # The pre-registered sentences say "zero"; they must state the real count otherwise.
     false_done_rate = false_dones / claimed_dones if claimed_dones else 0.0
+    shipped = "zero" if shipped_false_dones == 0 else str(shipped_false_dones)
+    failures = "failure" if shipped_false_dones == 1 else "failures"
     if false_dones >= 5 and false_done_rate >= 0.10:
         percent = _format_percent(false_done_rate)
         return (
             f"{percent} percent of an unguarded agent's 'done' was false; "
-            "Receipts shipped zero."
+            f"Receipts shipped {shipped}."
         )
     return (
-        "What a verified fix costs: dollars, minutes and zero shipped failures "
+        f"What a verified fix costs: dollars, minutes and {shipped} shipped {failures} "
         f"across {ran_tasks} SWE-rebench tasks."
     )
 
@@ -364,7 +368,7 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
         secondary_headline = _H3
 
     return Report(
-        headline=_headline(len(false_done_attempts), len(claimed), ran_tasks),
+        headline=_headline(len(false_done_attempts), len(claimed), ran_tasks, shipped_false_dones),
         secondary_headline=secondary_headline,
         ran_tasks=ran_tasks,
         configuration_a=ConfigurationA(
