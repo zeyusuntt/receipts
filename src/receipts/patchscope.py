@@ -1,9 +1,12 @@
 """Classify what a patch touched. Used by the R4 patch_scope predicate.
 
 Rules (deterministic, no model involved):
-- Path categories use this precedence: outside, pytest_config,
+- Path categories use this precedence: outside, reserved, pytest_config,
   executable_artifact, shadow, test, source, other.
 - outside: path escapes the repo (absolute or contains a `..` segment)
+- reserved: interpreter startup hooks (sitecustomize.py, usercustomize.py) and
+  entry_points.txt, which can register a pytest plugin from package metadata
+  on sys.path; other package metadata is harmless and stays other
 - pytest_config: conftest.py anywhere, pytest.ini, pytest.toml, .pytest.toml,
   tox.ini, pyproject.toml, setup.cfg. The filenames are forbidden outright;
   a fix does not need them, and
@@ -34,13 +37,14 @@ import posixpath
 import re
 import sys
 
-from receipts.models import ChangedFile, DiffSummary, FileCategory
+from receipts.models import ChangedFile, DiffSummary, FileCategory, PatchScope
 
 _CONFIG = {
     "pytest.ini", "pytest.toml", ".pytest.toml", "tox.ini", "conftest.py",
     "pyproject.toml", "setup.cfg",
 }
 _EXECUTABLE_SUFFIXES = (".pyc", ".pyo", ".so", ".pyd", ".dylib", ".pth")
+_RESERVED_BASENAMES = {"sitecustomize.py", "usercustomize.py", "entry_points.txt"}
 _DIFF_HEADER_PREFIX = "diff --git "
 _UNQUOTED_HEADER_PREFIX = "diff --git a/"
 _UNPARSEABLE_METADATA = (
@@ -102,6 +106,8 @@ def categorize(path: str, protected_modules: frozenset[str] = frozenset()) -> Fi
         return "outside"
     base = posixpath.basename(path)
     segments = path.split("/")[:-1]
+    if base in _RESERVED_BASENAMES:
+        return "reserved"
     if base in _CONFIG:
         return "pytest_config"
     if base.endswith(_EXECUTABLE_SUFFIXES):
@@ -115,6 +121,33 @@ def categorize(path: str, protected_modules: frozenset[str] = frozenset()) -> Fi
     if base.endswith(".py"):
         return "source"
     return "other"
+
+
+def _scope_top_level(path: str) -> tuple[str, str]:
+    segments = path.split("/")
+    if len(segments) >= 2 and segments[0] == "src":
+        entry = f"src/{segments[1]}"
+        name = segments[1]
+    else:
+        entry = segments[0]
+        name = segments[0]
+    if name.endswith(".py"):
+        name = name[:-3]
+    return entry, name
+
+
+def scope_shadow(
+    path: str,
+    status: str | None,
+    scope: PatchScope | None,
+) -> bool:
+    if scope is None or status != "added":
+        return False
+    top_level, name = _scope_top_level(path)
+    return (
+        top_level not in scope.c0_top_level
+        and name in scope.protected_names
+    )
 
 
 def summarize_patch(
@@ -171,6 +204,7 @@ def filter_patch(
     patch_text: str,
     protected_modules: frozenset[str] = frozenset(),
     spec_paths: frozenset[str] = frozenset(),
+    scope: PatchScope | None = None,
 ) -> tuple[str, list[str]]:
     blocks = ["".join(lines) for _, _, _, lines in _split_blocks(patch_text)]
     summaries = [summarize_patch(block, protected_modules).files[0] for block in blocks]
@@ -184,6 +218,8 @@ def filter_patch(
         category = summary.category
         hidden = any(segment.startswith(".") for segment in path.split("/"))
         if path in spec_paths:
+            dropped.append(path)
+        elif scope_shadow(path, summary.status, scope):
             dropped.append(path)
         elif category in ("source", "other") and not hidden and "site-packages" not in path:
             kept.append(block)

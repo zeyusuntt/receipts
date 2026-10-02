@@ -4,8 +4,8 @@ import subprocess
 import pytest
 
 import receipts.patchscope as patchscope
-from receipts.models import ChangedFile
-from receipts.patchscope import categorize, filter_patch, summarize_patch
+from receipts.models import ChangedFile, PatchScope
+from receipts.patchscope import categorize, filter_patch, scope_shadow, summarize_patch
 
 
 def test_categorize_paths():
@@ -50,6 +50,60 @@ def test_categorize_hazards_before_test_naming():
     assert categorize("tests/__init__.py", protected) == "shadow"
     assert categorize("test_foo.py", protected) == "test"
     assert categorize("tests/conftest.py", protected) == "pytest_config"
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "src/sitecustomize.py",
+        "usercustomize.py",
+        "pkg/foo.egg-info/entry_points.txt",
+        "src/evil.dist-info/entry_points.txt",
+    ],
+)
+def test_categorize_reserved_startup_and_package_metadata(path):
+    assert categorize(path) == "reserved"
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["src/pkg.egg-info/SOURCES.txt", "pkg.egg-info/PKG-INFO", "x.dist-info/RECORD"],
+)
+def test_other_package_metadata_is_not_reserved(path):
+    """Reinstalling an editable package rewrites these when they are in C0; only
+    entry_points.txt can register a plugin, so only it is reserved."""
+
+    assert categorize(path) == "other"
+
+
+def test_scope_shadow_uses_checkpoint_top_level_entries():
+    scope = PatchScope(
+        protected_names=["pkg", "scikit_build_core"],
+        c0_top_level=["pkg", "src/scikit_build_core"],
+    )
+
+    assert scope_shadow(
+        "scikit_build_core/build/_scripts.py",
+        "added",
+        scope,
+    )
+    assert not scope_shadow(
+        "src/scikit_build_core/build/_scripts.py",
+        "added",
+        scope,
+    )
+    assert not scope_shadow("pkg/new.py", "added", scope)
+    assert not scope_shadow("debug_tmp.py", "added", scope)
+    assert not scope_shadow(
+        "scikit_build_core/build/_scripts.py",
+        "modified",
+        scope,
+    )
+    assert not scope_shadow(
+        "scikit_build_core/build/_scripts.py",
+        "added",
+        None,
+    )
 
 
 def test_default_protected_modules_include_runtime_import_surfaces():
@@ -365,6 +419,33 @@ index 5555555..6666666 100644
 
     assert filtered == source
     assert dropped == ["test.py", "config/fixture.yaml"]
+
+
+def test_filter_scope_drops_root_shadow_copy_and_keeps_src_edit():
+    root_copy = """diff --git a/scikit_build_core/build/_scripts.py b/scikit_build_core/build/_scripts.py
+new file mode 100644
+--- /dev/null
++++ b/scikit_build_core/build/_scripts.py
+@@ -0,0 +1 @@
++VALUE = "shadow"
+"""
+    src_edit = """diff --git a/src/scikit_build_core/build/_scripts.py b/src/scikit_build_core/build/_scripts.py
+index 1111111..2222222 100644
+--- a/src/scikit_build_core/build/_scripts.py
++++ b/src/scikit_build_core/build/_scripts.py
+@@ -1 +1 @@
+-VALUE = "old"
++VALUE = "fixed"
+"""
+    scope = PatchScope(
+        protected_names=["scikit_build_core"],
+        c0_top_level=["src/scikit_build_core"],
+    )
+
+    filtered, dropped = filter_patch(root_copy + src_edit, scope=scope)
+
+    assert filtered == src_edit
+    assert dropped == ["scikit_build_core/build/_scripts.py"]
 
 
 def test_filter_drops_conftest_anywhere():

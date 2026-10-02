@@ -13,7 +13,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from receipts.models import Baseline, Branch, Checkpoint, JunitSummary, Receipt
+from receipts.models import Baseline, Branch, Checkpoint, JunitSummary, PatchScope, Receipt
 from receipts.patchscope import default_protected_modules, filter_patch
 from receipts.sandbox.protocol import CheckpointTampered, Executor
 
@@ -120,7 +120,8 @@ async def establish_baseline(
 
 async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_sha: str,
                          suite_scope: str, timeout_s: int, attempt: int,
-                         spec_paths: Sequence[str] = ()) -> Attempt:
+                         spec_paths: Sequence[str] = (),
+                         scope: PatchScope | None = None) -> Attempt:
     patch = None
     patch_text = ""
     filtered_patch = ""
@@ -136,6 +137,7 @@ async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_s
             patch_text,
             protected_modules,
             frozenset(spec_paths),
+            scope,
         )
         filtered_sha256 = hashlib.sha256(filtered_patch.encode()).hexdigest()
         (witness,) = await ex.fork(c0, 1, prefix="w")

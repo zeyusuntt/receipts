@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 ReceiptKind = Literal["command", "write", "diff", "apply", "verification"]
 FileCategory = Literal[
-    "source", "test", "pytest_config", "executable_artifact", "shadow",
+    "source", "test", "pytest_config", "executable_artifact", "shadow", "reserved",
     "symlink", "other", "outside", "unparseable",
 ]
 PredicateId = Literal[
@@ -129,6 +129,11 @@ class Receipt(BaseModel):
     snapshot_sha: str | None = None
 
 
+class PatchScope(BaseModel):
+    protected_names: list[str]
+    c0_top_level: list[str]
+
+
 class Baseline(BaseModel):
     """The suite as it stood before any agent touched the repo."""
     runs: list[JunitSummary]
@@ -145,6 +150,7 @@ class Baseline(BaseModel):
             "(the test patch and the spec tests' files); read-only"
         ),
     )
+    scope: PatchScope | None = None
 
 
 class Claims(BaseModel):

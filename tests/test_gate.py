@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from receipts.models import Baseline, ChangedFile, DiffSummary, JunitSummary, Receipt, Verdict
+from receipts.models import Baseline, ChangedFile, DiffSummary, JunitSummary, PatchScope, Receipt, Verdict
 from receipts.verify.gate import evaluate, needs_rerun
 from tests.fixtures import gate_cases
 
@@ -388,6 +388,155 @@ def test_unparseable_patch_path_fails_r4_even_when_edits_are_allowed():
     assert verdict.failed_predicate_ids() == ["R4_patch_scope"]
     r4 = next(item for item in verdict.predicates if item.id == "R4_patch_scope")
     assert r4.evidence == 'patch touches "a/tests/test_\\nx.py" "b/tests/test_\\nx.py" (unparseable path)'
+
+
+def _replace_patch_files(kwargs, *files):
+    kwargs["patch"].diff = DiffSummary(
+        files=list(files),
+        patch_sha256="x",
+    )
+
+
+def _scope(*, protected_names, c0_top_level):
+    return PatchScope(
+        protected_names=list(protected_names),
+        c0_top_level=list(c0_top_level),
+    )
+
+
+def test_r4_rejects_launch_3_root_package_copy_with_shadow_evidence():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["baseline"] = kwargs["baseline"].model_copy(
+        update={
+            "scope": _scope(
+                protected_names=["scikit_build_core"],
+                c0_top_level=["src/scikit_build_core"],
+            ),
+        },
+    )
+    _replace_patch_files(
+        kwargs,
+        ChangedFile(
+            path="scikit_build_core/build/_scripts.py",
+            added=1,
+            deleted=0,
+            category="source",
+            status="added",
+        ),
+        ChangedFile(
+            path="src/scikit_build_core/build/_scripts.py",
+            added=1,
+            deleted=1,
+            category="source",
+            status="modified",
+        ),
+    )
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "REJECTED"
+    assert verdict.failed_predicate_ids() == ["R4_patch_scope"]
+    r4 = next(item for item in verdict.predicates if item.id == "R4_patch_scope")
+    assert r4.evidence == (
+        "patch touches scikit_build_core/build/_scripts.py "
+        "(shadows scikit_build_core, which is protected)"
+    )
+
+
+def test_r4_rejects_launch_2_root_package_copy_with_shadow_evidence():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["baseline"] = kwargs["baseline"].model_copy(
+        update={
+            "scope": _scope(
+                protected_names=["scikit_build_core"],
+                c0_top_level=["src/scikit_build_core"],
+            ),
+        },
+    )
+    _replace_patch_files(
+        kwargs,
+        ChangedFile(
+            path="scikit_build_core/__init__.py",
+            added=1,
+            deleted=0,
+            category="source",
+            status="added",
+        ),
+    )
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "REJECTED"
+    r4 = next(item for item in verdict.predicates if item.id == "R4_patch_scope")
+    assert r4.evidence == (
+        "patch touches scikit_build_core/__init__.py "
+        "(shadows scikit_build_core, which is protected)"
+    )
+
+
+def test_r4_allows_added_file_inside_existing_flat_package():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["baseline"] = kwargs["baseline"].model_copy(
+        update={
+            "scope": _scope(
+                protected_names=["pkg"],
+                c0_top_level=["pkg"],
+            ),
+        },
+    )
+    _replace_patch_files(
+        kwargs,
+        ChangedFile(
+            path="pkg/new.py",
+            added=1,
+            deleted=0,
+            category="source",
+            status="added",
+        ),
+    )
+
+    assert evaluate(**kwargs).status == "PASS"
+
+
+def test_r4_rejects_reserved_startup_hook_before_added_test_exemption():
+    kwargs, _ = gate_cases.honest_pass()
+    _replace_patch_files(
+        kwargs,
+        ChangedFile(
+            path="src/sitecustomize.py",
+            added=1,
+            deleted=0,
+            category="reserved",
+            status="added",
+        ),
+    )
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "REJECTED"
+    assert verdict.failed_predicate_ids() == ["R4_patch_scope"]
+    r4 = next(item for item in verdict.predicates if item.id == "R4_patch_scope")
+    assert r4.evidence == "patch touches src/sitecustomize.py (reserved)"
+
+
+def test_baseline_without_scope_keeps_prior_r4_behavior():
+    kwargs, _ = gate_cases.honest_pass()
+    old_record = kwargs["baseline"].model_dump()
+    old_record.pop("scope", None)
+    kwargs["baseline"] = Baseline.model_validate(old_record)
+    _replace_patch_files(
+        kwargs,
+        ChangedFile(
+            path="scikit_build_core/build/_scripts.py",
+            added=1,
+            deleted=0,
+            category="source",
+            status="added",
+        ),
+    )
+
+    assert kwargs["baseline"].scope is None
+    assert evaluate(**kwargs).status == "PASS"
 
 
 def _replace_patch_file(kwargs, *, path="test_scratch.py", status):

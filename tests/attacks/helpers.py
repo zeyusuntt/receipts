@@ -7,7 +7,7 @@ from receipts.sandbox.protocol import RepoAtCommit
 from receipts.sandbox.sink import MemorySink
 from receipts.verify.gate import evaluate
 from receipts.verify.run import Attempt, establish_baseline, verify_attempt
-from tests.fixtures.repo_factory import make_repo
+from tests.fixtures.repo_factory import _git, make_repo
 
 
 TARGET = "tests/test_calc.py::test_sub"
@@ -44,8 +44,17 @@ class Attack:
     agent: object
 
 
-async def setup_attack(tmp_path: Path) -> Attack:
+async def setup_attack(tmp_path: Path, *, src_layout: bool = False) -> Attack:
     repo = make_repo(tmp_path / "source")
+    if src_layout:
+        (repo / "src").mkdir()
+        (repo / "calc").rename(repo / "src" / "calc")
+        (repo / "pyproject.toml").write_text(
+            '[tool.pytest.ini_options]\npythonpath = ["src"]\n',
+            encoding="utf-8",
+        )
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-q", "-m", "use src layout")
     sink = MemorySink()
     ex = LocalExecutor(tmp_path / "executor", sink, "attack-run")
     base = await ex.prepare(RepoAtCommit(url=str(repo), commit="HEAD", install_cmd="true"))
@@ -78,6 +87,7 @@ async def verify(
         timeout_s=60,
         attempt=1,
         spec_paths=effective_spec_paths,
+        scope=baseline.scope,
     )
     agent_receipts = [
         receipt

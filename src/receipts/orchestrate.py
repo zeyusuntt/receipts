@@ -17,7 +17,8 @@ from receipts.agent.planner import Plan, make_plan
 from receipts.agent.worker import Worker, WorkerBudget, WorkerOutcome
 from receipts.cost import CostMeter, TokenUsage
 from receipts.llm import ModelClient
-from receipts.models import Baseline, Branch, Checkpoint, Receipt, Verdict
+from receipts.models import Baseline, Branch, Checkpoint, PatchScope, Receipt, Verdict
+from receipts.patchscope import default_protected_modules
 from receipts.rundir import RunDirectory
 from receipts.sandbox.protocol import Executor, ImageSource, Source
 from receipts.verify.gate import evaluate
@@ -194,13 +195,71 @@ def worker_initial_message(
     )
 
 
-def _full_stdout(receipt: Receipt) -> str:
+def _full_stdout(receipt: Receipt, *, required: bool = False) -> str:
     if receipt.log_path is not None:
         try:
             return Path(receipt.log_path).read_bytes().decode(errors="replace")
-        except OSError:
-            pass
+        except OSError as exc:
+            if required:
+                raise RuntimeError(
+                    f"complete stdout unavailable for receipt {receipt.receipt_id}",
+                ) from exc
+    if required:
+        raise RuntimeError(
+            f"complete stdout unavailable for receipt {receipt.receipt_id}",
+        )
     return receipt.stdout_tail
+
+
+def _tree_entries(receipt: Receipt) -> list[str]:
+    return [entry for entry in _full_stdout(receipt, required=True).split("\0") if entry]
+
+
+def _protected_name(entry: str) -> str:
+    return entry[:-3] if entry.endswith(".py") else entry
+
+
+async def _build_patch_scope(
+    ex: Executor,
+    base: Branch,
+    snapshot_sha: str,
+) -> PatchScope:
+    root_receipt = await ex.run(
+        base,
+        "git -c core.quotePath=false ls-tree -z --name-only "
+        + shlex.quote(snapshot_sha),
+        timeout_s=_DISCLOSURE_TIMEOUT_S,
+    )
+    if root_receipt.timed_out or root_receipt.exit_code != 0:
+        raise RuntimeError(
+            "could not list checkpoint root "
+            f"(exit {root_receipt.exit_code}, timed_out={root_receipt.timed_out})",
+        )
+    root_entries = _tree_entries(root_receipt)
+
+    src_receipt = await ex.run(
+        base,
+        "git -c core.quotePath=false ls-tree -z --name-only "
+        + shlex.quote(f"{snapshot_sha}:src"),
+        timeout_s=_DISCLOSURE_TIMEOUT_S,
+    )
+    if src_receipt.timed_out:
+        raise RuntimeError("listing checkpoint src tree timed out")
+    src_entries = _tree_entries(src_receipt) if src_receipt.exit_code == 0 else []
+
+    c0_top_level = sorted(
+        set(root_entries).union(f"src/{entry}" for entry in src_entries),
+    )
+    repository_names = {
+        _protected_name(entry)
+        for entry in [*root_entries, *src_entries]
+        if not entry.startswith(".")
+    }
+    protected_names = sorted(set(default_protected_modules()).union(repository_names))
+    return PatchScope(
+        protected_names=protected_names,
+        c0_top_level=c0_top_level,
+    )
 
 
 def _stdout_bytes(receipt: Receipt) -> bytes:
@@ -466,7 +525,6 @@ async def fix(
             budget.baseline_limit_s,
             spec_paths=effective_spec_paths,
         )
-        run_directory.write_json("baseline.json", baseline)
 
         disclosure = await _collect_disclosure(
             recording,
@@ -484,6 +542,13 @@ async def fix(
                 "snapshot failed "
                 f"(exit {snapshot.exit_code}, timed_out={snapshot.timed_out})",
             )
+        scope = await _build_patch_scope(
+            recording,
+            base,
+            snapshot.snapshot_sha,
+        )
+        baseline = baseline.model_copy(update={"scope": scope})
+        run_directory.write_json("baseline.json", baseline)
         checkpoint = await recording.checkpoint(base)
         await recording.release(base)
         (agent,) = await recording.fork(checkpoint, 1, prefix="agent")
@@ -528,6 +593,7 @@ async def fix(
                     budget.verification_timeout_s,
                     attempt_number,
                     spec_paths=baseline.spec_paths,
+                    scope=baseline.scope,
                 )
                 load_confirmation = None
                 if (

@@ -136,9 +136,19 @@ async def _run(
     released: list[str] | None = None,
     spec_paths: list[str] | None = None,
     root_conftest: str | None = None,
+    src_layout: bool = False,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
+    if src_layout:
+        (repo / "src").mkdir()
+        (repo / "calc").rename(repo / "src" / "calc")
+        (repo / "pyproject.toml").write_text(
+            '[tool.pytest.ini_options]\npythonpath = ["src"]\n',
+            encoding="utf-8",
+        )
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-q", "-m", "use src layout")
     if root_conftest is not None:
         (repo / "conftest.py").write_text(root_conftest, encoding="utf-8")
         _git(repo, "add", "conftest.py")
@@ -269,6 +279,9 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     assert len(baseline["runs"]) == 2
     assert baseline["target"] == [TARGET]
     assert baseline["spec_paths"] == ["tests/test_calc.py"]
+    assert "calc" in baseline["scope"]["c0_top_level"]
+    assert "calc" in baseline["scope"]["protected_names"]
+    assert "src/calc" not in baseline["scope"]["c0_top_level"]
     run_input = json.loads((run_dir / "input.json").read_text())
     assert run_input["spec_paths"] == ["tests/test_calc.py"]
     disclosure = json.loads((run_dir / "disclosure.json").read_text())
@@ -322,6 +335,40 @@ def test_default_worker_budget_supports_realistic_repair_attempts():
     assert budget.max_completion_tokens == 64_000
 
 
+async def test_fix_stores_checkpoint_scope_for_src_layout(tmp_path: Path):
+    model = _model(
+        [
+            _turn(
+                _call(
+                    "write_file",
+                    {"path": "src/calc/__init__.py", "content": FIXED_CALC},
+                    "write-source",
+                ),
+            ),
+            _finish(
+                "finish",
+                summary="Corrected subtraction.",
+                changed=["src/calc/__init__.py"],
+                green=False,
+            ),
+        ],
+    )
+
+    result, run_dir, _, _ = await _run(
+        tmp_path,
+        model,
+        appeals=0,
+        src_layout=True,
+    )
+
+    assert result.baseline.scope is not None
+    assert "src/calc" in result.baseline.scope.c0_top_level
+    assert "calc" in result.baseline.scope.protected_names
+    persisted = json.loads((run_dir / "baseline.json").read_text())
+    assert "src/calc" in persisted["scope"]["c0_top_level"]
+    assert "calc" in persisted["scope"]["protected_names"]
+
+
 async def test_fix_unions_explicit_and_spec_test_paths_and_loads_v1_result(tmp_path: Path):
     model = _model(
         [
@@ -355,11 +402,13 @@ async def test_fix_unions_explicit_and_spec_test_paths_and_loads_v1_result(tmp_p
     old_result = json.loads((run_dir / "result.json").read_text())
     old_result["input"].pop("spec_paths")
     old_result["baseline"].pop("spec_paths")
+    old_result["baseline"].pop("scope")
     old_result["attempts"][0].pop("filtered_sha256")
     old_result["attempts"][0].pop("witness_apply_sha256")
     loaded = _orchestrate_module().RunResult.model_validate(old_result)
     assert loaded.input.spec_paths == []
     assert loaded.baseline.spec_paths == []
+    assert loaded.baseline.scope is None
     assert loaded.attempts[0].filtered_sha256 is None
     assert loaded.attempts[0].witness_apply_sha256 is None
 

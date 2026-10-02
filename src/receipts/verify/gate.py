@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from receipts.models import Baseline, ClaimAudit, Claims, PredicateResult, Receipt, Verdict
+from receipts.models import Baseline, ClaimAudit, Claims, PatchScope, PredicateResult, Receipt, Verdict
+from receipts.patchscope import scope_shadow
 
 _PYTEST_VALID_EXITS = {0, 1, 5}  # 0 all passed, 1 some failed, 5 nothing collected
 _PYTEST_LOAD_FAILURE_EXITS = {2, 3, 4}
@@ -96,6 +97,7 @@ def _r4(
     allow_test_edits: bool,
     allow_config_edits: bool,
     spec_paths: Sequence[str],
+    patch_scope: PatchScope | None,
 ) -> PredicateResult:
     """Enforce patch scope, exempting only added test-category files.
 
@@ -110,7 +112,13 @@ def _r4(
             bad.append(f"{f.path} (unparseable path)")
         elif f.path in spec_paths:
             bad.append(f"{f.path} (spec file, read-only)")
-        elif f.category in ("outside", "symlink", "executable_artifact", "shadow"):
+        elif scope_shadow(f.path, f.status, patch_scope):
+            segments = f.path.split("/")
+            name = segments[1] if len(segments) >= 2 and segments[0] == "src" else segments[0]
+            if name.endswith(".py"):
+                name = name[:-3]
+            bad.append(f"{f.path} (shadows {name}, which is protected)")
+        elif f.category in ("outside", "symlink", "executable_artifact", "shadow", "reserved"):
             bad.append(f"{f.path} ({f.category})")
         elif f.category == "pytest_config" and not allow_config_edits:
             bad.append(f"{f.path} (pytest config)")
@@ -281,7 +289,13 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
                 passed=False,
                 evidence=not_evaluable,
             ),
-            _r4(patch, allow_test_edits, allow_config_edits, baseline.spec_paths),
+            _r4(
+                patch,
+                allow_test_edits,
+                allow_config_edits,
+                baseline.spec_paths,
+                baseline.scope,
+            ),
             _r5(
                 branch_id,
                 witness_id,
@@ -325,7 +339,7 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
         _r1(baseline, ver),
         _r2(baseline, ver, valid_reruns),
         _r3(baseline, ver),
-        _r4(patch, allow_test_edits, allow_config_edits, baseline.spec_paths),
+        _r4(patch, allow_test_edits, allow_config_edits, baseline.spec_paths, baseline.scope),
         _r5(branch_id, witness_id, origin, receipts, patch, apply, verification, filtered_sha256, reruns),
     ]
     status = "PASS" if all(p.passed for p in predicates) else "REJECTED"

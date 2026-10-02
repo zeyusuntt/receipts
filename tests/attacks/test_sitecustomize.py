@@ -12,7 +12,10 @@ calc.sub = lambda a, b: a - b
 
     result, verdict = await verify(attack, files_changed=["sitecustomize.py"])
 
-    assert result.dropped == []
+    assert result.dropped == ["sitecustomize.py"]
     assert verdict.status == "REJECTED"
-    assert verdict.failed_predicate_ids() == ["R1_fail_to_pass"]
+    assert verdict.failed_predicate_ids() == ["R1_fail_to_pass", "R4_patch_scope"]
     assert not predicate(verdict, "R1_fail_to_pass").passed
+    assert predicate(verdict, "R4_patch_scope").evidence == (
+        "patch touches sitecustomize.py (reserved)"
+    )
