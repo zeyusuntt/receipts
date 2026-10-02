@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
+
+import pytest
 
 from receipts.agent.planner import Plan
 from receipts.agent.worker import WorkerOutcome
@@ -457,6 +460,86 @@ def test_pilot_screen_arguments_parse(tmp_path: Path):
     assert args.want == 110
     assert args.out == output
     assert args.concurrency == 2
+
+
+def test_pilot_watch_arguments_parse(tmp_path: Path):
+    pilot_dir = tmp_path / "pilot"
+
+    args = _parser().parse_args(
+        [
+            "pilot",
+            "watch",
+            str(pilot_dir),
+            "4321",
+            "--interval",
+            "0.25",
+        ],
+    )
+
+    assert args.command == "pilot"
+    assert args.pilot_command == "watch"
+    assert args.pilot_dir == pilot_dir
+    assert args.pid == 4321
+    assert args.interval == 0.25
+
+
+async def test_pilot_signal_handler_cancels_running_task():
+    import receipts.cli as cli
+
+    task = asyncio.create_task(asyncio.Event().wait())
+    cli._cancel_task(task)
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+
+@pytest.mark.parametrize("failure", [None, "release", "close"])
+async def test_screen_executor_finishes_full_cleanup_when_release_is_cancelled(
+    failure: str | None,
+):
+    import receipts.cli as cli
+
+    release_started = asyncio.Event()
+    allow_release = asyncio.Event()
+
+    class Executor:
+        def __init__(self) -> None:
+            self.released = False
+            self.closed = False
+            self.usage_calls = 0
+
+        async def release(self, branch) -> None:
+            release_started.set()
+            await allow_release.wait()
+            self.released = True
+            if failure == "release":
+                raise RuntimeError("release failed")
+
+        async def close(self) -> None:
+            await asyncio.sleep(0)
+            self.closed = True
+            if failure == "close":
+                raise RuntimeError("close failed")
+
+        def sandbox_usage(self) -> list[dict]:
+            self.usage_calls += 1
+            return [{"sandbox_id": "screen-1"}]
+
+    executor = Executor()
+    protected = cli._ScreenCleanupExecutor(executor)
+    task = asyncio.create_task(protected.release(object()))
+    await release_started.wait()
+    cli._cancel_task(task)
+    await asyncio.sleep(0)
+    allow_release.set()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert executor.released is True
+    assert executor.closed is True
+    assert executor.usage_calls == 1
+    assert protected.sandbox_usage() == [{"sandbox_id": "screen-1"}]
 
 
 def test_pilot_cleanup_arguments_parse(tmp_path: Path):

@@ -624,7 +624,7 @@ async def test_run_pilot_skips_finished_records_without_calling_model(tmp_path: 
         "fixture__calc-two",
     ]
     assert model.requests == []
-    progress = (pilot_dir / "progress.log").read_text(encoding="utf-8").splitlines()
+    progress = (pilot_dir / "progress.jsonl").read_text(encoding="utf-8").splitlines()
     assert [json.loads(line)["instance_id"] for line in progress] == [
         "fixture__calc-one",
         "fixture__calc-two",
@@ -927,6 +927,13 @@ async def test_run_pilot_stops_after_three_infrastructure_errors_then_moves_on(
     instance_dir = pilot_dir / failing.instance_id
     assert (instance_dir / "record.infra-1.json").is_file()
     assert (instance_dir / "record.infra-2.json").is_file()
+    marker_path = instance_dir / "final_infra_error.json"
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    assert marker["instance_id"] == failing.instance_id
+    assert marker["runs"] == 3
+    assert marker["reason"] == "RuntimeError: outage 3"
+    assert datetime.fromisoformat(marker["written_at"]).tzinfo is not None
+    assert not marker_path.with_suffix(".json.tmp").exists()
 
 
 async def test_run_pilot_never_reruns_existing_excluded_record(tmp_path: Path):
@@ -1226,7 +1233,7 @@ async def test_run_pilot_bounds_concurrency_and_stops_at_requested_ran_count(
         started.append(instance.instance_id)
         active += 1
         maximum_active = max(maximum_active, active)
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.02 if instance.instance_id.endswith("-0") else 0)
         active -= 1
         status = "excluded" if instance.instance_id.endswith("-0") else "ran"
         return runner.InstanceRecord(
@@ -1264,10 +1271,218 @@ async def test_run_pilot_bounds_concurrency_and_stops_at_requested_ran_count(
     ]
     assert maximum_active == 2
     assert [record.status for record in records] == ["excluded", "ran", "ran"]
-    progress = (tmp_path / "pilot" / "progress.log").read_text(
+    progress = (tmp_path / "pilot" / "progress.jsonl").read_text(
         encoding="utf-8",
     ).splitlines()
-    assert [json.loads(line)["instance_id"] for line in progress] == started
+    progress_rows = [json.loads(line) for line in progress]
+    assert [row["instance_id"] for row in progress_rows] == [
+        "fixture__calc-1",
+        "fixture__calc-0",
+        "fixture__calc-2",
+    ]
+    assert [row["candidate_position"] for row in progress_rows] == [2, 1, 3]
+
+
+async def test_run_pilot_concurrency_two_retries_and_resumes_real_instances(
+    tmp_path: Path,
+):
+    runner = _runner_module()
+    repo = make_repo(tmp_path / "source")
+    pilot_dir = tmp_path / "pilot"
+    retry = _instance("fixture__calc-retry-twice")
+    excluded = _instance("fixture__calc-excluded", target=PROTECTED)
+    normal_one = _instance("fixture__calc-normal-one")
+    normal_two = _instance("fixture__calc-normal-two")
+    candidates = [retry, excluded, normal_one, normal_two]
+    retry_runs = 0
+    normal_one_closed = asyncio.Event()
+    created: list[object] = []
+
+    class FailingPrepareExecutor:
+        def __init__(self) -> None:
+            self.sink = MemorySink()
+            self.closed = False
+
+        async def prepare(self, source) -> None:
+            raise RuntimeError("temporary sandbox outage")
+
+        async def close(self) -> None:
+            self.closed = True
+
+    class OrderedLocalExecutor(_ImageLocalExecutor):
+        def __init__(self, *args, wait_before_prepare=False, signal_on_close=False):
+            super().__init__(*args)
+            self.wait_before_prepare = wait_before_prepare
+            self.signal_on_close = signal_on_close
+
+        async def prepare(self, source):
+            if self.wait_before_prepare:
+                await normal_one_closed.wait()
+            return await super().prepare(source)
+
+        async def close(self) -> None:
+            await super().close()
+            if self.signal_on_close:
+                normal_one_closed.set()
+
+    def make_executor(run_id: str):
+        nonlocal retry_runs
+        if "fixture__calc-retry-twice" in run_id:
+            retry_runs += 1
+            if retry_runs <= 2:
+                executor = FailingPrepareExecutor()
+                created.append(executor)
+                return executor
+        executor = OrderedLocalExecutor(
+            tmp_path / "executors" / run_id,
+            repo,
+            run_id,
+            wait_before_prepare="fixture__calc-normal-two" in run_id,
+            signal_on_close="fixture__calc-normal-one" in run_id,
+        )
+        created.append(executor)
+        return executor
+
+    plan = {
+        "hypothesis": "calc.sub adds instead of subtracting",
+        "files_to_edit": ["calc/__init__.py"],
+        "approach": "Change calc.sub to subtract and run the suite.",
+    }
+    repair_turns = [
+        _turn(
+            "write_file",
+            {"path": "calc/__init__.py", "content": FIXED_CALC},
+            "write-source",
+        ),
+        _turn("run_command", {"command": "pytest -q"}, "run-suite"),
+        _finish("finish", ["calc/__init__.py"]),
+    ]
+    model = FakeModel(
+        json_objects=[plan, plan, plan],
+        turns=[*repair_turns, *repair_turns, *repair_turns],
+    )
+
+    records = await runner.run_pilot(
+        make_executor,
+        model,
+        candidates,
+        pilot_dir,
+        n=3,
+        concurrency=2,
+        budgets=_budgets(),
+    )
+
+    assert [record.status for record in records] == [
+        "ran",
+        "excluded",
+        "ran",
+        "ran",
+    ]
+    retry_dir = pilot_dir / retry.instance_id
+    assert (retry_dir / "record.infra-1.json").is_file()
+    assert (retry_dir / "record.infra-2.json").is_file()
+    assert not (retry_dir / "final_infra_error.json").exists()
+    assert all(getattr(executor, "closed") for executor in created)
+
+    progress_path = pilot_dir / "progress.jsonl"
+    progress_rows = [
+        json.loads(line)
+        for line in progress_path.read_text(encoding="utf-8").splitlines()
+    ]
+    assert sorted(row["candidate_position"] for row in progress_rows) == [1, 2, 3, 4]
+
+    progress_path.write_text(
+        "\n".join(
+            json.dumps(row)
+            for row in progress_rows
+            if row["instance_id"] != normal_two.instance_id
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    resumed = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"executor created while resuming: {run_id}"),
+        FakeModel(),
+        candidates,
+        pilot_dir,
+        n=3,
+        concurrency=2,
+        budgets=_budgets(),
+    )
+
+    assert [record.status for record in resumed] == [
+        "ran",
+        "excluded",
+        "ran",
+        "ran",
+    ]
+    resumed_rows = [
+        json.loads(line)
+        for line in progress_path.read_text(encoding="utf-8").splitlines()
+    ]
+    assert [
+        row["instance_id"] for row in resumed_rows
+    ].count(normal_two.instance_id) == 1
+    assert next(
+        row for row in resumed_rows if row["instance_id"] == normal_two.instance_id
+    )["candidate_position"] == 4
+
+
+async def test_cancelling_run_pilot_shields_every_executor_close(
+    tmp_path: Path,
+):
+    runner = _runner_module()
+    allow_close = asyncio.Event()
+    created = []
+
+    class ClosingExecutor:
+        def __init__(self) -> None:
+            self.sink = MemorySink()
+            self.close_started = asyncio.Event()
+            self.closed = False
+
+        async def prepare(self, source) -> None:
+            raise RuntimeError("fail before the run starts")
+
+        async def close(self) -> None:
+            self.close_started.set()
+            await allow_close.wait()
+            self.closed = True
+
+    def make_executor(run_id: str) -> ClosingExecutor:
+        executor = ClosingExecutor()
+        created.append(executor)
+        return executor
+
+    task = asyncio.create_task(
+        runner.run_pilot(
+            make_executor,
+            FakeModel(),
+            [_instance("fixture__cancel-one"), _instance("fixture__cancel-two")],
+            tmp_path / "pilot",
+            n=2,
+            concurrency=2,
+            budgets=_budgets(),
+        ),
+    )
+    while len(created) < 2 or not all(
+        executor.close_started.is_set() for executor in created
+    ):
+        await asyncio.sleep(0)
+    task.cancel()
+    await asyncio.sleep(0)
+    allow_close.set()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert len(created) == 2
+    assert all(executor.closed for executor in created)
+    for instance_id in ("fixture__cancel-one", "fixture__cancel-two"):
+        record_path = tmp_path / "pilot" / instance_id / "record.json"
+        assert not record_path.exists() or json.loads(
+            record_path.read_text(encoding="utf-8"),
+        )["status"] != "ran"
 
 
 def test_pilot_run_cli_loads_candidates_in_file_order(tmp_path: Path, monkeypatch):

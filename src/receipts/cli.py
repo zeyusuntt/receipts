@@ -5,12 +5,14 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib
+import inspect
 import json
 import os
+import signal
 import shutil
 import tempfile
 import uuid
-from collections.abc import Sequence
+from collections.abc import Awaitable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -26,8 +28,14 @@ from receipts.llm import (
 )
 from receipts.orchestrate import RunBudgets, RunResult, fix
 from receipts.pilot.cleanup import cleanup_manifests, render_cleanup
-from receipts.pilot.runner import InstanceRecord, run_pilot
+from receipts.pilot.runner import (
+    InstanceRecord,
+    _complete_shielded,
+    _shield_cleanup_methods,
+    run_pilot,
+)
 from receipts.pilot.screen import screen_candidates
+from receipts.pilot.watch import watch_pilot
 from receipts.preflight import run_preflight
 from receipts.receipt_text import render
 from receipts.sandbox.daytona import AsyncDaytonaApi, DaytonaExecutor
@@ -128,6 +136,13 @@ def _parser() -> argparse.ArgumentParser:
         help="build the report from pilot records",
     )
     pilot_report.add_argument("pilot_dir", type=Path)
+    pilot_watch = pilot_commands.add_parser(
+        "watch",
+        help="stop a pilot process on a terminal failure",
+    )
+    pilot_watch.add_argument("pilot_dir", type=Path)
+    pilot_watch.add_argument("pid", type=int)
+    pilot_watch.add_argument("--interval", type=float, default=20.0)
     pilot_cleanup = pilot_commands.add_parser(
         "cleanup",
         help="list or retry pending Daytona snapshot cleanup",
@@ -322,16 +337,94 @@ def _load_id_file(path: Path) -> list[str]:
     ]
 
 
-def _daytona_executor_factory(executor_root: Path, api_key: str):
-    def make_executor(run_id: str) -> DaytonaExecutor:
+class _ScreenCleanupExecutor:
+    """Keep screening cleanup atomic with respect to task cancellation."""
+
+    def __init__(self, executor: Any) -> None:
+        object.__setattr__(self, "_screen_executor", executor)
+        object.__setattr__(self, "_screen_closed", False)
+        object.__setattr__(self, "_screen_usage", None)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._screen_executor, name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name.startswith("_screen_"):
+            object.__setattr__(self, name, value)
+        else:
+            setattr(self._screen_executor, name, value)
+
+    async def _close_and_collect(self) -> tuple[bool, BaseException | None]:
+        if self._screen_closed:
+            return False, None
+        cancelled = False
+        error: BaseException | None = None
+        try:
+            close = getattr(self._screen_executor, "close", None)
+            if close is not None:
+                result = close()
+                if inspect.isawaitable(result):
+                    _, cancelled, error = await _complete_shielded(result)
+        except BaseException as exc:
+            error = exc
+        finally:
+            try:
+                usage = getattr(self._screen_executor, "sandbox_usage", None)
+                self._screen_usage = list(usage()) if usage is not None else []
+            except BaseException as exc:
+                if error is None:
+                    error = exc
+            finally:
+                self._screen_closed = True
+        return cancelled, error
+
+    async def release(self, branch: Any) -> None:
+        if self._screen_closed:
+            return
+        result = self._screen_executor.release(branch)
+        if inspect.isawaitable(result):
+            _, cancelled, error = await _complete_shielded(result)
+        else:
+            cancelled = False
+            error = None
+        if cancelled:
+            await self._close_and_collect()
+            raise asyncio.CancelledError
+        if error is not None:
+            raise error
+
+    async def close(self) -> None:
+        cancelled, error = await self._close_and_collect()
+        if cancelled:
+            raise asyncio.CancelledError
+        if error is not None:
+            raise error
+
+    def sandbox_usage(self) -> list[dict[str, Any]]:
+        if self._screen_usage is not None:
+            return list(self._screen_usage)
+        usage = getattr(self._screen_executor, "sandbox_usage", None)
+        return list(usage()) if usage is not None else []
+
+
+def _daytona_executor_factory(
+    executor_root: Path,
+    api_key: str,
+    *,
+    shield_cleanup: bool = False,
+):
+    def make_executor(run_id: str) -> Any:
         client = AsyncDaytona(DaytonaConfig(api_key=api_key))
         api = AsyncDaytonaApi(client)
-        return DaytonaExecutor(
+        executor = DaytonaExecutor(
             executor_root / run_id,
             MemorySink(),
             run_id,
             api,
         )
+        if shield_cleanup:
+            return _ScreenCleanupExecutor(executor)
+        return executor
 
     return make_executor
 
@@ -393,7 +486,11 @@ async def _run_pilot_screen(args: argparse.Namespace) -> int:
 
     with tempfile.TemporaryDirectory(prefix="receipts-screen-executor-") as root:
         included = await screen_candidates(
-            _daytona_executor_factory(Path(root), api_key),
+            _daytona_executor_factory(
+                Path(root),
+                api_key,
+                shield_cleanup=True,
+            ),
             candidates,
             args.out,
             start=args.start,
@@ -451,6 +548,30 @@ def _run_pilot_report(pilot_dir: Path) -> int:
     return 0
 
 
+def _cancel_task(task: asyncio.Task[Any]) -> None:
+    """Signal handler callback for gracefully cancelling a pilot operation."""
+
+    if not task.done():
+        task.cancel()
+
+
+async def _run_with_signal_cancellation(awaitable: Awaitable[int]) -> int:
+    task = asyncio.ensure_future(awaitable)
+    loop = asyncio.get_running_loop()
+    installed: list[signal.Signals] = []
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        try:
+            loop.add_signal_handler(sig, _cancel_task, task)
+        except (NotImplementedError, RuntimeError):
+            continue
+        installed.append(sig)
+    try:
+        return await task
+    finally:
+        for sig in installed:
+            loop.remove_signal_handler(sig)
+
+
 async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
     if args.command == "doctor":
         return await _doctor(args.live, model)
@@ -461,9 +582,15 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
     if args.command == "show":
         return _show(args.run_dir)
     if args.command == "pilot" and args.pilot_command == "run":
-        return await _run_pilot(args, model)
+        return await _run_with_signal_cancellation(_run_pilot(args, model))
     if args.command == "pilot" and args.pilot_command == "screen":
-        return await _run_pilot_screen(args)
+        return await _run_with_signal_cancellation(_run_pilot_screen(args))
+    if args.command == "pilot" and args.pilot_command == "watch":
+        return watch_pilot(
+            args.pilot_dir,
+            args.pid,
+            interval=args.interval,
+        )
     if args.command == "pilot" and args.pilot_command == "cleanup":
         return await _run_pilot_cleanup(args)
     if args.command == "pilot" and args.pilot_command == "report":
@@ -479,6 +606,8 @@ def main(
     args = _parser().parse_args(argv)
     try:
         return asyncio.run(_dispatch(args, model))
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        return 130
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"ERROR: {exc}")
         return 1

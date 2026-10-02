@@ -1,4 +1,9 @@
-"""Run and resume the pre-registered SWE-rebench pilot."""
+"""Run and resume the pre-registered SWE-rebench pilot.
+
+Rows in ``progress.jsonl`` are appended in completion order. Each row carries
+the candidate's 1-based position so the original candidate order can be
+reconstructed independently of concurrent completion order.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +17,7 @@ import time
 import traceback
 import uuid
 from collections.abc import Callable, Sequence
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
@@ -380,10 +386,113 @@ async def _close_executor(executor: Any) -> None:
         await closed
 
 
+async def _complete_shielded(
+    awaitable: Any,
+) -> tuple[Any, bool, BaseException | None]:
+    """Finish an awaitable and retain cancellation plus any cleanup error."""
+
+    task = asyncio.ensure_future(awaitable)
+    cancelled = False
+    while not task.done():
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            cancelled = True
+        except Exception:
+            pass
+    try:
+        return task.result(), cancelled, None
+    except BaseException as exc:
+        return None, cancelled, exc
+
+
+async def _await_shielded(awaitable: Any) -> Any:
+    """Finish cleanup despite caller cancellation, then propagate cancellation."""
+
+    result, cancelled, error = await _complete_shielded(awaitable)
+    if cancelled:
+        raise asyncio.CancelledError
+    if error is not None:
+        raise error
+    return result
+
+
+def _shield_cleanup_methods(executor: Any) -> Any:
+    """Protect an executor's async release and close operations from cancellation."""
+
+    for name in ("release", "close"):
+        original = getattr(executor, name, None)
+        if original is None or getattr(original, "_receipts_shielded", False):
+            continue
+
+        async def shielded(*args: Any, _original: Any = original, **kwargs: Any) -> Any:
+            result = _original(*args, **kwargs)
+            if inspect.isawaitable(result):
+                return await _await_shielded(result)
+            return result
+
+        setattr(shielded, "_receipts_shielded", True)
+        setattr(executor, name, shielded)
+    return executor
+
+
+async def _cleanup_executor(
+    executor: Any,
+    *,
+    original_sink: Any,
+    sink_replaced: bool,
+    original_run_pytest: Any,
+    pytest_replaced: bool,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    sandbox_usage: list[dict[str, Any]] = []
+    cleanup_errors: list[str] = []
+    try:
+        if executor is not None:
+            try:
+                await _close_executor(executor)
+            except Exception as exc:
+                cleanup_errors.append(f"{type(exc).__name__}: {exc}")
+    finally:
+        if executor is not None:
+            try:
+                sandbox_usage = _sandbox_usage(executor)
+            except Exception as exc:
+                cleanup_errors.append(
+                    f"sandbox usage failed: {type(exc).__name__}: {exc}",
+                )
+        if executor is not None and sink_replaced:
+            setattr(executor, "sink", original_sink)
+        if executor is not None and pytest_replaced:
+            setattr(executor, "run_pytest", original_run_pytest)
+    return sandbox_usage, cleanup_errors
+
+
 def _atomic_write_record(path: Path, record: InstanceRecord) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(record.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def _write_final_infrastructure_error(
+    instance_dir: Path,
+    record: InstanceRecord,
+    runs: int,
+) -> None:
+    path = instance_dir / "final_infra_error.json"
+    if path.is_file():
+        return
+    payload = {
+        "instance_id": record.instance_id,
+        "runs": runs,
+        "reason": record.reason or "reason unavailable",
+        "written_at": datetime.now(timezone.utc).isoformat(),
+    }
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     temporary.replace(path)
 
 
@@ -430,7 +539,7 @@ async def run_instance(
 
     try:
         try:
-            executor = make_executor(run_id)
+            executor = _shield_cleanup_methods(make_executor(run_id))
             if hasattr(executor, "cleanup_manifest"):
                 setattr(executor, "cleanup_manifest", run_dir / "cleanup.json")
             original_sink = getattr(executor, "sink", None)
@@ -474,24 +583,15 @@ async def run_instance(
             )
             _write_official_records(run_dir, official_records)
         finally:
-            try:
-                if executor is not None:
-                    try:
-                        await _close_executor(executor)
-                    except Exception as exc:
-                        cleanup_errors.append(f"{type(exc).__name__}: {exc}")
-            finally:
-                if executor is not None:
-                    try:
-                        sandbox_usage = _sandbox_usage(executor)
-                    except Exception as exc:
-                        cleanup_errors.append(
-                            f"sandbox usage failed: {type(exc).__name__}: {exc}",
-                        )
-                if executor is not None and sink_replaced:
-                    setattr(executor, "sink", original_sink)
-                if executor is not None and pytest_replaced:
-                    setattr(executor, "run_pytest", original_run_pytest)
+            sandbox_usage, cleanup_errors = await _await_shielded(
+                _cleanup_executor(
+                    executor,
+                    original_sink=original_sink,
+                    sink_replaced=sink_replaced,
+                    original_run_pytest=original_run_pytest,
+                    pytest_replaced=pytest_replaced,
+                ),
+            )
         record = _ran_record(
             instance,
             run_dir,
@@ -576,31 +676,36 @@ def _archive_infrastructure_record(
     ]
 
 
-def _append_progress(pilot_dir: Path, record: InstanceRecord) -> None:
+def _append_progress(
+    pilot_dir: Path,
+    record: InstanceRecord,
+    candidate_position: int,
+) -> None:
     pilot_dir.mkdir(parents=True, exist_ok=True)
     row = {
+        "candidate_position": candidate_position,
         "instance_id": record.instance_id,
         "status": record.status,
         "reason": record.reason,
         "record_path": f"{record.instance_id}/record.json",
     }
-    with (pilot_dir / "progress.log").open("a", encoding="utf-8") as writer:
+    with (pilot_dir / "progress.jsonl").open("a", encoding="utf-8") as writer:
         writer.write(json.dumps(row, ensure_ascii=True, separators=(",", ":")) + "\n")
         writer.flush()
 
 
 def _progress_ids(pilot_dir: Path) -> set[str]:
-    path = pilot_dir / "progress.log"
-    if not path.is_file():
-        return set()
     instance_ids: set[str] = set()
-    for line in path.read_text(encoding="utf-8").splitlines():
-        try:
-            value = json.loads(line)
-        except json.JSONDecodeError:
+    for path in (pilot_dir / "progress.log", pilot_dir / "progress.jsonl"):
+        if not path.is_file():
             continue
-        if isinstance(value, dict) and isinstance(value.get("instance_id"), str):
-            instance_ids.add(value["instance_id"])
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict) and isinstance(value.get("instance_id"), str):
+                instance_ids.add(value["instance_id"])
     return instance_ids
 
 
@@ -625,7 +730,10 @@ async def run_pilot(
     ran = 0
     index = 0
 
-    async def run_and_log(instance: Instance) -> InstanceRecord:
+    async def run_and_log(
+        candidate_position: int,
+        instance: Instance,
+    ) -> InstanceRecord:
         instance_dir = pilot_dir / instance.instance_id
         record_path = instance_dir / "record.json"
         prior_errors = _archived_infrastructure_errors(instance_dir)
@@ -645,6 +753,11 @@ async def run_pilot(
                     _normalize_record_paths(record)
                     record.prior_infrastructure_errors = list(prior_errors)
                     _atomic_write_record(record_path, record)
+                    _write_final_infrastructure_error(
+                        instance_dir,
+                        record,
+                        len(prior_errors) + 1,
+                    )
                     break
                 prior_errors = _archive_infrastructure_record(
                     record_path,
@@ -663,12 +776,12 @@ async def run_pilot(
             _atomic_write_record(record_path, record)
 
         if record.instance_id not in progress_ids:
-            _append_progress(pilot_dir, record)
+            _append_progress(pilot_dir, record, candidate_position)
             progress_ids.add(record.instance_id)
         return record
 
     while index < len(candidates) and ran < n:
-        batch: list[Instance] = []
+        batch: list[tuple[int, Instance]] = []
         while (
             index < len(candidates)
             and ran < n
@@ -676,12 +789,15 @@ async def run_pilot(
         ):
             instance = candidates[index]
             index += 1
-            batch.append(instance)
+            batch.append((index, instance))
 
         if not batch:
             continue
         completed = await asyncio.gather(
-            *(run_and_log(instance) for instance in batch),
+            *(
+                run_and_log(candidate_position, instance)
+                for candidate_position, instance in batch
+            ),
         )
         for record in completed:
             records.append(record)
