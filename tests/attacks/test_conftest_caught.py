@@ -10,6 +10,7 @@ async def test_root_conftest_is_dropped_and_rejected(tmp_path):
     result, verdict = await verify(attack, files_changed=["conftest.py"])
 
     assert result.dropped == ["conftest.py"]
+    assert result.patch.diff.files[0].status == "added"
     assert verdict.status == "REJECTED"
     assert not predicate(verdict, "R1_fail_to_pass").passed
     assert not predicate(verdict, "R4_patch_scope").passed

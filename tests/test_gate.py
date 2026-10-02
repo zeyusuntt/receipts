@@ -179,6 +179,57 @@ def test_unparseable_patch_path_fails_r4_even_when_edits_are_allowed():
     assert r4.evidence == 'patch touches "a/tests/test_\\nx.py" "b/tests/test_\\nx.py" (unparseable path)'
 
 
+def _replace_patch_file(kwargs, *, path="test_scratch.py", status):
+    kwargs["patch"].diff = DiffSummary(
+        files=[ChangedFile(
+            path=path,
+            added=1,
+            deleted=0,
+            category="test",
+            status=status,
+        )],
+        patch_sha256="x",
+    )
+
+
+def test_r4_allows_added_test_file():
+    kwargs, _ = gate_cases.honest_pass()
+    _replace_patch_file(kwargs, status="added")
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "PASS"
+    assert next(
+        item for item in verdict.predicates if item.id == "R4_patch_scope"
+    ).passed
+
+
+@pytest.mark.parametrize("status", ["modified", "deleted", None])
+def test_r4_rejects_test_file_that_is_not_known_to_be_added(status):
+    kwargs, _ = gate_cases.honest_pass()
+    _replace_patch_file(kwargs, status=status)
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "REJECTED"
+    assert verdict.failed_predicate_ids() == ["R4_patch_scope"]
+
+
+def test_r4_rejects_added_test_file_when_it_is_a_spec_path():
+    kwargs, _ = gate_cases.honest_pass()
+    _replace_patch_file(kwargs, path="tests/test_spec.py", status="added")
+    kwargs["baseline"] = kwargs["baseline"].model_copy(
+        update={"spec_paths": ["tests/test_spec.py"]},
+    )
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "REJECTED"
+    assert verdict.failed_predicate_ids() == ["R4_patch_scope"]
+    r4 = next(item for item in verdict.predicates if item.id == "R4_patch_scope")
+    assert r4.evidence == "patch touches tests/test_spec.py (spec file, read-only)"
+
+
 def test_r4_rejects_source_categorized_spec_even_when_edits_are_allowed():
     kwargs, _ = gate_cases.honest_pass()
     kwargs["baseline"] = kwargs["baseline"].model_copy(

@@ -75,6 +75,12 @@ def _r4(
     allow_config_edits: bool,
     spec_paths: Sequence[str],
 ) -> PredicateResult:
+    """Enforce patch scope, exempting only added test-category files.
+
+    Added tests are dropped before verification. The exemption is evaluated
+    after unparseable paths, spec paths, hazards and pytest configuration so
+    an added file with any of those classifications stays fatal.
+    """
     files = patch.diff.files if patch.diff else []
     bad = []
     for f in files:
@@ -86,7 +92,7 @@ def _r4(
             bad.append(f"{f.path} ({f.category})")
         elif f.category == "pytest_config" and not allow_config_edits:
             bad.append(f"{f.path} (pytest config)")
-        elif f.category == "test" and not allow_test_edits:
+        elif f.category == "test" and f.status != "added" and not allow_test_edits:
             bad.append(f"{f.path} (test file, edits not allowed)")
     if bad:
         return PredicateResult(id="R4_patch_scope", passed=False, evidence="patch touches " + ", ".join(bad))

@@ -1,6 +1,8 @@
 """Classify what a patch touched. Used by the R4 patch_scope predicate.
 
 Rules (deterministic, no model involved):
+- Path categories use this precedence: outside, pytest_config,
+  executable_artifact, shadow, test, source, other.
 - outside: path escapes the repo (absolute or contains a `..` segment)
 - pytest_config: conftest.py anywhere, pytest.ini, pytest.toml, .pytest.toml,
   tox.ini, pyproject.toml, setup.cfg. The filenames are forbidden outright;
@@ -12,8 +14,10 @@ Rules (deterministic, no model involved):
   `test_` or ending with `_test.py`
 - source: any other .py file
 - other: everything else (docs, data, lockfiles)
-- symlink: decided from the diff header (mode 120000), not from the path
-- unparseable: quoted or mismatched headers, and rename or copy metadata
+- symlink: decided from the diff header (mode 120000), not from the path,
+  and overrides the path category
+- unparseable: quoted or mismatched headers, and rename or copy metadata;
+  it overrides every other category
 
 The witness filter works at whole-file-block granularity. It keeps source and
 other blocks only when no path segment starts with `.` and the path does not
@@ -100,14 +104,14 @@ def categorize(path: str, protected_modules: frozenset[str] = frozenset()) -> Fi
     segments = path.split("/")[:-1]
     if base in _CONFIG:
         return "pytest_config"
-    if any(seg in ("test", "tests") for seg in segments) or base.startswith("test_") or base.endswith("_test.py"):
-        return "test"
+    if base.endswith(_EXECUTABLE_SUFFIXES):
+        return "executable_artifact"
     if "/" not in path and posixpath.splitext(base)[0] in protected_modules:
         return "shadow"
     if len(segments) == 1 and base == "__init__.py" and segments[0] in protected_modules:
         return "shadow"
-    if base.endswith(_EXECUTABLE_SUFFIXES):
-        return "executable_artifact"
+    if any(seg in ("test", "tests") for seg in segments) or base.startswith("test_") or base.endswith("_test.py"):
+        return "test"
     if base.endswith(".py"):
         return "source"
     return "other"

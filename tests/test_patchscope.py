@@ -30,16 +30,26 @@ def test_categorize_executable_artifacts():
     for suffix in (".pyc", ".pyo", ".so", ".pyd", ".dylib", ".pth"):
         assert categorize(f"build/payload{suffix}") == "executable_artifact"
 
+    assert categorize("tests/x.pth") == "executable_artifact"
+
 
 def test_categorize_top_level_protected_module_shadows():
     protected = frozenset({"pytest", "json"})
 
     assert categorize("pytest.py", protected) == "shadow"
-    assert categorize("pytest.pyc", protected) == "shadow"
-    assert categorize("pytest.so", protected) == "shadow"
+    assert categorize("pytest.pyc", protected) == "executable_artifact"
+    assert categorize("pytest.so", protected) == "executable_artifact"
     assert categorize("json/__init__.py", protected) == "shadow"
     assert categorize("pkg/pytest.py", protected) == "source"
     assert categorize("pkg/json/__init__.py", protected) == "source"
+
+
+def test_categorize_hazards_before_test_naming():
+    protected = frozenset({"tests"})
+
+    assert categorize("tests/__init__.py", protected) == "shadow"
+    assert categorize("test_foo.py", protected) == "test"
+    assert categorize("tests/conftest.py", protected) == "pytest_config"
 
 
 def test_default_protected_modules_include_runtime_import_surfaces():

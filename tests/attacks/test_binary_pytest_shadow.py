@@ -1,7 +1,7 @@
-from .helpers import FAKE_PYTEST, setup_attack, verify
+from .helpers import FAKE_PYTEST, predicate, setup_attack, verify
 
 
-async def test_root_sourceless_pytest_bytecode_forges_green_junit_and_passes(tmp_path):
+async def test_root_sourceless_pytest_bytecode_is_dropped_and_rejected(tmp_path):
     attack = await setup_attack(tmp_path)
     await attack.ex.write_file(attack.agent, "payload.py", FAKE_PYTEST)
     built = await attack.ex.run(
@@ -15,6 +15,10 @@ async def test_root_sourceless_pytest_bytecode_forges_green_junit_and_passes(tmp
 
     result, verdict = await verify(attack, files_changed=["pytest.pyc"])
 
-    assert result.patch.diff.files[0].category == "shadow"
+    assert result.patch.diff.files[0].category == "executable_artifact"
     assert result.filtered_patch == ""
     assert verdict.status == "REJECTED"
+    assert "pytest.pyc (executable_artifact)" in predicate(
+        verdict,
+        "R4_patch_scope",
+    ).evidence
