@@ -5,8 +5,7 @@ Draft, 2026-10-02. Becomes `PREREGISTRATION-v2.md` at the repository root and is
 Open before commit (filled in or removed when the file is committed):
 
 - `<FREEZE_COMMIT>`: the commit that v2 runs.
-- `<D2_IDS>`: the five rehearsal ids, once the D2 rehearsal has run.
-- `<EXECUTOR>`: Token Factory Sandboxes or Daytona, from the C5 decision gate.
+- `pysmt__pysmt-812`, `jupyterhub__binderhub-1571`, `pypa__twine-1066`, `twisted__towncrier-696`, `astropy__pyvo-204`: the five rehearsal ids, once the D2 rehearsal has run.
 
 ## Question
 
@@ -21,6 +20,8 @@ Every v2 run uses the code at `<FREEZE_COMMIT>` on branch `build/plan-1`, run fr
 - Gate: unparseable patch headers fail R4 (B0); the specification's files are read-only (B7); an added test-named file is dropped by the witness filter and no longer fails R4, while modified, deleted and hazardous files still fail (B1); a pytest exit of 2, 3 or 4 is REJECTED with evidence only when a second clean witness reproduces it, and is otherwise an infrastructure error (B2); FAIL_TO_PASS ids that the upstream parser truncated at whitespace map to every matching collected id, all of which must fail at baseline and pass on the witness (B3); a new top-level path that takes a protected name and did not exist in the checkpoint fails R4, as do `sitecustomize.py`, `usercustomize.py` and `entry_points.txt` anywhere (B6); the filtered patch's digest is checked at the gate, at official grading and in the report (B8).
 - Agent harness: tool names the model invents are mapped onto the real tools (A1); every tool result is logged (A0); the worker's first message carries the spec tests' baseline failure text and the planner gets a compact baseline summary (A3); a scratch directory outside the repository (A4); a larger budget and a context guard (A5).
 - Executor and runner: `.git` is not downloaded where nothing reads it (C1); concurrency 2 with a final-error marker, a watchdog and graceful cancellation (C2); durable snapshot cleanup (C3); a read-only preflight (C4); repository-relative paths in new records (D0).
+- The Token Factory Sandboxes executor (C5, Plan 5 section 10), with the fixes its rehearsal found (a platform cap on output size, with truncated output failing closed; empty patches), and the fixes the Daytona rehearsals found (the `str_replace` alias, `/tmp` as the scratch root, directory reads).
+- Corrected model prices and a model-spend budget stop in the watchdog.
 
 ## Agent and settings
 
@@ -30,7 +31,7 @@ Every v2 run uses the code at `<FREEZE_COMMIT>` on branch `build/plan-1`, run fr
 - Worker budget per attempt: 60 turns, 1,500 seconds, 96,000 completion tokens; command output shown to the model capped at the last 6,000 characters; an attempt also ends after three consecutive protocol errors. Before every model call, a prompt estimated above 160,000 tokens (characters divided by three) has its oldest tool outputs replaced by a one-line note until it fits; the system message, the first user message and the last six messages are never changed.
 - The worker's first message adds the spec tests' failure text from the first baseline run, capped at 6,000 characters in total.
 - Receipts configuration: one agent branch, one witness branch per attempt, one appeal. Unchanged.
-- Executor: `<EXECUTOR>`, decided by the gate in Plan 5, section 10, before this file is committed. Either Token Factory Sandboxes (the instance's preloaded SWE-rebench-V2 image from the Sandboxes catalogue; every command a run from the branch's immutable image; at most eight tasks at a time), or Daytona sandboxes in organization `0d3dbc72-...` (2 vCPU, 2 GiB memory and 5 GiB disk each, 60-minute idle auto-stop; at most two tasks at a time). The sentence that is not chosen is deleted before commit.
+- Executor: the primary sample P and the exploratory arm run on Nebius Token Factory Sandboxes (the instance's preloaded SWE-rebench-V2 image from the Sandboxes catalogue; every command is a run from the branch's immutable image; trusted tools injected into every run; at most eight tasks at a time). The seen sample S runs on Daytona sandboxes in organization `0d3dbc72-...` (2 vCPU, 2 GiB memory and 5 GiB disk each, 60-minute idle auto-stop; at most two tasks at a time), the executor v1 used, so that S compares v1 and v2 with the executor held fixed. Both executors passed every D2 rehearsal criterion (`docs/results/2026-10-02-d2-rehearsal-2.md`, `docs/results/2026-10-02-tokenfactory-rehearsal.md`).
 
 ## Task selection
 
@@ -42,15 +43,19 @@ Screening applies rules 4 and 5 with `receipts pilot screen`, which runs no mode
 
 ### Primary sample P (the headline)
 
-Walk `pilot/candidates.txt` from position 59, skipping every id in `pilot/v2-exclusions.txt` (v1's positions 1 to 58 and the five D2 rehearsal ids, `<D2_IDS>`). The first 100 included tasks are the sample, in position order, and the next 10 included tasks are an ordered reserve. If the reserve is used up, the walk continues in order. The screening ledger (`pilot/v2-screen-P.jsonl`), the sample list and the reserve list are committed before any agent runs. A sample task that fails rule 4 during its own run is excluded, listed, and replaced by the next reserve task in order.
+Walk `pilot/candidates.txt` from position 59, skipping every id in `pilot/v2-exclusions.txt` (v1's positions 1 to 58 and the five D2 rehearsal ids, `pysmt__pysmt-812`, `jupyterhub__binderhub-1571`, `pypa__twine-1066`, `twisted__towncrier-696`, `astropy__pyvo-204`). The first 100 included tasks are the sample, in position order, and the next 10 included tasks are an ordered reserve. If the reserve is used up, the walk continues in order. The screening ledger (`pilot/v2-screen-P.jsonl`), the sample list and the reserve list are committed before any agent runs. A sample task that fails rule 4 during its own run is excluded, listed, and replaced by the next reserve task in order.
 
 ### Seen sample S (exploratory)
 
-The 50 tasks that v1 ran, screened again under rules 4 and 5 in v1's order, with their own committed ledger (`pilot/v2-screen-S.jsonl`). Every included task is run under v2 and paired with its v1 record. Some v2 changes were motivated by failures on these tasks, so every S result is labelled as seen and exploratory. Expected, and checked before P runs: rule 5 excludes exactly v1's four environment tasks (`py-pdf__pypdf2-1318`, `datadog__guarddog-156`, `giampaolo__psutil-2379`, `altair-viz__altair-3068`); any other outcome is listed and explained.
+The 50 tasks that v1 ran, screened again under rules 4 and 5 in v1's order, with their own committed ledger (`pilot/v2-screen-S.jsonl`). Every included task is run under v2 and paired with its v1 record. Some v2 changes were motivated by failures on these tasks, so every S result is labelled as seen and exploratory. S runs on Daytona, as v1 did. Expected, and checked before P runs: rule 5 excludes exactly v1's four environment tasks (`py-pdf__pypdf2-1318`, `datadog__guarddog-156`, `giampaolo__psutil-2379`, `altair-viz__altair-3068`); any other outcome is listed and explained.
 
 ### Order and stopping
 
-P runs to completion before S starts, at concurrency 2, under `receipts pilot watch`. If P is not complete by 2026-10-12, 23:59 PT, the report uses every P task run so far, in order, and says how many. S runs only after P and may be cut.
+P runs first, on Token Factory Sandboxes at concurrency 4, under `receipts pilot watch` with a model-spend budget. After P's first 10 tasks the run pauses once for a health check (infrastructure errors, gate errors, costs); nothing about the agent, the gate or grading changes at the pause, and a defect found there is handled as a dated amendment. The exploratory arm runs after P. S runs last and may be cut. If P is not complete by 2026-10-12, 23:59 PT, or if the model spend recorded across all v2 runs reaches US$45 at the prices below, the report uses every P task run so far, in order, and says how many.
+
+## Prices
+
+Model dollars use the per-token prices that Token Factory listed on 2026-10-02 (`GET /v1/models`): Nemotron 3 Super $0.30 per million prompt tokens and $0.90 per million completion tokens; Nemotron 3.5 Lightning $0.06 and $0.24. v1's report used $0.06 and $0.24 for Super, which understated its model cost about five-fold; the correction is published separately and v1's report is not rewritten. Token Factory Sandboxes publish no price during the beta; the report gives the platform's per-run `cost` field as reported, with its unit stated as unknown unless Nebius confirms it. Daytona sandbox dollars are estimated as in v1.
 
 ## Infrastructure and retries
 
@@ -103,4 +108,4 @@ After P and S, the first 30 tasks of P run once more with one newer Nemotron mod
 
 ## Development runs
 
-Before this file was committed, v2's code was developed on v1's records (the D1 replay) and rehearsed on the five tasks `<D2_IDS>`, taken from the end of `pilot/candidates.txt` and screened under rules 4 and 5. Those runs are not part of the report's samples and their ids are in `pilot/v2-exclusions.txt`.
+Before this file was committed, v2's code was developed on v1's records (the D1 replay) and rehearsed on the five tasks `pysmt__pysmt-812`, `jupyterhub__binderhub-1571`, `pypa__twine-1066`, `twisted__towncrier-696`, `astropy__pyvo-204`, taken from the end of `pilot/candidates.txt` and screened under rules 4 and 5. Those runs are not part of the report's samples and their ids are in `pilot/v2-exclusions.txt`.
