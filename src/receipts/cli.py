@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from daytona import AsyncDaytona, DaytonaConfig
 
 from receipts.agent.worker import WorkerBudget
+from receipts.cost import price_table
 from receipts.llm import (
     ModelClient,
     TokenFactoryClient,
@@ -31,7 +32,6 @@ from receipts.pilot.cleanup import cleanup_manifests, render_cleanup
 from receipts.pilot.replay import summary_line as replay_summary_line
 from receipts.pilot.replay import write_replay
 from receipts.pilot.runner import (
-    InstanceRecord,
     _complete_shielded,
     _shield_cleanup_methods,
     run_pilot,
@@ -133,6 +133,10 @@ def _parser() -> argparse.ArgumentParser:
     )
     pilot_run.add_argument("--out", required=True, type=Path)
     pilot_run.add_argument("--concurrency", type=int, default=1)
+    pilot_run.add_argument(
+        "--model",
+        help="model id for both the planner and worker",
+    )
 
     pilot_screen = pilot_commands.add_parser(
         "screen",
@@ -155,6 +159,14 @@ def _parser() -> argparse.ArgumentParser:
         help="build the report from pilot records",
     )
     pilot_report.add_argument("pilot_dir", type=Path)
+    pilot_report.add_argument(
+        "--screen-ledger",
+        action="append",
+        default=[],
+        dest="screen_ledgers",
+        type=Path,
+        help="screening JSONL to include; may be repeated",
+    )
     pilot_watch = pilot_commands.add_parser(
         "watch",
         help="stop a pilot process on a terminal failure",
@@ -544,10 +556,24 @@ async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int
     if args.concurrency < 1:
         raise ValueError("--concurrency must be at least 1")
     candidates = _load_pilot_candidates(args.candidates, args.rows)
-    selected_model = model or TokenFactoryClient(
-        load_config(env_path=Path(".env")),
-        env_path=Path(".env"),
-    )
+    if model is None:
+        model_config = load_config(env_path=Path(".env"))
+        if args.model is not None:
+            if args.model not in price_table:
+                raise ValueError(
+                    f"--model {args.model} has no listed price in "
+                    "receipts.cost.price_table, so its spend could not be "
+                    "counted against the budget",
+                )
+            model_config = model_config.model_copy(
+                update={"model": args.model},
+            )
+        selected_model = TokenFactoryClient(
+            model_config,
+            env_path=Path(".env"),
+        )
+    else:
+        selected_model = model
     with tempfile.TemporaryDirectory(prefix="receipts-pilot-executor-") as root:
         executor_root = Path(root)
         if args.executor == "daytona":
@@ -658,7 +684,10 @@ async def _run_pilot_cleanup(args: argparse.Namespace) -> int:
     return 1 if result.failed else 0
 
 
-def _run_pilot_report(pilot_dir: Path) -> int:
+def _run_pilot_report(
+    pilot_dir: Path,
+    screen_ledgers: Sequence[Path] = (),
+) -> int:
     try:
         report_module = importlib.import_module("receipts.pilot.report")
     except ModuleNotFoundError as exc:
@@ -666,11 +695,10 @@ def _run_pilot_report(pilot_dir: Path) -> int:
             raise RuntimeError("pilot reporting is not available until Task P4") from exc
         raise
 
-    records = [
-        InstanceRecord.model_validate_json(path.read_text(encoding="utf-8"))
-        for path in sorted(pilot_dir.glob("*/record.json"))
-    ]
-    report = report_module.build_report(records)
+    report = report_module.build_report_from_directory(
+        pilot_dir,
+        screen_ledgers=screen_ledgers,
+    )
     markdown = report_module.render(report)
     (pilot_dir / "REPORT.md").write_text(markdown, encoding="utf-8")
     (pilot_dir / "report.json").write_text(
@@ -732,7 +760,7 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
         print(replay_summary_line(report))
         return 1 if report.summary.new_gate_looser else 0
     if args.command == "pilot" and args.pilot_command == "report":
-        return _run_pilot_report(args.pilot_dir)
+        return _run_pilot_report(args.pilot_dir, args.screen_ledgers)
     raise AssertionError(f"unknown command: {args.command}")
 
 

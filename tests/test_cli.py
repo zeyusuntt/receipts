@@ -567,6 +567,147 @@ def test_preflight_subcommand_parses_optional_output_path(tmp_path: Path):
     assert tokenfactory_args.executor == "tokenfactory"
 
 
+def test_pilot_run_model_and_report_screen_ledgers_parse(tmp_path: Path):
+    run_args = _parser().parse_args(
+        [
+            "pilot",
+            "run",
+            "--candidates",
+            str(tmp_path / "candidates.txt"),
+            "--rows",
+            str(tmp_path / "rows.jsonl"),
+            "--out",
+            str(tmp_path / "pilot"),
+            "--model",
+            "nvidia/Nemotron-3_5-Lightning",
+        ],
+    )
+    first_ledger = tmp_path / "primary-screen.jsonl"
+    second_ledger = tmp_path / "exploratory-screen.jsonl"
+    report_args = _parser().parse_args(
+        [
+            "pilot",
+            "report",
+            str(tmp_path / "pilot"),
+            "--screen-ledger",
+            str(first_ledger),
+            "--screen-ledger",
+            str(second_ledger),
+        ],
+    )
+
+    assert run_args.model == "nvidia/Nemotron-3_5-Lightning"
+    assert report_args.screen_ledgers == [first_ledger, second_ledger]
+
+
+def test_pilot_run_model_override_reaches_client_and_disclosure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    import receipts.cli as cli
+    from receipts.orchestrate import _model_disclosure
+
+    override = "nvidia/Nemotron-3_5-Lightning"
+    (tmp_path / ".env").write_text(
+        "OPENAI_API_KEY=test-key\n"
+        "OPENAI_BASE_URL=https://example.invalid/v1/\n"
+        "NEMOTRON_MODEL=nvidia/nemotron-3-super-120b-a12b\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("DAYTONA_API_KEY", "test-daytona-key")
+    monkeypatch.setattr(cli, "_load_pilot_candidates", lambda *args: [])
+    captured: dict[str, object] = {}
+
+    async def fake_run_pilot(
+        make_executor,
+        model,
+        candidates,
+        pilot_dir,
+        *,
+        n,
+        concurrency,
+        budgets,
+    ):
+        captured["client"] = model
+        captured["disclosure"] = _model_disclosure(model)
+        return []
+
+    monkeypatch.setattr(cli, "run_pilot", fake_run_pilot)
+
+    status = main(
+        [
+            "pilot",
+            "run",
+            "--candidates",
+            str(tmp_path / "candidates.txt"),
+            "--rows",
+            str(tmp_path / "rows.jsonl"),
+            "--out",
+            str(tmp_path / "pilot"),
+            "--model",
+            override,
+        ],
+    )
+
+    assert status == 0
+    client = captured["client"]
+    assert client.config.model == override
+    assert client.config.temperature == 1.0
+    assert client.config.top_p == 0.95
+    assert client.config.thinking is False
+    assert captured["disclosure"] == {
+        "client": "TokenFactoryClient",
+        "model": override,
+        "base_url": "https://example.invalid/v1/",
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "thinking": False,
+        "max_tokens": None,
+    }
+
+
+def test_pilot_run_refuses_a_model_without_a_price(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    import receipts.cli as cli
+
+    (tmp_path / ".env").write_text(
+        "OPENAI_API_KEY=test-key\n"
+        "OPENAI_BASE_URL=https://example.invalid/v1/\n"
+        "NEMOTRON_MODEL=nvidia/nemotron-3-super-120b-a12b\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("DAYTONA_API_KEY", "test-daytona-key")
+    monkeypatch.setattr(cli, "_load_pilot_candidates", lambda *args: [])
+
+    async def fake_run_pilot(*args, **kwargs):
+        raise AssertionError("an unpriced model must not start a run")
+
+    monkeypatch.setattr(cli, "run_pilot", fake_run_pilot)
+
+    status = main(
+        [
+            "pilot",
+            "run",
+            "--candidates",
+            str(tmp_path / "candidates.txt"),
+            "--rows",
+            str(tmp_path / "rows.jsonl"),
+            "--out",
+            str(tmp_path / "pilot"),
+            "--model",
+            "nvidia/unpriced-model",
+        ],
+    )
+
+    assert status != 0
+    assert "no listed price" in capsys.readouterr().out
+
+
 def test_pilot_screen_arguments_parse(tmp_path: Path):
     candidates = tmp_path / "candidates.txt"
     exclusions = tmp_path / "exclude.txt"

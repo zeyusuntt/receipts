@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from receipts.cost import DAYTONA_PRICING_READ_DATE
 from receipts.models import VerdictStatus
 from receipts.pilot.runner import InstanceRecord, PilotCost
+from receipts.pilot.screen import ScreenRecord
 from receipts.swerebench import Agreement
 
 
@@ -100,6 +101,48 @@ class CostPerVerifiedFix(BaseModel):
     wall_time_s: float | None
 
 
+class SpendTotal(BaseModel):
+    runs: int
+    tokens: int
+    model_dollars: float | None
+    sandbox_dollars_estimate: float
+    total_dollars_estimate: float | None
+    sandbox_lifetime_seconds: float
+    wall_time_s: float
+
+
+class SpendReport(BaseModel):
+    final: SpendTotal
+    infrastructure_error: SpendTotal
+    interrupted: SpendTotal
+    all_runs: SpendTotal
+    unreadable_archives: int
+
+
+class ScreeningCounts(BaseModel):
+    included: int
+    excluded_rule_4: int
+    excluded_rule_5: int
+    infrastructure_error: int
+    malformed_rows: int
+
+
+class ScreeningRow(BaseModel):
+    position: int
+    instance_id: str
+    outcome: Literal["included", "excluded", "infra_error"]
+    rule: Literal["4", "5"] | None
+    reason: str | None
+    failing_ids: list[str]
+    run_number: int
+
+
+class ScreeningLedgerReport(BaseModel):
+    ledger: str
+    counts: ScreeningCounts
+    rows: list[ScreeningRow]
+
+
 class ConfigurationB(BaseModel):
     verified_fixes: int
     first_verdict: int
@@ -162,6 +205,8 @@ class Report(BaseModel):
     headline: str
     secondary_headline: str | None
     ran_tasks: int
+    spend: SpendReport
+    screening: list[ScreeningLedgerReport] = Field(default_factory=list)
     configuration_a: ConfigurationA
     configuration_b: ConfigurationB
     harness: HarnessReport
@@ -220,6 +265,8 @@ def _official_result(resolved: bool | None) -> OfficialResult:
 def _cost_per_verified_fix(
     records: Sequence[InstanceRecord],
     verified_fixes: int,
+    *,
+    wall_time_records: Sequence[InstanceRecord] | None = None,
 ) -> CostPerVerifiedFix:
     if verified_fixes == 0:
         return CostPerVerifiedFix(
@@ -230,16 +277,12 @@ def _cost_per_verified_fix(
             sandbox_lifetime_seconds=None,
             wall_time_s=None,
         )
-    model_dollars = [record.cost.model_dollars for record in records]
-    total_model_dollars = (
-        None
-        if any(value is None for value in model_dollars)
-        else sum(model_dollars)
-    )
+    total_model_dollars = _total_model_dollars(records)
     sandbox_dollars = sum(
         record.cost.sandbox_dollars_estimate
         for record in records
     )
+    timed_records = records if wall_time_records is None else wall_time_records
     return CostPerVerifiedFix(
         tokens=sum(record.cost.tokens for record in records) / verified_fixes,
         model_dollars=(
@@ -257,7 +300,107 @@ def _cost_per_verified_fix(
             sum(record.cost.sandbox_lifetime_seconds for record in records)
             / verified_fixes
         ),
-        wall_time_s=sum(record.wall_time_s for record in records) / verified_fixes,
+        wall_time_s=(
+            sum(record.wall_time_s for record in timed_records)
+            / verified_fixes
+        ),
+    )
+
+
+def _total_model_dollars(records: Sequence[InstanceRecord]) -> float | None:
+    values = [record.cost.model_dollars for record in records]
+    if any(
+        value is None and record.cost.tokens > 0
+        for record, value in zip(records, values, strict=True)
+    ):
+        return None
+    return sum(value or 0 for value in values)
+
+
+def _spend_total(records: Sequence[InstanceRecord]) -> SpendTotal:
+    model_dollars = _total_model_dollars(records)
+    sandbox_dollars = sum(
+        record.cost.sandbox_dollars_estimate
+        for record in records
+    )
+    return SpendTotal(
+        runs=len(records),
+        tokens=sum(record.cost.tokens for record in records),
+        model_dollars=model_dollars,
+        sandbox_dollars_estimate=sandbox_dollars,
+        total_dollars_estimate=(
+            None
+            if model_dollars is None
+            else model_dollars + sandbox_dollars
+        ),
+        sandbox_lifetime_seconds=sum(
+            record.cost.sandbox_lifetime_seconds
+            for record in records
+        ),
+        wall_time_s=sum(record.wall_time_s for record in records),
+    )
+
+
+def _spend_report(
+    final: Sequence[InstanceRecord],
+    infrastructure_error: Sequence[InstanceRecord],
+    interrupted: Sequence[InstanceRecord],
+    unreadable_archives: int,
+) -> SpendReport:
+    all_runs = [*final, *infrastructure_error, *interrupted]
+    return SpendReport(
+        final=_spend_total(final),
+        infrastructure_error=_spend_total(infrastructure_error),
+        interrupted=_spend_total(interrupted),
+        all_runs=_spend_total(all_runs),
+        unreadable_archives=unreadable_archives,
+    )
+
+
+def _screening_report(path: Path) -> ScreeningLedgerReport:
+    latest: dict[int, ScreenRecord] = {}
+    malformed_rows = 0
+    for line in path.read_bytes().splitlines():
+        if not line.strip():
+            continue
+        try:
+            row = ScreenRecord.model_validate_json(line)
+        except (UnicodeError, ValueError):
+            malformed_rows += 1
+            continue
+        latest[row.position] = row
+
+    rows = [
+        ScreeningRow(
+            position=row.position,
+            instance_id=row.instance_id,
+            outcome=row.outcome,
+            rule=row.rule,
+            reason=row.reason,
+            failing_ids=list(row.failing_ids),
+            run_number=row.run_number,
+        )
+        for _, row in sorted(latest.items())
+    ]
+    return ScreeningLedgerReport(
+        ledger=str(path),
+        counts=ScreeningCounts(
+            included=sum(row.outcome == "included" for row in rows),
+            excluded_rule_4=sum(
+                row.outcome == "excluded" and row.rule == "4"
+                for row in rows
+            ),
+            excluded_rule_5=sum(
+                row.outcome == "excluded" and row.rule == "5"
+                for row in rows
+            ),
+            infrastructure_error=sum(
+                row.outcome == "infra_error"
+                for row in rows
+            ),
+            malformed_rows=malformed_rows,
+        ),
+        rows=rows,
     )
 
 
@@ -516,11 +659,33 @@ def _headline(
     )
 
 
-def build_report(records: Sequence[InstanceRecord]) -> Report:
+def build_report(
+    records: Sequence[InstanceRecord],
+    *,
+    infrastructure_records: Sequence[InstanceRecord] = (),
+    interrupted_records: Sequence[InstanceRecord] = (),
+    unreadable_archives: int = 0,
+    screening: Sequence[ScreeningLedgerReport] = (),
+) -> Report:
     """Compute every report value from durable per-instance records."""
 
     ordered = sorted(records, key=lambda record: record.instance_id)
     ran = [record for record in ordered if record.status == "ran"]
+    final_infrastructure = [
+        record
+        for record in ordered
+        if record.status == "infra_error"
+    ]
+    archived_infrastructure = sorted(
+        infrastructure_records,
+        key=lambda record: (record.instance_id, record.run_dir),
+    )
+    interrupted = sorted(
+        interrupted_records,
+        key=lambda record: (record.instance_id, record.run_dir),
+    )
+    all_infrastructure = [*archived_infrastructure, *final_infrastructure]
+    all_spend_records = [*ran, *all_infrastructure, *interrupted]
 
     first_attempts = [record.attempts[0] for record in ran if record.attempts]
     claimed = [attempt for attempt in first_attempts if attempt.claimed_done]
@@ -691,6 +856,13 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
         headline=_headline(len(false_done_attempts), len(claimed), ran_tasks, shipped_false_dones),
         secondary_headline=secondary_headline,
         ran_tasks=ran_tasks,
+        spend=_spend_report(
+            ran,
+            all_infrastructure,
+            interrupted,
+            unreadable_archives,
+        ),
+        screening=list(screening),
         configuration_a=ConfigurationA(
             claimed_dones=len(claimed),
             false_dones=len(false_done_attempts),
@@ -706,7 +878,11 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
             appeal=appeals,
             shipped_false_dones=shipped_false_dones,
             verified_rate=verified_rate,
-            cost_per_verified_fix=_cost_per_verified_fix(ran, verified_fixes),
+            cost_per_verified_fix=_cost_per_verified_fix(
+                all_spend_records,
+                verified_fixes,
+                wall_time_records=ran,
+            ),
         ),
         harness=_harness_report(ordered),
         shipped_bytes=ShippedBytesReport(
@@ -731,6 +907,48 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
     )
 
 
+def _load_archives(
+    paths: Sequence[Path],
+) -> tuple[list[InstanceRecord], int]:
+    records: list[InstanceRecord] = []
+    unreadable = 0
+    for path in paths:
+        try:
+            records.append(InstanceRecord.model_validate_json(path.read_bytes()))
+        except (OSError, UnicodeError, ValueError):
+            unreadable += 1
+    return records, unreadable
+
+
+def build_report_from_directory(
+    pilot_dir: Path,
+    *,
+    screen_ledgers: Sequence[Path] = (),
+) -> Report:
+    """Load final and archived records, then compute the report."""
+
+    records = [
+        InstanceRecord.model_validate_json(path.read_bytes())
+        for path in sorted(pilot_dir.glob("*/record.json"))
+    ]
+    infrastructure, unreadable_infrastructure = _load_archives(
+        sorted(pilot_dir.glob("*/record.infra-*.json")),
+    )
+    interrupted, unreadable_interrupted = _load_archives(
+        sorted(pilot_dir.glob("*/record.interrupted-*.json")),
+    )
+    screening = [_screening_report(path) for path in screen_ledgers]
+    return build_report(
+        records,
+        infrastructure_records=infrastructure,
+        interrupted_records=interrupted,
+        unreadable_archives=(
+            unreadable_infrastructure + unreadable_interrupted
+        ),
+        screening=screening,
+    )
+
+
 def _format_percent(value: float) -> str:
     percent = value * 100
     if math.isclose(percent, round(percent), abs_tol=1e-9):
@@ -742,6 +960,12 @@ def _format_number(value: float | None) -> str:
     if value is None:
         return "not available"
     return f"{value:.3f}".rstrip("0").rstrip(".")
+
+
+def _format_dollars(value: float | None) -> str:
+    if value is None:
+        return "not available"
+    return f"${_format_number(value)}"
 
 
 def _official_label(value: bool | None) -> str:
@@ -781,6 +1005,114 @@ def _render_problem_table(problems: Sequence[ReportedProblem]) -> list[str]:
     return lines
 
 
+def _screening_outcome(row: ScreeningRow) -> str:
+    if row.outcome == "included":
+        return "included"
+    if row.outcome == "infra_error":
+        return "final infrastructure error"
+    if row.rule in {"4", "5"}:
+        return f"excluded under rule {row.rule}"
+    return "excluded"
+
+
+def _render_screening(screening: Sequence[ScreeningLedgerReport]) -> list[str]:
+    if not screening:
+        return []
+    lines = ["## Screening", ""]
+    for ledger in screening:
+        counts = ledger.counts
+        lines.extend(
+            [
+                f"### `{_cell(ledger.ledger)}`",
+                "",
+                (
+                    f"Included: {counts.included}; "
+                    f"rule 4 exclusions: {counts.excluded_rule_4}; "
+                    f"rule 5 exclusions: {counts.excluded_rule_5}; "
+                    f"final infrastructure errors: {counts.infrastructure_error}; "
+                    f"malformed rows: {counts.malformed_rows}."
+                ),
+                "",
+                "| Position | Instance | Result | Reason | Failing ids |",
+                "| ---: | --- | --- | --- | --- |",
+            ],
+        )
+        lines.extend(
+            (
+                f"| {row.position} | {_cell(row.instance_id)} | "
+                f"{_screening_outcome(row)} | "
+                f"{_cell(row.reason or '')} | "
+                f"{_cell(', '.join(row.failing_ids))} |"
+            )
+            for row in ledger.rows
+        )
+        lines.append("")
+    return lines
+
+
+_TOKENFACTORY_SANDBOX_COST_HEADER = (
+    "Token Factory reported sandbox cost (unit not published)"
+)
+_TOKENFACTORY_SANDBOX_COST_NOTE = (
+    "The sandbox figure is the per-run `cost` that Token Factory Sandboxes "
+    "report. Token Factory does not publish the unit or a price during the "
+    "beta, so the figure is shown as reported, not as dollars, and no dollar "
+    "total is given."
+)
+
+
+def _has_tokenfactory(report: Report) -> bool:
+    return any(row.executor_kind == "tokenfactory" for row in report.instances)
+
+
+def _render_spend(spend: SpendReport, *, tokenfactory: bool = False) -> list[str]:
+    if tokenfactory:
+        lines = [
+            "## Spend",
+            "",
+            f"| Run class | Runs | Model dollars | {_TOKENFACTORY_SANDBOX_COST_HEADER} |",
+            "| --- | ---: | ---: | ---: |",
+        ]
+    else:
+        lines = [
+            "## Spend",
+            "",
+            "| Run class | Runs | Model dollars | Sandbox dollars | Total dollars |",
+            "| --- | ---: | ---: | ---: | ---: |",
+        ]
+    for label, total in (
+        ("Final", spend.final),
+        ("Infrastructure error", spend.infrastructure_error),
+        ("Interrupted", spend.interrupted),
+        ("All runs", spend.all_runs),
+    ):
+        if tokenfactory:
+            lines.append(
+                f"| {label} | {total.runs} | "
+                f"{_format_dollars(total.model_dollars)} | "
+                f"{_format_number(total.sandbox_dollars_estimate)} |",
+            )
+        else:
+            lines.append(
+                f"| {label} | {total.runs} | "
+                f"{_format_dollars(total.model_dollars)} | "
+                f"{_format_dollars(total.sandbox_dollars_estimate)} | "
+                f"{_format_dollars(total.total_dollars_estimate)} |",
+            )
+    lines.extend(
+        [
+            "",
+            f"Unreadable archives: {spend.unreadable_archives}.",
+            "All runs includes final agent runs and every readable "
+            "infrastructure-error and interrupted archive.",
+        ],
+    )
+    if tokenfactory:
+        lines.append(_TOKENFACTORY_SANDBOX_COST_NOTE)
+    lines.append("")
+    return lines
+
+
 def render(report: Report) -> str:
     """Render a deterministic Markdown report from computed report data."""
 
@@ -802,6 +1134,9 @@ def render(report: Report) -> str:
             for item in report.truncated_test_ids
         )
         lines.extend([f"Truncated test ids: {rendered}.", ""])
+
+    lines.extend(_render_screening(report.screening))
+    lines.extend(_render_spend(report.spend, tokenfactory=_has_tokenfactory(report)))
 
     configuration_a = report.configuration_a
     lines.extend(
@@ -830,25 +1165,22 @@ def render(report: Report) -> str:
 
     configuration_b = report.configuration_b
     cost = configuration_b.cost_per_verified_fix
-    has_tokenfactory = any(
-        row.executor_kind == "tokenfactory"
-        for row in report.instances
-    )
+    has_tokenfactory = _has_tokenfactory(report)
     has_daytona_or_legacy = any(
         row.executor_kind != "tokenfactory"
         for row in report.instances
     )
     if has_tokenfactory and has_daytona_or_legacy:
         sandbox_cost_explanation = (
-            "Sandbox dollars combine Token Factory reported cost for Token Factory "
-            "runs with Daytona vCPU, memory and billable disk estimates over measured "
-            "sandbox lifetimes. Total dollars combines sandbox dollars with the model "
-            "estimate."
+            "Model dollars estimate Token Factory token usage. The sandbox figure "
+            "adds Token Factory reported cost for Token Factory runs to Daytona "
+            "dollar estimates for the others, so it has no single unit. "
+            + _TOKENFACTORY_SANDBOX_COST_NOTE
         )
     elif has_tokenfactory:
         sandbox_cost_explanation = (
-            "Sandbox dollars are Token Factory reported cost. Total dollars combines "
-            "that reported cost with the model estimate."
+            "Model dollars estimate Token Factory token usage. "
+            + _TOKENFACTORY_SANDBOX_COST_NOTE
         )
     else:
         sandbox_cost_explanation = (
@@ -856,7 +1188,15 @@ def render(report: Report) -> str:
             "estimate Daytona vCPU, memory and billable disk over measured "
             "sandbox lifetimes. Total dollars combines both estimates."
         )
-    cost_notes = [sandbox_cost_explanation, ""]
+    cost_notes = [
+        (
+            "Model dollars, sandbox cost, tokens and sandbox lifetime use "
+            "all readable final, infrastructure-error and interrupted runs."
+        ),
+        "",
+        sandbox_cost_explanation,
+        "",
+    ]
     if has_daytona_or_legacy:
         cost_notes.extend(
             [
@@ -882,20 +1222,41 @@ def render(report: Report) -> str:
             "### Cost per verified fix",
             "",
             *cost_notes,
-            "| Model dollars (estimated) | Sandbox dollars (estimated) | "
-            "Total dollars (estimated) | Tokens | Sandbox lifetime seconds | "
-            "Wall seconds |",
-            "| ---: | ---: | ---: | ---: | ---: | ---: |",
-            (
-                f"| {_format_number(cost.model_dollars)} | "
-                f"{_format_number(cost.sandbox_dollars_estimate)} | "
-                f"{_format_number(cost.total_dollars_estimate)} | "
-                f"{_format_number(cost.tokens)} | "
-                f"{_format_number(cost.sandbox_lifetime_seconds)} | "
-                f"{_format_number(cost.wall_time_s)} |"
-            ),
         ],
     )
+    if has_tokenfactory:
+        lines.extend(
+            [
+                "| Model dollars (estimated) | "
+                f"{_TOKENFACTORY_SANDBOX_COST_HEADER} | Tokens | "
+                "Sandbox lifetime seconds | Wall seconds |",
+                "| ---: | ---: | ---: | ---: | ---: |",
+                (
+                    f"| {_format_number(cost.model_dollars)} | "
+                    f"{_format_number(cost.sandbox_dollars_estimate)} | "
+                    f"{_format_number(cost.tokens)} | "
+                    f"{_format_number(cost.sandbox_lifetime_seconds)} | "
+                    f"{_format_number(cost.wall_time_s)} |"
+                ),
+            ],
+        )
+    else:
+        lines.extend(
+            [
+                "| Model dollars (estimated) | Sandbox dollars (estimated) | "
+                "Total dollars (estimated) | Tokens | Sandbox lifetime seconds | "
+                "Wall seconds |",
+                "| ---: | ---: | ---: | ---: | ---: | ---: |",
+                (
+                    f"| {_format_number(cost.model_dollars)} | "
+                    f"{_format_number(cost.sandbox_dollars_estimate)} | "
+                    f"{_format_number(cost.total_dollars_estimate)} | "
+                    f"{_format_number(cost.tokens)} | "
+                    f"{_format_number(cost.sandbox_lifetime_seconds)} | "
+                    f"{_format_number(cost.wall_time_s)} |"
+                ),
+            ],
+        )
 
     peak_line = f"Peak live sandboxes: {report.peak_live_sandboxes}"
     if report.peak_live_sandboxes_at is not None:
@@ -1073,20 +1434,25 @@ def render(report: Report) -> str:
                 row.cost.model_dollars + row.cost.sandbox_dollars_estimate,
             )
         )
-        sandbox_cost = (
-            f"${_format_number(row.cost.sandbox_dollars_estimate)} "
-            + (
-                "Token Factory reported cost"
-                if row.executor_kind == "tokenfactory"
-                else "sandbox estimated"
-            )
-        )
-        rendered_cost = (
-            f"{row.cost.tokens} tokens; {model_dollars} model estimated; "
-            f"{sandbox_cost}; "
-            f"{total_dollars} total estimated; "
-            f"{_format_number(row.cost.sandbox_lifetime_seconds)} sandbox lifetime s; "
-            f"{_format_number(row.wall_time_s)} wall s"
+        if row.executor_kind == "tokenfactory":
+            cost_parts = [
+                f"{_format_number(row.cost.sandbox_dollars_estimate)} "
+                "Token Factory reported cost, unit not published",
+            ]
+        else:
+            cost_parts = [
+                f"${_format_number(row.cost.sandbox_dollars_estimate)} "
+                "sandbox estimated",
+                f"{total_dollars} total estimated",
+            ]
+        rendered_cost = "; ".join(
+            [
+                f"{row.cost.tokens} tokens",
+                f"{model_dollars} model estimated",
+                *cost_parts,
+                f"{_format_number(row.cost.sandbox_lifetime_seconds)} sandbox lifetime s",
+                f"{_format_number(row.wall_time_s)} wall s",
+            ],
         )
         lines.append(
             f"| {_cell(row.instance_id)} | "
@@ -1100,4 +1466,4 @@ def render(report: Report) -> str:
     return "\n".join(lines) + "\n"
 
 
-__all__ = ["Report", "build_report", "render"]
+__all__ = ["Report", "build_report", "build_report_from_directory", "render"]

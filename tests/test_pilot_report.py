@@ -116,6 +116,219 @@ def _claimed_records(false_dones: int, claimed_dones: int) -> list[InstanceRecor
     ]
 
 
+def _write_record(path: Path, record: InstanceRecord) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(record.model_dump_json() + "\n", encoding="utf-8")
+
+
+def _screen_row(
+    position: int,
+    instance_id: str,
+    outcome: str,
+    *,
+    rule: str | None = None,
+    reason: str | None = None,
+    failing_ids: Sequence[str] = (),
+    run_number: int = 1,
+) -> dict[str, object]:
+    return {
+        "position": position,
+        "instance_id": instance_id,
+        "outcome": outcome,
+        "rule": rule,
+        "reason": reason,
+        "failing_ids": list(failing_ids),
+        "official_log_path": None,
+        "official_log_sha256": None,
+        "sandbox_usage": [],
+        "wall_seconds": 1.0,
+        "run_number": run_number,
+        "recovered_torn_ledger_sha256": None,
+    }
+
+
+def test_directory_report_counts_all_archived_spend_and_unreadable_archives(
+    tmp_path: Path,
+):
+    report_module = _report_module()
+    pilot_dir = tmp_path / "pilot"
+    instance_dir = pilot_dir / "project__task"
+    final = _record(
+        "project__task",
+        [_attempt(gate_status="PASS", official_resolved=True, agreement="agree_pass")],
+        verified_fix=True,
+        tokens=100,
+        model_dollars=2.0,
+        sandbox_lifetime_seconds=20,
+        sandbox_dollars_estimate=0.50,
+        wall_time_s=30,
+    )
+    infrastructure = _record(
+        "project__task",
+        [],
+        status="infra_error",
+        reason="temporary sandbox failure",
+        tokens=25,
+        model_dollars=1.0,
+        sandbox_lifetime_seconds=10,
+        sandbox_dollars_estimate=0.25,
+        wall_time_s=12,
+    )
+    interrupted = _record(
+        "project__task",
+        [],
+        status="infra_error",
+        reason="interrupted",
+        tokens=10,
+        model_dollars=0.50,
+        sandbox_lifetime_seconds=5,
+        sandbox_dollars_estimate=0.75,
+        wall_time_s=6,
+    )
+    _write_record(instance_dir / "record.json", final)
+    _write_record(instance_dir / "record.infra-1.json", infrastructure)
+    _write_record(instance_dir / "record.interrupted-1.json", interrupted)
+    (instance_dir / "record.infra-2.json").write_text("{not json}\n", encoding="utf-8")
+
+    report = report_module.build_report_from_directory(pilot_dir)
+
+    assert report.spend.final.runs == 1
+    assert report.spend.infrastructure_error.runs == 1
+    assert report.spend.interrupted.runs == 1
+    assert report.spend.all_runs.runs == 3
+    assert report.spend.all_runs.tokens == 135
+    assert report.spend.all_runs.model_dollars == 3.50
+    assert report.spend.all_runs.sandbox_dollars_estimate == 1.50
+    assert report.spend.all_runs.total_dollars_estimate == 5.0
+    assert report.spend.unreadable_archives == 1
+    cost = report.configuration_b.cost_per_verified_fix
+    assert cost.tokens == 135
+    assert cost.model_dollars == 3.50
+    assert cost.sandbox_dollars_estimate == 1.50
+    assert cost.total_dollars_estimate == 5.0
+    assert cost.sandbox_lifetime_seconds == 35
+    assert cost.wall_time_s == 30
+    assert [row.instance_id for row in report.instances] == ["project__task"]
+
+    markdown = report_module.render(report)
+    spend = markdown.split("## Spend", 1)[1].split("## Configuration A", 1)[0]
+    assert "| Final | 1 | $3" not in spend
+    assert "| Final | 1 | $2 | $0.5 | $2.5 |" in spend
+    assert "| Infrastructure error | 1 | $1 | $0.25 | $1.25 |" in spend
+    assert "| Interrupted | 1 | $0.5 | $0.75 | $1.25 |" in spend
+    assert "| All runs | 3 | $3.5 | $1.5 | $5 |" in spend
+    assert "Unreadable archives: 1." in spend
+
+
+def test_v1_shaped_directory_without_archives_keeps_existing_cost_numbers(
+    tmp_path: Path,
+):
+    report_module = _report_module()
+    pilot_dir = tmp_path / "pilot"
+    original = _record(
+        "project__v1",
+        [_attempt(gate_status="PASS", official_resolved=True, agreement="agree_pass")],
+        verified_fix=True,
+        tokens=120,
+        model_dollars=0.25,
+        sandbox_lifetime_seconds=60,
+        sandbox_dollars_estimate=0.05,
+        wall_time_s=90,
+    )
+    payload = original.model_dump(mode="json")
+    payload.pop("executor_kind", None)
+    payload["cost"]["dollars"] = payload["cost"].pop("model_dollars")
+    record_path = pilot_dir / original.instance_id / "record.json"
+    record_path.parent.mkdir(parents=True)
+    record_path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    report = report_module.build_report_from_directory(pilot_dir)
+
+    assert report.spend.final.runs == 1
+    assert report.spend.infrastructure_error.runs == 0
+    assert report.spend.interrupted.runs == 0
+    assert report.spend.unreadable_archives == 0
+    assert report.spend.all_runs.model_dollars == 0.25
+    assert report.spend.all_runs.sandbox_dollars_estimate == 0.05
+    assert report.spend.all_runs.total_dollars_estimate == pytest.approx(0.30)
+    cost = report.configuration_b.cost_per_verified_fix
+    assert cost.tokens == 120
+    assert cost.model_dollars == 0.25
+    assert cost.sandbox_dollars_estimate == 0.05
+    assert cost.total_dollars_estimate == pytest.approx(0.30)
+    assert cost.sandbox_lifetime_seconds == 60
+    assert cost.wall_time_s == 90
+
+
+def test_report_screening_lists_final_rows_and_counts_malformed_lines(
+    tmp_path: Path,
+):
+    report_module = _report_module()
+    pilot_dir = tmp_path / "pilot"
+    pilot_dir.mkdir()
+    ledger = tmp_path / "screen.jsonl"
+    rows = [
+        _screen_row(1, "project__included", "infra_error", reason="retry", run_number=1),
+        _screen_row(1, "project__included", "included", run_number=2),
+        _screen_row(
+            2,
+            "project__rule-4",
+            "excluded",
+            rule="4",
+            reason="target already passes",
+            failing_ids=["tests/test_x.py::test_x"],
+        ),
+        _screen_row(
+            3,
+            "project__rule-5",
+            "excluded",
+            rule="5",
+            reason="official baseline is not gradeable",
+            failing_ids=["tests/test_y.py::test_y", "tests/test_z.py::test_z"],
+        ),
+        _screen_row(
+            4,
+            "project__infra",
+            "infra_error",
+            reason="RuntimeError: sandbox unavailable",
+            run_number=3,
+        ),
+    ]
+    ledger.write_text(
+        "\n".join([*(json.dumps(row) for row in rows), "{malformed}"]) + "\n",
+        encoding="utf-8",
+    )
+
+    report = report_module.build_report_from_directory(
+        pilot_dir,
+        screen_ledgers=[ledger],
+    )
+
+    assert len(report.screening) == 1
+    screening = report.screening[0]
+    assert screening.ledger == str(ledger)
+    assert screening.counts.included == 1
+    assert screening.counts.excluded_rule_4 == 1
+    assert screening.counts.excluded_rule_5 == 1
+    assert screening.counts.infrastructure_error == 1
+    assert screening.counts.malformed_rows == 1
+    assert [row.position for row in screening.rows] == [1, 2, 3, 4]
+    assert screening.rows[0].outcome == "included"
+    assert screening.rows[2].failing_ids == [
+        "tests/test_y.py::test_y",
+        "tests/test_z.py::test_z",
+    ]
+
+    markdown = report_module.render(report)
+    section = markdown.split("## Screening", 1)[1].split("## Spend", 1)[0]
+    assert "Included: 1; rule 4 exclusions: 1; rule 5 exclusions: 1;" in section
+    assert "final infrastructure errors: 1; malformed rows: 1." in section
+    assert "excluded under rule 4" in section
+    assert "excluded under rule 5" in section
+    assert "tests/test_y.py::test_y, tests/test_z.py::test_z" in section
+    assert "final infrastructure error" in section
+
+
 @pytest.mark.parametrize(
     ("false_dones", "claimed_dones", "lower", "upper"),
     [
@@ -805,8 +1018,20 @@ def test_report_labels_tokenfactory_reported_sandbox_cost():
 
     markdown = report_module.render(report_module.build_report([record]))
 
-    assert "Token Factory reported cost" in markdown
-    assert "$0.125 Token Factory reported cost" in markdown
+    assert "0.125 Token Factory reported cost, unit not published" in markdown
+    assert "$0.125" not in markdown
+    assert "Total dollars" not in markdown
+    assert "total estimated" not in markdown
+    assert (
+        "| Model dollars (estimated) | Token Factory reported sandbox cost "
+        "(unit not published) | Tokens | Sandbox lifetime seconds | "
+        "Wall seconds |"
+    ) in markdown
+    assert (
+        "| Run class | Runs | Model dollars | Token Factory reported sandbox "
+        "cost (unit not published) |"
+    ) in markdown
+    assert "does not publish the unit" in markdown
 
 
 def test_v1_shaped_record_keeps_cost_numbers_and_daytona_wording():
