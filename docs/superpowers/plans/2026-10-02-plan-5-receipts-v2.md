@@ -357,3 +357,21 @@ Each item landed test-first, was reviewed (trust-boundary items in the main sess
 | B3b | cut | It changes the trusted runner a week before the freeze, for a benefit that is only fewer fail-closed exclusions. Inherited spec ids keep failing closed, and screening lists them. |
 | A4 | in progress | Should tier. |
 | D1 | in progress | B4's rule cannot be replayed on v1 data: v1 never ran an empty-patch official grading. Instead, screening the seen sample S runs rule 5 on v1's tasks for real, and the expectation is that it excludes exactly the four environment tasks. |
+
+## 10. C5: the Token Factory Sandboxes executor (added Oct 2, Zeyu approved the switch)
+
+Token Factory Sandboxes access became active on Oct 2 (all six permissions; 50 concurrent operations). The catalogue preloads 32,064 SWE-rebench-V2 images, including 598 of the 600 candidates' images (`docker.io/swerebenchv2/X:Y` is tag `swerebenchv2/X:Y`). A trivial run takes about 1.1 s; every non-disposable run returns a new immutable image, and two runs from one image are isolated. Plan 5 already allowed the switch if access arrived before the freeze, with a new rehearsal. Zeyu approved it on Oct 2 because the track asks for agents that "write, run, and test code in Token Factory".
+
+Design, keeping every trust property of the Daytona executor:
+
+- A branch is a chain of immutable images; each command on a branch is one non-disposable run from the branch's head and moves the head. Receipts record the platform's image uuids before and after, so lineage comes from the platform. A checkpoint is an image uuid; images are immutable, so C0 cannot be changed after the checkpoint.
+- Trusted tooling is injected at spawn time through the API's `files`, never read from the image: a statically linked busybox (busybox.net 1.35.0 x86_64 musl, SHA-256 `6e123e7f3202a8c1e9b1f94d8941580a25135382b99e8d3e34fb858bba311348`, uploaded once and checked by digest) and the trusted pytest bootstrap. A static binary ignores the image's libraries, preload files and PATH.
+- Full output: commands write stdout and stderr to files that are downloaded through the inspect API, because the run result truncates them at 64 KB. Official grading needs the full `-rA` log.
+- Patch: the injected busybox archives the agent's worktree (without the top-level `.git`) into one tar; the host extracts it over a trusted copy of the checkpoint tree (archived once per task, with `.git`) and runs the existing hardened host-side git staging. The witness applies the filtered patch, uploaded and injected, with the upstream `git apply` flags, on a C0-derived image.
+- Tree digests for the claim audit are computed in the sandbox by the injected busybox.
+- No sandboxes or snapshots to delete: runs end on their own. Cost per run comes from the platform's reported cost.
+- Concurrency: up to eight tasks at a time, well under the 50-operation limit.
+
+Cards: TF-1 REST client and fake (in progress), TF-2 executor core, TF-3 pytest, digests, patch and apply, CLI and preflight, TF-4 live smoke test and rehearsal on the five D2 tasks.
+
+Decision gate: if the Token Factory rehearsal meets every D2 criterion by Oct 6, 23:59 PT, v2 freezes on Token Factory Sandboxes. Otherwise v2 freezes on Daytona, which passed rehearsal 2 (`docs/results/`), and Token Factory Sandboxes is used for re-verify and the demo only. The Oct 12 stop rule for P is unchanged.
