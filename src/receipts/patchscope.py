@@ -13,11 +13,13 @@ Rules (deterministic, no model involved):
 - source: any other .py file
 - other: everything else (docs, data, lockfiles)
 - symlink: decided from the diff header (mode 120000), not from the path
+- unparseable: quoted or mismatched headers, and rename or copy metadata
 
 The witness filter works at whole-file-block granularity. It keeps source and
 other blocks only when no path segment starts with `.` and the path does not
-contain `site-packages`. Joining the original `splitlines(keepends=True)` data
-preserves binary patch bodies and `\\ No newline at end of file` markers.
+contain `site-packages`. If any block is unparseable, it keeps nothing. Joining
+the original `splitlines(keepends=True)` data preserves binary patch bodies and
+`\\ No newline at end of file` markers.
 """
 
 from __future__ import annotations
@@ -35,8 +37,53 @@ _CONFIG = {
     "pyproject.toml", "setup.cfg",
 }
 _EXECUTABLE_SUFFIXES = (".pyc", ".pyo", ".so", ".pyd", ".dylib", ".pth")
-_DIFF_HEADER = re.compile(r"^diff --git a/(.*?) b/(.*)$")
+_DIFF_HEADER_PREFIX = "diff --git "
+_UNQUOTED_HEADER_PREFIX = "diff --git a/"
+_UNPARSEABLE_METADATA = (
+    "rename from ",
+    "rename to ",
+    "copy from ",
+    "copy to ",
+    "similarity index ",
+    "dissimilarity index ",
+)
 _SYMLINK_MODE = re.compile(r"^(new file mode|old mode|new mode|deleted file mode) 120000$")
+
+
+def _parse_header(line: str) -> tuple[str, str, bool] | None:
+    if not line.startswith(_DIFF_HEADER_PREFIX):
+        return None
+    raw = line[len(_DIFF_HEADER_PREFIX):]
+    if not line.startswith(_UNQUOTED_HEADER_PREFIX):
+        return raw, raw, False
+    rest = line[len(_UNQUOTED_HEADER_PREFIX):]
+    doubled_path_length = len(rest) - len(" b/")
+    if doubled_path_length < 0 or doubled_path_length % 2:
+        return raw, raw, False
+    path = rest[:doubled_path_length // 2]
+    if not path or path.startswith('"') or rest != path + " b/" + path:
+        return raw, raw, False
+    return path, raw, True
+
+
+def _split_blocks(patch_text: str) -> list[tuple[str, str, bool, list[str]]]:
+    blocks: list[tuple[str, str, bool, list[str]]] = []
+    path: str | None = None
+    raw_header = ""
+    parseable = False
+    lines: list[str] = []
+    for line in patch_text.splitlines(keepends=True):
+        header = _parse_header(line.rstrip("\r\n"))
+        if header is not None:
+            if path is not None:
+                blocks.append((path, raw_header, parseable, lines))
+            path, raw_header, parseable = header
+            lines = [line]
+        elif path is not None:
+            lines.append(line)
+    if path is not None:
+        blocks.append((path, raw_header, parseable, lines))
+    return blocks
 
 
 def default_protected_modules() -> frozenset[str]:
@@ -71,34 +118,48 @@ def summarize_patch(
     protected_modules: frozenset[str] = frozenset(),
 ) -> DiffSummary:
     files: list[ChangedFile] = []
-    current: str | None = None
-    added = deleted = 0
-    symlink = False
+    for path, raw_header, header_parseable, block_lines in _split_blocks(patch_text):
+        added = deleted = 0
+        symlink = False
+        new_file = deleted_file = False
+        metadata_parseable = True
+        for raw_line in block_lines[1:]:
+            line = raw_line.rstrip("\r\n")
+            if line.startswith(_UNPARSEABLE_METADATA):
+                metadata_parseable = False
+            if line.startswith("new file mode "):
+                new_file = True
+            elif line.startswith("deleted file mode "):
+                deleted_file = True
+            if _SYMLINK_MODE.match(line):
+                symlink = True
+            elif line.startswith("+++") or line.startswith("---"):
+                continue
+            elif line.startswith("+"):
+                added += 1
+            elif line.startswith("-"):
+                deleted += 1
 
-    def flush() -> None:
-        if current is not None:
-            files.append(ChangedFile(
-                path=current, added=added, deleted=deleted,
-                category="symlink" if symlink else categorize(current, protected_modules),
-            ))
-
-    for line in patch_text.splitlines():
-        m = _DIFF_HEADER.match(line)
-        if m:
-            flush()
-            current, added, deleted, symlink = m.group(2), 0, 0, False
-            continue
-        if current is None:
-            continue
-        if _SYMLINK_MODE.match(line):
-            symlink = True
-        elif line.startswith("+++") or line.startswith("---"):
-            continue
-        elif line.startswith("+"):
-            added += 1
-        elif line.startswith("-"):
-            deleted += 1
-    flush()
+        parseable = header_parseable and metadata_parseable
+        if not parseable:
+            category: FileCategory = "unparseable"
+            status = None
+            path = raw_header
+        else:
+            category = "symlink" if symlink else categorize(path, protected_modules)
+            if new_file:
+                status = "added"
+            elif deleted_file:
+                status = "deleted"
+            else:
+                status = "modified"
+        files.append(ChangedFile(
+            path=path,
+            added=added,
+            deleted=deleted,
+            category=category,
+            status=status,
+        ))
     return DiffSummary(files=files, patch_sha256=hashlib.sha256(patch_text.encode()).hexdigest())
 
 
@@ -106,26 +167,16 @@ def filter_patch(
     patch_text: str,
     protected_modules: frozenset[str] = frozenset(),
 ) -> tuple[str, list[str]]:
-    blocks: list[tuple[str, str]] = []
-    path: str | None = None
-    lines: list[str] = []
-    for line in patch_text.splitlines(keepends=True):
-        match = _DIFF_HEADER.match(line.rstrip("\r\n"))
-        if match:
-            if path is not None:
-                blocks.append((path, "".join(lines)))
-            path = match.group(2)
-            lines = [line]
-        elif path is not None:
-            lines.append(line)
-    if path is not None:
-        blocks.append((path, "".join(lines)))
+    blocks = ["".join(lines) for _, _, _, lines in _split_blocks(patch_text)]
+    summaries = [summarize_patch(block, protected_modules).files[0] for block in blocks]
+    if any(summary.category == "unparseable" for summary in summaries):
+        return "", [summary.path for summary in summaries]
 
     kept: list[str] = []
     dropped: list[str] = []
-    for path, block in blocks:
-        summary = summarize_patch(block, protected_modules)
-        category = summary.files[0].category
+    for block, summary in zip(blocks, summaries, strict=True):
+        path = summary.path
+        category = summary.category
         hidden = any(segment.startswith(".") for segment in path.split("/"))
         if category in ("source", "other") and not hidden and "site-packages" not in path:
             kept.append(block)

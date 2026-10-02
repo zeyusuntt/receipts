@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 ReceiptKind = Literal["command", "write", "diff", "apply", "verification"]
 FileCategory = Literal[
     "source", "test", "pytest_config", "executable_artifact", "shadow",
-    "symlink", "other", "outside",
+    "symlink", "other", "outside", "unparseable",
 ]
 PredicateId = Literal[
     "R1_fail_to_pass", "R2_pass_to_pass", "R3_no_shrink", "R4_patch_scope", "R5_provenance", "R6_claim_audit",
@@ -91,6 +91,7 @@ class ChangedFile(BaseModel):
     added: int
     deleted: int
     category: FileCategory
+    status: Literal["added", "modified", "deleted"] | None = None
 
 
 class DiffSummary(BaseModel):

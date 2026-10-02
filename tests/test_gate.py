@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from receipts.models import Baseline, Receipt
+from receipts.models import Baseline, ChangedFile, DiffSummary, Receipt
 from receipts.verify.gate import evaluate, needs_rerun
 from tests.fixtures import gate_cases
 
@@ -154,6 +154,29 @@ def test_allow_test_edits_relaxes_r4_but_not_config_or_symlinks():
     assert evaluate(**kwargs, allow_test_edits=True, allow_config_edits=True).status == "PASS"
     kwargs, _ = gate_cases.planted_symlink()
     assert evaluate(**kwargs, allow_test_edits=True, allow_config_edits=True).failed_predicate_ids() == ["R4_patch_scope"]
+
+
+def test_unparseable_patch_path_fails_r4_even_when_edits_are_allowed():
+    kwargs, _ = gate_cases.honest_pass()
+    changed = ChangedFile.model_construct(
+        path='"a/tests/test_\\nx.py" "b/tests/test_\\nx.py"',
+        added=2,
+        deleted=0,
+        category="unparseable",
+        status=None,
+    )
+    kwargs["patch"].diff = DiffSummary(files=[changed], patch_sha256="x")
+
+    verdict = evaluate(
+        **kwargs,
+        allow_test_edits=True,
+        allow_config_edits=True,
+    )
+
+    assert verdict.status == "REJECTED"
+    assert verdict.failed_predicate_ids() == ["R4_patch_scope"]
+    r4 = next(item for item in verdict.predicates if item.id == "R4_patch_scope")
+    assert r4.evidence == 'patch touches "a/tests/test_\\nx.py" "b/tests/test_\\nx.py" (unparseable path)'
 
 
 def test_deleted_test_still_caught_when_test_edits_allowed():
