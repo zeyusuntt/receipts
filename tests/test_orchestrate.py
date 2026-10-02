@@ -506,14 +506,15 @@ async def test_cost_includes_planner_usage_retries_and_worker_retries(tmp_path: 
     assert worker_rows[0]["retries"] == {"5xx": 1}
     assert "retries" not in worker_rows[1]
     assert cost["planner_tokens"] == 160
-    assert cost["planner_dollars"] == 0.000018
+    # Super pricing was corrected on 2026-10-02.
+    assert cost["planner_dollars"] == 0.000075
     assert cost["models"][SUPER_MODEL] == {
         "prompt_tokens": 130,
         "completion_tokens": 56,
         "reasoning_tokens": 10,
-        "estimated_dollars": 0.00002124,
+        "estimated_dollars": 0.0000894,
     }
-    assert cost["estimated_dollars"] == 0.00002124
+    assert cost["estimated_dollars"] == 0.0000894
     assert cost["model_retries"] == {"429": 2, "5xx": 1}
 
 def test_default_worker_budget_supports_realistic_repair_attempts():

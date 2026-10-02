@@ -10,7 +10,14 @@ from pydantic import BaseModel, Field
 
 
 SUPER_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+LIGHTNING_MODEL = "nvidia/Nemotron-3_5-Lightning"
 NANO_MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+ULTRA_MODEL = "nvidia/Nemotron-3-Ultra-550b-a55b"
+
+TOKEN_FACTORY_PRICING_READ_DATE = "2026-10-02"
+TOKEN_FACTORY_PRICING_SOURCE = (
+    "GET https://api.tokenfactory.nebius.com/v1/models?verbose=true"
+)
 
 # Published Daytona rates recorded in docs/research/2026-10-01-daytona-spike.md.
 DAYTONA_PRICING_READ_DATE = "2026-10-01"
@@ -19,10 +26,14 @@ DAYTONA_MEMORY_GIB_DOLLARS_PER_HOUR = 0.0162
 DAYTONA_DISK_GIB_DOLLARS_PER_HOUR = 0.000108
 DAYTONA_INCLUDED_DISK_GIB = 5
 
-# USD per one million tokens. These third-party rates are estimates from the
-# Token Factory spike, not prices verified against a Nebius pricing page.
+# USD per one million tokens, from the Token Factory model listing above.
 price_table: dict[str, dict[str, float | bool]] = {
     SUPER_MODEL: {
+        "prompt_per_million": 0.30,
+        "completion_per_million": 0.90,
+        "estimated": True,
+    },
+    LIGHTNING_MODEL: {
         "prompt_per_million": 0.06,
         "completion_per_million": 0.24,
         "estimated": True,
@@ -30,6 +41,11 @@ price_table: dict[str, dict[str, float | bool]] = {
     NANO_MODEL: {
         "prompt_per_million": 0.06,
         "completion_per_million": 0.24,
+        "estimated": True,
+    },
+    ULTRA_MODEL: {
+        "prompt_per_million": 1.00,
+        "completion_per_million": 3.00,
         "estimated": True,
     },
 }

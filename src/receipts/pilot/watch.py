@@ -10,6 +10,7 @@ import signal
 import time
 from collections import Counter
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Callable
 
@@ -78,10 +79,43 @@ def _instance_id(item: SnapshotFile) -> str:
     return Path(item.relative_path).parent.name
 
 
+def _model_spend(snapshot: DirectorySnapshot) -> Decimal:
+    total = Decimal("0")
+    for item in snapshot.files:
+        name = Path(item.relative_path).name
+        if (
+            item.value is None
+            or not (name == "record.json" or _ARCHIVE_NAME.fullmatch(name))
+        ):
+            continue
+        cost = item.value.get("cost")
+        if not isinstance(cost, dict):
+            continue
+        value = cost.get("model_dollars")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        try:
+            dollars = Decimal(str(value))
+        except InvalidOperation:
+            continue
+        if dollars.is_finite():
+            total += dollars
+    return total
+
+
+def _format_dollars(value: Decimal) -> str:
+    rendered = format(value, "f")
+    if "." not in rendered:
+        return f"{rendered}.00"
+    whole, fraction = rendered.split(".", maxsplit=1)
+    return f"{whole}.{fraction.ljust(2, '0')}"
+
+
 def decide(
     snapshot: DirectorySnapshot,
     *,
     max_infrastructure_runs: int = _MAX_INFRASTRUCTURE_RUNS,
+    model_budget_usd: float | None = None,
 ) -> str | None:
     """Return a stop reason for a directory snapshot, without performing I/O."""
 
@@ -120,6 +154,14 @@ def decide(
             return (
                 f"retry loop for {instance_id}: {count} archived infrastructure "
                 "records"
+            )
+    if model_budget_usd is not None:
+        budget = Decimal(str(model_budget_usd))
+        total = _model_spend(snapshot)
+        if total > budget:
+            return (
+                f"model spend ${_format_dollars(total)} exceeds budget "
+                f"${_format_dollars(budget)}"
             )
     return None
 
@@ -189,6 +231,7 @@ def watch_pilot(
     pid: int,
     *,
     interval: float = 20.0,
+    model_budget_usd: float | None = None,
     kill: Callable[[int, int], None] = os.kill,
     sleep: Callable[[float], None] = time.sleep,
 ) -> int:
@@ -206,7 +249,7 @@ def watch_pilot(
             print("pilot process exited", flush=True)
             return 0
 
-        reason = decide(snapshot)
+        reason = decide(snapshot, model_budget_usd=model_budget_usd)
         if reason is not None:
             try:
                 kill(pid, signal.SIGTERM)

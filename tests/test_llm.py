@@ -390,14 +390,15 @@ def test_cost_meter_accumulates_model_usage_and_sandbox_seconds():
 
     summary = meter.summary()
 
+    # Super pricing was corrected on 2026-10-02.
     assert summary["models"][SUPER] == {
         "prompt_tokens": 1_500_000,
         "completion_tokens": 1_000_000,
         "reasoning_tokens": 125_000,
-        "estimated_dollars": 0.33,
+        "estimated_dollars": 1.35,
     }
     assert summary["models"][NANO]["estimated_dollars"] == 0.075
-    assert summary["estimated_dollars"] == 0.405
+    assert summary["estimated_dollars"] == 1.425
     assert summary["sandbox_seconds"] == 4.0
     assert summary["pricing_is_estimate"] is True
 

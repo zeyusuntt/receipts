@@ -612,6 +612,8 @@ def test_pilot_watch_arguments_parse(tmp_path: Path):
             "4321",
             "--interval",
             "0.25",
+            "--model-budget-usd",
+            "45",
         ],
     )
 
@@ -620,6 +622,7 @@ def test_pilot_watch_arguments_parse(tmp_path: Path):
     assert args.pilot_dir == pilot_dir
     assert args.pid == 4321
     assert args.interval == 0.25
+    assert args.model_budget_usd == 45.0
 
 
 async def test_pilot_signal_handler_cancels_running_task():

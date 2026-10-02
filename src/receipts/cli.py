@@ -162,6 +162,7 @@ def _parser() -> argparse.ArgumentParser:
     pilot_watch.add_argument("pilot_dir", type=Path)
     pilot_watch.add_argument("pid", type=int)
     pilot_watch.add_argument("--interval", type=float, default=20.0)
+    pilot_watch.add_argument("--model-budget-usd", type=float)
     pilot_cleanup = pilot_commands.add_parser(
         "cleanup",
         help="list or retry pending Daytona snapshot cleanup",
@@ -722,6 +723,7 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
             args.pilot_dir,
             args.pid,
             interval=args.interval,
+            model_budget_usd=args.model_budget_usd,
         )
     if args.command == "pilot" and args.pilot_command == "cleanup":
         return await _run_pilot_cleanup(args)

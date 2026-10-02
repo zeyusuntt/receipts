@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import signal
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,7 @@ def _record(
     *,
     agreement: str | None = None,
     verified: bool = False,
+    model_dollars: float = 0.0,
 ) -> dict:
     return {
         "instance_id": instance_id,
@@ -38,6 +40,7 @@ def _record(
             },
         ] if agreement is not None else [],
         "final": {"verified_fix": verified} if status == "ran" else None,
+        "cost": {"model_dollars": model_dollars},
     }
 
 
@@ -144,3 +147,80 @@ def test_archiving_an_observed_record_does_not_print_it_twice(tmp_path: Path):
 
     assert len(lines) == 1
     assert archived_lines == ()
+
+
+def test_model_spend_under_budget_does_not_stop(tmp_path: Path):
+    watch = _watch_module()
+    _write_json(
+        tmp_path / "candidate-1" / "record.json",
+        _record("candidate-1", "ran", model_dollars=0.75),
+    )
+
+    reason = watch.decide(
+        watch.snapshot_directory(tmp_path),
+        model_budget_usd=1.0,
+    )
+
+    assert reason is None
+
+
+def test_model_spend_over_budget_stops_with_total_and_budget(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    watch = _watch_module()
+    _write_json(
+        tmp_path / "candidate-1" / "record.json",
+        _record("candidate-1", "ran", model_dollars=0.75),
+    )
+    _write_json(
+        tmp_path / "candidate-2" / "record.json",
+        _record("candidate-2", "ran", model_dollars=0.50),
+    )
+    signals: list[tuple[int, int]] = []
+
+    result = watch.watch_pilot(
+        tmp_path,
+        4321,
+        interval=0.01,
+        model_budget_usd=1.0,
+        kill=lambda pid, sig: signals.append((pid, sig)),
+        sleep=lambda _: pytest.fail("over-budget watch must stop before sleeping"),
+    )
+
+    assert result == 0
+    assert signals == [(4321, 0), (4321, signal.SIGTERM)]
+    assert capsys.readouterr().out == (
+        "WATCHDOG: model spend $1.25 exceeds budget $1.00\n"
+    )
+
+
+def test_archived_records_count_toward_model_budget(tmp_path: Path):
+    watch = _watch_module()
+    _write_json(
+        tmp_path / "candidate-1" / "record.infra-1.json",
+        _record("candidate-1", "infra_error", model_dollars=0.60),
+    )
+    _write_json(
+        tmp_path / "candidate-1" / "record.json",
+        _record("candidate-1", "ran", model_dollars=0.50),
+    )
+
+    reason = watch.decide(
+        watch.snapshot_directory(tmp_path),
+        model_budget_usd=1.0,
+    )
+
+    assert reason == "model spend $1.10 exceeds budget $1.00"
+
+
+def test_no_model_budget_flag_does_not_stop_on_spend(tmp_path: Path):
+    watch = _watch_module()
+    _write_json(
+        tmp_path / "candidate-1" / "record.json",
+        _record("candidate-1", "ran", model_dollars=100.0),
+    )
+
+    reason = watch.decide(watch.snapshot_directory(tmp_path))
+
+    assert reason is None
