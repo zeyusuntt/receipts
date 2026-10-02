@@ -164,6 +164,91 @@ async def test_chat_surfaces_malformed_tool_arguments_as_a_turn():
     }
 
 
+async def test_malformed_call_keeps_name_and_id_for_worker_logging():
+    sdk = _FakeSDK(
+        [
+            _response(
+                tool_calls=[
+                    _sdk_tool_call(
+                        "execute",
+                        '["arguments", "must", "be", "an", "object"]',
+                        "malformed-alias-7",
+                    ),
+                ],
+            ),
+        ],
+    )
+    client = TokenFactoryClient(_config(), client=sdk)
+
+    turn = await client.chat(
+        [{"role": "user", "content": "Run the tests"}],
+        [{"type": "function", "function": {"name": "run_command"}}],
+    )
+
+    assert isinstance(turn, MalformedToolCall)
+    assert turn.tool_name == "execute"
+    assert turn.tool_call_id == "malformed-alias-7"
+
+
+async def test_malformed_call_keeps_all_raw_call_metadata_in_order():
+    sdk = _FakeSDK(
+        [
+            _response(
+                tool_calls=[
+                    _sdk_tool_call("run_command", '{"cmd":', "malformed-first"),
+                    _sdk_tool_call("read_file", '{"path": "README.md"}', "valid-second"),
+                    _sdk_tool_call("edit_file", "[]", "malformed-third"),
+                ],
+            ),
+        ],
+    )
+    client = TokenFactoryClient(_config(), client=sdk)
+
+    turn = await client.chat(
+        [{"role": "user", "content": "Inspect the repository"}],
+        [{"type": "function", "function": {"name": "read_file"}}],
+    )
+
+    assert isinstance(turn, MalformedToolCall)
+    assert turn.tool_calls == []
+    assert [call.model_dump() for call in turn.raw_tool_calls] == [
+        {"id": "malformed-first", "name": "run_command", "malformed_args": True},
+        {"id": "valid-second", "name": "read_file", "malformed_args": False},
+        {"id": "malformed-third", "name": "edit_file", "malformed_args": True},
+    ]
+
+
+async def test_malformed_turn_with_a_later_nameless_call_is_still_a_malformed_turn():
+    """Logging metadata must never turn a malformed turn into a model error."""
+
+    later = _sdk_tool_call("read_file", '{"path": "README.md"}', "later")
+    later.id = None
+    later.function.name = None
+    sdk = _FakeSDK(
+        [
+            _response(
+                tool_calls=[
+                    _sdk_tool_call("run_command", '{"cmd":', "malformed-first"),
+                    later,
+                ],
+            ),
+        ],
+    )
+    client = TokenFactoryClient(_config(), client=sdk)
+
+    turn = await client.chat(
+        [{"role": "user", "content": "Inspect the repository"}],
+        [{"type": "function", "function": {"name": "read_file"}}],
+    )
+
+    assert isinstance(turn, MalformedToolCall)
+    assert turn.tool_calls == []
+    assert [call.model_dump() for call in turn.raw_tool_calls] == [
+        {"id": "malformed-first", "name": "run_command", "malformed_args": True},
+        {"id": "", "name": "", "malformed_args": False},
+    ]
+
+
 @pytest.mark.parametrize("status_code", [429, 503])
 async def test_chat_retries_transient_api_errors_three_times(status_code: int):
     sdk = _FakeSDK(

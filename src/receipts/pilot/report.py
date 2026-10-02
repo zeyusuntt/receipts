@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import math
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
@@ -15,6 +17,25 @@ from receipts.swerebench import Agreement
 
 
 OfficialResult = Literal["resolved", "not_resolved", "unavailable"]
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+_RESULT_CLASSES = (
+    "ok",
+    "unknown_tool",
+    "bad_args",
+    "malformed_args",
+    "edit_no_match",
+    "edit_multiple_matches",
+    "edit_too_large",
+    "edit_invalid_utf8",
+    "write_refused",
+    "command_timeout",
+    "nonzero_exit",
+    "finish_refused",
+    "noted",
+    "not_executed",
+    "tool_error",
+)
 
 _BREAKDOWN_PREDICATES = {
     "spec_still_failing": "R1_fail_to_pass",
@@ -47,6 +68,16 @@ class Rate(BaseModel):
     value: float | None
     lower_95: float | None
     upper_95: float | None
+
+
+class HarnessReport(BaseModel):
+    total_tool_calls: int
+    classes: dict[str, int]
+    aliases: dict[str, int]
+    edit_failure_rate: Rate
+    not_recorded: int
+    unreadable_logs: int
+    unreadable_rows: int = 0
 
 
 class ConfigurationA(BaseModel):
@@ -123,6 +154,7 @@ class Report(BaseModel):
     ran_tasks: int
     configuration_a: ConfigurationA
     configuration_b: ConfigurationB
+    harness: HarnessReport
     shipped_bytes: ShippedBytesReport
     agreement: AgreementReport
     exclusions: list[ReportedProblem]
@@ -232,6 +264,96 @@ def _b_outcome(record: InstanceRecord) -> str:
     if record.final.gate_status == "ERROR":
         return "gate error"
     return "refused"
+
+
+_RESULT_FIELDS = frozenset({"id", "name", "ran_as", "executed", "class", "result_bytes"})
+
+
+def _run_directory(run_dir: str) -> Path:
+    """Resolve a record's run directory, including v1's absolute paths from before
+    the repository moved: when such a path is gone, its part from `pilot/` on is
+    looked up under the repository root."""
+
+    path = Path(run_dir)
+    if not path.is_absolute():
+        return _REPOSITORY_ROOT / path
+    if path.exists() or "pilot" not in path.parts:
+        return path
+    return _REPOSITORY_ROOT.joinpath(*path.parts[path.parts.index("pilot"):])
+
+
+def _valid_result(result: object) -> bool:
+    return (
+        isinstance(result, dict)
+        and _RESULT_FIELDS <= set(result)
+        and isinstance(result["id"], str)
+        and isinstance(result["name"], str)
+        and (result["ran_as"] is None or isinstance(result["ran_as"], str))
+        and type(result["executed"]) is bool
+        and result["class"] in _RESULT_CLASSES
+        and type(result["result_bytes"]) is int
+        and result["result_bytes"] >= 0
+    )
+
+
+def _harness_report(records: Sequence[InstanceRecord]) -> HarnessReport:
+    classes = {name: 0 for name in _RESULT_CLASSES}
+    aliases: dict[str, int] = {}
+    total_tool_calls = 0
+    edit_calls = 0
+    edit_failures = 0
+    not_recorded = 0
+    unreadable_logs = 0
+    unreadable_rows = 0
+
+    for record in records:
+        path = _run_directory(record.run_dir) / "agent" / "worker.jsonl"
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeError):
+            unreadable_logs += 1
+            continue
+        for line in lines:
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                unreadable_rows += 1
+                continue
+            if not isinstance(row, dict):
+                unreadable_rows += 1
+                continue
+            if "results" not in row:
+                not_recorded += 1
+                continue
+            results = row["results"]
+            if not isinstance(results, list) or not all(_valid_result(r) for r in results):
+                unreadable_rows += 1
+                continue
+            for result in results:
+                total_tool_calls += 1
+                result_class = result["class"]
+                classes[result_class] = classes.get(result_class, 0) + 1
+                name, ran_as = result["name"], result["ran_as"]
+                if ran_as is not None and name != ran_as:
+                    aliases[name] = aliases.get(name, 0) + 1
+                # An edit is any call meant as edit_file, aliased or not; it failed
+                # unless it applied.
+                if name == "edit_file" or ran_as == "edit_file":
+                    edit_calls += 1
+                    if result_class != "ok":
+                        edit_failures += 1
+
+    return HarnessReport(
+        total_tool_calls=total_tool_calls,
+        classes={name: classes[name] for name in sorted(classes)},
+        aliases={name: aliases[name] for name in sorted(aliases)},
+        edit_failure_rate=_rate(edit_failures, edit_calls),
+        not_recorded=not_recorded,
+        unreadable_logs=unreadable_logs,
+        unreadable_rows=unreadable_rows,
+    )
 
 
 def _headline(
@@ -435,6 +557,7 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
             verified_rate=verified_rate,
             cost_per_verified_fix=_cost_per_verified_fix(ran, verified_fixes),
         ),
+        harness=_harness_report(ordered),
         shipped_bytes=ShippedBytesReport(
             agree=digest_agree,
             recorded=digest_recorded,
@@ -580,6 +703,59 @@ def render(report: Report) -> str:
                 f"{_format_number(cost.sandbox_lifetime_seconds)} | "
                 f"{_format_number(cost.wall_time_s)} |"
             ),
+        ],
+    )
+
+    harness = report.harness
+    edit_rate = harness.edit_failure_rate
+    edit_rate_text = f"{edit_rate.numerator} of {edit_rate.denominator}"
+    if edit_rate.value is not None:
+        edit_rate_text += f" ({_format_percent(edit_rate.value)}%)"
+    lines.extend(
+        [
+            "",
+            "## Harness",
+            "",
+            f"Total tool calls: {harness.total_tool_calls}.",
+            "",
+            f"Edit-failure rate (edit calls that did not apply, over all edit calls): {edit_rate_text}.",
+            "",
+            (
+                f"{harness.not_recorded} "
+                f"{'turn' if harness.not_recorded == 1 else 'turns'} not recorded "
+                "(worker rows before result logging)."
+            ),
+            "",
+            (
+                f"{harness.unreadable_logs} worker "
+                f"{'log' if harness.unreadable_logs == 1 else 'logs'} "
+                "unreadable or missing; "
+                f"{harness.unreadable_rows} unreadable "
+                f"{'row' if harness.unreadable_rows == 1 else 'rows'} skipped."
+            ),
+            "",
+            "### Result classes",
+            "",
+            "| Class | Calls |",
+            "| --- | ---: |",
+        ],
+    )
+    lines.extend(
+        f"| {name} | {count} |"
+        for name, count in harness.classes.items()
+    )
+    lines.extend(["", "### Alias calls", ""])
+    if harness.aliases:
+        lines.extend(["| Alias | Calls |", "| --- | ---: |"])
+        lines.extend(
+            f"| {name} | {count} |"
+            for name, count in harness.aliases.items()
+        )
+    else:
+        lines.append("None.")
+
+    lines.extend(
+        [
             "",
             "## Shipped bytes",
             "",

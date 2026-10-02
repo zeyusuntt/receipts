@@ -13,7 +13,7 @@ from types import ModuleType
 
 import pytest
 
-from receipts.llm import AssistantTurn, FakeModel, ToolCall
+from receipts.llm import AssistantTurn, FakeModel, MalformedToolCall, ToolCall
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import RepoAtCommit
 from receipts.sandbox.sink import MemorySink
@@ -113,6 +113,36 @@ def _result(instance, call_id: str) -> str:
         for message in instance.messages
         if message.get("tool_call_id") == call_id
     )
+
+
+def _logged_result(writer: io.StringIO, call_id: str) -> dict:
+    rows = [json.loads(line) for line in writer.getvalue().splitlines()]
+    return next(
+        result
+        for row in rows
+        for result in row["results"]
+        if result["id"] == call_id
+    )
+
+
+def _assert_logged_result(
+    writer: io.StringIO,
+    *,
+    call_id: str,
+    name: str,
+    ran_as: str | None,
+    executed: bool,
+    result_class: str,
+    reply: str,
+) -> None:
+    assert _logged_result(writer, call_id) == {
+        "id": call_id,
+        "name": name,
+        "ran_as": ran_as,
+        "executed": executed,
+        "class": result_class,
+        "result_bytes": len(reply.encode("utf-8")),
+    }
 
 
 @pytest.mark.parametrize(
@@ -1150,6 +1180,7 @@ async def test_three_consecutive_protocol_errors_end_the_attempt(tmp_path: Path)
     )
     assert invalid_result.startswith("invalid tool arguments:")
     rows = [json.loads(line) for line in writer.getvalue().splitlines()]
+    assert rows[0]["results"] == []
     assert rows[-1]["end_reason"] == "protocol_error"
 
 
@@ -1527,3 +1558,522 @@ async def test_model_failure_returns_model_error(tmp_path: Path):
     assert outcome.turns == 0
     assert "no scripted turn" in outcome.summary.lower()
     assert writer.getvalue() == ""
+
+
+async def test_logs_ok_result_for_aliased_execute_call(tmp_path: Path):
+    call = _call("execute", {"command": "printf '\u00e9'"}, "ok-alias")
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    reply = _result(instance, call.id)
+    assert outcome.end == "budget_exhausted"
+    assert reply == "(alias for run_command)\nexit 0\n\u00e9"
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name="execute",
+        ran_as="run_command",
+        executed=True,
+        result_class="ok",
+        reply=reply,
+    )
+
+
+async def test_logs_unknown_tool_result_without_dispatch(tmp_path: Path):
+    call = _call("delete_repository", {}, "unknown-log")
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    reply = _result(instance, call.id)
+    assert outcome.end == "budget_exhausted"
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as=None,
+        executed=False,
+        result_class="unknown_tool",
+        reply=reply,
+    )
+
+
+async def test_logs_bad_args_result_without_dispatch(tmp_path: Path):
+    call = _call("read_file", {}, "bad-args-log")
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    reply = _result(instance, call.id)
+    assert outcome.end == "budget_exhausted"
+    assert reply.startswith("invalid tool arguments:")
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as=None,
+        executed=False,
+        result_class="bad_args",
+        reply=reply,
+    )
+
+
+async def test_logs_malformed_args_with_original_name_and_id(tmp_path: Path):
+    turn = MalformedToolCall(
+        content="I will inspect the repository.",
+        tool_name="run_command",
+        tool_call_id="malformed-log",
+        raw_arguments='{"command":',
+        error="invalid JSON",
+        usage={"prompt": 10, "completion": 1, "reasoning": 0},
+    )
+    worker, instance, model, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [turn],
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    repair = instance.messages[-1]["content"]
+    assert outcome.end == "budget_exhausted"
+    assert model.requests[0]["messages"][-1]["content"] == (
+        "Fix calc.sub and prove the repository is green."
+    )
+    assert repair.startswith("Respond with exactly one tool call.")
+    _assert_logged_result(
+        writer,
+        call_id="malformed-log",
+        name="run_command",
+        ran_as=None,
+        executed=False,
+        result_class="malformed_args",
+        reply=repair,
+    )
+
+
+async def test_logs_calls_after_first_malformed_call_in_original_order(
+    tmp_path: Path,
+):
+    turn = MalformedToolCall(
+        content=None,
+        tool_name="run_command",
+        tool_call_id="malformed-first",
+        raw_arguments='{"command":',
+        error="invalid JSON",
+        raw_tool_calls=[
+            {"id": "malformed-first", "name": "run_command", "malformed_args": True},
+            {"id": "valid-second", "name": "read_file", "malformed_args": False},
+            {"id": "malformed-third", "name": "edit_file", "malformed_args": True},
+        ],
+        usage={"prompt": 10, "completion": 1, "reasoning": 0},
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [turn],
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    repair = instance.messages[-1]["content"]
+    row = json.loads(writer.getvalue())
+    assert outcome.end == "budget_exhausted"
+    assert [(result["id"], result["class"]) for result in row["results"]] == [
+        ("malformed-first", "malformed_args"),
+        ("valid-second", "not_executed"),
+        ("malformed-third", "malformed_args"),
+    ]
+    assert [result["result_bytes"] for result in row["results"]] == [
+        len(repair.encode("utf-8")),
+        0,
+        0,
+    ]
+
+
+async def test_logs_calls_after_parsed_call_when_later_call_is_malformed(
+    tmp_path: Path,
+):
+    first = _call("read_file", {"path": "calc/__init__.py"}, "valid-first")
+    turn = MalformedToolCall(
+        content=None,
+        tool_calls=[first],
+        tool_name="edit_file",
+        tool_call_id="malformed-second",
+        raw_arguments="[]",
+        error="tool arguments must be a JSON object",
+        raw_tool_calls=[
+            {"id": "valid-first", "name": "read_file", "malformed_args": False},
+            {"id": "malformed-second", "name": "edit_file", "malformed_args": True},
+            {"id": "valid-third", "name": "write_file", "malformed_args": False},
+        ],
+        usage={"prompt": 10, "completion": 1, "reasoning": 0},
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [turn],
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    row = json.loads(writer.getvalue())
+    assert outcome.end == "budget_exhausted"
+    assert [(result["id"], result["class"]) for result in row["results"]] == [
+        ("valid-first", "ok"),
+        ("malformed-second", "malformed_args"),
+        ("valid-third", "not_executed"),
+    ]
+    assert [result["result_bytes"] for result in row["results"][1:]] == [0, 0]
+
+
+async def test_logs_edit_no_match_result(tmp_path: Path):
+    call = _call(
+        "edit_file",
+        {"path": "calc/__init__.py", "old_text": "missing", "new_text": "new"},
+        "edit-no-match-log",
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="edit_file",
+        executed=True,
+        result_class="edit_no_match",
+        reply=reply,
+    )
+
+
+async def test_logs_edit_multiple_matches_result(tmp_path: Path):
+    call = _call(
+        "edit_file",
+        {"path": "calc/__init__.py", "old_text": "def ", "new_text": "fn "},
+        "edit-multiple-log",
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="edit_file",
+        executed=True,
+        result_class="edit_multiple_matches",
+        reply=reply,
+    )
+
+
+async def test_logs_edit_too_large_result(tmp_path: Path):
+    repo = make_repo(tmp_path / "source")
+    (repo / "too-large.txt").write_bytes(b"target" + b"x" * 1_999_994)
+    subprocess.run(["git", "add", "too-large.txt"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "large logging fixture"],
+        cwd=repo,
+        check=True,
+    )
+    call = _call(
+        "edit_file",
+        {"path": "too-large.txt", "old_text": "target", "new_text": "changed"},
+        "edit-too-large-log",
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path / "run",
+        [_turn(call)],
+        repo=repo,
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="edit_file",
+        executed=True,
+        result_class="edit_too_large",
+        reply=reply,
+    )
+
+
+async def test_logs_edit_invalid_utf8_result(tmp_path: Path):
+    repo = make_repo(tmp_path / "source")
+    (repo / "invalid.txt").write_bytes(b"before\xffafter\n")
+    subprocess.run(["git", "add", "invalid.txt"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "invalid utf8 logging fixture"],
+        cwd=repo,
+        check=True,
+    )
+    call = _call(
+        "edit_file",
+        {"path": "invalid.txt", "old_text": "before", "new_text": "changed"},
+        "edit-invalid-utf8-log",
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path / "run",
+        [_turn(call)],
+        repo=repo,
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="edit_file",
+        executed=True,
+        result_class="edit_invalid_utf8",
+        reply=reply,
+    )
+
+
+async def test_logs_write_refused_result(tmp_path: Path):
+    call = _call(
+        "write_file",
+        {"path": "../outside.py", "content": "unsafe\n"},
+        "write-refused-log",
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    assert reply == "refused: path is outside the repository"
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="write_file",
+        executed=True,
+        result_class="write_refused",
+        reply=reply,
+    )
+
+
+async def test_logs_command_timeout_before_nonzero_exit(tmp_path: Path):
+    call = _call(
+        "run_command",
+        {"command": "python -c 'import time; time.sleep(2)'"},
+        "command-timeout-log",
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(
+            max_turns=1,
+            max_wall_seconds=1.2,
+            max_completion_tokens=100,
+        ),
+    )
+
+    reply = _result(instance, call.id)
+    assert outcome.end == "budget_exhausted"
+    assert reply.startswith("timed out")
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="run_command",
+        executed=True,
+        result_class="command_timeout",
+        reply=reply,
+    )
+
+
+async def test_logs_command_not_dispatched_when_wall_budget_is_subsecond(
+    tmp_path: Path,
+):
+    call = _call("run_command", {"command": "printf never"}, "no-dispatch-log")
+    worker, instance, _, executor, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+    recording = _record_executor(instance, executor)
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(
+            max_turns=1,
+            max_wall_seconds=0.5,
+            max_completion_tokens=100,
+        ),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    assert recording.routes == []
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as=None,
+        executed=False,
+        result_class="command_timeout",
+        reply="",
+    )
+
+
+async def test_logs_nonzero_exit_result(tmp_path: Path):
+    call = _call("run_command", {"command": "exit 7"}, "nonzero-exit-log")
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    assert reply == "exit 7"
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="run_command",
+        executed=True,
+        result_class="nonzero_exit",
+        reply=reply,
+    )
+
+
+async def test_logs_finish_refused_result(tmp_path: Path):
+    call = _call(
+        "finish",
+        {
+            "summary": "Nothing needed changing.",
+            "claims": _claims(changed=[], green=False),
+        },
+        "finish-refused-log",
+    )
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="finish",
+        executed=True,
+        result_class="finish_refused",
+        reply=reply,
+    )
+
+
+async def test_logs_noted_result_without_dispatch(tmp_path: Path):
+    call = _call("think", {"thought": "Inspect first"}, "noted-log")
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    assert reply == "noted"
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as=None,
+        executed=False,
+        result_class="noted",
+        reply=reply,
+    )
+
+
+async def test_logs_extra_call_as_not_executed(tmp_path: Path):
+    first = _call("read_file", {"path": "calc/__init__.py"}, "first-log")
+    extra = _call("write_file", {"path": "extra.py", "content": "x = 1\n"}, "extra-log")
+    worker, instance, _, _, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(first, extra)],
+    )
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, extra.id)
+    _assert_logged_result(
+        writer,
+        call_id=extra.id,
+        name=extra.name,
+        ran_as=None,
+        executed=False,
+        result_class="not_executed",
+        reply=reply,
+    )
+
+
+async def test_logs_tool_error_result_for_executor_exception(tmp_path: Path):
+    call = _call("read_file", {"path": "calc/__init__.py"}, "tool-error-log")
+    worker, instance, _, executor, _, _, writer = await _fixture_worker(
+        tmp_path,
+        [_turn(call)],
+    )
+
+    class ErrorExecutor:
+        def __getattr__(self, name):
+            return getattr(executor, name)
+
+        async def read_file(self, branch, path, max_bytes):
+            raise RuntimeError("read failed")
+
+    instance.executor = ErrorExecutor()
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    reply = _result(instance, call.id)
+    assert reply == "tool error: RuntimeError: read failed"
+    _assert_logged_result(
+        writer,
+        call_id=call.id,
+        name=call.name,
+        ran_as="read_file",
+        executed=True,
+        result_class="tool_error",
+        reply=reply,
+    )

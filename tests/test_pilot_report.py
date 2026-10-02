@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 
@@ -70,6 +72,7 @@ def _record(
     sandbox_lifetime_seconds: float = 20.0,
     sandbox_dollars_estimate: float = 0.0,
     wall_time_s: float = 30.0,
+    run_dir: str | None = None,
 ) -> InstanceRecord:
     final = None
     if attempts:
@@ -83,7 +86,7 @@ def _record(
         instance_id=instance_id,
         status=status,
         reason=reason,
-        run_dir=f"pilot/{instance_id}/runs/run-1",
+        run_dir=run_dir or f"pilot/{instance_id}/runs/run-1",
         attempts=list(attempts),
         final=final,
         cost=PilotCost(
@@ -351,6 +354,166 @@ def test_same_records_produce_byte_identical_reports():
 
     assert report_module.render(first).encode() == report_module.render(second).encode()
     assert first.model_dump_json() == second.model_dump_json()
+
+
+def test_harness_keeps_good_rows_counts_bad_ones_and_maps_old_paths(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    report_module = _report_module()
+    monkeypatch.setattr(report_module, "_REPOSITORY_ROOT", tmp_path)
+
+    def result(call_id, name, ran_as, result_class, **extra):
+        return {
+            "id": call_id,
+            "name": name,
+            "ran_as": ran_as,
+            "executed": ran_as is not None,
+            "class": result_class,
+            "result_bytes": 10,
+            **extra,
+        }
+
+    log = tmp_path / "pilot" / "run-x" / "task" / "runs" / "r1" / "agent" / "worker.jsonl"
+    log.parent.mkdir(parents=True)
+    rows = [
+        {"results": [result("e1", "edit_file", "edit_file", "ok", future_field=1)]},
+        {"results": [result("e2", "edit_file", None, "bad_args")]},
+        {"results": [result("e3", "str_replace_editor", "edit_file", "edit_invalid_utf8")]},
+        {"results": [result("e4", "edit_file", "edit_file", "edit_no_match")]},
+    ]
+    log.write_text(
+        "".join(json.dumps(row) + "\n" for row in rows) + '{"results": [{"id": "trunc',
+    )
+    old_absolute = "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-x/task/runs/r1"
+
+    report = report_module.build_report([_record("old-path", [_attempt()], run_dir=old_absolute)])
+
+    assert report.harness.unreadable_logs == 0
+    assert report.harness.unreadable_rows == 1
+    assert report.harness.total_tool_calls == 4
+    assert report.harness.edit_failure_rate.numerator == 3
+    assert report.harness.edit_failure_rate.denominator == 4
+    markdown = report_module.render(report)
+    assert "edit calls that did not apply" in markdown
+
+
+def test_harness_section_counts_results_aliases_edit_failures_and_legacy_rows(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    report_module = _report_module()
+    monkeypatch.setattr(report_module, "_REPOSITORY_ROOT", tmp_path)
+
+    absolute_run = tmp_path / "absolute-run"
+    relative_run = tmp_path / "relative-run"
+    invalid_run = tmp_path / "invalid-run"
+    absolute_log = absolute_run / "agent" / "worker.jsonl"
+    relative_log = relative_run / "agent" / "worker.jsonl"
+    invalid_log = invalid_run / "agent" / "worker.jsonl"
+    absolute_log.parent.mkdir(parents=True)
+    relative_log.parent.mkdir(parents=True)
+    invalid_log.parent.mkdir(parents=True)
+    absolute_rows = [
+        {
+            "results": [
+                {
+                    "id": "edit-1",
+                    "name": "edit_file",
+                    "ran_as": "edit_file",
+                    "executed": True,
+                    "class": "edit_no_match",
+                    "result_bytes": 32,
+                },
+                {
+                    "id": "command-1",
+                    "name": "execute",
+                    "ran_as": "run_command",
+                    "executed": True,
+                    "class": "nonzero_exit",
+                    "result_bytes": 38,
+                },
+                {
+                    "id": "read-1",
+                    "name": "read_file",
+                    "ran_as": "read_file",
+                    "executed": True,
+                    "class": "ok",
+                    "result_bytes": 100,
+                },
+            ],
+        },
+        {"tool_calls": [{"id": "legacy"}]},
+    ]
+    relative_rows = [
+        {
+            "results": [
+                {
+                    "id": "edit-2",
+                    "name": "str_replace_editor",
+                    "ran_as": "edit_file",
+                    "executed": True,
+                    "class": "edit_multiple_matches",
+                    "result_bytes": 55,
+                },
+                {
+                    "id": "edit-3",
+                    "name": "edit_file",
+                    "ran_as": "edit_file",
+                    "executed": True,
+                    "class": "ok",
+                    "result_bytes": 2,
+                },
+                {
+                    "id": "think-1",
+                    "name": "think",
+                    "ran_as": None,
+                    "executed": False,
+                    "class": "noted",
+                    "result_bytes": 5,
+                },
+            ],
+        },
+    ]
+    absolute_log.write_text(
+        "".join(json.dumps(row) + "\n" for row in absolute_rows),
+    )
+    relative_log.write_text(
+        "".join(json.dumps(row) + "\n" for row in relative_rows),
+    )
+    invalid_log.write_text(json.dumps({"results": [{"class": "invented"}]}) + "\n")
+    records = [
+        _record("absolute", [_attempt()], run_dir=str(absolute_run)),
+        _record("relative", [_attempt()], run_dir="relative-run"),
+        _record("invalid", [_attempt()], run_dir="invalid-run"),
+        _record("missing", [_attempt()], run_dir="missing-run"),
+    ]
+
+    report = report_module.build_report(records)
+
+    assert report.harness.total_tool_calls == 6
+    assert report.harness.classes["ok"] == 2
+    assert report.harness.classes["edit_no_match"] == 1
+    assert report.harness.classes["edit_multiple_matches"] == 1
+    assert report.harness.classes["nonzero_exit"] == 1
+    assert report.harness.classes["noted"] == 1
+    assert report.harness.aliases == {"execute": 1, "str_replace_editor": 1}
+    assert report.harness.edit_failure_rate.numerator == 2
+    assert report.harness.edit_failure_rate.denominator == 3
+    assert report.harness.not_recorded == 1
+    assert report.harness.unreadable_logs == 1
+    assert report.harness.unreadable_rows == 1
+
+    markdown = report_module.render(report)
+    harness = markdown.split("## Harness", 1)[1].split("## Shipped bytes", 1)[0]
+    assert "Total tool calls: 6." in harness
+    assert "edit_no_match | 1" in harness
+    assert "edit_multiple_matches | 1" in harness
+    assert "execute | 1" in harness
+    assert "str_replace_editor | 1" in harness
+    assert "Edit-failure rate (edit calls that did not apply, over all edit calls): 2 of 3" in harness
+    assert "1 turn not recorded" in harness
+    assert "1 worker log unreadable or missing; 1 unreadable row skipped" in harness
 
 
 def test_report_lists_shipped_byte_digest_agreement_mismatches_and_old_records():

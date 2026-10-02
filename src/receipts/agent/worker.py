@@ -20,7 +20,7 @@ from pydantic import (
     model_validator,
 )
 
-from receipts.llm import AssistantTurn, ModelClient, ToolCall
+from receipts.llm import AssistantTurn, MalformedToolCall, ModelClient, ToolCall
 from receipts.models import Branch, Claims, Receipt
 from receipts.sandbox.protocol import Executor
 
@@ -43,6 +43,23 @@ _READ_FETCH_MAX_BYTES = 2_000_000
 _COMMAND_OUTPUT_CHARS = 6_000
 _COMMAND_TIMEOUT_S = 300
 _TOOL_NAMES = ("read_file", "edit_file", "write_file", "run_command", "finish")
+ResultClass = Literal[
+    "ok",
+    "unknown_tool",
+    "bad_args",
+    "malformed_args",
+    "edit_no_match",
+    "edit_multiple_matches",
+    "edit_too_large",
+    "edit_invalid_utf8",
+    "write_refused",
+    "command_timeout",
+    "nonzero_exit",
+    "finish_refused",
+    "noted",
+    "not_executed",
+    "tool_error",
+]
 _COMMAND_ALIASES = {
     "execute",
     "bash",
@@ -453,6 +470,75 @@ def _tool_message(call_id: str, content: str) -> dict[str, str]:
     }
 
 
+def _logged_result(
+    call: ToolCall,
+    *,
+    ran_as: str | None,
+    executed: bool,
+    result_class: ResultClass,
+    reply: str,
+) -> dict[str, Any]:
+    return {
+        "id": call.id,
+        "name": call.name,
+        "ran_as": ran_as,
+        "executed": executed,
+        "class": result_class,
+        "result_bytes": len(reply.encode("utf-8")),
+    }
+
+
+def _not_executed_results(
+    calls: list[ToolCall],
+    *,
+    reply: str = _ONE_CALL_REPLY,
+) -> list[dict[str, Any]]:
+    return [
+        _logged_result(
+            call,
+            ran_as=None,
+            executed=False,
+            result_class="not_executed",
+            reply=reply,
+        )
+        for call in calls
+    ]
+
+
+def _malformed_result(
+    turn: AssistantTurn,
+    *,
+    reply: str,
+) -> list[dict[str, Any]]:
+    if not isinstance(turn, MalformedToolCall):
+        return []
+    if turn.raw_tool_calls:
+        pending = turn.raw_tool_calls[len(turn.tool_calls) :]
+        return [
+            {
+                "id": call.id,
+                "name": call.name,
+                "ran_as": None,
+                "executed": False,
+                "class": (
+                    "malformed_args" if call.malformed_args else "not_executed"
+                ),
+                "result_bytes": len(reply.encode("utf-8")) if index == 0 else 0,
+            }
+            for index, call in enumerate(pending)
+        ]
+    return [
+        {
+            "id": turn.tool_call_id,
+            "name": turn.tool_name,
+            "ran_as": None,
+            "executed": False,
+            "class": "malformed_args",
+            "result_bytes": len(reply.encode("utf-8")),
+        },
+    ]
+
+
 def _cap_bytes(content: str, maximum: int) -> str:
     encoded = content.encode()
     if len(encoded) <= maximum:
@@ -617,10 +703,12 @@ class Worker:
         request_message_count: int,
         turn: AssistantTurn,
         end_reason: str,
+        results: list[dict[str, Any]],
     ) -> None:
         row = {
             "request_message_count": request_message_count,
             "tool_calls": [call.model_dump(mode="json") for call in turn.tool_calls],
+            "results": results,
             "usage": turn.usage.model_dump(mode="json"),
             "end_reason": end_reason,
         }
@@ -703,6 +791,7 @@ class Worker:
                         request_message_count=request_message_count,
                         turn=turn,
                         end_reason="protocol_error",
+                        results=_malformed_result(turn, reply=""),
                     )
                     return self._outcome(
                         "protocol_error",
@@ -720,12 +809,16 @@ class Worker:
                     request_message_count=request_message_count,
                     turn=turn,
                     end_reason=outcome.end if outcome is not None else "continue",
+                    results=_malformed_result(turn, reply=_FREE_TEXT_REPAIR),
                 )
                 if outcome is not None:
                     return outcome
                 continue
 
             primary, *extra = turn.tool_calls
+            model_primary = primary
+            extra_results = _not_executed_results(extra)
+            malformed_result = _malformed_result(turn, reply="")
 
             alias_target = _alias_target(primary)
             try:
@@ -744,6 +837,17 @@ class Worker:
                         request_message_count=request_message_count,
                         turn=turn,
                         end_reason="protocol_error",
+                        results=[
+                            _logged_result(
+                                model_primary,
+                                ran_as=None,
+                                executed=False,
+                                result_class="bad_args",
+                                reply=result,
+                            ),
+                            *extra_results,
+                            *malformed_result,
+                        ],
                     )
                     return self._outcome(
                         "protocol_error",
@@ -760,6 +864,17 @@ class Worker:
                     request_message_count=request_message_count,
                     turn=turn,
                     end_reason=outcome.end if outcome is not None else "continue",
+                    results=[
+                        _logged_result(
+                            model_primary,
+                            ran_as=None,
+                            executed=False,
+                            result_class="bad_args",
+                            reply=result,
+                        ),
+                        *extra_results,
+                        *malformed_result,
+                    ],
                 )
                 if outcome is not None:
                     return outcome
@@ -780,6 +895,17 @@ class Worker:
                     request_message_count=request_message_count,
                     turn=turn,
                     end_reason=outcome.end if outcome is not None else "continue",
+                    results=[
+                        _logged_result(
+                            model_primary,
+                            ran_as=None,
+                            executed=False,
+                            result_class="noted",
+                            reply=immediate_result,
+                        ),
+                        *extra_results,
+                        *malformed_result,
+                    ],
                 )
                 if outcome is not None:
                     return outcome
@@ -798,6 +924,17 @@ class Worker:
                         request_message_count=request_message_count,
                         turn=turn,
                         end_reason="protocol_error",
+                        results=[
+                            _logged_result(
+                                model_primary,
+                                ran_as=None,
+                                executed=False,
+                                result_class="unknown_tool",
+                                reply=_UNKNOWN_TOOL_REPLY,
+                            ),
+                            *extra_results,
+                            *malformed_result,
+                        ],
                     )
                     return self._outcome(
                         "protocol_error",
@@ -814,18 +951,30 @@ class Worker:
                     request_message_count=request_message_count,
                     turn=turn,
                     end_reason=outcome.end if outcome is not None else "continue",
+                    results=[
+                        _logged_result(
+                            model_primary,
+                            ran_as=None,
+                            executed=False,
+                            result_class="unknown_tool",
+                            reply=_UNKNOWN_TOOL_REPLY,
+                        ),
+                        *extra_results,
+                        *malformed_result,
+                    ],
                 )
                 if outcome is not None:
                     return outcome
                 continue
 
+            tool_remaining_s = max(
+                0.0,
+                budget.max_wall_seconds - (time.monotonic() - started),
+            )
             try:
-                result, finished = await self._execute_tool(
+                result, finished, result_class = await self._execute_tool(
                     primary,
-                    remaining_s=max(
-                        0.0,
-                        budget.max_wall_seconds - (time.monotonic() - started),
-                    ),
+                    remaining_s=tool_remaining_s,
                 )
             except ValidationError as exc:
                 result = _with_alias(
@@ -841,6 +990,17 @@ class Worker:
                         request_message_count=request_message_count,
                         turn=turn,
                         end_reason="protocol_error",
+                        results=[
+                            _logged_result(
+                                model_primary,
+                                ran_as=None,
+                                executed=False,
+                                result_class="bad_args",
+                                reply=result,
+                            ),
+                            *extra_results,
+                            *malformed_result,
+                        ],
                     )
                     return self._outcome(
                         "protocol_error",
@@ -857,15 +1017,44 @@ class Worker:
                     request_message_count=request_message_count,
                     turn=turn,
                     end_reason=outcome.end if outcome is not None else "continue",
+                    results=[
+                        _logged_result(
+                            model_primary,
+                            ran_as=None,
+                            executed=False,
+                            result_class="bad_args",
+                            reply=result,
+                        ),
+                        *extra_results,
+                        *malformed_result,
+                    ],
                 )
                 if outcome is not None:
                     return outcome
                 continue
             except TimeoutError:
+                dispatched = tool_remaining_s > 0 and not (
+                    primary.name == "run_command" and int(tool_remaining_s) < 1
+                )
                 self._log_turn(
                     request_message_count=request_message_count,
                     turn=turn,
                     end_reason="budget_exhausted",
+                    results=[
+                        _logged_result(
+                            model_primary,
+                            ran_as=primary.name if dispatched else None,
+                            executed=dispatched,
+                            result_class=(
+                                "command_timeout"
+                                if primary.name == "run_command"
+                                else "tool_error"
+                            ),
+                            reply="",
+                        ),
+                        *_not_executed_results(extra, reply=""),
+                        *malformed_result,
+                    ],
                 )
                 return self._outcome(
                     "budget_exhausted",
@@ -879,6 +1068,7 @@ class Worker:
                     f"tool error: {type(exc).__name__}: {exc}",
                 )
                 finished = None
+                result_class = "tool_error"
             else:
                 consecutive_protocol_errors = 0
                 result = _with_alias(alias_target, result)
@@ -893,6 +1083,17 @@ class Worker:
                     request_message_count=request_message_count,
                     turn=turn,
                     end_reason="finished",
+                    results=[
+                        _logged_result(
+                            model_primary,
+                            ran_as=primary.name,
+                            executed=True,
+                            result_class=result_class,
+                            reply=finish_result,
+                        ),
+                        *extra_results,
+                        *malformed_result,
+                    ],
                 )
                 return self._outcome(
                     "finished",
@@ -914,6 +1115,17 @@ class Worker:
                 request_message_count=request_message_count,
                 turn=turn,
                 end_reason=outcome.end if outcome is not None else "continue",
+                results=[
+                    _logged_result(
+                        model_primary,
+                        ran_as=primary.name,
+                        executed=True,
+                        result_class=result_class,
+                        reply=result,
+                    ),
+                    *extra_results,
+                    *malformed_result,
+                ],
             )
             if outcome is not None:
                 return outcome
@@ -945,7 +1157,7 @@ class Worker:
         call: ToolCall,
         *,
         remaining_s: float,
-    ) -> tuple[str, tuple[str, Claims] | None]:
+    ) -> tuple[str, tuple[str, Claims] | None, ResultClass]:
         if remaining_s <= 0:
             raise TimeoutError
 
@@ -965,7 +1177,7 @@ class Worker:
                 start_line=arguments.start_line,
                 end_line=arguments.end_line,
             )
-            return _with_note(note, result), None
+            return _with_note(note, result), None, "ok"
 
         if call.name == "edit_file":
             arguments, note = _tool_arguments(call, _EditFileArgs)
@@ -982,22 +1194,26 @@ class Worker:
                     "edit refused: file is too large to edit safely; "
                     "use run_command"
                 )
-                return _with_note(note, result), None
+                return _with_note(note, result), None, "edit_too_large"
             if "\ufffd" in content:
                 result = (
                     "edit refused: file is not valid UTF-8 text; "
                     "use write_file or run_command"
                 )
-                return _with_note(note, result), None
+                return _with_note(note, result), None, "edit_invalid_utf8"
             occurrences = content.count(arguments.old_text)
             if occurrences == 0:
-                return _with_note(note, "edit refused: old_text not found"), None
+                return (
+                    _with_note(note, "edit refused: old_text not found"),
+                    None,
+                    "edit_no_match",
+                )
             if occurrences > 1:
                 result = (
                     "edit refused: old_text occurs "
                     f"{occurrences} times; include more context"
                 )
-                return _with_note(note, result), None
+                return _with_note(note, result), None, "edit_multiple_matches"
             receipt = await asyncio.wait_for(
                 self.executor.write_file(
                     self.branch,
@@ -1009,10 +1225,10 @@ class Worker:
             self._record_receipt(receipt)
             if receipt.exit_code == 0:
                 self._successful_write = True
-                return _with_note(note, "ok"), None
+                return _with_note(note, "ok"), None, "ok"
             refusal = receipt.stderr_tail or receipt.stdout_tail
             result = refusal or f"refused (exit {receipt.exit_code})"
-            return _with_note(note, result), None
+            return _with_note(note, result), None, "write_refused"
 
         if call.name == "write_file":
             arguments, note = _tool_arguments(call, _WriteFileArgs)
@@ -1027,10 +1243,10 @@ class Worker:
             self._record_receipt(receipt)
             if receipt.exit_code == 0:
                 self._successful_write = True
-                return _with_note(note, "ok"), None
+                return _with_note(note, "ok"), None, "ok"
             refusal = receipt.stderr_tail or receipt.stdout_tail
             result = refusal or f"refused (exit {receipt.exit_code})"
-            return _with_note(note, result), None
+            return _with_note(note, result), None, "write_refused"
 
         if call.name == "run_command":
             arguments, note = _tool_arguments(call, _RunCommandArgs)
@@ -1056,13 +1272,23 @@ class Worker:
             ]
             status = "timed out" if receipt.timed_out else f"exit {receipt.exit_code}"
             result = status + (f"\n{combined}" if combined else "")
-            return _with_note(note, result), None
+            if receipt.timed_out:
+                result_class: ResultClass = "command_timeout"
+            elif receipt.exit_code != 0:
+                result_class = "nonzero_exit"
+            else:
+                result_class = "ok"
+            return _with_note(note, result), None, result_class
 
         arguments, note = _tool_arguments(call, _FinishArgs)
         if not self._successful_write and not self._premature_finish_refused:
             self._premature_finish_refused = True
-            return _with_note(note, "nothing has been changed yet"), None
-        return note, (arguments.summary, arguments.claims)
+            return (
+                _with_note(note, "nothing has been changed yet"),
+                None,
+                "finish_refused",
+            )
+        return note, (arguments.summary, arguments.claims), "ok"
 
 
 __all__ = [

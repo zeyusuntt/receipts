@@ -43,6 +43,19 @@ class AssistantTurn(BaseModel):
     usage: TokenUsage = Field(default_factory=TokenUsage)
 
 
+def _metadata_text(source: object, attribute: str) -> str:
+    """Logging metadata must never raise, so a missing id or name becomes ''."""
+
+    value = getattr(source, attribute, None)
+    return value if isinstance(value, str) else ""
+
+
+class ToolCallMetadata(BaseModel):
+    id: str
+    name: str
+    malformed_args: bool
+
+
 class MalformedToolCall(AssistantTurn):
     """A model turn whose tool arguments were not a JSON object."""
 
@@ -50,6 +63,7 @@ class MalformedToolCall(AssistantTurn):
     tool_call_id: str
     raw_arguments: str
     error: str
+    raw_tool_calls: list[ToolCallMetadata] = Field(default_factory=list)
 
 
 class ModelClient(Protocol):
@@ -258,9 +272,12 @@ class TokenFactoryClient:
         )
         usage = self._record_usage(response)
         message = response.choices[0].message
+        raw_calls = list(message.tool_calls or [])
         parsed_calls: list[ToolCall] = []
+        raw_tool_calls: list[ToolCallMetadata] = []
+        first_malformed: tuple[str, str, str, str] | None = None
 
-        for raw_call in message.tool_calls or []:
+        for raw_call in raw_calls:
             raw_arguments = raw_call.function.arguments
             try:
                 arguments = (
@@ -271,21 +288,48 @@ class TokenFactoryClient:
                 if not isinstance(arguments, dict):
                     raise ValueError("tool arguments must be a JSON object")
             except (json.JSONDecodeError, TypeError, ValueError) as exc:
-                return MalformedToolCall(
-                    content=message.content,
-                    tool_calls=parsed_calls,
-                    usage=usage,
-                    tool_name=raw_call.function.name,
-                    tool_call_id=raw_call.id,
-                    raw_arguments=str(raw_arguments),
-                    error=str(exc),
+                raw_tool_calls.append(
+                    ToolCallMetadata(
+                        id=_metadata_text(raw_call, "id"),
+                        name=_metadata_text(raw_call.function, "name"),
+                        malformed_args=True,
+                    ),
                 )
-            parsed_calls.append(
-                ToolCall(
-                    name=raw_call.function.name,
-                    arguments=arguments,
-                    id=raw_call.id,
+                if first_malformed is None:
+                    first_malformed = (
+                        raw_call.function.name,
+                        raw_call.id,
+                        str(raw_arguments),
+                        str(exc),
+                    )
+                continue
+            raw_tool_calls.append(
+                ToolCallMetadata(
+                    id=_metadata_text(raw_call, "id"),
+                    name=_metadata_text(raw_call.function, "name"),
+                    malformed_args=False,
                 ),
+            )
+            if first_malformed is None:
+                parsed_calls.append(
+                    ToolCall(
+                        name=raw_call.function.name,
+                        arguments=arguments,
+                        id=raw_call.id,
+                    ),
+                )
+
+        if first_malformed is not None:
+            tool_name, tool_call_id, raw_arguments, error = first_malformed
+            return MalformedToolCall(
+                content=message.content,
+                tool_calls=parsed_calls,
+                usage=usage,
+                tool_name=tool_name,
+                tool_call_id=tool_call_id,
+                raw_arguments=raw_arguments,
+                error=error,
+                raw_tool_calls=raw_tool_calls,
             )
 
         return AssistantTurn(
