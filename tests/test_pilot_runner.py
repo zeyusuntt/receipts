@@ -234,10 +234,18 @@ async def test_honest_agent_writes_atomic_ran_record_with_official_agreement(
         ],
     )
 
+    instance = _instance("fixture__calc-honest")
+    instance.test_patch = """diff --git a/config/fixture.yaml b/config/fixture.yaml
+new file mode 100644
+--- /dev/null
++++ b/config/fixture.yaml
+@@ -0,0 +1 @@
++enabled: true
+"""
     record = await runner.run_instance(
         _executor_factory(tmp_path, repo, created),
         model,
-        _instance("fixture__calc-honest"),
+        instance,
         tmp_path / "pilot",
         _budgets(),
     )
@@ -266,6 +274,13 @@ async def test_honest_agent_writes_atomic_ran_record_with_official_agreement(
     assert record.cost.sandbox_dollars_estimate == pytest.approx(0.29907)
     assert record.wall_time_s > 0
     assert created[0].closed is True
+    run_input = json.loads(
+        (Path(record.run_dir) / "input.json").read_text(encoding="utf-8"),
+    )
+    assert run_input["spec_paths"] == [
+        "config/fixture.yaml",
+        "tests/test_calc.py",
+    ]
 
     record_path = tmp_path / "pilot" / record.instance_id / "record.json"
     assert json.loads(record_path.read_text(encoding="utf-8")) == record.model_dump(
@@ -471,6 +486,35 @@ async def test_target_that_already_passes_is_excluded(tmp_path: Path):
     assert "target tests did not fail in every baseline run" in record.reason
     assert record.attempts == []
     assert record.final is None
+    assert created[0].closed is True
+
+
+async def test_test_patch_with_unparseable_path_is_excluded_not_infra(tmp_path: Path):
+    runner = _runner_module()
+    repo = make_repo(tmp_path / "source")
+    created: list[_ImageLocalExecutor] = []
+    instance = _instance("fixture__calc-renamed-spec").model_copy(
+        update={
+            "test_patch": (
+                "diff --git a/tests/test_old.py b/tests/test_new.py\n"
+                "similarity index 100%\n"
+                "rename from tests/test_old.py\n"
+                "rename to tests/test_new.py\n"
+            ),
+        },
+    )
+
+    record = await runner.run_instance(
+        _executor_factory(tmp_path, repo, created),
+        FakeModel(),
+        instance,
+        tmp_path / "pilot",
+        _budgets(),
+    )
+
+    assert record.status == "excluded"
+    assert "test patch contains an unparseable path" in record.reason
+    assert record.attempts == []
     assert created[0].closed is True
 
 

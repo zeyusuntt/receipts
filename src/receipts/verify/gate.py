@@ -69,12 +69,19 @@ def _r3(baseline: Baseline, ver) -> PredicateResult:
     return PredicateResult(id="R3_no_shrink", passed=False, evidence="; ".join(parts))
 
 
-def _r4(patch: Receipt, allow_test_edits: bool, allow_config_edits: bool) -> PredicateResult:
+def _r4(
+    patch: Receipt,
+    allow_test_edits: bool,
+    allow_config_edits: bool,
+    spec_paths: Sequence[str],
+) -> PredicateResult:
     files = patch.diff.files if patch.diff else []
     bad = []
     for f in files:
         if f.category == "unparseable":
             bad.append(f"{f.path} (unparseable path)")
+        elif f.path in spec_paths:
+            bad.append(f"{f.path} (spec file, read-only)")
         elif f.category in ("outside", "symlink", "executable_artifact", "shadow"):
             bad.append(f"{f.path} ({f.category})")
         elif f.category == "pytest_config" and not allow_config_edits:
@@ -204,7 +211,7 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
         _r1(baseline, ver),
         _r2(baseline, ver, valid_reruns),
         _r3(baseline, ver),
-        _r4(patch, allow_test_edits, allow_config_edits),
+        _r4(patch, allow_test_edits, allow_config_edits, baseline.spec_paths),
         _r5(branch_id, witness_id, origin, receipts, patch, apply, verification, filtered_sha256, reruns),
     ]
     status = "PASS" if all(p.passed for p in predicates) else "REJECTED"

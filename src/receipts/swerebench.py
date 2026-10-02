@@ -37,10 +37,15 @@ class Instance(BaseModel):
     problem_statement: str
 
 
+class UnparseableTestPatch(ValueError):
+    """The dataset's test patch names a path Receipts cannot parse, so its spec cannot be protected."""
+
+
 class SweTask(BaseModel):
     source: ImageSource
     issue: str
     spec_tests: list[str]
+    spec_paths: list[str]
     suite_scope: str
 
 
@@ -110,6 +115,15 @@ def _test_files_from_patch(patch: str) -> list[str]:
 def to_task(instance: Instance) -> SweTask:
     """Convert one dataset row into the inputs accepted by orchestrate.fix."""
 
+    test_patch_summary = summarize_patch(instance.test_patch)
+    if any(
+        changed.category == "unparseable"
+        for changed in test_patch_summary.files
+    ):
+        raise UnparseableTestPatch(
+            f"{instance.instance_id}: test patch contains an unparseable path",
+        )
+
     # The gate runs the instance's own pytest arguments (the suite named by test_cmd,
     # with its warning filters and options), so its runs match the official grader's.
     try:
@@ -132,6 +146,7 @@ def to_task(instance: Instance) -> SweTask:
         ),
         issue=instance.problem_statement,
         spec_tests=list(instance.fail_to_pass),
+        spec_paths=[changed.path for changed in test_patch_summary.files],
         suite_scope=shlex.join(suite),
     )
 

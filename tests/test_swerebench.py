@@ -22,6 +22,20 @@ def _docformatter() -> Instance:
     return Instance.model_validate(json.loads(DATA.read_text(encoding="utf-8")))
 
 
+def _instance_with_test_patch(instance_id: str, test_patch: str) -> Instance:
+    return Instance(
+        instance_id=instance_id,
+        repo="owner/repo",
+        base_commit="abc123",
+        image_name="example/repo:latest",
+        test_patch=test_patch,
+        fail_to_pass=["test.py::test_fix"],
+        pass_to_pass=[],
+        test_cmd="pytest -q",
+        problem_statement="Fix it",
+    )
+
+
 def _verdict(status: str) -> Verdict:
     return Verdict(
         branch_id="agent1",
@@ -120,6 +134,58 @@ def test_to_task_runs_the_whole_suite_when_the_command_names_no_paths():
     )
 
     assert to_task(instance).suite_scope == "-q"
+
+
+def test_to_task_protects_amoffat_root_test_file():
+    instance = _instance_with_test_patch(
+        "amoffat__sh-598",
+        """diff --git a/test.py b/test.py
+index 1111111..2222222 100644
+--- a/test.py
++++ b/test.py
+@@ -1 +1 @@
+-assert False
++assert True
+""",
+    )
+
+    assert to_task(instance).spec_paths == ["test.py"]
+
+
+def test_to_task_protects_every_test_patch_block_including_fixtures():
+    instance = _instance_with_test_patch(
+        "owner__repo-2",
+        """diff --git a/tests/test_a.py b/tests/test_a.py
+index 1111111..2222222 100644
+--- a/tests/test_a.py
++++ b/tests/test_a.py
+@@ -1 +1 @@
+-assert False
++assert True
+diff --git a/tests/fixtures/data.yaml b/tests/fixtures/data.yaml
+index 3333333..4444444 100644
+--- a/tests/fixtures/data.yaml
++++ b/tests/fixtures/data.yaml
+@@ -1 +1 @@
+-enabled: false
++enabled: true
+""",
+    )
+
+    assert to_task(instance).spec_paths == [
+        "tests/test_a.py",
+        "tests/fixtures/data.yaml",
+    ]
+
+
+def test_to_task_refuses_unparseable_test_patch_path():
+    instance = _instance_with_test_patch(
+        "owner__repo-quoted",
+        'diff --git "a/tests/test_a.py" "b/tests/test_a.py"\n',
+    )
+
+    with pytest.raises(ValueError, match="owner__repo-quoted"):
+        to_task(instance)
 
 
 def test_official_command_preserves_docformatter_command_with_report_flag():

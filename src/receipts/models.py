@@ -138,6 +138,13 @@ class Baseline(BaseModel):
     protected: list[str] = Field(description="node ids that passed in every baseline run")
     unstable: list[str] = Field(description="node ids whose outcome differed between runs")
     target: list[str] = Field(description="node ids that must go from failing to passing")
+    spec_paths: list[str] = Field(
+        default_factory=list,
+        description=(
+            "repository-relative paths of the specification "
+            "(the test patch and the spec tests' files); read-only"
+        ),
+    )
 
 
 class Claims(BaseModel):

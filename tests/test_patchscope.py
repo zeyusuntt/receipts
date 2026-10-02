@@ -314,6 +314,49 @@ HcmV?d00001
     assert dropped == ["tests/test_core.py"]
 
 
+def test_filter_drops_exact_spec_paths_regardless_of_category():
+    root_spec = """diff --git a/test.py b/test.py
+index 1111111..2222222 100644
+--- a/test.py
++++ b/test.py
+@@ -1 +1 @@
+-EXPECTED = 1
++EXPECTED = 2
+"""
+    fixture_spec = """diff --git a/config/fixture.yaml b/config/fixture.yaml
+index 3333333..4444444 100644
+--- a/config/fixture.yaml
++++ b/config/fixture.yaml
+@@ -1 +1 @@
+-enabled: false
++enabled: true
+"""
+    source = """diff --git a/src/pkg/core.py b/src/pkg/core.py
+index 5555555..6666666 100644
+--- a/src/pkg/core.py
++++ b/src/pkg/core.py
+@@ -1 +1 @@
+-VALUE = 1
++VALUE = 2
+"""
+    assert [
+        (item.path, item.category)
+        for item in summarize_patch(root_spec + fixture_spec + source).files
+    ] == [
+        ("test.py", "source"),
+        ("config/fixture.yaml", "other"),
+        ("src/pkg/core.py", "source"),
+    ]
+
+    filtered, dropped = filter_patch(
+        root_spec + fixture_spec + source,
+        spec_paths=frozenset({"test.py", "config/fixture.yaml"}),
+    )
+
+    assert filtered == source
+    assert dropped == ["test.py", "config/fixture.yaml"]
+
+
 def test_filter_drops_conftest_anywhere():
     patch = """diff --git a/conftest.py b/conftest.py
 new file mode 100644

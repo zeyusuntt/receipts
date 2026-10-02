@@ -134,6 +134,7 @@ async def _run(
     appeals: int = 1,
     image_workdir: str | None = None,
     released: list[str] | None = None,
+    spec_paths: list[str] | None = None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
@@ -151,6 +152,7 @@ async def _run(
         source = ImageSource(image="fixture", workdir=image_workdir)
     if released is not None:
         executor = _ReleaseRecordingExecutor(executor, released)
+    extra = {} if spec_paths is None else {"spec_paths": spec_paths}
     result = await orchestrate.fix(
         executor,
         model,
@@ -169,6 +171,7 @@ async def _run(
                 "max_completion_tokens": 100,
             },
         ),
+        **extra,
     )
     return result, run_dir, repo, model
 
@@ -256,6 +259,9 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     baseline = json.loads((run_dir / "baseline.json").read_text())
     assert len(baseline["runs"]) == 2
     assert baseline["target"] == [TARGET]
+    assert baseline["spec_paths"] == ["tests/test_calc.py"]
+    run_input = json.loads((run_dir / "input.json").read_text())
+    assert run_input["spec_paths"] == ["tests/test_calc.py"]
     disclosure = json.loads((run_dir / "disclosure.json").read_text())
     expected_test_digest = hashlib.sha256(
         (repo / "tests" / "test_calc.py").read_bytes(),
@@ -305,6 +311,44 @@ def test_default_worker_budget_supports_realistic_repair_attempts():
     assert budget.max_turns == 40
     assert budget.max_wall_seconds == 1_200
     assert budget.max_completion_tokens == 64_000
+
+
+async def test_fix_unions_explicit_and_spec_test_paths_and_loads_v1_result(tmp_path: Path):
+    model = _model(
+        [
+            _turn(
+                _call(
+                    "write_file",
+                    {"path": "calc/__init__.py", "content": FIXED_CALC},
+                    "write-source",
+                ),
+            ),
+            _finish(
+                "finish",
+                summary="Corrected subtraction.",
+                changed=["calc/__init__.py"],
+                green=False,
+            ),
+        ],
+    )
+
+    result, run_dir, _, _ = await _run(
+        tmp_path,
+        model,
+        appeals=0,
+        spec_paths=["config/fixture.yaml", "tests/test_calc.py"],
+    )
+
+    expected = ["config/fixture.yaml", "tests/test_calc.py"]
+    assert result.input.spec_paths == expected
+    assert result.baseline.spec_paths == expected
+
+    old_result = json.loads((run_dir / "result.json").read_text())
+    old_result["input"].pop("spec_paths")
+    old_result["baseline"].pop("spec_paths")
+    loaded = _orchestrate_module().RunResult.model_validate(old_result)
+    assert loaded.input.spec_paths == []
+    assert loaded.baseline.spec_paths == []
 
 
 async def test_image_source_workdir_reaches_worker_prompt(tmp_path: Path):

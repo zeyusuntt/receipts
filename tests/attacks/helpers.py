@@ -63,7 +63,12 @@ async def verify(
     files_changed: list[str],
     green_claim: bool = True,
     tests_run: bool = True,
+    spec_paths: list[str] | None = None,
 ) -> tuple[Attempt, Verdict]:
+    effective_spec_paths = sorted(set(spec_paths or []))
+    baseline = attack.baseline.model_copy(
+        update={"spec_paths": effective_spec_paths},
+    )
     result = await verify_attempt(
         attack.ex,
         attack.agent,
@@ -72,6 +77,7 @@ async def verify(
         "tests",
         timeout_s=60,
         attempt=1,
+        spec_paths=effective_spec_paths,
     )
     agent_receipts = [
         receipt
@@ -87,7 +93,7 @@ async def verify(
     verdict = evaluate(
         branch_id=attack.agent.id,
         witness_id=result.witness.id,
-        baseline=attack.baseline,
+        baseline=baseline,
         origin=attack.agent.origin,
         receipts=agent_receipts,
         patch=result.patch,

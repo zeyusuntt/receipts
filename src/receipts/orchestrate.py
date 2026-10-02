@@ -70,6 +70,7 @@ class RunInput(BaseModel):
     source: dict[str, Any]
     issue: str
     spec_tests: list[str]
+    spec_paths: list[str] = Field(default_factory=list)
     suite_scope: str
     appeals: int
     budgets: RunBudgets
@@ -404,16 +405,23 @@ async def fix(
     run_dir: Path,
     appeals: int = 1,
     budgets: RunBudgets | None = None,
+    spec_paths: list[str] | None = None,
 ) -> RunResult:
     if appeals < 0:
         raise ValueError("appeals cannot be negative")
     started = time.monotonic()
     budget = budgets or RunBudgets()
+    effective_spec_paths = sorted(
+        set(spec_paths or []).union(
+            node_id.split("::", 1)[0] for node_id in spec_tests
+        ),
+    )
     run_directory = RunDirectory(run_dir)
     run_input = RunInput(
         source=source.model_dump(mode="json"),
         issue=issue,
         spec_tests=spec_tests,
+        spec_paths=effective_spec_paths,
         suite_scope=suite_scope,
         appeals=appeals,
         budgets=budget,
@@ -449,6 +457,7 @@ async def fix(
             suite_scope,
             spec_tests,
             budget.baseline_limit_s,
+            spec_paths=effective_spec_paths,
         )
         run_directory.write_json("baseline.json", baseline)
 
@@ -511,6 +520,7 @@ async def fix(
                     suite_scope,
                     budget.verification_timeout_s,
                     attempt_number,
+                    spec_paths=baseline.spec_paths,
                 )
                 agent_receipts = [
                     receipt

@@ -166,6 +166,7 @@ def summarize_patch(
 def filter_patch(
     patch_text: str,
     protected_modules: frozenset[str] = frozenset(),
+    spec_paths: frozenset[str] = frozenset(),
 ) -> tuple[str, list[str]]:
     blocks = ["".join(lines) for _, _, _, lines in _split_blocks(patch_text)]
     summaries = [summarize_patch(block, protected_modules).files[0] for block in blocks]
@@ -178,7 +179,9 @@ def filter_patch(
         path = summary.path
         category = summary.category
         hidden = any(segment.startswith(".") for segment in path.split("/"))
-        if category in ("source", "other") and not hidden and "site-packages" not in path:
+        if path in spec_paths:
+            dropped.append(path)
+        elif category in ("source", "other") and not hidden and "site-packages" not in path:
             kept.append(block)
         else:
             dropped.append(path)

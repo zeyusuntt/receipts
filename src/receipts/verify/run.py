@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import shlex
+from collections.abc import Sequence
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -75,7 +76,14 @@ async def _checkpoint_error_attempt(
     )
 
 
-async def establish_baseline(ex: Executor, base: Branch, suite_scope: str, target: list[str], limit_s: int) -> Baseline:
+async def establish_baseline(
+    ex: Executor,
+    base: Branch,
+    suite_scope: str,
+    target: list[str],
+    limit_s: int,
+    spec_paths: Sequence[str] = (),
+) -> Baseline:
     first = await ex.run_pytest(base, suite_scope, timeout_s=max(limit_s, 1))
     if first.timed_out or first.duration_s > limit_s:
         raise BaselineTooSlow(first.duration_s)
@@ -99,11 +107,13 @@ async def establish_baseline(ex: Executor, base: Branch, suite_scope: str, targe
     protected = sorted(n for n in seen if all(j.outcome(n) == "passed" for j in runs))
     skipped = sorted(n for n in seen if any(j.outcome(n) == "skipped" for j in runs))
     return Baseline(runs=runs, run_receipt_ids=[r.receipt_id for r in receipts], collected_ids=seen,
-                    skipped_ids=skipped, protected=protected, unstable=unstable, target=list(target))
+                    skipped_ids=skipped, protected=protected, unstable=unstable, target=list(target),
+                    spec_paths=sorted(set(spec_paths)))
 
 
 async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_sha: str,
-                         suite_scope: str, timeout_s: int, attempt: int) -> Attempt:
+                         suite_scope: str, timeout_s: int, attempt: int,
+                         spec_paths: Sequence[str] = ()) -> Attempt:
     patch = None
     patch_text = ""
     filtered_patch = ""
@@ -115,7 +125,11 @@ async def verify_attempt(ex: Executor, agent: Branch, c0: Checkpoint, snapshot_s
         if patch.exit_code == 0 and patch.diff is not None and patch.diff.patch_path is not None:
             patch_text = Path(patch.diff.patch_path).read_text()
         protected_modules = default_protected_modules()
-        filtered_patch, dropped = filter_patch(patch_text, protected_modules)
+        filtered_patch, dropped = filter_patch(
+            patch_text,
+            protected_modules,
+            frozenset(spec_paths),
+        )
         filtered_sha256 = hashlib.sha256(filtered_patch.encode()).hexdigest()
         (witness,) = await ex.fork(c0, 1, prefix="w")
     except CheckpointTampered as error:

@@ -19,12 +19,20 @@ async def _setup(tmp_path, flaky=False):
 
 async def test_baseline_runs_twice_and_marks_unstable(tmp_path):
     ex, base, sink = await _setup(tmp_path, flaky=True)
-    b = await establish_baseline(ex, base, "tests", [T], limit_s=600)
+    b = await establish_baseline(
+        ex,
+        base,
+        "tests",
+        [T],
+        limit_s=600,
+        spec_paths=["z/fixture.yaml", "test.py", "z/fixture.yaml"],
+    )
     assert len(b.runs) == 2 and len(b.run_receipt_ids) == 2
     assert b.unstable == ["tests/test_flaky.py::test_flaky"]
     assert set(b.protected) == {"tests/test_calc.py::test_add", "tests/test_calc.py::test_zero", "tests/test_calc.py::test_param[a b]"}
     assert set(b.collected_ids) == set(b.protected) | {T, "tests/test_flaky.py::test_flaky"}
     assert b.skipped_ids == [] and b.target == [T]
+    assert b.spec_paths == ["test.py", "z/fixture.yaml"]
     assert [r.kind for r in sink.receipts].count("command") == 3  # install + two baseline runs
 
 
@@ -92,6 +100,30 @@ def force_target_green(monkeypatch):
     result = await verify_attempt(ex, agent, c0, snapshot.snapshot_sha, "tests", timeout_s=60, attempt=1)
     assert result.dropped == ["tests/conftest.py"]
     assert result.patch.dropped_paths == ["tests/conftest.py"] and result.filtered_patch == ""
+    assert result.verification.junit.failed == [T]
+
+
+async def test_verify_attempt_drops_a_readonly_spec_path(tmp_path):
+    ex, base, _ = await _setup(tmp_path)
+    snapshot = await ex.snapshot(base)
+    c0 = await ex.checkpoint(base)
+    (agent,) = await ex.fork(c0, 1)
+    fixed = "def add(a, b):\n    return a + b\n\n\ndef sub(a, b):\n    return a - b\n"
+    await ex.write_file(agent, "calc/__init__.py", fixed)
+
+    result = await verify_attempt(
+        ex,
+        agent,
+        c0,
+        snapshot.snapshot_sha,
+        "tests",
+        timeout_s=60,
+        attempt=1,
+        spec_paths=["calc/__init__.py"],
+    )
+
+    assert result.filtered_patch == ""
+    assert result.dropped == ["calc/__init__.py"]
     assert result.verification.junit.failed == [T]
 
 

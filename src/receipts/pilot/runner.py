@@ -25,7 +25,7 @@ from receipts.orchestrate import RunBudgets, RunResult, fix
 from receipts.pilot.grade import OfficialRecord, grade_attempts
 from receipts.sandbox.protocol import Executor
 from receipts.sandbox.sink import RunSink
-from receipts.swerebench import Agreement, Instance, agreement, to_task
+from receipts.swerebench import Agreement, Instance, UnparseableTestPatch, agreement, to_task
 from receipts.verify.run import BaselineBroken, BaselineTooSlow, TargetNotFailing
 
 
@@ -422,6 +422,7 @@ async def run_instance(
                 run_dir,
                 appeals=1,
                 budgets=orchestration_budgets,
+                spec_paths=task.spec_paths,
             )
             official_records = await grade_attempts(
                 executor,
@@ -450,7 +451,7 @@ async def run_instance(
             time.monotonic() - started,
             sandbox_usage,
         )
-    except (BaselineBroken, BaselineTooSlow, TargetNotFailing) as exc:
+    except (BaselineBroken, BaselineTooSlow, TargetNotFailing, UnparseableTestPatch) as exc:
         record = InstanceRecord(
             instance_id=instance.instance_id,
             status="excluded",

@@ -179,6 +179,48 @@ def test_unparseable_patch_path_fails_r4_even_when_edits_are_allowed():
     assert r4.evidence == 'patch touches "a/tests/test_\\nx.py" "b/tests/test_\\nx.py" (unparseable path)'
 
 
+def test_r4_rejects_source_categorized_spec_even_when_edits_are_allowed():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["baseline"] = kwargs["baseline"].model_copy(
+        update={"spec_paths": ["calc/__init__.py"]},
+    )
+
+    verdict = evaluate(
+        **kwargs,
+        allow_test_edits=True,
+        allow_config_edits=True,
+    )
+
+    assert verdict.status == "REJECTED"
+    assert verdict.failed_predicate_ids() == ["R4_patch_scope"]
+    r4 = next(item for item in verdict.predicates if item.id == "R4_patch_scope")
+    assert r4.evidence == "patch touches calc/__init__.py (spec file, read-only)"
+
+
+def test_r4_allows_ordinary_source_when_other_spec_paths_are_protected():
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["baseline"] = kwargs["baseline"].model_copy(
+        update={"spec_paths": ["test.py"]},
+    )
+
+    verdict = evaluate(**kwargs)
+
+    assert verdict.status == "PASS"
+    assert next(
+        item for item in verdict.predicates if item.id == "R4_patch_scope"
+    ).passed
+
+
+def test_baseline_without_spec_paths_keeps_prior_r4_behavior():
+    kwargs, _ = gate_cases.honest_pass()
+    old_record = kwargs["baseline"].model_dump()
+    old_record.pop("spec_paths", None)
+    kwargs["baseline"] = Baseline.model_validate(old_record)
+
+    assert getattr(kwargs["baseline"], "spec_paths", None) == []
+    assert evaluate(**kwargs).status == "PASS"
+
+
 def test_deleted_test_still_caught_when_test_edits_allowed():
     kwargs, _ = gate_cases.deleted_a_test()
     v = evaluate(**kwargs, allow_test_edits=True)
