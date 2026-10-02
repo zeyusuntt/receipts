@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from pathlib import Path
 
@@ -31,6 +32,8 @@ class OfficialRecord(BaseModel):
     infra_error: str | None = None
     applied_sha256: str | None = None
     read_sha256: str | None = None
+    note: str | None = None
+    cleanup_error: str | None = None
 
 
 class Gradeability(BaseModel):
@@ -134,6 +137,7 @@ async def grade_patch(
 
     (branch,) = await ex.fork(checkpoint, 1, prefix="official")
     read_sha256 = hashlib.sha256(patch_text.encode()).hexdigest()
+    record: OfficialRecord | None = None
     try:
         applied = await ex.apply_patch(branch, patch_text)
         if applied.timed_out or applied.exit_code != 0:
@@ -146,7 +150,7 @@ async def grade_patch(
             )
             if detail:
                 infra_error += f": {detail}"
-            return OfficialRecord(
+            record = OfficialRecord(
                 attempt=0,
                 branch_id=branch.id,
                 apply_exit_code=applied.exit_code,
@@ -159,39 +163,118 @@ async def grade_patch(
                 applied_sha256=applied.patch_sha256,
                 read_sha256=read_sha256,
             )
-
-        tested = await ex.run(
-            branch,
-            official_command(instance),
-            timeout_s=timeout_s,
-        )
-        output, log_error = _full_stdout(tested)
-        if output is None:
-            output = b""
-        log_path, log_sha256 = _write_log(run_dir, log_name, output)
-        judgement = official_resolved(instance, output.decode(errors="replace"))
-        infra_error = None
-        if log_error is not None:
-            judgement = judgement.model_copy(update={"resolved": False})
-            infra_error = f"full log unavailable: {log_error}"
-        elif tested.timed_out:
-            judgement = judgement.model_copy(update={"resolved": False})
-            infra_error = f"official test timed out after {timeout_s} seconds"
-        return OfficialRecord(
-            attempt=0,
-            branch_id=branch.id,
-            apply_exit_code=applied.exit_code,
-            test_exit_code=tested.exit_code,
-            timed_out=tested.timed_out,
-            log_path=log_path,
-            log_sha256=log_sha256,
-            judgement=judgement,
-            infra_error=infra_error,
-            applied_sha256=applied.patch_sha256,
-            read_sha256=read_sha256,
-        )
-    finally:
+        elif applied.patch_sha256 != read_sha256:
+            output = _apply_failure_output(applied)
+            log_path, log_sha256 = _write_log(run_dir, log_name, output)
+            record = OfficialRecord(
+                attempt=0,
+                branch_id=branch.id,
+                apply_exit_code=applied.exit_code,
+                test_exit_code=None,
+                timed_out=False,
+                log_path=log_path,
+                log_sha256=log_sha256,
+                judgement=official_resolved(instance, ""),
+                infra_error=(
+                    "official apply digest does not match the patch bytes"
+                ),
+                applied_sha256=applied.patch_sha256,
+                read_sha256=read_sha256,
+            )
+        else:
+            tested = await ex.run(
+                branch,
+                official_command(instance),
+                timeout_s=timeout_s,
+            )
+            output, log_error = _full_stdout(tested)
+            if output is None:
+                output = b""
+            log_path, log_sha256 = _write_log(run_dir, log_name, output)
+            judgement = official_resolved(instance, output.decode(errors="replace"))
+            infra_error = None
+            if log_error is not None:
+                judgement = judgement.model_copy(update={"resolved": False})
+                infra_error = f"full log unavailable: {log_error}"
+            elif tested.timed_out:
+                judgement = judgement.model_copy(update={"resolved": False})
+                infra_error = f"official test timed out after {timeout_s} seconds"
+            record = OfficialRecord(
+                attempt=0,
+                branch_id=branch.id,
+                apply_exit_code=applied.exit_code,
+                test_exit_code=tested.exit_code,
+                timed_out=tested.timed_out,
+                log_path=log_path,
+                log_sha256=log_sha256,
+                judgement=judgement,
+                infra_error=infra_error,
+                applied_sha256=applied.patch_sha256,
+                read_sha256=read_sha256,
+            )
+    except BaseException as operation_error:
+        try:
+            await ex.release(branch)
+        except BaseException as cleanup_error:
+            if (
+                isinstance(cleanup_error, asyncio.CancelledError)
+                and not isinstance(operation_error, asyncio.CancelledError)
+            ):
+                cleanup_error.add_note(
+                    "official grading also failed: "
+                    f"{type(operation_error).__name__}: {operation_error}",
+                )
+                raise cleanup_error from operation_error
+            operation_error.add_note(
+                "official release also failed: "
+                f"{type(cleanup_error).__name__}: {cleanup_error}",
+            )
+        raise
+    try:
         await ex.release(branch)
+    except Exception as exc:
+        if record is None:
+            raise
+        record = record.model_copy(
+            update={"cleanup_error": f"{type(exc).__name__}: {exc}"},
+        )
+    if record is None:
+        raise RuntimeError("official grading produced no record")
+    return record
+
+
+def _not_run_record(
+    instance: Instance,
+    attempt: int,
+    run_dir: Path,
+    log_name: str,
+    infra_error: str,
+    read_sha256: str,
+) -> OfficialRecord:
+    log_path, log_sha256 = _write_log(run_dir, log_name, b"")
+    return OfficialRecord(
+        attempt=attempt,
+        branch_id="not-run",
+        apply_exit_code=None,
+        test_exit_code=None,
+        timed_out=False,
+        log_path=log_path,
+        log_sha256=log_sha256,
+        judgement=official_resolved(instance, ""),
+        infra_error=infra_error,
+        read_sha256=read_sha256,
+    )
+
+
+def _witness_timed_out(attempt: object) -> bool:
+    verdict = getattr(attempt, "verdict", None)
+    error = getattr(verdict, "error", None)
+    return bool(
+        getattr(verdict, "status", None) == "ERROR"
+        and getattr(verdict, "error_kind", None) == "attempt"
+        and isinstance(error, str)
+        and error.startswith("verification timed out after ")
+    )
 
 
 async def grade_attempts(
@@ -212,21 +295,31 @@ async def grade_attempts(
             attempt.filtered_sha256 is not None
             and patch_sha256 != attempt.filtered_sha256
         ):
-            log_path, log_sha256 = _write_log(run_dir, log_name, b"")
             records.append(
-                OfficialRecord(
-                    attempt=attempt.number,
-                    branch_id="not-run",
-                    apply_exit_code=None,
-                    test_exit_code=None,
-                    timed_out=False,
-                    log_path=log_path,
-                    log_sha256=log_sha256,
-                    judgement=official_resolved(instance, ""),
-                    infra_error=(
-                        "filtered.diff does not match the digest recorded at the gate"
-                    ),
-                    read_sha256=patch_sha256,
+                _not_run_record(
+                    instance,
+                    attempt.number,
+                    run_dir,
+                    log_name,
+                    "filtered.diff does not match the digest recorded at the gate",
+                    patch_sha256,
+                ),
+            )
+            continue
+        witness_apply_sha256 = getattr(attempt, "witness_apply_sha256", None)
+        if (
+            attempt.filtered_sha256 is not None
+            and witness_apply_sha256 is not None
+            and attempt.filtered_sha256 != witness_apply_sha256
+        ):
+            records.append(
+                _not_run_record(
+                    instance,
+                    attempt.number,
+                    run_dir,
+                    log_name,
+                    "witness apply digest does not match the filtered patch digest",
+                    patch_sha256,
                 ),
             )
             continue
@@ -239,6 +332,18 @@ async def grade_attempts(
             log_name,
             timeout_s=timeout_s,
         )
+        if (
+            record.timed_out
+            and record.infra_error is not None
+            and record.infra_error.startswith("official test timed out after ")
+            and _witness_timed_out(attempt)
+        ):
+            record = record.model_copy(
+                update={
+                    "infra_error": None,
+                    "note": "official run timed out, as the witness did",
+                },
+            )
         records.append(record.model_copy(update={"attempt": attempt.number}))
 
     return records

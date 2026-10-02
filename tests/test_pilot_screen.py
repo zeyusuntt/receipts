@@ -257,7 +257,7 @@ class _FakeScreenExecutor:
         if self.scenario == "infra":
             log_path = None
             output = f"FAILED {TARGET}\nPASSED {PROTECTED}\n"
-        elif self.scenario == "rule5":
+        elif self.scenario in {"rule5", "rule5_cleanup"}:
             output = f"FAILED {TARGET}\nFAILED {PROTECTED}\n"
             log_path = self.root / "official-source.log"
             log_path.write_text(output, encoding="utf-8")
@@ -283,6 +283,8 @@ class _FakeScreenExecutor:
         if not self.closed:
             self.closed = True
             self.factory.active -= 1
+        if self.scenario in {"cleanup", "rule5_cleanup"}:
+            raise RuntimeError("screen close failed")
 
     def sandbox_usage(self) -> list[dict]:
         return [
@@ -483,4 +485,46 @@ async def test_screen_sets_cleanup_manifest_in_run_directory(
     assert included == ["candidate-1"]
     assert factory.executors[0].cleanup_manifest == (
         Path("pilot/screen/candidate-1/run-1/cleanup.json")
+    )
+
+
+@pytest.mark.parametrize(
+    ("scenario", "expected_outcome", "expected_rule", "expected_included"),
+    [
+        ("cleanup", "included", None, ["candidate-1"]),
+        ("rule5_cleanup", "excluded", "5", []),
+    ],
+)
+async def test_screen_cleanup_failure_keeps_ledger_outcome(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    scenario: str,
+    expected_outcome: str,
+    expected_rule: str | None,
+    expected_included: list[str],
+):
+    screen = _screen_module()
+    monkeypatch.chdir(tmp_path)
+    factory = _FakeScreenFactory(
+        tmp_path / "executors",
+        {"candidate-1": [scenario]},
+    )
+    ledger = Path("pilot/screen.jsonl")
+
+    included = await screen.screen_candidates(
+        factory,
+        [_instance("candidate-1")],
+        ledger,
+        start=1,
+        exclude=set(),
+        want=1,
+    )
+
+    assert included == expected_included
+    rows = _read_ledger(ledger)
+    assert len(rows) == 1
+    assert rows[0]["outcome"] == expected_outcome
+    assert rows[0]["rule"] == expected_rule
+    assert rows[0]["cleanup_error"] == (
+        "executor close failed: RuntimeError: screen close failed"
     )

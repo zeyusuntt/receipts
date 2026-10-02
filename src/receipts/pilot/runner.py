@@ -25,6 +25,8 @@ from pydantic import AliasChoices, BaseModel, Field
 
 from receipts.agent.worker import WorkerOutcome
 from receipts.cost import (
+    CostMeter,
+    TokenUsage,
     estimate_daytona_sandbox_dollars,
     estimate_tokenfactory_sandbox_dollars,
 )
@@ -38,7 +40,7 @@ from receipts.swerebench import Agreement, Instance, UnparseableTestPatch, agree
 from receipts.verify.run import BaselineBroken, BaselineTooSlow, TargetNotFailing
 
 
-PilotStatus = Literal["ran", "excluded", "infra_error"]
+PilotStatus = Literal["ran", "excluded", "infra_error", "interrupted"]
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -85,6 +87,13 @@ class PriorInfrastructureError(BaseModel):
     run_dir: str
 
 
+class PriorInterruptedRun(BaseModel):
+    reason: str
+    run_dir: str
+    cost: PilotCost
+    wall_time_s: float = Field(ge=0)
+
+
 class InstanceRecord(BaseModel):
     instance_id: str
     status: PilotStatus
@@ -97,6 +106,9 @@ class InstanceRecord(BaseModel):
     wall_time_s: float = Field(ge=0)
     cleanup_error: str | None = None
     prior_infrastructure_errors: list[PriorInfrastructureError] = Field(
+        default_factory=list,
+    )
+    prior_interrupted_runs: list[PriorInterruptedRun] = Field(
         default_factory=list,
     )
 
@@ -193,11 +205,17 @@ def _executor_kind_from_instance(executor: Any) -> str:
 
 
 def _pilot_cost(
-    result: RunResult | None,
+    result: Any | None,
     sandbox_usage: Sequence[dict[str, Any]],
 ) -> PilotCost:
     tokens = 0
-    models = result.cost.get("models") if result is not None else None
+    if isinstance(result, dict):
+        cost = result
+        disclosure = None
+    else:
+        cost = getattr(result, "cost", {}) if result is not None else {}
+        disclosure = getattr(result, "disclosure", None)
+    models = cost.get("models") if isinstance(cost, dict) else None
     if isinstance(models, dict):
         for values in models.values():
             if not isinstance(values, dict):
@@ -207,14 +225,13 @@ def _pilot_cost(
                 if isinstance(value, int) and not isinstance(value, bool):
                     tokens += value
 
-    dollars = result.cost.get("estimated_dollars") if result is not None else None
+    dollars = cost.get("estimated_dollars") if isinstance(cost, dict) else None
     if not isinstance(dollars, (int, float)) or isinstance(dollars, bool):
         dollars = None
     sandbox_lifetime_seconds = sum(
         float(item["seconds"])
         for item in sandbox_usage
     )
-    disclosure = getattr(result, "disclosure", None)
     executor_kind = getattr(disclosure, "executor_kind", None)
     tokenfactory_usage: list[dict[str, Any]] = []
     daytona_usage: list[dict[str, Any]] = []
@@ -251,6 +268,83 @@ def _pilot_cost(
         sandbox_lifetime_seconds=sandbox_lifetime_seconds,
         sandbox_dollars_estimate=sandbox_dollars,
     )
+
+
+def _partial_pilot_cost(
+    run_dir: Path,
+    result: RunResult | None,
+    sandbox_usage: Sequence[dict[str, Any]],
+) -> PilotCost:
+    if result is not None:
+        return _pilot_cost(result, sandbox_usage)
+    result_path = run_dir / "result.json"
+    if result_path.is_file():
+        try:
+            stored_result = RunResult.model_validate_json(
+                result_path.read_text(encoding="utf-8"),
+            )
+        except (OSError, ValueError):
+            pass
+        else:
+            return _pilot_cost(stored_result, sandbox_usage)
+    cost_path = run_dir / "cost.json"
+    if cost_path.is_file():
+        try:
+            stored_cost = json.loads(cost_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+        else:
+            if isinstance(stored_cost, dict):
+                return _pilot_cost(stored_cost, sandbox_usage)
+    partial_model_cost = _partial_model_cost(run_dir)
+    if partial_model_cost is not None:
+        return _pilot_cost(partial_model_cost, sandbox_usage)
+    return _pilot_cost(None, sandbox_usage)
+
+
+def _read_json_object(path: Path) -> dict[str, Any] | None:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _partial_model_cost(run_dir: Path) -> dict[str, Any] | None:
+    disclosure = _read_json_object(run_dir / "disclosure.json")
+    model_values = disclosure.get("model") if disclosure is not None else None
+    if not isinstance(model_values, dict):
+        return None
+    model_name = model_values.get("model") or model_values.get("client")
+    if not isinstance(model_name, str) or not model_name:
+        return None
+
+    meter = CostMeter()
+    usage_found = False
+    plan = _read_json_object(run_dir / "plan.json")
+    if plan is not None and isinstance(plan.get("usage"), dict):
+        try:
+            meter.add_usage(model_name, TokenUsage.model_validate(plan["usage"]))
+        except ValueError:
+            pass
+        else:
+            usage_found = True
+
+    worker_log = run_dir / "agent" / "worker.jsonl"
+    try:
+        worker_lines = worker_log.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError):
+        worker_lines = []
+    for line in worker_lines:
+        try:
+            row = json.loads(line)
+            usage = row.get("usage") if isinstance(row, dict) else None
+            parsed = TokenUsage.model_validate(usage)
+        except (json.JSONDecodeError, ValueError):
+            continue
+        meter.add_usage(model_name, parsed)
+        usage_found = True
+    return meter.summary() if usage_found else None
 
 
 def _sandbox_usage(executor: Any) -> list[dict[str, Any]]:
@@ -327,6 +421,10 @@ def _normalize_record_paths(record: InstanceRecord) -> InstanceRecord:
     record.prior_infrastructure_errors = [
         prior.model_copy(update={"run_dir": _stored_run_dir(prior.run_dir)})
         for prior in record.prior_infrastructure_errors
+    ]
+    record.prior_interrupted_runs = [
+        prior.model_copy(update={"run_dir": _stored_run_dir(prior.run_dir)})
+        for prior in record.prior_interrupted_runs
     ]
     return record
 
@@ -652,6 +750,29 @@ async def run_instance(
         )
         if record.executor_kind is None:
             record.executor_kind = executor_kind
+    except asyncio.CancelledError:
+        if not sandbox_usage and executor is not None:
+            try:
+                sandbox_usage = _sandbox_usage(executor)
+            except Exception as exc:
+                cleanup_errors.append(
+                    f"sandbox usage failed: {type(exc).__name__}: {exc}",
+                )
+        run_dir.mkdir(parents=True, exist_ok=True)
+        record = InstanceRecord(
+            instance_id=instance.instance_id,
+            status="interrupted",
+            reason="interrupted",
+            run_dir=_record_run_dir(run_dir),
+            executor_kind=executor_kind,
+            attempts=[],
+            final=None,
+            cost=_partial_pilot_cost(run_dir, result, sandbox_usage),
+            wall_time_s=time.monotonic() - started,
+            cleanup_error="; ".join(cleanup_errors) if cleanup_errors else None,
+        )
+        _archive_interrupted_record(instance_dir, record)
+        raise
     except (BaselineBroken, BaselineTooSlow, TargetNotFailing, UnparseableTestPatch) as exc:
         record = InstanceRecord(
             instance_id=instance.instance_id,
@@ -693,6 +814,21 @@ def _read_record(path: Path) -> InstanceRecord:
     return InstanceRecord.model_validate_json(path.read_text(encoding="utf-8"))
 
 
+def _archive_interrupted_record(
+    instance_dir: Path,
+    record: InstanceRecord,
+) -> Path:
+    number = 1
+    while True:
+        archive_path = instance_dir / f"record.interrupted-{number}.json"
+        if not archive_path.exists():
+            break
+        number += 1
+    _normalize_record_paths(record)
+    _atomic_write_record(archive_path, record)
+    return archive_path
+
+
 def _archived_infrastructure_errors(
     instance_dir: Path,
 ) -> list[PriorInfrastructureError]:
@@ -706,6 +842,23 @@ def _archived_infrastructure_errors(
             ),
         )
     return errors
+
+
+def _archived_interrupted_runs(
+    instance_dir: Path,
+) -> list[PriorInterruptedRun]:
+    interrupted: list[PriorInterruptedRun] = []
+    for path in sorted(instance_dir.glob("record.interrupted-*.json")):
+        record = _read_record(path)
+        interrupted.append(
+            PriorInterruptedRun(
+                reason=record.reason or "interrupted",
+                run_dir=_stored_run_dir(record.run_dir),
+                cost=record.cost,
+                wall_time_s=record.wall_time_s,
+            ),
+        )
+    return interrupted
 
 
 def _archive_infrastructure_record(
@@ -791,14 +944,19 @@ async def run_pilot(
         instance_dir = pilot_dir / instance.instance_id
         record_path = instance_dir / "record.json"
         prior_errors = _archived_infrastructure_errors(instance_dir)
+        prior_interrupted = _archived_interrupted_runs(instance_dir)
         record = _read_record(record_path) if record_path.is_file() else None
 
         if (
             record is not None
             and record.status != "infra_error"
-            and record.prior_infrastructure_errors != prior_errors
+            and (
+                record.prior_infrastructure_errors != prior_errors
+                or record.prior_interrupted_runs != prior_interrupted
+            )
         ):
             record.prior_infrastructure_errors = list(prior_errors)
+            record.prior_interrupted_runs = list(prior_interrupted)
             _atomic_write_record(record_path, record)
 
         while record is None or record.status == "infra_error":
@@ -806,6 +964,7 @@ async def run_pilot(
                 if len(prior_errors) + 1 >= _MAX_INFRASTRUCTURE_RUNS:
                     _normalize_record_paths(record)
                     record.prior_infrastructure_errors = list(prior_errors)
+                    record.prior_interrupted_runs = list(prior_interrupted)
                     _atomic_write_record(record_path, record)
                     _write_final_infrastructure_error(
                         instance_dir,
@@ -827,6 +986,7 @@ async def run_pilot(
             )
             _normalize_record_paths(record)
             record.prior_infrastructure_errors = list(prior_errors)
+            record.prior_interrupted_runs = list(prior_interrupted)
             _atomic_write_record(record_path, record)
 
         if record.instance_id not in progress_ids:
@@ -867,6 +1027,7 @@ __all__ = [
     "InstanceRecord",
     "PilotCost",
     "PriorInfrastructureError",
+    "PriorInterruptedRun",
     "run_instance",
     "run_pilot",
 ]

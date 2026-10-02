@@ -214,6 +214,38 @@ def test_archived_records_count_toward_model_budget(tmp_path: Path):
     assert reason == "model spend $1.10 exceeds budget $1.00"
 
 
+def test_interrupted_archives_count_toward_model_budget(tmp_path: Path):
+    watch = _watch_module()
+    _write_json(
+        tmp_path / "candidate-1" / "record.interrupted-1.json",
+        _record("candidate-1", "interrupted", model_dollars=0.70),
+    )
+    _write_json(
+        tmp_path / "candidate-1" / "record.json",
+        _record("candidate-1", "ran", model_dollars=0.50),
+    )
+
+    reason = watch.decide(
+        watch.snapshot_directory(tmp_path),
+        model_budget_usd=1.0,
+    )
+
+    assert reason == "model spend $1.20 exceeds budget $1.00"
+
+
+def test_interrupted_archives_do_not_count_as_infrastructure_retries(
+    tmp_path: Path,
+):
+    watch = _watch_module()
+    for number in range(1, 5):
+        _write_json(
+            tmp_path / "candidate-1" / f"record.interrupted-{number}.json",
+            _record("candidate-1", "interrupted"),
+        )
+
+    assert watch.decide(watch.snapshot_directory(tmp_path)) is None
+
+
 def test_no_model_budget_flag_does_not_stop_on_spend(tmp_path: Path):
     watch = _watch_module()
     _write_json(

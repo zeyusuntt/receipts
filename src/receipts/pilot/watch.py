@@ -17,6 +17,7 @@ from typing import Any, Callable
 
 _MAX_INFRASTRUCTURE_RUNS = 3
 _ARCHIVE_NAME = re.compile(r"record\.infra-[0-9]+\.json\Z")
+_INTERRUPTED_NAME = re.compile(r"record\.interrupted-[0-9]+\.json\Z")
 FileVersion = tuple[str, str]
 
 
@@ -64,6 +65,7 @@ def snapshot_directory(pilot_dir: Path) -> DirectorySnapshot:
 
     paths = sorted(pilot_dir.glob("*/record.json"))
     paths.extend(sorted(pilot_dir.glob("*/record.infra-*.json")))
+    paths.extend(sorted(pilot_dir.glob("*/record.interrupted-*.json")))
     paths.extend(sorted(pilot_dir.glob("*/final_infra_error.json")))
     files = tuple(
         snapshot
@@ -85,7 +87,11 @@ def _model_spend(snapshot: DirectorySnapshot) -> Decimal:
         name = Path(item.relative_path).name
         if (
             item.value is None
-            or not (name == "record.json" or _ARCHIVE_NAME.fullmatch(name))
+            or not (
+                name == "record.json"
+                or _ARCHIVE_NAME.fullmatch(name)
+                or _INTERRUPTED_NAME.fullmatch(name)
+            )
         ):
             continue
         cost = item.value.get("cost")

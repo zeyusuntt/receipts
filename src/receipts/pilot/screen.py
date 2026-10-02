@@ -54,6 +54,7 @@ class ScreenRecord(BaseModel):
     wall_seconds: float = Field(ge=0)
     run_number: int = Field(ge=1)
     recovered_torn_ledger_sha256: str | None = None
+    cleanup_error: str | None = None
 
 
 def _repository_root() -> Path:
@@ -101,6 +102,7 @@ async def _screen_once(
     official_log_sha256: str | None = None
     error_detail: str | None = None
     sandbox_usage: list[dict[str, Any]] = []
+    cleanup_error: str | None = None
 
     try:
         executor = make_executor(_run_id(instance.instance_id))
@@ -161,6 +163,8 @@ async def _screen_once(
         log_text = official_path.read_bytes().decode(errors="replace")
         official_log_path = _relative_to_repository(official_path)
         official_log_sha256 = official.log_sha256
+        if official.cleanup_error is not None:
+            cleanup_error = f"official release failed: {official.cleanup_error}"
         result = gradeability(instance, official, log_text)
         if result.infra_error is not None:
             reason = result.infra_error
@@ -203,11 +207,14 @@ async def _screen_once(
                     f"sandbox usage failed: {type(exc).__name__}: {exc}",
                 )
         if cleanup_errors:
-            outcome = "infra_error"
-            rule = None
-            failing_ids = []
-            reason = "; ".join(cleanup_errors)
-            error_detail = (error_detail or "") + reason + "\n"
+            cleanup_error = "; ".join(
+                filter(None, (cleanup_error, *cleanup_errors)),
+            )
+            if outcome == "infra_error":
+                rule = None
+                failing_ids = []
+                reason = "; ".join(filter(None, (reason, cleanup_error)))
+                error_detail = (error_detail or "") + cleanup_error + "\n"
 
     if outcome == "infra_error":
         rule = None
@@ -226,6 +233,7 @@ async def _screen_once(
         sandbox_usage=sandbox_usage,
         wall_seconds=time.monotonic() - started,
         run_number=run_number,
+        cleanup_error=cleanup_error,
     )
 
 

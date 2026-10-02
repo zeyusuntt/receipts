@@ -183,9 +183,16 @@ class _ImageSourceLocalExecutor:
 
 
 class _ReleaseRecordingExecutor:
-    def __init__(self, inner, released: list[str]) -> None:
+    def __init__(
+        self,
+        inner,
+        released: list[str],
+        *,
+        fail_agent_release: bool = False,
+    ) -> None:
         self.inner = inner
         self.released = released
+        self.fail_agent_release = fail_agent_release
 
     @property
     def sink(self):
@@ -201,6 +208,8 @@ class _ReleaseRecordingExecutor:
     async def release(self, branch):
         self.released.append(branch.id)
         await self.inner.release(branch)
+        if self.fail_agent_release and branch.id.startswith("agent"):
+            raise RuntimeError("agent release failed")
 
 
 async def _run(
@@ -210,6 +219,7 @@ async def _run(
     appeals: int = 1,
     image_workdir: str | None = None,
     released: list[str] | None = None,
+    fail_agent_release: bool = False,
     spec_paths: list[str] | None = None,
     root_conftest: str | None = None,
     src_layout: bool = False,
@@ -250,8 +260,12 @@ async def _run(
     else:
         executor = _ImageSourceLocalExecutor(local, repo)
         source = ImageSource(image="fixture", workdir=image_workdir)
-    if released is not None:
-        executor = _ReleaseRecordingExecutor(executor, released)
+    if released is not None or fail_agent_release:
+        executor = _ReleaseRecordingExecutor(
+            executor,
+            released if released is not None else [],
+            fail_agent_release=fail_agent_release,
+        )
     extra = {} if spec_paths is None else {"spec_paths": spec_paths}
     result = await orchestrate.fix(
         executor,
@@ -791,6 +805,46 @@ async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path)
     assert "tests/test_calc.py" in markdown
     assert "Changed the test and claimed success." in markdown
     assert "Restored the test, fixed the source, and ran the suite." in markdown
+
+
+async def test_agent_release_failure_after_result_is_recorded_and_returned(
+    tmp_path: Path,
+):
+    model = _model(
+        [
+            _turn(
+                _call(
+                    "write_file",
+                    {"path": "calc/__init__.py", "content": FIXED_CALC},
+                    "write-source",
+                ),
+            ),
+            _turn(
+                _call(
+                    "run_command",
+                    {"command": "python -m pytest -q"},
+                    "run-suite",
+                ),
+            ),
+            _finish(
+                "finish",
+                summary="Fixed subtraction and ran the suite.",
+                changed=["calc/__init__.py"],
+                green=True,
+            ),
+        ],
+    )
+
+    result, run_dir, _, _ = await _run(
+        tmp_path,
+        model,
+        fail_agent_release=True,
+    )
+
+    assert result.final_verdict.status == "PASS"
+    assert result.cleanup_error == "RuntimeError: agent release failed"
+    persisted = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+    assert persisted["cleanup_error"] == "RuntimeError: agent release failed"
 
 
 async def test_no_fix_after_one_appeal_selects_no_verified_patch(tmp_path: Path):

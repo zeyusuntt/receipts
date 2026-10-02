@@ -133,6 +133,7 @@ class RunResult(BaseModel):
     checkpoint: Checkpoint
     checkpoint_id: str
     agent_branch_id: str
+    cleanup_error: str | None = None
 
 
 class _ReceiptCollector:
@@ -802,7 +803,13 @@ async def fix(
             agent_branch_id=agent.id,
         )
         run_directory.write_json("result.json", result)
-        await recording.release(agent)
+        try:
+            await recording.release(agent)
+        except Exception as exc:
+            result = result.model_copy(
+                update={"cleanup_error": f"{type(exc).__name__}: {exc}"},
+            )
+            run_directory.write_json("result.json", result)
         return result
     finally:
         if sink_replaced:

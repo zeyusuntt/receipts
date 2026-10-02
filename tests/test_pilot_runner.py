@@ -12,6 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from receipts.agent.worker import WorkerBudget
+from receipts.cost import SUPER_MODEL
 from receipts.llm import AssistantTurn, FakeModel, ToolCall
 from receipts.models import Branch, JunitSummary, Receipt, Verdict
 from receipts.orchestrate import RunBudgets
@@ -1055,6 +1056,209 @@ async def test_run_pilot_stops_after_three_infrastructure_errors_then_moves_on(
     assert marker["reason"] == "RuntimeError: outage 3"
     assert datetime.fromisoformat(marker["written_at"]).tzinfo is not None
     assert not marker_path.with_suffix(".json.tmp").exists()
+
+
+async def test_cancelled_run_archives_cost_and_resume_lists_interruption(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    runner = _runner_module()
+    pilot_dir = tmp_path / "pilot"
+    instance = _instance("fixture__calc-interrupted")
+    entered = asyncio.Event()
+    wait_forever = asyncio.Event()
+
+    class InterruptibleExecutor:
+        def __init__(self) -> None:
+            self.sink = MemorySink()
+            self.closed = False
+
+        async def close(self) -> None:
+            self.closed = True
+
+        def sandbox_usage(self) -> list[dict]:
+            return [
+                {
+                    "sandbox_id": "partial-sandbox",
+                    "seconds": 12.0,
+                    "resources": {"cpu": 0, "memory": 0, "disk": 0},
+                    "executor_kind": "tokenfactory",
+                    "cost": 0.03,
+                },
+            ]
+
+    executor = InterruptibleExecutor()
+
+    async def interrupted_fix(
+        ex,
+        model,
+        source,
+        issue,
+        spec_tests,
+        suite_scope,
+        run_dir,
+        **kwargs,
+    ):
+        del ex, model, source, issue, spec_tests, suite_scope, kwargs
+        run_dir.mkdir(parents=True, exist_ok=True)
+        (run_dir / "disclosure.json").write_text(
+            json.dumps({"model": {"model": SUPER_MODEL}}),
+            encoding="utf-8",
+        )
+        (run_dir / "plan.json").write_text(
+            json.dumps(
+                {"usage": {"prompt": 3, "completion": 2, "reasoning": 1}},
+            ),
+            encoding="utf-8",
+        )
+        worker_log = run_dir / "agent" / "worker.jsonl"
+        worker_log.parent.mkdir(parents=True)
+        worker_log.write_text(
+            json.dumps(
+                {"usage": {"prompt": 11, "completion": 5, "reasoning": 2}},
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        entered.set()
+        await wait_forever.wait()
+
+    monkeypatch.setattr(runner, "fix", interrupted_fix)
+    task = asyncio.create_task(
+        runner.run_instance(
+            lambda run_id: executor,
+            FakeModel(),
+            instance,
+            pilot_dir,
+            _budgets(),
+        ),
+    )
+    await entered.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    archives = sorted(
+        (pilot_dir / instance.instance_id).glob("record.interrupted-*.json"),
+    )
+    assert len(archives) == 1
+    archived = runner.InstanceRecord.model_validate_json(
+        archives[0].read_text(encoding="utf-8"),
+    )
+    assert archived.status == "interrupted"
+    assert archived.reason == "interrupted"
+    assert Path(archived.run_dir).is_dir()
+    assert archived.cost.tokens == 24
+    assert archived.cost.model_dollars == pytest.approx(0.0000105)
+    assert archived.cost.sandbox_lifetime_seconds == 12.0
+    assert archived.cost.sandbox_dollars_estimate == pytest.approx(0.03)
+    assert archived.wall_time_s >= 0
+    assert executor.closed is True
+
+    resumed: list[str] = []
+
+    async def successful_run(
+        make_executor,
+        model,
+        current_instance,
+        current_pilot_dir,
+        budgets,
+    ):
+        del make_executor, model, budgets
+        resumed.append(current_instance.instance_id)
+        return _pilot_record(
+            runner,
+            current_instance.instance_id,
+            "ran",
+            current_pilot_dir
+            / current_instance.instance_id
+            / "runs"
+            / "resumed-run",
+        )
+
+    monkeypatch.setattr(runner, "run_instance", successful_run)
+    (final,) = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"unexpected executor construction: {run_id}"),
+        FakeModel(),
+        [instance],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    assert resumed == [instance.instance_id]
+    assert final.status == "ran"
+    assert len(final.prior_interrupted_runs) == 1
+    assert final.prior_interrupted_runs[0].run_dir == archived.run_dir
+    assert final.prior_interrupted_runs[0].cost == archived.cost
+    assert final.prior_interrupted_runs[0].wall_time_s == archived.wall_time_s
+
+
+async def test_interrupted_archives_do_not_count_toward_infrastructure_limit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    runner = _runner_module()
+    pilot_dir = tmp_path / "pilot"
+    instance = _instance("fixture__calc-interrupted-limit")
+    instance_dir = pilot_dir / instance.instance_id
+    instance_dir.mkdir(parents=True)
+    for number in range(1, 4):
+        run_dir = instance_dir / "runs" / f"interrupted-{number}"
+        run_dir.mkdir(parents=True)
+        payload = _pilot_record(
+            runner,
+            instance.instance_id,
+            "infra_error",
+            run_dir,
+            "interrupted",
+        ).model_dump(mode="json")
+        payload["status"] = "interrupted"
+        (instance_dir / f"record.interrupted-{number}.json").write_text(
+            json.dumps(payload),
+            encoding="utf-8",
+        )
+
+    calls = 0
+
+    async def fake_run_instance(
+        make_executor,
+        model,
+        current_instance,
+        current_pilot_dir,
+        budgets,
+    ):
+        nonlocal calls
+        del make_executor, model, budgets
+        calls += 1
+        status = "ran" if calls == 3 else "infra_error"
+        return _pilot_record(
+            runner,
+            current_instance.instance_id,
+            status,
+            current_pilot_dir
+            / current_instance.instance_id
+            / "runs"
+            / f"retry-{calls}",
+            None if status == "ran" else f"RuntimeError: outage {calls}",
+        )
+
+    monkeypatch.setattr(runner, "run_instance", fake_run_instance)
+    (final,) = await runner.run_pilot(
+        lambda run_id: pytest.fail(f"unexpected executor construction: {run_id}"),
+        FakeModel(),
+        [instance],
+        pilot_dir,
+        n=1,
+        budgets=_budgets(),
+    )
+
+    assert calls == 3
+    assert final.status == "ran"
+    assert len(final.prior_interrupted_runs) == 3
+    assert [
+        error.reason for error in final.prior_infrastructure_errors
+    ] == ["RuntimeError: outage 1", "RuntimeError: outage 2"]
 
 
 async def test_run_pilot_never_reruns_existing_excluded_record(tmp_path: Path):

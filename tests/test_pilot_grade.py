@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from datetime import datetime, timezone
 from difflib import unified_diff
 from pathlib import Path
 
+import pytest
+
 import receipts.pilot.grade as pilot_grade
-from receipts.models import Receipt
+from receipts.models import Receipt, Verdict
 from receipts.orchestrate import AttemptResult, RunResult
 from receipts.pilot.grade import grade_attempts
 from receipts.sandbox.local import LocalExecutor
@@ -287,6 +290,38 @@ async def test_timeout_is_infrastructure_error_even_if_log_looks_resolved(
     )
 
 
+async def test_official_timeout_after_witness_timeout_is_attempt_outcome(
+    tmp_path: Path,
+):
+    executor, result, run_dir, instance = await _grading_case(
+        tmp_path,
+        [_source_patch(FIXED_CALC)],
+    )
+    result.attempts[0].verdict = Verdict(
+        branch_id="agent1",
+        status="ERROR",
+        predicates=[],
+        claim_audit="no_claim",
+        claim_evidence="branch ended without a finish call",
+        error="verification timed out after 7s",
+        error_kind="attempt",
+    )
+    timed_out = _TimeoutExecutor(executor, tmp_path / "timeout" / "full.log")
+
+    (record,) = await grade_attempts(
+        timed_out,
+        result,
+        run_dir,
+        instance,
+        timeout_s=7,
+    )
+
+    assert record.timed_out is True
+    assert record.judgement.resolved is False
+    assert record.infra_error is None
+    assert record.note == "official run timed out, as the witness did"
+
+
 class _UnavailableLogExecutor:
     def __init__(self, inner: LocalExecutor, log_path: Path | None) -> None:
         self.inner = inner
@@ -387,6 +422,129 @@ async def test_releases_official_branches_in_attempt_order_after_logs_are_writte
 
     assert [record.branch_id for record in records] == ["official1", "official2"]
     assert recording.released == [("official1", True), ("official2", True)]
+
+
+class _ReleaseFailingExecutor:
+    def __init__(self, inner: LocalExecutor) -> None:
+        self.inner = inner
+
+    def __getattr__(self, name: str):
+        return getattr(self.inner, name)
+
+    async def release(self, branch) -> None:
+        await self.inner.release(branch)
+        raise RuntimeError("official release failed")
+
+
+async def test_release_failure_after_official_result_is_recorded(tmp_path: Path):
+    executor, result, run_dir, instance = await _grading_case(
+        tmp_path,
+        [_source_patch(FIXED_CALC)],
+    )
+
+    (record,) = await grade_attempts(
+        _ReleaseFailingExecutor(executor),
+        result,
+        run_dir,
+        instance,
+    )
+
+    assert record.judgement.resolved is True
+    assert record.infra_error is None
+    assert record.cleanup_error == "RuntimeError: official release failed"
+
+
+class _CancellingApplyWithReleaseFailureExecutor:
+    def __init__(self, inner: LocalExecutor) -> None:
+        self.inner = inner
+
+    def __getattr__(self, name: str):
+        return getattr(self.inner, name)
+
+    async def apply_patch(self, branch, patch_text):
+        raise asyncio.CancelledError
+
+    async def release(self, branch) -> None:
+        await self.inner.release(branch)
+        raise RuntimeError("official release failed during cancellation")
+
+
+async def test_release_failure_does_not_replace_official_cancellation(
+    tmp_path: Path,
+):
+    executor, result, run_dir, instance = await _grading_case(tmp_path, [])
+
+    with pytest.raises(asyncio.CancelledError) as raised:
+        await pilot_grade.grade_patch(
+            _CancellingApplyWithReleaseFailureExecutor(executor),
+            result.checkpoint,
+            instance,
+            "",
+            run_dir,
+            "official.log",
+        )
+
+    assert raised.value.__notes__ == [
+        "official release also failed: RuntimeError: "
+        "official release failed during cancellation",
+    ]
+
+
+async def test_witness_apply_digest_mismatch_is_rejected_before_official_apply(
+    tmp_path: Path,
+):
+    executor, result, run_dir, instance = await _grading_case(
+        tmp_path,
+        [_source_patch(FIXED_CALC)],
+    )
+    result.attempts[0].witness_apply_sha256 = "f" * 64
+    recording = _ApplyRecordingExecutor(executor)
+
+    (record,) = await grade_attempts(recording, result, run_dir, instance)
+
+    assert recording.apply_calls == 0
+    assert record.branch_id == "not-run"
+    assert record.infra_error == (
+        "witness apply digest does not match the filtered patch digest"
+    )
+    assert record.judgement.resolved is False
+
+
+class _ApplyDigestMismatchExecutor:
+    def __init__(self, inner: LocalExecutor) -> None:
+        self.inner = inner
+        self.run_calls = 0
+
+    def __getattr__(self, name: str):
+        return getattr(self.inner, name)
+
+    async def apply_patch(self, branch, patch_text):
+        receipt = await self.inner.apply_patch(branch, patch_text)
+        return receipt.model_copy(update={"patch_sha256": "f" * 64})
+
+    async def run(self, branch, cmd: str, timeout_s: int):
+        self.run_calls += 1
+        return await self.inner.run(branch, cmd, timeout_s)
+
+
+async def test_official_apply_digest_mismatch_does_not_run_tests(tmp_path: Path):
+    executor, result, run_dir, instance = await _grading_case(
+        tmp_path,
+        [_source_patch(FIXED_CALC)],
+    )
+    mismatching = _ApplyDigestMismatchExecutor(executor)
+
+    (record,) = await grade_attempts(mismatching, result, run_dir, instance)
+
+    assert mismatching.run_calls == 0
+    assert record.apply_exit_code == 0
+    assert record.test_exit_code is None
+    assert record.applied_sha256 == "f" * 64
+    assert record.read_sha256 == result.attempts[0].filtered_sha256
+    assert record.infra_error == (
+        "official apply digest does not match the patch bytes"
+    )
+    assert record.judgement.resolved is False
 
 
 async def test_grade_patch_empty_patch_uses_fresh_fork_and_releases_it(
