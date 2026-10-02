@@ -321,6 +321,97 @@ new file mode 100644
     assert official_records[0]["log_sha256"] == attempt.official.log_sha256
 
 
+async def test_tokenfactory_run_instance_records_executor_kind_and_reported_cost(
+    tmp_path: Path,
+):
+    runner = _runner_module()
+    from receipts.sandbox.tokenfactory import TokenFactoryExecutor
+    from receipts.sandbox.tokenfactory_api import FakeTokenFactorySandboxApi
+
+    repo = make_repo(tmp_path / "source")
+    created: list[TokenFactoryExecutor] = []
+
+    def make_executor(run_id: str) -> TokenFactoryExecutor:
+        api = FakeTokenFactorySandboxApi()
+        executor = TokenFactoryExecutor(
+            tmp_path / "tokenfactory" / run_id,
+            MemorySink(),
+            run_id,
+            api,
+            busybox=b"trusted busybox",
+        )
+        delegate = _ImageLocalExecutor(
+            tmp_path / "delegates" / run_id,
+            repo,
+            run_id,
+        )
+        for name in (
+            "prepare",
+            "run",
+            "run_pytest",
+            "read_file",
+            "write_file",
+            "snapshot",
+            "checkpoint",
+            "fork",
+            "patch",
+            "apply_patch",
+            "release",
+            "scratch_path",
+        ):
+            setattr(executor, name, getattr(delegate, name))
+
+        async def close() -> None:
+            await delegate.close()
+            await api.aclose()
+
+        executor.close = close
+        executor.sandbox_usage = lambda: [
+            {
+                "operation_id": "fake-operation-1",
+                "seconds": 15.0,
+                "cost": 0.0375,
+                "resources": {"cpu": 0, "memory": 0, "disk": 0},
+            },
+        ]
+        created.append(executor)
+        return executor
+
+    model = _model(
+        [
+            _turn(
+                "write_file",
+                {"path": "calc/__init__.py", "content": FIXED_CALC},
+                "write-source",
+            ),
+            _turn("run_command", {"command": "python -m pytest -q"}, "run-suite"),
+            _finish("finish", ["calc/__init__.py"]),
+        ],
+    )
+
+    record = await runner.run_instance(
+        make_executor,
+        model,
+        _instance("fixture__tokenfactory"),
+        tmp_path / "pilot",
+        _budgets(),
+    )
+
+    assert record.status == "ran"
+    assert record.final is not None and record.final.verified_fix is True
+    assert record.executor_kind == "tokenfactory"
+    assert record.cost.sandbox_lifetime_seconds == 15.0
+    assert record.cost.sandbox_dollars_estimate == pytest.approx(0.0375)
+    persisted = json.loads(
+        (tmp_path / "pilot" / record.instance_id / "record.json").read_text(
+            encoding="utf-8",
+        ),
+    )
+    assert persisted["executor_kind"] == "tokenfactory"
+    assert persisted["cost"]["sandbox_dollars_estimate"] == pytest.approx(0.0375)
+    assert created
+
+
 def test_daytona_price_constants_record_published_rates_and_read_date():
     import receipts.cost as cost
 
@@ -329,6 +420,36 @@ def test_daytona_price_constants_record_published_rates_and_read_date():
     assert cost.DAYTONA_MEMORY_GIB_DOLLARS_PER_HOUR == 0.0162
     assert cost.DAYTONA_DISK_GIB_DOLLARS_PER_HOUR == 0.000108
     assert cost.DAYTONA_INCLUDED_DISK_GIB == 5
+
+
+def test_pilot_cost_selects_reported_cost_by_kind_or_zero_resources():
+    runner = _runner_module()
+    result = SimpleNamespace(
+        cost={},
+        disclosure=SimpleNamespace(executor_kind="daytona"),
+    )
+    usage = [
+        {
+            "executor_kind": "Token Factory",
+            "seconds": 60,
+            "cost": 0.02,
+            "resources": {"cpu": 99, "memory": 99, "disk": 99},
+        },
+        {
+            "seconds": 60,
+            "cost": 0.03,
+            "resources": {"cpu": 0, "memory": 0, "disk": 0},
+        },
+        {
+            "seconds": 3_600,
+            "resources": {"cpu": 2, "memory": 2, "disk": 5},
+        },
+    ]
+
+    summary = runner._pilot_cost(result, usage)
+
+    assert summary.sandbox_lifetime_seconds == 3_720
+    assert summary.sandbox_dollars_estimate == pytest.approx(0.1832)
 
 
 async def test_test_edit_is_rejected_but_naive_green_is_recorded(tmp_path: Path):

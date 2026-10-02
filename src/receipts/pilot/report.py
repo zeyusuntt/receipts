@@ -149,6 +149,7 @@ class InstanceRow(BaseModel):
     cost: PilotCost
     wall_time_s: float
     run_dir: str
+    executor_kind: str | None = None
 
 
 class TruncatedTestIds(BaseModel):
@@ -672,6 +673,7 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
                 cost=record.cost,
                 wall_time_s=record.wall_time_s,
                 run_dir=record.run_dir,
+                executor_kind=record.executor_kind,
             ),
         )
 
@@ -828,6 +830,41 @@ def render(report: Report) -> str:
 
     configuration_b = report.configuration_b
     cost = configuration_b.cost_per_verified_fix
+    has_tokenfactory = any(
+        row.executor_kind == "tokenfactory"
+        for row in report.instances
+    )
+    has_daytona_or_legacy = any(
+        row.executor_kind != "tokenfactory"
+        for row in report.instances
+    )
+    if has_tokenfactory and has_daytona_or_legacy:
+        sandbox_cost_explanation = (
+            "Sandbox dollars combine Token Factory reported cost for Token Factory "
+            "runs with Daytona vCPU, memory and billable disk estimates over measured "
+            "sandbox lifetimes. Total dollars combines sandbox dollars with the model "
+            "estimate."
+        )
+    elif has_tokenfactory:
+        sandbox_cost_explanation = (
+            "Sandbox dollars are Token Factory reported cost. Total dollars combines "
+            "that reported cost with the model estimate."
+        )
+    else:
+        sandbox_cost_explanation = (
+            "Model dollars estimate Token Factory token usage. Sandbox dollars "
+            "estimate Daytona vCPU, memory and billable disk over measured "
+            "sandbox lifetimes. Total dollars combines both estimates."
+        )
+    cost_notes = [sandbox_cost_explanation, ""]
+    if has_daytona_or_legacy:
+        cost_notes.extend(
+            [
+                "Snapshot storage is not included because Daytona had not published "
+                f"its price when the rates were read on {DAYTONA_PRICING_READ_DATE}.",
+                "",
+            ],
+        )
     lines.extend(
         [
             "",
@@ -844,17 +881,7 @@ def render(report: Report) -> str:
             "",
             "### Cost per verified fix",
             "",
-            (
-                "Model dollars estimate Token Factory token usage. Sandbox dollars "
-                "estimate Daytona vCPU, memory and billable disk over measured "
-                "sandbox lifetimes. Total dollars combines both estimates."
-            ),
-            "",
-            (
-                "Snapshot storage is not included because Daytona had not published "
-                f"its price when the rates were read on {DAYTONA_PRICING_READ_DATE}."
-            ),
-            "",
+            *cost_notes,
             "| Model dollars (estimated) | Sandbox dollars (estimated) | "
             "Total dollars (estimated) | Tokens | Sandbox lifetime seconds | "
             "Wall seconds |",
@@ -1046,9 +1073,17 @@ def render(report: Report) -> str:
                 row.cost.model_dollars + row.cost.sandbox_dollars_estimate,
             )
         )
+        sandbox_cost = (
+            f"${_format_number(row.cost.sandbox_dollars_estimate)} "
+            + (
+                "Token Factory reported cost"
+                if row.executor_kind == "tokenfactory"
+                else "sandbox estimated"
+            )
+        )
         rendered_cost = (
             f"{row.cost.tokens} tokens; {model_dollars} model estimated; "
-            f"${_format_number(row.cost.sandbox_dollars_estimate)} sandbox estimated; "
+            f"{sandbox_cost}; "
             f"{total_dollars} total estimated; "
             f"{_format_number(row.cost.sandbox_lifetime_seconds)} sandbox lifetime s; "
             f"{_format_number(row.wall_time_s)} wall s"

@@ -355,6 +355,139 @@ def test_fix_builds_daytona_executor_for_an_image_source(
     assert "**Verdict: VERIFIED**" in capsys.readouterr().out
 
 
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        [
+            "fix",
+            "--image",
+            "swerebenchv2/example:1",
+            "--workdir",
+            "/repo",
+            "--test",
+            TARGET,
+            "--issue-file",
+            "issue.txt",
+            "--executor",
+            "tokenfactory",
+            "--out",
+            "run",
+        ],
+        [
+            "pilot",
+            "run",
+            "--candidates",
+            "candidates.txt",
+            "--rows",
+            "rows.jsonl",
+            "--executor",
+            "tokenfactory",
+            "--out",
+            "pilot",
+        ],
+        [
+            "pilot",
+            "screen",
+            "--candidates",
+            "candidates.txt",
+            "--start",
+            "1",
+            "--exclude",
+            "exclude.txt",
+            "--want",
+            "1",
+            "--executor",
+            "tokenfactory",
+            "--out",
+            "screen.jsonl",
+        ],
+    ],
+)
+def test_tokenfactory_executor_parses_for_fix_and_pilot_commands(arguments):
+    assert _parser().parse_args(arguments).executor == "tokenfactory"
+
+
+def test_fix_selects_tokenfactory_executor_and_closes_one_api_client(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    import receipts.cli as cli
+
+    issue_file = tmp_path / "issue.txt"
+    issue_file.write_text("Repair the formatter.\n", encoding="utf-8")
+    captured: dict[str, object] = {}
+
+    class FakeApi:
+        def __init__(self) -> None:
+            self.close_calls = 0
+
+        async def aclose(self) -> None:
+            self.close_calls += 1
+
+    api = FakeApi()
+
+    class FakeApiType:
+        @classmethod
+        def from_env(cls):
+            captured["from_env_calls"] = int(captured.get("from_env_calls", 0)) + 1
+            return api
+
+    class FakeExecutor:
+        def __init__(self, root, sink, run_id, selected_api, *, busybox):
+            captured.update(
+                executor=self,
+                root=root,
+                sink=sink,
+                run_id=run_id,
+                api=selected_api,
+                busybox=busybox,
+            )
+            self.closed = False
+
+        async def close(self):
+            self.closed = True
+
+    async def fake_fix(executor, model, source, issue, tests, suite, out, *, budgets):
+        captured.update(source=source, issue=issue, tests=tests, suite=suite, out=out)
+        return _sample_result()
+
+    monkeypatch.setattr(cli, "TokenFactorySandboxApi", FakeApiType)
+    monkeypatch.setattr(cli, "TokenFactoryExecutor", FakeExecutor)
+    monkeypatch.setattr(cli, "load_busybox", lambda: b"trusted-busybox")
+    monkeypatch.setattr(cli, "fix", fake_fix)
+
+    status = main(
+        [
+            "fix",
+            "--image",
+            "swerebenchv2/example:1",
+            "--workdir",
+            "/repo",
+            "--test",
+            TARGET,
+            "--issue-file",
+            str(issue_file),
+            "--executor",
+            "tokenfactory",
+            "--out",
+            str(tmp_path / "run"),
+        ],
+        model=_honest_model(),
+    )
+
+    assert status == 0
+    assert captured["from_env_calls"] == 1
+    assert captured["api"] is api
+    assert captured["busybox"] == b"trusted-busybox"
+    assert captured["source"] == ImageSource(
+        image="swerebenchv2/example:1",
+        workdir="/repo",
+        python="python",
+    )
+    assert captured["executor"].closed is True
+    assert api.close_calls == 1
+
+
 def test_show_prints_the_serialized_run_receipt(tmp_path: Path, capsys):
     run_dir = tmp_path / "run"
     run_dir.mkdir()
@@ -424,8 +557,14 @@ def test_preflight_subcommand_parses_optional_output_path(tmp_path: Path):
 
     assert default_args.command == "preflight"
     assert default_args.out is None
+    assert default_args.executor == "daytona"
     assert custom_args.command == "preflight"
     assert custom_args.out == output_path
+
+    tokenfactory_args = _parser().parse_args(
+        ["preflight", "--executor", "tokenfactory"],
+    )
+    assert tokenfactory_args.executor == "tokenfactory"
 
 
 def test_pilot_screen_arguments_parse(tmp_path: Path):
@@ -657,3 +796,181 @@ def test_pilot_screen_never_constructs_a_model(tmp_path: Path, monkeypatch, caps
     assert captured["want"] == 1
     assert captured["concurrency"] == 1
     assert capsys.readouterr().out == "SCREEN included=1\n"
+
+
+@pytest.mark.parametrize("command", ["run", "screen"])
+def test_pilot_commands_select_tokenfactory_factory_with_shared_inputs(
+    command: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    import receipts.cli as cli
+
+    candidate = Instance(
+        instance_id="candidate-1",
+        repo="fixture/calc",
+        base_commit="HEAD",
+        image_name="fixture/calc:latest",
+        test_patch="",
+        fail_to_pass=[TARGET],
+        pass_to_pass=[],
+        test_cmd="pytest tests -rA",
+        problem_statement="Fix subtraction.",
+    )
+    captured: dict[str, object] = {}
+
+    class FakeApi:
+        def __init__(self) -> None:
+            self.close_calls = 0
+
+        async def aclose(self) -> None:
+            self.close_calls += 1
+
+    api = FakeApi()
+
+    class FakeApiType:
+        @classmethod
+        def from_env(cls):
+            captured["from_env_calls"] = int(captured.get("from_env_calls", 0)) + 1
+            return api
+
+    def fake_factory(executor_root, selected_api, busybox, *, shield_cleanup=False):
+        captured.update(
+            executor_root=executor_root,
+            api=selected_api,
+            busybox=busybox,
+            shield_cleanup=shield_cleanup,
+        )
+        return lambda run_id: (run_id, selected_api, busybox)
+
+    async def fake_run_pilot(
+        make_executor,
+        model,
+        candidates,
+        pilot_dir,
+        *,
+        n,
+        concurrency,
+        budgets,
+    ):
+        captured["made"] = make_executor("pilot-run")
+        captured["concurrency"] = concurrency
+        return []
+
+    async def fake_screen(
+        make_executor,
+        candidates,
+        ledger_path,
+        *,
+        start,
+        exclude,
+        want,
+        concurrency,
+    ):
+        captured["made"] = make_executor("screen-run")
+        captured["concurrency"] = concurrency
+        return []
+
+    monkeypatch.setattr(cli, "TokenFactorySandboxApi", FakeApiType)
+    monkeypatch.setattr(cli, "load_busybox", lambda: b"trusted-busybox")
+    monkeypatch.setattr(cli, "_tokenfactory_executor_factory", fake_factory, raising=False)
+    monkeypatch.setattr(cli, "_load_pilot_candidates", lambda *args: [candidate])
+    monkeypatch.setattr(cli, "run_pilot", fake_run_pilot)
+    monkeypatch.setattr(cli, "screen_candidates", fake_screen)
+
+    if command == "run":
+        arguments = [
+            "pilot",
+            "run",
+            "--candidates",
+            str(tmp_path / "candidates.txt"),
+            "--rows",
+            str(tmp_path / "rows.jsonl"),
+            "--executor",
+            "tokenfactory",
+            "--out",
+            str(tmp_path / "pilot"),
+            "--concurrency",
+            "2",
+        ]
+        status = main(arguments, model=FakeModel())
+        expected_run_id = "pilot-run"
+    else:
+        exclusions = tmp_path / "exclude.txt"
+        exclusions.write_text("# none\n", encoding="utf-8")
+        arguments = [
+            "pilot",
+            "screen",
+            "--candidates",
+            str(tmp_path / "candidates.txt"),
+            "--start",
+            "1",
+            "--exclude",
+            str(exclusions),
+            "--want",
+            "1",
+            "--executor",
+            "tokenfactory",
+            "--out",
+            str(tmp_path / "screen.jsonl"),
+            "--concurrency",
+            "2",
+        ]
+        status = main(arguments)
+        expected_run_id = "screen-run"
+
+    assert status == 0
+    assert captured["from_env_calls"] == 1
+    assert captured["api"] is api
+    assert captured["busybox"] == b"trusted-busybox"
+    assert captured["shield_cleanup"] is (command == "screen")
+    assert captured["made"] == (expected_run_id, api, b"trusted-busybox")
+    assert captured["concurrency"] == 2
+    assert api.close_calls == 1
+
+
+async def test_tokenfactory_factory_borrows_shared_api_until_invocation_exit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    import receipts.cli as cli
+
+    constructed_with: list[object] = []
+
+    class FakeApi:
+        def __init__(self) -> None:
+            self.close_calls = 0
+
+        async def aclose(self) -> None:
+            self.close_calls += 1
+
+    class FakeExecutor:
+        def __init__(self, root, sink, run_id, api, *, busybox):
+            self.root = root
+            self.api = api
+            self.busybox = busybox
+            constructed_with.append(api)
+
+        async def close(self) -> None:
+            await self.api.aclose()
+
+    api = FakeApi()
+    monkeypatch.setattr(cli, "TokenFactoryExecutor", FakeExecutor)
+    make_executor = cli._tokenfactory_executor_factory(
+        tmp_path,
+        api,
+        b"trusted-busybox",
+    )
+
+    first = make_executor("first")
+    second = make_executor("second")
+    await first.close()
+    await second.close()
+
+    assert constructed_with == [api, api]
+    assert first.root == tmp_path / "first"
+    assert second.root == tmp_path / "second"
+    assert first.busybox == second.busybox == b"trusted-busybox"
+    assert api.close_calls == 0
+    await api.aclose()
+    assert api.close_calls == 1

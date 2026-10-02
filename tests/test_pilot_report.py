@@ -793,6 +793,54 @@ def test_cost_columns_are_computed_from_separate_model_and_sandbox_costs():
     assert "Snapshot storage is not included" in markdown
 
 
+def test_report_labels_tokenfactory_reported_sandbox_cost():
+    report_module = _report_module()
+    record = _record(
+        "project__tokenfactory",
+        [_attempt(gate_status="PASS", official_resolved=True, agreement="agree_pass")],
+        verified_fix=True,
+        sandbox_dollars_estimate=0.125,
+    )
+    record.executor_kind = "tokenfactory"
+
+    markdown = report_module.render(report_module.build_report([record]))
+
+    assert "Token Factory reported cost" in markdown
+    assert "$0.125 Token Factory reported cost" in markdown
+
+
+def test_v1_shaped_record_keeps_cost_numbers_and_daytona_wording():
+    report_module = _report_module()
+    original = _record(
+        "project__v1",
+        [_attempt(gate_status="PASS", official_resolved=True, agreement="agree_pass")],
+        verified_fix=True,
+        tokens=120,
+        model_dollars=0.25,
+        sandbox_lifetime_seconds=60,
+        sandbox_dollars_estimate=0.05,
+        wall_time_s=90,
+    )
+    payload = original.model_dump(mode="json")
+    payload.pop("executor_kind", None)
+    payload["cost"]["dollars"] = payload["cost"].pop("model_dollars")
+
+    loaded = InstanceRecord.model_validate(payload)
+    report = report_module.build_report([loaded])
+    cost = report.configuration_b.cost_per_verified_fix
+
+    assert loaded.executor_kind is None
+    assert cost.tokens == 120
+    assert cost.model_dollars == 0.25
+    assert cost.sandbox_dollars_estimate == 0.05
+    assert cost.total_dollars_estimate == 0.30
+    assert cost.sandbox_lifetime_seconds == 60
+    assert cost.wall_time_s == 90
+    markdown = report_module.render(report)
+    assert "estimate Daytona vCPU, memory and billable disk" in markdown
+    assert "Token Factory reported cost" not in markdown
+
+
 def test_report_computes_peak_live_sandboxes_and_sums_model_retries(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

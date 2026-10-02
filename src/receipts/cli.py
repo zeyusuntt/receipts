@@ -40,11 +40,14 @@ from receipts.pilot.screen import screen_candidates
 from receipts.pilot.watch import watch_pilot
 from receipts.preflight import run_preflight
 from receipts.receipt_text import render
+from receipts.sandbox.busybox import load_busybox
 from receipts.sandbox.daytona import AsyncDaytonaApi, DaytonaExecutor
 from receipts.sandbox.docker import DockerExecutor
 from receipts.sandbox.local import LocalExecutor
 from receipts.sandbox.protocol import ImageSource, RepoAtCommit
 from receipts.sandbox.sink import MemorySink, RunSink
+from receipts.sandbox.tokenfactory import TokenFactoryExecutor
+from receipts.sandbox.tokenfactory_api import TokenFactorySandboxApi
 from receipts.swerebench import Instance
 
 
@@ -63,8 +66,8 @@ def _parser() -> argparse.ArgumentParser:
     fix_parser = commands.add_parser("fix", help="run an agent and verify its patch")
     fix_parser.add_argument("--repo", help="repository path or URL")
     fix_parser.add_argument("--commit", help="commit to check out")
-    fix_parser.add_argument("--image", help="container image for the Daytona executor")
-    fix_parser.add_argument("--workdir", help="repository path inside the Daytona image")
+    fix_parser.add_argument("--image", help="container image for a sandbox executor")
+    fix_parser.add_argument("--workdir", help="repository path inside the sandbox image")
     fix_parser.add_argument("--python", default="python", help="Python executable in the image")
     fix_parser.add_argument(
         "--test",
@@ -78,7 +81,7 @@ def _parser() -> argparse.ArgumentParser:
     fix_parser.add_argument("--suite", default="tests", help="pytest suite arguments")
     fix_parser.add_argument(
         "--executor",
-        choices=("local", "docker", "daytona"),
+        choices=("local", "docker", "daytona", "tokenfactory"),
         default="local",
     )
     fix_parser.add_argument("--out", required=True, type=Path)
@@ -95,6 +98,11 @@ def _parser() -> argparse.ArgumentParser:
         help="write the launch preflight JSON",
     )
     preflight_parser.add_argument("--out", type=Path)
+    preflight_parser.add_argument(
+        "--executor",
+        choices=("daytona", "tokenfactory"),
+        default="daytona",
+    )
 
     show_parser = commands.add_parser("show", help="print a run's Markdown receipt")
     show_parser.add_argument("run_dir", type=Path)
@@ -118,7 +126,11 @@ def _parser() -> argparse.ArgumentParser:
         help="SWE-rebench row JSONL",
     )
     pilot_run.add_argument("--n", type=int, default=50)
-    pilot_run.add_argument("--executor", choices=("daytona",), default="daytona")
+    pilot_run.add_argument(
+        "--executor",
+        choices=("daytona", "tokenfactory"),
+        default="daytona",
+    )
     pilot_run.add_argument("--out", required=True, type=Path)
     pilot_run.add_argument("--concurrency", type=int, default=1)
 
@@ -132,6 +144,11 @@ def _parser() -> argparse.ArgumentParser:
     pilot_screen.add_argument("--want", required=True, type=int)
     pilot_screen.add_argument("--out", required=True, type=Path)
     pilot_screen.add_argument("--concurrency", type=int, default=1)
+    pilot_screen.add_argument(
+        "--executor",
+        choices=("daytona", "tokenfactory"),
+        default="daytona",
+    )
 
     pilot_report = pilot_commands.add_parser(
         "report",
@@ -224,9 +241,11 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
         load_config(env_path=Path(".env")),
         env_path=Path(".env"),
     )
-    if args.executor == "daytona":
+    if args.executor in {"daytona", "tokenfactory"}:
         if not args.image or not args.workdir:
-            raise ValueError("--image and --workdir are required for the Daytona executor")
+            raise ValueError(
+                "--image and --workdir are required for sandbox executors",
+            )
         source = ImageSource(
             image=args.image,
             workdir=args.workdir,
@@ -272,7 +291,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
                 )
             finally:
                 await executor.close()
-        else:
+        elif args.executor == "daytona":
             dotenv = _parse_dotenv(Path(".env"))
             api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY")
             if not api_key:
@@ -292,6 +311,34 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
                 )
             finally:
                 await executor.close()
+        else:
+            api = TokenFactorySandboxApi.from_env()
+            try:
+                busybox = load_busybox()
+                executor = TokenFactoryExecutor(
+                    Path(executor_root),
+                    sink,
+                    run_id,
+                    api,
+                    busybox=busybox,
+                )
+                if getattr(executor, "api", None) is api:
+                    executor.api = _BorrowedTokenFactorySandboxApi(api)
+                try:
+                    result = await fix(
+                        executor,
+                        selected_model,
+                        source,
+                        issue,
+                        args.tests,
+                        args.suite,
+                        args.out,
+                        budgets=budgets,
+                    )
+                finally:
+                    await executor.close()
+            finally:
+                await api.aclose()
 
     print(render(result), end="")
     return 0 if result.verified_fix else 1
@@ -438,6 +485,45 @@ def _daytona_executor_factory(
     return make_executor
 
 
+class _BorrowedTokenFactorySandboxApi:
+    """Delegate API calls while keeping invocation-level ownership of close."""
+
+    def __init__(self, api: Any) -> None:
+        self._api = api
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._api, name)
+
+    async def aclose(self) -> None:
+        return None
+
+
+def _tokenfactory_executor_factory(
+    executor_root: Path,
+    api: Any,
+    busybox: bytes,
+    *,
+    shield_cleanup: bool = False,
+):
+    borrowed_api = _BorrowedTokenFactorySandboxApi(api)
+
+    def make_executor(run_id: str) -> Any:
+        executor = TokenFactoryExecutor(
+            executor_root / run_id,
+            MemorySink(),
+            run_id,
+            api,
+            busybox=busybox,
+        )
+        if getattr(executor, "api", None) is api:
+            executor.api = borrowed_api
+        if shield_cleanup:
+            return _ScreenCleanupExecutor(executor)
+        return executor
+
+    return make_executor
+
+
 def _default_run_budgets() -> RunBudgets:
     return RunBudgets(
         baseline_limit_s=600,
@@ -461,22 +547,40 @@ async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int
         load_config(env_path=Path(".env")),
         env_path=Path(".env"),
     )
-    dotenv = _parse_dotenv(Path(".env"))
-    api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY")
-    if not api_key:
-        raise ValueError("DAYTONA_API_KEY is required for the Daytona executor")
-
     with tempfile.TemporaryDirectory(prefix="receipts-pilot-executor-") as root:
         executor_root = Path(root)
-        records = await run_pilot(
-            _daytona_executor_factory(executor_root, api_key),
-            selected_model,
-            candidates,
-            args.out,
-            n=args.n,
-            concurrency=args.concurrency,
-            budgets=_default_run_budgets(),
-        )
+        if args.executor == "daytona":
+            dotenv = _parse_dotenv(Path(".env"))
+            api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY")
+            if not api_key:
+                raise ValueError("DAYTONA_API_KEY is required for the Daytona executor")
+            records = await run_pilot(
+                _daytona_executor_factory(executor_root, api_key),
+                selected_model,
+                candidates,
+                args.out,
+                n=args.n,
+                concurrency=args.concurrency,
+                budgets=_default_run_budgets(),
+            )
+        else:
+            api = TokenFactorySandboxApi.from_env()
+            try:
+                records = await run_pilot(
+                    _tokenfactory_executor_factory(
+                        executor_root,
+                        api,
+                        load_busybox(),
+                    ),
+                    selected_model,
+                    candidates,
+                    args.out,
+                    n=args.n,
+                    concurrency=args.concurrency,
+                    budgets=_default_run_budgets(),
+                )
+            finally:
+                await api.aclose()
 
     ran = sum(record.status == "ran" for record in records)
     excluded = sum(record.status == "excluded" for record in records)
@@ -488,25 +592,44 @@ async def _run_pilot(args: argparse.Namespace, model: ModelClient | None) -> int
 async def _run_pilot_screen(args: argparse.Namespace) -> int:
     candidates = _load_pilot_candidates(args.candidates, _PILOT_ROWS_PATH)
     exclusions = set(_load_id_file(args.exclude))
-    dotenv = _parse_dotenv(Path(".env"))
-    api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY")
-    if not api_key:
-        raise ValueError("DAYTONA_API_KEY is required for the Daytona executor")
-
     with tempfile.TemporaryDirectory(prefix="receipts-screen-executor-") as root:
-        included = await screen_candidates(
-            _daytona_executor_factory(
-                Path(root),
-                api_key,
-                shield_cleanup=True,
-            ),
-            candidates,
-            args.out,
-            start=args.start,
-            exclude=exclusions,
-            want=args.want,
-            concurrency=args.concurrency,
-        )
+        if args.executor == "daytona":
+            dotenv = _parse_dotenv(Path(".env"))
+            api_key = os.environ.get("DAYTONA_API_KEY") or dotenv.get("DAYTONA_API_KEY")
+            if not api_key:
+                raise ValueError("DAYTONA_API_KEY is required for the Daytona executor")
+            included = await screen_candidates(
+                _daytona_executor_factory(
+                    Path(root),
+                    api_key,
+                    shield_cleanup=True,
+                ),
+                candidates,
+                args.out,
+                start=args.start,
+                exclude=exclusions,
+                want=args.want,
+                concurrency=args.concurrency,
+            )
+        else:
+            api = TokenFactorySandboxApi.from_env()
+            try:
+                included = await screen_candidates(
+                    _tokenfactory_executor_factory(
+                        Path(root),
+                        api,
+                        load_busybox(),
+                        shield_cleanup=True,
+                    ),
+                    candidates,
+                    args.out,
+                    start=args.start,
+                    exclude=exclusions,
+                    want=args.want,
+                    concurrency=args.concurrency,
+                )
+            finally:
+                await api.aclose()
 
     print(f"SCREEN included={len(included)}")
     return 0
@@ -585,7 +708,7 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
     if args.command == "doctor":
         return await _doctor(args.live, model)
     if args.command == "preflight":
-        return await run_preflight(args.out)
+        return await run_preflight(args.out, executor=args.executor)
     if args.command == "fix":
         return await _run_fix(args, model)
     if args.command == "show":

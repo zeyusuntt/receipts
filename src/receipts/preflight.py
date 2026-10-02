@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -18,6 +19,8 @@ from daytona import AsyncDaytona, DaytonaConfig
 from dotenv import dotenv_values
 
 from receipts.llm import _settings as _model_client_settings
+from receipts.sandbox.busybox import BUSYBOX_SHA256, load_busybox
+from receipts.sandbox.tokenfactory_api import TokenFactorySandboxApi
 
 
 DEFAULT_DAYTONA_API_URL = "https://app.daytona.io/api"
@@ -33,6 +36,10 @@ REQUIRED_DAYTONA_PERMISSIONS = frozenset(
         "delete:snapshots",
     }
 )
+REQUIRED_TOKEN_FACTORY_SANDBOX_PERMISSIONS = frozenset(
+    {"spawn", "list", "import", "cancel"},
+)
+TOKEN_FACTORY_PREFLIGHT_IMAGE = "swerebenchv2/pysmt-pysmt:812-bbfe2c5"
 
 
 class _DiskUsage(Protocol):
@@ -42,6 +49,8 @@ class _DiskUsage(Protocol):
 SnapshotLister = Callable[[str], Awaitable[Sequence[Any]]]
 DiskUsage = Callable[[Path], _DiskUsage]
 Clock = Callable[[], datetime]
+SandboxApiFactory = Callable[..., Any]
+BusyboxLoader = Callable[[], bytes]
 
 
 @dataclass(frozen=True)
@@ -143,9 +152,12 @@ async def _daytona_key_check(
     client: httpx.AsyncClient,
     config: PreflightConfig,
     failures: list[str],
+    *,
+    required: bool = True,
 ) -> tuple[dict[str, Any], str | None]:
     facts: dict[str, Any] = {
         "status": None,
+        "required": required,
         "organization_id": None,
         "key_name": None,
         "created_at": None,
@@ -154,7 +166,7 @@ async def _daytona_key_check(
     }
     if config.daytona_api_key is None:
         facts.update(passed=False, reason="DAYTONA_API_KEY is not configured")
-        failures.append("DAYTONA_API_KEY")
+        _append_required_failure(failures, required, "DAYTONA_API_KEY")
         return facts, None
 
     try:
@@ -167,7 +179,7 @@ async def _daytona_key_check(
             passed=False,
             reason=f"Daytona key lookup failed ({_exception_name(exc)})",
         )
-        failures.append("daytona_key")
+        _append_required_failure(failures, required, "daytona_key")
         return facts, None
 
     facts["status"] = response.status_code
@@ -176,19 +188,19 @@ async def _daytona_key_check(
             passed=False,
             reason=f"Daytona key lookup returned status {response.status_code}",
         )
-        failures.append("daytona_key")
+        _append_required_failure(failures, required, "daytona_key")
         return facts, None
 
     try:
         body = response.json()
     except ValueError:
         facts.update(passed=False, reason="Daytona key lookup returned invalid JSON")
-        failures.append("daytona_key")
+        _append_required_failure(failures, required, "daytona_key")
         return facts, None
 
     if not isinstance(body, dict):
         facts.update(passed=False, reason="Daytona key lookup returned an invalid object")
-        failures.append("daytona_key")
+        _append_required_failure(failures, required, "daytona_key")
         return facts, None
 
     raw_permissions = body.get("permissions")
@@ -214,16 +226,22 @@ async def _daytona_key_check(
     )
     if not isinstance(raw_permissions, list):
         facts.update(passed=False, reason="Daytona key response has invalid permissions")
-        failures.extend(missing)
+        if required:
+            failures.extend(permission for permission in missing if permission not in failures)
     elif not facts["organization_id"]:
         facts.update(passed=False, reason="Daytona key response has no organization id")
-        failures.append("daytona_key.organization_id")
+        _append_required_failure(
+            failures,
+            required,
+            "daytona_key.organization_id",
+        )
     elif missing:
         facts.update(
             passed=False,
             reason="missing required permissions: " + ", ".join(missing),
         )
-        failures.extend(missing)
+        if required:
+            failures.extend(permission for permission in missing if permission not in failures)
     else:
         facts.update(passed=True, reason="required permissions are present")
     return facts, facts["organization_id"]
@@ -472,6 +490,170 @@ def _safe_json_value(value: Any, secrets: tuple[str, ...]) -> Any:
     return value
 
 
+def _append_required_failure(
+    failures: list[str],
+    required: bool,
+    failure: str,
+) -> None:
+    if required and failure not in failures:
+        failures.append(failure)
+
+
+async def _token_factory_sandbox_checks(
+    *,
+    required: bool,
+    failures: list[str],
+    api_factory: SandboxApiFactory,
+    busybox_loader: BusyboxLoader,
+    environ: Mapping[str, str] | None,
+    dotenv_path: Path,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    sandbox_check: dict[str, Any] = {
+        "status": None,
+        "required": required,
+        "permissions": {},
+        "missing_permissions": sorted(REQUIRED_TOKEN_FACTORY_SANDBOX_PERMISSIONS),
+        "limits": None,
+        "passed": False,
+        "reason": "Token Factory sandbox client is unavailable",
+    }
+    catalogue_check: dict[str, Any] = {
+        "tag": TOKEN_FACTORY_PREFLIGHT_IMAGE,
+        "image_uuid": None,
+        "required": required,
+        "passed": False,
+        "reason": "Token Factory sandbox client is unavailable",
+    }
+    busybox_check: dict[str, Any] = {
+        "required": required,
+        "sha256": None,
+        "size": None,
+        "passed": False,
+        "reason": "not checked because the Token Factory sandbox client is unavailable",
+    }
+
+    try:
+        api = api_factory(environ=environ, dotenv_path=dotenv_path)
+    except Exception as exc:
+        reason = f"Token Factory sandbox client setup failed ({_exception_name(exc)})"
+        sandbox_check["reason"] = reason
+        catalogue_check["reason"] = reason
+        _append_required_failure(failures, required, "token_factory_sandboxes")
+        _append_required_failure(failures, required, "token_factory_catalogue")
+        _append_required_failure(failures, required, "busybox")
+        return sandbox_check, catalogue_check, busybox_check
+
+    try:
+        try:
+            body = await api.whoami()
+            sandbox_check["status"] = 200
+            raw_permissions = body.get("permissions") if isinstance(body, Mapping) else None
+            permissions = (
+                {
+                    str(name): value is True
+                    for name, value in raw_permissions.items()
+                    if isinstance(name, str)
+                }
+                if isinstance(raw_permissions, Mapping)
+                else {}
+            )
+            missing = sorted(
+                permission
+                for permission in REQUIRED_TOKEN_FACTORY_SANDBOX_PERMISSIONS
+                if permissions.get(permission) is not True
+            )
+            raw_limits = body.get("limits") if isinstance(body, Mapping) else None
+            sandbox_check.update(
+                permissions=dict(sorted(permissions.items())),
+                missing_permissions=missing,
+                limits=dict(raw_limits) if isinstance(raw_limits, Mapping) else None,
+            )
+            if not isinstance(body, Mapping):
+                sandbox_check["reason"] = "whoami returned an invalid object"
+                _append_required_failure(
+                    failures,
+                    required,
+                    "token_factory_sandboxes.whoami",
+                )
+            elif missing:
+                sandbox_check["reason"] = (
+                    "missing required permissions: " + ", ".join(missing)
+                )
+                _append_required_failure(
+                    failures,
+                    required,
+                    "token_factory_sandboxes.permissions",
+                )
+            else:
+                sandbox_check.update(
+                    passed=True,
+                    reason="required permissions are present",
+                )
+        except Exception as exc:
+            status_code = getattr(exc, "status_code", None)
+            sandbox_check.update(
+                status=status_code if isinstance(status_code, int) else None,
+                reason=f"whoami failed ({_exception_name(exc)})",
+            )
+            _append_required_failure(
+                failures,
+                required,
+                "token_factory_sandboxes.whoami",
+            )
+
+        try:
+            image_uuid = await api.image_by_tag(TOKEN_FACTORY_PREFLIGHT_IMAGE)
+            catalogue_check["image_uuid"] = image_uuid
+            if isinstance(image_uuid, str) and image_uuid:
+                catalogue_check.update(
+                    passed=True,
+                    reason="catalogue image resolved",
+                )
+            else:
+                catalogue_check["reason"] = "catalogue image did not resolve"
+                _append_required_failure(
+                    failures,
+                    required,
+                    "token_factory_catalogue",
+                )
+        except Exception as exc:
+            catalogue_check["reason"] = (
+                f"catalogue lookup failed ({_exception_name(exc)})"
+            )
+            _append_required_failure(
+                failures,
+                required,
+                "token_factory_catalogue",
+            )
+
+        try:
+            busybox = busybox_loader()
+            if not isinstance(busybox, bytes):
+                raise TypeError("busybox loader did not return bytes")
+            digest = hashlib.sha256(busybox).hexdigest()
+            busybox_check.update(sha256=digest, size=len(busybox))
+            if digest == BUSYBOX_SHA256:
+                busybox_check.update(
+                    passed=True,
+                    reason="pinned busybox digest verified",
+                )
+            else:
+                busybox_check["reason"] = "pinned busybox digest mismatch"
+                _append_required_failure(failures, required, "busybox")
+        except Exception as exc:
+            busybox_check["reason"] = (
+                f"busybox load failed ({_exception_name(exc)})"
+            )
+            _append_required_failure(failures, required, "busybox")
+    finally:
+        try:
+            await api.aclose()
+        except Exception:
+            pass
+
+    return sandbox_check, catalogue_check, busybox_check
+
+
 async def _collect_preflight(
     *,
     client: httpx.AsyncClient,
@@ -480,9 +662,19 @@ async def _collect_preflight(
     disk_usage: DiskUsage,
     repo_root: Path,
     created_at: datetime,
+    executor: str,
+    sandbox_api_factory: SandboxApiFactory,
+    busybox_loader: BusyboxLoader,
+    environ: Mapping[str, str] | None,
+    dotenv_path: Path,
 ) -> dict[str, Any]:
     failures: list[str] = []
-    key_check, organization_id = await _daytona_key_check(client, config, failures)
+    key_check, organization_id = await _daytona_key_check(
+        client,
+        config,
+        failures,
+        required=executor == "daytona",
+    )
     snapshots_check = await _daytona_snapshots_check(
         config,
         organization_id,
@@ -490,6 +682,16 @@ async def _collect_preflight(
     )
     limits_check = await _daytona_limits_check(client, config, organization_id)
     model_check = await _token_factory_model_check(client, config, failures)
+    sandbox_check, catalogue_check, busybox_check = (
+        await _token_factory_sandbox_checks(
+            required=executor == "tokenfactory",
+            failures=failures,
+            api_factory=sandbox_api_factory,
+            busybox_loader=busybox_loader,
+            environ=environ,
+            dotenv_path=dotenv_path,
+        )
+    )
     disk_check = _disk_check(repo_root, disk_usage, failures)
     balance_check = {
         "available": False,
@@ -504,6 +706,9 @@ async def _collect_preflight(
             "daytona_snapshots": snapshots_check,
             "daytona_organization_limits": limits_check,
             "token_factory_model": model_check,
+            "token_factory_sandboxes": sandbox_check,
+            "token_factory_catalogue": catalogue_check,
+            "busybox": busybox_check,
             "disk": disk_check,
             "token_factory_balance": balance_check,
         },
@@ -515,6 +720,7 @@ async def _collect_preflight(
 async def run_preflight(
     out: Path | None = None,
     *,
+    executor: str = "daytona",
     http_client: httpx.AsyncClient | None = None,
     snapshot_lister: SnapshotLister = _list_daytona_snapshots,
     disk_usage: DiskUsage = shutil.disk_usage,
@@ -522,6 +728,8 @@ async def run_preflight(
     now: Clock = lambda: datetime.now(timezone.utc),
     environ: Mapping[str, str] | None = None,
     dotenv_path: Path = Path(".env"),
+    sandbox_api_factory: SandboxApiFactory | None = None,
+    busybox_loader: BusyboxLoader | None = None,
 ) -> int:
     """Run the preflight, write its JSON artifact, and return its exit code."""
 
@@ -529,6 +737,10 @@ async def run_preflight(
     output_path = out or Path("pilot") / f"preflight-{created_at.astimezone(timezone.utc):%Y-%m-%d}.json"
     config = load_preflight_config(environ=environ, dotenv_path=dotenv_path)
     root = Path.cwd() if repo_root is None else repo_root
+    if executor not in {"daytona", "tokenfactory"}:
+        raise ValueError(f"unsupported executor: {executor}")
+    selected_api_factory = sandbox_api_factory or TokenFactorySandboxApi.from_env
+    selected_busybox_loader = busybox_loader or load_busybox
 
     if http_client is None:
         async with httpx.AsyncClient(timeout=20) as owned_client:
@@ -539,6 +751,11 @@ async def run_preflight(
                 disk_usage=disk_usage,
                 repo_root=root,
                 created_at=created_at,
+                executor=executor,
+                sandbox_api_factory=selected_api_factory,
+                busybox_loader=selected_busybox_loader,
+                environ=environ,
+                dotenv_path=dotenv_path,
             )
     else:
         report = await _collect_preflight(
@@ -548,6 +765,11 @@ async def run_preflight(
             disk_usage=disk_usage,
             repo_root=root,
             created_at=created_at,
+            executor=executor,
+            sandbox_api_factory=selected_api_factory,
+            busybox_loader=selected_busybox_loader,
+            environ=environ,
+            dotenv_path=dotenv_path,
         )
 
     secrets = tuple(

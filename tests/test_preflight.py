@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib
 import json
 import math
@@ -174,6 +175,9 @@ async def test_all_checks_pass_and_write_default_dated_json_without_secrets(
         "daytona_snapshots",
         "daytona_organization_limits",
         "token_factory_model",
+        "token_factory_sandboxes",
+        "token_factory_catalogue",
+        "busybox",
         "disk",
         "token_factory_balance",
     }
@@ -491,3 +495,255 @@ def test_token_factory_settings_follow_the_model_client_precedence(tmp_path):
     assert config.openai_api_key == "tf-key-from-dotenv"
     assert config.openai_base_url == "https://tf.example/v1/"
     assert config.daytona_api_key == "daytona-from-shell"
+
+
+class _FakeSandboxApi:
+    def __init__(
+        self,
+        *,
+        permissions: dict[str, bool] | None = None,
+        image_uuid: str | None = "image-uuid",
+        whoami_error: Exception | None = None,
+    ) -> None:
+        self.permissions = (
+            permissions
+            if permissions is not None
+            else {
+                "spawn": True,
+                "list": True,
+                "import": True,
+                "cancel": True,
+            }
+        )
+        self.image_uuid = image_uuid
+        self.whoami_error = whoami_error
+        self.calls: list[tuple[str, str | None]] = []
+        self.close_calls = 0
+
+    async def whoami(self):
+        self.calls.append(("whoami", None))
+        if self.whoami_error is not None:
+            raise self.whoami_error
+        return {
+            "permissions": self.permissions,
+            "limits": {
+                "instance_max_timeout": 3600,
+                "instance_max_concurrency": 50,
+            },
+        }
+
+    async def image_by_tag(self, tag: str):
+        self.calls.append(("image_by_tag", tag))
+        return self.image_uuid
+
+    async def aclose(self):
+        self.close_calls += 1
+
+
+@pytest.mark.asyncio
+async def test_tokenfactory_required_preflight_checks_pass_and_record_limits(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    module = _preflight_module()
+    _set_environment(monkeypatch)
+    monkeypatch.delenv("DAYTONA_API_KEY")
+    output_path = tmp_path / "preflight.json"
+    busybox = b"trusted busybox"
+    monkeypatch.setattr(
+        module,
+        "BUSYBOX_SHA256",
+        hashlib.sha256(busybox).hexdigest(),
+    )
+    api = _FakeSandboxApi()
+
+    async with _http_client() as client:
+        status = await module.run_preflight(
+            out=output_path,
+            executor="tokenfactory",
+            http_client=client,
+            snapshot_lister=_snapshots,
+            disk_usage=_disk_with_free_gb(40),
+            repo_root=tmp_path,
+            now=lambda: NOW,
+            sandbox_api_factory=lambda **_kwargs: api,
+            busybox_loader=lambda: busybox,
+        )
+
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    sandboxes = report["checks"]["token_factory_sandboxes"]
+    catalogue = report["checks"]["token_factory_catalogue"]
+    busybox_check = report["checks"]["busybox"]
+    assert status == 0
+    assert report["failures"] == []
+    assert sandboxes["status"] == 200
+    assert sandboxes["required"] is True
+    assert sandboxes["missing_permissions"] == []
+    assert sandboxes["limits"] == {
+        "instance_max_timeout": 3600,
+        "instance_max_concurrency": 50,
+    }
+    assert catalogue == {
+        "image_uuid": "image-uuid",
+        "passed": True,
+        "reason": "catalogue image resolved",
+        "required": True,
+        "tag": module.TOKEN_FACTORY_PREFLIGHT_IMAGE,
+    }
+    assert busybox_check["passed"] is True
+    assert busybox_check["sha256"] == module.BUSYBOX_SHA256
+    assert busybox_check["size"] == len(busybox)
+    assert api.calls == [
+        ("whoami", None),
+        ("image_by_tag", module.TOKEN_FACTORY_PREFLIGHT_IMAGE),
+    ]
+    assert api.close_calls == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("api", "busybox", "failure"),
+    [
+        (
+            _FakeSandboxApi(
+                permissions={
+                    "spawn": True,
+                    "list": True,
+                    "import": True,
+                    "cancel": False,
+                },
+            ),
+            b"trusted busybox",
+            "token_factory_sandboxes.permissions",
+        ),
+        (
+            _FakeSandboxApi(image_uuid=None),
+            b"trusted busybox",
+            "token_factory_catalogue",
+        ),
+        (
+            _FakeSandboxApi(),
+            b"wrong busybox",
+            "busybox",
+        ),
+    ],
+)
+async def test_tokenfactory_required_preflight_checks_fail_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    api: _FakeSandboxApi,
+    busybox: bytes,
+    failure: str,
+):
+    module = _preflight_module()
+    _set_environment(monkeypatch)
+    output_path = tmp_path / "preflight.json"
+    expected = b"trusted busybox"
+    monkeypatch.setattr(
+        module,
+        "BUSYBOX_SHA256",
+        hashlib.sha256(expected).hexdigest(),
+    )
+
+    async with _http_client() as client:
+        status = await module.run_preflight(
+            out=output_path,
+            executor="tokenfactory",
+            http_client=client,
+            snapshot_lister=_snapshots,
+            disk_usage=_disk_with_free_gb(40),
+            repo_root=tmp_path,
+            now=lambda: NOW,
+            sandbox_api_factory=lambda **_kwargs: api,
+            busybox_loader=lambda: busybox,
+        )
+
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert status == 1
+    assert report["passed"] is False
+    assert failure in report["failures"]
+    assert api.close_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_tokenfactory_whoami_non_200_is_required_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    module = _preflight_module()
+    from receipts.sandbox.tokenfactory_api import TokenFactoryApiError
+
+    _set_environment(monkeypatch)
+    output_path = tmp_path / "preflight.json"
+    busybox = b"trusted busybox"
+    monkeypatch.setattr(
+        module,
+        "BUSYBOX_SHA256",
+        hashlib.sha256(busybox).hexdigest(),
+    )
+    api = _FakeSandboxApi(
+        whoami_error=TokenFactoryApiError(403, "GET", "/v1/whoami", "denied"),
+    )
+
+    async with _http_client() as client:
+        status = await module.run_preflight(
+            out=output_path,
+            executor="tokenfactory",
+            http_client=client,
+            snapshot_lister=_snapshots,
+            disk_usage=_disk_with_free_gb(40),
+            repo_root=tmp_path,
+            now=lambda: NOW,
+            sandbox_api_factory=lambda **_kwargs: api,
+            busybox_loader=lambda: busybox,
+        )
+
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    check = report["checks"]["token_factory_sandboxes"]
+    assert status == 1
+    assert check["status"] == 403
+    assert check["passed"] is False
+    assert "token_factory_sandboxes.whoami" in report["failures"]
+    assert api.close_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_tokenfactory_sandbox_failures_are_informational_for_daytona(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    module = _preflight_module()
+    _set_environment(monkeypatch)
+    output_path = tmp_path / "preflight.json"
+    api = _FakeSandboxApi(
+        image_uuid=None,
+        whoami_error=RuntimeError("unavailable"),
+    )
+
+    async with _http_client() as client:
+        status = await module.run_preflight(
+            out=output_path,
+            executor="daytona",
+            http_client=client,
+            snapshot_lister=_snapshots,
+            disk_usage=_disk_with_free_gb(40),
+            repo_root=tmp_path,
+            now=lambda: NOW,
+            sandbox_api_factory=lambda **_kwargs: api,
+            busybox_loader=lambda: b"wrong busybox",
+        )
+
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert status == 0
+    assert report["passed"] is True
+    assert report["checks"]["token_factory_sandboxes"]["required"] is False
+    assert report["checks"]["token_factory_sandboxes"]["passed"] is False
+    assert report["checks"]["token_factory_catalogue"]["passed"] is False
+    assert report["checks"]["busybox"]["passed"] is False
+    assert not any(
+        failure.startswith("token_factory_sandboxes")
+        for failure in report["failures"]
+    )
+    assert "token_factory_catalogue" not in report["failures"]
+    assert "busybox" not in report["failures"]
+    assert api.close_calls == 1

@@ -72,6 +72,17 @@ def estimate_daytona_sandbox_dollars(
     return float(total)
 
 
+def estimate_tokenfactory_sandbox_dollars(
+    usage: Sequence[Mapping[str, Any]],
+) -> float:
+    """Sum the per-operation cost reported by Token Factory Sandboxes."""
+
+    total = Decimal("0")
+    for item in usage:
+        total += Decimal(str(item["cost"]))
+    return float(total)
+
+
 class TokenUsage(BaseModel):
     """The token counters reported for one model response."""
 

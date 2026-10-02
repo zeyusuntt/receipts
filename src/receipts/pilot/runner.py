@@ -24,7 +24,10 @@ from typing import Any, Literal
 from pydantic import AliasChoices, BaseModel, Field
 
 from receipts.agent.worker import WorkerOutcome
-from receipts.cost import estimate_daytona_sandbox_dollars
+from receipts.cost import (
+    estimate_daytona_sandbox_dollars,
+    estimate_tokenfactory_sandbox_dollars,
+)
 from receipts.llm import ModelClient
 from receipts.models import ClaimAudit, Claims, Receipt, VerdictStatus
 from receipts.orchestrate import RunBudgets, RunResult, fix
@@ -87,6 +90,7 @@ class InstanceRecord(BaseModel):
     status: PilotStatus
     reason: str | None
     run_dir: str
+    executor_kind: str | None = None
     attempts: list[AttemptRecord]
     final: FinalRecord | None
     cost: PilotCost
@@ -181,6 +185,13 @@ def _run_id(instance_id: str) -> str:
     return f"pilot-{prefix}-{uuid.uuid4().hex[:10]}"
 
 
+def _executor_kind_from_instance(executor: Any) -> str:
+    name = type(executor).__name__
+    if name.endswith("Executor"):
+        name = name[: -len("Executor")]
+    return name.lower()
+
+
 def _pilot_cost(
     result: RunResult | None,
     sandbox_usage: Sequence[dict[str, Any]],
@@ -203,11 +214,42 @@ def _pilot_cost(
         float(item["seconds"])
         for item in sandbox_usage
     )
+    disclosure = getattr(result, "disclosure", None)
+    executor_kind = getattr(disclosure, "executor_kind", None)
+    tokenfactory_usage: list[dict[str, Any]] = []
+    daytona_usage: list[dict[str, Any]] = []
+    for item in sandbox_usage:
+        item_kind = re.sub(
+            r"[^a-z0-9]+",
+            "",
+            str(item.get("executor_kind", "")).lower(),
+        )
+        resources = item.get("resources")
+        zero_resources = False
+        if isinstance(resources, dict):
+            try:
+                zero_resources = all(
+                    float(resources[name]) == 0
+                    for name in ("cpu", "memory", "disk")
+                )
+            except (KeyError, TypeError, ValueError):
+                zero_resources = False
+        reported = (
+            executor_kind == "tokenfactory"
+            or item_kind == "tokenfactory"
+            or ("cost" in item and zero_resources)
+        )
+        if reported:
+            tokenfactory_usage.append(item)
+        else:
+            daytona_usage.append(item)
+    sandbox_dollars = estimate_daytona_sandbox_dollars(daytona_usage)
+    sandbox_dollars += estimate_tokenfactory_sandbox_dollars(tokenfactory_usage)
     return PilotCost(
         tokens=tokens,
         model_dollars=float(dollars) if dollars is not None else None,
         sandbox_lifetime_seconds=sandbox_lifetime_seconds,
-        sandbox_dollars_estimate=estimate_daytona_sandbox_dollars(sandbox_usage),
+        sandbox_dollars_estimate=sandbox_dollars,
     )
 
 
@@ -363,6 +405,11 @@ def _ran_record(
         status="infra_error" if infrastructure_reason is not None else "ran",
         reason=infrastructure_reason,
         run_dir=_record_run_dir(run_dir),
+        executor_kind=getattr(
+            getattr(result, "disclosure", None),
+            "executor_kind",
+            None,
+        ),
         attempts=attempts,
         final=FinalRecord(
             gate_status=result.final_verdict.status,
@@ -529,6 +576,7 @@ async def run_instance(
     run_id = _run_id(instance.instance_id)
     run_dir = instance_dir / "runs" / run_id
     executor: Executor | None = None
+    executor_kind: str | None = None
     original_sink: Any = None
     sink_replaced = False
     original_run_pytest: Any = None
@@ -539,7 +587,9 @@ async def run_instance(
 
     try:
         try:
-            executor = _shield_cleanup_methods(make_executor(run_id))
+            executor = make_executor(run_id)
+            executor_kind = _executor_kind_from_instance(executor)
+            executor = _shield_cleanup_methods(executor)
             if hasattr(executor, "cleanup_manifest"):
                 setattr(executor, "cleanup_manifest", run_dir / "cleanup.json")
             original_sink = getattr(executor, "sink", None)
@@ -600,12 +650,15 @@ async def run_instance(
             time.monotonic() - started,
             sandbox_usage,
         )
+        if record.executor_kind is None:
+            record.executor_kind = executor_kind
     except (BaselineBroken, BaselineTooSlow, TargetNotFailing, UnparseableTestPatch) as exc:
         record = InstanceRecord(
             instance_id=instance.instance_id,
             status="excluded",
             reason=str(exc),
             run_dir=_record_run_dir(run_dir),
+            executor_kind=executor_kind,
             attempts=[],
             final=None,
             cost=_pilot_cost(result, sandbox_usage),
@@ -619,6 +672,7 @@ async def run_instance(
             status="infra_error",
             reason=f"{type(exc).__name__}: {exc}",
             run_dir=_record_run_dir(run_dir),
+            executor_kind=executor_kind,
             attempts=[],
             final=None,
             cost=_pilot_cost(result, sandbox_usage),
