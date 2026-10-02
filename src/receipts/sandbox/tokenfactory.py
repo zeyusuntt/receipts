@@ -2,24 +2,48 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import io
 import json
+import os
 import posixpath
 import shlex
+import shutil
+import signal
+import stat
+import tarfile
+import time
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from receipts.junit import parse_junit
 from receipts.models import Branch, Checkpoint, Receipt, ReceiptKind
-from receipts.sandbox.protocol import PYTEST_BOOTSTRAP, ImageSource, Source
+from receipts.patchscope import default_protected_modules, filter_patch, summarize_patch
+from receipts.sandbox.protocol import (
+    GIT_APPLY_FLAGS,
+    PYTEST_BOOTSTRAP,
+    PYTEST_FLAGS,
+    ImageSource,
+    Source,
+)
 from receipts.sandbox.sink import ReceiptSink
+from receipts.sandbox.staging import (
+    git_environment,
+    mirror_worktree,
+    patch_command,
+    remove_path,
+)
 from receipts.sandbox.tokenfactory_api import (
     InstanceFileSpec,
     RunResult,
     TokenFactoryApiError,
     UploadedFile,
 )
+from receipts.sandbox.tree import tree_digest as _tree_digest
 
 
 TAIL = 6_000
@@ -27,6 +51,8 @@ _SCRATCH_ROOT = "/tmp"
 _BUSYBOX_PATH = "/opt/receipts-bin/busybox"
 _PYTEST_PATH = "/opt/receipts/receipts_pytest.py"
 _INCOMING_ROOT = "/opt/receipts/incoming"
+_REPORTS_ROOT = "/opt/receipts/reports"
+_DEFAULT_ARCHIVE_SIZE_CAP_BYTES = 2 * 1024 * 1024 * 1024
 _SNAPSHOT_COMMAND = (
     "git add -A && git -c user.name=receipts "
     "-c user.email=receipts@localhost commit -q --allow-empty "
@@ -40,6 +66,184 @@ def _now() -> datetime:
 
 def _tail(text: str) -> str:
     return text[-TAIL:]
+
+
+def _tail_bytes(data: bytes) -> str:
+    return data.decode(errors="replace")[-TAIL:]
+
+
+def _archive_path(name: str, *, description: str) -> PurePosixPath:
+    if not name or "\x00" in name:
+        raise OSError(f"unsafe Token Factory archive: invalid {description}")
+    candidate = PurePosixPath(name)
+    if candidate.is_absolute() or name.startswith("/"):
+        raise OSError(
+            f"unsafe Token Factory archive: absolute {description}: {name}",
+        )
+    parts: list[str] = []
+    for part in candidate.parts:
+        if part in ("", "."):
+            continue
+        if part == "..":
+            raise OSError(
+                f"unsafe Token Factory archive: parent traversal in {description}: {name}",
+            )
+        parts.append(part)
+    return PurePosixPath(*parts) if parts else PurePosixPath(".")
+
+
+def _safe_extract_tar(
+    archive_bytes: bytes,
+    destination: Path,
+    *,
+    size_cap_bytes: int = _DEFAULT_ARCHIVE_SIZE_CAP_BYTES,
+) -> None:
+    """Extract an agent-controlled tar without following archive symlinks."""
+
+    if size_cap_bytes <= 0:
+        raise ValueError("archive size cap must be positive")
+    if len(archive_bytes) > size_cap_bytes:
+        raise OSError(
+            "Token Factory archive exceeds size cap "
+            f"of {size_cap_bytes} bytes: {len(archive_bytes)} bytes",
+        )
+    if os.path.lexists(destination):
+        raise OSError(f"Token Factory archive destination already exists: {destination}")
+
+    try:
+        archive = tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:*")
+    except (tarfile.TarError, OSError) as exc:
+        raise OSError(f"unsafe Token Factory archive: invalid tar: {exc}") from exc
+
+    with archive:
+        members = archive.getmembers()
+        extracted_size = sum(member.size for member in members if member.isreg())
+        if extracted_size > size_cap_bytes:
+            raise OSError(
+                "Token Factory archive exceeds size cap "
+                f"of {size_cap_bytes} bytes after extraction: {extracted_size} bytes",
+            )
+
+        normalized: list[tuple[tarfile.TarInfo, PurePosixPath]] = []
+        by_path: dict[PurePosixPath, tarfile.TarInfo] = {}
+        symlinks: set[PurePosixPath] = set()
+        allowed = (
+            tarfile.DIRTYPE,
+            tarfile.REGTYPE,
+            tarfile.AREGTYPE,
+            tarfile.SYMTYPE,
+            tarfile.LNKTYPE,
+        )
+        for member in members:
+            path = _archive_path(member.name, description="member path")
+            if member.type not in allowed:
+                raise OSError(
+                    "unsafe Token Factory archive: special member refused: "
+                    f"{member.name}",
+                )
+            if path == PurePosixPath(".") and not member.isdir():
+                raise OSError("unsafe Token Factory archive: non-directory root member")
+            if path in by_path:
+                raise OSError(
+                    f"unsafe Token Factory archive: duplicate member path: {member.name}",
+                )
+            by_path[path] = member
+            normalized.append((member, path))
+            if member.issym():
+                symlinks.add(path)
+
+        def parents(path: PurePosixPath) -> tuple[PurePosixPath, ...]:
+            return tuple(path.parents[:-1])
+
+        for member, path in normalized:
+            crossed = next((parent for parent in parents(path) if parent in symlinks), None)
+            if crossed is not None:
+                raise OSError(
+                    "unsafe Token Factory archive: member path passes through symlink "
+                    f"{crossed.as_posix()}: {member.name}",
+                )
+            if member.islnk():
+                target = _archive_path(member.linkname, description="hard-link target")
+                crossed_target = next(
+                    (parent for parent in (target, *parents(target)) if parent in symlinks),
+                    None,
+                )
+                if crossed_target is not None:
+                    raise OSError(
+                        "unsafe Token Factory archive: hard-link target passes through "
+                        f"symlink {crossed_target.as_posix()}: {member.linkname}",
+                    )
+                target_member = by_path.get(target)
+                if target_member is None or not (target_member.isreg() or target_member.islnk()):
+                    raise OSError(
+                        "unsafe Token Factory archive: invalid hard-link target: "
+                        f"{member.linkname}",
+                    )
+
+        destination.mkdir(parents=True)
+        directories = sorted(
+            ((member, path) for member, path in normalized if member.isdir()),
+            key=lambda item: len(item[1].parts),
+        )
+        for _member, path in directories:
+            if path != PurePosixPath("."):
+                destination.joinpath(*path.parts).mkdir()
+
+        for member, path in normalized:
+            if not member.isreg():
+                continue
+            target = destination.joinpath(*path.parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            source = archive.extractfile(member)
+            if source is None:
+                raise OSError(
+                    f"unsafe Token Factory archive: missing file data: {member.name}",
+                )
+            data = source.read(size_cap_bytes + 1)
+            if len(data) != member.size:
+                raise OSError(
+                    f"unsafe Token Factory archive: truncated file data: {member.name}",
+                )
+            target.write_bytes(data)
+            target.chmod(stat.S_IMODE(member.mode), follow_symlinks=False)
+
+        def hard_target(path: PurePosixPath, seen: set[PurePosixPath]) -> PurePosixPath:
+            if path in seen:
+                raise OSError("unsafe Token Factory archive: hard-link cycle")
+            member = by_path[path]
+            if member.isreg():
+                return path
+            target = _archive_path(member.linkname, description="hard-link target")
+            return hard_target(target, {*seen, path})
+
+        for member, path in normalized:
+            if not member.islnk():
+                continue
+            source_path = hard_target(
+                _archive_path(member.linkname, description="hard-link target"),
+                {path},
+            )
+            source = destination.joinpath(*source_path.parts)
+            target = destination.joinpath(*path.parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            os.link(source, target, follow_symlinks=False)
+
+        # Symlinks are created last and their literal targets are never resolved.
+        # Outside-pointing links must remain links so the patch-scope gate can see them.
+        for member, path in normalized:
+            if not member.issym():
+                continue
+            target = destination.joinpath(*path.parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.symlink_to(member.linkname)
+
+        for member, path in reversed(directories):
+            target = (
+                destination
+                if path == PurePosixPath(".")
+                else destination.joinpath(*path.parts)
+            )
+            target.chmod(stat.S_IMODE(member.mode), follow_symlinks=False)
 
 
 @dataclass(frozen=True)
@@ -69,6 +273,7 @@ class TokenFactoryExecutor:
         truncate_output_at: int = 64 * 1024 * 1024,
         run_timeout_cap_s: int = 3600,
         hostname: str = "receipts",
+        archive_size_cap_bytes: int = _DEFAULT_ARCHIVE_SIZE_CAP_BYTES,
     ) -> None:
         if not isinstance(busybox, bytes):
             raise TypeError("busybox must be bytes")
@@ -80,6 +285,8 @@ class TokenFactoryExecutor:
             raise ValueError("run_timeout_cap_s must be positive")
         if not hostname:
             raise ValueError("hostname must not be empty")
+        if archive_size_cap_bytes <= 0:
+            raise ValueError("archive_size_cap_bytes must be positive")
 
         self.root = Path(root)
         self.sink = sink
@@ -88,6 +295,7 @@ class TokenFactoryExecutor:
         self.truncate_output_at = truncate_output_at
         self.run_timeout_cap_s = run_timeout_cap_s
         self.hostname = hostname
+        self.archive_size_cap_bytes = archive_size_cap_bytes
         self.cleanup_manifest: Path | None = None
 
         self._busybox = bytes(busybox)
@@ -97,14 +305,27 @@ class TokenFactoryExecutor:
         self._heads: dict[str, str] = {}
         self._specs: dict[str, _BranchSpec] = {}
         self._checkpoint_specs: dict[str, _BranchSpec] = {}
+        self._checkpoint_trees: dict[str, Path] = {}
+        self._checkpoint_cache_lock = asyncio.Lock()
         self._fork_next: dict[str, int] = {}
         self._released_branches: set[str] = set()
         self._usage: list[dict[str, Any]] = []
         self._prepared = False
         self._closed = False
+        self._protected_modules = default_protected_modules()
+
+        git_path = shutil.which("git")
+        if git_path is None:
+            raise RuntimeError("git executable not found")
+        self._git = Path(git_path).resolve()
+        bash_path = shutil.which("bash", path=os.defpath)
+        if bash_path is None:
+            raise RuntimeError("bash executable not found")
+        self._bash = Path(bash_path).resolve()
 
         self.root.mkdir(parents=True, exist_ok=True)
-        (self.root / "logs").mkdir(exist_ok=True)
+        for directory in ("logs", "reports", "patches", "staging", "checkpoints"):
+            (self.root / directory).mkdir(exist_ok=True)
 
     def __repr__(self) -> str:
         return (
@@ -240,12 +461,15 @@ class TokenFactoryExecutor:
         command: str,
         timeout_s: int,
         *,
+        env: dict[str, str] | None = None,
         extra_files: dict[str, InstanceFileSpec] | None = None,
+        image: str | None = None,
+        advance_head: bool = True,
     ) -> _Execution:
         if timeout_s <= 0:
             raise ValueError("timeout_s must be positive")
         await self._ensure_tools()
-        before = self._head(branch)
+        before = image or self._head(branch)
         files = self._trusted_files()
         if extra_files:
             files.update(extra_files)
@@ -255,6 +479,7 @@ class TokenFactoryExecutor:
             image=before,
             hostname=self.hostname,
             shell=True,
+            env=env,
             cwd=self._spec(branch).workdir,
             disposable=False,
             timeout=min(timeout_s, self.run_timeout_cap_s),
@@ -268,8 +493,9 @@ class TokenFactoryExecutor:
             raise RuntimeError(f"Token Factory sandbox operation failed: {detail}")
 
         after = result.image_uuid or before
-        self._heads[branch.id] = after
-        branch.head = after
+        if advance_head:
+            self._heads[branch.id] = after
+            branch.head = after
         return _Execution(
             before=before,
             after=after,
@@ -317,6 +543,10 @@ class TokenFactoryExecutor:
         path: str | None = None,
         snapshot_sha: str | None = None,
         stdout_sha256: str | None = None,
+        junit: Any = None,
+        tree_digest: str | None = None,
+        tree_download_s: float | None = None,
+        patch_sha256: str | None = None,
     ) -> Receipt:
         result = execution.result
         output = (result.stdout + result.stderr).encode()
@@ -337,6 +567,179 @@ class TokenFactoryExecutor:
             duration_s=max(0.0, result.duration_s),
             timed_out=result.timed_out,
             snapshot_sha=snapshot_sha,
+            junit=junit,
+            tree_digest=tree_digest,
+            tree_download_s=tree_download_s,
+            patch_sha256=patch_sha256,
+        )
+
+    async def _archive_image(
+        self,
+        branch: Branch,
+        image: str,
+        *,
+        include_top_level_git: bool,
+    ) -> tuple[bytes, float]:
+        token = uuid.uuid4().hex
+        remote_archive = f"{_SCRATCH_ROOT}/receipts-{token}.tar"
+        parts = [
+            shlex.quote(_BUSYBOX_PATH),
+            "tar",
+            "-C",
+            shlex.quote(self._spec(branch).workdir),
+        ]
+        if not include_top_level_git:
+            parts.append("--exclude=./.git")
+        parts.extend(("-cf", shlex.quote(remote_archive), "."))
+        command = " ".join(parts)
+        started = time.monotonic()
+        execution = await self._execute(
+            branch,
+            command,
+            min(300, self.run_timeout_cap_s),
+            image=image,
+            advance_head=False,
+        )
+        result = execution.result
+        if result.timed_out or result.exit_code != 0:
+            detail = _tail(result.stderr) or _tail(result.stdout) or "no output"
+            raise OSError(f"Token Factory worktree archive failed: {detail}")
+        if result.image_uuid is None:
+            raise OSError("Token Factory worktree archive returned no downloadable image")
+        archive = await self.api.download(result.image_uuid, remote_archive)
+        elapsed = time.monotonic() - started
+        if archive is None:
+            raise OSError("Token Factory worktree archive was missing from result image")
+        if len(archive) > self.archive_size_cap_bytes:
+            raise OSError(
+                "Token Factory archive exceeds size cap "
+                f"of {self.archive_size_cap_bytes} bytes: {len(archive)} bytes",
+            )
+        return archive, elapsed
+
+    async def _download_tree_from_image(
+        self,
+        branch: Branch,
+        image: str,
+        destination: Path,
+        *,
+        include_top_level_git: bool,
+    ) -> float:
+        archive, download_s = await self._archive_image(
+            branch,
+            image,
+            include_top_level_git=include_top_level_git,
+        )
+        try:
+            await asyncio.to_thread(
+                _safe_extract_tar,
+                archive,
+                destination,
+                size_cap_bytes=self.archive_size_cap_bytes,
+            )
+        except Exception:
+            if os.path.lexists(destination):
+                await asyncio.to_thread(remove_path, destination)
+            raise
+        return download_s
+
+    async def _tree_digest_with_download_time(
+        self,
+        branch: Branch,
+    ) -> tuple[str, float]:
+        destination = self.root / "staging" / f"digest-{branch.id}-{uuid.uuid4().hex}"
+        try:
+            download_s = await self._download_tree_from_image(
+                branch,
+                self._head(branch),
+                destination,
+                # The digest ignores every .git path, so the top-level history,
+                # by far the largest part of a repository, is not archived.
+                include_top_level_git=False,
+            )
+            digest = await asyncio.to_thread(_tree_digest, destination)
+            return digest, download_s
+        finally:
+            if os.path.lexists(destination):
+                await asyncio.to_thread(remove_path, destination)
+
+    async def _checkpoint_tree(self, branch: Branch) -> Path:
+        checkpoint = branch.origin
+        cached = self._checkpoint_trees.get(checkpoint)
+        if cached is not None:
+            return cached
+        async with self._checkpoint_cache_lock:
+            cached = self._checkpoint_trees.get(checkpoint)
+            if cached is not None:
+                return cached
+            destination = self.root / "checkpoints" / hashlib.sha256(
+                checkpoint.encode(),
+            ).hexdigest()
+            if os.path.lexists(destination):
+                await asyncio.to_thread(remove_path, destination)
+            await self._download_tree_from_image(
+                branch,
+                checkpoint,
+                destination,
+                include_top_level_git=True,
+            )
+            self._checkpoint_trees[checkpoint] = destination
+            return destination
+
+    async def _execute_host(
+        self,
+        workdir: Path,
+        command: str,
+        timeout_s: int,
+        *,
+        env_overrides: dict[str, str] | None = None,
+    ) -> tuple[bytes, bytes, int | None, bool, datetime, float]:
+        env = {
+            "PATH": os.defpath,
+            "HOME": str(self.root),
+            "LANG": "C.UTF-8",
+        }
+        if env_overrides:
+            env.update(env_overrides)
+        started_at = _now()
+        monotonic_started = time.monotonic()
+        process = await asyncio.create_subprocess_exec(
+            str(self._bash),
+            "-c",
+            command,
+            cwd=workdir,
+            env=env,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            start_new_session=True,
+        )
+        timed_out = False
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=timeout_s,
+            )
+            exit_code: int | None = process.returncode
+        except asyncio.TimeoutError:
+            timed_out = True
+            exit_code = None
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            stdout, stderr = await process.communicate()
+        else:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        return (
+            stdout,
+            stderr,
+            exit_code,
+            timed_out,
+            started_at,
+            time.monotonic() - monotonic_started,
         )
 
     async def prepare(self, source: Source) -> Branch:
@@ -391,7 +794,39 @@ class TokenFactoryExecutor:
         timeout_s: int,
         kind: ReceiptKind = "command",
     ) -> Receipt:
-        raise NotImplementedError("TF-3")
+        seq = self._next_seq(branch)
+        spec = self._spec(branch)
+        remote_report = f"{_REPORTS_ROOT}/{branch.id}-{seq}.xml"
+        local_report = self.root / "reports" / f"{branch.id}-{seq}.xml"
+        local_report.unlink(missing_ok=True)
+        pytest_command = (
+            f"{shlex.quote(spec.python)} -I {shlex.quote(_PYTEST_PATH)} "
+            f"{args} {PYTEST_FLAGS} --junitxml={shlex.quote(remote_report)}"
+        )
+        command = (
+            f"{shlex.quote(_BUSYBOX_PATH)} mkdir -p {shlex.quote(_REPORTS_ROOT)} "
+            f"&& {pytest_command}"
+        )
+        execution = await self._execute(
+            branch,
+            command,
+            timeout_s,
+            env={"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""},
+        )
+        report = await self.api.download(execution.after, remote_report)
+        if report is not None:
+            local_report.write_bytes(report)
+        junit = parse_junit(local_report if local_report.exists() else None)
+        tree_digest, tree_download_s = await self._tree_digest_with_download_time(branch)
+        return self._execution_receipt(
+            branch,
+            execution,
+            kind=kind,
+            command=command,
+            junit=junit,
+            tree_digest=tree_digest,
+            tree_download_s=tree_download_s,
+        )
 
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:
         if max_bytes < 0:
@@ -529,10 +964,150 @@ class TokenFactoryExecutor:
         return branches
 
     async def patch(self, branch: Branch, snapshot_sha: str) -> Receipt:
-        raise NotImplementedError("TF-3")
+        started = _now()
+        head = self._head(branch)
+        token = uuid.uuid4().hex
+        staging = self.root / "staging" / f"{branch.id}-{token}"
+        agent_tree = self.root / "staging" / f"{branch.id}-{token}-agent"
+        try:
+            checkpoint_tree = await self._checkpoint_tree(branch)
+            await asyncio.to_thread(
+                shutil.copytree,
+                checkpoint_tree,
+                staging,
+                symlinks=True,
+            )
+            tree_download_s = await self._download_tree_from_image(
+                branch,
+                head,
+                agent_tree,
+                include_top_level_git=False,
+            )
+            tree_digest = await asyncio.to_thread(_tree_digest, agent_tree)
+            # Token Factory tar archives preserve symlinks, including dangling and
+            # outside-pointing links, so Daytona's index-based reconstruction is
+            # unnecessary here. Staging never follows those links.
+            await asyncio.to_thread(mirror_worktree, agent_tree, staging)
+        except (OSError, shutil.Error) as exc:
+            for path in (agent_tree, staging):
+                if os.path.lexists(path):
+                    await asyncio.to_thread(remove_path, path)
+            message = f"trusted patch staging failed: {exc}"
+            return self._emit(
+                branch,
+                before=head,
+                after=head,
+                kind="diff",
+                cmd="compute patch in executor staging",
+                exit_code=1,
+                stderr_tail=_tail(message),
+                stdout_sha256=hashlib.sha256(b"").hexdigest(),
+                started_at=started,
+                duration_s=max(0.0, (_now() - started).total_seconds()),
+                snapshot_sha=snapshot_sha,
+            )
+
+        command = patch_command(self._git, snapshot_sha)
+        display_command = f"compute patch in executor staging {staging.name}: {command}"
+        try:
+            stdout, stderr, code, timed_out, command_started, duration = (
+                await self._execute_host(
+                    staging,
+                    command,
+                    120,
+                    env_overrides=git_environment(self.root),
+                )
+            )
+        finally:
+            for path in (agent_tree, staging):
+                if os.path.lexists(path):
+                    await asyncio.to_thread(remove_path, path)
+
+        if code != 0:
+            return self._emit(
+                branch,
+                before=head,
+                after=head,
+                kind="diff",
+                cmd=display_command,
+                exit_code=1,
+                stdout_tail=_tail_bytes(stdout),
+                stderr_tail=_tail_bytes(stderr),
+                stdout_sha256=hashlib.sha256(stdout).hexdigest(),
+                started_at=command_started,
+                duration_s=duration,
+                timed_out=timed_out,
+                tree_digest=tree_digest,
+                tree_download_s=tree_download_s,
+                snapshot_sha=snapshot_sha,
+            )
+
+        patch_text = stdout.decode(errors="replace")
+        patch_path = (
+            self.root
+            / "patches"
+            / f"{branch.id}-{self._next_seq(branch)}-full.diff"
+        )
+        patch_path.write_text(patch_text)
+        summary = summarize_patch(patch_text, self._protected_modules).model_copy(
+            update={"patch_path": str(patch_path)},
+        )
+        _, dropped = filter_patch(patch_text, self._protected_modules)
+        return self._emit(
+            branch,
+            before=head,
+            after=head,
+            kind="diff",
+            cmd=display_command,
+            exit_code=0,
+            stdout_tail=patch_text[-TAIL:],
+            stderr_tail=_tail_bytes(stderr),
+            stdout_sha256=summary.patch_sha256,
+            patch_sha256=summary.patch_sha256,
+            started_at=command_started,
+            duration_s=duration,
+            timed_out=timed_out,
+            tree_digest=tree_digest,
+            tree_download_s=tree_download_s,
+            diff=summary,
+            dropped_paths=dropped,
+            snapshot_sha=snapshot_sha,
+        )
 
     async def apply_patch(self, branch: Branch, patch_text: str) -> Receipt:
-        raise NotImplementedError("TF-3")
+        digest = hashlib.sha256(patch_text.encode()).hexdigest()
+        seq = self._next_seq(branch)
+        local_patch = self.root / "patches" / f"{branch.id}-{seq}-apply.diff"
+        local_patch.write_text(patch_text)
+        uploaded = await self.api.upload(patch_text.encode())
+        remote_patch = f"{_INCOMING_ROOT}/{digest}.diff"
+        command = (
+            "git update-index -q --refresh; "
+            f"git apply {GIT_APPLY_FLAGS} {shlex.quote(remote_patch)}"
+        )
+        execution = await self._execute(
+            branch,
+            command,
+            120,
+            extra_files={
+                remote_patch: InstanceFileSpec(
+                    uuid=uploaded.uuid,
+                    mode="0644",
+                    uid=0,
+                    gid=0,
+                ),
+            },
+        )
+        tree_digest, tree_download_s = await self._tree_digest_with_download_time(branch)
+        return self._execution_receipt(
+            branch,
+            execution,
+            kind="apply",
+            command=command,
+            patch_sha256=digest,
+            tree_digest=tree_digest,
+            tree_download_s=tree_download_s,
+        )
 
     async def release(self, branch: Branch) -> None:
         if branch.id in self._released_branches:

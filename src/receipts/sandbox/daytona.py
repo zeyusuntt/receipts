@@ -66,6 +66,10 @@ from receipts.sandbox.staging import (
     patch_command,
     remove_path,
 )
+from receipts.sandbox.tree import (
+    tree_digest as _tree_digest,
+    tree_digest_ignores as _tree_digest_ignores,
+)
 
 TAIL = 6000
 _SCRATCH_ROOT = "/tmp"
@@ -79,10 +83,6 @@ def _tail(data: bytes) -> str:
     return data.decode(errors="replace")[-TAIL:]
 
 
-def _tree_digest_ignores(path: str) -> bool:
-    return ".git" in PurePosixPath(path).parts
-
-
 def _skip_top_level_git(path: str) -> bool:
     parts = PurePosixPath(path).parts
     return bool(parts) and parts[0] == ".git"
@@ -90,40 +90,6 @@ def _skip_top_level_git(path: str) -> bool:
 
 def _skip_nothing(path: str) -> bool:
     return False
-
-
-def _tree_digest(root: Path) -> str:
-    entries: list[tuple[str, int, str]] = []
-    for directory, names, filenames in os.walk(root, followlinks=False):
-        directory_path = Path(directory)
-        relative_directory = directory_path.relative_to(root)
-        names[:] = sorted(
-            name
-            for name in names
-            if not _tree_digest_ignores((relative_directory / name).as_posix())
-        )
-        for filename in sorted(
-            name
-            for name in filenames
-            if not _tree_digest_ignores((relative_directory / name).as_posix())
-        ):
-            path = directory_path / filename
-            mode = path.lstat().st_mode
-            if stat.S_ISLNK(mode):
-                content = os.fsencode(os.readlink(path))
-            elif stat.S_ISREG(mode):
-                content = path.read_bytes()
-            else:
-                content = b""
-            entries.append(
-                (
-                    path.relative_to(root).as_posix(),
-                    stat.S_IMODE(mode),
-                    hashlib.sha256(content).hexdigest(),
-                ),
-            )
-    serialized = json.dumps(entries, ensure_ascii=True, separators=(",", ":")).encode()
-    return hashlib.sha256(serialized).hexdigest()
 
 
 def _set_symlink(path: Path, target: str) -> None:

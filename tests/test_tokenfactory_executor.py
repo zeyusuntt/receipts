@@ -1,6 +1,11 @@
 import hashlib
+import io
 import importlib
 import json
+import os
+import shutil
+import subprocess
+import tarfile
 from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime
@@ -9,12 +14,15 @@ from pathlib import Path
 import pytest
 
 from receipts.models import Branch
-from receipts.sandbox.protocol import ImageSource, RepoAtCommit
+from receipts.sandbox.protocol import GIT_APPLY_FLAGS, PYTEST_FLAGS, ImageSource, RepoAtCommit
 from receipts.sandbox.sink import MemorySink
+from receipts.sandbox.staging import mirror_worktree
 
 
 BASE_IMAGE = "11111111-1111-1111-1111-111111111111"
 BUSYBOX = b"trusted static busybox"
+ARCHIVE_ALL = "/__fixture_archive_all__.tar"
+ARCHIVE_NO_GIT = "/__fixture_archive_no_git__.tar"
 
 
 def _module():
@@ -37,7 +45,7 @@ def _fake(*, handlers=None, tree=None, tags=None):
     )
 
 
-def _executor(tmp_path: Path, module, api=None):
+def _executor(tmp_path: Path, module, api=None, **kwargs):
     sink = MemorySink()
     executor = module.TokenFactoryExecutor(
         tmp_path / "executor",
@@ -45,6 +53,7 @@ def _executor(tmp_path: Path, module, api=None):
         "run-1",
         api or _fake(),
         busybox=BUSYBOX,
+        **kwargs,
     )
     return executor, executor.api, sink
 
@@ -56,6 +65,106 @@ def _copy_handler(incoming: str, target: str):
         return 0, "", "", tree
 
     return copy_file
+
+
+def _tar_directory(root: Path, *, include_git: bool) -> bytes:
+    stream = io.BytesIO()
+
+    def include(member: tarfile.TarInfo) -> tarfile.TarInfo | None:
+        parts = Path(member.name).parts
+        relative = parts[1:] if parts[:1] == (".",) else parts
+        if not include_git and relative[:1] == (".git",):
+            return None
+        return member
+
+    with tarfile.open(fileobj=stream, mode="w", dereference=False) as archive:
+        archive.add(root, arcname=".", recursive=True, filter=include)
+    return stream.getvalue()
+
+
+def _fixture_tree(root: Path) -> dict[str, bytes]:
+    return {
+        ARCHIVE_ALL: _tar_directory(root, include_git=True),
+        ARCHIVE_NO_GIT: _tar_directory(root, include_git=False),
+    }
+
+
+def _archive_fake(root: Path, *, handlers=None):
+    api_module = _api_module()
+
+    class ArchiveFake(api_module.FakeTokenFactorySandboxApi):
+        async def run(self, **kwargs):
+            command = kwargs["command"]
+            if command.startswith("/opt/receipts-bin/busybox tar "):
+                words = command.split()
+                target = words[words.index("-cf") + 1]
+                archive_key = (
+                    ARCHIVE_NO_GIT if "--exclude=./.git" in words else ARCHIVE_ALL
+                )
+
+                def archive(tree):
+                    tree[target] = tree[archive_key]
+                    return 0, "", "", tree
+
+                self.handlers[command] = archive
+            return await super().run(**kwargs)
+
+    return ArchiveFake(
+        images={BASE_IMAGE: _fixture_tree(root)},
+        tags={"swerebenchv2/example:1": BASE_IMAGE},
+        handlers=handlers or {},
+    )
+
+
+def _init_repo(root: Path) -> str:
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
+    subprocess.run(["git", "config", "user.name", "Fixture"], cwd=root, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "fixture@example.com"],
+        cwd=root,
+        check=True,
+    )
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def _junit_xml() -> bytes:
+    return b"""\
+<?xml version="1.0" encoding="utf-8"?>
+<testsuite tests="1" failures="0" errors="0" skipped="0">
+  <properties>
+    <property name="receipts_rootdir" value="/repo" />
+    <property name="receipts_invocation_dir" value="/repo" />
+  </properties>
+  <testcase classname="tests.test_sample" name="test_ok" file="tests/test_sample.py" />
+</testsuite>
+"""
+
+
+def _tar_with_members(members: list[tuple[tarfile.TarInfo, bytes]]) -> bytes:
+    stream = io.BytesIO()
+    with tarfile.open(fileobj=stream, mode="w") as archive:
+        for member, content in members:
+            if member.isreg():
+                member.size = len(content)
+                archive.addfile(member, io.BytesIO(content))
+            else:
+                archive.addfile(member)
+    return stream.getvalue()
+
+
+def _tar_info(name: str, member_type: bytes, *, linkname: str = "") -> tarfile.TarInfo:
+    member = tarfile.TarInfo(name)
+    member.type = member_type
+    member.linkname = linkname
+    return member
 
 
 @pytest.mark.parametrize(
@@ -488,6 +597,325 @@ async def test_snapshot_returns_sha_from_daytona_git_command(tmp_path):
     assert next(call for call in api.calls if call["method"] == "run")["command"] == command
 
 
+async def test_run_pytest_uses_trusted_runner_downloads_result_junit_and_digest(
+    tmp_path,
+):
+    module = _module()
+    repository = tmp_path / "repository"
+    (repository / "tests").mkdir(parents=True)
+    (repository / "tests" / "test_sample.py").write_text("def test_ok(): pass\n")
+    (repository / ".git").mkdir()
+    (repository / ".git" / "index").write_bytes(b"root git metadata")
+    (repository / "pkg" / ".git").mkdir(parents=True)
+    (repository / "pkg" / ".git" / "index").write_bytes(b"nested git metadata")
+
+    report = "/opt/receipts/reports/base-1.xml"
+    command = (
+        "/opt/receipts-bin/busybox mkdir -p /opt/receipts/reports && "
+        "python3 -I /opt/receipts/receipts_pytest.py "
+        f"tests/test_sample.py::test_ok {PYTEST_FLAGS} --junitxml={report}"
+    )
+
+    def pytest_run(tree):
+        tree[report] = _junit_xml()
+        tree.update(_fixture_tree(repository))
+        return 0, "tests/test_sample.py::test_ok PASSED\n", "", tree
+
+    api = _archive_fake(repository, handlers={command: pytest_run})
+    executor, _, _ = _executor(tmp_path, module, api)
+    base = await executor.prepare(
+        ImageSource(
+            image="swerebenchv2/example:1",
+            workdir="/repo",
+            python="python3",
+        ),
+    )
+
+    receipt = await executor.run_pytest(
+        base,
+        "tests/test_sample.py::test_ok",
+        timeout_s=37,
+        kind="verification",
+    )
+
+    from receipts.sandbox.daytona import _tree_digest
+
+    without_git = tmp_path / "without-git"
+    shutil.copytree(repository, without_git, symlinks=True)
+    shutil.rmtree(without_git / ".git")
+    shutil.rmtree(without_git / "pkg" / ".git")
+    expected_digest = _tree_digest(repository)
+    assert expected_digest == _tree_digest(without_git)
+    run_calls = [call for call in api.calls if call["method"] == "run"]
+    assert run_calls[0]["command"] == command
+    assert run_calls[0]["env"] == {"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""}
+    assert run_calls[0]["image"] == BASE_IMAGE
+    assert run_calls[1]["image"] == receipt.image_after
+    assert run_calls[1]["disposable"] is False
+    assert receipt.kind == "verification" and receipt.exit_code == 0
+    assert receipt.junit is not None
+    assert receipt.junit.passed == ["tests/test_sample.py::test_ok"]
+    assert receipt.tree_digest == expected_digest
+    assert receipt.tree_download_s is not None and receipt.tree_download_s >= 0
+    assert receipt.image_before == BASE_IMAGE
+    assert receipt.image_after == base.head
+    assert run_calls[1]["image"] == base.head
+    report_download = next(
+        call
+        for call in api.calls
+        if call["method"] == "download" and call["path"] == report
+    )
+    assert report_download["image"] == receipt.image_after
+    archive_download = next(
+        call
+        for call in api.calls
+        if call["method"] == "download" and call["path"].endswith(".tar")
+    )
+    assert archive_download["image"] != base.head
+
+
+async def test_run_pytest_returns_none_when_result_image_has_no_junit(tmp_path):
+    module = _module()
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    (repository / "module.py").write_text("VALUE = 1\n")
+    report = "/opt/receipts/reports/base-1.xml"
+    command = (
+        "/opt/receipts-bin/busybox mkdir -p /opt/receipts/reports && "
+        "python -I /opt/receipts/receipts_pytest.py "
+        f"tests/missing.py {PYTEST_FLAGS} --junitxml={report}"
+    )
+
+    def missing_report(tree):
+        return 4, "", "collection failed\n", tree
+
+    api = _archive_fake(repository, handlers={command: missing_report})
+    executor, _, _ = _executor(tmp_path, module, api)
+    base = await executor.prepare(
+        ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
+    )
+
+    receipt = await executor.run_pytest(base, "tests/missing.py", timeout_s=30)
+
+    assert receipt.exit_code == 4
+    assert receipt.junit is None
+    assert receipt.tree_digest is not None
+    assert base.head == receipt.image_after
+
+
+@pytest.mark.parametrize(
+    ("member", "content"),
+    [
+        (tarfile.TarInfo("../x"), b"escape"),
+        (tarfile.TarInfo("/abs"), b"absolute"),
+        (_tar_info("device", tarfile.CHRTYPE), b""),
+        (_tar_info("fifo", tarfile.FIFOTYPE), b""),
+        (
+            _tar_info("hardlink", tarfile.LNKTYPE, linkname="../outside"),
+            b"",
+        ),
+    ],
+)
+def test_safe_archive_extraction_refuses_unsafe_members(tmp_path, member, content):
+    module = _module()
+    archive = _tar_with_members([(member, content)])
+
+    with pytest.raises(OSError, match="unsafe Token Factory archive"):
+        module._safe_extract_tar(archive, tmp_path / "out", size_cap_bytes=len(archive))
+
+
+def test_safe_archive_extraction_refuses_writes_through_archive_symlink(tmp_path):
+    module = _module()
+    link = tarfile.TarInfo("linked")
+    link.type = tarfile.SYMTYPE
+    link.linkname = "../outside"
+    child = tarfile.TarInfo("linked/file.txt")
+    archive = _tar_with_members([(child, b"escape"), (link, b"")])
+
+    with pytest.raises(OSError, match="passes through symlink"):
+        module._safe_extract_tar(archive, tmp_path / "out", size_cap_bytes=len(archive))
+
+
+def test_safe_archive_extraction_enforces_cap_and_keeps_outside_symlink_literal(
+    tmp_path,
+):
+    module = _module()
+    link = tarfile.TarInfo("outside-link")
+    link.type = tarfile.SYMTYPE
+    link.linkname = "../../outside"
+    archive = _tar_with_members([(link, b"")])
+
+    with pytest.raises(OSError, match="size cap"):
+        module._safe_extract_tar(
+            archive,
+            tmp_path / "too-large",
+            size_cap_bytes=len(archive) - 1,
+        )
+    module._safe_extract_tar(
+        archive,
+        tmp_path / "extracted",
+        size_cap_bytes=len(archive),
+    )
+
+    extracted = tmp_path / "extracted" / "outside-link"
+    assert extracted.is_symlink()
+    assert os.readlink(extracted) == "../../outside"
+
+
+async def test_patch_matches_trusted_staging_preserves_symlinks_and_caches_checkpoint(
+    tmp_path,
+):
+    module = _module()
+    checkpoint_tree = tmp_path / "checkpoint"
+    (checkpoint_tree / "src").mkdir(parents=True)
+    (checkpoint_tree / "tests").mkdir()
+    (checkpoint_tree / "src" / "app.py").write_text("VALUE = 1\n")
+    (checkpoint_tree / "src" / "delete.py").write_text("DELETE = True\n")
+    (checkpoint_tree / "tests" / "test_guard.py").write_text("def test_old(): pass\n")
+    (checkpoint_tree / "space name.txt").write_text("before\n")
+    (checkpoint_tree / "link.py").symlink_to("src/app.py")
+    snapshot_sha = _init_repo(checkpoint_tree)
+
+    agent_tree = tmp_path / "agent"
+    shutil.copytree(checkpoint_tree, agent_tree, symlinks=True)
+    (agent_tree / "src" / "app.py").write_text("VALUE = 2\n")
+    (agent_tree / "src" / "new.py").write_text("NEW = True\n")
+    (agent_tree / "src" / "delete.py").unlink()
+    (agent_tree / "tests" / "test_guard.py").write_text("def test_new(): pass\n")
+    (agent_tree / "space name.txt").write_text("after\n")
+    (agent_tree / "outside-link").symlink_to("../../outside")
+
+    expected_tree = tmp_path / "expected"
+    shutil.copytree(checkpoint_tree, expected_tree, symlinks=True)
+    mirror_worktree(agent_tree, expected_tree)
+    subprocess.run(["git", "add", "-A"], cwd=expected_tree, check=True)
+    expected_patch = subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.quotePath=false",
+            "diff",
+            "--cached",
+            "--binary",
+            "--no-ext-diff",
+            "--no-textconv",
+            "--no-renames",
+            snapshot_sha,
+        ],
+        cwd=expected_tree,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+
+    def mutate(tree):
+        tree.update(_fixture_tree(agent_tree))
+        return 0, "", "", tree
+
+    api = _archive_fake(checkpoint_tree, handlers={"mutate agent": mutate})
+    executor, _, _ = _executor(tmp_path, module, api)
+    base = await executor.prepare(
+        ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
+    )
+    checkpoint = await executor.checkpoint(base)
+    (agent,) = await executor.fork(checkpoint, 1, prefix="agent")
+    await executor.run(agent, "mutate agent", timeout_s=30)
+
+    receipt = await executor.patch(agent, snapshot_sha)
+    second = await executor.patch(agent, snapshot_sha)
+
+    from receipts.sandbox.daytona import _tree_digest
+
+    assert receipt.exit_code == second.exit_code == 0
+    assert receipt.diff is not None and second.diff is not None
+    assert Path(receipt.diff.patch_path).read_text() == expected_patch
+    assert Path(second.diff.patch_path).read_text() == expected_patch
+    assert receipt.diff.patch_sha256 == hashlib.sha256(expected_patch.encode()).hexdigest()
+    assert receipt.patch_sha256 == receipt.diff.patch_sha256
+    assert receipt.snapshot_sha == snapshot_sha
+    assert receipt.tree_digest == _tree_digest(agent_tree)
+    assert set(receipt.dropped_paths) == {"outside-link", "tests/test_guard.py"}
+    changed = {item.path: item.status for item in receipt.diff.files}
+    assert changed["src/app.py"] == "modified"
+    assert changed["src/new.py"] == "added"
+    assert changed["src/delete.py"] == "deleted"
+    assert changed["space name.txt"] == "modified"
+    tar_calls = [
+        call
+        for call in api.calls
+        if call["method"] == "run"
+        and call["command"].startswith("/opt/receipts-bin/busybox tar ")
+    ]
+    checkpoint_fetches = [
+        call
+        for call in tar_calls
+        if call["image"] == checkpoint.id and "--exclude=./.git" not in call["command"]
+    ]
+    assert len(checkpoint_fetches) == 1
+    assert len([call for call in tar_calls if "--exclude=./.git" in call["command"]]) == 2
+    assert agent.head == receipt.image_before == receipt.image_after
+    assert second.image_before == second.image_after == agent.head
+
+
+async def test_apply_patch_injects_exact_bytes_uses_upstream_flags_and_moves_head(
+    tmp_path,
+):
+    module = _module()
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    (repository / "original.txt").write_text("original\n")
+    _init_repo(repository)
+    applied = tmp_path / "applied"
+    shutil.copytree(repository, applied, symlinks=True)
+    (applied / "original.txt").write_text("changed\n")
+    patch_text = subprocess.run(
+        ["git", "diff", "--binary", "--no-ext-diff", "--no-textconv", "--no-renames"],
+        cwd=applied,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    digest = hashlib.sha256(patch_text.encode()).hexdigest()
+    remote_patch = f"/opt/receipts/incoming/{digest}.diff"
+    command = (
+        "git update-index -q --refresh; "
+        f"git apply {GIT_APPLY_FLAGS} {remote_patch}"
+    )
+
+    def apply(tree):
+        assert tree[remote_patch] == patch_text.encode()
+        tree.update(_fixture_tree(applied))
+        return 0, "Checking patch original.txt...\nApplied patch original.txt cleanly.\n", "", tree
+
+    api = _archive_fake(repository, handlers={command: apply})
+    executor, _, _ = _executor(tmp_path, module, api)
+    base = await executor.prepare(
+        ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
+    )
+    checkpoint = await executor.checkpoint(base)
+    (witness,) = await executor.fork(checkpoint, 1, prefix="w")
+    before = witness.head
+
+    receipt = await executor.apply_patch(witness, patch_text)
+
+    from receipts.sandbox.daytona import _tree_digest
+
+    run_calls = [call for call in api.calls if call["method"] == "run"]
+    assert run_calls[0]["command"] == command
+    assert set(run_calls[0]["files"]) == {
+        "/opt/receipts-bin/busybox",
+        "/opt/receipts/receipts_pytest.py",
+        remote_patch,
+    }
+    assert receipt.kind == "apply" and receipt.exit_code == 0
+    assert receipt.patch_sha256 == digest
+    assert receipt.image_before == before
+    assert receipt.image_after == witness.head != before
+    assert run_calls[1]["image"] == witness.head
+    assert run_calls[1]["image"] == receipt.image_after
+    assert receipt.tree_digest == _tree_digest(applied)
+
+
 async def test_sandbox_usage_records_each_run_cost_and_close_writes_empty_manifest(
     tmp_path,
 ):
@@ -542,20 +970,13 @@ async def test_sandbox_usage_records_each_run_cost_and_close_writes_empty_manife
     assert [call["method"] for call in api.calls].count("aclose") == 1
 
 
-async def test_release_forgets_branch_and_tf3_methods_are_explicit(tmp_path):
+async def test_release_forgets_branch(tmp_path):
     module = _module()
     executor, _, _ = _executor(tmp_path, module)
     base = await executor.prepare(
         ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
     )
 
-    for call in (
-        executor.run_pytest(base, "", 10),
-        executor.patch(base, "a" * 40),
-        executor.apply_patch(base, "diff --git a/a b/a\n"),
-    ):
-        with pytest.raises(NotImplementedError, match="^TF-3$"):
-            await call
     await executor.release(base)
     await executor.release(base)
     with pytest.raises(RuntimeError, match="released|unknown"):
