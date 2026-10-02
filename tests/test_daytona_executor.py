@@ -8,7 +8,7 @@ import stat
 import subprocess
 import uuid
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 
@@ -419,25 +419,41 @@ async def test_sandbox_usage_reports_lifetimes_and_resources_from_injected_clock
 ):
     module = _daytona_module()
     clock = ManualClock(10.0)
+    created_at = datetime(2026, 10, 2, 12, 0, tzinfo=timezone.utc)
+    wall_clock = ManualClock(created_at)
     resources = module.DaytonaResources(cpu=4, memory=8, disk=10)
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    cost_path = run_dir / "cost.json"
+    cost_path.write_text('{"estimated_dollars": 1.25}\n', encoding="utf-8")
     executor, _, _ = _executor(
         tmp_path,
         module,
         resources=resources,
         clock=clock,
+        wall_clock=wall_clock,
+        cleanup_manifest=run_dir / "cleanup.json",
     )
 
     await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
     clock.value = 25.5
+    wall_clock.value = created_at + timedelta(seconds=16)
     await executor.close()
 
-    assert executor.sandbox_usage() == [
+    usage = executor.sandbox_usage()
+    assert usage == [
         {
             "sandbox_id": "sandbox-1",
             "seconds": 15.5,
+            "created_at": "2026-10-02T12:00:00+00:00",
+            "deleted_at": "2026-10-02T12:00:16+00:00",
             "resources": {"cpu": 4, "memory": 8, "disk": 10},
         },
     ]
+    assert usage[0]["created_at"] <= usage[0]["deleted_at"]
+    persisted_cost = json.loads(cost_path.read_text(encoding="utf-8"))
+    assert persisted_cost["estimated_dollars"] == 1.25
+    assert persisted_cost["sandbox_usage"] == usage
 
 
 async def test_run_write_read_and_snapshot_form_one_complete_provenance_chain(tmp_path):

@@ -35,6 +35,18 @@ price_table: dict[str, dict[str, float | bool]] = {
 }
 
 
+class CostSummary(BaseModel):
+    """The durable cost artifact, including defaults for pre-C2b runs."""
+
+    models: dict[str, dict[str, int | float | None]] = Field(default_factory=dict)
+    estimated_dollars: float | None = None
+    sandbox_seconds: float = Field(default=0, ge=0)
+    pricing_is_estimate: bool = True
+    planner_tokens: int = Field(default=0, ge=0)
+    planner_dollars: float | None = Field(default=0, ge=0)
+    model_retries: dict[str, int] = Field(default_factory=dict)
+
+
 def estimate_daytona_sandbox_dollars(
     usage: Sequence[Mapping[str, Any]],
 ) -> float:
@@ -66,6 +78,28 @@ class TokenUsage(BaseModel):
     prompt: int = Field(default=0, ge=0)
     completion: int = Field(default=0, ge=0)
     reasoning: int = Field(default=0, ge=0)
+
+
+def token_count(usage: TokenUsage) -> int:
+    return usage.prompt + usage.completion + usage.reasoning
+
+
+def estimate_model_dollars(
+    model: str,
+    usage: TokenUsage,
+    prices: Mapping[str, Mapping[str, float | bool]] | None = None,
+) -> float | None:
+    selected_prices = price_table if prices is None else prices
+    price = selected_prices.get(model)
+    if price is None:
+        return None
+    prompt_price = Decimal(str(price["prompt_per_million"]))
+    completion_price = Decimal(str(price["completion_per_million"]))
+    total = (
+        Decimal(usage.prompt) * prompt_price
+        + Decimal(usage.completion) * completion_price
+    ) / Decimal(1_000_000)
+    return float(total)
 
 
 class CostMeter:
@@ -105,12 +139,9 @@ class CostMeter:
                 estimated_dollars = None
                 all_models_priced = False
             else:
-                prompt_price = Decimal(str(price["prompt_per_million"]))
-                completion_price = Decimal(str(price["completion_per_million"]))
-                model_cost = (
-                    Decimal(usage.prompt) * prompt_price
-                    + Decimal(usage.completion) * completion_price
-                ) / Decimal(1_000_000)
+                model_cost = Decimal(
+                    str(estimate_model_dollars(model, usage, self._prices)),
+                )
                 total += model_cost
                 estimated_dollars = float(model_cost)
 
@@ -121,9 +152,8 @@ class CostMeter:
                 "estimated_dollars": estimated_dollars,
             }
 
-        return {
-            "models": models,
-            "estimated_dollars": float(total) if all_models_priced else None,
-            "sandbox_seconds": self._sandbox_seconds,
-            "pricing_is_estimate": True,
-        }
+        return CostSummary(
+            models=models,
+            estimated_dollars=float(total) if all_models_priced else None,
+            sandbox_seconds=self._sandbox_seconds,
+        ).model_dump(mode="json")

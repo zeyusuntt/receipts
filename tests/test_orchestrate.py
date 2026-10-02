@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from types import ModuleType
 
+from receipts.cost import SUPER_MODEL, TokenUsage
 from receipts.llm import AssistantTurn, FakeModel, ToolCall
 from receipts.receipt_text import render
 from receipts.sandbox.local import LocalExecutor
@@ -143,6 +144,19 @@ def _model(turns: list[AssistantTurn]) -> FakeModel:
         ],
         turns=turns,
     )
+
+
+class _MeasuredFakeModel(FakeModel):
+    config = {"model": SUPER_MODEL, "base_url": "offline"}
+
+    async def complete_json(self, system, user, schema):
+        result = await super().complete_json(system, user, schema)
+        return result.model_copy(
+            update={
+                "usage": TokenUsage(prompt=100, completion=50, reasoning=10),
+                "retries": {"429": 2},
+            },
+        )
 
 
 class _ImageSourceLocalExecutor:
@@ -399,6 +413,69 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
     ]
     assert [row["kind"] for row in witness_rows] == ["apply", "verification"]
 
+
+async def test_cost_includes_planner_usage_retries_and_worker_retries(tmp_path: Path):
+    first = _turn(
+        _call(
+            "edit_file",
+            {
+                "path": "calc/__init__.py",
+                "old_text": (
+                    "def sub(a, b):\n"
+                    "    return a + b  # bug: should be a - b\n"
+                ),
+                "new_text": "def sub(a, b):\n    return a - b\n",
+            },
+            "edit-source",
+        ),
+    ).model_copy(update={"retries": {"5xx": 1}})
+    model = _MeasuredFakeModel(
+        json_objects=[
+            {
+                "hypothesis": "calc.sub adds instead of subtracting",
+                "files_to_edit": ["calc/__init__.py"],
+                "approach": "Change calc.sub to subtract and run the suite.",
+            },
+        ],
+        turns=[
+            first,
+            _turn(
+                _call(
+                    "run_command",
+                    {"command": "python -m pytest -q"},
+                    "run-suite",
+                ),
+            ),
+            _finish(
+                "finish",
+                summary="Corrected subtraction and ran the full suite.",
+                changed=["calc/__init__.py"],
+                green=True,
+            ),
+        ],
+    )
+
+    _, run_dir, _, _ = await _run(tmp_path, model)
+
+    plan = json.loads((run_dir / "plan.json").read_text(encoding="utf-8"))
+    cost = json.loads((run_dir / "cost.json").read_text(encoding="utf-8"))
+    worker_rows = [
+        json.loads(line)
+        for line in (run_dir / "agent" / "worker.jsonl").read_text().splitlines()
+    ]
+    assert plan["retries"] == {"429": 2}
+    assert worker_rows[0]["retries"] == {"5xx": 1}
+    assert "retries" not in worker_rows[1]
+    assert cost["planner_tokens"] == 160
+    assert cost["planner_dollars"] == 0.000018
+    assert cost["models"][SUPER_MODEL] == {
+        "prompt_tokens": 130,
+        "completion_tokens": 56,
+        "reasoning_tokens": 10,
+        "estimated_dollars": 0.00002124,
+    }
+    assert cost["estimated_dollars"] == 0.00002124
+    assert cost["model_retries"] == {"429": 2, "5xx": 1}
 
 def test_default_worker_budget_supports_realistic_repair_attempts():
     budget = _orchestrate_module().RunBudgets().worker

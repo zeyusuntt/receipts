@@ -15,7 +15,12 @@ from pydantic import BaseModel, Field
 
 from receipts.agent.planner import Plan, make_plan
 from receipts.agent.worker import Worker, WorkerBudget, WorkerOutcome
-from receipts.cost import CostMeter, TokenUsage
+from receipts.cost import (
+    CostMeter,
+    TokenUsage,
+    estimate_model_dollars,
+    token_count,
+)
 from receipts.llm import ModelClient
 from receipts.models import (
     Baseline,
@@ -486,18 +491,50 @@ def _cost_summary(
     disclosure: Disclosure,
     collector: _ReceiptCollector,
     worker_log: Path,
+    plan: Plan,
 ) -> dict[str, Any]:
     existing = getattr(model, "_meter", None)
     meter = existing if isinstance(existing, CostMeter) else CostMeter()
+    model_name = str(disclosure.model.get("model") or disclosure.model["client"])
+    planner_usage = plan.usage
     if not isinstance(existing, CostMeter) and worker_log.is_file():
-        model_name = str(disclosure.model.get("model") or disclosure.model["client"])
         for line in worker_log.read_text(encoding="utf-8").splitlines():
             row = json.loads(line)
             meter.add_usage(model_name, TokenUsage.model_validate(row["usage"]))
+    if not isinstance(existing, CostMeter) and planner_usage is not None:
+        meter.add_usage(model_name, planner_usage)
     meter.add_sandbox_seconds(
         sum(receipt.duration_s for receipt in collector.receipts),
     )
-    return meter.summary()
+    model_retries: dict[str, int] = {}
+    planner_retries = getattr(plan, "retries", {})
+    if isinstance(planner_retries, dict):
+        for kind, count in planner_retries.items():
+            if isinstance(kind, str) and type(count) is int and count > 0:
+                model_retries[kind] = model_retries.get(kind, 0) + count
+    if worker_log.is_file():
+        for line in worker_log.read_text(encoding="utf-8").splitlines():
+            retries = json.loads(line).get("retries", {})
+            if not isinstance(retries, dict):
+                continue
+            for kind, count in retries.items():
+                if isinstance(kind, str) and type(count) is int and count > 0:
+                    model_retries[kind] = model_retries.get(kind, 0) + count
+
+    summary = meter.summary()
+    summary["planner_tokens"] = (
+        token_count(planner_usage) if planner_usage is not None else 0
+    )
+    summary["planner_dollars"] = (
+        estimate_model_dollars(model_name, planner_usage)
+        if planner_usage is not None
+        else 0.0
+    )
+    summary["model_retries"] = {
+        kind: model_retries[kind]
+        for kind in sorted(model_retries)
+    }
+    return summary
 
 
 async def fix(
@@ -600,7 +637,10 @@ async def fix(
             baseline,
             baseline.target,
         )
-        run_directory.write_json("plan.json", plan)
+        plan_json = plan.model_dump(mode="json")
+        planner_retries = getattr(plan, "retries", {})
+        plan_json["retries"] = planner_retries if isinstance(planner_retries, dict) else {}
+        run_directory.write_json("plan.json", plan_json)
 
         attempt_results: list[AttemptResult] = []
         verdict_history: list[Verdict] = []
@@ -740,7 +780,7 @@ async def fix(
                 )
 
         final_verdict = verdict_history[-1]
-        cost = _cost_summary(model, disclosure, collector, worker_log)
+        cost = _cost_summary(model, disclosure, collector, worker_log, plan)
         run_directory.write_json("cost.json", cost)
         result = RunResult(
             input=run_input,

@@ -6,6 +6,8 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+import httpx2
+from openai import APIConnectionError, APITimeoutError
 from pydantic import BaseModel
 
 import receipts.llm as llm_module
@@ -307,8 +309,69 @@ async def test_chat_retries_transient_api_errors_three_times(status_code: int):
     turn = await client.chat([{"role": "user", "content": "hello"}], [])
 
     assert turn.content == "recovered"
+    assert turn.retries == {"429" if status_code == 429 else "5xx": 3}
     assert delays == [1.0, 2.0, 4.0]
     assert len(sdk.completions.calls) == 4
+
+
+async def test_chat_reports_two_429_retries_on_the_successful_turn():
+    sdk = _FakeSDK(
+        [
+            _FakeStatusError(429),
+            _FakeStatusError(429),
+            _response(content="recovered"),
+        ],
+    )
+
+    async def fake_sleep(delay: float) -> None:
+        pass
+
+    client = TokenFactoryClient(_config(), client=sdk, sleep=fake_sleep)
+
+    turn = await client.chat([{"role": "user", "content": "hello"}], [])
+
+    assert turn.retries == {"429": 2}
+
+
+async def test_chat_reports_no_retries_when_the_first_request_succeeds():
+    client = TokenFactoryClient(
+        _config(),
+        client=_FakeSDK([_response(content="first try")]),
+    )
+
+    turn = await client.chat([{"role": "user", "content": "hello"}], [])
+
+    assert turn.retries == {}
+
+
+@pytest.mark.parametrize(
+    ("error", "kind"),
+    [
+        (TimeoutError("request timed out"), "timeout"),
+        (ConnectionError("connection reset"), "connection"),
+        (
+            APITimeoutError(httpx2.Request("GET", "https://example.invalid")),
+            "timeout",
+        ),
+        (
+            APIConnectionError(
+                request=httpx2.Request("GET", "https://example.invalid"),
+            ),
+            "connection",
+        ),
+    ],
+)
+async def test_chat_counts_timeout_and_connection_retries(error: Exception, kind: str):
+    sdk = _FakeSDK([error, _response(content="recovered")])
+
+    async def fake_sleep(delay: float) -> None:
+        pass
+
+    client = TokenFactoryClient(_config(), client=sdk, sleep=fake_sleep)
+
+    turn = await client.chat([{"role": "user", "content": "hello"}], [])
+
+    assert turn.retries == {kind: 1}
 
 
 def test_cost_meter_accumulates_model_usage_and_sandbox_seconds():

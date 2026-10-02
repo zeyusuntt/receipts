@@ -5,8 +5,9 @@ from __future__ import annotations
 import json
 import math
 from collections.abc import Sequence
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -170,6 +171,10 @@ class Report(BaseModel):
     cleanup_errors: list[ReportedProblem]
     instances: list[InstanceRow]
     truncated_test_ids: list[TruncatedTestIds] = Field(default_factory=list)
+    peak_live_sandboxes: int = Field(default=0, ge=0)
+    peak_live_sandboxes_at: str | None = None
+    records_without_sandbox_intervals: int = Field(default=0, ge=0)
+    model_retries: dict[str, int] = Field(default_factory=dict)
 
 
 def _rate(numerator: int, denominator: int) -> Rate:
@@ -290,6 +295,84 @@ def _run_directory(run_dir: str) -> Path:
     if path.exists() or "pilot" not in path.parts:
         return path
     return _REPOSITORY_ROOT.joinpath(*path.parts[path.parts.index("pilot"):])
+
+
+def _cost_artifact(record: InstanceRecord) -> dict[str, Any]:
+    path = _run_directory(record.run_dir) / "cost.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        value = {}
+    return value if isinstance(value, dict) else {}
+
+
+def _utc_datetime(value: object) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None
+    return parsed.astimezone(timezone.utc)
+
+
+def _rehearsal_measurements(
+    records: Sequence[InstanceRecord],
+) -> tuple[int, str | None, int, dict[str, int]]:
+    events: list[tuple[datetime, int]] = []
+    missing_intervals = 0
+    retries: dict[str, int] = {}
+
+    for record in records:
+        artifact = _cost_artifact(record)
+        usage = getattr(record, "sandbox_usage", None)
+        if not isinstance(usage, list):
+            usage = artifact.get("sandbox_usage")
+        valid_intervals = 0
+        if isinstance(usage, list):
+            for interval in usage:
+                if not isinstance(interval, dict):
+                    continue
+                created_at = _utc_datetime(interval.get("created_at"))
+                deleted_at = _utc_datetime(interval.get("deleted_at"))
+                if created_at is None or (
+                    deleted_at is not None and deleted_at < created_at
+                ):
+                    continue
+                valid_intervals += 1
+                events.append((created_at, 1))
+                if deleted_at is not None:
+                    events.append((deleted_at, -1))
+        if valid_intervals == 0:
+            missing_intervals += 1
+
+        record_retries = getattr(record, "model_retries", None)
+        if not isinstance(record_retries, dict):
+            record_retries = artifact.get("model_retries")
+        if isinstance(record_retries, dict):
+            for kind, count in record_retries.items():
+                if isinstance(kind, str) and type(count) is int and count > 0:
+                    retries[kind] = retries.get(kind, 0) + count
+
+    live = 0
+    peak = 0
+    peak_at: datetime | None = None
+    for occurred_at, change in sorted(
+        events,
+        key=lambda event: (event[0], 0 if event[1] < 0 else 1),
+    ):
+        live += change
+        if live > peak:
+            peak = live
+            peak_at = occurred_at
+    return (
+        peak,
+        peak_at.isoformat() if peak_at is not None else None,
+        missing_intervals,
+        {kind: retries[kind] for kind in sorted(retries)},
+    )
 
 
 def _truncated_test_ids(
@@ -595,6 +678,9 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
     verified_fixes = len(verified_records)
     ran_tasks = len(ran)
     verified_rate = _rate(verified_fixes, ran_tasks)
+    peak, peak_at, missing_intervals, model_retries = _rehearsal_measurements(
+        ordered,
+    )
     secondary_headline = None
     if verified_rate.value is not None and verified_rate.value < 0.15:
         secondary_headline = _H3
@@ -636,6 +722,10 @@ def build_report(records: Sequence[InstanceRecord]) -> Report:
         cleanup_errors=cleanup_errors,
         instances=instances,
         truncated_test_ids=_truncated_test_ids(ordered),
+        peak_live_sandboxes=peak,
+        peak_live_sandboxes_at=peak_at,
+        records_without_sandbox_intervals=missing_intervals,
+        model_retries=model_retries,
     )
 
 
@@ -777,6 +867,29 @@ def render(report: Report) -> str:
                 f"{_format_number(cost.sandbox_lifetime_seconds)} | "
                 f"{_format_number(cost.wall_time_s)} |"
             ),
+        ],
+    )
+
+    peak_line = f"Peak live sandboxes: {report.peak_live_sandboxes}"
+    if report.peak_live_sandboxes_at is not None:
+        peak_line += f" at {report.peak_live_sandboxes_at}"
+    retry_text = "; ".join(
+        f"{kind}: {count}"
+        for kind, count in report.model_retries.items()
+    ) or "none"
+    lines.extend(
+        [
+            "",
+            "### Rehearsal measurements",
+            "",
+            peak_line + ".",
+            "",
+            (
+                "Records without sandbox intervals: "
+                f"{report.records_without_sandbox_intervals}."
+            ),
+            "",
+            f"Model retries: {retry_text}.",
         ],
     )
 

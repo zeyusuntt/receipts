@@ -767,6 +767,8 @@ class Worker:
         }
         if self._request_context_guard is not None:
             row["context_guard"] = self._request_context_guard
+        if turn.retries:
+            row["retries"] = turn.retries
         self.writer.write(json.dumps(row, ensure_ascii=True, separators=(",", ":")) + "\n")
         self.writer.flush()
 

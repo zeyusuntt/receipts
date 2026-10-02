@@ -10,7 +10,7 @@ from collections.abc import Awaitable, Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Protocol, TypeVar
 
-from openai import AsyncOpenAI
+from openai import APIConnectionError, APITimeoutError, AsyncOpenAI
 from pydantic import BaseModel, Field, ValidationError
 
 from receipts.cost import CostMeter, SUPER_MODEL, TokenUsage
@@ -42,6 +42,7 @@ class AssistantTurn(BaseModel):
     tool_calls: list[ToolCall] = Field(default_factory=list)
     usage: TokenUsage = Field(default_factory=TokenUsage)
     finish_reason: str | None = None
+    retries: dict[str, int] = Field(default_factory=dict)
 
 
 def _metadata_text(source: object, attribute: str) -> str:
@@ -169,17 +170,30 @@ class TokenFactoryClient:
             options["max_tokens"] = self.config.max_tokens
         return options
 
-    async def _create(self, **kwargs: Any) -> Any:
+    @staticmethod
+    def _retry_kind(exc: Exception) -> str | None:
+        status_code = getattr(exc, "status_code", None)
+        if status_code == 429:
+            return "429"
+        if isinstance(status_code, int) and 500 <= status_code <= 599:
+            return "5xx"
+        if isinstance(exc, (APITimeoutError, TimeoutError)):
+            return "timeout"
+        if isinstance(exc, (APIConnectionError, ConnectionError)):
+            return "connection"
+        return None
+
+    async def _create(self, **kwargs: Any) -> tuple[Any, dict[str, int]]:
+        retries: dict[str, int] = {}
         for retry in range(_API_RETRIES + 1):
             try:
-                return await self._client.chat.completions.create(**kwargs)
+                response = await self._client.chat.completions.create(**kwargs)
+                return response, retries
             except Exception as exc:
-                status_code = getattr(exc, "status_code", None)
-                transient = status_code == 429 or (
-                    isinstance(status_code, int) and 500 <= status_code <= 599
-                )
-                if not transient or retry == _API_RETRIES:
+                kind = self._retry_kind(exc)
+                if kind is None or retry == _API_RETRIES:
                     raise
+                retries[kind] = retries.get(kind, 0) + 1
                 await self._sleep(float(2**retry))
         raise AssertionError("unreachable")
 
@@ -205,6 +219,7 @@ class TokenFactoryClient:
         use_strict = True
         last_error: str | None = None
         validation_attempt = 0
+        call_retries: dict[str, int] = {}
 
         while True:
             current_system = system
@@ -232,7 +247,7 @@ class TokenFactoryClient:
                 )
 
             try:
-                response = await self._create(
+                response, retries = await self._create(
                     **self._request_options(),
                     messages=[
                         {"role": "system", "content": current_system},
@@ -240,6 +255,8 @@ class TokenFactoryClient:
                     ],
                     response_format=response_format,
                 )
+                for kind, count in retries.items():
+                    call_retries[kind] = call_retries.get(kind, 0) + count
             except Exception as exc:
                 status_code = getattr(exc, "status_code", None)
                 if use_strict and status_code in {400, 422}:
@@ -260,6 +277,8 @@ class TokenFactoryClient:
                     metadata["usage"] = usage
                 if "finish_reason" in schema.model_fields:
                     metadata["finish_reason"] = finish_reason
+                if call_retries:
+                    metadata["retries"] = dict(sorted(call_retries.items()))
                 return result.model_copy(update=metadata) if metadata else result
             except ValidationError as exc:
                 last_error = str(exc)
@@ -276,7 +295,7 @@ class TokenFactoryClient:
         messages: Sequence[Mapping[str, Any]],
         tools: Sequence[Mapping[str, Any]],
     ) -> AssistantTurn:
-        response = await self._create(
+        response, retries = await self._create(
             **self._request_options(),
             messages=messages,
             tools=tools,
@@ -344,6 +363,7 @@ class TokenFactoryClient:
                 raw_arguments=raw_arguments,
                 error=error,
                 raw_tool_calls=raw_tool_calls,
+                retries=retries,
             )
 
         return AssistantTurn(
@@ -351,6 +371,7 @@ class TokenFactoryClient:
             tool_calls=parsed_calls,
             usage=usage,
             finish_reason=finish_reason,
+            retries=retries,
         )
 
 

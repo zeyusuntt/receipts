@@ -793,6 +793,66 @@ def test_cost_columns_are_computed_from_separate_model_and_sandbox_costs():
     assert "Snapshot storage is not included" in markdown
 
 
+def test_report_computes_peak_live_sandboxes_and_sums_model_retries(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    report_module = _report_module()
+    monkeypatch.setattr(report_module, "_REPOSITORY_ROOT", tmp_path)
+    first = _record("first", [_attempt()], run_dir="first")
+    second = _record("second", [_attempt()], run_dir="second")
+    missing = _record("missing", [_attempt()], run_dir="missing")
+    first_dir = tmp_path / "first"
+    second_dir = tmp_path / "second"
+    missing_dir = tmp_path / "missing"
+    first_dir.mkdir()
+    second_dir.mkdir()
+    missing_dir.mkdir()
+    (first_dir / "cost.json").write_text(
+        json.dumps(
+            {
+                "sandbox_usage": [
+                    {
+                        "created_at": "2026-10-02T00:00:00+00:00",
+                        "deleted_at": "2026-10-02T00:00:10+00:00",
+                    },
+                    {
+                        "created_at": "2026-10-02T00:00:06+00:00",
+                        "deleted_at": "2026-10-02T00:00:07+00:00",
+                    },
+                ],
+                "model_retries": {"429": 2},
+            },
+        ),
+        encoding="utf-8",
+    )
+    (second_dir / "cost.json").write_text(
+        json.dumps(
+            {
+                "sandbox_usage": [
+                    {
+                        "created_at": "2026-10-02T00:00:05+00:00",
+                        "deleted_at": "2026-10-02T00:00:15+00:00",
+                    },
+                ],
+                "model_retries": {"429": 1, "5xx": 3},
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    report = report_module.build_report([first, second, missing])
+
+    assert report.peak_live_sandboxes == 3
+    assert report.peak_live_sandboxes_at == "2026-10-02T00:00:06+00:00"
+    assert report.records_without_sandbox_intervals == 1
+    assert report.model_retries == {"429": 3, "5xx": 3}
+    markdown = report_module.render(report)
+    assert "Peak live sandboxes: 3 at 2026-10-02T00:00:06+00:00." in markdown
+    assert "Records without sandbox intervals: 1." in markdown
+    assert "Model retries: 429: 3; 5xx: 3." in markdown
+
+
 def test_headline_states_the_number_of_shipped_false_dones_when_it_is_not_zero():
     """Seen in the pilot: the pre-registered H1 and H2 sentences say "zero"; with a shipped
     false done the headline must state the real count, never "zero"."""

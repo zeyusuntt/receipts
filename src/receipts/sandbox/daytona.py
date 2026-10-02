@@ -491,6 +491,7 @@ class DaytonaExecutor:
         snapshot_timeout_s: int = 900,
         file_timeout_s: int = 120,
         clock: Callable[[], float] = time.monotonic,
+        wall_clock: Callable[[], datetime] | None = None,
         cleanup_manifest: Path | None = None,
     ) -> None:
         self.root = root
@@ -506,6 +507,7 @@ class DaytonaExecutor:
         self.file_timeout_s = file_timeout_s
         self.cleanup_manifest = cleanup_manifest
         self._clock = clock
+        self._wall_clock = wall_clock or _now
         self._validate_configuration()
 
         self._seq: dict[str, int] = {}
@@ -514,6 +516,10 @@ class DaytonaExecutor:
         self._specs: dict[str, _BranchSpec] = {}
         self._created_sandboxes: list[str] = []
         self._sandbox_lifetimes: dict[str, tuple[float, float | None]] = {}
+        self._sandbox_intervals: dict[
+            str,
+            tuple[datetime, datetime | None],
+        ] = {}
         self._snapshots: dict[str, DaytonaSnapshot] = {}
         self._created_snapshots: dict[str, DaytonaSnapshot] = {}
         self._snapshot_cleanup_entries: dict[str, dict[str, object]] = {}
@@ -588,12 +594,41 @@ class DaytonaExecutor:
 
     def _record_sandbox_created(self, sandbox_id: str) -> None:
         self._sandbox_lifetimes[sandbox_id] = (self._clock(), None)
+        self._sandbox_intervals[sandbox_id] = (self._utc_wall_time(), None)
 
     def _record_sandbox_deleted(self, sandbox_id: str) -> None:
         lifetime = self._sandbox_lifetimes.get(sandbox_id)
         if lifetime is None or lifetime[1] is not None:
             return
         self._sandbox_lifetimes[sandbox_id] = (lifetime[0], self._clock())
+        interval = self._sandbox_intervals[sandbox_id]
+        self._sandbox_intervals[sandbox_id] = (interval[0], self._utc_wall_time())
+
+    def _utc_wall_time(self) -> datetime:
+        value = self._wall_clock()
+        if value.tzinfo is None or value.utcoffset() is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+
+    def _persist_sandbox_usage(self, usage: list[dict]) -> None:
+        if self.cleanup_manifest is None:
+            return
+        cost_path = self.cleanup_manifest.parent / "cost.json"
+        if not cost_path.is_file():
+            return
+        try:
+            cost = json.loads(cost_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            return
+        if not isinstance(cost, dict):
+            return
+        cost["sandbox_usage"] = usage
+        temporary = cost_path.with_suffix(cost_path.suffix + ".tmp")
+        temporary.write_text(
+            json.dumps(cost, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(cost_path)
 
     def sandbox_usage(self) -> list[dict]:
         """Return measured lifetime and resources for each created sandbox."""
@@ -604,17 +639,25 @@ class DaytonaExecutor:
             "memory": self.resources.memory,
             "disk": self.resources.disk,
         }
-        return [
+        usage = [
             {
                 "sandbox_id": sandbox_id,
                 "seconds": max(
                     0.0,
                     (deleted_at if deleted_at is not None else now) - created_at,
                 ),
+                "created_at": self._sandbox_intervals[sandbox_id][0].isoformat(),
+                "deleted_at": (
+                    self._sandbox_intervals[sandbox_id][1].isoformat()
+                    if self._sandbox_intervals[sandbox_id][1] is not None
+                    else None
+                ),
                 "resources": dict(resources),
             }
             for sandbox_id, (created_at, deleted_at) in self._sandbox_lifetimes.items()
         ]
+        self._persist_sandbox_usage(usage)
+        return usage
 
     def _sandbox_id(self, branch: Branch) -> str:
         if branch.id in self._released_branches:
