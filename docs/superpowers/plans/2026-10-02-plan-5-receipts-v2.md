@@ -253,7 +253,7 @@ E runs alongside D. Judges score design, impact and idea as much as implementati
   - `receipts site` generates a static site from run directories: a Run page and a Receipt page per the D1 mockups (https://claude.ai/artifact/9rqEefF1fbjs8NoGMQuk8d).
   - Each Receipt page shows the predicates, the claim audit next to what the agent said, the dropped files and the new files.
   - Hosted on GitHub Pages.
-- **E2. `receipts reverify <receipt>`.** Anyone with Docker can re-check a published receipt on the task's public image: apply the shipped patch on a clean fork, check its digest (B8), re-run the spec tests, and compare. No hosted button spends our sandbox credits. First step: confirm that the SWE-rebench images pull without credentials on a clean machine. If they do not, fall back to a recorded re-verify plus the CLI for anyone with access.
+- **E2. `receipts reverify <receipt>`.** Anyone with Docker can re-check a published receipt on the task's public image: apply the shipped patch on a clean fork, check its digest (B8), re-run the spec tests, and compare. No hosted button spends our sandbox credits. Checked Oct 2: the SWE-rebench-V2 images are public on Docker Hub (`docker.io/swerebenchv2/...`); an anonymous manifest request returns 200 for candidates at positions 1, 101, 301 and 600, including scikit-build-core-254. Anonymous pulls are rate-limited per IP (about 100 per six hours), which a judge will not reach.
 - **E3. README first screen.** The false-done number, one real receipt, and "re-verify it yourself" in three commands.
 - **E4. Video under three minutes.** The spine:
   1. The pilot's own false done (scikit-build: our gate shipped it, the pre-registered process caught it, here is the fix).
