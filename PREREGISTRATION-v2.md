@@ -1,11 +1,6 @@
 # Pre-registration v2: the False-Done Report on unseen tasks
 
-Draft, 2026-10-02. Becomes `PREREGISTRATION-v2.md` at the repository root and is committed, together with `pilot/v2-exclusions.txt`, before the screening of either v2 sample starts. The code frozen for v2 is the commit named in "Frozen code" below. After the commit that adds this file, nothing in it changes; every later change is a dated amendment appended at the end, never an edit in place. v1's `PREREGISTRATION.md` and `REPORT.md` are not changed.
-
-Open before commit (filled in or removed when the file is committed):
-
-- `<FREEZE_COMMIT>`: the commit that v2 runs.
-- `pysmt__pysmt-812`, `jupyterhub__binderhub-1571`, `pypa__twine-1066`, `twisted__towncrier-696`, `astropy__pyvo-204`: the five rehearsal ids, once the D2 rehearsal has run.
+Committed 2026-10-02, together with `pilot/v2-exclusions.txt`, before the screening of either v2 sample starts. The code frozen for v2 is the commit named in "Frozen code" below. Nothing in this file changes after this commit; every later change is a dated amendment appended at the end, never an edit in place. v1's `PREREGISTRATION.md` and `REPORT.md` are not changed. Its drafts are in this file's git history (as `docs/PREREGISTRATION-v2-draft.md`), and the plan behind it is `docs/superpowers/plans/2026-10-02-plan-5-receipts-v2.md`.
 
 ## Question
 
@@ -15,13 +10,14 @@ v2 asks it on tasks nobody has looked at, with a harness and a gate improved fro
 
 ## Frozen code
 
-Every v2 run uses the code at `<FREEZE_COMMIT>` on branch `build/plan-1`, run from a pinned worktree of that commit with its own environment and the dataset extract of v1 (revision `475dd5e8`, same SHA-256). The changes since v1's code are listed in `docs/superpowers/plans/2026-10-02-plan-5-receipts-v2.md`, section 9, each with its commit. In short:
+Every v2 run uses the code at commit `9bf8a9a4b9c37a131a86cd583d23b10cd52e1682` (`9bf8a9a`) on branch `build/plan-1`, with the runtime packages pinned by `uv.lock` and the dataset extract of v1 (revision `475dd5e8`, same SHA-256). Runs start from the repository's own checkout, so records keep repository-relative paths (v1 ran from a separate worktree and its records hold absolute paths). Before every launch and resume, a guard refuses to start unless `src/`, `pyproject.toml` and `uv.lock` are identical to `9bf8a9a` and `src/` has no untracked files; later commits may change documents and the receipt site, never the code that runs. The changes since v1's code are listed in `docs/superpowers/plans/2026-10-02-plan-5-receipts-v2.md`, section 9, each with its commit. In short:
 
 - Gate: unparseable patch headers fail R4 (B0); the specification's files are read-only (B7); an added test-named file is dropped by the witness filter and no longer fails R4, while modified, deleted and hazardous files still fail (B1); a pytest exit of 2, 3 or 4 is REJECTED with evidence only when a second clean witness reproduces it, and is otherwise an infrastructure error (B2); FAIL_TO_PASS ids that the upstream parser truncated at whitespace map to every matching collected id, all of which must fail at baseline and pass on the witness (B3); a new top-level path that takes a protected name and did not exist in the checkpoint fails R4, as do `sitecustomize.py`, `usercustomize.py` and `entry_points.txt` anywhere (B6); the filtered patch's digest is checked at the gate, at official grading and in the report (B8).
 - Agent harness: tool names the model invents are mapped onto the real tools (A1); every tool result is logged (A0); the worker's first message carries the spec tests' baseline failure text and the planner gets a compact baseline summary (A3); a scratch directory outside the repository (A4); a larger budget and a context guard (A5).
 - Executor and runner: `.git` is not downloaded where nothing reads it (C1); concurrency 2 with a final-error marker, a watchdog and graceful cancellation (C2); durable snapshot cleanup (C3); a read-only preflight (C4); repository-relative paths in new records (D0).
 - The Token Factory Sandboxes executor (C5, Plan 5 section 10), with the fixes its rehearsal found (a platform cap on output size, with truncated output failing closed; empty patches), and the fixes the Daytona rehearsals found (the `str_replace` alias, `/tmp` as the scratch root, directory reads).
 - Corrected model prices and a model-spend budget stop in the watchdog.
+- The fixes from the pre-freeze review and smoke test (Plan 5 section 11): bounded Token Factory runs, archives and downloads, trusted tools at a fresh path per run, retries of transport errors on safe requests, directory reads as on Daytona; interrupted runs kept with their spend; grading that refuses digest mismatches; spend over every run, screening ledgers and budget endings in the report; `pilot run --model`.
 
 ## Agent and settings
 
@@ -108,7 +104,7 @@ After P and S, the first 30 tasks of P run once more with one newer Nemotron mod
 
 ## Development runs
 
-Before this file was committed, v2's code was developed on v1's records (the D1 replay) and rehearsed on the five tasks `pysmt__pysmt-812`, `jupyterhub__binderhub-1571`, `pypa__twine-1066`, `twisted__towncrier-696`, `astropy__pyvo-204`, taken from the end of `pilot/candidates.txt` and screened under rules 4 and 5. Those runs are not part of the report's samples and their ids are in `pilot/v2-exclusions.txt`.
+Before this file was committed, v2's code was developed on v1's records (the D1 replay) and rehearsed on the five tasks `pysmt__pysmt-812`, `jupyterhub__binderhub-1571`, `pypa__twine-1066`, `twisted__towncrier-696`, `astropy__pyvo-204`, taken from the end of `pilot/candidates.txt` and screened under rules 4 and 5. Those runs are not part of the report's samples and their ids are in `pilot/v2-exclusions.txt`. The pre-freeze smoke tests also used only these five tasks (`pilot/v2-smoke-tf/`, `pilot/v2-smoke-tf-2/`).
 
 ## Known limits, stated before the run
 
