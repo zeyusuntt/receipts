@@ -3,16 +3,17 @@ import importlib
 import logging
 import os
 import shlex
+import shutil
 import stat
 import subprocess
 import uuid
 from copy import deepcopy
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 
 import pytest
 
-from receipts.models import Branch
+from receipts.models import Branch, Receipt
 from receipts.sandbox.protocol import CheckpointTampered, ImageSource
 from receipts.sandbox.sink import MemorySink
 
@@ -36,6 +37,8 @@ class MemoryDaytonaApi:
         self.create_calls = []
         self.exec_calls = []
         self.upload_calls = []
+        self.download_calls = []
+        self.list_calls = []
         self.deleted_sandboxes = []
         self.deleted_snapshots = []
         self.timeout_commands = set()
@@ -86,6 +89,10 @@ class MemoryDaytonaApi:
     def set_file(self, sandbox_id, path, content, mode=0o644):
         self.sandboxes[sandbox_id]["files"][path] = content
         self.sandboxes[sandbox_id]["modes"][path] = mode
+        parent = PurePosixPath(path).parent
+        while parent != parent.parent:
+            self.sandboxes[sandbox_id]["directories"].setdefault(str(parent), 0o755)
+            parent = parent.parent
 
     async def create_from_image(
         self,
@@ -189,6 +196,7 @@ class MemoryDaytonaApi:
         return self.sandboxes[sandbox_id]["files"].get(remote_path)
 
     async def download_files(self, sandbox_id, requests, *, timeout_s):
+        self.download_calls.extend(request.source for request in requests)
         responses = []
         for request in requests:
             content = self.sandboxes[sandbox_id]["files"].get(request.source)
@@ -218,7 +226,15 @@ class MemoryDaytonaApi:
         return responses
 
     async def list_files(self, sandbox_id, path, *, depth):
+        self.list_calls.append((sandbox_id, path, depth))
         prefix = path.rstrip("/") + "/"
+
+        def included(candidate):
+            if not candidate.startswith(prefix):
+                return False
+            relative = PurePosixPath(candidate.removeprefix(prefix))
+            return bool(relative.parts) and len(relative.parts) <= depth
+
         directories = [
             self.module.DaytonaFile(
                 path=directory_path,
@@ -230,7 +246,7 @@ class MemoryDaytonaApi:
             for directory_path, mode in sorted(
                 self.sandboxes[sandbox_id]["directories"].items(),
             )
-            if directory_path.startswith(prefix)
+            if included(directory_path)
         ]
         files = [
             self.module.DaytonaFile(
@@ -245,7 +261,7 @@ class MemoryDaytonaApi:
                 size=len(content),
             )
             for file_path, content in self.sandboxes[sandbox_id]["files"].items()
-            if file_path.startswith(prefix)
+            if included(file_path)
         ]
         return directories + files
 
@@ -497,6 +513,12 @@ async def test_run_pytest_uses_trusted_runner_and_reads_junit_through_fs(tmp_pat
     assert receipt.junit is not None
     assert receipt.junit.passed == ["tests/test_sample.py::test_ok"]
     assert receipt.tree_digest is not None
+    assert receipt.tree_download_s is not None
+    assert receipt.tree_download_s >= 0
+    old_receipt = Receipt.model_validate(
+        receipt.model_dump(exclude={"tree_download_s"}),
+    )
+    assert old_receipt.tree_download_s is None
     assert receipt.image_before == "sandbox-1"
     assert receipt.image_after == base.head == "sandbox-1#1"
     assert Path(receipt.log_path).read_text() == "tests/test_sample.py::test_ok PASSED\n"
@@ -583,10 +605,12 @@ async def test_checkpoint_restores_downloaded_symlinks_from_the_trusted_index(tm
     api.snapshot_sha = snapshot_sha
     await executor.snapshot(base)
     sandbox_commands = list(api.exec_calls)
+    api.download_calls.clear()
 
     checkpoint = await executor.checkpoint(base)
 
     assert api.exec_calls == sandbox_commands
+    assert any(path.startswith("/repo/.git/") for path in api.download_calls)
     checkpoint_tree = executor._checkpoint_trees[checkpoint.id]
     assert (checkpoint_tree / "file-link").is_symlink()
     assert os.readlink(checkpoint_tree / "file-link") == "target.txt"
@@ -620,6 +644,30 @@ async def test_patch_downloads_tree_preserves_exec_bits_and_static_copies_symlin
         capture_output=True,
         text=True,
     ).stdout.strip()
+    reference = tmp_path / "reference"
+    shutil.copytree(repository, reference, symlinks=True)
+    (reference / "src" / "app.py").write_text("VALUE = 2\n")
+    reference_tool = reference / "bin" / "tool"
+    reference_tool.parent.mkdir()
+    reference_tool.write_text("#!/bin/sh\nexit 0\n")
+    reference_tool.chmod(0o755)
+    subprocess.run(["git", "add", "-A"], cwd=reference, check=True)
+    expected_patch = subprocess.run(
+        [
+            "git",
+            "diff",
+            "--cached",
+            "--binary",
+            "--no-ext-diff",
+            "--no-textconv",
+            "--no-renames",
+            snapshot_sha,
+        ],
+        cwd=reference,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
 
     executor, api, _ = _executor(tmp_path, module)
     base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
@@ -635,6 +683,7 @@ async def test_patch_downloads_tree_preserves_exec_bits_and_static_copies_symlin
     api.set_file(sandbox_id, "/repo/src/app.py", b"VALUE = 2\n")
     api.set_file(sandbox_id, "/repo/link.py", b"VALUE = 2\n")
     api.set_file(sandbox_id, "/repo/bin/tool", b"#!/bin/sh\nexit 0\n", 0o755)
+    api.set_file(sandbox_id, "/repo/pkg/vendor/.git", b"nested metadata\n")
     marker = tmp_path / "hostile-diff-ran"
     api.set_file(
         sandbox_id,
@@ -644,17 +693,21 @@ async def test_patch_downloads_tree_preserves_exec_bits_and_static_copies_symlin
             + f"\n[diff]\n\texternal = printf ran > {marker}\n".encode()
         ),
     )
+    api.download_calls.clear()
 
     receipt = await executor.patch(agent, snapshot.snapshot_sha)
 
     assert receipt.exit_code == 0 and receipt.diff is not None
     patch_text = Path(receipt.diff.patch_path).read_text()
+    assert patch_text == expected_patch
     assert "diff --git a/src/app.py b/src/app.py" in patch_text
     assert "diff --git a/bin/tool b/bin/tool" in patch_text
     assert "new file mode 100755" in patch_text
     assert "diff --git a/link.py b/link.py" not in patch_text
     assert "link.py" not in receipt.dropped_paths
     assert receipt.tree_digest is not None
+    assert not any(path.startswith("/repo/.git/") for path in api.download_calls)
+    assert "/repo/pkg/vendor/.git" in api.download_calls
     assert not marker.exists()
     assert api.exec_calls == sandbox_commands
     assert receipt.image_before == checkpoint.id
@@ -1088,6 +1141,34 @@ def test_tree_digest_ignores_git_file_and_tracks_content_and_exec_mode(tmp_path)
     assert git_changed == initial
     assert content_changed != initial
     assert mode_changed != content_changed
+
+
+async def test_digest_download_skips_every_git_path_without_changing_digest(tmp_path):
+    module = _daytona_module()
+    repository = tmp_path / "repository"
+    (repository / ".git" / "objects").mkdir(parents=True)
+    (repository / ".git" / "objects" / "large.pack").write_bytes(b"x" * 100_000)
+    (repository / "pkg" / "vendor" / ".git").mkdir(parents=True)
+    (repository / "pkg" / "vendor" / ".git" / "index").write_bytes(b"nested")
+    (repository / "pkg" / "module.py").write_text("VALUE = 1\n")
+    expected_digest = module._tree_digest(repository)
+    executor, api, _ = _executor(tmp_path, module)
+    base = await executor.prepare(ImageSource(image="example:1", workdir="/repo"))
+    api.replace_tree("sandbox-1", repository)
+
+    receipt = await executor.run_pytest(base, "tests", timeout_s=30)
+
+    relative_downloads = [
+        PurePosixPath(path).relative_to("/repo")
+        for path in api.download_calls
+    ]
+    # One recursive listing of the worktree per download, never one per directory.
+    assert api.list_calls and all(
+        path == "/repo" and depth == 64 for _, path, depth in api.list_calls
+    )
+    assert all(".git" not in path.parts for path in relative_downloads)
+    assert relative_downloads
+    assert receipt.tree_digest == expected_digest
 
 
 @pytest.mark.live

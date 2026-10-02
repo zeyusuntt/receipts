@@ -80,12 +80,34 @@ def _tail(data: bytes) -> str:
     return data.decode(errors="replace")[-TAIL:]
 
 
+def _tree_digest_ignores(path: str) -> bool:
+    return ".git" in PurePosixPath(path).parts
+
+
+def _skip_top_level_git(path: str) -> bool:
+    parts = PurePosixPath(path).parts
+    return bool(parts) and parts[0] == ".git"
+
+
+def _skip_nothing(path: str) -> bool:
+    return False
+
+
 def _tree_digest(root: Path) -> str:
     entries: list[tuple[str, int, str]] = []
     for directory, names, filenames in os.walk(root, followlinks=False):
-        names[:] = sorted(name for name in names if name != ".git")
         directory_path = Path(directory)
-        for filename in sorted(name for name in filenames if name != ".git"):
+        relative_directory = directory_path.relative_to(root)
+        names[:] = sorted(
+            name
+            for name in names
+            if not _tree_digest_ignores((relative_directory / name).as_posix())
+        )
+        for filename in sorted(
+            name
+            for name in filenames
+            if not _tree_digest_ignores((relative_directory / name).as_posix())
+        ):
             path = directory_path / filename
             mode = path.lstat().st_mode
             if stat.S_ISLNK(mode):
@@ -676,23 +698,37 @@ class DaytonaExecutor:
             raise OSError(f"Daytona listed an invalid repository path: {remote_path}")
         return Path(*relative.parts)
 
-    async def _download_tree(self, branch: Branch, destination: Path) -> None:
+    async def _download_tree(
+        self,
+        branch: Branch,
+        destination: Path,
+        *,
+        skip: Callable[[str], bool],
+    ) -> float:
         if destination.exists():
             await asyncio.to_thread(remove_path, destination)
         destination.mkdir(parents=True)
+        started = time.monotonic()
+        files: list[tuple[DaytonaFile, Path]] = []
+        seen: set[Path] = set()
+        # One recursive listing, as before: a listing per directory would cost a
+        # round trip per directory on every digest. Skipped paths are listed but
+        # never downloaded, which is where the time went.
         entries = await self.api.list_files(
             self._sandbox_id(branch),
             self._spec(branch).workdir,
             depth=64,
         )
-        files: list[tuple[DaytonaFile, Path]] = []
-        seen: set[Path] = set()
         for entry in entries:
             relative = self._relative_remote_path(branch, entry.path)
             if relative is None:
                 continue
+            if skip(relative.as_posix()):
+                continue
             if relative in seen:
-                raise OSError(f"Daytona listed a duplicate repository path: {entry.path}")
+                raise OSError(
+                    f"Daytona listed a duplicate repository path: {entry.path}",
+                )
             seen.add(relative)
             target = destination / relative
             if entry.is_dir:
@@ -740,6 +776,7 @@ class DaytonaExecutor:
             if missing:
                 rendered = ", ".join(sorted(missing))
                 raise OSError(f"Daytona omitted downloads: {rendered}")
+        return time.monotonic() - started
 
     async def _trusted_git(self, root: Path, *args: str) -> bytes:
         command = git_command(self._git, *args)
@@ -801,14 +838,26 @@ class DaytonaExecutor:
             symlink_paths.append(relative)
         return tuple(symlink_paths)
 
-    async def _tree_digest(self, branch: Branch) -> str:
+    async def _tree_digest_with_download_time(
+        self,
+        branch: Branch,
+    ) -> tuple[str, float]:
         destination = self.root / "staging" / f"digest-{branch.id}-{uuid.uuid4().hex[:12]}"
         try:
-            await self._download_tree(branch, destination)
-            return await asyncio.to_thread(_tree_digest, destination)
+            download_s = await self._download_tree(
+                branch,
+                destination,
+                skip=_tree_digest_ignores,
+            )
+            digest = await asyncio.to_thread(_tree_digest, destination)
+            return digest, download_s
         finally:
             if destination.exists():
                 await asyncio.to_thread(remove_path, destination)
+
+    async def _tree_digest(self, branch: Branch) -> str:
+        digest, _ = await self._tree_digest_with_download_time(branch)
+        return digest
 
     async def _execute_host(
         self,
@@ -973,7 +1022,7 @@ class DaytonaExecutor:
             local_report.write_bytes(report)
         junit = parse_junit(local_report if local_report.exists() else None)
         log_path = self._write_log(branch, output)
-        tree_digest = await self._tree_digest(branch)
+        tree_digest, tree_download_s = await self._tree_digest_with_download_time(branch)
         return self._emit(
             branch,
             kind=kind,
@@ -988,6 +1037,7 @@ class DaytonaExecutor:
             timed_out=timed_out,
             junit=junit,
             tree_digest=tree_digest,
+            tree_download_s=tree_download_s,
         )
 
     async def read_file(self, branch: Branch, path: str, max_bytes: int) -> str:
@@ -1085,7 +1135,7 @@ class DaytonaExecutor:
         checkpoint_tree = self.root / "checkpoints" / hashlib.sha256(
             snapshot.ref.encode(),
         ).hexdigest()
-        await self._download_tree(branch, checkpoint_tree)
+        await self._download_tree(branch, checkpoint_tree, skip=_skip_nothing)
         symlink_paths = await self._restore_checkpoint_symlinks(checkpoint_tree)
         self._checkpoint_trees[snapshot.ref] = checkpoint_tree
         self._checkpoint_symlinks[snapshot.ref] = symlink_paths
@@ -1162,7 +1212,11 @@ class DaytonaExecutor:
                 staging,
                 symlinks=True,
             )
-            await self._download_tree(branch, agent_tree)
+            tree_download_s = await self._download_tree(
+                branch,
+                agent_tree,
+                skip=_skip_top_level_git,
+            )
             # Hash the tree as downloaded, the same view every test-run receipt
             # hashes, so the claim audit can compare the two; symlinks are put
             # back only for the patch itself.
@@ -1218,6 +1272,7 @@ class DaytonaExecutor:
                 duration_s=duration,
                 timed_out=timed_out,
                 tree_digest=tree_digest,
+                tree_download_s=tree_download_s,
             )
 
         patch_text = stdout.decode(errors="replace")
@@ -1240,6 +1295,7 @@ class DaytonaExecutor:
             duration_s=duration,
             timed_out=timed_out,
             tree_digest=tree_digest,
+            tree_download_s=tree_download_s,
             diff=summary,
             dropped_paths=dropped,
         )
@@ -1273,7 +1329,7 @@ class DaytonaExecutor:
             timed_out = False
             command_started = started
             duration = (_now() - started).total_seconds()
-        tree_digest = await self._tree_digest(branch)
+        tree_digest, tree_download_s = await self._tree_digest_with_download_time(branch)
         return self._emit(
             branch,
             kind="apply",
@@ -1287,6 +1343,7 @@ class DaytonaExecutor:
             duration_s=duration,
             timed_out=timed_out,
             tree_digest=tree_digest,
+            tree_download_s=tree_download_s,
         )
 
     async def release(self, branch: Branch) -> None:
