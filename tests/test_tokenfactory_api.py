@@ -141,6 +141,36 @@ async def test_every_http_request_has_token_factory_headers():
     assert len(requests) == 9  # upload of an existing file is HEAD then GET for its uuid
 
 
+async def test_bounded_download_stops_stream_after_limit_is_exceeded():
+    module = _module()
+
+    class RecordingStream(httpx.AsyncByteStream):
+        def __init__(self):
+            self.yielded = 0
+            self.closed = False
+
+        async def __aiter__(self):
+            for chunk in (b"abc", b"def", b"unread"):
+                self.yielded += 1
+                yield chunk
+
+        async def aclose(self):
+            self.closed = True
+
+    stream = RecordingStream()
+
+    async def handle(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, stream=stream, request=request)
+
+    async with _client(handle) as client:
+        api = module.TokenFactorySandboxApi(API_KEY, PROJECT_ID, client=client)
+        with pytest.raises(RuntimeError, match="size cap of 5 bytes"):
+            await api.download(IMAGE_UUID, "/tmp/archive.tar", max_bytes=5)
+
+    assert stream.yielded == 2
+    assert stream.closed is True
+
+
 async def test_missing_project_response_is_clear_and_is_not_retried():
     module = _module()
     calls = 0
@@ -625,6 +655,42 @@ async def test_fake_injects_uploaded_files_and_records_calls():
         "preserve_env": False,
         "client_timeout_s": None,
     }
+
+
+async def test_fake_cancels_non_terminal_operation_on_client_timeout():
+    module = _module()
+
+    class NeverTerminalFake(module.FakeTokenFactorySandboxApi):
+        async def _execute(self, **kwargs):
+            operation_id = await super()._execute(**kwargs)
+            self._operations[operation_id]["status"] = "PENDING"
+            return operation_id
+
+    fake = NeverTerminalFake(
+        images={IMAGE_UUID: {}},
+        handlers={"wait": lambda tree: (0, "", "", tree)},
+    )
+
+    with pytest.raises(TimeoutError, match="fake-operation-1"):
+        await fake.run(
+            command="wait",
+            image=IMAGE_UUID,
+            hostname="runner",
+            cwd="/repo",
+            client_timeout_s=0.01,
+        )
+
+    assert {"method": "cancel", "operation": "fake-operation-1"} in fake.calls
+
+
+async def test_fake_bounded_download_refuses_content_over_limit():
+    module = _module()
+    fake = module.FakeTokenFactorySandboxApi(
+        images={IMAGE_UUID: {"/tmp/archive.tar": b"123456"}},
+    )
+
+    with pytest.raises(RuntimeError, match="size cap of 5 bytes"):
+        await fake.download(IMAGE_UUID, "/tmp/archive.tar", max_bytes=5)
 
 
 async def test_fake_rejects_output_limits_the_live_api_rejects():

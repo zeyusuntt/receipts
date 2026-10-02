@@ -24,6 +24,13 @@ _MAX_ATTEMPTS = 5
 _TERMINAL_STATUSES = frozenset({"SUCCESS", "FAILED", "CANCELLED"})
 
 
+def _download_too_large(path: str, max_bytes: int, received: int) -> RuntimeError:
+    return RuntimeError(
+        f"Token Factory download of {path} exceeds size cap of {max_bytes} bytes: "
+        f"at least {received} bytes",
+    )
+
+
 @dataclass(frozen=True)
 class StreamDescription:
     value: str
@@ -269,20 +276,27 @@ class TokenFactorySandboxApi:
         retries: dict[str, int] | None = None,
         allowed_statuses: frozenset[int] = frozenset(),
         headers: Mapping[str, str] | None = None,
+        stream: bool = False,
         **kwargs: Any,
     ) -> httpx.Response:
+        """Send a request with retries; a streamed response must be closed by the caller."""
+
         retry_counts = retries if retries is not None else {}
         request_headers = self._headers()
         if headers:
             request_headers.update(headers)
 
         for attempt in range(_MAX_ATTEMPTS):
-            response = await self._client.request(
+            request = self._client.build_request(
                 method,
                 f"{self.base_url}{path}",
                 headers=request_headers,
-                follow_redirects=False,
                 **kwargs,
+            )
+            response = await self._client.send(
+                request,
+                stream=stream,
+                follow_redirects=False,
             )
             retry_kind = None
             if response.status_code == 429:
@@ -291,10 +305,17 @@ class TokenFactorySandboxApi:
                 retry_kind = "5xx"
 
             if retry_kind is not None and attempt + 1 < _MAX_ATTEMPTS:
+                if stream:
+                    await response.aclose()
                 retry_counts[retry_kind] = retry_counts.get(retry_kind, 0) + 1
                 await self._sleep(float(2**attempt))
                 continue
             if response.status_code >= 400 and response.status_code not in allowed_statuses:
+                if stream:
+                    try:
+                        await response.aread()
+                    finally:
+                        await response.aclose()
                 raise self._error(response)
             return response
         raise AssertionError("unreachable")
@@ -358,14 +379,40 @@ class TokenFactorySandboxApi:
         )
         return [dict(item) for item in response.json()["files"]]
 
-    async def download(self, image_uuid: str, path: str) -> bytes | None:
+    async def download(
+        self,
+        image_uuid: str,
+        path: str,
+        *,
+        max_bytes: int | None = None,
+    ) -> bytes | None:
+        if max_bytes is not None and max_bytes <= 0:
+            raise ValueError("max_bytes must be positive")
         response = await self._request(
             "GET",
             f"/v1/inspect/{image_uuid}/download",
             params={"path": path},
             allowed_statuses=frozenset({404}),
+            stream=True,
         )
-        return None if response.status_code == 404 else response.content
+        try:
+            if response.status_code == 404:
+                return None
+            if max_bytes is None:
+                return await response.aread()
+            declared = response.headers.get("Content-Length")
+            if declared is not None and declared.isdigit() and int(declared) > max_bytes:
+                raise _download_too_large(path, max_bytes, int(declared))
+            chunks: list[bytes] = []
+            received = 0
+            async for chunk in response.aiter_bytes():
+                received += len(chunk)
+                if received > max_bytes:
+                    raise _download_too_large(path, max_bytes, received)
+                chunks.append(chunk)
+            return b"".join(chunks)
+        finally:
+            await response.aclose()
 
     async def upload(self, data: bytes) -> UploadedFile:
         digest = hashlib.sha256(data).hexdigest()
@@ -708,12 +755,24 @@ class FakeTokenFactorySandboxApi:
             "group": "root",
         }
 
-    async def download(self, image_uuid: str | None, path: str) -> bytes | None:
+    async def download(
+        self,
+        image_uuid: str | None,
+        path: str,
+        *,
+        max_bytes: int | None = None,
+    ) -> bytes | None:
+        if max_bytes is not None and max_bytes <= 0:
+            raise ValueError("max_bytes must be positive")
         self.calls.append({"method": "download", "image": image_uuid, "path": path})
         if image_uuid is None:
             return None
         contents = self.images[image_uuid].get(path)
-        return bytes(contents) if contents is not None else None
+        if contents is None:
+            return None
+        if max_bytes is not None and len(contents) > max_bytes:
+            raise _download_too_large(path, max_bytes, len(contents))
+        return bytes(contents)
 
     async def upload(self, data: bytes) -> UploadedFile:
         digest = hashlib.sha256(data).hexdigest()
@@ -943,6 +1002,13 @@ class FakeTokenFactorySandboxApi:
         operation = self._operations[operation_id]
         operation["status"] = "CANCELLED"
 
+    async def _poll(self, operation_id: str) -> dict[str, Any]:
+        while True:
+            operation = await self.operation(operation_id)
+            if str(operation.get("status", "")).upper() in _TERMINAL_STATUSES:
+                return operation
+            await asyncio.sleep(0.001)
+
     async def run(
         self,
         *,
@@ -994,8 +1060,19 @@ class FakeTokenFactorySandboxApi:
             files=files,
             preserve_env=preserve_env,
         )
+        try:
+            poll = self._poll(operation_id)
+            if client_timeout_s is None:
+                operation = await poll
+            else:
+                operation = await asyncio.wait_for(poll, timeout=client_timeout_s)
+        except TimeoutError as exc:
+            await self.cancel(operation_id)
+            raise TimeoutError(
+                f"Token Factory sandbox operation {operation_id} exceeded the client timeout"
+            ) from exc
         return _run_result(
-            self._operations[operation_id],
+            operation,
             {},
             operation_id=operation_id,
         )

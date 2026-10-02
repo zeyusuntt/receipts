@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import io
 import json
+import math
 import os
 import posixpath
 import shlex
@@ -49,11 +50,11 @@ from receipts.sandbox.tree import tree_digest as _tree_digest
 
 TAIL = 6_000
 _SCRATCH_ROOT = "/tmp"
-_BUSYBOX_PATH = "/opt/receipts-bin/busybox"
-_PYTEST_PATH = "/opt/receipts/receipts_pytest.py"
-_INCOMING_ROOT = "/opt/receipts/incoming"
 _REPORTS_ROOT = "/opt/receipts/reports"
-_DEFAULT_ARCHIVE_SIZE_CAP_BYTES = 2 * 1024 * 1024 * 1024
+_DEFAULT_ARCHIVE_SIZE_CAP_BYTES = 512 * 1024 * 1024
+_DEFAULT_ARCHIVE_MEMBER_CAP = 200_000
+_DEFAULT_ARCHIVE_MEMBER_PATH_CAP_BYTES = 4_096
+_DEFAULT_CLIENT_TIMEOUT_ALLOWANCE_S = 600.0
 _SNAPSHOT_COMMAND = (
     "git add -A && git -c user.name=receipts "
     "-c user.email=receipts@localhost commit -q --allow-empty "
@@ -93,18 +94,28 @@ def _archive_path(name: str, *, description: str) -> PurePosixPath:
     return PurePosixPath(*parts) if parts else PurePosixPath(".")
 
 
+class _ArchiveLimitError(RuntimeError):
+    """A bounded archive refusal that must classify as infrastructure."""
+
+
 def _safe_extract_tar(
     archive_bytes: bytes,
     destination: Path,
     *,
     size_cap_bytes: int = _DEFAULT_ARCHIVE_SIZE_CAP_BYTES,
+    member_cap: int = _DEFAULT_ARCHIVE_MEMBER_CAP,
+    member_path_cap_bytes: int = _DEFAULT_ARCHIVE_MEMBER_PATH_CAP_BYTES,
 ) -> None:
     """Extract an agent-controlled tar without following archive symlinks."""
 
     if size_cap_bytes <= 0:
         raise ValueError("archive size cap must be positive")
+    if member_cap <= 0:
+        raise ValueError("archive member cap must be positive")
+    if member_path_cap_bytes <= 0:
+        raise ValueError("archive member path cap must be positive")
     if len(archive_bytes) > size_cap_bytes:
-        raise OSError(
+        raise _ArchiveLimitError(
             "Token Factory archive exceeds size cap "
             f"of {size_cap_bytes} bytes: {len(archive_bytes)} bytes",
         )
@@ -117,17 +128,10 @@ def _safe_extract_tar(
         raise OSError(f"unsafe Token Factory archive: invalid tar: {exc}") from exc
 
     with archive:
-        members = archive.getmembers()
-        extracted_size = sum(member.size for member in members if member.isreg())
-        if extracted_size > size_cap_bytes:
-            raise OSError(
-                "Token Factory archive exceeds size cap "
-                f"of {size_cap_bytes} bytes after extraction: {extracted_size} bytes",
-            )
-
         normalized: list[tuple[tarfile.TarInfo, PurePosixPath]] = []
         by_path: dict[PurePosixPath, tarfile.TarInfo] = {}
         symlinks: set[PurePosixPath] = set()
+        extracted_size = 0
         allowed = (
             tarfile.DIRTYPE,
             tarfile.REGTYPE,
@@ -135,7 +139,26 @@ def _safe_extract_tar(
             tarfile.SYMTYPE,
             tarfile.LNKTYPE,
         )
-        for member in members:
+        for member_count, member in enumerate(archive, start=1):
+            if member_count > member_cap:
+                raise _ArchiveLimitError(
+                    "Token Factory archive exceeds member cap "
+                    f"of {member_cap}: {member_count} members",
+                )
+            path_bytes = len(member.name.encode("utf-8", errors="surrogateescape"))
+            if path_bytes > member_path_cap_bytes:
+                raise _ArchiveLimitError(
+                    "Token Factory archive member path exceeds "
+                    f"{member_path_cap_bytes} bytes: {path_bytes} bytes: {member.name}",
+                )
+            if member.isreg():
+                extracted_size += member.size
+                if extracted_size > size_cap_bytes:
+                    raise _ArchiveLimitError(
+                        "Token Factory archive exceeds size cap "
+                        f"of {size_cap_bytes} bytes after extraction: "
+                        f"{extracted_size} bytes",
+                    )
             path = _archive_path(member.name, description="member path")
             if member.type not in allowed:
                 raise OSError(
@@ -254,6 +277,25 @@ class _BranchSpec:
 
 
 @dataclass(frozen=True)
+class _RunPaths:
+    root: str
+    busybox: str
+    pytest: str
+
+    @classmethod
+    def fresh(cls) -> _RunPaths:
+        root = f"/opt/receipts-{uuid.uuid4().hex}"
+        return cls(
+            root=root,
+            busybox=f"{root}/bin/busybox",
+            pytest=f"{root}/receipts_pytest.py",
+        )
+
+    def incoming(self, name: str) -> str:
+        return f"{self.root}/incoming/{name}"
+
+
+@dataclass(frozen=True)
 class _Execution:
     before: str
     after: str
@@ -273,8 +315,11 @@ class TokenFactoryExecutor:
         busybox: bytes,
         truncate_output_at: int = MAX_TRUNCATE_OUTPUT_AT,
         run_timeout_cap_s: int = 3600,
+        client_timeout_allowance_s: float = _DEFAULT_CLIENT_TIMEOUT_ALLOWANCE_S,
         hostname: str = "receipts",
         archive_size_cap_bytes: int = _DEFAULT_ARCHIVE_SIZE_CAP_BYTES,
+        archive_member_cap: int = _DEFAULT_ARCHIVE_MEMBER_CAP,
+        archive_member_path_cap_bytes: int = _DEFAULT_ARCHIVE_MEMBER_PATH_CAP_BYTES,
     ) -> None:
         if not isinstance(busybox, bytes):
             raise TypeError("busybox must be bytes")
@@ -286,10 +331,16 @@ class TokenFactoryExecutor:
             )
         if run_timeout_cap_s <= 0:
             raise ValueError("run_timeout_cap_s must be positive")
+        if not math.isfinite(client_timeout_allowance_s) or client_timeout_allowance_s < 0:
+            raise ValueError("client_timeout_allowance_s must be finite and non-negative")
         if not hostname:
             raise ValueError("hostname must not be empty")
         if archive_size_cap_bytes <= 0:
             raise ValueError("archive_size_cap_bytes must be positive")
+        if archive_member_cap <= 0:
+            raise ValueError("archive_member_cap must be positive")
+        if archive_member_path_cap_bytes <= 0:
+            raise ValueError("archive_member_path_cap_bytes must be positive")
 
         self.root = Path(root)
         self.sink = sink
@@ -297,8 +348,11 @@ class TokenFactoryExecutor:
         self.api = api
         self.truncate_output_at = truncate_output_at
         self.run_timeout_cap_s = run_timeout_cap_s
+        self.client_timeout_allowance_s = client_timeout_allowance_s
         self.hostname = hostname
         self.archive_size_cap_bytes = archive_size_cap_bytes
+        self.archive_member_cap = archive_member_cap
+        self.archive_member_path_cap_bytes = archive_member_path_cap_bytes
         self.cleanup_manifest: Path | None = None
 
         self._busybox = bytes(busybox)
@@ -416,17 +470,17 @@ class TokenFactoryExecutor:
         if self._pytest_upload is None:
             self._pytest_upload = await self.api.upload(PYTEST_BOOTSTRAP.encode())
 
-    def _trusted_files(self) -> dict[str, InstanceFileSpec]:
+    def _trusted_files(self, run_paths: _RunPaths) -> dict[str, InstanceFileSpec]:
         if self._busybox_upload is None or self._pytest_upload is None:
             raise RuntimeError("trusted Token Factory files have not been uploaded")
         return {
-            _BUSYBOX_PATH: InstanceFileSpec(
+            run_paths.busybox: InstanceFileSpec(
                 uuid=self._busybox_upload.uuid,
                 mode="0755",
                 uid=0,
                 gid=0,
             ),
-            _PYTEST_PATH: InstanceFileSpec(
+            run_paths.pytest: InstanceFileSpec(
                 uuid=self._pytest_upload.uuid,
                 mode="0644",
                 uid=0,
@@ -468,29 +522,41 @@ class TokenFactoryExecutor:
         extra_files: dict[str, InstanceFileSpec] | None = None,
         image: str | None = None,
         advance_head: bool = True,
+        require_image: bool = False,
+        run_paths: _RunPaths | None = None,
     ) -> _Execution:
         if timeout_s <= 0:
             raise ValueError("timeout_s must be positive")
         await self._ensure_tools()
         before = image or self._head(branch)
-        files = self._trusted_files()
+        paths = run_paths or _RunPaths.fresh()
+        files = self._trusted_files(paths)
         if extra_files:
             files.update(extra_files)
+        command_timeout_s = min(timeout_s, self.run_timeout_cap_s)
         started_at = _now()
-        result = await self.api.run(
-            command=command,
-            image=before,
-            hostname=self.hostname,
-            shell=True,
-            env=env,
-            cwd=self._spec(branch).workdir,
-            disposable=False,
-            timeout=min(timeout_s, self.run_timeout_cap_s),
-            truncate_output_at=self.truncate_output_at,
-            files=files,
-        )
+        try:
+            result = await self.api.run(
+                command=command,
+                image=before,
+                hostname=self.hostname,
+                shell=True,
+                env=env,
+                cwd=self._spec(branch).workdir,
+                disposable=False,
+                timeout=command_timeout_s,
+                truncate_output_at=self.truncate_output_at,
+                files=files,
+                client_timeout_s=command_timeout_s + self.client_timeout_allowance_s,
+            )
+        except TimeoutError as exc:
+            raise RuntimeError(f"Token Factory run timed out: {exc}") from exc
         finished_at = _now()
         self._record_usage(branch, result, started_at, finished_at)
+        if (advance_head or require_image) and result.image_uuid is None:
+            raise RuntimeError(
+                f"Token Factory run returned no image: {result.operation_id}",
+            )
         if result.status.upper() != "SUCCESS" and not result.has_process_result:
             detail = result.error or f"status {result.status or 'unknown'}"
             raise RuntimeError(f"Token Factory sandbox operation failed: {detail}")
@@ -596,8 +662,9 @@ class TokenFactoryExecutor:
     ) -> tuple[bytes, float]:
         token = uuid.uuid4().hex
         remote_archive = f"{_SCRATCH_ROOT}/receipts-{token}.tar"
+        run_paths = _RunPaths.fresh()
         parts = [
-            shlex.quote(_BUSYBOX_PATH),
+            shlex.quote(run_paths.busybox),
             "tar",
             "-C",
             shlex.quote(self._spec(branch).workdir),
@@ -613,19 +680,23 @@ class TokenFactoryExecutor:
             min(300, self.run_timeout_cap_s),
             image=image,
             advance_head=False,
+            require_image=True,
+            run_paths=run_paths,
         )
         result = execution.result
         if result.timed_out or result.exit_code != 0:
             detail = _tail(result.stderr) or _tail(result.stdout) or "no output"
             raise OSError(f"Token Factory worktree archive failed: {detail}")
-        if result.image_uuid is None:
-            raise OSError("Token Factory worktree archive returned no downloadable image")
-        archive = await self.api.download(result.image_uuid, remote_archive)
+        archive = await self.api.download(
+            result.image_uuid,
+            remote_archive,
+            max_bytes=self.archive_size_cap_bytes,
+        )
         elapsed = time.monotonic() - started
         if archive is None:
             raise OSError("Token Factory worktree archive was missing from result image")
         if len(archive) > self.archive_size_cap_bytes:
-            raise OSError(
+            raise _ArchiveLimitError(
                 "Token Factory archive exceeds size cap "
                 f"of {self.archive_size_cap_bytes} bytes: {len(archive)} bytes",
             )
@@ -650,6 +721,8 @@ class TokenFactoryExecutor:
                 archive,
                 destination,
                 size_cap_bytes=self.archive_size_cap_bytes,
+                member_cap=self.archive_member_cap,
+                member_path_cap_bytes=self.archive_member_path_cap_bytes,
             )
         except Exception:
             if os.path.lexists(destination):
@@ -810,15 +883,17 @@ class TokenFactoryExecutor:
     ) -> Receipt:
         seq = self._next_seq(branch)
         spec = self._spec(branch)
+        run_paths = _RunPaths.fresh()
         remote_report = f"{_REPORTS_ROOT}/{branch.id}-{seq}.xml"
         local_report = self.root / "reports" / f"{branch.id}-{seq}.xml"
         local_report.unlink(missing_ok=True)
         pytest_command = (
-            f"{shlex.quote(spec.python)} -I {shlex.quote(_PYTEST_PATH)} "
+            f"{shlex.quote(spec.python)} -I {shlex.quote(run_paths.pytest)} "
             f"{args} {PYTEST_FLAGS} --junitxml={shlex.quote(remote_report)}"
         )
         command = (
-            f"{shlex.quote(_BUSYBOX_PATH)} mkdir -p {shlex.quote(_REPORTS_ROOT)} "
+            f"{shlex.quote(run_paths.busybox)} mkdir -p "
+            f"{shlex.quote(_REPORTS_ROOT)} "
             f"&& {pytest_command}"
         )
         execution = await self._execute(
@@ -826,6 +901,7 @@ class TokenFactoryExecutor:
             command,
             timeout_s,
             env={"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""},
+            run_paths=run_paths,
         )
         report = await self.api.download(execution.after, remote_report)
         if report is not None:
@@ -896,14 +972,15 @@ class TokenFactoryExecutor:
         encoded = content.encode()
         digest = hashlib.sha256(encoded).hexdigest()
         uploaded = await self.api.upload(encoded)
-        incoming = f"{_INCOMING_ROOT}/{digest}"
+        run_paths = _RunPaths.fresh()
+        incoming = run_paths.incoming(digest)
         parent = posixpath.dirname(remote_path)
         inner = (
             f"mkdir -p {shlex.quote(parent)} && "
             f"cp {shlex.quote(incoming)} {shlex.quote(remote_path)}"
         )
         command = (
-            f"{shlex.quote(_BUSYBOX_PATH)} sh -c {shlex.quote(inner)}"
+            f"{shlex.quote(run_paths.busybox)} sh -c {shlex.quote(inner)}"
         )
         execution = await self._execute(
             branch,
@@ -917,6 +994,7 @@ class TokenFactoryExecutor:
                     gid=0,
                 ),
             },
+            run_paths=run_paths,
         )
         return self._execution_receipt(
             branch,
@@ -1093,7 +1171,8 @@ class TokenFactoryExecutor:
         seq = self._next_seq(branch)
         local_patch = self.root / "patches" / f"{branch.id}-{seq}-apply.diff"
         local_patch.write_text(patch_text)
-        remote_patch = f"{_INCOMING_ROOT}/{digest}.diff"
+        run_paths = _RunPaths.fresh()
+        remote_patch = run_paths.incoming(f"{digest}.diff")
         command = (
             "git update-index -q --refresh; "
             f"git apply {GIT_APPLY_FLAGS} {shlex.quote(remote_patch)}"
@@ -1134,6 +1213,7 @@ class TokenFactoryExecutor:
                     gid=0,
                 ),
             },
+            run_paths=run_paths,
         )
         tree_digest, tree_download_s = await self._tree_digest_with_download_time(branch)
         return self._execution_receipt(

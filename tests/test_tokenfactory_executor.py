@@ -3,6 +3,7 @@ import io
 import importlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tarfile
@@ -23,6 +24,7 @@ BASE_IMAGE = "11111111-1111-1111-1111-111111111111"
 BUSYBOX = b"trusted static busybox"
 ARCHIVE_ALL = "/__fixture_archive_all__.tar"
 ARCHIVE_NO_GIT = "/__fixture_archive_no_git__.tar"
+TRUSTED_ROOT_RE = re.compile(r"/opt/receipts-[0-9a-f]{32}")
 
 
 def _module():
@@ -42,6 +44,35 @@ def _fake(*, handlers=None, tree=None, tags=None):
         images={BASE_IMAGE: tree or {"/repo/original.txt": b"original\n"}},
         tags=tags if tags is not None else {"swerebenchv2/example:1": BASE_IMAGE},
         handlers=handlers or {},
+    )
+
+
+def _trusted_root(call) -> str:
+    roots = {
+        path.removesuffix("/bin/busybox")
+        for path in call["files"]
+        if path.endswith("/bin/busybox")
+    }
+    assert len(roots) == 1
+    root = roots.pop()
+    assert TRUSTED_ROOT_RE.fullmatch(root)
+    assert f"{root}/receipts_pytest.py" in call["files"]
+    return root
+
+
+def _dynamic_fake(handler_for_run, *, tree=None, tags=None):
+    api_module = _api_module()
+
+    class DynamicFake(api_module.FakeTokenFactorySandboxApi):
+        async def run(self, **kwargs):
+            handler = handler_for_run(kwargs)
+            if handler is not None:
+                self.handlers[kwargs["command"]] = handler
+            return await super().run(**kwargs)
+
+    return DynamicFake(
+        images={BASE_IMAGE: tree or {"/repo/original.txt": b"original\n"}},
+        tags=tags if tags is not None else {"swerebenchv2/example:1": BASE_IMAGE},
     )
 
 
@@ -89,13 +120,14 @@ def _fixture_tree(root: Path) -> dict[str, bytes]:
     }
 
 
-def _archive_fake(root: Path, *, handlers=None):
+def _archive_fake(root: Path, *, handlers=None, handler_for_run=None):
     api_module = _api_module()
 
     class ArchiveFake(api_module.FakeTokenFactorySandboxApi):
         async def run(self, **kwargs):
             command = kwargs["command"]
-            if command.startswith("/opt/receipts-bin/busybox tar "):
+            trusted_root = _trusted_root(kwargs)
+            if command.startswith(f"{trusted_root}/bin/busybox tar "):
                 words = command.split()
                 target = words[words.index("-cf") + 1]
                 archive_key = (
@@ -107,6 +139,10 @@ def _archive_fake(root: Path, *, handlers=None):
                     return 0, "", "", tree
 
                 self.handlers[command] = archive
+            elif handler_for_run is not None:
+                handler = handler_for_run(kwargs)
+                if handler is not None:
+                    self.handlers[command] = handler
             return await super().run(**kwargs)
 
     return ArchiveFake(
@@ -295,16 +331,30 @@ async def test_every_run_injects_trusted_files_and_chains_immutable_images(tmp_p
     assert all(call["disposable"] is False for call in calls)
     assert calls[0]["timeout"] == 17
     assert calls[1]["timeout"] == 3600
+    assert calls[0]["client_timeout_s"] == 617
+    assert calls[1]["client_timeout_s"] == 4200
     assert all(call["truncate_output_at"] == 10 * 1024 * 1024 - 1 for call in calls)
-    for call in calls:
+    trusted_roots = [_trusted_root(call) for call in calls]
+    assert trusted_roots[0] != trusted_roots[1]
+    for call, trusted_root in zip(calls, trusted_roots, strict=True):
+        # R1 makes each trusted injection destination unpredictable per run.
         assert set(call["files"]) == {
-            "/opt/receipts-bin/busybox",
-            "/opt/receipts/receipts_pytest.py",
+            f"{trusted_root}/bin/busybox",
+            f"{trusted_root}/receipts_pytest.py",
         }
-        assert call["files"]["/opt/receipts-bin/busybox"]["mode"] == "0755"
-        assert call["files"]["/opt/receipts/receipts_pytest.py"]["mode"] == "0644"
-    assert all(tree["/opt/receipts-bin/busybox"] == BUSYBOX for tree in seen)
-    assert all(b"import pytest" in tree["/opt/receipts/receipts_pytest.py"] for tree in seen)
+        assert call["files"][f"{trusted_root}/bin/busybox"]["mode"] == "0755"
+        assert call["files"][f"{trusted_root}/receipts_pytest.py"]["mode"] == "0644"
+    assert all(
+        tree[f"{trusted_root}/bin/busybox"] == BUSYBOX
+        for tree, trusted_root in zip(seen, trusted_roots, strict=True)
+    )
+    assert all(
+        b"import pytest" in tree[f"{trusted_root}/receipts_pytest.py"]
+        for tree, trusted_root in zip(seen, trusted_roots, strict=True)
+    )
+    rendered_calls = json.dumps(calls)
+    assert "/opt/receipts-bin/busybox" not in rendered_calls
+    assert "/opt/receipts/receipts_pytest.py" not in rendered_calls
     assert first_receipt.seq == 1 and first_receipt.receipt_id == "base-1"
     assert first_receipt.image_before == BASE_IMAGE
     assert first_receipt.image_after == second_receipt.image_before
@@ -312,7 +362,7 @@ async def test_every_run_injects_trusted_files_and_chains_immutable_images(tmp_p
     assert sink.receipts == [first_receipt, second_receipt]
 
 
-async def test_run_without_output_image_keeps_head_and_platform_failure_raises(tmp_path):
+async def test_run_without_output_image_is_infrastructure_even_for_process_results(tmp_path):
     module = _module()
     api_module = _api_module()
 
@@ -345,8 +395,13 @@ async def test_run_without_output_image_keeps_head_and_platform_failure_raises(t
     base = await executor.prepare(
         ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
     )
-    receipt = await executor.run(base, "no image", timeout_s=10)
-    assert receipt.image_before == receipt.image_after == base.head == BASE_IMAGE
+    # R1 no longer aliases a missing immutable output image to the input head.
+    with pytest.raises(
+        RuntimeError,
+        match="Token Factory run returned no image: fake-operation-1",
+    ):
+        await executor.run(base, "no image", timeout_s=10)
+    assert base.head == BASE_IMAGE
 
     failed_api = FailedApi(
         images={BASE_IMAGE: {"/repo/original.txt": b"original\n"}},
@@ -357,10 +412,73 @@ async def test_run_without_output_image_keeps_head_and_platform_failure_raises(t
     failed_base = await failed.prepare(
         ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
     )
-    with pytest.raises(RuntimeError, match="platform capacity unavailable"):
+    with pytest.raises(
+        RuntimeError,
+        match="Token Factory run returned no image: fake-operation-1",
+    ):
         await failed.run(failed_base, "fail", timeout_s=10)
     assert failed_base.head == BASE_IMAGE
     assert failed_sink.receipts == []
+
+
+async def test_archive_side_run_without_output_image_names_operation(tmp_path):
+    module = _module()
+    api_module = _api_module()
+
+    class NoImageArchiveApi(api_module.FakeTokenFactorySandboxApi):
+        async def run(self, **kwargs):
+            self.handlers[kwargs["command"]] = lambda tree: (0, "", "", tree)
+            result = await super().run(**kwargs)
+            return replace(result, image_uuid=None)
+
+    api = NoImageArchiveApi(
+        images={BASE_IMAGE: {"/repo/original.txt": b"original\n"}},
+        tags={"swerebenchv2/example:1": BASE_IMAGE},
+    )
+    executor, _, _ = _executor(tmp_path, module, api)
+    base = await executor.prepare(
+        ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Token Factory run returned no image: fake-operation-1",
+    ):
+        await executor._archive_image(base, base.head, include_top_level_git=False)
+
+
+async def test_run_client_timeout_is_bounded_and_cancels_operation(tmp_path):
+    module = _module()
+    api_module = _api_module()
+
+    class NeverTerminalApi(api_module.FakeTokenFactorySandboxApi):
+        async def _execute(self, **kwargs):
+            operation_id = await super()._execute(**kwargs)
+            self._operations[operation_id]["status"] = "PENDING"
+            return operation_id
+
+    api = NeverTerminalApi(
+        images={BASE_IMAGE: {"/repo/original.txt": b"original\n"}},
+        tags={"swerebenchv2/example:1": BASE_IMAGE},
+        handlers={"never": lambda tree: (0, "", "", tree)},
+    )
+    executor, _, _ = _executor(
+        tmp_path,
+        module,
+        api,
+        client_timeout_allowance_s=0,
+    )
+    base = await executor.prepare(
+        ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
+    )
+
+    with pytest.raises(RuntimeError, match="fake-operation-1"):
+        await executor.run(base, "never", timeout_s=0.01)
+
+    run_call = next(call for call in api.calls if call["method"] == "run")
+    assert run_call["client_timeout_s"] == 0.01
+    assert {"method": "cancel", "operation": "fake-operation-1"} in api.calls
+    assert base.head == BASE_IMAGE
 
 
 async def test_run_preserves_platform_timeout_state(tmp_path):
@@ -429,13 +547,22 @@ async def test_write_then_read_round_trips_through_busybox_and_creates_parent(tm
     module = _module()
     content = "VALUE = 1\n"
     digest = hashlib.sha256(content.encode()).hexdigest()
-    incoming = f"/opt/receipts/incoming/{digest}"
     target = "/repo/pkg/deep/new.py"
-    command = (
-        "/opt/receipts-bin/busybox sh -c "
-        f"'mkdir -p /repo/pkg/deep && cp {incoming} {target}'"
-    )
-    api = _fake(handlers={command: _copy_handler(incoming, target)})
+    expected: dict[str, str] = {}
+
+    def handler_for_run(call):
+        trusted_root = _trusted_root(call)
+        incoming = f"{trusted_root}/incoming/{digest}"
+        expected["root"] = trusted_root
+        expected["incoming"] = incoming
+        expected["command"] = (
+            f"{trusted_root}/bin/busybox sh -c "
+            f"'mkdir -p /repo/pkg/deep && cp {incoming} {target}'"
+        )
+        assert call["command"] == expected["command"]
+        return _copy_handler(incoming, target)
+
+    api = _dynamic_fake(handler_for_run)
     executor, _, _ = _executor(tmp_path, module, api)
     base = await executor.prepare(
         ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
@@ -448,26 +575,32 @@ async def test_write_then_read_round_trips_through_busybox_and_creates_parent(tm
     assert receipt.stdout_sha256 == digest
     assert await executor.read_file(base, "pkg/deep/new.py", 7) == "VALUE ="
     call = next(call for call in api.calls if call["method"] == "run")
-    assert call["command"] == command
+    assert call["command"] == expected["command"]
     assert set(call["files"]) == {
-        "/opt/receipts-bin/busybox",
-        "/opt/receipts/receipts_pytest.py",
-        incoming,
+        f"{expected['root']}/bin/busybox",
+        f"{expected['root']}/receipts_pytest.py",
+        expected["incoming"],
     }
-    assert call["files"][incoming]["mode"] == "0644"
+    assert call["files"][expected["incoming"]]["mode"] == "0644"
 
 
 async def test_scratch_write_works_and_refused_paths_emit_refusal_receipts(tmp_path):
     module = _module()
     content = "print('probe')\n"
     digest = hashlib.sha256(content.encode()).hexdigest()
-    incoming = f"/opt/receipts/incoming/{digest}"
     target = "/tmp/probe.py"
-    command = (
-        "/opt/receipts-bin/busybox sh -c "
-        f"'mkdir -p /tmp && cp {incoming} {target}'"
-    )
-    api = _fake(handlers={command: _copy_handler(incoming, target)})
+
+    def handler_for_run(call):
+        trusted_root = _trusted_root(call)
+        incoming = f"{trusted_root}/incoming/{digest}"
+        command = (
+            f"{trusted_root}/bin/busybox sh -c "
+            f"'mkdir -p /tmp && cp {incoming} {target}'"
+        )
+        assert call["command"] == command
+        return _copy_handler(incoming, target)
+
+    api = _dynamic_fake(handler_for_run)
     executor, _, _ = _executor(tmp_path, module, api)
     base = await executor.prepare(
         ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
@@ -540,16 +673,22 @@ async def test_checkpoint_and_late_forks_use_immutable_image_with_expected_ids(t
     module = _module()
     content = "agent only\n"
     digest = hashlib.sha256(content.encode()).hexdigest()
-    incoming = f"/opt/receipts/incoming/{digest}"
     target = "/repo/agent.txt"
-    command = (
-        "/opt/receipts-bin/busybox sh -c "
-        f"'mkdir -p /repo && cp {incoming} {target}'"
-    )
+
+    def handler_for_run(call):
+        trusted_root = _trusted_root(call)
+        incoming = f"{trusted_root}/incoming/{digest}"
+        command = (
+            f"{trusted_root}/bin/busybox sh -c "
+            f"'mkdir -p /repo && cp {incoming} {target}'"
+        )
+        assert call["command"] == command
+        return _copy_handler(incoming, target)
+
     executor, _, _ = _executor(
         tmp_path,
         module,
-        _fake(handlers={command: _copy_handler(incoming, target)}),
+        _dynamic_fake(handler_for_run),
     )
     base = await executor.prepare(
         ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
@@ -610,18 +749,25 @@ async def test_run_pytest_uses_trusted_runner_downloads_result_junit_and_digest(
     (repository / "pkg" / ".git" / "index").write_bytes(b"nested git metadata")
 
     report = "/opt/receipts/reports/base-1.xml"
-    command = (
-        "/opt/receipts-bin/busybox mkdir -p /opt/receipts/reports && "
-        "python3 -I /opt/receipts/receipts_pytest.py "
-        f"tests/test_sample.py::test_ok {PYTEST_FLAGS} --junitxml={report}"
-    )
+    expected: dict[str, str] = {}
 
     def pytest_run(tree):
         tree[report] = _junit_xml()
         tree.update(_fixture_tree(repository))
         return 0, "tests/test_sample.py::test_ok PASSED\n", "", tree
 
-    api = _archive_fake(repository, handlers={command: pytest_run})
+    def handler_for_run(call):
+        trusted_root = _trusted_root(call)
+        expected["root"] = trusted_root
+        expected["command"] = (
+            f"{trusted_root}/bin/busybox mkdir -p /opt/receipts/reports && "
+            f"python3 -I {trusted_root}/receipts_pytest.py "
+            f"tests/test_sample.py::test_ok {PYTEST_FLAGS} --junitxml={report}"
+        )
+        assert call["command"] == expected["command"]
+        return pytest_run
+
+    api = _archive_fake(repository, handler_for_run=handler_for_run)
     executor, _, _ = _executor(tmp_path, module, api)
     base = await executor.prepare(
         ImageSource(
@@ -647,7 +793,7 @@ async def test_run_pytest_uses_trusted_runner_downloads_result_junit_and_digest(
     expected_digest = _tree_digest(repository)
     assert expected_digest == _tree_digest(without_git)
     run_calls = [call for call in api.calls if call["method"] == "run"]
-    assert run_calls[0]["command"] == command
+    assert run_calls[0]["command"] == expected["command"]
     assert run_calls[0]["env"] == {"PYTEST_ADDOPTS": "", "PYTEST_PLUGINS": ""}
     assert run_calls[0]["image"] == BASE_IMAGE
     assert run_calls[1]["image"] == receipt.image_after
@@ -672,6 +818,10 @@ async def test_run_pytest_uses_trusted_runner_downloads_result_junit_and_digest(
         if call["method"] == "download" and call["path"].endswith(".tar")
     )
     assert archive_download["image"] != base.head
+    archive_call = run_calls[1]
+    archive_root = _trusted_root(archive_call)
+    assert archive_root != expected["root"]
+    assert archive_call["command"].startswith(f"{archive_root}/bin/busybox tar ")
 
 
 async def test_run_pytest_returns_none_when_result_image_has_no_junit(tmp_path):
@@ -680,16 +830,21 @@ async def test_run_pytest_returns_none_when_result_image_has_no_junit(tmp_path):
     repository.mkdir()
     (repository / "module.py").write_text("VALUE = 1\n")
     report = "/opt/receipts/reports/base-1.xml"
-    command = (
-        "/opt/receipts-bin/busybox mkdir -p /opt/receipts/reports && "
-        "python -I /opt/receipts/receipts_pytest.py "
-        f"tests/missing.py {PYTEST_FLAGS} --junitxml={report}"
-    )
 
     def missing_report(tree):
         return 4, "", "collection failed\n", tree
 
-    api = _archive_fake(repository, handlers={command: missing_report})
+    def handler_for_run(call):
+        trusted_root = _trusted_root(call)
+        command = (
+            f"{trusted_root}/bin/busybox mkdir -p /opt/receipts/reports && "
+            f"python -I {trusted_root}/receipts_pytest.py "
+            f"tests/missing.py {PYTEST_FLAGS} --junitxml={report}"
+        )
+        assert call["command"] == command
+        return missing_report
+
+    api = _archive_fake(repository, handler_for_run=handler_for_run)
     executor, _, _ = _executor(tmp_path, module, api)
     base = await executor.prepare(
         ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
@@ -745,7 +900,8 @@ def test_safe_archive_extraction_enforces_cap_and_keeps_outside_symlink_literal(
     link.linkname = "../../outside"
     archive = _tar_with_members([(link, b"")])
 
-    with pytest.raises(OSError, match="size cap"):
+    # Archive limit refusals escape as infrastructure errors.
+    with pytest.raises(RuntimeError, match="size cap"):
         module._safe_extract_tar(
             archive,
             tmp_path / "too-large",
@@ -760,6 +916,139 @@ def test_safe_archive_extraction_enforces_cap_and_keeps_outside_symlink_literal(
     extracted = tmp_path / "extracted" / "outside-link"
     assert extracted.is_symlink()
     assert os.readlink(extracted) == "../../outside"
+
+
+def test_safe_archive_extraction_refuses_too_many_members_with_injected_cap(tmp_path):
+    module = _module()
+    archive = _tar_with_members(
+        [
+            (tarfile.TarInfo("one"), b"1"),
+            (tarfile.TarInfo("two"), b"2"),
+        ],
+    )
+
+    with pytest.raises(RuntimeError, match="member cap of 1: 2 members"):
+        module._safe_extract_tar(
+            archive,
+            tmp_path / "out",
+            size_cap_bytes=len(archive),
+            member_cap=1,
+        )
+
+
+def test_archive_member_cap_stops_iteration_at_cap_plus_one(tmp_path, monkeypatch):
+    module = _module()
+
+    class CountingArchive:
+        def __init__(self):
+            self.yielded = 0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def __iter__(self):
+            for name in ("one", "two", "must-not-be-read"):
+                self.yielded += 1
+                if self.yielded > 2:
+                    raise AssertionError("archive iteration continued beyond cap + 1")
+                yield tarfile.TarInfo(name)
+
+        def getmembers(self):
+            raise AssertionError("archive members must be consumed incrementally")
+
+    counting_archive = CountingArchive()
+    monkeypatch.setattr(
+        module.tarfile,
+        "open",
+        lambda **_kwargs: counting_archive,
+    )
+
+    with pytest.raises(RuntimeError, match="member cap of 1: 2 members"):
+        module._safe_extract_tar(
+            b"",
+            tmp_path / "out",
+            size_cap_bytes=1,
+            member_cap=1,
+        )
+
+    assert counting_archive.yielded == 2
+
+
+@pytest.mark.parametrize(
+    ("first_member", "limits", "message"),
+    [
+        (
+            tarfile.TarInfo("éé"),
+            {"member_path_cap_bytes": 3},
+            "member path exceeds 3 bytes",
+        ),
+        (
+            tarfile.TarInfo("large"),
+            {"size_cap_bytes": 1},
+            "after extraction: 2 bytes",
+        ),
+    ],
+)
+def test_archive_per_member_limits_stop_iteration_immediately(
+    tmp_path,
+    monkeypatch,
+    first_member,
+    limits,
+    message,
+):
+    module = _module()
+    if first_member.name == "large":
+        first_member.size = 2
+
+    class StopAfterFirstArchive:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def __iter__(self):
+            yield first_member
+            raise AssertionError("archive iteration continued after limit violation")
+
+    monkeypatch.setattr(
+        module.tarfile,
+        "open",
+        lambda **_kwargs: StopAfterFirstArchive(),
+    )
+
+    with pytest.raises(RuntimeError, match=message):
+        module._safe_extract_tar(
+            b"",
+            tmp_path / "out",
+            size_cap_bytes=limits.get("size_cap_bytes", 1),
+            member_path_cap_bytes=limits.get("member_path_cap_bytes", 4_096),
+        )
+
+
+def test_safe_archive_extraction_refuses_long_utf8_member_path_with_injected_cap(
+    tmp_path,
+):
+    module = _module()
+    archive = _tar_with_members([(tarfile.TarInfo("éé"), b"content")])
+
+    with pytest.raises(RuntimeError, match="member path exceeds 3 bytes"):
+        module._safe_extract_tar(
+            archive,
+            tmp_path / "out",
+            size_cap_bytes=len(archive),
+            member_path_cap_bytes=3,
+        )
+
+
+def test_default_archive_size_cap_is_512_mib(tmp_path):
+    module = _module()
+    executor, _, _ = _executor(tmp_path, module)
+
+    assert executor.archive_size_cap_bytes == 512 * 1024 * 1024
 
 
 async def test_patch_matches_trusted_staging_preserves_symlinks_and_caches_checkpoint(
@@ -844,7 +1133,8 @@ async def test_patch_matches_trusted_staging_preserves_symlinks_and_caches_check
         call
         for call in api.calls
         if call["method"] == "run"
-        and call["command"].startswith("/opt/receipts-bin/busybox tar ")
+        and " tar " in call["command"]
+        and call["command"].split()[0].endswith("/bin/busybox")
     ]
     checkpoint_fetches = [
         call
@@ -876,18 +1166,26 @@ async def test_apply_patch_injects_exact_bytes_uses_upstream_flags_and_moves_hea
         text=True,
     ).stdout
     digest = hashlib.sha256(patch_text.encode()).hexdigest()
-    remote_patch = f"/opt/receipts/incoming/{digest}.diff"
-    command = (
-        "git update-index -q --refresh; "
-        f"git apply {GIT_APPLY_FLAGS} {remote_patch}"
-    )
+    expected: dict[str, str] = {}
 
-    def apply(tree):
-        assert tree[remote_patch] == patch_text.encode()
-        tree.update(_fixture_tree(applied))
-        return 0, "Checking patch original.txt...\nApplied patch original.txt cleanly.\n", "", tree
+    def handler_for_run(call):
+        trusted_root = _trusted_root(call)
+        remote_patch = f"{trusted_root}/incoming/{digest}.diff"
+        command = (
+            "git update-index -q --refresh; "
+            f"git apply {GIT_APPLY_FLAGS} {remote_patch}"
+        )
+        expected.update(root=trusted_root, remote_patch=remote_patch, command=command)
+        assert call["command"] == command
 
-    api = _archive_fake(repository, handlers={command: apply})
+        def apply(tree):
+            assert tree[remote_patch] == patch_text.encode()
+            tree.update(_fixture_tree(applied))
+            return 0, "Checking patch original.txt...\nApplied patch original.txt cleanly.\n", "", tree
+
+        return apply
+
+    api = _archive_fake(repository, handler_for_run=handler_for_run)
     executor, _, _ = _executor(tmp_path, module, api)
     base = await executor.prepare(
         ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
@@ -901,11 +1199,11 @@ async def test_apply_patch_injects_exact_bytes_uses_upstream_flags_and_moves_hea
     from receipts.sandbox.daytona import _tree_digest
 
     run_calls = [call for call in api.calls if call["method"] == "run"]
-    assert run_calls[0]["command"] == command
+    assert run_calls[0]["command"] == expected["command"]
     assert set(run_calls[0]["files"]) == {
-        "/opt/receipts-bin/busybox",
-        "/opt/receipts/receipts_pytest.py",
-        remote_patch,
+        f"{expected['root']}/bin/busybox",
+        f"{expected['root']}/receipts_pytest.py",
+        expected["remote_patch"],
     }
     assert receipt.kind == "apply" and receipt.exit_code == 0
     assert receipt.patch_sha256 == digest
