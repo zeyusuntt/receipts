@@ -11,7 +11,14 @@ import shlex
 import time
 from typing import Any, Literal, TextIO
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from receipts.llm import AssistantTurn, ModelClient, ToolCall
 from receipts.models import Branch, Claims, Receipt
@@ -36,6 +43,22 @@ _READ_FETCH_MAX_BYTES = 2_000_000
 _COMMAND_OUTPUT_CHARS = 6_000
 _COMMAND_TIMEOUT_S = 300
 _TOOL_NAMES = ("read_file", "edit_file", "write_file", "run_command", "finish")
+_COMMAND_ALIASES = {
+    "execute",
+    "bash",
+    "shell",
+    "run",
+    "terminal",
+    "execute_command",
+    "execute_bash",
+}
+_GREP_ALIASES = {"execute_grep", "grep", "search"}
+_LIST_ALIASES = {"list_dir", "ls"}
+_EDITOR_TARGETS = {
+    "view": "read_file",
+    "str_replace": "edit_file",
+    "create": "write_file",
+}
 _ONE_CALL_REPLY = "one tool call per turn; only the first was run"
 _FREE_TEXT_REPAIR = (
     "Respond with exactly one tool call. The available tools are "
@@ -233,6 +256,48 @@ class _RunCommandArgs(BaseModel):
     command: str
 
 
+class _ShellAliasArgs(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    @field_validator("*", mode="after")
+    @classmethod
+    def reject_shell_control_bytes(cls, value: str) -> str:
+        if any(character in value for character in ("\n", "\r", "\x00")):
+            raise ValueError("shell arguments must not contain newline or NUL bytes")
+        return value
+
+
+class _GrepAliasArgs(_ShellAliasArgs):
+    pattern: str
+    path: str = "."
+
+
+class _ListAliasArgs(_ShellAliasArgs):
+    path: str = "."
+
+
+class _EditorAliasArgs(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    command: Literal["view", "str_replace", "create"]
+    path: str
+    old_str: str | None = None
+    old_text: str | None = None
+    new_str: str | None = None
+    new_text: str | None = None
+    file_text: str | None = None
+
+    @model_validator(mode="after")
+    def require_command_arguments(self) -> _EditorAliasArgs:
+        if self.command == "str_replace":
+            if self.old_text is None and self.old_str is None:
+                raise ValueError("str_replace requires old_text or old_str")
+            if self.new_text is None and self.new_str is None:
+                raise ValueError("str_replace requires new_text or new_str")
+        if self.command == "create" and self.file_text is None:
+            raise ValueError("create requires file_text")
+        return self
+
+
 class _FinishArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     summary: str
@@ -263,6 +328,101 @@ def _with_note(note: str, result: str) -> str:
     if not note:
         return result
     return f"{note}\n{result}"
+
+
+def _alias_target(call: ToolCall) -> str | None:
+    if call.name in _COMMAND_ALIASES or call.name in _GREP_ALIASES:
+        return "run_command"
+    if call.name in _LIST_ALIASES:
+        return "run_command"
+    if call.name == "str_replace_editor":
+        command = call.arguments.get("command")
+        return _EDITOR_TARGETS.get(command) if isinstance(command, str) else None
+    return None
+
+
+def _rewrite_tool_alias(call: ToolCall) -> tuple[ToolCall | None, str | None]:
+    if call.name in _COMMAND_ALIASES:
+        arguments: dict[str, Any] = {}
+        for name in ("command", "cmd", "script"):
+            if name in call.arguments:
+                arguments["command"] = call.arguments[name]
+                break
+        return ToolCall(name="run_command", arguments=arguments, id=call.id), None
+
+    if call.name in _GREP_ALIASES:
+        arguments = _GrepAliasArgs.model_validate(call.arguments)
+        command = " ".join(
+            (
+                "grep -rn --",
+                shlex.quote(arguments.pattern),
+                shlex.quote(arguments.path),
+            ),
+        )
+        return (
+            ToolCall(
+                name="run_command",
+                arguments={"command": command},
+                id=call.id,
+            ),
+            None,
+        )
+
+    if call.name in _LIST_ALIASES:
+        arguments = _ListAliasArgs.model_validate(call.arguments)
+        command = f"ls -la -- {shlex.quote(arguments.path)}"
+        return (
+            ToolCall(
+                name="run_command",
+                arguments={"command": command},
+                id=call.id,
+            ),
+            None,
+        )
+
+    if call.name == "str_replace_editor":
+        arguments = _EditorAliasArgs.model_validate(call.arguments)
+        if arguments.command == "view":
+            mapped = {"path": arguments.path}
+            for name in ("view_range", "start_line", "end_line"):
+                if name in call.arguments:
+                    mapped[name] = call.arguments[name]
+        elif arguments.command == "str_replace":
+            mapped = {
+                "path": arguments.path,
+                "old_text": (
+                    arguments.old_text
+                    if arguments.old_text is not None
+                    else arguments.old_str
+                ),
+                "new_text": (
+                    arguments.new_text
+                    if arguments.new_text is not None
+                    else arguments.new_str
+                ),
+            }
+        else:
+            mapped = {"path": arguments.path, "content": arguments.file_text}
+        return (
+            ToolCall(
+                name=_EDITOR_TARGETS[arguments.command],
+                arguments=mapped,
+                id=call.id,
+            ),
+            None,
+        )
+
+    if call.name == "think":
+        return None, "noted"
+
+    return call, None
+
+
+def _with_alias(alias_target: str | None, result: str) -> str:
+    if alias_target is None:
+        return result
+    prefix = f"(alias for {alias_target})"
+    return prefix + (f"\n{result}" if result else "")
 
 
 def _assistant_message(turn: AssistantTurn) -> dict[str, Any]:
@@ -567,6 +727,67 @@ class Worker:
 
             primary, *extra = turn.tool_calls
 
+            alias_target = _alias_target(primary)
+            try:
+                rewritten, immediate_result = _rewrite_tool_alias(primary)
+            except ValidationError as exc:
+                result = _with_alias(
+                    alias_target,
+                    "invalid tool arguments: " + str(exc),
+                )
+                self.messages.append(_tool_message(primary.id, result))
+                for call in extra:
+                    self.messages.append(_tool_message(call.id, _ONE_CALL_REPLY))
+                consecutive_protocol_errors += 1
+                if consecutive_protocol_errors >= 3:
+                    self._log_turn(
+                        request_message_count=request_message_count,
+                        turn=turn,
+                        end_reason="protocol_error",
+                    )
+                    return self._outcome(
+                        "protocol_error",
+                        summary="model made three consecutive protocol errors",
+                        turns=turns,
+                    )
+                outcome = self._budget_after_turn(
+                    budget,
+                    started=started,
+                    turns=turns,
+                    completion_tokens=completion_tokens,
+                )
+                self._log_turn(
+                    request_message_count=request_message_count,
+                    turn=turn,
+                    end_reason=outcome.end if outcome is not None else "continue",
+                )
+                if outcome is not None:
+                    return outcome
+                continue
+
+            if immediate_result is not None:
+                consecutive_protocol_errors = 0
+                self.messages.append(_tool_message(primary.id, immediate_result))
+                for call in extra:
+                    self.messages.append(_tool_message(call.id, _ONE_CALL_REPLY))
+                outcome = self._budget_after_turn(
+                    budget,
+                    started=started,
+                    turns=turns,
+                    completion_tokens=completion_tokens,
+                )
+                self._log_turn(
+                    request_message_count=request_message_count,
+                    turn=turn,
+                    end_reason=outcome.end if outcome is not None else "continue",
+                )
+                if outcome is not None:
+                    return outcome
+                continue
+
+            assert rewritten is not None
+            primary = rewritten
+
             if primary.name not in _TOOL_NAMES:
                 self.messages.append(_tool_message(primary.id, _UNKNOWN_TOOL_REPLY))
                 for call in extra:
@@ -607,7 +828,10 @@ class Worker:
                     ),
                 )
             except ValidationError as exc:
-                result = "invalid tool arguments: " + str(exc)
+                result = _with_alias(
+                    alias_target,
+                    "invalid tool arguments: " + str(exc),
+                )
                 self.messages.append(_tool_message(primary.id, result))
                 for call in extra:
                     self.messages.append(_tool_message(call.id, _ONE_CALL_REPLY))
@@ -650,10 +874,14 @@ class Worker:
                 )
             except Exception as exc:
                 consecutive_protocol_errors = 0
-                result = f"tool error: {type(exc).__name__}: {exc}"
+                result = _with_alias(
+                    alias_target,
+                    f"tool error: {type(exc).__name__}: {exc}",
+                )
                 finished = None
             else:
                 consecutive_protocol_errors = 0
+                result = _with_alias(alias_target, result)
 
             if finished is not None:
                 summary, claims = finished

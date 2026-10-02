@@ -6,6 +6,7 @@ import importlib.util
 import io
 import json
 import re
+import shlex
 import subprocess
 from pathlib import Path
 from types import ModuleType
@@ -83,6 +84,37 @@ async def _fixture_worker(
     return worker_module, instance, model, executor, branch, sink, writer
 
 
+class _RecordingExecutor:
+    def __init__(self, inner):
+        self.inner = inner
+        self.routes: list[tuple[str, str]] = []
+
+    def __getattr__(self, name):
+        return getattr(self.inner, name)
+
+    async def run(self, branch, command, timeout_s):
+        self.routes.append(("run", command))
+        return await self.inner.run(branch, command, timeout_s)
+
+    async def run_pytest(self, branch, args, timeout_s):
+        self.routes.append(("pytest", args))
+        return await self.inner.run_pytest(branch, args, timeout_s)
+
+
+def _record_executor(instance, executor) -> _RecordingExecutor:
+    recording = _RecordingExecutor(executor)
+    instance.executor = recording
+    return recording
+
+
+def _result(instance, call_id: str) -> str:
+    return next(
+        message["content"]
+        for message in instance.messages
+        if message.get("tool_call_id") == call_id
+    )
+
+
 @pytest.mark.parametrize(
     ("command", "expected"),
     [
@@ -132,6 +164,402 @@ def test_pytest_args_allows_one_trusted_leading_cd(
     expected: str | None,
 ):
     assert _worker_module().pytest_args(command, repo_root=repo_root) == expected
+
+
+@pytest.mark.parametrize(
+    ("alias", "argument_name"),
+    [
+        ("execute", "command"),
+        ("bash", "cmd"),
+        ("shell", "script"),
+        ("run", "command"),
+        ("terminal", "cmd"),
+        ("execute_command", "script"),
+        ("execute_bash", "command"),
+    ],
+)
+async def test_command_aliases_run_as_run_command_without_protocol_strike(
+    tmp_path: Path,
+    alias: str,
+    argument_name: str,
+):
+    command = "printf alias-command"
+    turns = [
+        _turn(content="first protocol error"),
+        _turn(content="second protocol error"),
+        _turn(_call(alias, {argument_name: command}, "alias-command")),
+    ]
+    worker, instance, _, executor, _, _, _ = await _fixture_worker(tmp_path, turns)
+    recording = _record_executor(instance, executor)
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=3, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    assert recording.routes == [("run", command)]
+    assert _result(instance, "alias-command").startswith(
+        "(alias for run_command)\nexit 0\n",
+    )
+
+
+@pytest.mark.parametrize("alias", ["execute_grep", "grep", "search"])
+async def test_grep_aliases_run_as_quoted_run_command_without_protocol_strike(
+    tmp_path: Path,
+    alias: str,
+):
+    turns = [
+        _turn(content="first protocol error"),
+        _turn(content="second protocol error"),
+        _turn(
+            _call(
+                alias,
+                {"pattern": "return a", "path": "calc"},
+                "alias-grep",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, _, _, _ = await _fixture_worker(tmp_path, turns)
+    recording = _record_executor(instance, executor)
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=3, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    assert recording.routes == [("run", "grep -rn -- 'return a' calc")]
+    assert _result(instance, "alias-grep").startswith(
+        "(alias for run_command)\nexit 0\n",
+    )
+
+
+@pytest.mark.parametrize(
+    ("alias", "arguments", "expected"),
+    [
+        ("list_dir", {"path": "calc"}, "ls -la -- calc"),
+        ("ls", {}, "ls -la -- ."),
+    ],
+)
+async def test_list_aliases_run_as_quoted_run_command_without_protocol_strike(
+    tmp_path: Path,
+    alias: str,
+    arguments: dict,
+    expected: str,
+):
+    turns = [
+        _turn(content="first protocol error"),
+        _turn(content="second protocol error"),
+        _turn(_call(alias, arguments, "alias-list")),
+    ]
+    worker, instance, _, executor, _, _, _ = await _fixture_worker(tmp_path, turns)
+    recording = _record_executor(instance, executor)
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=3, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    assert recording.routes == [("run", expected)]
+    assert _result(instance, "alias-list").startswith(
+        "(alias for run_command)\nexit 0\n",
+    )
+
+
+async def test_str_replace_editor_aliases_use_real_file_tools_without_strikes(
+    tmp_path: Path,
+):
+    old_text = "    return a + b  # bug: should be a - b\n"
+    new_text = "    return a - b\n"
+    turns = [
+        _turn(content="view error one"),
+        _turn(content="view error two"),
+        _turn(
+            _call(
+                "str_replace_editor",
+                {"command": "view", "path": "calc/__init__.py"},
+                "editor-view",
+            ),
+        ),
+        _turn(content="edit error one"),
+        _turn(content="edit error two"),
+        _turn(
+            _call(
+                "str_replace_editor",
+                {
+                    "command": "str_replace",
+                    "path": "calc/__init__.py",
+                    "old_text": old_text,
+                    "new_text": new_text,
+                },
+                "editor-replace",
+            ),
+        ),
+        _turn(content="create error one"),
+        _turn(content="create error two"),
+        _turn(
+            _call(
+                "str_replace_editor",
+                {
+                    "command": "create",
+                    "path": "created.txt",
+                    "file_text": "created\n",
+                },
+                "editor-create",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, branch, _, _ = await _fixture_worker(tmp_path, turns)
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=9, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    assert "return a - b" in await executor.read_file(
+        branch,
+        "calc/__init__.py",
+        2_000_000,
+    )
+    assert await executor.read_file(branch, "created.txt", 100) == "created\n"
+    assert _result(instance, "editor-view").startswith("(alias for read_file)\n")
+    assert _result(instance, "editor-replace") == "(alias for edit_file)\nok"
+    assert _result(instance, "editor-create") == "(alias for write_file)\nok"
+
+
+async def test_editor_alias_with_non_string_command_is_a_strike_not_a_crash(tmp_path: Path):
+    turns = [
+        _turn(_call("str_replace_editor", {"command": ["view"], "path": "calc/__init__.py"}, "bad-1")),
+        _turn(_call("str_replace_editor", {"command": {"view": 1}, "path": "calc/__init__.py"}, "bad-2")),
+        _turn(_call("str_replace_editor", {"command": None, "path": "calc/__init__.py"}, "bad-3")),
+    ]
+    worker, instance, _, _, _, _, _ = await _fixture_worker(tmp_path, turns)
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=9, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "protocol_error"
+    assert "invalid tool arguments" in _result(instance, "bad-1")
+
+
+async def test_editor_view_alias_keeps_the_requested_line_range(tmp_path: Path):
+    turns = [
+        _turn(
+            _call(
+                "str_replace_editor",
+                {"command": "view", "path": "calc/__init__.py", "view_range": [2, 2]},
+                "editor-view-range",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, branch, _, _ = await _fixture_worker(tmp_path, turns)
+    whole = await executor.read_file(branch, "calc/__init__.py", 2_000_000)
+
+    await instance.attempt(worker.WorkerBudget(max_turns=1, max_completion_tokens=100))
+
+    result = _result(instance, "editor-view-range")
+    assert result.startswith("(alias for read_file)\n")
+    assert whole.splitlines()[1] in result
+    assert whole.splitlines()[0] not in result
+
+
+async def test_think_alias_is_noted_without_action_or_protocol_strike(tmp_path: Path):
+    turns = [
+        _turn(content="first protocol error"),
+        _turn(content="second protocol error"),
+        _turn(_call("think", {"anything": ["is", "accepted"]}, "think-1")),
+        _turn(content="third protocol error"),
+        _turn(content="fourth protocol error"),
+    ]
+    worker, instance, _, executor, branch, sink, _ = await _fixture_worker(
+        tmp_path,
+        turns,
+    )
+    recording = _record_executor(instance, executor)
+
+    outcome = await instance.attempt(
+        worker.WorkerBudget(max_turns=5, max_completion_tokens=100),
+    )
+
+    assert outcome.end == "budget_exhausted"
+    assert _result(instance, "think-1") == "noted"
+    assert recording.routes == []
+    assert not [
+        receipt for receipt in sink.receipts if receipt.branch_id == branch.id
+    ]
+
+
+async def test_grep_alias_quotes_shell_metacharacters_as_one_literal_argument(
+    tmp_path: Path,
+):
+    pattern = "'; rm -rf /"
+    turns = [
+        _turn(
+            _call(
+                "execute_grep",
+                {"pattern": pattern},
+                "grep-injection",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, _, _, _ = await _fixture_worker(tmp_path, turns)
+    recording = _record_executor(instance, executor)
+
+    await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    expected = f"grep -rn -- {shlex.quote(pattern)} {shlex.quote('.')}"
+    assert recording.routes == [("run", expected)]
+
+
+@pytest.mark.parametrize(
+    ("alias", "arguments", "expected"),
+    [
+        (
+            "grep",
+            {"pattern": "-needle", "path": "-directory"},
+            "grep -rn -- -needle -directory",
+        ),
+        ("list_dir", {"path": "-directory"}, "ls -la -- -directory"),
+    ],
+)
+async def test_shell_alias_dash_arguments_are_protected_by_double_dash(
+    tmp_path: Path,
+    alias: str,
+    arguments: dict,
+    expected: str,
+):
+    turns = [_turn(_call(alias, arguments, "dash-argument"))]
+    worker, instance, _, executor, _, _, _ = await _fixture_worker(tmp_path, turns)
+    recording = _record_executor(instance, executor)
+
+    await instance.attempt(
+        worker.WorkerBudget(max_turns=1, max_completion_tokens=100),
+    )
+
+    assert recording.routes == [("run", expected)]
+
+
+@pytest.mark.parametrize(
+    ("alias", "arguments"),
+    [
+        ("grep", {"pattern": "line\nbreak"}),
+        ("grep", {"pattern": "needle", "path": "line\nbreak"}),
+        ("list_dir", {"path": "line\nbreak"}),
+        ("grep", {"pattern": "nul\x00byte"}),
+        ("grep", {"pattern": "needle", "path": "nul\x00byte"}),
+        ("list_dir", {"path": "nul\x00byte"}),
+    ],
+)
+async def test_shell_alias_rejects_newline_and_nul_arguments_as_protocol_strikes(
+    tmp_path: Path,
+    alias: str,
+    arguments: dict,
+):
+    turns = [
+        _turn(_call(alias, arguments, f"bad-{number}"))
+        for number in range(3)
+    ]
+    worker, instance, _, executor, _, _, _ = await _fixture_worker(tmp_path, turns)
+    recording = _record_executor(instance, executor)
+
+    outcome = await instance.attempt(worker.WorkerBudget(max_completion_tokens=100))
+
+    assert outcome.end == "protocol_error"
+    assert recording.routes == []
+    for number in range(3):
+        assert _result(instance, f"bad-{number}").startswith(
+            "(alias for run_command)\ninvalid tool arguments:",
+        )
+
+
+async def test_execute_alias_uses_trusted_pytest_but_bash_wrapper_does_not(
+    tmp_path: Path,
+):
+    spec_test = "tests/test_calc.py::test_add"
+    turns = [
+        _turn(
+            _call(
+                "execute",
+                {"command": f"pytest {spec_test}"},
+                "trusted-pytest",
+            ),
+        ),
+        _turn(
+            _call(
+                "bash",
+                {"command": "bash -c 'pytest'"},
+                "ordinary-bash",
+            ),
+        ),
+    ]
+    worker, instance, _, executor, branch, sink, _ = await _fixture_worker(
+        tmp_path,
+        turns,
+    )
+    recording = _record_executor(instance, executor)
+
+    await instance.attempt(
+        worker.WorkerBudget(max_turns=2, max_completion_tokens=100),
+    )
+
+    assert recording.routes == [
+        ("pytest", spec_test),
+        ("run", "bash -c 'pytest'"),
+    ]
+    command_receipts = [
+        receipt
+        for receipt in sink.receipts
+        if receipt.branch_id == branch.id and receipt.kind == "command"
+    ]
+    assert len(command_receipts) == 2
+    assert command_receipts[0].junit is not None
+    assert command_receipts[0].tree_digest is not None
+    assert command_receipts[1].junit is None
+    assert _result(instance, "trusted-pytest").startswith(
+        "(alias for run_command)\nexit 0\n",
+    )
+    assert _result(instance, "ordinary-bash").startswith(
+        "(alias for run_command)\nexit 1\n",
+    )
+
+
+async def test_command_alias_without_command_is_a_bad_arguments_strike(
+    tmp_path: Path,
+):
+    turns = [
+        _turn(_call("execute", {}, f"bad-execute-{number}"))
+        for number in range(3)
+    ]
+    worker, instance, _, executor, _, _, _ = await _fixture_worker(tmp_path, turns)
+    recording = _record_executor(instance, executor)
+
+    outcome = await instance.attempt(worker.WorkerBudget(max_completion_tokens=100))
+
+    assert outcome.end == "protocol_error"
+    assert recording.routes == []
+    for number in range(3):
+        assert _result(instance, f"bad-execute-{number}").startswith(
+            "(alias for run_command)\ninvalid tool arguments:",
+        )
+
+
+async def test_browser_remains_an_unknown_tool_protocol_strike(tmp_path: Path):
+    turns = [
+        _turn(_call("browser", {}, f"browser-{number}"))
+        for number in range(3)
+    ]
+    worker, instance, _, _, _, _, _ = await _fixture_worker(tmp_path, turns)
+
+    outcome = await instance.attempt(worker.WorkerBudget(max_completion_tokens=100))
+
+    assert outcome.end == "protocol_error"
+    for number in range(3):
+        assert _result(instance, f"browser-{number}") == (
+            "unknown tool, the tools are read_file, edit_file, write_file, "
+            "run_command, finish"
+        )
 
 
 async def test_honest_fix_finishes_with_claims_receipts_and_jsonl(tmp_path: Path):
