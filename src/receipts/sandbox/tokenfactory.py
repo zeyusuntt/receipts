@@ -1093,12 +1093,35 @@ class TokenFactoryExecutor:
         seq = self._next_seq(branch)
         local_patch = self.root / "patches" / f"{branch.id}-{seq}-apply.diff"
         local_patch.write_text(patch_text)
-        uploaded = await self.api.upload(patch_text.encode())
         remote_patch = f"{_INCOMING_ROOT}/{digest}.diff"
         command = (
             "git update-index -q --refresh; "
             f"git apply {GIT_APPLY_FLAGS} {shlex.quote(remote_patch)}"
         )
+        if not patch_text:
+            # As on Daytona: an empty patch (screening grades one) applies nothing,
+            # so no run happens and the branch stays at its image.
+            started = _now()
+            head = self._head(branch)
+            tree_digest, tree_download_s = await self._tree_digest_with_download_time(branch)
+            return self._emit(
+                branch,
+                before=head,
+                after=head,
+                kind="apply",
+                cmd=command,
+                exit_code=0,
+                stdout_tail="",
+                stderr_tail="",
+                stdout_sha256=hashlib.sha256(b"").hexdigest(),
+                patch_sha256=digest,
+                started_at=started,
+                duration_s=(_now() - started).total_seconds(),
+                timed_out=False,
+                tree_digest=tree_digest,
+                tree_download_s=tree_download_s,
+            )
+        uploaded = await self.api.upload(patch_text.encode())
         execution = await self._execute(
             branch,
             command,

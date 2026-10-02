@@ -1038,3 +1038,27 @@ async def test_truncated_output_leaves_no_full_log_so_grading_fails_closed(tmp_p
 
     assert receipt.log_path is None
     assert "truncated" in receipt.stderr_tail
+
+
+async def test_empty_patch_is_a_successful_apply_without_running_git(tmp_path):
+    """Screening grades an empty patch; like Daytona, nothing is applied."""
+
+    module = _module()
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    (repository / "original.txt").write_text("original\n")
+    _init_repo(repository)
+    api = _archive_fake(repository, handlers={})
+    executor, _, _ = _executor(tmp_path, module, api)
+    base = await executor.prepare(ImageSource(image="swerebenchv2/example:1", workdir="/repo"))
+    checkpoint = await executor.checkpoint(base)
+    (witness,) = await executor.fork(checkpoint, 1, prefix="official")
+    before = witness.head
+
+    receipt = await executor.apply_patch(witness, "")
+
+    assert receipt.kind == "apply"
+    assert receipt.exit_code == 0
+    assert receipt.patch_sha256 == hashlib.sha256(b"").hexdigest()
+    assert receipt.image_before == before == receipt.image_after == witness.head
+    assert not any("git apply" in call.get("command", "") for call in api.calls if call["method"] == "run")
