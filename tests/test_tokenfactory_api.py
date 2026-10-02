@@ -362,31 +362,6 @@ async def test_run_cancels_an_accepted_operation_on_client_timeout():
     assert methods.count("DELETE") == 1
 
 
-async def test_run_cancels_an_accepted_operation_on_http_transport_timeout():
-    module = _module()
-    methods: list[str] = []
-
-    async def handle(request: httpx.Request) -> httpx.Response:
-        methods.append(request.method)
-        if request.method == "POST":
-            return httpx.Response(200, json={"uuid": "operation-1"}, request=request)
-        if request.method == "DELETE":
-            return httpx.Response(204, request=request)
-        raise httpx.ReadTimeout("poll timed out", request=request)
-
-    async with _client(handle) as client:
-        api = module.TokenFactorySandboxApi(API_KEY, PROJECT_ID, client=client)
-        with pytest.raises(TimeoutError, match="operation-1"):
-            await api.run(
-                command="sleep",
-                image=IMAGE_UUID,
-                hostname="runner",
-                cwd="/repo",
-            )
-
-    assert methods == ["POST", "GET", "DELETE"]
-
-
 async def test_run_counts_429_retry_without_resending_accepted_spawn():
     module = _module()
     spawn_calls = 0
@@ -424,6 +399,148 @@ async def test_run_counts_429_retry_without_resending_accepted_spawn():
     assert poll_calls == 2
     assert result.retries == {"429": 1}
     assert sleeps == [1.0]
+
+
+async def test_run_retries_a_poll_read_timeout_without_resending_spawn():
+    module = _module()
+    spawn_calls = 0
+    poll_calls = 0
+    sleeps: list[float] = []
+
+    async def handle(request: httpx.Request) -> httpx.Response:
+        nonlocal spawn_calls, poll_calls
+        if request.method == "POST":
+            spawn_calls += 1
+            return httpx.Response(200, json={"uuid": "operation-1"}, request=request)
+        poll_calls += 1
+        if poll_calls == 1:
+            raise httpx.ReadTimeout("poll timed out", request=request)
+        return httpx.Response(200, json=_operation(), request=request)
+
+    async def sleep(delay: float) -> None:
+        sleeps.append(delay)
+
+    async with _client(handle) as client:
+        api = module.TokenFactorySandboxApi(
+            API_KEY,
+            PROJECT_ID,
+            client=client,
+            sleep=sleep,
+        )
+        result = await api.run(
+            command="true",
+            image=IMAGE_UUID,
+            hostname="runner",
+            cwd="/repo",
+        )
+
+    assert spawn_calls == 1
+    assert poll_calls == 2
+    assert result.retries == {"transport": 1}
+    assert sleeps == [1.0]
+
+
+async def test_spawn_read_timeout_is_not_retried():
+    module = _module()
+    spawn_calls = 0
+
+    async def handle(request: httpx.Request) -> httpx.Response:
+        nonlocal spawn_calls
+        assert request.method == "POST"
+        spawn_calls += 1
+        raise httpx.ReadTimeout("spawn timed out", request=request)
+
+    async def sleep(delay: float) -> None:
+        raise AssertionError("a spawn that may have started must not be resent")
+
+    async with _client(handle) as client:
+        api = module.TokenFactorySandboxApi(
+            API_KEY,
+            PROJECT_ID,
+            client=client,
+            sleep=sleep,
+        )
+        with pytest.raises(httpx.ReadTimeout):
+            await api.run(
+                command="true",
+                image=IMAGE_UUID,
+                hostname="runner",
+                cwd="/repo",
+            )
+
+    assert spawn_calls == 1
+
+
+async def test_spawn_connect_error_is_retried():
+    module = _module()
+    spawn_calls = 0
+    sleeps: list[float] = []
+
+    async def handle(request: httpx.Request) -> httpx.Response:
+        nonlocal spawn_calls
+        if request.method == "POST":
+            spawn_calls += 1
+            if spawn_calls == 1:
+                raise httpx.ConnectError("connection refused", request=request)
+            return httpx.Response(200, json={"uuid": "operation-1"}, request=request)
+        return httpx.Response(200, json=_operation(), request=request)
+
+    async def sleep(delay: float) -> None:
+        sleeps.append(delay)
+
+    async with _client(handle) as client:
+        api = module.TokenFactorySandboxApi(
+            API_KEY,
+            PROJECT_ID,
+            client=client,
+            sleep=sleep,
+        )
+        result = await api.run(
+            command="true",
+            image=IMAGE_UUID,
+            hostname="runner",
+            cwd="/repo",
+        )
+
+    assert spawn_calls == 2
+    assert result.retries == {"transport": 1}
+    assert sleeps == [1.0]
+
+
+async def test_persistent_poll_timeout_cancels_and_raises_the_transport_error():
+    module = _module()
+    methods: list[str] = []
+    sleeps: list[float] = []
+
+    async def handle(request: httpx.Request) -> httpx.Response:
+        methods.append(request.method)
+        if request.method == "POST":
+            return httpx.Response(200, json={"uuid": "operation-1"}, request=request)
+        if request.method == "DELETE":
+            return httpx.Response(200, json={}, request=request)
+        raise httpx.ReadTimeout("poll timed out", request=request)
+
+    async def sleep(delay: float) -> None:
+        sleeps.append(delay)
+
+    async with _client(handle) as client:
+        api = module.TokenFactorySandboxApi(
+            API_KEY,
+            PROJECT_ID,
+            client=client,
+            sleep=sleep,
+        )
+        with pytest.raises(httpx.ReadTimeout):
+            await api.run(
+                command="true",
+                image=IMAGE_UUID,
+                hostname="runner",
+                cwd="/repo",
+            )
+
+    assert methods.count("GET") == 5
+    assert methods[-1] == "DELETE"
+    assert sleeps == [1.0, 2.0, 4.0, 8.0]
 
 
 async def test_upload_skips_post_when_sha256_already_exists():
@@ -681,6 +798,19 @@ async def test_fake_cancels_non_terminal_operation_on_client_timeout():
         )
 
     assert {"method": "cancel", "operation": "fake-operation-1"} in fake.calls
+
+
+async def test_fake_download_of_a_directory_is_422_as_on_the_live_api():
+    module = _module()
+    fake = module.FakeTokenFactorySandboxApi(
+        images={IMAGE_UUID: {"/repo/pkg/a.py": b"a\n"}},
+    )
+
+    with pytest.raises(module.TokenFactoryApiError) as raised:
+        await fake.download(IMAGE_UUID, "/repo/pkg")
+
+    assert raised.value.status_code == 422
+    assert await fake.download(IMAGE_UUID, "/repo/missing") is None
 
 
 async def test_fake_bounded_download_refuses_content_over_limit():

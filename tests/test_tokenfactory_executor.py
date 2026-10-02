@@ -669,6 +669,27 @@ async def test_read_file_treats_a_listing_404_as_missing(tmp_path):
     assert await executor.read_file(base, "missing", 100) == ""
 
 
+async def test_read_file_refuses_a_listed_entry_outside_the_directory(tmp_path):
+    module = _module()
+    api_module = _api_module()
+
+    class EscapingListingApi(api_module.FakeTokenFactorySandboxApi):
+        async def list_files(self, image_uuid, path):
+            return [self._file_item("../outside.py", b"x", is_dir=False)]
+
+    api = EscapingListingApi(
+        images={BASE_IMAGE: {"/repo/listing/a.py": b"a\n"}},
+        tags={"swerebenchv2/example:1": BASE_IMAGE},
+    )
+    executor, _, _ = _executor(tmp_path, module, api)
+    base = await executor.prepare(
+        ImageSource(image="swerebenchv2/example:1", workdir="/repo"),
+    )
+
+    with pytest.raises(OSError, match="outside the requested directory"):
+        await executor.read_file(base, "listing", 100)
+
+
 async def test_checkpoint_and_late_forks_use_immutable_image_with_expected_ids(tmp_path):
     module = _module()
     content = "agent only\n"

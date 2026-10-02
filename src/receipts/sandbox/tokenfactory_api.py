@@ -22,6 +22,15 @@ from receipts.llm import _settings
 DEFAULT_BASE_URL = "https://api.tokenfactory.nebius.com/sandboxes"
 _MAX_ATTEMPTS = 5
 _TERMINAL_STATUSES = frozenset({"SUCCESS", "FAILED", "CANCELLED"})
+_IDEMPOTENT_METHODS = frozenset({"GET", "HEAD", "DELETE"})
+
+
+def _transport_error_is_retryable(method: str, error: httpx.TransportError) -> bool:
+    """Resend reads after any transport error, and other requests only if never sent."""
+
+    if method.upper() in _IDEMPOTENT_METHODS:
+        return True
+    return isinstance(error, (httpx.ConnectError, httpx.ConnectTimeout))
 
 
 def _download_too_large(path: str, max_bytes: int, received: int) -> RuntimeError:
@@ -293,11 +302,21 @@ class TokenFactorySandboxApi:
                 headers=request_headers,
                 **kwargs,
             )
-            response = await self._client.send(
-                request,
-                stream=stream,
-                follow_redirects=False,
-            )
+            try:
+                response = await self._client.send(
+                    request,
+                    stream=stream,
+                    follow_redirects=False,
+                )
+            except httpx.TransportError as exc:
+                if (
+                    attempt + 1 < _MAX_ATTEMPTS
+                    and _transport_error_is_retryable(method, exc)
+                ):
+                    retry_counts["transport"] = retry_counts.get("transport", 0) + 1
+                    await self._sleep(float(2**attempt))
+                    continue
+                raise
             retry_kind = None
             if response.status_code == 429:
                 retry_kind = "429"
@@ -593,6 +612,17 @@ class TokenFactorySandboxApi:
             await self._sleep(delay)
             delay = min(delay * 2, 10.0)
 
+    async def _cancel_after_failed_poll(
+        self,
+        operation_id: str,
+        retries: dict[str, int],
+        error: BaseException,
+    ) -> None:
+        try:
+            await self._cancel(operation_id, retries)
+        except Exception as cancel_error:
+            error.add_note(f"operation cancellation failed: {type(cancel_error).__name__}")
+
     async def run(
         self,
         *,
@@ -634,14 +664,14 @@ class TokenFactorySandboxApi:
                 operation = await poll
             else:
                 operation = await asyncio.wait_for(poll, timeout=client_timeout_s)
-        except (TimeoutError, httpx.TimeoutException) as exc:
-            try:
-                await self._cancel(operation_id, retries)
-            except Exception as cancel_error:
-                exc.add_note(f"operation cancellation failed: {type(cancel_error).__name__}")
+        except TimeoutError as exc:
+            await self._cancel_after_failed_poll(operation_id, retries, exc)
             raise TimeoutError(
                 f"Token Factory sandbox operation {operation_id} exceeded the client timeout"
             ) from exc
+        except httpx.TransportError as exc:
+            await self._cancel_after_failed_poll(operation_id, retries, exc)
+            raise
         return _run_result(operation, retries, operation_id=operation_id)
 
 
@@ -728,11 +758,11 @@ class FakeTokenFactorySandboxApi:
             if not relative:
                 continue
             first, separator, _rest = relative.partition("/")
-            entry_path = f"/{first}" if root == "/" else f"{root}/{first}"
+            # The live API names each entry relative to the listed directory.
             if separator:
-                entries[entry_path] = self._file_item(entry_path, b"", is_dir=True)
+                entries[first] = self._file_item(first, b"", is_dir=True)
             else:
-                entries[entry_path] = self._file_item(entry_path, contents, is_dir=False)
+                entries[first] = self._file_item(first, contents, is_dir=False)
         return list(entries.values())
 
     @staticmethod
@@ -767,8 +797,18 @@ class FakeTokenFactorySandboxApi:
         self.calls.append({"method": "download", "image": image_uuid, "path": path})
         if image_uuid is None:
             return None
-        contents = self.images[image_uuid].get(path)
+        tree = self.images[image_uuid]
+        contents = tree.get(path)
         if contents is None:
+            prefix = path.rstrip("/") + "/"
+            if any(candidate.startswith(prefix) for candidate in tree):
+                # The live API answers 422 for a directory, 404 for a missing path.
+                raise TokenFactoryApiError(
+                    422,
+                    "GET",
+                    f"/v1/inspect/{image_uuid}/download",
+                    "Path is not a regular file",
+                )
             return None
         if max_bytes is not None and len(contents) > max_bytes:
             raise _download_too_large(path, max_bytes, len(contents))

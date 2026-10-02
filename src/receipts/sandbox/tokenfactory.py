@@ -925,7 +925,13 @@ class TokenFactoryExecutor:
         if remote_path is None:
             return ""
         image = self._head(branch)
-        content = await self.api.download(image, remote_path)
+        try:
+            content = await self.api.download(image, remote_path)
+        except TokenFactoryApiError as exc:
+            # The live API refuses to download a directory with 422; list it instead.
+            if exc.status_code != 422:
+                raise
+            content = None
         if content is not None:
             return content[:max_bytes].decode(errors="replace")
 
@@ -938,7 +944,11 @@ class TokenFactoryExecutor:
         root = PurePosixPath(posixpath.normpath(remote_path))
         listing: list[str] = []
         for entry in entries:
-            candidate = PurePosixPath(posixpath.normpath(str(entry["path"])))
+            # The live API names entries relative to the listed directory.
+            listed = str(entry["path"])
+            if not listed.startswith("/"):
+                listed = posixpath.join(str(root), listed)
+            candidate = PurePosixPath(posixpath.normpath(listed))
             try:
                 relative = candidate.relative_to(root)
             except ValueError as exc:
