@@ -21,7 +21,7 @@ uv sync
 uv run receipts reverify receipts/{featured_receipt}.json
 ```
 
-It starts the task's public image, applies the shipped patch to a clean copy, checks the patch's digest against the receipt, re-runs the tests, and must agree with the receipt. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
+It checks the patch digests, starts the task's public image, rebuilds the original checkpoint, replays the agent's patch through the same filter and gate on a fresh witness, grades the shipped patch with SWE-rebench's official grader, and must agree with the receipt on every check (about a minute per receipt on Token Factory). With a Nebius account, add `--executor tokenfactory` to run it on Token Factory Sandboxes instead of Docker. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
 
 ## How it works
 
