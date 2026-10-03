@@ -1,6 +1,6 @@
 # Devpost submission text (draft)
 
-Numbers in `{braces}` come from `REPORT-v2.md` and are filled in by hand from it, never estimated.
+Every number comes from `REPORT-v2.md` (main branch, commit `1a56165`) and `pilot/v2-P/report.json`; none is estimated.
 
 ## Tagline
 
@@ -8,7 +8,7 @@ The coding agent that is not allowed to grade its own homework.
 
 ## Inspiration
 
-Coding agents say "done, all tests pass" and nobody checks. We measured it: on {P_n} SWE-rebench tasks the agent had never seen, {A_false_pct}% of an unguarded Nemotron agent's "done" was false, by SWE-rebench's own grader. A maintainer cannot merge a fix on the agent's word, so the fix is worth little until someone re-runs the tests. We built the someone.
+Coding agents say "done, all tests pass" and nobody checks. We measured it: on 100 SWE-rebench tasks the agent had never seen, 17.9% of an unguarded Nemotron agent's "done" was false, by SWE-rebench's own grader. A maintainer cannot merge a fix on the agent's word, so the fix is worth little until someone re-runs the tests. We built the someone.
 
 ## What it does
 
@@ -22,8 +22,8 @@ You write the failing test. Receipts:
 ## How we built it
 
 - **Nebius Token Factory, models:** Nemotron 3 Super 120B-A12B plans and works through five tools (read, edit, write, run, finish), thinking off, temperature 1.0. The client counts tokens and dollars per run at Token Factory's listed prices.
-- **Nebius Token Factory, Sandboxes:** each branch is a chain of immutable images, so "fork the original checkpoint" is exact and the witness provably never saw the agent's environment. Trusted tools (a pinned static busybox and our test runner) are injected per run at a fresh path, never read from the image. We ran {sandbox_runs} sandbox runs at up to concurrency 6.
-- **The gate:** plain Python over junit reports and diffs. No model is asked whether a fix worked. {attack_tests} attack tests in the repository try to fool it (shadow packages, quoted patch paths, edited specifications, hidden skips).
+- **Nebius Token Factory, Sandboxes:** each branch is a chain of immutable images, so "fork the original checkpoint" is exact and the witness provably never saw the agent's environment. Trusted tools (a pinned static busybox and our test runner) are injected per run at a fresh path, never read from the image. We ran more than 4,400 sandbox runs at up to concurrency 6.
+- **The gate:** plain Python over junit reports and diffs. No model is asked whether a fix worked. 26 attack tests in the repository try to fool it (shadow packages, quoted patch paths, edited specifications, hidden skips).
 - **The experiment:** we pre-registered two runs, committing the rules, the sample and the analysis before each one, and graded every patch again with SWE-rebench-V2's official grader in a separate sandbox. Every outcome is published, including our own mistakes.
 
 ## Challenges we ran into
@@ -32,8 +32,8 @@ Making the gate un-foolable. In our own pilot the gate shipped one false fix: th
 
 ## Accomplishments that we're proud of
 
-- {shipped_false_dones} shipped false dones out of {B_verified} verified fixes on unseen tasks, with the gate and the official grader agreeing on {agree_n} of {attempts_n} attempts.
-- {cost_per_fix} of model tokens per verified fix.
+- 0 shipped false dones out of 66 verified fixes on unseen tasks, with the gate and the official grader agreeing on 138 of 141 attempts.
+- $0.41 of model tokens per verified fix.
 - A receipt anyone can re-check on their own machine, without trusting us or an API key.
 
 ## What we learned

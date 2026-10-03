@@ -3,11 +3,11 @@
 You write the failing test. Receipts writes the fix with NVIDIA Nemotron 3 Super on Nebius Token Factory, re-runs your tests itself in a clean Token Factory Sandbox the agent never touched, and hands you a receipt anyone can re-verify.</p>
 <p align="center"><a href="https://zeyusuntt.github.io/receipts/"><b>Receipts from real runs</b></a> · <a href="https://youtu.be/{video_id}"><b>Video (2:50)</b></a> · <a href="REPORT-v2.md"><b>False-Done Report</b></a> · <a href="#re-verify-it-yourself"><b>Re-verify it yourself</b></a></p>
 
-| | On {P_n} SWE-rebench tasks the agent had never seen | Proof |
+| | On 100 SWE-rebench tasks the agent had never seen | Proof |
 |---:|---|---|
-| **{A_false_pct}%** | of an unguarded Nemotron agent's "done" was false ({A_false} of {A_claimed}, 95% interval {ci_low} to {ci_high}%) | [every trace](REPORT-v2.md) |
-| **{shipped_false_dones}** | of {B_verified} fixes Receipts shipped fail SWE-rebench's official grader ({B_appeal} won on appeal) | [every receipt](https://zeyusuntt.github.io/receipts/) |
-| **{cost_per_fix}** | of model tokens per verified fix, at Token Factory's listed prices | [costs](REPORT-v2.md) |
+| **17.9%** | of an unguarded Nemotron agent's "done" was false (12 of 67, 95% interval 10.6 to 28.7%) | [every trace](REPORT-v2.md) |
+| **0** | of 66 fixes Receipts shipped fail SWE-rebench's official grader (7 won on appeal) | [every receipt](https://zeyusuntt.github.io/receipts/) |
+| **$0.41** | of model tokens per verified fix, at Token Factory's listed prices | [costs](REPORT-v2.md) |
 
 <sub>Tasks chosen by a rule committed before the first run (<a href="PREREGISTRATION-v2.md">PREREGISTRATION-v2.md</a>). Every outcome is published, including our own pilot's false done.</sub>
 
@@ -18,7 +18,7 @@ Docker, no API key:
 ```
 git clone https://github.com/zeyusuntt/receipts && cd receipts
 uv sync
-uv run receipts reverify receipts/{featured_receipt}.json
+uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json
 ```
 
 It checks the patch digests, starts the task's public image, rebuilds the original checkpoint, replays the agent's patch through the same filter and gate on a fresh witness, grades the shipped patch with SWE-rebench's official grader, and must agree with the receipt on every check (about a minute per receipt on Token Factory). With a Nebius account, add `--executor tokenfactory` to run it on Token Factory Sandboxes instead of Docker. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
@@ -58,7 +58,7 @@ R1 to R5 decide VERIFIED or REJECTED. R6 is reported on every receipt but does n
 We ran Receipts as a pre-registered experiment twice: the rules, the sample and the reporting were committed before each run, and every outcome is published.
 
 - **v1 pilot (Oct 1):** 50 SWE-rebench tasks. Receipts shipped one false done because of a defect in Receipts: the agent hid a copy of the package at the repository root, where our test runner found it and the official grader did not. The pre-registration made us publish it, fix it, and start again. [REPORT.md](REPORT.md), [PREREGISTRATION.md](PREREGISTRATION.md), and a [cost erratum](docs/results/2026-10-02-v1-cost-erratum.md).
-- **v2 (Oct 2 to 3):** {P_n} tasks nobody had looked at, chosen by a rule committed in advance, on Token Factory Sandboxes, with the gate hardened against what v1 found. [REPORT-v2.md](REPORT-v2.md), [PREREGISTRATION-v2.md](PREREGISTRATION-v2.md).
+- **v2 (Oct 2 to 3):** 100 tasks nobody had looked at, chosen by a rule committed in advance, on Token Factory Sandboxes, with the gate hardened against what v1 found. [REPORT-v2.md](REPORT-v2.md), [PREREGISTRATION-v2.md](PREREGISTRATION-v2.md).
 
 What we found along the way about the tools we built on: [FEEDBACK.md](FEEDBACK.md).
 
