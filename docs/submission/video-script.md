@@ -14,7 +14,7 @@ What winners do that this borrows: a first line that says who you are and why yo
 
 ## The narration to record (revision 5)
 
-Read it in one take, the way you'd explain it to a friend at a desk. Pause about a second at each `/`. Every claim is true of our runs. The line in [brackets] must be confirmed by the narrator before recording. About 330 words: at a slow 120 words a minute that is 2:45, which leaves room for the pauses, the silent cold open and the end card inside 3:00. Slow down rather than rush; if it runs long, I cut, you don't speed up.
+Read it in one take, the way you'd explain it to a friend at a desk. Pause about a second at each `/`. Every claim is true of our runs. The line in [brackets] must be confirmed by the narrator before recording. About 340 words: at a slow 120 words a minute that is about 2:50 of speech, close to the 3:00 limit once the silent cold open and the end card are added. Slow down rather than rush; if the take runs long, I cut a sentence, you don't speed up.
 
 > This is a coding agent telling me it's done. All tests pass. /
 > They didn't. /
