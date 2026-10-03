@@ -1,0 +1,33 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "FluxPointsEstimator fails if no edisp is set\n**Gammapy version**\r\npresent dev\r\n\r\n\r\n**Bug description**\r\n\r\nRunning `FluxPointsEstimator` on a dataset without an `edisp` gives a very confusing error message `ValueError: Can only stack equivalent maps or cutout of the same map.`\r\n\r\n\r\n**To Reproduce**\r\n\r\nSet `edisp=None` for any dataset (with e_true=e_reco) and proceed with flux points estimation in multiple energy bands (normal use case).\r\n\r\n**Expected behaviour**\r\nThe analysis fails (as expected) during the fitting stage if `energy_true` has a different binning from the `energy` axis with a more understandable error \r\n```\r\nFile ~/Gammapy-dev/gammapy/gammapy/datasets/evaluator.py:245, in MapEvaluator._edisp_diagonal(self)\r\n    242 @lazyproperty\r\n    243 def _edisp_diagonal(self):\r\n    244     return EDispKernel.from_diagonal_response(\r\n--> 245         energy_axis_true=self.edisp.axes[\"energy_true\"],\r\n    246         energy_axis=self.edisp.axes[\"energy\"],\r\n    247     )\r\n\r\nAttributeError: 'NoneType' object has no attribute 'axes'\r\n```\r\nHowever, if the `energy_axis` and the `energy_axis_true` have same binning, the fit proceeds fine and then the very confusing error is raised during flux points estimation.\r\n\r\n1. Either the flux estimator (and also the fit) should fail with a decent error message consistently for no edisp OR\r\n2. the diagonal edisp can be adapted with the `energy_axis` here \r\nhttps://github.com/gammapy/gammapy/blob/e9b22cdff573768ac2ab1e2a4a18250071ba3b60/gammapy/datasets/evaluator.py#L243\r\nto use the dataset energy axis.\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/gammapy-gammapy:5342-c9521d5",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-gammapy__gammapy-5342-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2dhbW1hcHkvZXN0aW1hdG9ycy9wb2ludHMvdGVzdHMvdGVzdF9zZWQucHkgYi9nYW1tYXB5L2VzdGltYXRvcnMvcG9pbnRzL3Rlc3RzL3Rlc3Rfc2VkLnB5CmluZGV4IDA1NjY2OTMyMy4uOWY0ZjMyODBmIDEwMDY0NAotLS0gYS9nYW1tYXB5L2VzdGltYXRvcnMvcG9pbnRzL3Rlc3RzL3Rlc3Rfc2VkLnB5CisrKyBiL2dhbW1hcHkvZXN0aW1hdG9ycy9wb2ludHMvdGVzdHMvdGVzdF9zZWQucHkKQEAgLTQzMCw2ICs0MzAsMzEgQEAgZGVmIHRlc3RfcnVuX21hcF9wd2xfcmVvcHRpbWl6ZShmcGVfbWFwX3B3bF9yZW9wdGltaXplKToKICAgICBhc3NlcnRfYWxsY2xvc2UoYWN0dWFsLCBbOS43ODgxMjMsIDAuNDg2MDY2LCAxNy42MDM3MDhdLCBydG9sPTFlLTIpCiAKIAorZGVmIHRlc3RfcnVuX25vX2VkaXAoZnBlX3B3bCwgdG1wZGlyKToKKyAgICBkYXRhc2V0cywgZnBlID0gZnBlX3B3bAorCisgICAgZGF0YXNldHMgPSBkYXRhc2V0cy5jb3B5KCkKKworICAgIGRhdGFzZXRzWzBdLm1vZGVsc1sic291cmNlIl0uYXBwbHlfaXJmWyJlZGlzcCJdID0gRmFsc2UKKyAgICBmcCA9IGZwZS5ydW4oZGF0YXNldHMpCisgICAgdGFibGUgPSBmcC50b190YWJsZSgpCisgICAgYWN0dWFsID0gdGFibGVbIm5vcm0iXS5kYXRhCisgICAgYXNzZXJ0X2FsbGNsb3NlKGFjdHVhbCwgWzEuMDgxNDM0LCAwLjkxMDc3LCAwLjkyMjE3Nl0sIHJ0b2w9MWUtMykKKworICAgIGRhdGFzZXRzWzBdLmVkaXNwID0gTm9uZQorCisgICAgZnAgPSBmcGUucnVuKGRhdGFzZXRzKQorICAgIHRhYmxlID0gZnAudG9fdGFibGUoKQorICAgIGFjdHVhbCA9IHRhYmxlWyJub3JtIl0uZGF0YQorICAgIGFzc2VydF9hbGxjbG9zZShhY3R1YWwsIFsxLjA4MTQzNCwgMC45MTA3NywgMC45MjIxNzZdLCBydG9sPTFlLTMpCisKKyAgICBkYXRhc2V0c1swXS5tb2RlbHNbInNvdXJjZSJdLmFwcGx5X2lyZlsiZWRpc3AiXSA9IFRydWUKKyAgICBmcCA9IGZwZS5ydW4oZGF0YXNldHMpCisgICAgdGFibGUgPSBmcC50b190YWJsZSgpCisgICAgYWN0dWFsID0gdGFibGVbIm5vcm0iXS5kYXRhCisgICAgYXNzZXJ0X2FsbGNsb3NlKGFjdHVhbCwgWzEuMDgxNDM0LCAwLjkxMDc3LCAwLjkyMjE3Nl0sIHJ0b2w9MWUtMykKKworCiBAcmVxdWlyZXNfZGVwZW5kZW5jeSgiaW1pbnVpdCIpCiBAcmVxdWlyZXNfZGF0YSgpCiBkZWYgdGVzdF9ydW5fdGVtcGxhdGVfbnByZWQoZnBlX21hcF9wd2wsIHRtcGRpcik6Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-gammapy__gammapy-5342-test.patch"
+    ],
+    "workdir": "/gammapy"
+  },
+  "spec_paths": [
+    "gammapy/estimators/points/tests/test_sed.py"
+  ],
+  "spec_tests": [
+    "gammapy/estimators/points/tests/test_sed.py::test_run_no_edip",
+    "gammapy/estimators/points/tests/test_sed.py::test_flux_points_recompute_ul",
+    "gammapy/estimators/points/tests/test_sed.py::test_flux_points_parallel_multiprocessing"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning gammapy/estimators/points/tests/test_sed.py"
+}

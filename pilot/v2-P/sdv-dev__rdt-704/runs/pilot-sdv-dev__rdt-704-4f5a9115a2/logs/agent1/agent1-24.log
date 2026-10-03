@@ -1,0 +1,14 @@
+
+        Returns:
+            pandas.Series.
+        """
+        if not isinstance(data, np.ndarray):
+            data = data.to_numpy()
+
+        recovered_data = self._reverse_transform_helper(data)
+        if self.null_transformer and self.null_transformer.models_missing_values():
+            data = np.stack([recovered_data, data[:, -1]], axis=1)  # noqa: PD013
+        else:
+            data = recovered_data
+
+        return super()._reverse_transform(data)

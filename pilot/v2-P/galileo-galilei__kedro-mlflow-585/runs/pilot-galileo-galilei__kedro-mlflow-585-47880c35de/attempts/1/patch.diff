@@ -1,0 +1,40 @@
+diff --git a/kedro_mlflow/pipeline/pipeline_ml.py b/kedro_mlflow/pipeline/pipeline_ml.py
+index b8c17a6..084e6ea 100644
+--- a/kedro_mlflow/pipeline/pipeline_ml.py
++++ b/kedro_mlflow/pipeline/pipeline_ml.py
+@@ -165,7 +165,16 @@ class PipelineML(Pipeline):
+     def only_nodes_with_namespace(
+         self, node_namespace: str
+     ) -> "Pipeline":  # pragma: no cover
+-        raise NotImplementedError(MSG_NOT_IMPLEMENTED)
++        import logging
++        logger = logging.getLogger(__name__)
++        logger.info(
++            "This method is not implemented because it does "
++            "not make sense for 'PipelineML'. "
++            "Manipulate directly the training pipeline and "
++            "recreate the 'PipelineML' with 'pipeline_ml_factory' factory. "
++            "(kedro-viz but should never be)"
++        )
++        return self.training.only_nodes_with_namespace(node_namespace)
+ 
+     def only_nodes_with_inputs(self, *inputs: str) -> "PipelineML":  # pragma: no cover
+         raise NotImplementedError(MSG_NOT_IMPLEMENTED)
+@@ -235,7 +244,16 @@ class PipelineML(Pipeline):
+         raise NotImplementedError(MSG_NOT_IMPLEMENTED)
+ 
+     def __sub__(self, other):  # pragma: no cover
+-        raise NotImplementedError(MSG_NOT_IMPLEMENTED)
++        import logging
++        logger = logging.getLogger(__name__)
++        logger.info(
++            "This method is not implemented because it does "
++            "not make sense for 'PipelineML'. "
++            "Manipulate directly the training pipeline and "
++            "recreate the 'PipelineML' with 'pipeline_ml_factory' factory. "
++            "(kedro-viz but should never be)"
++        )
++        return self.training - other
+ 
+     def __and__(self, other):  # pragma: no cover
+         # kept for compatibility with KedroContext _filter_pipelinefunction

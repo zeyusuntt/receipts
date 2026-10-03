@@ -1,0 +1,21 @@
+        traj: The Dymos Trajectory object containing the added mission phases.
+        """
+        # `self.verbosity` is "true" verbosity for entire run. `verbosity` is verbosity
+        # override for just this method
+        if verbosity is not None:
+            # compatibility with being passed int for verbosity
+            verbosity = Verbosity(verbosity)
+        else:
+            verbosity = self.verbosity  # defaults to BRIEF
+
+        if phase_info_parameterization is not None:
+            self.phase_info, self.post_mission_info = phase_info_parameterization(
+                self.phase_info, self.post_mission_info, self.aviary_inputs
+            )
+
+        phase_info = self.phase_info
+
+        if self.analysis_scheme is AnalysisScheme.COLLOCATION:
+            phases = list(phase_info.keys())
+            traj = self.model.add_subsystem('traj', dm.Trajectory(parallel_phases=parallel_phases))
+

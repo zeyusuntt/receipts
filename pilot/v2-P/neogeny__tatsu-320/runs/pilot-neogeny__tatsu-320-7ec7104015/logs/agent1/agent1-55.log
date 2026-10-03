@@ -1,0 +1,81 @@
+Testing variable assignment syntax:
+Error: (1:1) Expecting end of text :
+hello
+^
+start
+
+Testing with backticks in input:
+Error: (1:1) Expecting end of text :
+`hello`
+^
+start
+Traceback (most recent call last):
+  File "/TatSu/debug14.py", line 11, in <module>
+    result = parse(grammar, 'hello')
+  File "/TatSu/tatsu/tool.py", line 177, in parse
+    return model.parse(input, start=start, semantics=semantics, config=config, **settings)
+  File "/TatSu/tatsu/grammars.py", line 1068, in parse
+    return ctx.parse(text, config=config)
+  File "/TatSu/tatsu/contexts.py", line 239, in parse
+    raise self._furthest_exception
+  File "/TatSu/tatsu/contexts.py", line 232, in parse
+    result = rule()
+  File "/TatSu/tatsu/grammars.py", line 857, in parse
+    result = self._parse_rhs(ctx, self.exp)
+  File "/TatSu/tatsu/grammars.py", line 869, in _parse_rhs
+    result = ctx._call(ruleinfo)
+  File "/TatSu/tatsu/contexts.py", line 613, in _call
+    result = self._recursive_call(ruleinfo)
+  File "/TatSu/tatsu/contexts.py", line 644, in _recursive_call
+    return self._invoke_rule(ruleinfo, key)
+  File "/TatSu/tatsu/contexts.py", line 690, in _invoke_rule
+    ruleinfo.impl(self)
+  File "/TatSu/tatsu/grammars.py", line 435, in parse
+    ctx.last_node = [s.parse(ctx) for s in self.sequence]
+  File "/TatSu/tatsu/grammars.py", line 435, in <listcomp>
+    ctx.last_node = [s.parse(ctx) for s in self.sequence]
+  File "/TatSu/tatsu/grammars.py", line 216, in parse
+    ctx._check_eof()
+  File "/TatSu/tatsu/contexts.py", line 763, in _check_eof
+    self._error('Expecting end of text', exclass=FailedExpectingEndOfText)
+  File "/TatSu/tatsu/contexts.py", line 549, in _error
+    raise self._make_exception(item, exclass=exclass)
+tatsu.exceptions.FailedExpectingEndOfText: (1:1) Expecting end of text :
+hello
+^
+start
+Traceback (most recent call last):
+  File "/TatSu/debug14.py", line 23, in <module>
+    result = parse(grammar, '`hello`')
+  File "/TatSu/tatsu/tool.py", line 177, in parse
+    return model.parse(input, start=start, semantics=semantics, config=config, **settings)
+  File "/TatSu/tatsu/grammars.py", line 1068, in parse
+    return ctx.parse(text, config=config)
+  File "/TatSu/tatsu/contexts.py", line 239, in parse
+    raise self._furthest_exception
+  File "/TatSu/tatsu/contexts.py", line 232, in parse
+    result = rule()
+  File "/TatSu/tatsu/grammars.py", line 857, in parse
+    result = self._parse_rhs(ctx, self.exp)
+  File "/TatSu/tatsu/grammars.py", line 869, in _parse_rhs
+    result = ctx._call(ruleinfo)
+  File "/TatSu/tatsu/contexts.py", line 613, in _call
+    result = self._recursive_call(ruleinfo)
+  File "/TatSu/tatsu/contexts.py", line 644, in _recursive_call
+    return self._invoke_rule(ruleinfo, key)
+  File "/TatSu/tatsu/contexts.py", line 690, in _invoke_rule
+    ruleinfo.impl(self)
+  File "/TatSu/tatsu/grammars.py", line 435, in parse
+    ctx.last_node = [s.parse(ctx) for s in self.sequence]
+  File "/TatSu/tatsu/grammars.py", line 435, in <listcomp>
+    ctx.last_node = [s.parse(ctx) for s in self.sequence]
+  File "/TatSu/tatsu/grammars.py", line 216, in parse
+    ctx._check_eof()
+  File "/TatSu/tatsu/contexts.py", line 763, in _check_eof
+    self._error('Expecting end of text', exclass=FailedExpectingEndOfText)
+  File "/TatSu/tatsu/contexts.py", line 549, in _error
+    raise self._make_exception(item, exclass=exclass)
+tatsu.exceptions.FailedExpectingEndOfText: (1:1) Expecting end of text :
+`hello`
+^
+start

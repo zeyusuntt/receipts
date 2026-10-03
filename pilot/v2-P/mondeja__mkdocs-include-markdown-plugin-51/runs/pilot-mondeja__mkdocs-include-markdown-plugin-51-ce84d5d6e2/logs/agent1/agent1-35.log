@@ -1,0 +1,33 @@
+=== TESTING EXTRACTION ===
+Input text length: 309
+Start marker: '<!--start-tag-->'
+End marker: '<!--end-tag-->'
+Iteration 1: search_pos=0
+  Found start at: 11
+  Content starts at: 27
+  Found end at: 53
+  End marker found - extracting content
+    Part: '\nThis should be included.\n'
+    Stripped: 'This should be included.'
+  Next search position: 67
+Iteration 2: search_pos=67
+  Found start at: 98
+  Content starts at: 114
+  Found end at: 145
+  End marker found - extracting content
+    Part: '\nThis should be included also.\n'
+    Stripped: 'This should be included also.'
+  Next search position: 159
+Iteration 3: search_pos=159
+  Found start at: 230
+  Content starts at: 246
+  Found end at: -1
+  No end marker found - taking rest of string
+    Part: "\nThis should be included even if hasn't defined af"...
+    Stripped: "This should be included even if hasn't defined aft"...
+  Breaking (no end marker)
+Completed after 3 safety iterations
+Extracted 3 parts
+Joined result: "This should be included.\n\nThis should be included also.\n\nThis should be included even if hasn't defi"...
+=== RESULT ===
+"This should be included.\n\nThis should be included also.\n\nThis should be included even if hasn't defined after end tag."

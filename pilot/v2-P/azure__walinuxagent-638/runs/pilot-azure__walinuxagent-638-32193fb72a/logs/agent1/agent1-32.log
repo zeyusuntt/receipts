@@ -1,0 +1,21 @@
+51:class AgentTestCase(unittest.TestCase):
+52-    def setUp(self):
+53-        prefix = "{0}_".format(self.__class__.__name__)
+54-        self.tmp_dir = tempfile.mkdtemp(prefix=prefix)
+55-        self.test_file = 'test_file'
+56-        conf.get_autoupdate_enabled = Mock(return_value=True)
+57-        conf.get_lib_dir = Mock(return_value=self.tmp_dir)
+58-        ext_log_dir = os.path.join(self.tmp_dir, "azure")
+59-        conf.get_ext_log_dir = Mock(return_value=ext_log_dir)
+60-        conf.get_agent_pid_file_path = Mock(return_value=os.path.join(self.tmp_dir, "waagent.pid"))
+61-
+62-    def tearDown(self):
+63-        if not debug and self.tmp_dir is not None:
+64-            shutil.rmtree(self.tmp_dir)
+65-
+66-def load_data(name):
+67-    """Load test data"""
+68-    path = os.path.join(data_dir, name)
+69-    with open(path, "r") as data_file:
+70-        return data_file.read()
+71-

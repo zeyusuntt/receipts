@@ -1,0 +1,72 @@
+============================= test session starts ==============================
+collected 21 items
+
+tests/test_versioning/test_serialization.py ...................F.        [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: assert '1.20.3' == '1.02.3'
+      
+      - 1.02.3
+      ?    -
+      + 1.20.3
+      ?   +
+/bump-my-version/tests/test_versioning/test_serialization.py:207: AssertionError: assert '1.20.3' == '1.02.3'
+==================================== PASSES ====================================
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                      Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------
+bumpversion/__init__.py                       1      0      0      0   100%
+bumpversion/autocast.py                      35     35     16      0     0%   9-85
+bumpversion/bump.py                          59     59     12      0     0%   3-137
+bumpversion/cli.py                          139    139     26      0     0%   3-573
+bumpversion/config/__init__.py               38     38      6      0     0%   3-119
+bumpversion/config/create.py                 31     31      8      0     0%   3-77
+bumpversion/config/files.py                  46     46     12      0     0%   3-151
+bumpversion/config/files_legacy.py           62     62     32      0     0%   3-135
+bumpversion/config/models.py                107    107     14      0     0%   3-173
+bumpversion/config/utils.py                  32     32      6      0     0%   3-67
+bumpversion/context.py                       29     17      6      0    34%   44-47, 52-54, 59-63, 78-84, 89
+bumpversion/exceptions.py                    22      0      0      0   100%
+bumpversion/files.py                        129    129     32      0     0%   3-362
+bumpversion/indented_logger.py               26      6      2      1    75%   34, 41, 59, 66, 79-81
+bumpversion/scm.py                          207    207     40      0     0%   3-389
+bumpversion/show.py                          66     66     16      0     0%   3-131
+bumpversion/ui.py                            19      6      0      0    68%   27-38, 43, 48, 53
+bumpversion/utils.py                         39     28     16      0    20%   17-21, 26-29, 44, 62-74, 89-101
+bumpversion/version_part.py                  35     35      2      0     0%   3-96
+bumpversion/versioning/__init__.py            0      0      0      0   100%
+bumpversion/versioning/conventions.py        11      1      0      0    91%   71
+bumpversion/versioning/functions.py          69     30     18      4    54%   31-36, 40, 47-52, 56, 77, 86-99, 123, 132, 140, 146-149
+bumpversion/versioning/models.py            154     51     34      6    61%   47-48, 59, 72-74, 78-80, 85, 90, 101, 104, 145, 167, 168->170, 171, 182, 197-206, 224, 227, 230, 236, 248-263, 267, 271-272, 276-282
+bumpversion/versioning/serialization.py      55      0     12      0   100%
+bumpversion/visualize.py                     62     62     10      0     0%   3-138
+bumpversion/yaml_dump.py                     72     72     22      0     0%   3-148
+-------------------------------------------------------------------------------------
+TOTAL                                      1545   1259    342     11    17%
+Coverage HTML written to dir test-reports/htmlcov
+=========================== short test summary info ============================
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_empty_version_returns_empty_dict
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_empty_parse_pattern_returns_empty_dict
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_parses_version_and_returns_full_dict[parse-version]
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_parses_version_and_returns_full_dict[parse-prerelease]
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_parses_version_and_returns_full_dict[parse-buildmetadata]
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_parses_version_and_returns_full_dict[parse-prerelease-buildmetadata]
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_unmatched_pattern_returns_empty_dict
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_invalid_parse_pattern_raises_error
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_parse_pattern_with_newlines
+PASSED tests/test_versioning/test_serialization.py::TestParseVersion::test_parse_pattern_with_zero_padding
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_string_with_fewest_required_labels[major-minor-patch]
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_string_with_fewest_required_labels[major-minor-patch-zero]
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_string_with_fewest_required_labels[major-minor-zero-patch-zero]
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_renderable_pattern_with_fewest_labels
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_first_pattern_with_fewest_labels
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_includes_optional_component_when_dependent_is_not_optional
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_selects_first_pattern_when_all_are_invalid
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestRendersFormat::test_with_newlines
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestRendersFormat::test_with_additional_context
+PASSED tests/test_versioning/test_serialization.py::TestSerialize::TestRaisesError::test_if_context_is_missing_values
+FAILED tests/test_versioning/test_serialization.py::TestSerialize::TestRendersFormat::test_zero_padding
+========================= 1 failed, 20 passed in 1.12s =========================

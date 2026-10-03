@@ -1,0 +1,14 @@
+diff --git a/bumpversion/versioning/serialization.py b/bumpversion/versioning/serialization.py
+index b119d65..0bc9772 100644
+--- a/bumpversion/versioning/serialization.py
++++ b/bumpversion/versioning/serialization.py
+@@ -103,7 +103,8 @@ def serialize(version: Version, serialize_patterns: List[str], context: MutableM
+     logger.indent()
+ 
+     local_context = copy(context)
+-    local_context.update(version.values())
++    # Use VersionComponent objects instead of raw string values to preserve formatting capabilities
++    local_context.update({key: component for key, component in version.components.items()})
+     local_context_keys = set(local_context.keys())
+     required_component_labels = set(version.required_components())
+ 

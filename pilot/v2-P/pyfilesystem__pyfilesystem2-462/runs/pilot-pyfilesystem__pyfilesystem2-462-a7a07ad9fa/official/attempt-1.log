@@ -1,0 +1,620 @@
+============================= test session starts ==============================
+collected 342 items
+
+tests/test_ftpfs.py ..........s......................................... [ 15%]
+........................................E....s.......................... [ 35%]
+........................................................E....s.......... [ 56%]
+.................................................................E       [ 75%]
+tests/test_memoryfs.py ...........F..................................... [ 90%]
+..................................                                       [100%]
+
+==================================== ERRORS ====================================
+________________ ERROR at teardown of TestFTPFS.test_writetext _________________
+E   AttributeError: 'Process' object has no attribute 'net_connections'. Did you mean: 'connections'?
+_____________ ERROR at teardown of TestFTPFSNoMLSD.test_writetext ______________
+E   AttributeError: 'Process' object has no attribute 'net_connections'. Did you mean: 'connections'?
+______________ ERROR at teardown of TestAnonFTPFS.test_writetext _______________
+E   AttributeError: 'Process' object has no attribute 'net_connections'. Did you mean: 'connections'?
+=================================== FAILURES ===================================
+E   AttributeError: 'MemoryFS' object has no attribute 'getmodified'
+/pyfilesystem2/tests/test_memoryfs.py:75: AttributeError: 'MemoryFS' object has no attribute 'getmodified'
+=============================== warnings summary ===============================
+fs/__init__.py:4
+  /pyfilesystem2/fs/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    __import__("pkg_resources").declare_namespace(__name__)  # type: ignore
+
+tests/test_ftpfs.py::TestAnonFTPFS::test_appendbytes
+  /usr/local/lib/python3.10/site-packages/pyftpdlib/authorizers.py:118: RuntimeWarning: write permissions assigned to anonymous user.
+    self._check_permissions(username, perm)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+___________________________ TestFTPFS.test_bin_files ___________________________
+----------------------------- Captured stdout call -----------------------------
+<ftpfile 'ftp://user:1234@127.0.0.1:43569' '/foo2' Mode('rb')>
+_________________________ TestFTPFS.test_copy_dir_mem __________________________
+----------------------------- Captured stdout call -----------------------------
+BEFORE
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+`-- bar
+    `-- baz
+        `-- test.txt
+FS
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+OTHER
+|-- bar
+|   `-- baz
+|       `-- test.txt
+`-- egg
+    `-- bar
+        `-- baz
+            `-- test.txt
+_________________________ TestFTPFS.test_copy_dir_temp _________________________
+----------------------------- Captured stdout call -----------------------------
+BEFORE
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+`-- bar
+    `-- baz
+        `-- test.txt
+FS
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+OTHER
+|-- bar
+|   `-- baz
+|       `-- test.txt
+`-- egg
+    `-- bar
+        `-- baz
+            `-- test.txt
+__________________________ TestFTPFS.test_open_files ___________________________
+----------------------------- Captured stdout call -----------------------------
+FTPFS('127.0.0.1', port=43569)
+<fs.iotools.RawWrapper object at 0x7ffff4ca04f0>
+________________________ TestFTPFSNoMLSD.test_bin_files ________________________
+----------------------------- Captured stdout call -----------------------------
+<ftpfile 'ftp://user:1234@127.0.0.1:43571' '/foo2' Mode('rb')>
+______________________ TestFTPFSNoMLSD.test_copy_dir_mem _______________________
+----------------------------- Captured stdout call -----------------------------
+BEFORE
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+`-- bar
+    `-- baz
+        `-- test.txt
+FS
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+OTHER
+|-- bar
+|   `-- baz
+|       `-- test.txt
+`-- egg
+    `-- bar
+        `-- baz
+            `-- test.txt
+______________________ TestFTPFSNoMLSD.test_copy_dir_temp ______________________
+----------------------------- Captured stdout call -----------------------------
+BEFORE
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+`-- bar
+    `-- baz
+        `-- test.txt
+FS
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+OTHER
+|-- bar
+|   `-- baz
+|       `-- test.txt
+`-- egg
+    `-- bar
+        `-- baz
+            `-- test.txt
+_______________________ TestFTPFSNoMLSD.test_open_files ________________________
+----------------------------- Captured stdout call -----------------------------
+FTPFS('127.0.0.1', port=43571)
+<fs.iotools.RawWrapper object at 0x7ffff4ca0df0>
+_________________________ TestAnonFTPFS.test_bin_files _________________________
+----------------------------- Captured stdout call -----------------------------
+<ftpfile 'ftp://127.0.0.1:34991' '/foo2' Mode('rb')>
+_______________________ TestAnonFTPFS.test_copy_dir_mem ________________________
+----------------------------- Captured stdout call -----------------------------
+BEFORE
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+`-- bar
+    `-- baz
+        `-- test.txt
+FS
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+OTHER
+|-- bar
+|   `-- baz
+|       `-- test.txt
+`-- egg
+    `-- bar
+        `-- baz
+            `-- test.txt
+_______________________ TestAnonFTPFS.test_copy_dir_temp _______________________
+----------------------------- Captured stdout call -----------------------------
+BEFORE
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+`-- bar
+    `-- baz
+        `-- test.txt
+FS
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+OTHER
+|-- bar
+|   `-- baz
+|       `-- test.txt
+`-- egg
+    `-- bar
+        `-- baz
+            `-- test.txt
+________________________ TestAnonFTPFS.test_open_files _________________________
+----------------------------- Captured stdout call -----------------------------
+FTPFS('127.0.0.1', port=34991)
+<fs.iotools.RawWrapper object at 0x7ffff599a200>
+_________________________ TestMemoryFS.test_bin_files __________________________
+----------------------------- Captured stdout call -----------------------------
+<fs.memoryfs._MemoryFile object at 0x7ffff580e320>
+________________________ TestMemoryFS.test_copy_dir_mem ________________________
+----------------------------- Captured stdout call -----------------------------
+BEFORE
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+`-- bar
+    `-- baz
+        `-- test.txt
+FS
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+OTHER
+|-- bar
+|   `-- baz
+|       `-- test.txt
+`-- egg
+    `-- bar
+        `-- baz
+            `-- test.txt
+_______________________ TestMemoryFS.test_copy_dir_temp ________________________
+----------------------------- Captured stdout call -----------------------------
+BEFORE
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+`-- bar
+    `-- baz
+        `-- test.txt
+FS
+|-- egg
+|-- foo
+|   `-- bar
+|       `-- baz
+|           `-- test.txt
+`-- top.txt
+OTHER
+|-- bar
+|   `-- baz
+|       `-- test.txt
+`-- egg
+    `-- bar
+        `-- baz
+            `-- test.txt
+_________________________ TestMemoryFS.test_open_files _________________________
+----------------------------- Captured stdout call -----------------------------
+MemoryFS()
+<fs.iotools.RawWrapper object at 0x7ffff599bb80>
+=========================== short test summary info ============================
+PASSED tests/test_ftpfs.py::TestFTPFSClass::test_opener
+PASSED tests/test_ftpfs.py::TestFTPFSClass::test_parse_ftp_time
+PASSED tests/test_ftpfs.py::TestFTPFSClass::test_parse_mlsx
+PASSED tests/test_ftpfs.py::TestFTPFSClass::test_parse_mlsx_type
+PASSED tests/test_ftpfs.py::TestFTPErrors::test_manager
+PASSED tests/test_ftpfs.py::TestFTPErrors::test_manager_with_host
+PASSED tests/test_ftpfs.py::TestFTPFS::test_appendbytes
+PASSED tests/test_ftpfs.py::TestFTPFS::test_appendtext
+PASSED tests/test_ftpfs.py::TestFTPFS::test_basic
+PASSED tests/test_ftpfs.py::TestFTPFS::test_bin_files
+PASSED tests/test_ftpfs.py::TestFTPFS::test_close
+PASSED tests/test_ftpfs.py::TestFTPFS::test_connection_error
+PASSED tests/test_ftpfs.py::TestFTPFS::test_copy
+PASSED tests/test_ftpfs.py::TestFTPFS::test_copy_dir_mem
+PASSED tests/test_ftpfs.py::TestFTPFS::test_copy_dir_temp
+PASSED tests/test_ftpfs.py::TestFTPFS::test_copy_file
+PASSED tests/test_ftpfs.py::TestFTPFS::test_copy_structure
+PASSED tests/test_ftpfs.py::TestFTPFS::test_copydir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_create
+PASSED tests/test_ftpfs.py::TestFTPFS::test_desc
+PASSED tests/test_ftpfs.py::TestFTPFS::test_download
+PASSED tests/test_ftpfs.py::TestFTPFS::test_download_0
+PASSED tests/test_ftpfs.py::TestFTPFS::test_download_1
+PASSED tests/test_ftpfs.py::TestFTPFS::test_download_2
+PASSED tests/test_ftpfs.py::TestFTPFS::test_download_4
+PASSED tests/test_ftpfs.py::TestFTPFS::test_download_chunk_size
+PASSED tests/test_ftpfs.py::TestFTPFS::test_exists
+PASSED tests/test_ftpfs.py::TestFTPFS::test_files
+PASSED tests/test_ftpfs.py::TestFTPFS::test_filterdir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_ftp_url
+PASSED tests/test_ftpfs.py::TestFTPFS::test_getinfo
+PASSED tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified
+PASSED tests/test_ftpfs.py::TestFTPFS::test_getmeta
+PASSED tests/test_ftpfs.py::TestFTPFS::test_getmeta_unicode_path
+PASSED tests/test_ftpfs.py::TestFTPFS::test_getsize
+PASSED tests/test_ftpfs.py::TestFTPFS::test_getsyspath
+PASSED tests/test_ftpfs.py::TestFTPFS::test_geturl
+PASSED tests/test_ftpfs.py::TestFTPFS::test_geturl_purpose
+PASSED tests/test_ftpfs.py::TestFTPFS::test_glob
+PASSED tests/test_ftpfs.py::TestFTPFS::test_hash
+PASSED tests/test_ftpfs.py::TestFTPFS::test_host
+PASSED tests/test_ftpfs.py::TestFTPFS::test_invalid_chars
+PASSED tests/test_ftpfs.py::TestFTPFS::test_isdir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_isempty
+PASSED tests/test_ftpfs.py::TestFTPFS::test_isfile
+PASSED tests/test_ftpfs.py::TestFTPFS::test_islink
+PASSED tests/test_ftpfs.py::TestFTPFS::test_listdir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_makedir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_makedirs
+PASSED tests/test_ftpfs.py::TestFTPFS::test_match
+PASSED tests/test_ftpfs.py::TestFTPFS::test_move
+PASSED tests/test_ftpfs.py::TestFTPFS::test_move_dir_mem
+PASSED tests/test_ftpfs.py::TestFTPFS::test_move_dir_temp
+PASSED tests/test_ftpfs.py::TestFTPFS::test_move_file_mem
+PASSED tests/test_ftpfs.py::TestFTPFS::test_move_file_same_fs
+PASSED tests/test_ftpfs.py::TestFTPFS::test_move_file_temp
+PASSED tests/test_ftpfs.py::TestFTPFS::test_move_same_fs
+PASSED tests/test_ftpfs.py::TestFTPFS::test_movedir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_open
+PASSED tests/test_ftpfs.py::TestFTPFS::test_open_exclusive
+PASSED tests/test_ftpfs.py::TestFTPFS::test_open_files
+PASSED tests/test_ftpfs.py::TestFTPFS::test_openbin
+PASSED tests/test_ftpfs.py::TestFTPFS::test_openbin_exclusive
+PASSED tests/test_ftpfs.py::TestFTPFS::test_openbin_rw
+PASSED tests/test_ftpfs.py::TestFTPFS::test_opendir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_opener_path
+PASSED tests/test_ftpfs.py::TestFTPFS::test_readbytes
+PASSED tests/test_ftpfs.py::TestFTPFS::test_readtext
+PASSED tests/test_ftpfs.py::TestFTPFS::test_remove
+PASSED tests/test_ftpfs.py::TestFTPFS::test_removedir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_removetree
+PASSED tests/test_ftpfs.py::TestFTPFS::test_removetree_root
+PASSED tests/test_ftpfs.py::TestFTPFS::test_repeat_dir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_root_dir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_scandir
+PASSED tests/test_ftpfs.py::TestFTPFS::test_setinfo
+PASSED tests/test_ftpfs.py::TestFTPFS::test_settimes
+PASSED tests/test_ftpfs.py::TestFTPFS::test_touch
+PASSED tests/test_ftpfs.py::TestFTPFS::test_tree
+PASSED tests/test_ftpfs.py::TestFTPFS::test_unicode_path
+PASSED tests/test_ftpfs.py::TestFTPFS::test_upload
+PASSED tests/test_ftpfs.py::TestFTPFS::test_upload_0
+PASSED tests/test_ftpfs.py::TestFTPFS::test_upload_1
+PASSED tests/test_ftpfs.py::TestFTPFS::test_upload_2
+PASSED tests/test_ftpfs.py::TestFTPFS::test_upload_4
+PASSED tests/test_ftpfs.py::TestFTPFS::test_upload_chunk_size
+PASSED tests/test_ftpfs.py::TestFTPFS::test_upload_connection
+PASSED tests/test_ftpfs.py::TestFTPFS::test_validatepath
+PASSED tests/test_ftpfs.py::TestFTPFS::test_writebytes
+PASSED tests/test_ftpfs.py::TestFTPFS::test_writefile
+PASSED tests/test_ftpfs.py::TestFTPFS::test_writetext
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_appendbytes
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_appendtext
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_basic
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_bin_files
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_close
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_connection_error
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_copy
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_copy_dir_mem
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_copy_dir_temp
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_copy_file
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_copy_structure
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_copydir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_create
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_desc
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_download
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_download_0
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_download_1
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_download_2
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_download_4
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_download_chunk_size
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_exists
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_features
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_files
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_filterdir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_ftp_url
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getmeta
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getmeta_unicode_path
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getsize
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getsyspath
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_geturl
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_geturl_purpose
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_glob
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_hash
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_host
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_invalid_chars
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_isdir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_isempty
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_isfile
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_islink
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_listdir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_makedir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_makedirs
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_match
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_move
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_move_dir_mem
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_move_dir_temp
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_move_file_mem
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_move_file_same_fs
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_move_file_temp
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_move_same_fs
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_movedir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_open
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_open_exclusive
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_open_files
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_openbin
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_openbin_exclusive
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_openbin_rw
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_opendir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_opener_path
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_readbytes
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_readtext
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_remove
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_removedir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_removetree
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_removetree_root
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_repeat_dir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_root_dir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_scandir
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_setinfo
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_settimes
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_touch
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_tree
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_unicode_path
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_upload
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_upload_0
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_upload_1
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_upload_2
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_upload_4
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_upload_chunk_size
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_upload_connection
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_validatepath
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_writebytes
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_writefile
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_writetext
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_appendbytes
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_appendtext
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_basic
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_bin_files
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_close
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_copy
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_copy_dir_mem
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_copy_dir_temp
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_copy_file
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_copy_structure
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_copydir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_create
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_desc
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_download
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_download_0
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_download_1
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_download_2
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_download_4
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_download_chunk_size
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_exists
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_files
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_filterdir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_ftp_url
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_getinfo
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_getmeta
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_getsize
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_getsyspath
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_geturl
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_geturl_purpose
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_glob
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_hash
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_invalid_chars
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_isdir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_isempty
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_isfile
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_islink
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_listdir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_makedir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_makedirs
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_match
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_move
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_move_dir_mem
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_move_dir_temp
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_move_file_mem
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_move_file_same_fs
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_move_file_temp
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_move_same_fs
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_movedir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_open
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_open_exclusive
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_open_files
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_openbin
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_openbin_exclusive
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_openbin_rw
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_opendir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_readbytes
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_readtext
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_remove
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_removedir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_removetree
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_removetree_root
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_repeat_dir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_root_dir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_scandir
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_setinfo
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_settimes
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_touch
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_tree
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_unicode_path
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_upload
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_upload_0
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_upload_1
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_upload_2
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_upload_4
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_upload_chunk_size
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_validatepath
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_writebytes
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_writefile
+PASSED tests/test_ftpfs.py::TestAnonFTPFS::test_writetext
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_appendbytes
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_appendtext
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_basic
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_bin_files
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_case_sensitive
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_close
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_close_mem_free
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_copy
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_copy_dir_mem
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_copy_dir_temp
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_copy_file
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_copy_structure
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_copydir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_create
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_desc
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_download
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_download_0
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_download_1
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_download_2
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_download_4
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_download_chunk_size
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_exists
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_files
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_filterdir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_getinfo
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_getmeta
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_getsize
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_getsyspath
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_geturl
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_geturl_purpose
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_glob
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_hash
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_invalid_chars
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_isdir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_isempty
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_isfile
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_islink
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_listdir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_makedir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_makedirs
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_match
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_move
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_move_dir_mem
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_move_dir_temp
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_move_file_mem
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_move_file_same_fs
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_move_file_temp
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_move_same_fs
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_movedir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_open
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_open_exclusive
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_open_files
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_openbin
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_openbin_exclusive
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_openbin_rw
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_opendir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_readbytes
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_readtext
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_remove
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_removedir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_removetree
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_removetree_root
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_repeat_dir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_root_dir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_scandir
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_setinfo
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_settimes
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_touch
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_tree
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_unicode_path
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_upload
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_upload_0
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_upload_1
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_upload_2
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_upload_4
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_upload_chunk_size
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_validatepath
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_writebytes
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_writefile
+PASSED tests/test_memoryfs.py::TestMemoryFS::test_writetext
+PASSED tests/test_memoryfs.py::TestMemoryFile::test_readinto_writing
+PASSED tests/test_memoryfs.py::TestMemoryFile::test_readline_writing
+SKIPPED [3] fs/test.py:1879: case sensitivity not known
+ERROR tests/test_ftpfs.py::TestFTPFS::test_writetext - AttributeError: 'Proce...
+ERROR tests/test_ftpfs.py::TestFTPFSNoMLSD::test_writetext - AttributeError: ...
+ERROR tests/test_ftpfs.py::TestAnonFTPFS::test_writetext - AttributeError: 'P...
+FAILED tests/test_memoryfs.py::TestMemoryFS::test_copy_preserve_time - Attrib...
+======== 1 failed, 338 passed, 3 skipped, 2 warnings, 3 errors in 9.81s ========

@@ -1,0 +1,53 @@
+    def __call__(self, **kwargs):
+        """
+        Render this field as HTML, using keyword args as additional attributes.
+
+        This delegates rendering to
+        :meth:`meta.render_field <wtforms.meta.DefaultMeta.render_field>`
+        whose default behavior is to call the field's widget, passing any
+        keyword arguments from this call along to the widget.
+
+        In all of the WTForms HTML widgets, keyword arguments are turned to
+        HTML attributes, though in theory a widget is free to do anything it
+        wants with the supplied keyword arguments, and widgets don't have to
+        even do anything related to HTML.
+        """
+        return self.meta.render_field(self, kwargs)
+
+    @classmethod
+    def check_validators(cls, validators):
+        if validators is not None:
+            for validator in validators:
+                if not callable(validator):
+                    raise TypeError(
+                        "{} is not a valid validator because it is not "
+                        "callable".format(validator)
+                    )
+
+--
+    def __call__(self, text=None, **kwargs):
+        if "for_" in kwargs:
+            kwargs["for"] = kwargs.pop("for_")
+        else:
+            kwargs.setdefault("for", self.field_id)
+
+        attributes = widgets.html_params(**kwargs)
+        text = escape(text or self.text)
+        return Markup(f"<label {attributes}>{text}</label>")
+
+    def __repr__(self):
+        return f"Label({self.field_id!r}, {self.text!r})"
+
+
+class SelectFieldBase(Field):
+    option_widget = widgets.Option()
+
+    """
+    Base class for fields which can be iterated to produce options.
+
+    This isn't a field, but an abstract base class for fields which want to
+    provide this functionality.
+    """
+
+    def __init__(self, label=None, validators=None, option_widget=None, **kwargs):
+        super().__init__(label, validators, **kwargs)

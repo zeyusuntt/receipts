@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /cfn-python-lint
+collecting ... collected 1 item
+
+test/unit/rules/mappings/test_key_name.py::TestKeyName::test_file_negative FAILED [100%]
+
+=================================== FAILURES ===================================
+________________________ TestKeyName.test_file_negative ________________________
+
+self = <test.unit.rules.mappings.test_key_name.TestKeyName testMethod=test_file_negative>
+
+    def test_file_negative(self):
+        """Test failure"""
+>       self.helper_file_negative('test/fixtures/templates/bad/mappings/key_name.yaml', 4)
+
+test/unit/rules/mappings/test_key_name.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/unit/rules/__init__.py:54: in helper_file_negative
+    self.assertEqual(err_count, len(errs))
+E   AssertionError: 4 != 3
+----------- generated xml file: /opt/receipts/reports/agent1-22.xml ------------
+=========================== short test summary info ============================
+FAILED test/unit/rules/mappings/test_key_name.py::TestKeyName::test_file_negative
+============================== 1 failed in 1.87s ===============================

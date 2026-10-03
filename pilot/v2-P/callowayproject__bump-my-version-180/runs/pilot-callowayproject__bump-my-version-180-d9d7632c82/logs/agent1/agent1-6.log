@@ -1,0 +1,18 @@
+Format string: {major}.{minor:02}.{patch}
+Parsed format:
+  ('', 'major', '', None)
+  ('.', 'minor', '02', None)
+  ('.', 'patch', '', None)
+
+Context: {'major': '1', 'minor': '2', 'patch': '3', 'pre_l': '', 'pre_n': '0', 'buildmetadata': '0'}
+
+Testing parts:
+major_part.format(**{'major': context['major']}): '1'
+minor_part.format(**{'minor': context['minor']}): '20'
+patch_part.format(**{'patch': context['patch']}): '3'
+
+Minor VC: 2
+minor_vc.value: '2' (type: <class 'str'>)
+minor_vc.__format__('02'): '02'
+
+Direct format_str.format(**context): '1.20.3'

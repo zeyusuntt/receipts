@@ -1,0 +1,56 @@
+diff --git a/skypy/galaxies/velocity_dispersion.py b/skypy/galaxies/velocity_dispersion.py
+new file mode 100644
+index 0000000..7f1cd4d
+--- /dev/null
++++ b/skypy/galaxies/velocity_dispersion.py
+@@ -0,0 +1,49 @@
++"""
++Velocity dispersion function samplers.
++"""
++import numpy as np
++
++
++def schechter_vdf(alpha, beta, vd_star, vd_min, vd_max, size, resolution):
++    """
++    Draw random samples from the velocity dispersion function described
++    by a Schechter-like form (Choi et al. 2017).
++
++    Parameters
++    ----------
++    alpha : float
++        Power-law slope of the VDF.
++    beta : float
++        Exponential cutoff slope of the VDF.
++    vd_star : float
++        Characteristic velocity dispersion (km/s).
++    vd_min : float
++        Minimum velocity dispersion for sampling (km/s).
++    vd_max : float
++        Maximum velocity dispersion for sampling (km/s).
++    size : int
++        Number of samples to draw.
++    resolution : int
++        Number of grid points used to construct the CDF.
++
++    Returns
++    -------
++    samples : ndarray, shape (size,)
++        Random draws from the VDF.
++    """
++    # Grid in velocity dispersion
++    vd_grid = np.linspace(vd_min, vd_max, resolution)
++    # Un-normalised Schechter-like VDF (matching test calc_pdf up to norm)
++    # Following equation 1 in Choi et al. (2017) ApJ 837 102 (converted to sigma_v)
++    pdf = (vd_grid / vd_star) ** alpha * np.exp(-(vd_grid / vd_star) ** beta)
++    pdf /= vd_grid  # extra 1/sigma_v factor as in test calc_pdf
++
++    # Normalise to obtain probability distribution
++    cdf = np.cumsum(pdf)
++    cdf /= cdf[-1]  # normalise to 1
++
++    # Inverse transform sampling
++    u = np.random.uniform(0, 1, size)
++    samples = np.interp(u, cdf, vd_grid)
++
++    return samples
+\ No newline at end of file

@@ -1,0 +1,31 @@
+            phase_builder = DescentPhase
+        else:
+            raise ValueError(
+                f'{phase_name} does not have an associated phase_builder \n phase_name must '
+                'include one of: groundroll, rotation, accel, ascent, climb, cruise, or desc'
+            )
+
+        return phase_builder
+
+    def set_phase_options(self, prob, phase_name, phase_idx, phase, user_options):
+        """
+        Set any necessary problem-related options on the phase.
+
+        This is called from _get_phase in AviaryProblem.add_phases
+
+        Parameters
+        ----------
+        prob : AviaryProblem
+            Problem that owns this builder.
+        phase_name : str
+            Name of the requested phase.
+        phase_idx : int
+            Phase position in prob.phases. Can be used to identify first phase.
+        phase : Phase
+            Instantiated phase object.
+        user_options : dict
+            Subdictionary "user_options" from the phase_info.
+        """
+        time_units = 's'
+
+        try:

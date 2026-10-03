@@ -1,0 +1,103 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /stac-fastapi
+configfile: pyproject.toml
+plugins: anyio-4.12.1, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+stac_fastapi/api/tests/test_app.py::test_client_response_type FAILED     [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_client_response_type ___________________________
+
+TestCoreClient = <class 'conftest.TestCoreClient.<locals>.CoreClient'>
+
+    def test_client_response_type(TestCoreClient):
+        """Test all GET endpoints. Verify that responses are valid STAC items."""
+    
+        test_app = app.StacApi(
+            settings=ApiSettings(),
+            client=TestCoreClient(),
+        )
+    
+>       with TestClient(test_app.app) as client:
+
+stac_fastapi/api/tests/test_app.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:688: in __enter__
+    portal.call(self.wait_startup)
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:334: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:717: in wait_startup
+    message = await receive()
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:714: in receive
+    self.task.result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:704: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1134: in __call__
+    await super().__call__(scope, receive, send)
+/usr/local/lib/python3.10/site-packages/starlette/applications.py:106: in __call__
+    self.middleware_stack = self.build_middleware_stack()
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1042: in build_middleware_stack
+    app = cls(app, *args, **kwargs)
+stac_fastapi/api/stac_fastapi/api/middleware.py:35: in __init__
+    super().__init__(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <stac_fastapi.api.middleware.CORSMiddleware object at 0x7ffff4c5b2b0>
+app = <brotli_asgi.BrotliMiddleware object at 0x7ffff4c5b250>
+allow_origins = ('*',), allow_methods = ('OPTIONS', 'POST', 'GET')
+allow_headers = ('Content-Type',), allow_credentials = False
+allow_origin_regex = None, allow_private_network = (), expose_headers = 600
+max_age = 600
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        allow_origins: Sequence[str] = (),
+        allow_methods: Sequence[str] = ("GET",),
+        allow_headers: Sequence[str] = (),
+        allow_credentials: bool = False,
+        allow_origin_regex: str | None = None,
+        allow_private_network: bool = False,
+        expose_headers: Sequence[str] = (),
+        max_age: int = 600,
+    ) -> None:
+        if "*" in allow_methods:
+            allow_methods = ALL_METHODS
+    
+        compiled_allow_origin_regex = None
+        if allow_origin_regex is not None:
+            compiled_allow_origin_regex = re.compile(allow_origin_regex)
+    
+        allow_all_origins = "*" in allow_origins
+        allow_all_headers = "*" in allow_headers
+        preflight_explicit_allow_origin = not allow_all_origins or allow_credentials
+    
+        simple_headers: dict[str, str] = {}
+        if allow_all_origins:
+            simple_headers["Access-Control-Allow-Origin"] = "*"
+        if allow_credentials:
+            simple_headers["Access-Control-Allow-Credentials"] = "true"
+        if expose_headers:
+>           simple_headers["Access-Control-Expose-Headers"] = ", ".join(expose_headers)
+E           TypeError: can only join an iterable
+
+/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py:45: TypeError
+----------- generated xml file: /opt/receipts/reports/agent1-79.xml ------------
+=========================== short test summary info ============================
+FAILED stac_fastapi/api/tests/test_app.py::test_client_response_type - TypeEr...
+============================== 1 failed in 0.39s ===============================

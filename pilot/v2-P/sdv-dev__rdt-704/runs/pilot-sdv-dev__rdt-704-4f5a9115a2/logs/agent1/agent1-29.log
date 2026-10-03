@@ -1,0 +1,21 @@
+                p=component_prob_t
+            )
+
+        aranged = np.arange(len(data))
+        normalized = normalized_values[aranged, selected_component].reshape([-1, 1])
+        normalized = np.clip(normalized, -.99, .99)
+        normalized = normalized[:, 0]
+        rows = [normalized, selected_component]
+        if self.null_transformer and self.null_transformer.models_missing_values():
+            rows.append(model_missing_values)
+
+        return np.stack(rows, axis=1)  # noqa: PD013
+
+    def _reverse_transform_helper(self, data):
+        normalized = np.clip(data[:, 0], -1, 1)
+        means = self._bgm_transformer.means_.reshape([-1])
+        stds = np.sqrt(self._bgm_transformer.covariances_).reshape([-1])
+        selected_component = data[:, 1].astype(int)  # maybe round instead?
+        std_t = stds[self.valid_component_indicator][selected_component]
+        mean_t = means[self.valid_component_indicator][selected_component]
+        reversed_data = normalized * self.STD_MULTIPLIER * std_t + mean_t

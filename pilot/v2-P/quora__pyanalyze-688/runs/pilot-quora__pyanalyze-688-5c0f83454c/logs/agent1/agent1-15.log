@@ -1,0 +1,86 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-7.4.4, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pyanalyze
+collecting ... collected 1 item
+
+pyanalyze/test_implementation.py::TestAny::test_call FAILED              [100%]
+
+=================================== FAILURES ===================================
+______________________________ TestAny.test_call _______________________________
+
+self = <pyanalyze.test_implementation.TestAny object at 0x7ffff534c2e0>
+
+    @functools.wraps(fn)
+    def wrapper(self):
+>       self.assert_passes(_extract_code_from_fn(fn), **kwargs)
+
+pyanalyze/test_node_visitor.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pyanalyze.test_implementation.TestAny object at 0x7ffff534c2e0>
+code_str = 'from typing import Any\n\ndef capybara():\n    Any(42)  # E: incompatible_call\n'
+kwargs = {}, errors = []
+expected_errors = defaultdict(<function BaseNodeVisitorTester.assert_passes.<locals>.<lambda> at 0x7ffff70f6c20>, {4: defaultdict(<class 'int'>, {'incompatible_call': 1})})
+i = 4, line = '    Any(42)  # E: incompatible_call', whole_line_match = None
+separate_match = <re.Match object; span=(13, 35), match='# E: incompatible_call'>
+mismatches = ['Expected incompatible_call on line 4']
+
+    def assert_passes(self, code_str, **kwargs):
+        """Asserts that running the given code_str throws no errors."""
+        code_str = textwrap.dedent(code_str)
+        errors = self._run_str(
+            code_str, expect_failure=False, fail_after_first=False, **kwargs
+        )
+        expected_errors = defaultdict(lambda: defaultdict(int))
+        for i, line in enumerate(code_str.splitlines(), start=1):
+            whole_line_match = re.match(r"^ *#\s*E:\s*([a-z_]+)$", line)
+            if whole_line_match:
+                expected_errors[i + 1][whole_line_match.group(1)] += 1
+                continue
+            for separate_match in re.finditer(r"#\s*E:\s*([a-z_]+)", line):
+                expected_errors[i][separate_match.group(1)] += 1
+    
+        mismatches = []
+    
+        for error in errors:
+            lineno = error["lineno"]
+            actual_code = error["code"].name
+            if (
+                actual_code in expected_errors[lineno]
+                and expected_errors[lineno][actual_code] > 0
+            ):
+                expected_errors[lineno][actual_code] -= 1
+            else:
+                mismatches.append(
+                    f"Did not expect error {actual_code} on line {lineno}"
+                )
+    
+        for lineno, errors_by_line in expected_errors.items():
+            for error_code, count in errors_by_line.items():
+                if count > 0:
+                    mismatches.append(f"Expected {error_code} on line {lineno}")
+    
+>       assert not mismatches, "".join(line + "\n" for line in mismatches) + "".join(
+            error["message"] for error in errors
+        )
+E       AssertionError: Expected incompatible_call on line 4
+E         
+E       assert not ['Expected incompatible_call on line 4']
+
+pyanalyze/test_node_visitor.py:86: AssertionError
+----------------------------- Captured stderr call -----------------------------
+<test input 529ed0fb047271ca31b0db31315e42e52c59fcad5e50893aed5b4be4232674b5> took 0.01 s
+=============================== warnings summary ===============================
+pyanalyze/test_name_check_visitor.py:343
+  /pyanalyze/pyanalyze/test_name_check_visitor.py:343: SyntaxWarning: 'list' object is not callable; perhaps you missed a comma?
+    print([1, 2]())  # E: not_callable
+
+pyanalyze/test_name_check_visitor.py:1300
+  /pyanalyze/pyanalyze/test_name_check_visitor.py:1300: SyntaxWarning: list indices must be integers or slices, not float; perhaps you missed a comma?
+    return [1, 2][3.0]  # E: unsupported_operation
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-15.xml ------------
+=========================== short test summary info ============================
+FAILED pyanalyze/test_implementation.py::TestAny::test_call - AssertionError:...
+======================== 1 failed, 2 warnings in 0.53s =========================

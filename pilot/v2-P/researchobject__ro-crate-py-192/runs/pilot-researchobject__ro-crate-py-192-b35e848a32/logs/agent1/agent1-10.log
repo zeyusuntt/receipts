@@ -1,0 +1,14 @@
+About to write crate...
+ERROR: [Errno 2] No such file or directory: 'data.csv'
+Traceback (most recent call last):
+  File "/ro-crate-py/test_example.py", line 32, in <module>
+    crate.write("out_crate")
+  File "/ro-crate-py/rocrate/rocrate.py", line 458, in write
+    writable_entity.write(base_path)
+  File "/ro-crate-py/rocrate/model/file.py", line 71, in write
+    shutil.copy(self.source, out_file_path)
+  File "/usr/local/lib/python3.10/shutil.py", line 417, in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+  File "/usr/local/lib/python3.10/shutil.py", line 254, in copyfile
+    with open(src, 'rb') as fsrc:
+FileNotFoundError: [Errno 2] No such file or directory: 'data.csv'

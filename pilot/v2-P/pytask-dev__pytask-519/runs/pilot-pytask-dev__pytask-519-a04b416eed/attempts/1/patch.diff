@@ -1,0 +1,21 @@
+diff --git a/src/_pytask/task_utils.py b/src/_pytask/task_utils.py
+index 59af53e..74e8e09 100644
+--- a/src/_pytask/task_utils.py
++++ b/src/_pytask/task_utils.py
+@@ -92,9 +92,13 @@ def task(
+                 )
+                 raise ValueError(msg)
+ 
+-        unwrapped = inspect.unwrap(func)
+-
+-        raw_path = inspect.getfile(unwrapped)
++        try:
++            unwrapped = inspect.unwrap(func)
++            raw_path = inspect.getfile(unwrapped)
++        except Exception:
++            msg = "Builtin functions cannot be wrapped"
++            raise ValueError(msg)
++        
+         if "<string>" in raw_path:
+             path = Path(unwrapped.__globals__["__file__"]).absolute().resolve()
+         else:

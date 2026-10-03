@@ -1,0 +1,13 @@
+BaseSearchGetRequest fields: ['collections', 'ids', 'bbox', 'intersects', 'datetime', 'limit']
+FieldsExtensionGetRequest fields: ['fields']
+
+=== Test 1: BaseSearchGetRequest only ===
+Traceback (most recent call last):
+  File "/tmp/simple_test.py", line 14, in <module>
+    class Test1:
+  File "<string>", line 9, in __init__
+  File "/stac-fastapi/stac_fastapi/types/stac_fastapi/types/search.py", line 70, in __post_init__
+    self.collections = str2list(self.collections)  # type: ignore
+  File "/stac-fastapi/stac_fastapi/types/stac_fastapi/types/search.py", line 30, in str2list
+    return x.split(",")
+AttributeError: type object 'Test1' has no attribute 'split'

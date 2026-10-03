@@ -1,0 +1,40 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /jsonpickle
+configfile: pytest.ini
+plugins: benchmark-5.2.3, checkdocs-2.14.0, cov-7.0.0, enabler-3.4.0, ruff-0.5
+collecting ... collected 1 item
+
+tests/jsonpickle_test.py::PicklingProtocol2TestCase::test_restore_nested_dict_state_with_references_preserved _restore_object: class_name='jsonpickle_test.PickleProtocol2GetStateNestedDict' cls=<class 'jsonpickle_test.PickleProtocol2GetStateNestedDict'>
+  [_restore_state] before _restore_from_dict instance=<jsonpickle_test.PickleProtocol2GetStateNestedDict object at 0x7ffff56df220>
+  [_restore_state] after _restore_from_dict instance=<jsonpickle_test.PickleProtocol2GetStateNestedDict object at 0x7ffff56df220>
+_restore_id: idx=1 returning <jsonpickle_test.PickleProtocol2GetStateNestedDict object at 0x7ffff56df220>
+_restore_object: class_name='jsonpickle_test.PickleProtocol2GetStateNestedDict' cls=<class 'jsonpickle_test.PickleProtocol2GetStateNestedDict'>
+  [_restore_state] before _restore_from_dict instance=<jsonpickle_test.PickleProtocol2GetStateNestedDict object at 0x7ffff56df280>
+  [_restore_state] after _restore_from_dict instance=<jsonpickle_test.PickleProtocol2GetStateNestedDict object at 0x7ffff56df280>
+_restore_id: idx=4 returning {'magic': True}
+FAILED
+
+=================================== FAILURES ===================================
+_ PicklingProtocol2TestCase.test_restore_nested_dict_state_with_references_preserved _
+
+self = <jsonpickle_test.PicklingProtocol2TestCase testMethod=test_restore_nested_dict_state_with_references_preserved>
+
+    def test_restore_nested_dict_state_with_references_preserved(self):
+        """
+        Ensure that nested dicts in "py/state" are not duplicated when tracking
+        objects to preserve references
+        """
+        instance1 = PickleProtocol2GetStateNestedDict('whatevs')
+        instance2 = PickleProtocol2GetStateNestedDict('different')
+        encoded = jsonpickle.encode([instance1, instance1, instance2, instance2])
+        decoded = jsonpickle.decode(encoded)
+        self.assertTrue(decoded[0].nested['magic'])
+        self.assertIs(decoded[1], decoded[0])
+        self.assertTrue(decoded[2].nested['magic'])
+>       self.assertIs(decoded[3], decoded[2])
+E       AssertionError: {'magic': True} is not <jsonpickle_test.PickleProtocol2GetStateNestedDict object at 0x7ffff56df280>
+
+tests/jsonpickle_test.py:1573: AssertionError

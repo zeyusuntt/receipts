@@ -1,0 +1,71 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /Copulas
+configfile: setup.cfg
+plugins: cov-4.1.0
+collecting ... collected 1 item
+
+tests/copulas/multivariate/test_vine.py::TestVine::test_sample FAILED    [100%]
+
+=================================== FAILURES ===================================
+_____________________________ TestVine.test_sample _____________________________
+
+self = <test_vine.TestVine testMethod=test_sample>
+sample_mock = <function _sample_row at 0x7fffe652d830>
+
+    @patch('copulas.multivariate.vine.VineCopula._sample_row', autospec=True)
+    def test_sample(self, sample_mock):
+        """After being fit, a vine can sample new data."""
+        # Setup
+        vine = VineCopula(TreeTypes.REGULAR)
+        X = pd.DataFrame([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ], columns=list('ABCD'))
+        vine.fit(X)
+    
+        expected_result = pd.DataFrame([
+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},
+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},
+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},
+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},
+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},
+        ])
+    
+        sample_mock.return_value = np.array([1, 2, 3, 4])
+    
+        # Run
+>       result = vine.sample(5)
+
+tests/copulas/multivariate/test_vine.py:234: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <copulas.multivariate.vine.VineCopula object at 0x7fffe6529d90>
+num_rows = 5
+
+    def sample(self, num_rows=1):
+        """Generating samples from vine model.
+    
+        Args:
+            num_rows: Number of rows to sample.
+    
+        Returns:
+            pandas.DataFrame with sampled data.
+        """
+>       from copulas.utils import check_random_state
+E       ModuleNotFoundError: No module named 'copulas.utils'
+
+copulas/multivariate/vine.py:224: ModuleNotFoundError
+=============================== warnings summary ===============================
+../usr/local/lib/python3.7/site-packages/_pytest/config/__init__.py:1373
+  /usr/local/lib/python3.7/site-packages/_pytest/config/__init__.py:1373: PytestConfigWarning: Unknown config option: collect_ignore
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /opt/receipts/reports/agent1-3.xml ------------
+=========================== short test summary info ============================
+FAILED tests/copulas/multivariate/test_vine.py::TestVine::test_sample - Modul...
+========================= 1 failed, 1 warning in 0.89s =========================

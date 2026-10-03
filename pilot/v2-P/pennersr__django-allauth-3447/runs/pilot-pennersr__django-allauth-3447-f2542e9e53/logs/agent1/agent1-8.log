@@ -1,0 +1,60 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+django: version: 5.2.11, settings: test_settings (from ini)
+rootdir: /django-allauth
+configfile: pytest.ini
+plugins: django-4.12.0
+collecting ... collected 16 items
+
+allauth/account/tests/test_signup.py::CustomSignupFormTests::test_custom_form_field_order PASSED [  6%]
+allauth/account/tests/test_signup.py::CustomSignupFormTests::test_user_class_attribute PASSED [ 12%]
+allauth/account/tests/test_signup.py::BaseSignupFormTests::test_signup_email_verification PASSED [ 18%]
+allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_in_blacklist PASSED [ 25%]
+allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_maxlength PASSED [ 31%]
+allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_not_in_blacklist PASSED [ 37%]
+allauth/account/tests/test_signup.py::SignupTests::test_django_password_validation PASSED [ 43%]
+allauth/account/tests/test_signup.py::SignupTests::test_signup_email_twice PASSED [ 50%]
+allauth/account/tests/test_signup.py::SignupTests::test_signup_other_email_verified_externally PASSED [ 56%]
+allauth/account/tests/test_signup.py::SignupTests::test_signup_password_twice_form_error PASSED [ 62%]
+allauth/account/tests/test_signup.py::SignupTests::test_signup_same_email_verified_externally PASSED [ 68%]
+allauth/account/tests/test_signup.py::test_prevent_enumeration_with_mandatory_verification PASSED [ 75%]
+allauth/account/tests/test_signup.py::test_prevent_enumeration_off PASSED [ 81%]
+allauth/account/tests/test_signup.py::test_prevent_enumeration_strictly PASSED [ 87%]
+allauth/account/tests/test_signup.py::test_prevent_enumeration_on PASSED [ 93%]
+allauth/account/tests/test_signup.py::test_get_initial_with_valid_email PASSED [100%]
+
+=============================== warnings summary ===============================
+../usr/local/lib/python3.10/site-packages/openid/oidutil.py:105
+  /usr/local/lib/python3.10/site-packages/openid/oidutil.py:105: DeprecationWarning: defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead.
+    ElementTree = __import__(mod_name, None, None, ['unused'])
+
+allauth/account/tests/test_signup.py::SignupTests::test_django_password_validation
+  /django-allauth/allauth/socialaccount/providers/openid/forms.py:5: RemovedInDjango60Warning: The default scheme will be changed from 'http' to 'https' in Django 6.0. Pass the forms.URLField.assume_scheme argument to silence this warning, or set the FORMS_URLFIELD_ASSUME_HTTPS transitional setting to True to opt into using 'https' as the new default scheme.
+    openid = forms.URLField(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+______________ CustomSignupFormTests.test_custom_form_field_order ______________
+---------------------------- Captured stderr setup -----------------------------
+Creating test database for alias 'default'...
+--------------------------- Captured stderr teardown ---------------------------
+Destroying test database for alias 'default'...
+------------ generated xml file: /opt/receipts/reports/agent1-8.xml ------------
+=========================== short test summary info ============================
+PASSED allauth/account/tests/test_signup.py::CustomSignupFormTests::test_custom_form_field_order
+PASSED allauth/account/tests/test_signup.py::CustomSignupFormTests::test_user_class_attribute
+PASSED allauth/account/tests/test_signup.py::BaseSignupFormTests::test_signup_email_verification
+PASSED allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_in_blacklist
+PASSED allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_maxlength
+PASSED allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_not_in_blacklist
+PASSED allauth/account/tests/test_signup.py::SignupTests::test_django_password_validation
+PASSED allauth/account/tests/test_signup.py::SignupTests::test_signup_email_twice
+PASSED allauth/account/tests/test_signup.py::SignupTests::test_signup_other_email_verified_externally
+PASSED allauth/account/tests/test_signup.py::SignupTests::test_signup_password_twice_form_error
+PASSED allauth/account/tests/test_signup.py::SignupTests::test_signup_same_email_verified_externally
+PASSED allauth/account/tests/test_signup.py::test_prevent_enumeration_with_mandatory_verification
+PASSED allauth/account/tests/test_signup.py::test_prevent_enumeration_off
+PASSED allauth/account/tests/test_signup.py::test_prevent_enumeration_strictly
+PASSED allauth/account/tests/test_signup.py::test_prevent_enumeration_on
+PASSED allauth/account/tests/test_signup.py::test_get_initial_with_valid_email
+======================== 16 passed, 2 warnings in 1.10s ========================

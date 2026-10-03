@@ -1,0 +1,38 @@
+diff --git a/opensearchpy/_async/http_aiohttp.py b/opensearchpy/_async/http_aiohttp.py
+index ed1d26e..65ffb8b 100644
+--- a/opensearchpy/_async/http_aiohttp.py
++++ b/opensearchpy/_async/http_aiohttp.py
+@@ -86,6 +86,7 @@ class AIOHttpConnection(AsyncConnection):
+         client_key: Any = None,
+         ssl_version: Any = None,
+         ssl_assert_fingerprint: Any = None,
++        ssl_assert_hostname: Any = None,
+         maxsize: Optional[int] = 10,
+         headers: Any = None,
+         ssl_context: Any = None,
+@@ -163,6 +164,7 @@ class AIOHttpConnection(AsyncConnection):
+             )
+ 
+         self.ssl_assert_fingerprint = ssl_assert_fingerprint
++        self.ssl_assert_hostname = ssl_assert_hostname
+         if self.use_ssl and ssl_context is None:
+             if ssl_version is None:
+                 ssl_context = ssl.create_default_context()
+@@ -182,6 +184,8 @@ class AIOHttpConnection(AsyncConnection):
+             else:
+                 ssl_context.check_hostname = False
+                 ssl_context.verify_mode = ssl.CERT_NONE
++            if self.ssl_assert_hostname is not None:
++                ssl_context.check_hostname = self.ssl_assert_hostname
+ 
+             if ca_certs is None:
+                 ca_certs = self.default_ca_certs()
+@@ -215,6 +219,8 @@ class AIOHttpConnection(AsyncConnection):
+                 ssl_context.load_cert_chain(client_cert, client_key)
+             elif client_cert:
+                 ssl_context.load_cert_chain(client_cert)
++            if ssl_context is not None and self.ssl_assert_hostname is not None:
++                ssl_context.check_hostname = self.ssl_assert_hostname
+ 
+         self.headers.setdefault("connection", "keep-alive")
+         self.loop = loop

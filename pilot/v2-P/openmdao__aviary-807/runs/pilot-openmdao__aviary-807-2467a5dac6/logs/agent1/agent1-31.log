@@ -1,0 +1,21 @@
+
+        return phase
+
+    def add_phases(self, phase_info_parameterization=None, parallel_phases=True, verbosity=None):
+        """
+        Add the mission phases to the problem trajectory based on the user-specified
+        phase_info dictionary.
+
+        Parameters
+        ----------
+        phase_info_parameterization (function, optional): A function that takes in the
+            phase_info dictionary and aviary_inputs and returns modified phase_info.
+            Defaults to None.
+
+        parallel_phases (bool, optional): If True, the top-level container of all phases
+            will be a ParallelGroup, otherwise it will be a standard OpenMDAO Group.
+            Defaults to True.
+
+        Returns
+        -------
+        traj: The Dymos Trajectory object containing the added mission phases.

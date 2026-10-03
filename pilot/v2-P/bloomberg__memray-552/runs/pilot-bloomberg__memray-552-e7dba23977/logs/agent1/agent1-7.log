@@ -1,0 +1,64 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /memray
+configfile: pyproject.toml
+plugins: cov-7.0.0, textual-snapshot-1.1.0, syrupy-4.8.0
+collecting ... collected 3 items
+
+tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_script[-I] FAILED
+
+=================================== FAILURES ===================================
+_ TestRunSubcommand.test_suppressing_sys_manipulations_when_running_script[-I] _
+
+self = <tests.integration.test_main.TestRunSubcommand object at 0x7ffff555c9a0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-5/test_suppressing_sys_manipulat0')
+isolation_flag = '-I'
+
+    @pytest.mark.parametrize(
+        "isolation_flag", ["-I"] + (["-P"] if sys.version_info > (3, 11) else [])
+    )
+    def test_suppressing_sys_manipulations_when_running_script(
+        self, tmp_path, isolation_flag
+    ):
+        # GIVEN
+        out_file = tmp_path / "result.bin"
+        target_file = tmp_path / "test.py"
+        target_file.write_text("import json, sys; print(json.dumps(sys.path))")
+    
+        # WHEN
+        proc = subprocess.run(
+            [
+                sys.executable,
+                isolation_flag,
+                "-m",
+                "memray",
+                "run",
+                "--quiet",
+                "--output",
+                str(out_file),
+                str(target_file),
+                "some",
+                "provided args",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    
+        # THEN
+        assert out_file.exists()
+        assert proc.returncode == 0
+        # Running `python -m` did not put cwd in sys.path; ensure it isn't
+        # there, and neither is the tmp_path we would have replaced it with.
+        path = json.loads(proc.stdout)
+        assert os.getcwd() not in path
+>       assert str(tmp_path) not in path
+E       AssertionError: assert '/tmp/pytest-of-root/pytest-5/test_suppressing_sys_manipulat0' not in ['/tmp/pytest-of-root/pytest-5/test_suppressing_sys_manipulat0', '/usr/local/lib/python3.10', '/usr/local/lib/python3.10/lib-dynload', '/usr/local/lib/python3.10/site-packages', '/memray/src']
+E        +  where '/tmp/pytest-of-root/pytest-5/test_suppressing_sys_manipulat0' = str(PosixPath('/tmp/pytest-of-root/pytest-5/test_suppressing_sys_manipulat0'))
+
+tests/integration/test_main.py:338: AssertionError
+------------ generated xml file: /opt/receipts/reports/agent1-7.xml ------------
+=========================== short test summary info ============================
+FAILED tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_script[-I]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.46s ===============================

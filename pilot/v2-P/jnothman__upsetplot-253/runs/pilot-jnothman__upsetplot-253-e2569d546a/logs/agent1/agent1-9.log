@@ -1,0 +1,490 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /UpSetPlot
+configfile: setup.cfg
+plugins: cov-7.0.0
+collecting ... collected 12 items
+
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params0-expected0] PASSED [  8%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params1-expected1] FAILED [ 16%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params2-expected2] PASSED [ 25%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params3-expected3] PASSED [ 33%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params4-expected4] PASSED [ 41%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params5-expected5] PASSED [ 50%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params0-expected0] PASSED [ 58%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params1-expected1] FAILED [ 66%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params2-expected2] PASSED [ 75%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params3-expected3] PASSED [ 83%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params4-expected4] PASSED [ 91%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params5-expected5] PASSED [100%]
+
+=================================== FAILURES ===================================
+__________ test_filter_subsets[cardinality-filter_params1-expected1] ___________
+
+filter_params = {'max_subset_rank': 3}
+expected = {(True, False, False): 884, (True, True, False): 1547, (True, True, True): 990}
+sort_by = 'cardinality'
+
+    @pytest.mark.parametrize(
+        ("filter_params", "expected"),
+        [
+            (
+                {"min_subset_size": 623},
+                {
+                    (True, False, False): 884,
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"max_subset_rank": 3},
+                {
+                    (True, False, False): 884,
+                    (True, True, False): 1547,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_subset_size": 800, "max_subset_size": 990},
+                {
+                    (True, False, False): 884,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_degree": 2},
+                {
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (False, True, True): 258,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_degree": 2, "max_degree": 2},
+                {
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (False, True, True): 258,
+                },
+            ),
+            (
+                {"max_subset_size": 500, "max_degree": 2},
+                {
+                    (False, False, False): 220,
+                    (False, True, False): 335,
+                    (False, False, True): 143,
+                    (False, True, True): 258,
+                },
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("sort_by", ["cardinality", "degree"])
+    def test_filter_subsets(filter_params, expected, sort_by):
+        data = generate_samples(seed=0, n_samples=5000, n_categories=3)
+        # data =
+        #   cat1   cat0   cat2
+        #   False  False  False     220
+        #   True   False  False     884
+        #   False  True   False     335
+        #          False  True      143
+        #   True   True   False    1547
+        #          False  True      623
+        #   False  True   True      258
+        #   True   True   True      990
+        upset_full = UpSet(data, subset_size="auto", sort_by=sort_by)
+>       upset_filtered = UpSet(data, subset_size="auto", sort_by=sort_by, **filter_params)
+
+data       =                    index     value
+cat0  cat1  cat2                  
+True  True  False      0  1.235461
+      False False      1  0.821389
+      True  False      2  0.967079
+            True       3  1.773347
+            False      4  1.674779
+...                  ...       ...
+False True  False   4995  1.147737
+            False   4996  1.368000
+      False False   4997  0.327888
+True  True  False   4998  1.598400
+            True    4999  2.419338
+
+[5000 rows x 2 columns]
+expected   = {(True, False, False): 884, (True, True, False): 1547, (True, True, True): 990}
+filter_params = {'max_subset_rank': 3}
+sort_by    = 'cardinality'
+upset_full = <upsetplot.plotting.UpSet object at 0x7ffff6e6c100>
+
+upsetplot/tests/test_upsetplot.py:813: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+upsetplot/plotting.py:349: in __init__
+    self._df['_bin'] = orig_data[mask].apply(lambda row: mapping[tuple(row)], axis=1)
+        a          = 1.0
+        b          = 1.0
+        bgcolor    = 'white'
+        data       =                    index     value
+cat0  cat1  cat2                  
+True  True  False      0  1.235461
+      False False      1  0.821389
+      True  False      2  0.967079
+            True       3  1.773347
+            False      4  1.674779
+...                  ...       ...
+False True  False   4995  1.147737
+            False   4996  1.368000
+      False False   4997  0.327888
+True  True  False   4998  1.598400
+            True    4999  2.419338
+
+[5000 rows x 2 columns]
+        element_size = 32
+        facecolor  = 'black'
+        g          = 1.0
+        include_empty_subsets = False
+        intersection_plot_elements = 6
+        lightness  = np.float64(1.0)
+        mapping    = {(True, False, False): 2, (True, True, False): 0, (True, True, True): 1}
+        mask       = cat1   cat0   cat2 
+True   True   False    False
+False  True   False    False
+True   True   False    False
+              True     False
+              False    False
+                       ...  
+       False  False    False
+              False    False
+False  False  False    False
+True   True   False    False
+              True     False
+Length: 5000, dtype: bool
+        max_degree = None
+        max_subset_rank = 3
+        max_subset_size = None
+        min_degree = None
+        min_subset_size = None
+        orientation = 'horizontal'
+        orig_data  =                    index     value
+cat1  cat0  cat2                  
+True  True  False      0  1.235461
+False True  False      1  0.821389
+True  True  False      2  0.967079
+            True       3  1.773347
+            False      4  1.674779
+...                  ...       ...
+      False False   4995  1.147737
+            False   4996  1.368000
+False False False   4997  0.327888
+True  True  False   4998  1.598400
+            True    4999  2.419338
+
+[5000 rows x 2 columns]
+        other_dots_color = 0.18
+        r          = 1.0
+        self       = <upsetplot.plotting.UpSet object at 0x7ffff7545750>
+        shading_color = 0.05
+        show_counts = ''
+        show_percentages = False
+        sort_by    = 'cardinality'
+        sort_categories_by = 'cardinality'
+        subset_size = 'auto'
+        subset_tuples = MultiIndex([(True,  True, False),
+            (True,  True,  True),
+            (True, False, False)],
+           names=['cat1', 'cat0', 'cat2'])
+        sum_over   = None
+        totals_plot_elements = 2
+        with_lines = True
+/usr/local/lib/python3.10/site-packages/pandas/core/frame.py:4312: in __setitem__
+    self._set_item_frame_value(key, value)
+        key        = '_bin'
+        self       = Empty DataFrame
+Columns: [index, value, _bin]
+Index: []
+        value      = Empty DataFrame
+Columns: [index, value]
+Index: []
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Empty DataFrame
+Columns: [index, value, _bin]
+Index: [], key = '_bin'
+value = Empty DataFrame
+Columns: [index, value]
+Index: []
+
+    def _set_item_frame_value(self, key, value: DataFrame) -> None:
+        self._ensure_valid_index(value)
+    
+        # align columns
+        if key in self.columns:
+            loc = self.columns.get_loc(key)
+            cols = self.columns[loc]
+            len_cols = 1 if is_scalar(cols) or isinstance(cols, tuple) else len(cols)
+            if len_cols != len(value.columns):
+>               raise ValueError("Columns must be same length as key")
+E               ValueError: Columns must be same length as key
+
+cols       = '_bin'
+key        = '_bin'
+len_cols   = 1
+loc        = 2
+self       = Empty DataFrame
+Columns: [index, value, _bin]
+Index: []
+value      = Empty DataFrame
+Columns: [index, value]
+Index: []
+
+/usr/local/lib/python3.10/site-packages/pandas/core/frame.py:4440: ValueError
+_____________ test_filter_subsets[degree-filter_params1-expected1] _____________
+
+filter_params = {'max_subset_rank': 3}
+expected = {(True, False, False): 884, (True, True, False): 1547, (True, True, True): 990}
+sort_by = 'degree'
+
+    @pytest.mark.parametrize(
+        ("filter_params", "expected"),
+        [
+            (
+                {"min_subset_size": 623},
+                {
+                    (True, False, False): 884,
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"max_subset_rank": 3},
+                {
+                    (True, False, False): 884,
+                    (True, True, False): 1547,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_subset_size": 800, "max_subset_size": 990},
+                {
+                    (True, False, False): 884,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_degree": 2},
+                {
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (False, True, True): 258,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_degree": 2, "max_degree": 2},
+                {
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (False, True, True): 258,
+                },
+            ),
+            (
+                {"max_subset_size": 500, "max_degree": 2},
+                {
+                    (False, False, False): 220,
+                    (False, True, False): 335,
+                    (False, False, True): 143,
+                    (False, True, True): 258,
+                },
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("sort_by", ["cardinality", "degree"])
+    def test_filter_subsets(filter_params, expected, sort_by):
+        data = generate_samples(seed=0, n_samples=5000, n_categories=3)
+        # data =
+        #   cat1   cat0   cat2
+        #   False  False  False     220
+        #   True   False  False     884
+        #   False  True   False     335
+        #          False  True      143
+        #   True   True   False    1547
+        #          False  True      623
+        #   False  True   True      258
+        #   True   True   True      990
+        upset_full = UpSet(data, subset_size="auto", sort_by=sort_by)
+>       upset_filtered = UpSet(data, subset_size="auto", sort_by=sort_by, **filter_params)
+
+data       =                    index     value
+cat0  cat1  cat2                  
+True  True  False      0  1.235461
+      False False      1  0.821389
+      True  False      2  0.967079
+            True       3  1.773347
+            False      4  1.674779
+...                  ...       ...
+False True  False   4995  1.147737
+            False   4996  1.368000
+      False False   4997  0.327888
+True  True  False   4998  1.598400
+            True    4999  2.419338
+
+[5000 rows x 2 columns]
+expected   = {(True, False, False): 884, (True, True, False): 1547, (True, True, True): 990}
+filter_params = {'max_subset_rank': 3}
+sort_by    = 'degree'
+upset_full = <upsetplot.plotting.UpSet object at 0x7fffe53e24d0>
+
+upsetplot/tests/test_upsetplot.py:813: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+upsetplot/plotting.py:349: in __init__
+    self._df['_bin'] = orig_data[mask].apply(lambda row: mapping[tuple(row)], axis=1)
+        a          = 1.0
+        b          = 1.0
+        bgcolor    = 'white'
+        data       =                    index     value
+cat0  cat1  cat2                  
+True  True  False      0  1.235461
+      False False      1  0.821389
+      True  False      2  0.967079
+            True       3  1.773347
+            False      4  1.674779
+...                  ...       ...
+False True  False   4995  1.147737
+            False   4996  1.368000
+      False False   4997  0.327888
+True  True  False   4998  1.598400
+            True    4999  2.419338
+
+[5000 rows x 2 columns]
+        element_size = 32
+        facecolor  = 'black'
+        g          = 1.0
+        include_empty_subsets = False
+        intersection_plot_elements = 6
+        lightness  = np.float64(1.0)
+        mapping    = {(False, False, False): 0, (False, True, False): 2, (True, False, False): 1}
+        mask       = cat1   cat0   cat2 
+True   True   False    False
+False  True   False    False
+True   True   False    False
+              True     False
+              False    False
+                       ...  
+       False  False    False
+              False    False
+False  False  False    False
+True   True   False    False
+              True     False
+Length: 5000, dtype: bool
+        max_degree = None
+        max_subset_rank = 3
+        max_subset_size = None
+        min_degree = None
+        min_subset_size = None
+        orientation = 'horizontal'
+        orig_data  =                    index     value
+cat1  cat0  cat2                  
+True  True  False      0  1.235461
+False True  False      1  0.821389
+True  True  False      2  0.967079
+            True       3  1.773347
+            False      4  1.674779
+...                  ...       ...
+      False False   4995  1.147737
+            False   4996  1.368000
+False False False   4997  0.327888
+True  True  False   4998  1.598400
+            True    4999  2.419338
+
+[5000 rows x 2 columns]
+        other_dots_color = 0.18
+        r          = 1.0
+        self       = <upsetplot.plotting.UpSet object at 0x7fffe53e3370>
+        shading_color = 0.05
+        show_counts = ''
+        show_percentages = False
+        sort_by    = 'degree'
+        sort_categories_by = 'cardinality'
+        subset_size = 'auto'
+        subset_tuples = MultiIndex([(False, False, False),
+            ( True, False, False),
+            (False,  True, False)],
+           names=['cat1', 'cat0', 'cat2'])
+        sum_over   = None
+        totals_plot_elements = 2
+        with_lines = True
+/usr/local/lib/python3.10/site-packages/pandas/core/frame.py:4312: in __setitem__
+    self._set_item_frame_value(key, value)
+        key        = '_bin'
+        self       = Empty DataFrame
+Columns: [index, value, _bin]
+Index: []
+        value      = Empty DataFrame
+Columns: [index, value]
+Index: []
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Empty DataFrame
+Columns: [index, value, _bin]
+Index: [], key = '_bin'
+value = Empty DataFrame
+Columns: [index, value]
+Index: []
+
+    def _set_item_frame_value(self, key, value: DataFrame) -> None:
+        self._ensure_valid_index(value)
+    
+        # align columns
+        if key in self.columns:
+            loc = self.columns.get_loc(key)
+            cols = self.columns[loc]
+            len_cols = 1 if is_scalar(cols) or isinstance(cols, tuple) else len(cols)
+            if len_cols != len(value.columns):
+>               raise ValueError("Columns must be same length as key")
+E               ValueError: Columns must be same length as key
+
+cols       = '_bin'
+key        = '_bin'
+len_cols   = 1
+loc        = 2
+self       = Empty DataFrame
+Columns: [index, value, _bin]
+Index: []
+value      = Empty DataFrame
+Columns: [index, value]
+Index: []
+
+/usr/local/lib/python3.10/site-packages/pandas/core/frame.py:4440: ValueError
+==================================== PASSES ====================================
+------------ generated xml file: /opt/receipts/reports/agent1-9.xml ------------
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+upsetplot/__init__.py                   7      0   100%
+upsetplot/data.py                     103     81    21%
+upsetplot/plotting.py                 374    284    24%
+upsetplot/reformat.py                 122     48    61%
+upsetplot/tests/__init__.py             0      0   100%
+upsetplot/tests/test_data.py           91     91     0%
+upsetplot/tests/test_examples.py       13     13     0%
+upsetplot/tests/test_reformat.py       17     17     0%
+upsetplot/tests/test_upsetplot.py     476    383    20%
+upsetplot/util.py                      29     22    24%
+-------------------------------------------------------
+TOTAL                                1232    939    24%
+=========================== short test summary info ============================
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params0-expected0]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params2-expected2]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params3-expected3]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params4-expected4]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params5-expected5]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params0-expected0]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params2-expected2]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params3-expected3]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params4-expected4]
+PASSED upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params5-expected5]
+FAILED upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params1-expected1] - ValueError: Columns must be same length as key
+FAILED upsetplot/tests/test_upsetplot.py::test_filter_subsets[degree-filter_params1-expected1] - ValueError: Columns must be same length as key
+========================= 2 failed, 10 passed in 3.16s =========================

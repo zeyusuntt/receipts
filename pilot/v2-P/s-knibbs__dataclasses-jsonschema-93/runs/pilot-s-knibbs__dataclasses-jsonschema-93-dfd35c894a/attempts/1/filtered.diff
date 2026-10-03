@@ -1,0 +1,50 @@
+diff --git a/dataclasses_jsonschema/__init__.py b/dataclasses_jsonschema/__init__.py
+index b17098d..0c2dacb 100644
+--- a/dataclasses_jsonschema/__init__.py
++++ b/dataclasses_jsonschema/__init__.py
+@@ -487,6 +487,45 @@ class JsonSchemaMixin:
+             setattr(instance, field_name, value)
+         return instance
+ 
++    @classmethod
++    def from_json(cls: Type[T], json_str: str, *, encoding: str = "utf-8", validate: bool = True, skip_invalid: bool = False) -> T:
++        """Creates a dataclass instance from a JSON string.
++        
++        Args:
++            json_str: JSON string to parse
++            encoding: Text encoding to use (default: utf-8)
++            validate: Whether to validate against JSON schema (default: True)
++            skip_invalid: Whether to skip invalid fields during parsing (default: False)
++            
++        Returns:
++            Instance of the dataclass
++        """
++        import json
++        data = json.loads(json_str)
++        if skip_invalid:
++            # Filter out fields that don't exist in the dataclass
++            valid_fields = {f.name for f in fields(cls)}
++            data = {k: v for k, v in data.items() if k in valid_fields or cls.field_mapping().get(k) in valid_fields}
++            # Reverse map field mapping for validation
++            reverse_mapping = {v: k for k, v in cls.field_mapping().items()}
++            data = {reverse_mapping.get(k, k): v for k, v in data.items()}
++        return cls.from_dict(data, validate=validate)
++
++    def to_json(self, *, indent: int = None, ensure_ascii: bool = True, validate: bool = False) -> str:
++        """Serializes the dataclass instance to a JSON string.
++        
++        Args:
++            indent: Indentation level for pretty-printing (default: None)
++            ensure_ascii: Whether to escape non-ASCII characters (default: True)
++            validate: Whether to validate against JSON schema before serializing (default: False)
++            
++        Returns:
++            JSON string representation of the instance
++        """
++        import json
++        data = self.to_dict(validate=validate)
++        return json.dumps(data, indent=indent, ensure_ascii=ensure_ascii)
++
+     @staticmethod
+     def _is_json_schema_subclass(field_type) -> bool:
+         return issubclass_safe(field_type, JsonSchemaMixin)

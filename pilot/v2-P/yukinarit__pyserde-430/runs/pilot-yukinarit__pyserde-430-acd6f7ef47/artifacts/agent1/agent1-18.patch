@@ -1,0 +1,17 @@
+diff --git a/serde/de.py b/serde/de.py
+index be905d8..a07b6ba 100644
+--- a/serde/de.py
++++ b/serde/de.py
+@@ -804,7 +804,11 @@ reuse_instances=reuse_instances)) if data.get("f") is not None else None'
+         if arg.iterbased:
+             exists = f"{arg.data} is not None"
+         else:
+-            exists = f'{arg.datavar}.get("{arg.conv_name()}") is not None'
++            if arg.alias:
++                aliases = (f'"{s}"' for s in [arg.name, *arg.alias])
++                exists = f'_exists_by_aliases({arg.datavar}, [{",".join(aliases)}])'
++            else:
++                exists = f'{arg.datavar}.get("{arg.conv_name()}") is not None'
+         return f"({self.render(value_arg)}) if {exists} else None"
+ 
+     def list(self, arg: DeField[Any]) -> str:

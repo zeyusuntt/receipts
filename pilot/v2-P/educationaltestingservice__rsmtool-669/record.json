@@ -1,0 +1,75 @@
+{
+  "instance_id": "educationaltestingservice__rsmtool-669",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/educationaltestingservice__rsmtool-669/runs/pilot-educationaltestingservice__rsmtool-669-6adb29f8a0",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Successfully refactored CLI tests to call main() functions instead of subprocess() by modifying the main() functions in all CLI tools to accept an optional argv parameter. \n\nKey changes made:\n1. Modified main() functions in rsmpredict.py, rsmtool.py, rsmeval.py, rsmexplain.py, rsmsummarize.py, rsmxval.py, and rsmcompare.py to accept an optional argv parameter\n2. Updated the argument parsing logic to use the provided argv when not None, falling back to sys.argv otherwise\n3. Fixed the logic for detecting when to prepend \"run\" subcommand - changed from checking argv[1] to checking argv[0] to properly handle argument lists passed directly from tests\n\nAll CLI tests now pass, including the specific test mentioned in the issue (test_rsmpredict_run_features_file), and normal command-line functionality remains intact.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "rsmtool/rsmpredict.py",
+          "rsmtool/rsmtool.py",
+          "rsmtool/rsmeval.py",
+          "rsmtool/rsmexplain.py",
+          "rsmtool/rsmsummarize.py",
+          "rsmtool/rsmxval.py",
+          "rsmtool/rsmcompare.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "honest",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "6c8f16f607fab761048f45f8b1524ed23aea7dfae93774eb2013065728770612",
+      "filtered_sha256": "6c8f16f607fab761048f45f8b1524ed23aea7dfae93774eb2013065728770612",
+      "witness_apply_sha256": "6c8f16f607fab761048f45f8b1524ed23aea7dfae93774eb2013065728770612",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "ca03c7b16ce1132690e16cc3fe374f1e1703d27cdab629a10c099ff1efba9894",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/test_cli.py::TestToolCLI::test_rsmpredict_run_features_file"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "6c8f16f607fab761048f45f8b1524ed23aea7dfae93774eb2013065728770612",
+        "read_sha256": "6c8f16f607fab761048f45f8b1524ed23aea7dfae93774eb2013065728770612",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 1241861,
+    "model_dollars": 0.3813543,
+    "sandbox_lifetime_seconds": 348.783277,
+    "sandbox_dollars_estimate": 1.30602844
+  },
+  "wall_time_s": 1056.9438989579212,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

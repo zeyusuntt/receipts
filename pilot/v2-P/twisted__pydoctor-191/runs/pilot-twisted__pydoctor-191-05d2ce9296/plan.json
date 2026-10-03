@@ -1,0 +1,14 @@
+{
+  "approach": "Add logic to process `__doc__` assignments similar to how regular variables are handled. Specifically in the `_handleAssignmentInModule`, `_handleAssignmentInClass`, etc., methods that deal with attribute/variable processing, treat `__doc__` specially when assigning to existing Function/Method objects.",
+  "files_to_edit": [
+    "pydoctor/astbuilder.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "Looking at the test failure and the problem described in the issue, pydoctor needs to detect when a docstring is assigned to a function after its definition via direct `__doc__` assignment. Currently, pydoctor processes definitions statically by examining the initial function definition AST node and extracting docstrings from the first expression if it's a string literal. When assignments happen later (like in conditional blocks setting `__doc__`), they're missed.\n\nI need to enhance the Function visitor in astbuilder.py to check for post-definition `__doc__` assignments and capture those docstrings similarly to how other attributes are processed.",
+  "retries": {},
+  "usage": {
+    "completion": 214,
+    "prompt": 15705,
+    "reasoning": 0
+  }
+}

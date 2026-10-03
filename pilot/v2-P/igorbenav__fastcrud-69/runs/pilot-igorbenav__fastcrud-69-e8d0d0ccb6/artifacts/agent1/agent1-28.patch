@@ -1,0 +1,57 @@
+diff --git a/fastcrud/crud/fast_crud.py b/fastcrud/crud/fast_crud.py
+index f813407..c6d7063 100644
+--- a/fastcrud/crud/fast_crud.py
++++ b/fastcrud/crud/fast_crud.py
+@@ -921,7 +921,7 @@ class FastCRUD(
+             join_select = _extract_matching_columns_from_schema(
+                 model=join.model,
+                 schema=join.schema_to_select,
+-                prefix=join.join_prefix,
++                prefix=effective_prefix,
+                 alias=join.alias,
+             )
+ 
+@@ -1240,10 +1240,16 @@ class FastCRUD(
+                 else None
+             )
+ 
++            # Determine effective prefix for column selection to avoid conflicts
++            # If no explicit prefix provided, use table name + "_" to ensure uniqueness
++            effective_prefix = join.join_prefix
++            if effective_prefix is None:
++                effective_prefix = join.model.__tablename__ + "_"
++            
+             join_select = _extract_matching_columns_from_schema(
+                 model=join.model,
+                 schema=join.schema_to_select,
+-                prefix=join.join_prefix,
++                prefix=effective_prefix,
+                 alias=join.alias,
+             )
+ 
+diff --git a/fastcrud/crud/helper.py b/fastcrud/crud/helper.py
+index ad25fbf..c8f0449 100644
+--- a/fastcrud/crud/helper.py
++++ b/fastcrud/crud/helper.py
+@@ -108,9 +108,18 @@ def _nest_join_data(
+     for key, value in data.items():
+         nested = False
+         for join in join_definitions:
+-            if join.join_prefix and key.startswith(join.join_prefix):
+-                nested_key = join.join_prefix.rstrip("_")
+-                nested_field = key[len(join.join_prefix) :]
++            # Determine what prefix was used for this join during column selection
++            if join.join_prefix is not None:
++                # Explicit prefix was provided
++                prefix_to_check = join.join_prefix
++                nested_key = join.join_prefix.rstrip("_") if join.join_prefix else join.model.__tablename__
++            else:
++                # No explicit prefix, we used table_name + "_" as effective prefix
++                prefix_to_check = join.model.__tablename__ + "_"
++                nested_key = join.model.__tablename__
++                
++            if prefix_to_check and key.startswith(prefix_to_check):
++                nested_field = key[len(prefix_to_check) :]
+                 if nested_key not in nested_data:
+                     nested_data[nested_key] = {}
+                 nested_data[nested_key][nested_field] = value

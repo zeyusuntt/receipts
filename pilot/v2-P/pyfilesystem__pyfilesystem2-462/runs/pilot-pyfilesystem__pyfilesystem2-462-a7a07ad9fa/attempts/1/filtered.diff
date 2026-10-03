@@ -1,0 +1,53 @@
+diff --git a/fs/ftpfs.py b/fs/ftpfs.py
+index 86f0495..e1ab883 100644
+--- a/fs/ftpfs.py
++++ b/fs/ftpfs.py
+@@ -694,6 +694,48 @@ class FTPFS(FS):
+             _meta["unicode_paths"] = "UTF8" in self.features
+         return _meta
+ 
++    def getmodified(self, path):
++        # type: (Text) -> DateTime
++        """Get the modified time of a resource as a datetime object.
++        
++        Uses MDTM command when available for efficiency.
++        """
++        _path = self.validatepath(path)
++        with self._lock:
++            with ftp_errors(self, path=path):
++                response = self.ftp.sendcmd(str("MDTM ") + _encode(_path, self.ftp.encoding))
++        # MDTM response format: "YYYYMMDDHHMMSS[.ffffff]"
++        time_text = _decode(response, self.ftp.encoding).strip()
++        # Remove the MDTM prefix (first 4 chars)
++        if time_text.startswith("213 "):
++            time_text = time_text[4:]
++        elif time_text.startswith("213"):
++            time_text = time_text[3:]
++        # Parse the timestamp
++        try:
++            # Handle potential microseconds
++            if "." in time_text:
++                main_part, frac_part = time_text.split(".", 1)
++                frac_part = frac_part.ljust(6, "0")[:6]  # Pad/truncate to 6 digits
++                time_text = main_part + frac_part
++            
++            tm_year = int(time_text[0:4])
++            tm_month = int(time_text[4:6])
++            tm_day = int(time_text[6:8])
++            tm_hour = int(time_text[8:10])
++            tm_min = int(time_text[10:12])
++            tm_sec = int(time_text[12:14])
++            tm_usec = int(time_text[14:20]) if len(time_text) > 14 else 0
++        except ValueError:
++            # Fallback to getting info if MDTM fails
++            info = self.getinfo(path, namespaces=("basic", "details"))
++            return info.modified
++        
++        # Convert to datetime object
++        dt = datetime.datetime(tm_year, tm_month, tm_day, tm_hour, tm_min, tm_sec, tm_usec)
++        # FTP times are typically in UTC
++        return dt.replace(tzinfo=datetime.timezone.utc)
++
+     def listdir(self, path):
+         # type: (Text) -> List[Text]
+         _path = self.validatepath(path)

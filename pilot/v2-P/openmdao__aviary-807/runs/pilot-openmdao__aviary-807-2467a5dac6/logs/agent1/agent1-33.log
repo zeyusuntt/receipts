@@ -1,0 +1,11 @@
+        Returns
+        -------
+        traj: The Dymos Trajectory object containing the added mission phases.
+        """
+        # `self.verbosity` is "true" verbosity for entire run. `verbosity` is verbosity
+        # override for just this method
+        if verbosity is not None:
+            # compatibility with being passed int for verbosity
+            verbosity = Verbosity(verbosity)
+        else:
+            verbosity = self.verbosity  # defaults to BRIEF

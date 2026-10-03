@@ -1,0 +1,62 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /nox
+configfile: pyproject.toml
+plugins: anyio-4.12.1, cov-7.0.0
+collecting ... collected 1 item
+
+tests/test_virtualenv.py::test_conda_env_create_verbose FAILED           [100%]
+
+=================================== FAILURES ===================================
+________________________ test_conda_env_create_verbose _________________________
+
+make_conda = <function make_conda.<locals>.factory at 0x7ffff5acf130>
+
+    @pytest.mark.skipif(not HAS_CONDA, reason="Missing conda command.")
+    def test_conda_env_create_verbose(make_conda):
+        venv, dir_ = make_conda()
+        with mock.patch("nox.virtualenv.nox.command.run") as mock_run:
+>           venv.create()
+
+tests/test_virtualenv.py:217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nox.virtualenv.CondaEnv object at 0x7ffff7180730>
+
+    def create(self) -> bool:
+        """Create the conda env."""
+        if not self._clean_location():
+            logger.debug(
+                "Re-using existing conda env at {}.".format(self.location_name)
+            )
+    
+            self._reused = True
+    
+            return False
+    
+        cmd = ["conda", "create", "--yes", "--prefix", self.location]
+    
+        cmd.extend(self.venv_params)
+    
+        # Ensure the pip package is installed.
+        cmd.append("pip")
+    
+        if self.interpreter:
+            python_dep = "python={}".format(self.interpreter)
+        else:
+            python_dep = "python"
+        cmd.append(python_dep)
+    
+        logger.info(
+            "Creating conda env in {} with {}".format(self.location_name, python_dep)
+        )
+        # Import locally to avoid circular imports
+        from nox._options import options
+>       nox.command.run(cmd, silent=True, log=not options.verbose)
+E       AttributeError: 'OptionSet' object has no attribute 'verbose'
+
+nox/virtualenv.py:255: AttributeError
+----------- generated xml file: /opt/receipts/reports/agent1-17.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_virtualenv.py::test_conda_env_create_verbose - AttributeErr...
+============================== 1 failed in 0.18s ===============================

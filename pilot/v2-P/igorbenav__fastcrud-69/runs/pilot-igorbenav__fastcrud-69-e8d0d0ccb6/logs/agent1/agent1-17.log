@@ -1,0 +1,108 @@
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1936, in _exec_single_context
+    self.dialect.do_executemany(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 949, in do_executemany
+    cursor.executemany(statement, parameters)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/dialects/sqlite/aiosqlite.py", line 197, in executemany
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/dialects/sqlite/aiosqlite.py", line 342, in _handle_exception
+    raise error
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/dialects/sqlite/aiosqlite.py", line 191, in executemany
+    self.await_(_cursor.executemany(operation, seq_of_parameters))
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+  File "/usr/local/lib/python3.10/site-packages/aiosqlite/cursor.py", line 47, in executemany
+    await self._execute(self._cursor.executemany, sql, parameters)
+  File "/usr/local/lib/python3.10/site-packages/aiosqlite/cursor.py", line 32, in _execute
+    return await self._conn._execute(fn, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/aiosqlite/core.py", line 160, in _execute
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/aiosqlite/core.py", line 63, in _connection_worker_thread
+    result = function()
+sqlite3.OperationalError: no such table: tier
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/debug_test.py", line 76, in <module>
+    asyncio.run(test_nesting())
+  File "/usr/local/lib/python3.10/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/tmp/debug_test.py", line 48, in test_nesting
+    await init_db()
+  File "/tmp/debug_test.py", line 45, in init_db
+    await session.commit()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/ext/asyncio/session.py", line 1000, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 2030, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 1311, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 1286, in _prepare_impl
+    self.session.flush()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 4331, in flush
+    self._flush(objects)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 4466, in _flush
+    with util.safe_reraise():
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 4427, in _flush
+    flush_context.execute()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/persistence.py", line 1048, in _emit_insert_statements
+    result = connection.execute(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1936, in _exec_single_context
+    self.dialect.do_executemany(
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 949, in do_executemany
+    cursor.executemany(statement, parameters)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/dialects/sqlite/aiosqlite.py", line 197, in executemany
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/dialects/sqlite/aiosqlite.py", line 342, in _handle_exception
+    raise error
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/dialects/sqlite/aiosqlite.py", line 191, in executemany
+    self.await_(_cursor.executemany(operation, seq_of_parameters))
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+  File "/usr/local/lib/python3.10/site-packages/aiosqlite/cursor.py", line 47, in executemany
+    await self._execute(self._cursor.executemany, sql, parameters)
+  File "/usr/local/lib/python3.10/site-packages/aiosqlite/cursor.py", line 32, in _execute
+    return await self._conn._execute(fn, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/aiosqlite/core.py", line 160, in _execute
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/aiosqlite/core.py", line 63, in _connection_worker_thread
+    result = function()
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: tier
+[SQL: INSERT INTO tier (id, name) VALUES (?, ?)]
+[parameters: [(1, 'Premium'), (2, 'Basic')]]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)

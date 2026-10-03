@@ -1,0 +1,147 @@
+
+Gammapy test data availability:
+gammapy-data ... no
+Gammapy environment variables:
+GAMMAPY_DATA = not set
+Setting matplotlib backend to "agg" for the tests.
+============================= test session starts ==============================
+collected 22 items
+
+gammapy/estimators/points/tests/test_sed.py ...ssFsss.F..FF.sss..s       [100%]
+
+=================================== FAILURES ===================================
+E   ValueError: operands could not be broadcast together with shapes (5,1,1) (20,1,1) (5,1,1)
+------------------------------ Captured log call -------------------------------
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+/gammapy/gammapy/maps/region/ndmap.py:708: ValueError: operands could not be broadcast together with shapes (5,1,1) (20,1,1) (5,1,1)
+E   ValueError: Can only stack equivalent maps or cutout of the same map.
+/gammapy/gammapy/maps/wcs/ndmap.py:1076: ValueError: Can only stack equivalent maps or cutout of the same map.
+E   ValueError: operands could not be broadcast together with shapes (5,1,1) (20,1,1) (5,1,1)
+/gammapy/gammapy/maps/region/ndmap.py:708: ValueError: operands could not be broadcast together with shapes (5,1,1) (20,1,1) (5,1,1)
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+  File "/usr/local/lib/python3.10/multiprocessing/pool.py", line 51, in starmapstar
+    return list(itertools.starmap(args[0], args[1]))
+  File "/gammapy/gammapy/estimators/points/sed.py", line 208, in estimate_flux_point
+    return super().run(datasets=datasets_sliced)
+  File "/gammapy/gammapy/estimators/flux.py", line 224, in run
+    result.update(super().run(datasets, model.norm))
+  File "/gammapy/gammapy/estimators/parameter.py", line 336, in run
+    result = self.estimate_best_fit(datasets, parameter)
+  File "/gammapy/gammapy/estimators/parameter.py", line 108, in estimate_best_fit
+    result = self.fit.run(datasets=datasets)
+  File "/gammapy/gammapy/modeling/fit.py", line 174, in run
+    optimize_result = self.optimize(datasets=datasets)
+  File "/gammapy/gammapy/modeling/fit.py", line 223, in optimize
+    factors, info, optimizer = compute(
+  File "/gammapy/gammapy/modeling/iminuit.py", line 79, in optimize_iminuit
+    minuit.migrad(**migrad_opts)
+  File "/usr/local/lib/python3.10/site-packages/iminuit/minuit.py", line 852, in migrad
+    fm = _robust_low_level_fit(
+  File "/usr/local/lib/python3.10/site-packages/iminuit/minuit.py", line 2863, in _robust_low_level_fit
+    fm = migrad(ncall, tolerance)
+  File "/gammapy/gammapy/modeling/iminuit.py", line 25, in fcn
+    total_stat = self.function()
+  File "/gammapy/gammapy/datasets/core.py", line 240, in stat_sum
+    stat_sum += dataset.stat_sum()
+  File "/gammapy/gammapy/datasets/map.py", line 2651, in stat_sum
+    return Dataset.stat_sum(self)
+  File "/gammapy/gammapy/datasets/core.py", line 72, in stat_sum
+    stat = self.stat_array()
+  File "/gammapy/gammapy/datasets/map.py", line 2412, in stat_array
+    mu_sig = self.npred_signal().data
+  File "/gammapy/gammapy/datasets/map.py", line 731, in npred_signal
+    npred_total.stack(npred)
+  File "/gammapy/gammapy/maps/region/ndmap.py", line 708, in stack
+    self.data += data
+ValueError: operands could not be broadcast together with shapes (5,1,1) (20,1,1) (5,1,1) 
+"""
+
+The above exception was the direct cause of the following exception:
+E   ValueError: operands could not be broadcast together with shapes (5,1,1) (20,1,1) (5,1,1)
+/usr/local/lib/python3.10/multiprocessing/pool.py:774: ValueError: operands could not be broadcast together with shapes (5,1,1) (20,1,1) (5,1,1)
+=============================== warnings summary ===============================
+gammapy/estimators/points/tests/test_sed.py::test_run_pwl
+gammapy/estimators/points/tests/test_sed.py::test_run_no_edip
+gammapy/estimators/points/tests/test_sed.py::test_no_likelihood_contribution
+gammapy/estimators/points/tests/test_sed.py::test_run_pwl_parameter_range
+gammapy/estimators/points/tests/test_sed.py::test_run_pwl_parameter_range
+  /usr/local/lib/python3.10/site-packages/astropy/units/quantity.py:671: RuntimeWarning: divide by zero encountered in divide
+    result = super().__array_ufunc__(function, method, *arrays, **kwargs)
+
+gammapy/estimators/points/tests/test_sed.py::test_run_pwl
+gammapy/estimators/points/tests/test_sed.py::test_run_no_edip
+gammapy/estimators/points/tests/test_sed.py::test_no_likelihood_contribution
+gammapy/estimators/points/tests/test_sed.py::test_run_pwl_parameter_range
+gammapy/estimators/points/tests/test_sed.py::test_run_pwl_parameter_range
+  /usr/local/lib/python3.10/site-packages/astropy/units/quantity.py:671: RuntimeWarning: invalid value encountered in multiply
+    result = super().__array_ufunc__(function, method, *arrays, **kwargs)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+_________________________________ test_run_pwl _________________________________
+------------------------------ Captured log call -------------------------------
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+________________________________ test_run_ecpl _________________________________
+------------------------------ Captured log call -------------------------------
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+_________________________ test_run_pwl_parameter_range _________________________
+------------------------------ Captured log call -------------------------------
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+____________________ test_flux_points_estimator_small_edges ____________________
+------------------------------ Captured log call -------------------------------
+WARNING  gammapy.estimators.points.sed:sed.py:210 No dataset contribute in range 0.36869450645195756 TeV-0.3981071705534972 TeV
+-------------- generated xml file: /opt/receipts/reports/w1-2.xml --------------
+=========================== short test summary info ============================
+PASSED gammapy/estimators/points/tests/test_sed.py::test_str
+PASSED gammapy/estimators/points/tests/test_sed.py::test_run_pwl
+PASSED gammapy/estimators/points/tests/test_sed.py::test_run_ecpl
+PASSED gammapy/estimators/points/tests/test_sed.py::test_no_likelihood_contribution
+PASSED gammapy/estimators/points/tests/test_sed.py::test_run_pwl_parameter_range
+PASSED gammapy/estimators/points/tests/test_sed.py::test_flux_points_estimator_small_edges
+PASSED gammapy/estimators/points/tests/test_sed.py::test_global_n_jobs_default_handling
+PASSED gammapy/estimators/points/tests/test_sed.py::test_fpe_non_aligned_energy_axes
+PASSED gammapy/estimators/points/tests/test_sed.py::test_fpe_non_uniform_datasets
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:365: Missing data: gammapy-data
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:408: Missing data: gammapy-data
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:458: Missing data: gammapy-data
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:483: Missing data: gammapy-data
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:492: Missing data: gammapy-data
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:669: Missing dependency: ray
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:683: Missing dependency: ray
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:692: Missing dependency: ray
+SKIPPED [1] gammapy/estimators/points/tests/test_sed.py:769: Missing data: gammapy-data
+FAILED gammapy/estimators/points/tests/test_sed.py::test_run_no_edip - ValueE...
+FAILED gammapy/estimators/points/tests/test_sed.py::test_mask_shape - ValueEr...
+FAILED gammapy/estimators/points/tests/test_sed.py::test_flux_points_recompute_ul
+FAILED gammapy/estimators/points/tests/test_sed.py::test_flux_points_parallel_multiprocessing
+============= 4 failed, 9 passed, 9 skipped, 10 warnings in 3.55s ==============

@@ -1,0 +1,17 @@
+=== Creating Union(None, Int) ===
+[UNION_INIT] traits=(None, <class 'traits.trait_types.Int'>)
+Traceback (most recent call last):
+  File "/tmp/debug_union_detailed.py", line 60, in <module>
+    u = Union(None, Int)
+  File "/tmp/debug_union_detailed.py", line 20, in debug_init
+    self.list_ctrait_instances.append(ctrait_instance)
+  File "/traits/traits/trait_type.py", line 461, in __getattr__
+    return getattr(self, "_metadata", {}).get(name, None)
+  File "/traits/traits/trait_type.py", line 461, in __getattr__
+    return getattr(self, "_metadata", {}).get(name, None)
+  File "/traits/traits/trait_type.py", line 461, in __getattr__
+    return getattr(self, "_metadata", {}).get(name, None)
+  [Previous line repeated 495 more times]
+  File "/traits/traits/trait_type.py", line 455, in __getattr__
+    if (name[:2] == "__") and (name[-2:] == "__"):
+RecursionError: maximum recursion depth exceeded in comparison

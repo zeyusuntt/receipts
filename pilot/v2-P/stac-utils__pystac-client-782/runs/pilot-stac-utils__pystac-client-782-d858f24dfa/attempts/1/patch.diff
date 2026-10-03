@@ -1,0 +1,18 @@
+diff --git a/pystac_client/client.py b/pystac_client/client.py
+index e843a5a..1129773 100644
+--- a/pystac_client/client.py
++++ b/pystac_client/client.py
+@@ -408,9 +408,13 @@ class Client(pystac.Catalog, QueryablesMixin):
+             call_modifier(self.modifier, collection)
+         else:
+             self._warn_about_fallback("COLLECTIONS", "FEATURES")
++            collection = None
+             for collection in super().get_collections():
+                 if collection.id == collection_id:
+                     call_modifier(self.modifier, collection)
++                    break
++            if collection is None:
++                raise KeyError(f"Collection {collection_id!r} not found on catalog")
+         return collection
+ 
+     def get_collections(self) -> Iterator[Collection]:

@@ -1,0 +1,51 @@
+def phase_info_parameterization(phase_info, post_mission_info, aviary_inputs):
+    """
+    Modify the values in the phase_info dictionary to accommodate different values
+    for the following mission design inputs: cruise altitude, cruise Mach number,
+    cruise range, design gross mass.
+
+    Parameters
+    ----------
+    phase_info : dict
+        Dictionary of phase settings for a mission profile
+    post_mission_info : dict
+        Dictionary of phase settings for a post mission profile
+    aviary_inputs : <AviaryValues>
+        Object containing values and units for all aviary inputs and options
+
+    Returns
+    -------
+    dict
+        Modified phase_info that has been changed to match the new mission
+        parameters
+    """
+    range_cruise = aviary_inputs.get_val(Mission.Design.RANGE, units='NM')
+    alt_cruise = aviary_inputs.get_val(Mission.Design.CRUISE_ALTITUDE, units='ft')
+    gross_mass = aviary_inputs.get_val(Mission.Design.GROSS_MASS, units='lbm')
+    mach_cruise = aviary_inputs.get_val(Mission.Design.MACH)
+
+    # Range
+    old_range_cruise = phase_info['desc2']['initial_guesses']['distance'][0][1]
+    range_scale = 1.0
+    if range_cruise != old_range_cruise:
+        phase_info['desc1']['initial_guesses']['distance'] = (
+            [0.92 * range_cruise, 0.96 * range_cruise],
+            'NM',
+        )
+        phase_info['desc2']['initial_guesses']['distance'] = (
+            [0.96 * range_cruise, range_cruise],
+            'NM',
+        )
+        range_scale = range_cruise / old_range_cruise
+
+    # Altitude
+    old_alt_cruise = phase_info['climb2']['user_options']['altitude_final'][0]
+    if alt_cruise != old_alt_cruise:
+        phase_info['climb2']['user_options']['altitude_final'] = (alt_cruise, 'ft')
+        phase_info['climb2']['initial_guesses']['altitude'] = ([10.0e3, alt_cruise], 'ft')
+        phase_info['cruise']['initial_guesses']['altitude'] = (alt_cruise, 'ft')
+        phase_info['desc1']['initial_guesses']['altitude'] = ([alt_cruise, 10.0e3], 'ft')
+
+        # TODO - Could adjust time guesses/bounds in climb2 and desc2.
+
+    # Mass

@@ -1,0 +1,44 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /curator
+collecting ... collected 1 item
+
+test/unit/test_validators.py::TestFilterTypes::test_age_with_string_unit_count FAILED
+
+=================================== FAILURES ===================================
+_______________ TestFilterTypes.test_age_with_string_unit_count ________________
+
+self = <test.unit.test_validators.TestFilterTypes testMethod=test_age_with_string_unit_count>
+
+    def test_age_with_string_unit_count(self):
+        action = 'delete_indices'
+        config = [
+            {
+                'filtertype' : 'age',
+                'direction' : 'older',
+                'unit' : 'days',
+                'unit_count' : "1",
+                'source' : 'field_stats',
+                'field'  : '@timestamp',
+            }
+        ]
+        result = shared_result(config, action)
+>       self.assertEqual(1, result[0]['unit_count'])
+E       AssertionError: 1 != '1'
+
+test/unit/test_validators.py:64: AssertionError
+=============================== warnings summary ===============================
+curator/validators/schemacheck.py:38
+  /curator/curator/validators/schemacheck.py:38: DeprecationWarning: invalid escape sequence \]
+    elements = re.sub('[\'\]]', '', data_string).split('[')
+
+curator/utils.py:134
+  /curator/curator/utils.py:134: DeprecationWarning: invalid escape sequence \d
+    regex += '\d{' + settings.date_regex()[curr] + '}'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-12.xml ------------
+=========================== short test summary info ============================
+FAILED test/unit/test_validators.py::TestFilterTypes::test_age_with_string_unit_count
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+======================== 1 failed, 2 warnings in 0.18s =========================

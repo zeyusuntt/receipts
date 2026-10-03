@@ -1,0 +1,98 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /PythonFMU
+configfile: setup.cfg
+collecting ... collected 1 item
+
+pythonfmu/tests/test_default_experiment.py::test_default_experiment FAILED [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_default_experiment ____________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-7/test_default_experiment0')
+
+    def test_default_experiment(tmp_path):
+        fmpy = pytest.importorskip(
+            "fmpy", reason="fmpy is not available for testing the produced FMU"
+        )
+    
+        script_file = Path(__file__).parent / "slaves/pythonslave_read_file.py"
+        project_file = Path(__file__).parent / "data/hello.txt"
+        fmu = FmuBuilder.build_FMU(script_file, project_files=[project_file], dest=tmp_path, needsExecutionTool="false")
+        assert fmu.exists()
+    
+>       model_description = fmpy.read_model_description(fmu)
+
+pythonfmu/tests/test_default_experiment.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+filename = PosixPath('/tmp/pytest-of-root/pytest-7/test_default_experiment0/PythonSlaveReadFile.fmu')
+validate = True, validate_variable_names = False
+validate_model_structure = False
+
+    def read_model_description(filename: str | PathLike | IO, validate: bool = True, validate_variable_names: bool = False, validate_model_structure: bool = False) -> ModelDescription:
+        """ Read the model description from an FMU without extracting it
+    
+        Parameters:
+            filename                  filename of the FMU or XML file, directory with extracted FMU or file like object
+            validate                  whether the model description should be validated
+            validate_variable_names   validate the variable names against the EBNF
+            validate_model_structure  validate the model structure
+    
+        returns:
+            model_description   a ModelDescription object
+        """
+    
+        import zipfile
+        from lxml import etree
+        import os
+        from . import validation
+        import numpy as np
+    
+        # remember the original filename
+        _filename = filename
+    
+        if isinstance(filename, (str, os.PathLike)) and os.path.isdir(filename):  # extracted FMU
+            filename = os.path.join(filename, 'modelDescription.xml')
+            tree = etree.parse(filename)
+        elif isinstance(filename, str) and os.path.isfile(filename) and filename.lower().endswith('.xml'):  # XML file
+            tree = etree.parse(filename)
+        else:  # FMU as path or file like object
+            with zipfile.ZipFile(filename, 'r') as zf:
+                xml = zf.open('modelDescription.xml')
+                tree = etree.parse(xml)
+    
+        root = tree.getroot()
+    
+        fmiVersion = root.get('fmiVersion')
+    
+        is_fmi1 = fmiVersion == '1.0'
+        is_fmi2 = fmiVersion == '2.0'
+        is_fmi3 = fmiVersion.startswith('3.')
+    
+        if not is_fmi1 and not is_fmi2 and not is_fmi3:
+            raise Exception("Unsupported FMI version: %s" % fmiVersion)
+    
+        if validate:
+    
+            module_dir, _ = os.path.split(__file__)
+    
+            if is_fmi1:
+                schema = etree.XMLSchema(file=os.path.join(module_dir, 'schema', 'fmi1', 'fmiModelDescription.xsd'))
+            elif is_fmi2:
+                schema = etree.XMLSchema(file=os.path.join(module_dir, 'schema', 'fmi2', 'fmi2ModelDescription.xsd'))
+            else:
+                schema = etree.XMLSchema(file=os.path.join(module_dir, 'schema', 'fmi3', 'fmi3ModelDescription.xsd'))
+    
+            if not schema.validate(root):
+                problems = ["%s (line %d, column %d): %s" % (e.level_name, e.line, e.column, e.message)
+                            for e in schema.error_log]
+>               raise ValidationError(problems)
+E               fmpy.model_description.ValidationError: Failed to validate modelDescription.xml:
+E               - ERROR (line 33, column 0): Element 'DefaultExperiment': This element is not expected.
+
+/usr/local/lib/python3.10/site-packages/fmpy/model_description.py:537: ValidationError
+----------- generated xml file: /opt/receipts/reports/agent1-21.xml ------------
+=========================== short test summary info ============================
+FAILED pythonfmu/tests/test_default_experiment.py::test_default_experiment - ...
+============================== 1 failed in 0.39s ===============================

@@ -1,0 +1,860 @@
+============================= test session starts ==============================
+collected 82 items
+
+pyanalyze/test_implementation.py .........F.F.F.FF.F.................... [ 47%]
+FF.............FF................F...F..                                 [ 96%]
+pyanalyze/test_runtime.py FFF                                            [100%]
+
+=================================== FAILURES ===================================
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 6
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 7
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 7
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 9
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 20
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 3
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 10
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 10
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 2
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 2
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error incompatible_call on line 2
+/pyanalyze/pyanalyze/test_node_visitor.py:86: AssertionError: Did not expect error inference_failure on line 7
+/pyanalyze/pyanalyze/test_runtime.py:10: assert not True
+/pyanalyze/pyanalyze/test_runtime.py:17: AssertionError: assert None == 'Cannot assign Literal[42] to list\n'
+b58e948c038923a959febad6a17feecd3f66c5a7c8fe10ac19bc73c539fc8f0f.py:2: ModuleNotFoundError: No module named 'annotated_types'
+=============================== warnings summary ===============================
+pyanalyze/test_name_check_visitor.py:343
+  /pyanalyze/pyanalyze/test_name_check_visitor.py:343: SyntaxWarning: 'list' object is not callable; perhaps you missed a comma?
+    print([1, 2]())  # E: not_callable
+
+pyanalyze/test_name_check_visitor.py:1300
+  /pyanalyze/pyanalyze/test_name_check_visitor.py:1300: SyntaxWarning: list indices must be integers or slices, not float; perhaps you missed a comma?
+    return [1, 2][3.0]  # E: unsupported_operation
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+___________________________ TestSuperCall.test_basic ___________________________
+----------------------------- Captured stderr call -----------------------------
+<test input b781dfbab9a42378e73abdb4b80013a052c82c12ffb74b1c1d1cd8260baa5b00> took 0.00 s
+_______________________ TestSuperCall.test_super_no_args _______________________
+----------------------------- Captured stderr call -----------------------------
+<test input f46dac6e9cdc173bb8e7db95446b891b748a08e65af7d6038d9f7b81294d7b47> took 0.03 s
+_________________ TestSuperCall.test_super_no_args_wrong_args __________________
+----------------------------- Captured stderr call -----------------------------
+
+In call to <test input 0323e549baf1279313ece5acdbd4ff7519ff5baf9e751dd86c2e8135cc6bac87>.Gaudeamus.eat: Takes 1 positional arguments but 2 were given (code: incompatible_call)
+In <test input 0323e549baf1279313ece5acdbd4ff7519ff5baf9e751dd86c2e8135cc6bac87> at line 7
+   4: 
+   5: class Canaanimys(Gaudeamus):
+   6:     def eat(self, grass=None):
+   7:         super(Canaanimys, self).eat(grass)  # E: incompatible_call
+              ^
+<test input 0323e549baf1279313ece5acdbd4ff7519ff5baf9e751dd86c2e8135cc6bac87> took 0.00 s
+___________ TestSuperCall.test_super_no_args_wrong_args_classmethod ____________
+----------------------------- Captured stderr call -----------------------------
+
+In call to <test input 405dad999d85a6e873173bec60b691f5420586574b51b58072d59b7d9a20c05b>.Gaudeamus.eat: Takes 1 positional arguments but 2 were given (code: incompatible_call)
+In <test input 405dad999d85a6e873173bec60b691f5420586574b51b58072d59b7d9a20c05b> at line 9
+   6: class Canaanimys(Gaudeamus):
+   7:     @classmethod
+   8:     def eat(cls, grass):
+   9:         super().eat(grass)  # E: incompatible_call
+              ^
+<test input 405dad999d85a6e873173bec60b691f5420586574b51b58072d59b7d9a20c05b> took 0.03 s
+______________ TestSuperCall.test_super_no_args_in_comprehension _______________
+----------------------------- Captured stderr call -----------------------------
+
+Zero-argument super() does not work inside a comprehension (code: bad_super_call)
+In <test input 7139f47571614de6b7582378595c8ea70ad58157c1a183ad75fd216dee3d5cc9> at line 3
+   1: class Canaanimys:
+   2:     def __init__(self, a, b):
+   3:         self.x = [super().__init__() for _ in range(1)]  # E: bad_super_call
+                        ^
+<test input 7139f47571614de6b7582378595c8ea70ad58157c1a183ad75fd216dee3d5cc9> took 0.06 s
+_________________ TestSuperCall.test_super_no_args_in_gen_exp __________________
+----------------------------- Captured stderr call -----------------------------
+
+Zero-argument super() does not work inside a comprehension (code: bad_super_call)
+In <test input 5627afdeeebacf8b71c55ee6c93faaf070afe3ac5309e75fd078f68eb4f1f8a7> at line 3
+   1: class Canaanimys:
+   2:     def __init__(self, a, b):
+   3:         self.x = (super().__init__() for _ in range(1))  # E: bad_super_call
+                        ^
+<test input 5627afdeeebacf8b71c55ee6c93faaf070afe3ac5309e75fd078f68eb4f1f8a7> took 0.03 s
+_____________ TestSuperCall.test_super_no_args_in_nested_function ______________
+----------------------------- Captured stderr call -----------------------------
+
+Zero-argument super() does not work inside a nested function (code: bad_super_call)
+In <test input e88e800be130a5fc1458164ad7c502e1cb023329161af402bebe69c062ccf740> at line 4
+   1: class Canaanimys:
+   2:     def __init__(self, a, b):
+   3:         def nested():
+   4:             self.x = super().__init__()  # E: bad_super_call
+                           ^
+   5: 
+   6:         nested()
+<test input e88e800be130a5fc1458164ad7c502e1cb023329161af402bebe69c062ccf740> took 0.04 s
+____________________ TestSuperCall.test_super_init_subclass ____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 6fa85e6fbf7aebcaa24f7055ae96d716b2d1d711b1cc160ff0b7cfbda368fe63> took 0.00 s
+______________________ TestSuperCall.test_good_super_call ______________________
+----------------------------- Captured stderr call -----------------------------
+<test input 1e4c82ad45ee42609e88cb508b42750824b7ba6594520b5510c18c38af6f6321> took 0.00 s
+_____________________ TestSuperCall.test_first_arg_is_base _____________________
+----------------------------- Captured stderr call -----------------------------
+
+First argument to super() is not the current class (code: bad_super_call)
+In <test input 3a5febe3b08f552bd85bf181a188cf5167fad9168a44cbcb2e1e00f3795cd865> at line 11
+   8: 
+   9: class Child(Base2):
+  10:     def method(self):
+  11:         super(Base2, self).method()  # E: bad_super_call
+              ^
+<test input 3a5febe3b08f552bd85bf181a188cf5167fad9168a44cbcb2e1e00f3795cd865> took 0.00 s
+______________________ TestSuperCall.test_super_attribute ______________________
+----------------------------- Captured stderr call -----------------------------
+
+In call to <test input 20fa8000ee69849ef1bb754d22e2e471029fc9e97277cef5cb37df8244374388>.MotherCapybara.__init__: Missing required argument 'grass' (code: incompatible_call)
+In <test input 20fa8000ee69849ef1bb754d22e2e471029fc9e97277cef5cb37df8244374388> at line 7
+   4: 
+   5: class ChildCapybara(MotherCapybara):
+   6:     def __init__(self):
+   7:         super(ChildCapybara, self).__init__()  # E: incompatible_call
+              ^
+<test input 20fa8000ee69849ef1bb754d22e2e471029fc9e97277cef5cb37df8244374388> took 0.00 s
+_________________________ TestSuperCall.test_metaclass _________________________
+----------------------------- Captured stderr call -----------------------------
+<test input bfca07aaf493d24f69e17b318102a1d0272e42a44dc0a8d419831053c99f22ce> took 0.03 s
+_________________________ TestSequenceImpl.test_union __________________________
+----------------------------- Captured stderr call -----------------------------
+<test input 634a93cf8a925191393b4270fa88b0f3c4d0f4e9e3dab54f900f93557a1e69a7> took 0.03 s
+____________________________ TestFormat.test_basic _____________________________
+----------------------------- Captured stderr call -----------------------------
+<test input e6ed467c4d6364dd84086a45a310db1c3cc84e48a81008f86514602848f817a7> took 0.03 s
+____________________________ TestFormat.test_errors ____________________________
+----------------------------- Captured stderr call -----------------------------
+
+Too few arguments to format string (expected at least 1) (code: incompatible_call)
+In <test input 15419cd7e5fb1094dd6a41e910bc029acfd0d0afa288db5f54770a473bc04b45> at line 2
+   1: def out_of_range_implicit():
+   2:     "{} {}".format(0)  # E: incompatible_call
+          ^
+   3: 
+   4: def out_of_range_numbered():
+   5:     "{0} {1}".format(0)  # E: incompatible_call
+
+Numbered argument 1 to format string is out of range (code: incompatible_call)
+In <test input 15419cd7e5fb1094dd6a41e910bc029acfd0d0afa288db5f54770a473bc04b45> at line 5
+   2:     "{} {}".format(0)  # E: incompatible_call
+   3: 
+   4: def out_of_range_numbered():
+   5:     "{0} {1}".format(0)  # E: incompatible_call
+          ^
+   6: 
+   7: def out_of_range_named():
+   8:     "{x}".format(y=3)  # E: incompatible_call
+
+Named argument x to format string was not given (code: incompatible_call)
+In <test input 15419cd7e5fb1094dd6a41e910bc029acfd0d0afa288db5f54770a473bc04b45> at line 8
+   5:     "{0} {1}".format(0)  # E: incompatible_call
+   6: 
+   7: def out_of_range_named():
+   8:     "{x}".format(y=3)  # E: incompatible_call
+          ^
+   9: 
+  10: def unused_numbered():
+  11:     "{}".format(0, 1)  # E: incompatible_call
+Ignoring duplicate error (<ast.Call object at 0x7ffff72e7d30>, <ErrorCode.incompatible_call: 12>)
+
+Numbered argument(s) 1 were not used (code: incompatible_call)
+In <test input 15419cd7e5fb1094dd6a41e910bc029acfd0d0afa288db5f54770a473bc04b45> at line 11
+   8:     "{x}".format(y=3)  # E: incompatible_call
+   9: 
+  10: def unused_numbered():
+  11:     "{}".format(0, 1)  # E: incompatible_call
+          ^
+  12: 
+  13: def unused_names():
+  14:     "{x}".format(x=0, y=1)  # E: incompatible_call
+
+Named argument(s) y were not used (code: incompatible_call)
+In <test input 15419cd7e5fb1094dd6a41e910bc029acfd0d0afa288db5f54770a473bc04b45> at line 14
+  11:     "{}".format(0, 1)  # E: incompatible_call
+  12: 
+  13: def unused_names():
+  14:     "{x}".format(x=0, y=1)  # E: incompatible_call
+          ^
+<test input 15419cd7e5fb1094dd6a41e910bc029acfd0d0afa288db5f54770a473bc04b45> took 0.06 s
+____________________________ TestFormat.test_union _____________________________
+----------------------------- Captured stderr call -----------------------------
+<test input 0c73b7b4d0e9b9f33cacea36fc3d6b72ef6b1f4b2f77201720ba54c8d823ec0f> took 0.03 s
+_____________________________ TestTypeMethods.test _____________________________
+----------------------------- Captured stderr call -----------------------------
+<test input f8d5aa5628ba506cb1f0f0494e85b04a37805c0ad64e3ac8edc591703e27a6e5> took 0.06 s
+____________________________ TestEncodeDecode.test _____________________________
+----------------------------- Captured stderr call -----------------------------
+<test input 9fc6637a2ff2c3ca7bc17c7c7397d7696fabb932166b9b214a1dac34214b8c4c> took 0.03 s
+___________________ TestEncodeDecode.test_encode_wrong_type ____________________
+----------------------------- Captured stderr call -----------------------------
+
+Incompatible argument type for encoding: expected str but got Literal[42] (code: incompatible_argument)
+  Cannot assign Literal[42] to str
+
+In <test input 2e23ac28d4dad9d5f4cb861f8aca85440a19a086a35c4197a8ab891940adaec2> at line 3
+   1: def capybara():
+   2:     # TODO this should produce only one error
+   3:     "".encode(42)  # E: incompatible_call  # E: incompatible_argument
+                    ^
+
+Error calling (self: str, /, encoding: str = Literal[''], errors: str = Literal['']) -> bytes: encode() argument 'encoding' must be str, not int (code: incompatible_call)
+Ellipsis
+In <test input 2e23ac28d4dad9d5f4cb861f8aca85440a19a086a35c4197a8ab891940adaec2> at line 3
+   1: def capybara():
+   2:     # TODO this should produce only one error
+   3:     "".encode(42)  # E: incompatible_call  # E: incompatible_argument
+          ^
+<test input 2e23ac28d4dad9d5f4cb861f8aca85440a19a086a35c4197a8ab891940adaec2> took 0.06 s
+___________________ TestEncodeDecode.test_decode_wrong_type ____________________
+----------------------------- Captured stderr call -----------------------------
+
+Incompatible argument type for encoding: expected str but got Literal[42] (code: incompatible_argument)
+  Cannot assign Literal[42] to str
+
+In <test input a7a8c21643cccf9aad077b24b80c99d55d12fff70c8548cb207d7667e32d6083> at line 2
+   1: def capybara():
+   2:     b"".decode(42)  # E: incompatible_call  # E: incompatible_argument
+                     ^
+
+Error calling (self: bytes, /, encoding: str = Literal[''], errors: str = Literal['']) -> str: decode() argument 'encoding' must be str, not int (code: incompatible_call)
+Ellipsis
+In <test input a7a8c21643cccf9aad077b24b80c99d55d12fff70c8548cb207d7667e32d6083> at line 2
+   1: def capybara():
+   2:     b"".decode(42)  # E: incompatible_call  # E: incompatible_argument
+          ^
+<test input a7a8c21643cccf9aad077b24b80c99d55d12fff70c8548cb207d7667e32d6083> took 0.03 s
+_________________________________ TestLen.test _________________________________
+----------------------------- Captured stderr call -----------------------------
+<test input 4400fef9e90c149a1b05a60f0c9ad8305cbe83d2b60b08aee6860aefa695620f> took 0.06 s
+____________________________ TestLen.test_narrowing ____________________________
+----------------------------- Captured stderr call -----------------------------
+<test input 82a8b587b23bcdacddd750b32fe850b2b73f3dc0aed3220bdf9d5aa9dc77c0ab> took 0.03 s
+___________________________ TestLen.test_wrong_type ____________________________
+----------------------------- Captured stderr call -----------------------------
+
+Incompatible argument type for obj: expected collections.abc.Sized (Protocol with members '__len__') but got Literal[3] (code: incompatible_argument)
+  Literal[3] has no attribute '__len__'
+
+In <test input f70ab8aa42de73594eab14d1fca8a29ad766d4db7e9fccc525eb1c2ff576faa5> at line 2
+   1: def capybara():
+   2:     len(3)  # E: incompatible_argument
+              ^
+<test input f70ab8aa42de73594eab14d1fca8a29ad766d4db7e9fccc525eb1c2ff576faa5> took 0.05 s
+__________________________ TestBool.test_return_value __________________________
+----------------------------- Captured stderr call -----------------------------
+<test input dda128e7e85e10c3f0b9c7e7b24c2b70aa64f52c3854613b66e61464d0191ded> took 0.03 s
+___________________________ TestBool.test_constraint ___________________________
+----------------------------- Captured stderr call -----------------------------
+<test input 55ab2ec66d91fbd88d5e4d06e1a62766ef498fd4e6e533ecc35aa4a9b13bed0b> took 0.06 s
+________________________________ TestCast.test _________________________________
+----------------------------- Captured stderr call -----------------------------
+<test input ac586d2454a8c908c82d798a487ebf009ea17e4ced58e4c0e87c320a5913505b> took 0.03 s
+_________________________ TestCast.test_undefined_name _________________________
+----------------------------- Captured stderr call -----------------------------
+
+Undefined name: fail (code: undefined_name)
+In <test input f0e763000377fddc2fba72549ce7a78513040f3f51116b895f24040484b694c7> at line 4
+   1: from typing import cast, List
+   2: 
+   3: def capybara():
+   4:     cast("List[fail]", 1)  # E: undefined_name
+          ^
+<test input f0e763000377fddc2fba72549ce7a78513040f3f51116b895f24040484b694c7> took 0.05 s
+_____________________________ TestSubclasses.test ______________________________
+----------------------------- Captured stderr call -----------------------------
+<test input feeb38683f90d839873410ab2046c5a909a99ff93c77b871778ab785c240eb74> took 0.03 s
+_____________________ TestGenericMutators.test_list_append _____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 0f24384070ae9a4d5cd61479c875a00290ec0ebb16f0d4e0ba5b2f110467943b> took 0.07 s
+________________ TestGenericMutators.test_list_append_pos_only _________________
+----------------------------- Captured stderr call -----------------------------
+
+In call to list.append: Missing required positional argument 'object' (code: incompatible_call)
+In <test input 5999762cff7269e488124e8dde25c83b0c3e3ba1a23d006def27531bd0a8a2fe> at line 4
+   1: from typing import List
+   2: 
+   3: def capybara(lst: List[int]) -> None:
+   4:     lst.append(object=42)  # E: incompatible_call
+          ^
+<test input 5999762cff7269e488124e8dde25c83b0c3e3ba1a23d006def27531bd0a8a2fe> took 0.03 s
+_______________ TestGenericMutators.test_list_append_wrong_type ________________
+----------------------------- Captured stderr call -----------------------------
+
+list.append: expected str but got Literal[1] (code: incompatible_argument)
+  Cannot assign Literal[1] to str
+
+In <test input f81853ed8f36d518d3f684a0453dfba10021f1697305e7349007818f7f871410> at line 6
+   3: def capybara():
+   4:     lst: List[str] = ["x"]
+   5:     assert_is_value(lst, GenericValue(list, [TypedValue(str)]))
+   6:     lst.append(1)  # E: incompatible_argument
+                     ^
+   7: 
+   8:     double_lst: List[List[int]] = [[42]]
+   9:     assert_is_value(
+
+list.append: expected int but got Literal['x'] (code: incompatible_argument)
+  Cannot assign Literal['x'] to int
+
+In <test input f81853ed8f36d518d3f684a0453dfba10021f1697305e7349007818f7f871410> at line 12
+   9:     assert_is_value(
+  10:         double_lst, GenericValue(list, [GenericValue(list, [TypedValue(int)])])
+  11:     )
+  12:     double_lst[0].append("x")  # E: incompatible_argument
+                               ^
+<test input f81853ed8f36d518d3f684a0453dfba10021f1697305e7349007818f7f871410> took 0.07 s
+_______________________ TestGenericMutators.test_set_add _______________________
+----------------------------- Captured stderr call -----------------------------
+<test input dd4cd48f8cc00968509dfe859252b1f02ed8e969576fa162f163d74fcdd8fda1> took 0.04 s
+______________________ TestGenericMutators.test_list_add _______________________
+----------------------------- Captured stderr call -----------------------------
+<test input 49d8f6a4cb22085d60b3e2304d8b8a9132648c97f38df1769834894581758905> took 0.07 s
+___________________ TestGenericMutators.test_list_iadd_never ___________________
+----------------------------- Captured stderr call -----------------------------
+<test input 1486048dd8a93b3b3244de5a3b620660788e493500f1a5cdb7576cef43551256> took 0.03 s
+_____________________ TestGenericMutators.test_weak_value ______________________
+----------------------------- Captured stderr call -----------------------------
+<test input 794f941872236b75e3a3bdba8cd3853d8c9deea7d85cabc37d7ab30f604a533e> took 0.08 s
+____________________ TestGenericMutators.test_starred_weak _____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 2373c9f598d654b872d0c842b96c08d64a3e384be58b2e84196e5321d8847cf6> took 0.06 s
+_______________ TestGenericMutators.test_list_extend_wrong_type ________________
+----------------------------- Captured stderr call -----------------------------
+
+list.extend: expected int but got str (code: incompatible_argument)
+  Cannot assign str to int
+
+In <test input c418fb486f0fff51cbbf614d26912df4b78db756a6ab224d05667cffdeeb4522> at line 5
+   2: 
+   3: def capybara():
+   4:     lst: List[int] = [3]
+   5:     lst.extend([str(3)])  # E: incompatible_argument
+                     ^
+<test input c418fb486f0fff51cbbf614d26912df4b78db756a6ab224d05667cffdeeb4522> took 0.06 s
+__________________ TestGenericMutators.test_list_extend_union __________________
+----------------------------- Captured stderr call -----------------------------
+<test input 5802298b82f896c2962c35c960cf7054cc5740429c38fdb323671aab6dce8da0> took 0.09 s
+______________________ TestGenericMutators.test_dict_get _______________________
+----------------------------- Captured stderr call -----------------------------
+
+Missing type parameters for generic type dict (code: missing_generic_parameters)
+In <test input 78389fd398e1f14ee918ac09bfb394ebc11ba7d473f08a74a39443362ac50681> at line 14
+  11:     td: TD,
+  12:     s: str,
+  13:     d: Dict[str, int],
+  14:     untyped: dict,  # E: missing_generic_parameters
+                   ^
+  15: ):
+  16:     assert_is_value(td.get("a"), TypedValue(int))
+  17:     assert_is_value(td.get("c"), TypedValue(str) | KnownValue(None))
+Ignoring duplicate error (<ast.Name object at 0x7ffff4d3b9a0>, <ErrorCode.missing_generic_parameters: 88>)
+
+TypedDict key must be str, not Literal[1] (code: invalid_typeddict_key)
+In <test input 78389fd398e1f14ee918ac09bfb394ebc11ba7d473f08a74a39443362ac50681> at line 19
+  16:     assert_is_value(td.get("a"), TypedValue(int))
+  17:     assert_is_value(td.get("c"), TypedValue(str) | KnownValue(None))
+  18:     assert_is_value(td.get("c", 1), TypedValue(str) | KnownValue(1))
+  19:     td.get(1)  # E: invalid_typeddict_key
+          ^
+  20: 
+  21:     known = {"a": "b"}
+  22:     assert_is_value(known.get("a"), KnownValue("b") | KnownValue(None))
+
+Dictionary does not accept keys of type Literal[1] (code: incompatible_argument)
+  Cannot assign Literal[1] to str
+
+In <test input 78389fd398e1f14ee918ac09bfb394ebc11ba7d473f08a74a39443362ac50681> at line 34
+  31: 
+  32:     assert_is_value(d.get("x"), TypedValue(int) | KnownValue(None))
+  33:     assert_is_value(d.get(s), TypedValue(int) | KnownValue(None))
+  34:     d.get(1)  # E: incompatible_argument
+                ^
+  35: 
+  36:     untyped.get([])  # E: unhashable_key
+
+Dictionary key is not hashable (code: unhashable_key)
+  [] is not hashable
+    TypeError("unhashable type: 'list'")
+
+In <test input 78389fd398e1f14ee918ac09bfb394ebc11ba7d473f08a74a39443362ac50681> at line 36
+  33:     assert_is_value(d.get(s), TypedValue(int) | KnownValue(None))
+  34:     d.get(1)  # E: incompatible_argument
+  35: 
+  36:     untyped.get([])  # E: unhashable_key
+          ^
+<test input 78389fd398e1f14ee918ac09bfb394ebc11ba7d473f08a74a39443362ac50681> took 0.05 s
+_____________________ TestGenericMutators.test_setdefault ______________________
+----------------------------- Captured stderr call -----------------------------
+
+Dictionary key is not hashable (code: unhashable_key)
+  {} is not hashable
+    TypeError("unhashable type: 'dict'")
+
+In <test input 1db8164f2cc2393630f48090af944636b6b70e114d28710d672402d678f3d7ba> at line 10
+   7:     b: str
+   8: 
+   9: def typeddict(td: TD):
+  10:     td.setdefault({})  # E: unhashable_key
+                        ^
+  11:     td.setdefault(0)  # E: invalid_typeddict_key
+  12:     td.setdefault("c")  # E: invalid_typeddict_key
+  13:     td.setdefault("a", "s")  # E: incompatible_argument
+
+TypedDict key must be str, not Literal[0] (code: invalid_typeddict_key)
+In <test input 1db8164f2cc2393630f48090af944636b6b70e114d28710d672402d678f3d7ba> at line 11
+   8: 
+   9: def typeddict(td: TD):
+  10:     td.setdefault({})  # E: unhashable_key
+  11:     td.setdefault(0)  # E: invalid_typeddict_key
+                        ^
+  12:     td.setdefault("c")  # E: invalid_typeddict_key
+  13:     td.setdefault("a", "s")  # E: incompatible_argument
+  14:     assert_is_value(td.setdefault("b", "x"), TypedValue(str))
+
+Key Literal['c'] does not exist in TypedDict (code: invalid_typeddict_key)
+In <test input 1db8164f2cc2393630f48090af944636b6b70e114d28710d672402d678f3d7ba> at line 12
+   9: def typeddict(td: TD):
+  10:     td.setdefault({})  # E: unhashable_key
+  11:     td.setdefault(0)  # E: invalid_typeddict_key
+  12:     td.setdefault("c")  # E: invalid_typeddict_key
+                        ^
+  13:     td.setdefault("a", "s")  # E: incompatible_argument
+  14:     assert_is_value(td.setdefault("b", "x"), TypedValue(str))
+  15: 
+
+TypedDict key a expected value of type int, not Literal['s'] (code: incompatible_argument)
+In <test input 1db8164f2cc2393630f48090af944636b6b70e114d28710d672402d678f3d7ba> at line 13
+  10:     td.setdefault({})  # E: unhashable_key
+  11:     td.setdefault(0)  # E: invalid_typeddict_key
+  12:     td.setdefault("c")  # E: invalid_typeddict_key
+  13:     td.setdefault("a", "s")  # E: incompatible_argument
+                             ^
+  14:     assert_is_value(td.setdefault("b", "x"), TypedValue(str))
+  15: 
+  16: def dict_incomplete_value():
+<test input 1db8164f2cc2393630f48090af944636b6b70e114d28710d672402d678f3d7ba> took 0.09 s
+______________________ TestGenericMutators.test_dict_pop _______________________
+----------------------------- Captured stderr call -----------------------------
+
+Dictionary key is not hashable (code: unhashable_key)
+  {} is not hashable
+    TypeError("unhashable type: 'dict'")
+
+In <test input 75c865029d382251cb298ff43391cfecd439618dd14e1f87878ec47e6bef05bf> at line 10
+   7:     b: NotRequired[str]
+   8: 
+   9: def typeddict(td: TD):
+  10:     td.pop({})  # E: unhashable_key
+                 ^
+  11:     td.pop(0)  # E: invalid_typeddict_key
+  12:     td.pop("c")  # E: invalid_typeddict_key
+  13:     val = td.pop("a", "s")  # E: incompatible_argument
+
+TypedDict key must be str, not Literal[0] (code: invalid_typeddict_key)
+In <test input 75c865029d382251cb298ff43391cfecd439618dd14e1f87878ec47e6bef05bf> at line 11
+   8: 
+   9: def typeddict(td: TD):
+  10:     td.pop({})  # E: unhashable_key
+  11:     td.pop(0)  # E: invalid_typeddict_key
+                 ^
+  12:     td.pop("c")  # E: invalid_typeddict_key
+  13:     val = td.pop("a", "s")  # E: incompatible_argument
+  14:     assert_is_value(val, TypedValue(int) | KnownValue("s"))
+
+Key Literal['c'] does not exist in TypedDict (code: invalid_typeddict_key)
+In <test input 75c865029d382251cb298ff43391cfecd439618dd14e1f87878ec47e6bef05bf> at line 12
+   9: def typeddict(td: TD):
+  10:     td.pop({})  # E: unhashable_key
+  11:     td.pop(0)  # E: invalid_typeddict_key
+  12:     td.pop("c")  # E: invalid_typeddict_key
+                 ^
+  13:     val = td.pop("a", "s")  # E: incompatible_argument
+  14:     assert_is_value(val, TypedValue(int) | KnownValue("s"))
+  15:     assert_is_value(td.pop("b", "x"), TypedValue(str) | KnownValue("x"))
+
+Cannot pop required TypedDict key Literal['a'] (code: incompatible_argument)
+In <test input 75c865029d382251cb298ff43391cfecd439618dd14e1f87878ec47e6bef05bf> at line 13
+  10:     td.pop({})  # E: unhashable_key
+  11:     td.pop(0)  # E: invalid_typeddict_key
+  12:     td.pop("c")  # E: invalid_typeddict_key
+  13:     val = td.pop("a", "s")  # E: incompatible_argument
+                       ^
+  14:     assert_is_value(val, TypedValue(int) | KnownValue("s"))
+  15:     assert_is_value(td.pop("b", "x"), TypedValue(str) | KnownValue("x"))
+  16: 
+
+Key Literal['b'] does not exist in dictionary <dict containing {Literal['a']: str, Literal['c']: Literal[42]}> (code: incompatible_argument)
+In <test input 75c865029d382251cb298ff43391cfecd439618dd14e1f87878ec47e6bef05bf> at line 29
+  26:             ],
+  27:         ),
+  28:     )
+  29:     incomplete_value.pop("b")  # E: incompatible_argument
+                               ^
+  30:     assert_is_value(incomplete_value.pop("a"), TypedValue(str))
+  31:     assert_is_value(
+  32:         incomplete_value,
+<test input 75c865029d382251cb298ff43391cfecd439618dd14e1f87878ec47e6bef05bf> took 0.05 s
+___________________ TestGenericMutators.test_dict_pop_union ____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 526b0953f9edc17bcf1fc280a1a903c9b3c5fb58e7135a4e5595976d6044a79e> took 0.03 s
+_____________________ TestGenericMutators.test_dict_update _____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 0c7efc6fe5cc5a0320bb72440eba72ab107dd3552f97bbe5f3ac4b8fe945fe48> took 0.06 s
+___________________ TestGenericMutators.test_copy_and_update ___________________
+----------------------------- Captured stderr call -----------------------------
+
+Cannot set key of type Literal[1] (expecting str) (code: incompatible_argument)
+  Cannot assign Literal[1] to str
+
+In <test input fb606a74dd8ba36ee90ce01b43cc7c16f6a129c095248357fa976c54562a4f48> at line 7
+   4:     d1: Dict[str, int] = {"x": 1}
+   5:     d1_val = GenericValue(dict, [TypedValue(str), TypedValue(int)])
+   6:     assert_is_value(d1, d1_val)
+   7:     d1[1] = 3  # E: incompatible_argument
+             ^
+   8:     d2 = d1.copy()
+   9:     assert_is_value(
+  10:         d2,
+<test input fb606a74dd8ba36ee90ce01b43cc7c16f6a129c095248357fa976c54562a4f48> took 0.04 s
+________________________ TestSequenceGetItem.test_list _________________________
+----------------------------- Captured stderr call -----------------------------
+exception calling: (KnownValueWithTypeVars(val=<method '__getitem__' of 'list' objects>, typevars={~SelfT: TypedValue(typ=<class 'list'>, literal_only=False)}), IndexError('list index out of range'))
+exception calling: (KnownValueWithTypeVars(val=<method '__getitem__' of 'list' objects>, typevars={~SelfT: TypedValue(typ=<class 'list'>, literal_only=False)}), IndexError('list index out of range'))
+exception calling: (KnownValueWithTypeVars(val=<method '__getitem__' of 'list' objects>, typevars={~SelfT: TypedValue(typ=<class 'list'>, literal_only=False)}), IndexError('list index out of range'))
+exception calling: (KnownValueWithTypeVars(val=<method '__getitem__' of 'list' objects>, typevars={~SelfT: TypedValue(typ=<class 'list'>, literal_only=False)}), IndexError('list index out of range'))
+<test input 5c9a3581a4f2d68232c148e7247507bf5a52ad970cf95152d6de40796fed1138> took 0.08 s
+________________________ TestSequenceGetItem.test_tuple ________________________
+----------------------------- Captured stderr call -----------------------------
+exception calling: (KnownValueWithTypeVars(val=<slot wrapper '__getitem__' of 'tuple' objects>, typevars={~SelfT: TypedValue(typ=<class 'tuple'>, literal_only=False)}), IndexError('tuple index out of range'))
+exception calling: (KnownValueWithTypeVars(val=<slot wrapper '__getitem__' of 'tuple' objects>, typevars={~SelfT: TypedValue(typ=<class 'tuple'>, literal_only=False)}), IndexError('tuple index out of range'))
+
+Tuple index out of range: Literal[0] (code: incompatible_call)
+In <test input 19b4bb2e2d3b3da6f9d6e1f4975d2278809cf0da9cdded9941933981db55cee3> at line 13
+  10:     assert_is_value(tpl[unannotated], AnyValue(AnySource.from_another))
+  11: 
+  12:     empty = ()
+  13:     assert_is_value(empty[0], AnyValue(AnySource.error))  # E: incompatible_call
+                          ^
+  14:     assert_is_value(empty[1:], KnownValue(()))
+  15:     assert_is_value(empty[i], AnyValue(AnySource.unreachable))
+  16:     assert_is_value(empty[s], SequenceValue(tuple, []))
+exception calling: (KnownValueWithTypeVars(val=<slot wrapper '__getitem__' of 'tuple' objects>, typevars={~SelfT: TypedValue(typ=<class 'tuple'>, literal_only=False)}), IndexError('tuple index out of range'))
+
+Tuple index out of range: Literal[-5] (code: incompatible_call)
+In <test input 19b4bb2e2d3b3da6f9d6e1f4975d2278809cf0da9cdded9941933981db55cee3> at line 23
+  20:     assert_is_value(known[0], KnownValue(1))
+  21:     assert_is_value(known[-1], KnownValue(2))
+  22:     assert_is_value(
+  23:         known[-5], AnyValue(AnySource.error)  # E: incompatible_call
+              ^
+  24:     )
+  25:     assert_is_value(known[1:], KnownValue((2,)))
+  26:     assert_is_value(known[::-1], KnownValue((2, 1)))
+exception calling: (KnownValueWithTypeVars(val=<slot wrapper '__getitem__' of 'tuple' objects>, typevars={~SelfT: TypedValue(typ=<class 'tuple'>, literal_only=False)}), IndexError('tuple index out of range'))
+<test input 19b4bb2e2d3b3da6f9d6e1f4975d2278809cf0da9cdded9941933981db55cee3> took 0.05 s
+__________________ TestSequenceGetItem.test_tuple_annotation ___________________
+----------------------------- Captured stderr call -----------------------------
+<test input 50047be6b05a54183ad9ecfd7bdbe988ebf3ab5039078bd53382943363bd5bc6> took 0.07 s
+___________________ TestSequenceGetItem.test_list_in_lambda ____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 131a9263f9f3374f904c512bd72d6c2b186774f3b67f844558f53180bccf1048> took 0.05 s
+_____________________ TestSequenceGetItem.test_subclasses ______________________
+----------------------------- Captured stderr call -----------------------------
+<test input 6f1be783f817c2b7055492e6d5efc8955ca540488e93b1de22949e197ba247b2> took 0.08 s
+_______________________ TestDictGetItem.test_unhashable ________________________
+----------------------------- Captured stderr call -----------------------------
+exception calling: (KnownValueWithTypeVars(val=<method '__getitem__' of 'dict' objects>, typevars={~SelfT: TypedValue(typ=<class 'dict'>, literal_only=False)}), TypeError("unhashable type: 'dict'"))
+
+Dictionary key is not hashable (code: unhashable_key)
+  {} is not hashable
+    TypeError("unhashable type: 'dict'")
+
+In <test input fa831d7b8e4198feecb25b8ff489da2fafd8a8f2ea9ca553891bccf746f58bca> at line 3
+   1: def capybara():
+   2:     d = {}
+   3:     d[{}]  # E: unhashable_key
+            ^
+exception calling: (KnownValueWithTypeVars(val=<method '__getitem__' of 'dict' objects>, typevars={~SelfT: TypedValue(typ=<class 'dict'>, literal_only=False)}), TypeError("unhashable type: 'dict'"))
+<test input fa831d7b8e4198feecb25b8ff489da2fafd8a8f2ea9ca553891bccf746f58bca> took 0.03 s
+__________________ TestDictGetItem.test_invalid_typeddict_key __________________
+----------------------------- Captured stderr call -----------------------------
+
+TypedDict key must be str, not Literal[1] (code: invalid_typeddict_key)
+In <test input b51e56ea456e09e285c1a715ee4676229009cbf56690a28d567f086ebb01067e> at line 7
+   4:     a: int
+   5: 
+   6: def capybara(td: TD):
+   7:     td[1]  # E: invalid_typeddict_key
+             ^
+<test input b51e56ea456e09e285c1a715ee4676229009cbf56690a28d567f086ebb01067e> took 0.07 s
+____________________ TestDictGetItem.test_incomplete_value _____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 56aff7b1fdd3c092890c7332871d9b1dcf9b15066e04541a41676d5fbf7d4922> took 0.04 s
+___________________ TestDictGetItem.test_complex_incomplete ____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 02a57768722ba1ccb6d7cb07e47b573bcf6900dc36518dfeff67191b8c2f47d7> took 0.08 s
+_____________________________ TestDictGetItem.test _____________________________
+----------------------------- Captured stderr call -----------------------------
+
+Missing type parameters for generic type dict (code: missing_generic_parameters)
+In <test input 58967388513ec53daaa9ed4780acdead9f526fffab2896870059c01598e5dc42> at line 22
+  19:     dct: Dict[str, int],
+  20:     rev: ReversedDict[str, int],
+  21:     nd: NormalDict[int, str],
+  22:     untyped: dict,  # E: missing_generic_parameters
+                   ^
+  23: ):
+  24:     d = {1: 2}
+  25:     assert_is_value(d[1], KnownValue(2))
+Ignoring duplicate error (<ast.Name object at 0x7ffff4978640>, <ErrorCode.missing_generic_parameters: 88>)
+
+Dictionary key is not hashable (code: unhashable_key)
+  [] is not hashable
+    TypeError("unhashable type: 'list'")
+
+In <test input 58967388513ec53daaa9ed4780acdead9f526fffab2896870059c01598e5dc42> at line 32
+  29:     assert_is_value(nd[1], TypedValue(str))
+  30:     assert_is_value(rev[1], TypedValue(str))
+  31: 
+  32:     untyped[[]]  # E: unhashable_key
+                  ^
+  33:     dct[1]  # E: incompatible_argument
+
+Dictionary does not accept keys of type Literal[1] (code: incompatible_argument)
+  Cannot assign Literal[1] to str
+
+In <test input 58967388513ec53daaa9ed4780acdead9f526fffab2896870059c01598e5dc42> at line 33
+  30:     assert_is_value(rev[1], TypedValue(str))
+  31: 
+  32:     untyped[[]]  # E: unhashable_key
+  33:     dct[1]  # E: incompatible_argument
+          ^
+<test input 58967388513ec53daaa9ed4780acdead9f526fffab2896870059c01598e5dc42> took 0.07 s
+_______________________ TestDictGetItem.test_type_as_key _______________________
+----------------------------- Captured stderr call -----------------------------
+
+Missing type parameters for generic type dict (code: missing_generic_parameters)
+In <test input d4ecf606063c4b0dcde812c46be22a5768b847fab78511e7aff6787e433b225f> at line 3
+   1: from typing import Type
+   2: 
+   3: def capybara(d: dict, t: Type[int]):  # E: missing_generic_parameters
+                      ^
+   4:     d[int]
+   5:     d[t]
+Ignoring duplicate error (<ast.Name object at 0x7ffff48a95d0>, <ErrorCode.missing_generic_parameters: 88>)
+<test input d4ecf606063c4b0dcde812c46be22a5768b847fab78511e7aff6787e433b225f> took 0.03 s
+_________________ TestDictSetItem.test_typeddict_setitem_valid _________________
+----------------------------- Captured stderr call -----------------------------
+<test input 7f8da1abfd2e686fea37a3d6b2ac597fa2b745e9b094e0db173e759eef914393> took 0.07 s
+________________ TestDictSetItem.test_typeddict_non_literal_key ________________
+----------------------------- Captured stderr call -----------------------------
+
+TypedDict key must be a string literal (got Literal[41]) (code: invalid_typeddict_key)
+In <test input 930a1ad76acf21b0522d1ba973137d9ad33d9d3196c1bd37e49897c2b9483f82> at line 7
+   4:     x: int
+   5: 
+   6: def capybara(td: TD) -> None:
+   7:     td[41] = 42  # E: invalid_typeddict_key
+             ^
+<test input 930a1ad76acf21b0522d1ba973137d9ad33d9d3196c1bd37e49897c2b9483f82> took 0.03 s
+_______________ TestDictSetItem.test_typeddict_unrecognized_key ________________
+----------------------------- Captured stderr call -----------------------------
+
+Key 'y' does not exist in TypedDict({"x": int}) (code: invalid_typeddict_key)
+In <test input b43c390f8884d021e55c78b00c35aff806fee4e5cef63ed2857b0e938ea9c882> at line 7
+   4:     x: int
+   5: 
+   6: def capybara(td: TD) -> None:
+   7:     td["y"] = 42  # E: invalid_typeddict_key
+             ^
+<test input b43c390f8884d021e55c78b00c35aff806fee4e5cef63ed2857b0e938ea9c882> took 0.07 s
+___________________ TestDictSetItem.test_typeddict_bad_value ___________________
+----------------------------- Captured stderr call -----------------------------
+
+Value for key 'x' must be int, not Literal['y'] (code: incompatible_argument)
+  Cannot assign Literal['y'] to int
+
+In <test input d535a6f4ba8c184bffd5fa5b8fc425f0f5caaca57edec61a6cb2ffb07ddf0712> at line 7
+   4:     x: int
+   5: 
+   6: def capybara(td: TD) -> None:
+   7:     td["x"] = "y"  # E: incompatible_argument
+          ^
+<test input d535a6f4ba8c184bffd5fa5b8fc425f0f5caaca57edec61a6cb2ffb07ddf0712> took 0.03 s
+____________________ TestDictSetItem.test_incomplete_value _____________________
+----------------------------- Captured stderr call -----------------------------
+<test input ae7f6fd3a757a5fd459b1f465f1a5628aadf8cd1458ce7be289cef89b1010dd9> took 0.07 s
+______________________ TestDictSetItem.test_bad_key_type _______________________
+----------------------------- Captured stderr call -----------------------------
+
+Missing type parameters for generic type dict (code: missing_generic_parameters)
+In <test input b46734cebae7c1b58b8135edea5002ff7dd4371c1e455b91708b876ab743cedd> at line 3
+   1: from typing import Dict
+   2: 
+   3: def capybara(untyped: dict) -> None:  # E: missing_generic_parameters
+                            ^
+   4:     dct: Dict[str, int] = {}
+   5:     dct[1] = 1  # E: incompatible_argument
+   6: 
+Ignoring duplicate error (<ast.Name object at 0x7ffff49f2ec0>, <ErrorCode.missing_generic_parameters: 88>)
+
+Cannot set key of type Literal[1] (expecting str) (code: incompatible_argument)
+  Cannot assign Literal[1] to str
+
+In <test input b46734cebae7c1b58b8135edea5002ff7dd4371c1e455b91708b876ab743cedd> at line 5
+   2: 
+   3: def capybara(untyped: dict) -> None:  # E: missing_generic_parameters
+   4:     dct: Dict[str, int] = {}
+   5:     dct[1] = 1  # E: incompatible_argument
+              ^
+   6: 
+   7:     untyped[[]] = 1  # E: unhashable_key
+
+Dictionary key is not hashable (code: unhashable_key)
+  [] is not hashable
+    TypeError("unhashable type: 'list'")
+
+In <test input b46734cebae7c1b58b8135edea5002ff7dd4371c1e455b91708b876ab743cedd> at line 7
+   4:     dct: Dict[str, int] = {}
+   5:     dct[1] = 1  # E: incompatible_argument
+   6: 
+   7:     untyped[[]] = 1  # E: unhashable_key
+                  ^
+<test input b46734cebae7c1b58b8135edea5002ff7dd4371c1e455b91708b876ab743cedd> took 0.03 s
+_____________________ TestDictSetItem.test_bad_value_type ______________________
+----------------------------- Captured stderr call -----------------------------
+
+Cannot set value of type Literal['1'] (expecting int) (code: incompatible_argument)
+  Cannot assign Literal['1'] to int
+
+In <test input e1f72ed7511ea211b07193b8cc8da4dc34125dca1634f575f17951647ffb8c65> at line 5
+   2: 
+   3: def capybara() -> None:
+   4:     dct: Dict[str, int] = {}
+   5:     dct["1"] = "1"  # E: incompatible_argument
+          ^
+<test input e1f72ed7511ea211b07193b8cc8da4dc34125dca1634f575f17951647ffb8c65> took 0.06 s
+_____________________________ TestIssubclass.test ______________________________
+----------------------------- Captured stderr call -----------------------------
+<test input 3093526ca00e3feff819af4ee9dc041d201b6a23edf0be14fc4f37f562e05b05> took 0.07 s
+____________________ TestIssubclass.test_negative_narrowing ____________________
+----------------------------- Captured stderr call -----------------------------
+<test input 115e0439d90219a6c725347653fc40e855887107c51a0a392927324f00dfba00> took 0.03 s
+_______________________ TestCallableGuards.test_callable _______________________
+----------------------------- Captured stderr call -----------------------------
+<test input 5a5baabc4ea6cf147bec5f61af018ca34fbffb8a00aab1f368ce53ee1c6e4124> took 0.06 s
+_______________________ TestAssertType.test_assert_type ________________________
+----------------------------- Captured stderr call -----------------------------
+
+Type is object (expected int) (code: inference_failure)
+In <test input 516a003f6093798fd610a104566594837e6655b4016ec4e4043ea19fe391097c> at line 13
+  10:     assert_type(unannotated, Any)
+  11:     assert_type(explicit_any, Any)
+  12: 
+  13:     assert_type(x, int)  # E: inference_failure
+          ^
+<test input 516a003f6093798fd610a104566594837e6655b4016ec4e4043ea19fe391097c> took 0.03 s
+______________________________ TestAny.test_call _______________________________
+----------------------------- Captured stderr call -----------------------------
+
+Cannot call Any() directly; use cast() instead or remove the call (code: incompatible_call)
+In <test input 84142e40e4aeab4c164e0e977d6a48d5c98cb21ee5424ed608b3063f2cbfc8b2> at line 4
+   1: from typing import Any
+   2: 
+   3: def capybara():
+   4:     Any(42)  # E: incompatible_call
+          ^
+<test input 84142e40e4aeab4c164e0e977d6a48d5c98cb21ee5424ed608b3063f2cbfc8b2> took 0.01 s
+----------- generated xml file: /opt/receipts/reports/agent1-21.xml ------------
+=========================== short test summary info ============================
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_basic
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_super_no_args
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_super_no_args_wrong_args
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_super_no_args_wrong_args_classmethod
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_super_no_args_in_comprehension
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_super_no_args_in_gen_exp
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_super_no_args_in_nested_function
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_super_init_subclass
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_good_super_call
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_first_arg_is_base
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_super_attribute
+PASSED pyanalyze/test_implementation.py::TestSuperCall::test_metaclass
+PASSED pyanalyze/test_implementation.py::TestSequenceImpl::test_union
+PASSED pyanalyze/test_implementation.py::TestFormat::test_basic
+PASSED pyanalyze/test_implementation.py::TestFormat::test_errors
+PASSED pyanalyze/test_implementation.py::TestFormat::test_union
+PASSED pyanalyze/test_implementation.py::TestTypeMethods::test
+PASSED pyanalyze/test_implementation.py::TestEncodeDecode::test
+PASSED pyanalyze/test_implementation.py::TestEncodeDecode::test_encode_wrong_type
+PASSED pyanalyze/test_implementation.py::TestEncodeDecode::test_decode_wrong_type
+PASSED pyanalyze/test_implementation.py::TestLen::test
+PASSED pyanalyze/test_implementation.py::TestLen::test_narrowing
+PASSED pyanalyze/test_implementation.py::TestLen::test_wrong_type
+PASSED pyanalyze/test_implementation.py::TestBool::test_return_value
+PASSED pyanalyze/test_implementation.py::TestBool::test_constraint
+PASSED pyanalyze/test_implementation.py::TestCast::test
+PASSED pyanalyze/test_implementation.py::TestCast::test_undefined_name
+PASSED pyanalyze/test_implementation.py::TestSubclasses::test
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_list_append
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_list_append_pos_only
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_list_append_wrong_type
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_set_add
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_list_add
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_list_iadd_never
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_weak_value
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_starred_weak
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_list_extend_wrong_type
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_list_extend_union
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_dict_get
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_setdefault
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_dict_pop
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_dict_pop_union
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_dict_update
+PASSED pyanalyze/test_implementation.py::TestGenericMutators::test_copy_and_update
+PASSED pyanalyze/test_implementation.py::TestSequenceGetItem::test_list
+PASSED pyanalyze/test_implementation.py::TestSequenceGetItem::test_tuple
+PASSED pyanalyze/test_implementation.py::TestSequenceGetItem::test_tuple_annotation
+PASSED pyanalyze/test_implementation.py::TestSequenceGetItem::test_list_in_lambda
+PASSED pyanalyze/test_implementation.py::TestSequenceGetItem::test_subclasses
+PASSED pyanalyze/test_implementation.py::TestDictGetItem::test_unhashable
+PASSED pyanalyze/test_implementation.py::TestDictGetItem::test_invalid_typeddict_key
+PASSED pyanalyze/test_implementation.py::TestDictGetItem::test_incomplete_value
+PASSED pyanalyze/test_implementation.py::TestDictGetItem::test_complex_incomplete
+PASSED pyanalyze/test_implementation.py::TestDictGetItem::test
+PASSED pyanalyze/test_implementation.py::TestDictGetItem::test_type_as_key
+PASSED pyanalyze/test_implementation.py::TestDictSetItem::test_typeddict_setitem_valid
+PASSED pyanalyze/test_implementation.py::TestDictSetItem::test_typeddict_non_literal_key
+PASSED pyanalyze/test_implementation.py::TestDictSetItem::test_typeddict_unrecognized_key
+PASSED pyanalyze/test_implementation.py::TestDictSetItem::test_typeddict_bad_value
+PASSED pyanalyze/test_implementation.py::TestDictSetItem::test_incomplete_value
+PASSED pyanalyze/test_implementation.py::TestDictSetItem::test_bad_key_type
+PASSED pyanalyze/test_implementation.py::TestDictSetItem::test_bad_value_type
+PASSED pyanalyze/test_implementation.py::TestIssubclass::test
+PASSED pyanalyze/test_implementation.py::TestIssubclass::test_negative_narrowing
+PASSED pyanalyze/test_implementation.py::TestCallableGuards::test_callable
+PASSED pyanalyze/test_implementation.py::TestAssertType::test_assert_type
+PASSED pyanalyze/test_implementation.py::TestAny::test_call
+FAILED pyanalyze/test_implementation.py::TestSuperCall::test_bad_super_call
+FAILED pyanalyze/test_implementation.py::TestSuperCall::test_bad_super_call_classmethod
+FAILED pyanalyze/test_implementation.py::TestSuperCall::test_undefined_super_attribute
+FAILED pyanalyze/test_implementation.py::TestSuperCall::test_mixin - Assertio...
+FAILED pyanalyze/test_implementation.py::TestSequenceImpl::test - AssertionEr...
+FAILED pyanalyze/test_implementation.py::TestSequenceImpl::test_not_iterable
+FAILED pyanalyze/test_implementation.py::TestGenericMutators::test_list_extend
+FAILED pyanalyze/test_implementation.py::TestGenericMutators::test_list_iadd
+FAILED pyanalyze/test_implementation.py::TestSequenceGetItem::test_list_index
+FAILED pyanalyze/test_implementation.py::TestSequenceGetItem::test_tuple_index
+FAILED pyanalyze/test_implementation.py::TestDictSetItem::test_weak - Asserti...
+FAILED pyanalyze/test_implementation.py::TestCallableGuards::test_isfunction
+FAILED pyanalyze/test_runtime.py::test_is_compatible - assert not True
+FAILED pyanalyze/test_runtime.py::test_get_compatibility_error - AssertionErr...
+FAILED pyanalyze/test_runtime.py::TestRuntimeTypeGuard::test_runtime - Module...
+================== 15 failed, 67 passed, 2 warnings in 6.53s ===================

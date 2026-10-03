@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Add a strict option to sort_together()\nA *strict* option would detect data size mismatches. This would avoid silently dropping data:\r\n\r\n```\r\n>>> iterables = [(4, 3, 2, 1), ('a', 'b', 'c')]\r\n>>> sort_together(iterables)\r\n[(2, 3, 4), ('c', 'b', 'a')]\r\n```",
+  "source": {
+    "image": "docker.io/swerebenchv2/more-itertools-more-itertools:892-1ae91eb",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-more-itertools__more-itertools-892-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfbW9yZS5weSBiL3Rlc3RzL3Rlc3RfbW9yZS5weQppbmRleCA4OTMxN2NjLi5iMjUzNDNmIDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X21vcmUucHkKKysrIGIvdGVzdHMvdGVzdF9tb3JlLnB5CkBAIC0yMTczLDYgKzIxNzMsMjkgQEAgY2xhc3MgU29ydFRvZ2V0aGVyVGVzdChUZXN0Q2FzZSk6CiAgICAgICAgICAgICBdLAogICAgICAgICApCiAKKyAgICBkZWYgdGVzdF9zdHJpY3Qoc2VsZik6CisgICAgICAgICMgVGVzdCBmb3IgbGlzdCBvZiBsaXN0cyBvciB0dXBsZXMKKyAgICAgICAgc2VsZi5hc3NlcnRSYWlzZXMoCisgICAgICAgICAgICBtaS5VbmVxdWFsSXRlcmFibGVzRXJyb3IsCisgICAgICAgICAgICBsYW1iZGE6IG1pLnNvcnRfdG9nZXRoZXIoCisgICAgICAgICAgICAgICAgWyg0LCAzLCAyLCAxKSwgKCdhJywgJ2InLCAnYycpXSwgc3RyaWN0PVRydWUKKyAgICAgICAgICAgICksCisgICAgICAgICkKKworICAgICAgICAjIFRlc3QgZm9yIGxpc3Qgb2YgaXRlcmFibGVzCisgICAgICAgIHNlbGYuYXNzZXJ0UmFpc2VzKAorICAgICAgICAgICAgbWkuVW5lcXVhbEl0ZXJhYmxlc0Vycm9yLAorICAgICAgICAgICAgbGFtYmRhOiBtaS5zb3J0X3RvZ2V0aGVyKFtyYW5nZSg0KSwgcmFuZ2UoNSldLCBzdHJpY3Q9VHJ1ZSksCisgICAgICAgICkKKworICAgICAgICAjIFRlc3QgZm9yIGl0ZXJhYmxlIG9mIGl0ZXJhYmxlcworICAgICAgICBzZWxmLmFzc2VydFJhaXNlcygKKyAgICAgICAgICAgIG1pLlVuZXF1YWxJdGVyYWJsZXNFcnJvciwKKyAgICAgICAgICAgIGxhbWJkYTogbWkuc29ydF90b2dldGhlcigKKyAgICAgICAgICAgICAgICAocmFuZ2UoaSkgZm9yIGkgaW4gcmFuZ2UoNCkpLCBzdHJpY3Q9VHJ1ZQorICAgICAgICAgICAgKSwKKyAgICAgICAgKQorCiAKIGNsYXNzIERpdmlkZVRlc3QoVGVzdENhc2UpOgogICAgICIiIlRlc3RzIGZvciBkaXZpZGUoKSIiIgo='\"'\"'))'",
+      "git apply /tmp/receipts-more-itertools__more-itertools-892-test.patch"
+    ],
+    "workdir": "/more-itertools"
+  },
+  "spec_paths": [
+    "tests/test_more.py"
+  ],
+  "spec_tests": [
+    "tests/test_more.py::SortTogetherTest::test_strict"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_more.py"
+}

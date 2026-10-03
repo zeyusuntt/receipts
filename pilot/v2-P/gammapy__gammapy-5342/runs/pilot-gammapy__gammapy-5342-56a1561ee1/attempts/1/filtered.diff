@@ -1,0 +1,14 @@
+diff --git a/gammapy/datasets/evaluator.py b/gammapy/datasets/evaluator.py
+index 160ad4c43..c274ed418 100644
+--- a/gammapy/datasets/evaluator.py
++++ b/gammapy/datasets/evaluator.py
+@@ -384,6 +384,9 @@ class MapEvaluator:
+         npred_reco : `~gammapy.maps.Map`
+             Predicted counts in reconstructed energy bins.
+         """
++        # No energy dispersion -> return unchanged
++        if self.edisp is None:
++            return npred
+         if self.model.apply_irf["edisp"]:
+             return apply_edisp(npred, self.edisp)
+         else:

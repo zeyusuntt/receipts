@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+collected 4 items
+
+tests/client_generators/result_types_generator/test_get_operation_as_str.py F [ 25%]
+..F                                                                      [100%]
+
+=================================== FAILURES ===================================
+E   KeyError: '__typename'
+
+During handling of the above exception, another exception occurred:
+E   TypeError: Redefinition of reserved type 'String'
+/usr/local/lib/python3.10/site-packages/graphql/type/definition.py:236: TypeError: Redefinition of reserved type 'String'
+E   assert 'mixin' not in 'query Custo...   }\n  }\n}'
+      
+      'mixin' is contained here:
+        query CustomQuery {
+          query2 @mixin(from: ".mixins", import: "TestMixin") {
+      ?           +++++
+            id
+            field1 @mixin(from: ".mixins", import: "TestMixin1") {...
+      
+      ...Full output truncated (7 lines hidden), use '-vv' to show
+/ariadne-codegen/tests/client_generators/result_types_generator/test_get_operation_as_str.py:190: assert 'mixin' not in 'query Custo...   }\n  }\n}'
+==================================== PASSES ====================================
+------------- generated xml file: /opt/receipts/reports/base-4.xml -------------
+=========================== short test summary info ============================
+PASSED tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_used_fragments
+PASSED tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_fragment_used_by_another_fragment
+FAILED tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_added_typename
+FAILED tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_representation_without_mixin_directive
+========================= 2 failed, 2 passed in 0.42s ==========================

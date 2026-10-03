@@ -1,0 +1,18 @@
+=== INPUT ===
+"Some text\n\n<!--start-tag-->\nThis should be included.\n<!--end-tag-->\n\nThis shouldn't be included.\n\n<!--start-tag-->\nThis should be included also.\n<!--end-tag-->\n\nHere some text\nthat should be ignored.\n\n<!--start-->\n<!--end-->\n\nEtc\n<!--start-tag-->\nThis should be included even if hasn't defined after end tag.\n"
+
+=== EXPECTED ===
+"This should be included.\n\nThis should be included also.\n\nThis should be included even if hasn't defined after end tag.\n"
+
+=== ACTUAL ===
+'\nThis should be included.\n\nThis should be included also.\n'
+
+=== MATCHES? ===
+False
+
+=== DIFFERENCE ANALYSIS ===
+Length actual: 57
+Length expected: 119
+First diff at pos 0: actual='\n', expected='T'
+Context actual: '\nThis shou'
+Context expected: 'This shoul'

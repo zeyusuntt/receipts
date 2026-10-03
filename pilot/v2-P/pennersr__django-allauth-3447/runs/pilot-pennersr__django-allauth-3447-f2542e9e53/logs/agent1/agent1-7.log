@@ -1,0 +1,126 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+django: version: 5.2.11, settings: test_settings (from ini)
+rootdir: /django-allauth
+configfile: pytest.ini
+plugins: django-4.12.0
+collecting ... collected 1 item
+
+allauth/socialaccount/tests/test_signup.py::test_email_address_conflict_removes_conflicting_email FAILED [100%]
+
+=================================== FAILURES ===================================
+____________ test_email_address_conflict_removes_conflicting_email _____________
+
+request = <WSGIRequest: GET '/'>, level = 20
+message = 'Confirmation email sent to ad4f267cd42e4d13a3f2eb7b31a261a7@ffe94ca37abe45b1b4c13c1457bff623.org.'
+extra_tags = '', fail_silently = False
+
+    def add_message(request, level, message, extra_tags="", fail_silently=False):
+        """
+        Attempt to add a message to the request using the 'messages' app.
+        """
+        try:
+>           messages = request._messages
+E           AttributeError: 'WSGIRequest' object has no attribute '_messages'
+
+/usr/local/lib/python3.10/site-packages/django/contrib/messages/api.py:27: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+db = None
+settings = <pytest_django.fixtures.SettingsWrapper object at 0x7ffff4bac8b0>
+user_factory = <function user_factory.<locals>.factory at 0x7ffff4562170>
+sociallogin_factory = <function sociallogin_factory.<locals>.factory at 0x7ffff4562200>
+client = <django.test.client.Client object at 0x7ffff4b332e0>
+rf = <django.test.client.RequestFactory object at 0x7ffff534af80>
+mailoutbox = [<django.core.mail.message.EmailMultiAlternatives object at 0x7ffff4a074c0>]
+
+    def test_email_address_conflict_removes_conflicting_email(
+        db, settings, user_factory, sociallogin_factory, client, rf, mailoutbox
+    ):
+        """Tests that when an already existing email is given at the social signup
+        form, enumeration preventation kicks in.
+        """
+        settings.ACCOUNT_EMAIL_REQUIRED = True
+        settings.ACCOUNT_UNIQUE_EMAIL = True
+        settings.ACCOUNT_USERNAME_REQUIRED = False
+        settings.ACCOUNT_AUTHENTICATION_METHOD = "email"
+        settings.ACCOUNT_EMAIL_VERIFICATION = "optional"
+        settings.SOCIALACCOUNT_AUTO_SIGNUP = True
+        settings.SOCIALACCOUNT_EMAIL_AUTHENTICATION = False
+    
+        user = user_factory(email_verified=False)
+        sociallogin = sociallogin_factory(email=user.email, email_verified=False)
+    
+        request = rf.get("/")
+        request.session = {}
+        request.user = AnonymousUser()
+    
+>       resp = complete_social_login(request, sociallogin)
+
+allauth/socialaccount/tests/test_signup.py:515: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+allauth/socialaccount/helpers.py:196: in complete_social_login
+    return _complete_social_login(request, sociallogin)
+allauth/socialaccount/helpers.py:214: in _complete_social_login
+    ret = _process_signup(request, sociallogin)
+allauth/socialaccount/helpers.py:92: in _process_signup
+    resp = complete_social_signup(request, sociallogin)
+allauth/socialaccount/helpers.py:219: in complete_social_signup
+    return complete_signup(
+allauth/account/utils.py:242: in complete_signup
+    return perform_login(
+allauth/account/utils.py:167: in perform_login
+    return _perform_login(request, login)
+allauth/account/utils.py:177: in _perform_login
+    response = adapter.pre_login(request, login.user, **hook_kwargs)
+allauth/account/adapter.py:411: in pre_login
+    send_email_confirmation(request, user, signup=signup, email=email)
+allauth/account/utils.py:387: in send_email_confirmation
+    adapter.add_message(
+allauth/account/adapter.py:339: in add_message
+    messages.add_message(request, level, message, extra_tags=extra_tags)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+request = <WSGIRequest: GET '/'>, level = 20
+message = 'Confirmation email sent to ad4f267cd42e4d13a3f2eb7b31a261a7@ffe94ca37abe45b1b4c13c1457bff623.org.'
+extra_tags = '', fail_silently = False
+
+    def add_message(request, level, message, extra_tags="", fail_silently=False):
+        """
+        Attempt to add a message to the request using the 'messages' app.
+        """
+        try:
+            messages = request._messages
+        except AttributeError:
+            if not hasattr(request, "META"):
+                raise TypeError(
+                    "add_message() argument must be an HttpRequest object, not "
+                    "'%s'." % request.__class__.__name__
+                )
+            if not fail_silently:
+>               raise MessageFailure(
+                    "You cannot add messages without installing "
+                    "django.contrib.messages.middleware.MessageMiddleware"
+                )
+E               django.contrib.messages.api.MessageFailure: You cannot add messages without installing django.contrib.messages.middleware.MessageMiddleware
+
+/usr/local/lib/python3.10/site-packages/django/contrib/messages/api.py:35: MessageFailure
+---------------------------- Captured stderr setup -----------------------------
+Creating test database for alias 'default'...
+--------------------------- Captured stderr teardown ---------------------------
+Destroying test database for alias 'default'...
+=============================== warnings summary ===============================
+../usr/local/lib/python3.10/site-packages/openid/oidutil.py:105
+  /usr/local/lib/python3.10/site-packages/openid/oidutil.py:105: DeprecationWarning: defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead.
+    ElementTree = __import__(mod_name, None, None, ['unused'])
+
+allauth/socialaccount/tests/test_signup.py::test_email_address_conflict_removes_conflicting_email
+  /django-allauth/allauth/socialaccount/providers/openid/forms.py:5: RemovedInDjango60Warning: The default scheme will be changed from 'http' to 'https' in Django 6.0. Pass the forms.URLField.assume_scheme argument to silence this warning, or set the FORMS_URLFIELD_ASSUME_HTTPS transitional setting to True to opt into using 'https' as the new default scheme.
+    openid = forms.URLField(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /opt/receipts/reports/agent1-7.xml ------------
+=========================== short test summary info ============================
+FAILED allauth/socialaccount/tests/test_signup.py::test_email_address_conflict_removes_conflicting_email
+======================== 1 failed, 2 warnings in 1.04s =========================

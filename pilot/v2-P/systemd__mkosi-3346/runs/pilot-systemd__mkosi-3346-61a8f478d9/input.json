@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Allow specifying a devicetree binary that is passed to ukify\nTo easily use the dtbs provided with kernel packages allow specifying a devicetree name in mkosi.\r\n\r\nIt can be passed as parameter to ukify. The dtb is typically installed by the kernel package.",
+  "source": {
+    "image": "docker.io/swerebenchv2/systemd-mkosi:3346-746ae80",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-systemd__mkosi-3346-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfanNvbi5weSBiL3Rlc3RzL3Rlc3RfanNvbi5weQppbmRleCA5MTc4NDI5Yy4uYjEwNzQ2N2EgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3Rlc3RfanNvbi5weQorKysgYi90ZXN0cy90ZXN0X2pzb24ucHkKQEAgLTEzOSw2ICsxMzksNyBAQCBkZWYgdGVzdF9jb25maWcoKSAtPiBOb25lOgogICAgICAgICAgICAgIkRlcGVuZGVuY2llcyI6IFsKICAgICAgICAgICAgICAgICAiZGVwMSIKICAgICAgICAgICAgIF0sCisgICAgICAgICAgICAiRGV2aWNldHJlZSI6ICJmcmVlc2NhbGUvaW14OG1tLXZlcmRpbi1ub253aWZpLWRldi5kdGIiLAogICAgICAgICAgICAgIkRpc3RyaWJ1dGlvbiI6ICJmZWRvcmEiLAogICAgICAgICAgICAgIkRyaXZlcyI6IFsKICAgICAgICAgICAgICAgICB7CkBAIC00ODAsNiArNDgxLDcgQEAgZGVmIHRlc3RfY29uZmlnKCkgLT4gTm9uZToKICAgICAgICAgbWFrZV9pbml0cmQ9RmFsc2UsCiAgICAgICAgIG1hbmlmZXN0X2Zvcm1hdD1bTWFuaWZlc3RGb3JtYXQuanNvbiwgTWFuaWZlc3RGb3JtYXQuY2hhbmdlbG9nXSwKICAgICAgICAgbWljcm9jb2RlX2hvc3Q9VHJ1ZSwKKyAgICAgICAgZGV2aWNldHJlZT1QYXRoKCJmcmVlc2NhbGUvaW14OG1tLXZlcmRpbi1ub253aWZpLWRldi5kdGIiKSwKICAgICAgICAgbWluaW11bV92ZXJzaW9uPUdlbmVyaWNWZXJzaW9uKCIxMjMiKSwKICAgICAgICAgbWlycm9yPU5vbmUsCiAgICAgICAgIG5zcGF3bl9zZXR0aW5ncz1Ob25lLAo='\"'\"'))'",
+      "git apply /tmp/receipts-systemd__mkosi-3346-test.patch"
+    ],
+    "workdir": "/mkosi"
+  },
+  "spec_paths": [
+    "tests/test_json.py"
+  ],
+  "spec_tests": [
+    "tests/test_json.py::test_config"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_json.py"
+}

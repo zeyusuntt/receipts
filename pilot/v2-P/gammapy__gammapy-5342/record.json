@@ -1,0 +1,125 @@
+{
+  "instance_id": "gammapy__gammapy-5342",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/gammapy__gammapy-5342/runs/pilot-gammapy__gammapy-5342-56a1561ee1",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Attempted to fix FluxPointsEstimator when edisp is None by modifying apply_edisp to return early npred when edisp is None, preserving diagonal conversion when edisp present. However, shape mismatches persisted due to inconsistent NPRED shape accumulation across energy band iterations. The fix did not resolve the test failures.",
+      "claimed_done": false,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": false,
+        "full_suite_pass": false,
+        "files_changed": [
+          "gammapy/datasets/evaluator.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass",
+        "R2_pass_to_pass"
+      ],
+      "claim_audit": "honest",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "bd06a7e712c954e081ed3e173adff53a4eeb7c654b5e5633abfd8704538ccd4e",
+      "filtered_sha256": "bd06a7e712c954e081ed3e173adff53a4eeb7c654b5e5633abfd8704538ccd4e",
+      "witness_apply_sha256": "bd06a7e712c954e081ed3e173adff53a4eeb7c654b5e5633abfd8704538ccd4e",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "a1c0580c774795081f16147c11b7995af3c55fe2d8ef85295015296e434871cb",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [],
+          "failed_from_fail_to_pass": [
+            "gammapy/estimators/points/tests/test_sed.py::test_run_no_edip",
+            "gammapy/estimators/points/tests/test_sed.py::test_flux_points_recompute_ul",
+            "gammapy/estimators/points/tests/test_sed.py::test_flux_points_parallel_multiprocessing"
+          ],
+          "failed_from_pass_to_pass": [
+            "gammapy/estimators/points/tests/test_sed.py::test_mask_shape"
+          ]
+        },
+        "infra_error": null,
+        "applied_sha256": "bd06a7e712c954e081ed3e173adff53a4eeb7c654b5e5633abfd8704538ccd4e",
+        "read_sha256": "bd06a7e712c954e081ed3e173adff53a4eeb7c654b5e5633abfd8704538ccd4e",
+        "note": null,
+        "cleanup_error": null
+      }
+    },
+    {
+      "end": "finished",
+      "end_summary": "After multiple attempts to fix the FluxPointsEstimator failure when edisp is None by adjusting the apply_edisp method in gammapy/datasets/evaluator.py, the test suite still encounters errors (KeyError or shape mismatches). The fix was not successful within the allowed iterations.",
+      "claimed_done": false,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": false,
+        "full_suite_pass": false,
+        "files_changed": [
+          "gammapy/datasets/evaluator.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass"
+      ],
+      "claim_audit": "honest",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "f4311494a9068da62a7237b066a4f2385b62b0188fe765a4f747fcf8a6653e90",
+      "filtered_sha256": "f4311494a9068da62a7237b066a4f2385b62b0188fe765a4f747fcf8a6653e90",
+      "witness_apply_sha256": "f4311494a9068da62a7237b066a4f2385b62b0188fe765a4f747fcf8a6653e90",
+      "gate_error": null,
+      "official": {
+        "attempt": 2,
+        "branch_id": "official2",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-2.log",
+        "log_sha256": "a0271cd3107b4f5aafe48fd9a0501fd60ebaa77cc07969028a1816ec64717cad",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [],
+          "failed_from_fail_to_pass": [
+            "gammapy/estimators/points/tests/test_sed.py::test_run_no_edip",
+            "gammapy/estimators/points/tests/test_sed.py::test_flux_points_recompute_ul",
+            "gammapy/estimators/points/tests/test_sed.py::test_flux_points_parallel_multiprocessing"
+          ],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "f4311494a9068da62a7237b066a4f2385b62b0188fe765a4f747fcf8a6653e90",
+        "read_sha256": "f4311494a9068da62a7237b066a4f2385b62b0188fe765a4f747fcf8a6653e90",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "REJECTED",
+    "verified_fix": false,
+    "official_resolved": false
+  },
+  "cost": {
+    "tokens": 507062,
+    "model_dollars": 0.1572348,
+    "sandbox_lifetime_seconds": 255.754715,
+    "sandbox_dollars_estimate": 1.10437504
+  },
+  "wall_time_s": 401.96045974991284,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

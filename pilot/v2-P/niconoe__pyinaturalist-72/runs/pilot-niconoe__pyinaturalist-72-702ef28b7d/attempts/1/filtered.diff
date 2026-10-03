@@ -1,0 +1,55 @@
+diff --git a/pyinaturalist/rest_api.py b/pyinaturalist/rest_api.py
+index e9edc76..53b1b55 100644
+--- a/pyinaturalist/rest_api.py
++++ b/pyinaturalist/rest_api.py
+@@ -39,10 +39,17 @@ from pyinaturalist.response_format import convert_lat_long_to_float
+ 
+ 
+ def get_access_token(
+-    username: str, password: str, app_id: str, app_secret: str, user_agent: str = None
++    username: str = None,
++    password: str = None,
++    app_id: str = None,
++    app_secret: str = None,
++    user_agent: str = None,
+ ) -> str:
+     """Get an access token using the user's iNaturalist username and password.
+     You still need an iNaturalist app to do this.
++    Credentials can be provided as arguments or via environment variables:
++    INAT_USERNAME, INAT_PASSWORD, INAT_APP_ID, INAT_APP_SECRET.
++    Arguments take precedence over environment variables.
+ 
+     **API reference:** https://www.inaturalist.org/pages/api+reference#auth
+ 
+@@ -57,6 +64,31 @@ def get_access_token(
+         app_secret: iNaturalist application secret
+         user_agent: a user-agent string that will be passed to iNaturalist.
+     """
++    import os
++    
++    # Get values from arguments or environment variables, with args taking precedence
++    username = username or os.environ.get('INAT_USERNAME')
++    password = password or os.environ.get('INAT_PASSWORD')
++    app_id = app_id or os.environ.get('INAT_APP_ID')
++    app_secret = app_secret or os.environ.get('INAT_APP_SECRET')
++    
++    # Check that all required credentials are present
++    if not all([username, password, app_id, app_secret]):
++        missing = []
++        if not username:
++            missing.append('username')
++        if not password:
++            missing.append('password')
++        if not app_id:
++            missing.append('app_id')
++        if not app_secret:
++            missing.append('app_secret')
++        raise AuthenticationError(
++            f"Missing credentials: {', '.join(missing)}. "
++            "Provide them as arguments or set the INAT_USERNAME, INAT_PASSWORD, "
++            "INAT_APP_ID, and INAT_APP_SECRET environment variables."
++        )
++
+     payload = {
+         "client_id": app_id,
+         "client_secret": app_secret,

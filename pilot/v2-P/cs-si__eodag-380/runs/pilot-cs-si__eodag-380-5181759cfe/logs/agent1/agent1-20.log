@@ -1,0 +1,68 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /eodag
+plugins: Faker-40.4.0
+collecting ... collected 1 item
+
+tests/integration/test_search_stac_static.py::TestSearchStacStatic::test_search_stac_static_load_child FAILED [100%]
+
+=================================== FAILURES ===================================
+___________ TestSearchStacStatic.test_search_stac_static_load_child ____________
+
+self = <tests.integration.test_search_stac_static.TestSearchStacStatic testMethod=test_search_stac_static_load_child>
+
+    def test_search_stac_static_load_child(self):
+        """load_stac_items from child catalog must provide items"""
+        items = self.dag.load_stac_items(
+            self.child_cat, recursive=True, provider=self.stac_provider
+        )
+        self.assertIsInstance(items, SearchResult)
+        self.assertEqual(len(items), self.child_cat_len)
+        self.assertEqual(items[0].provider, self.stac_provider)
+        # if no product_type is provided, product_type should be guessed from properties
+>       self.assertEqual(items[0].product_type, "S2_MSI_L1C")
+E       AssertionError: None != 'S2_MSI_L1C'
+
+tests/integration/test_search_stac_static.py:87: AssertionError
+=============================== warnings summary ===============================
+eodag/api/core.py:24
+  /eodag/eodag/api/core.py:24: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/filters.py:50
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/filters.py:50: DeprecationWarning: invalid escape sequence '\w'
+    url_pattern = rcompile("""
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/filters.py:148
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/filters.py:148: DeprecationWarning: invalid escape sequence '\S'
+    """Interleaves the results of two or more filters (or filter chains).
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:37
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:37: DeprecationWarning: invalid escape sequence '\S'
+    """Given a set of words (or any object with a ``__contains__`` method),
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:224
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:224: DeprecationWarning: invalid escape sequence '\S'
+    """Splits words into subwords and performs optional transformations on
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:285
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:285: DeprecationWarning: invalid escape sequence '\|'
+    def __init__(self, delims=u("-_'\"()!@#$%^&*[]{}<>\|;:,./?`~=+"),
+
+eodag/api/product/_product.py:25
+  /eodag/eodag/api/product/_product.py:25: DeprecationWarning: The 'shapely.geos' module is deprecated, and will be removed in a future version. All attributes of 'shapely.geos' are available directly from the top-level 'shapely' namespace (since shapely 2.0.0).
+    from shapely import geometry, geos, wkb, wkt
+
+../usr/local/lib/python3.10/site-packages/whoosh/codec/whoosh3.py:1116
+  /usr/local/lib/python3.10/site-packages/whoosh/codec/whoosh3.py:1116: SyntaxWarning: "is" with a literal. Did you mean "=="?
+    elif fixedsize is 0:
+
+tests/integration/test_search_stac_static.py::TestSearchStacStatic::test_search_stac_static_load_child
+  /eodag/tests/integration/test_search_stac_static.py:80: DeprecationWarning: Call to deprecated function/method load_stac_items (Use the StaticStacSearch search plugin instead) -- Deprecated since v2.2.1
+    items = self.dag.load_stac_items(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-20.xml ------------
+=========================== short test summary info ============================
+FAILED tests/integration/test_search_stac_static.py::TestSearchStacStatic::test_search_stac_static_load_child
+======================== 1 failed, 9 warnings in 5.12s =========================

@@ -1,0 +1,29 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /nox
+configfile: pyproject.toml
+plugins: anyio-4.12.1, cov-7.0.0
+collecting ... collected 1 item
+
+tests/test_virtualenv.py::test_conda_env_create_verbose FAILED           [100%]
+
+=================================== FAILURES ===================================
+________________________ test_conda_env_create_verbose _________________________
+
+make_conda = <function make_conda.<locals>.factory at 0x7ffff5acf130>
+
+    @pytest.mark.skipif(not HAS_CONDA, reason="Missing conda command.")
+    def test_conda_env_create_verbose(make_conda):
+        venv, dir_ = make_conda()
+        with mock.patch("nox.virtualenv.nox.command.run") as mock_run:
+            venv.create()
+    
+        args, kwargs = mock_run.call_args
+>       assert kwargs["log"] is False
+E       assert True is False
+
+tests/test_virtualenv.py:220: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-29.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_virtualenv.py::test_conda_env_create_verbose - assert True ...
+============================== 1 failed in 0.17s ===============================

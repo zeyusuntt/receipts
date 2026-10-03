@@ -1,0 +1,69 @@
+{
+  "instance_id": "mirumee__ariadne-codegen-159",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/mirumee__ariadne-codegen-159/runs/pilot-mirumee__ariadne-codegen-159-93bb7154d4",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the mixin directive removal issue in the generated GraphQL operations. The problem was that mixin directives were being preserved in the final printed GraphQL string sent to remote APIs, causing validation errors. \n\nModified the `get_operation_as_str()` method in `ariadne_codegen/client_generators/result_types.py` to create a copy of the operation definition AST with all mixin directives removed before printing it to string. This ensures that:\n1. Mixin directives are still processed during code generation to properly extend Pydantic models \n2. But they are stripped from the final GraphQL query string sent to remote APIs\n3. Both field-level and operation-level mixin directives are handled recursively\n4. Other directives and AST structure are preserved\n\nThe specific test `test_get_operation_as_str_returns_representation_without_mixin_directive` now passes, confirming the fix works correctly.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": false,
+        "files_changed": [
+          "ariadne_codegen/client_generators/result_types.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "honest",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "e0484aa0cc173e988287f002e3e4e5326d7e6069986511d605c49981e230b5b5",
+      "filtered_sha256": "e0484aa0cc173e988287f002e3e4e5326d7e6069986511d605c49981e230b5b5",
+      "witness_apply_sha256": "e0484aa0cc173e988287f002e3e4e5326d7e6069986511d605c49981e230b5b5",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "34caae8d4393d7d2ef7a513fc33bf5890e0661a3aefc893ee6e1c82fb12f21d6",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_representation_without_mixin_directive"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "e0484aa0cc173e988287f002e3e4e5326d7e6069986511d605c49981e230b5b5",
+        "read_sha256": "e0484aa0cc173e988287f002e3e4e5326d7e6069986511d605c49981e230b5b5",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 139543,
+    "model_dollars": 0.0433863,
+    "sandbox_lifetime_seconds": 59.795311,
+    "sandbox_dollars_estimate": 0.099341
+  },
+  "wall_time_s": 107.25439799996093,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

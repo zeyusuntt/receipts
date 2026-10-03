@@ -1,0 +1,61 @@
+============================= test session starts ==============================
+collected 2 items / 1 deselected / 1 selected
+
+tests/test_install.py .                                                  [100%]
+
+==================================== PASSES ====================================
+________________ test_install_fetch_missing_python_invalid[3.1] ________________
+---------------------------- Captured stdout setup -----------------------------
+Using the following file to specify needed package files:
+    testdata/tests_packages/unix-python3.10.txt
+Ensuring the following directory contains necessary package files:
+    /pipx/.pipx_tests/package_cache/3.10
+MISSING FILES: 0
+EXISTING (found) FILES: 197
+LEFTOVER (unused) FILES: 0
+<LocalRequest: GET http://127.0.0.1:58989/simple/>
+200 OK
+127.0.0.1 - - [03/Oct/2026 18:33:04] "GET /simple/ HTTP/1.1" 200 10404
+
+---------------------------- Captured stderr setup -----------------------------
+Bottle v0.12.25 server starting up (using AutoServer(handler_class=<class 'pypiserver.__main__.WsgiHandler'>))...
+Listening on http://127.0.0.1:58989/
+Hit Ctrl-C to quit.
+
+------------------------------ Captured log call -------------------------------
+DEBUG    pipx.main:main.py:988 2026-10-03 18:33:04
+DEBUG    pipx.main:main.py:989 pipx install --python 3.1 --fetch-missing-python pycowsay
+INFO     pipx.main:main.py:990 pipx version is 1.5.1.dev14+g440236287
+INFO     pipx.main:main.py:991 Default python interpreter is '/usr/local/bin/python3.10'
+DEBUG    pipx.main:main.py:235 Failed to resolve interpreter:
+Traceback (most recent call last):
+  File "/pipx/src/pipx/standalone_python.py", line 72, in download_python_build_standalone
+    full_version, download_link = resolve_python_version(python_version)
+  File "/pipx/src/pipx/standalone_python.py", line 204, in resolve_python_version
+    raise NotAvailable(f"Python version {requested_version} is not available.")
+pipx.standalone_python.NotAvailable: Python version 3.1 is not available.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/pipx/src/pipx/interpreter.py", line 67, in find_python_interpreter
+    standalone_executable = download_python_build_standalone(python_version)
+  File "/pipx/src/pipx/standalone_python.py", line 74, in download_python_build_standalone
+    raise PipxError(f"Unable to acquire a standalone python build matching {python_version}.") from e
+pipx.util.PipxError: Unable to acquire a standalone python build matching 3.1.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/pipx/src/pipx/main.py", line 230, in run_pipx_command
+    interpreter = find_python_interpreter(
+  File "/pipx/src/pipx/interpreter.py", line 70, in find_python_interpreter
+    raise InterpreterResolutionError(source="the python-build-standalone project", version=python_version) from e
+pipx.interpreter.InterpreterResolutionError: No executable for the provided Python version '3.1' found in the
+python-build-standalone project. Please make sure the provided version is
+listed in https://github.com/indygreg/python-build-standalone/releases/latest.
+DEBUG    pipx.main:main.py:1067 pipx finished.
+------------ generated xml file: /opt/receipts/reports/agent1-5.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_install.py::test_install_fetch_missing_python_invalid[3.1]
+======================= 1 passed, 1 deselected in 0.34s ========================

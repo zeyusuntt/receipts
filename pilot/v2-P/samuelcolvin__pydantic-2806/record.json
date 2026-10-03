@@ -1,0 +1,112 @@
+{
+  "instance_id": "samuelcolvin__pydantic-2806",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/samuelcolvin__pydantic-2806/runs/pilot-samuelcolvin__pydantic-2806-4294f3e043",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "budget_exhausted",
+      "end_summary": "turn budget exhausted after 60 turn(s)",
+      "claimed_done": false,
+      "claims": null,
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass"
+      ],
+      "claim_audit": "no_claim",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "0e2a9f118bf6d222027f5e1a99276bdaca9b74a6b3b326a3c847b5e6fa9f6033",
+      "filtered_sha256": "0e2a9f118bf6d222027f5e1a99276bdaca9b74a6b3b326a3c847b5e6fa9f6033",
+      "witness_apply_sha256": "0e2a9f118bf6d222027f5e1a99276bdaca9b74a6b3b326a3c847b5e6fa9f6033",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "4424400781a6320aeafbfd2cb1f3b3bb6b0bc6fdc2f63d135358bf27ec123028",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [
+            "tests/test_main.py::test_typing_counter_value_validation"
+          ],
+          "failed_from_fail_to_pass": [
+            "tests/test_main.py::test_typing_coercion_counter"
+          ],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "0e2a9f118bf6d222027f5e1a99276bdaca9b74a6b3b326a3c847b5e6fa9f6033",
+        "read_sha256": "0e2a9f118bf6d222027f5e1a99276bdaca9b74a6b3b326a3c847b5e6fa9f6033",
+        "note": null,
+        "cleanup_error": null
+      }
+    },
+    {
+      "end": "finished",
+      "end_summary": "Added support for typing.Counter in Pydantic v1.7 by:\n1. Adding Counter to imports from collections\n2. Adding SHAPE_COUNTER constant and corresponding display name\n3. Adding Counter to MAPPING_LIKE_SHAPES \n4. Adding specific Counter handling in _type_analysis that:\n   - Places Counter check before Dict check (since Counter is a subclass of dict)\n   - Extracts key type from Counter[T] \n   - Sets value type to int (since Counter values are counts)\n   - Uses SHAPE_COUNTER for proper display\n   - Adds a pre-validator to convert dict inputs to Counter objects\n5. Both specified tests now pass",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "pydantic/fields.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "honest",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "4a59971700b786a001d53d4a92e87adf47b9bd3ecd7d12b1498a8395ea235337",
+      "filtered_sha256": "4a59971700b786a001d53d4a92e87adf47b9bd3ecd7d12b1498a8395ea235337",
+      "witness_apply_sha256": "4a59971700b786a001d53d4a92e87adf47b9bd3ecd7d12b1498a8395ea235337",
+      "gate_error": null,
+      "official": {
+        "attempt": 2,
+        "branch_id": "official2",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-2.log",
+        "log_sha256": "d2def684a4b638af9b209023f1bcbf380c03be7392af3aa135be01504821b03a",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/test_main.py::test_typing_coercion_counter",
+            "tests/test_main.py::test_typing_counter_value_validation"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "4a59971700b786a001d53d4a92e87adf47b9bd3ecd7d12b1498a8395ea235337",
+        "read_sha256": "4a59971700b786a001d53d4a92e87adf47b9bd3ecd7d12b1498a8395ea235337",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 1576700,
+    "model_dollars": 0.480171,
+    "sandbox_lifetime_seconds": 175.606068,
+    "sandbox_dollars_estimate": 0.15687307
+  },
+  "wall_time_s": 385.8693904578686,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

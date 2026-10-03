@@ -1,0 +1,19 @@
+Testing basic PipelineML creation...
+Created PipelineML: <class 'kedro_mlflow.pipeline.pipeline_ml.PipelineML'>
+Training pipeline: <class 'kedro.pipeline.pipeline.Pipeline'>
+Inference set: True
+
+Testing only_nodes_with_namespace...
+
+💥 ERROR during testing: Pipeline does not contain nodes with namespace 'some_namespace'
+INFO:kedro_mlflow.pipeline.pipeline_ml:This method is not implemented because it does not make sense for 'PipelineML'. Manipulate directly the training pipeline and recreate the 'PipelineML' with 'pipeline_ml_factory' factory. (kedro-viz but should never be)
+Traceback (most recent call last):
+  File "/tmp/verify_fix.py", line 82, in <module>
+    test1_pass = test_only_nodes_with_namespace(pipeline_ml)
+  File "/tmp/verify_fix.py", line 51, in test_only_nodes_with_namespace
+    result = pipeline_ml.only_nodes_with_namespace("some_namespace")
+  File "/kedro-mlflow/./kedro_mlflow/pipeline/pipeline_ml.py", line 177, in only_nodes_with_namespace
+    return self.training.only_nodes_with_namespace(node_namespace)
+  File "/usr/local/lib/python3.10/site-packages/kedro/pipeline/pipeline.py", line 661, in only_nodes_with_namespace
+    raise ValueError(
+ValueError: Pipeline does not contain nodes with namespace 'some_namespace'

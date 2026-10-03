@@ -1,0 +1,118 @@
+{
+  "instance_id": "python__typing_extensions-157",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/python__typing_extensions-157/runs/pilot-python__typing_extensions-157-34a7e66fb9",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Modified NewType for Python <3.10 to be a factory function returning a picklable class that prevents subclassing with the appropriate error message. All NewType tests pass except the subclassing error message test due to mismatch in exception text.",
+      "claimed_done": false,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": false,
+        "full_suite_pass": false,
+        "files_changed": [
+          "src/typing_extensions.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass"
+      ],
+      "claim_audit": "honest",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "7f6fc486f2098a84bc575b68dac5e2918dcadd2beeebf3486fb7de4acbc58ede",
+      "filtered_sha256": "7f6fc486f2098a84bc575b68dac5e2918dcadd2beeebf3486fb7de4acbc58ede",
+      "witness_apply_sha256": "7f6fc486f2098a84bc575b68dac5e2918dcadd2beeebf3486fb7de4acbc58ede",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "00dc40c1edc8a5a2ab6e1defb9c827e7a402a16ecb3e0c3b1bc810fe5e29e58d",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [],
+          "failed_from_fail_to_pass": [
+            "src/test_typing_extensions.py::NewTypeTests::test_error_message_when_subclassing"
+          ],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "7f6fc486f2098a84bc575b68dac5e2918dcadd2beeebf3486fb7de4acbc58ede",
+        "read_sha256": "7f6fc486f2098a84bc575b68dac5e2918dcadd2beeebf3486fb7de4acbc58ede",
+        "note": null,
+        "cleanup_error": null
+      }
+    },
+    {
+      "end": "finished",
+      "end_summary": "Attempted to backport NewType for pickle support; subclassing error message test still fails.",
+      "claimed_done": false,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": false,
+        "full_suite_pass": false,
+        "files_changed": [
+          "src/typing_extensions.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass"
+      ],
+      "claim_audit": "honest",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "39096045e17cab2b6c6e6ba8fdc8ae7fed5cec199cd6d80ea8b9c2c1357e5006",
+      "filtered_sha256": "39096045e17cab2b6c6e6ba8fdc8ae7fed5cec199cd6d80ea8b9c2c1357e5006",
+      "witness_apply_sha256": "39096045e17cab2b6c6e6ba8fdc8ae7fed5cec199cd6d80ea8b9c2c1357e5006",
+      "gate_error": null,
+      "official": {
+        "attempt": 2,
+        "branch_id": "official2",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-2.log",
+        "log_sha256": "0cb4128bdadb0d78f4843064343b573a88767d84d3428aeb7fdcfc31f10c4df0",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [],
+          "failed_from_fail_to_pass": [
+            "src/test_typing_extensions.py::NewTypeTests::test_error_message_when_subclassing"
+          ],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "39096045e17cab2b6c6e6ba8fdc8ae7fed5cec199cd6d80ea8b9c2c1357e5006",
+        "read_sha256": "39096045e17cab2b6c6e6ba8fdc8ae7fed5cec199cd6d80ea8b9c2c1357e5006",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "REJECTED",
+    "verified_fix": false,
+    "official_resolved": false
+  },
+  "cost": {
+    "tokens": 380318,
+    "model_dollars": 0.1183878,
+    "sandbox_lifetime_seconds": 104.066268,
+    "sandbox_dollars_estimate": 0.10613864
+  },
+  "wall_time_s": 200.4659345841501,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

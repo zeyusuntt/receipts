@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Literal ``None`` is interpreted as a string\nWhen using a construct like\r\n```\r\nnull = 'null' value:`None` ;\r\n```\r\n`value` takes the string value `\"None\"` and not `None`.  `` `None` ``is used in the Tatsu's EBNF grammar in a few places and I have the impression that it is meant to be the `None` object no the `\"None\"` string. I find it mildly confusing that bot `` `\"foo\"` `` and `` `foo` `` are interpreted as strings, but I don't think that this can be changed, for backward compatibility. ",
+  "source": {
+    "image": "docker.io/swerebenchv2/neogeny-tatsu:320-8584cd5",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-neogeny__tatsu-320-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvZ3JhbW1hci9hbGVydHNfdGVzdC5weSBiL3Rlc3QvZ3JhbW1hci9hbGVydHNfdGVzdC5weQppbmRleCAyNjM3MTFkLi5lNTgzZTU4IDEwMDY0NAotLS0gYS90ZXN0L2dyYW1tYXIvYWxlcnRzX3Rlc3QucHkKKysrIGIvdGVzdC9ncmFtbWFyL2FsZXJ0c190ZXN0LnB5CkBAIC05LDQgKzksNSBAQCBkZWYgdGVzdF9hbGVydF9pbnRlcnBvbGF0aW9uKCk6CiAgICAgICAgICAgICBzdGFydCA9IGE6bnVtYmVyIGI6IG51bWJlciBpOl5gInNlZW46IHthfSwge2J9ImAgJCA7CiAgICAgICAgICAgICBudW1iZXIgPSAvXGQrLyA7CiAgICAgJycnCi0gICAgYXNzZXJ0IHBhcnNlKGdyYW1tYXIsIGlucHV0KSA9PSB7J2EnOiAnNDInLCAnYic6ICc2OScsICdpJzogJ3NlZW46IDQyLCA2OSd9CisgICAgYXN0ID0gcGFyc2UoZ3JhbW1hciwgaW5wdXQpCisgICAgYXNzZXJ0IGFzdCA9PSB7J2EnOiAnNDInLCAnYic6ICc2OScsICdpJzogJ3NlZW46IDQyLCA2OSd9CmRpZmYgLS1naXQgYS90ZXN0L2dyYW1tYXIvY29uc3RhbnRzX3Rlc3QucHkgYi90ZXN0L2dyYW1tYXIvY29uc3RhbnRzX3Rlc3QucHkKaW5kZXggNWU0MTY4Ni4uMzJkMzZmNCAxMDA2NDQKLS0tIGEvdGVzdC9ncmFtbWFyL2NvbnN0YW50c190ZXN0LnB5CisrKyBiL3Rlc3QvZ3JhbW1hci9jb25zdGFudHNfdGVzdC5weQpAQCAtMzYsMyArMzYsMTggQEAgZGVmIHRlc3RfY29uc3RhbnRfaW50ZXJwb2xhdGlvbl9tdWx0aWxpbmUoKToKICAgICByZXN1bHQgPSBwYXJzZShncmFtbWFyLCBpbnB1dCkKICAgICBwcmludChyZXN1bHQpCiAgICAgYXNzZXJ0IHJlc3VsdCA9PSB7J2EnOiAnNDInLCAnYic6ICc2OScsICdpJzogJ3NlZW46XG40MlxuNjlcbid9CisKKworZGVmIHRlc3RfZXZhbHVhdGVfY29uc3RhbnQoKToKKyAgICBncmFtbWFyID0gJycnCisgICAgICAgIEBAZ3JhbW1hciA6OiBjb25zdGFudHMKKyAgICAgICAgc3RhcnQgPSBpbnQgYm9vbCBzdHIgbnVsbCAnYScgJDsKKworICAgICAgICBpbnQgPSBgNDJgIDsKKyAgICAgICAgYm9vbCA9IGBUcnVlYCA7CisgICAgICAgIHN0ciA9IGBTb21ldGhpbmdgIDsKKyAgICAgICAgbnVsbCA9IGBOb25lYCA7CisgICAgJycnCisKKyAgICBhc3QgPSBwYXJzZShncmFtbWFyLCAnYScpCisgICAgYXNzZXJ0IGFzdCA9PSAoNDIsIFRydWUsICdTb21ldGhpbmcnLCBOb25lLCAnYScpCg=='\"'\"'))'",
+      "git apply /tmp/receipts-neogeny__tatsu-320-test.patch"
+    ],
+    "workdir": "/TatSu"
+  },
+  "spec_paths": [
+    "test/grammar/alerts_test.py",
+    "test/grammar/constants_test.py"
+  ],
+  "spec_tests": [
+    "test/grammar/constants_test.py::test_evaluate_constant"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/grammar/alerts_test.py test/grammar/constants_test.py"
+}

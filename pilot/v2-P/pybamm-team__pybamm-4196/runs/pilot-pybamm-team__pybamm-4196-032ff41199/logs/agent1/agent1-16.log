@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+created: 4/4 workers
+4 workers [3 items]
+
+scheduling tests via LoadScheduling
+
+tests/unit/test_expression_tree/test_functions.py::TestFunction::test_diff 
+tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_diff 
+tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_to_from_json 
+[gw0] [ 33%] FAILED tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_to_from_json 
+[gw1] [ 66%] PASSED tests/unit/test_expression_tree/test_functions.py::TestFunction::test_diff 
+[gw2] [100%] FAILED tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_diff 
+
+=================================== FAILURES ===================================
+[gw0] linux -- Python 3.10.19 /usr/local/bin/python
+E   AssertionError: {'nam[31 chars]id': 590714, 'x': [[0.0, 0.1111111111111111, 0[364 chars]True} != {'nam[31 chars]id': <ANY>, 'x': [[0.0, 0.1111111111111111, 0.[386 chars]': 0}
+    Diff is 716 characters long. Set self.maxDiff to None to see it.
+/usr/local/lib/python3.10/unittest/case.py:675: AssertionError: {'nam[31 chars]id': 590714, 'x': [[0.0, 0.1111111111111111, 0[364 chars]True} != {'nam[31 chars]id': <ANY>, 'x': [[0.0, 0.1111111111111111, 0.[386 chars]': 0}
+[gw2] linux -- Python 3.10.19 /usr/local/bin/python
+E   ValueError: 
+                        differentiation using '.derivative()' not implemented for functions
+                        with more than one child
+/PyBaMM/pybamm/expression_tree/functions.py:106: ValueError:
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-16.xml ------------
+=========================== short test summary info ============================
+PASSED tests/unit/test_expression_tree/test_functions.py::TestFunction::test_diff
+FAILED tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_to_from_json
+FAILED tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_diff
+========================= 2 failed, 1 passed in 5.79s ==========================

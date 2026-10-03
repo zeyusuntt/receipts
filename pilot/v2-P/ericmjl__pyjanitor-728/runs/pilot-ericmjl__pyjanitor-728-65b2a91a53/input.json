@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Add the ability to test and sort timestamps to be monotonic in a pandas data frame\n# Brief Description\r\n\r\nFollowing up on #703, this issue seeks to introduce the ability to sort the timestamps in a pandas data frame monotonically\r\n\r\nI would like to propose...\r\n\r\n# Example API\r\n```python\r\ndef _test_for_monotonicity(\r\n        df: pd.DataFrame,\r\n        column_name: str = None,\r\n        direction: str = 'increasing'\r\n) -> bool:\r\n    \"\"\"\r\n    Tests input data frame for monotonicity.\r\n\r\n    Check if the data is monotonically increasing or decreasing.\r\n    Direction is dependent on user input.\r\n    Defaults to increasing\r\n\r\n    :param df: data frame to be tested for monotonicity\r\n    :param column_name: needs to be specified if and only if the date time is not in index.\r\n        Defaults to None.\r\n    :param direction: specifies the direction in which monotonicity is being tested for.\r\n        Defaults to 'increasing'\r\n    :return: single boolean flag indicating whether the test has passed or not\r\n    \"\"\"\r\n\r\ndef sort_monotonically(\r\n        df: pd.DataFrame,\r\n        column_name: str = None,\r\n        direction: str ='increasing'\r\n) -> pd.DataFrame:\r\n    \"\"\"\r\n    Sorts data frame monotonically.\r\n    It assumes the data frame has an index of type pd.DateTimeIndex when index is datetime.\r\n    If datetime is in a column, then the column is expected to be of type pd.Timestamp\r\n\r\n    :param df: data frame to sort monotonically\r\n    :param column_name: needs to be specified if and only if the date time is not in index.\r\n        Defaults to None\r\n    :param direction: specifies the direction in which monotonicity is being tested for.\r\n        Defaults to 'increasing'\r\n    :return: data frame with its index sorted\r\n    \"\"\"\r\n\r\n\r\n# more examples below\r\n# ...\r\n```\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/ericmjl-pyjanitor:728-26c59a9",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-ericmjl__pyjanitor-728-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3RpbWVzZXJpZXMvdGVzdF9zb3J0X3RpbWVzdGFtcHNfbW9ub3RvbmljYWxseS5weSBiL3Rlc3RzL3RpbWVzZXJpZXMvdGVzdF9zb3J0X3RpbWVzdGFtcHNfbW9ub3RvbmljYWxseS5weQpuZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwLi44MTNmZmZhCi0tLSAvZGV2L251bGwKKysrIGIvdGVzdHMvdGltZXNlcmllcy90ZXN0X3NvcnRfdGltZXN0YW1wc19tb25vdG9uaWNhbGx5LnB5CkBAIC0wLDAgKzEsNTIgQEAKK2ltcG9ydCBweXRlc3QKK2ltcG9ydCBwYW5kYXMgYXMgcGQKK2Zyb20gcmFuZG9tIGltcG9ydCByYW5kaW50CitpbXBvcnQgamFuaXRvciAgIyBub3FhOiBGNDAxCitpbXBvcnQgamFuaXRvci50aW1lc2VyaWVzICAjIG5vcWE6IEY0MDEKKworCitAcHl0ZXN0LmZpeHR1cmUKK2RlZiB0aW1lc2VyaWVzX2RhdGFmcmFtZSgpIC0+IHBkLkRhdGFGcmFtZToKKyAgICAiIiIKKyAgICBSZXR1cm5zIGEgdGltZSBzZXJpZXMgZGF0YWZyYW1lCisgICAgIiIiCisgICAgdHNfaW5kZXggPSBwZC5kYXRlX3JhbmdlKCIxLzEvMjAxOSIsIHBlcmlvZHM9MTAwMCwgZnJlcT0iMUgiKQorICAgIHYxID0gW3JhbmRpbnQoMSwgMjAwMCkgZm9yIGkgaW4gcmFuZ2UoMTAwMCldCisgICAgdGVzdF9kZiA9IHBkLkRhdGFGcmFtZSh7InYxIjogdjF9LCBpbmRleD10c19pbmRleCkKKyAgICByZXR1cm4gdGVzdF9kZgorCisKKyMgTk9URTogVGhlIHRlc3RzIHBvc3NpYmx5IGNhbiBiZSBtZXJnZWQgYmFjayB0b2dldGhlciBsYXRlcgorIyBpZiB0aGV5IGFyZSBwYXJhbWV0cml6ZWQgcHJvcGVybHkuCisjIE5PVEU6IFRoZXNlIHRlc3RzIHVzZSBgZGYuZXF1YWxzKG90aGVyX2RmKWAsCisjIGJlY2F1c2UgdGhlIGRlc2lyZWQgYHBkLmFzc2VydF9mcmFtZV9lcXVhbChkZiwgb3RoZXJfZGYpYAorIyBjb25zdGFudGx5IGZhaWxlZCBvbiB0aGUgQ0kgc3lzdGVtcy4KKyMgSXQncyBhIHRhc2sgZm9yIGxhdGVyIHRvIGZpeC4KKworCitAcHl0ZXN0Lm1hcmsudGltZXNlcmllcworZGVmIHRlc3Rfc29ydF90aW1lc3RhbXBzX21vbm90b25pY2FsbHkodGltZXNlcmllc19kYXRhZnJhbWUpOgorICAgICIiIlRlc3Qgc29ydF90aW1lc3RhbXBzX21vbm90b25pY2FsbHkgZm9yIGFzY2VuZGluZyBvcmRlciIiIgorICAgIGRmID0gdGltZXNlcmllc19kYXRhZnJhbWUuc2h1ZmZsZSgKKyAgICAgICAgcmVzZXRfaW5kZXg9RmFsc2UKKyAgICApLnNvcnRfdGltZXN0YW1wc19tb25vdG9uaWNhbGx5KCkKKyAgICBhc3NlcnQgZGYuZXF1YWxzKHRpbWVzZXJpZXNfZGF0YWZyYW1lKQorCisKK0BweXRlc3QubWFyay50aW1lc2VyaWVzCitkZWYgdGVzdF9zb3J0X3RpbWVzdGFtcHNfbW9ub3RvbmljYWxseV9kZWNyZWFzaW5nKHRpbWVzZXJpZXNfZGF0YWZyYW1lKToKKyAgICAiIiJUZXN0IHNvcnRfdGltZXN0YW1wc19tb25vdG9uaWNhbGx5IGZvciBkZXNjZW5kaW5nIG9yZGVyIiIiCisgICAgZGYyID0gdGltZXNlcmllc19kYXRhZnJhbWUuc29ydF9pbmRleChhc2NlbmRpbmc9RmFsc2UpCisgICAgZGYzID0gZGYyLnNvcnRfdGltZXN0YW1wc19tb25vdG9uaWNhbGx5KCJkZWNyZWFzaW5nIikKKyAgICBhc3NlcnQgZGYzLmVxdWFscyhkZjIpCisKKworQHB5dGVzdC5tYXJrLnRpbWVzZXJpZXMKK2RlZiB0ZXN0X3NvcnRfdGltZXN0YW1wc19tb25vdG9uaWNhbGx5X3N0cmljdCh0aW1lc2VyaWVzX2RhdGFmcmFtZSk6CisgICAgIiIiVGVzdCBzb3J0X3RpbWVzdGFtcHNfbW9ub3RvbmljYWxseSBmb3IgaW5kZXggZHVwbGljYXRpb24gaGFuZGxpbmciIiIKKyAgICBkZiA9IHRpbWVzZXJpZXNfZGF0YWZyYW1lLnNodWZmbGUocmVzZXRfaW5kZXg9RmFsc2UpCisgICAgcmFuZG9tX251bWJlciA9IHJhbmRpbnQoMSwgbGVuKHRpbWVzZXJpZXNfZGF0YWZyYW1lKSkKKyAgICBkZiA9IGRmLmFwcGVuZCgKKyAgICAgICAgZGYubG9jW2RmLmluZGV4W3JhbmRvbV9udW1iZXJdLCA6XQorICAgICkuc29ydF90aW1lc3RhbXBzX21vbm90b25pY2FsbHkoZGlyZWN0aW9uPSJpbmNyZWFzaW5nIiwgc3RyaWN0PVRydWUpCisgICAgYXNzZXJ0IGRmLmVxdWFscyh0aW1lc2VyaWVzX2RhdGFmcmFtZSkK'\"'\"'))'",
+      "git apply /tmp/receipts-ericmjl__pyjanitor-728-test.patch"
+    ],
+    "workdir": "/pyjanitor"
+  },
+  "spec_paths": [
+    "tests/timeseries/test_sort_timestamps_monotonically.py"
+  ],
+  "spec_tests": [
+    "tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically",
+    "tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically_decreasing"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/timeseries/test_sort_timestamps_monotonically.py"
+}

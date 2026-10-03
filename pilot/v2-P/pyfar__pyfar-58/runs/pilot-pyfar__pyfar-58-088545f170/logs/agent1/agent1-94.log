@@ -1,0 +1,55 @@
+def cyl2cart(azimuth, height, radius):
+    """
+    Transforms from cylindrical to Cartesian coordinates.
+
+    Cylindrical coordinates follow the convention that the azimuth is 0 at
+    positive x-direction and pi/2 at positive y-direction (counter clockwise
+    rotation). The height is identical to the z-coordinate and the radius is
+    measured orthogonal from the z-axis.
+
+    Cartesian coordinates follow the right hand rule.
+
+    .. math::
+
+        x &= radius * \\cos(azimuth),
+
+        y &= radius * \\sin(azimuth),
+
+        z &= height
+
+    .. math::
+
+        0 < azimuth < 2 \\pi
+
+
+    Notes
+    -----
+    To ensure proper handling of the azimuth angle, the arctan2 implementation
+    from numpy is used.
+
+    Parameters
+    ----------
+    azimuth : ndarray, number
+
+    height : ndarray, number
+
+    radius : ndarray, number
+
+    Returns
+    -------
+    x : ndarray, number
+
+    y : ndarray, number
+
+    z : ndarray, number
+    """
+    x = radius * np.cos(azimuth)
+    y = radius * np.sin(azimuth)
+    if isinstance(height, np.ndarray):
+        z = height.copy()
+    else:
+        z = height
+
+    return x, y, z
+
+

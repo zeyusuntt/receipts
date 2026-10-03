@@ -1,0 +1,22 @@
+diff --git a/odc/geo/crs.py b/odc/geo/crs.py
+index 6c208aa..42e002a 100644
+--- a/odc/geo/crs.py
++++ b/odc/geo/crs.py
+@@ -213,8 +213,15 @@ class CRS:
+             return "degrees_north", "degrees_east"
+ 
+         if self.projected:
+-            x, y = self._crs.axis_info
+-            return x.unit_name, y.unit_name
++            # Handle compound CRS by taking the first two spatial axes (typically easting, northing)
++            axis_info = self._crs.axis_info
++            if len(axis_info) >= 2:
++                # Take the first two axes which should be the spatial dimensions
++                x, y = axis_info[0], axis_info[1]
++                return x.unit_name, y.unit_name
++            else:
++                # Fallback for unexpected cases
++                raise ValueError("Expected at least 2 axes in projected CRS")
+ 
+         raise ValueError("Neither projected nor geographic")  # pragma: no cover
+ 

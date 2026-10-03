@@ -1,0 +1,91 @@
+diff --git a/ariadne_codegen/client_generators/result_types.py b/ariadne_codegen/client_generators/result_types.py
+index 1a1e9e1..9e2177e 100644
+--- a/ariadne_codegen/client_generators/result_types.py
++++ b/ariadne_codegen/client_generators/result_types.py
+@@ -167,7 +167,85 @@ class ResultTypesGenerator:
+         return self._class_defs
+ 
+     def get_operation_as_str(self) -> str:
+-        operation_str = print_ast(self.operation_definition)
++        # Create a copy of the operation definition without mixin directives
++        from graphql import OperationDefinitionNode
++        
++        def remove_mixin_directives_from_selections(selections):
++            result = []
++            for selection in selections:
++                if hasattr(selection, 'directives') and selection.directives:
++                    # Filter out mixin directives
++                    filtered_directives = [
++                        d for d in selection.directives 
++                        if not (d.name and d.name.value == MIXIN_NAME)
++                    ]
++                    # Create a copy of the selection with filtered directives
++                    if isinstance(selection, FieldNode):
++                        new_selection = FieldNode(
++                            alias=selection.alias,
++                            name=selection.name,
++                            arguments=selection.arguments,
++                            directives=filtered_directives,
++                            selection_set=selection.selection_set
++                        )
++                        # Recursively process nested selections
++                        if new_selection.selection_set:
++                            new_selection.selection_set = SelectionSetNode(
++                                selections=remove_mixin_directives_from_selections(
++                                    new_selection.selection_set.selections
++                                )
++                            )
++                        result.append(new_selection)
++                    elif isinstance(selection, InlineFragmentNode):
++                        new_selection = InlineFragmentNode(
++                            type_condition=selection.type_condition,
++                            directives=filtered_directives,
++                            selection_set=selection.selection_set
++                        )
++                        # Recursively process nested selections
++                        if new_selection.selection_set:
++                            new_selection.selection_set = SelectionSetNode(
++                                selections=remove_mixin_directives_from_selections(
++                                    new_selection.selection_set.selections
++                                )
++                            )
++                        result.append(new_selection)
++                    elif isinstance(selection, FragmentSpreadNode):
++                        # Fragment spreads don't typically have directives that matter here,
++                        # but we copy them anyway
++                        result.append(selection)
++                    else:
++                        result.append(selection)
++                else:
++                    result.append(selection)
++            return result
++
++        # Copy the operation definition and remove mixin directives
++        if hasattr(self.operation_definition, 'directives'):
++            filtered_directives = [
++                d for d in self.operation_definition.directives
++                if not (d.name and d.name.value == MIXIN_NAME)
++            ]
++            
++            if isinstance(self.operation_definition, OperationDefinitionNode):
++                cleaned_operation = OperationDefinitionNode(
++                    operation=self.operation_definition.operation,
++                    name=self.operation_definition.name,
++                    variable_definitions=self.operation_definition.variable_definitions,
++                    directives=filtered_directives,
++                    selection_set=SelectionSetNode(
++                        selections=remove_mixin_directives_from_selections(
++                            self.operation_definition.selection_set.selections
++                        )
++                    )
++                )
++            else:
++                # For other executable definitions (shouldn't happen in practice for queries)
++                cleaned_operation = self.operation_definition
++        else:
++            cleaned_operation = self.operation_definition
++            
++        operation_str = print_ast(cleaned_operation)
+         if self._fragments_used_as_mixins or self._unpacked_fragments:
+             for used_fragment in sorted(self._get_all_related_fragments()):
+                 operation_str += "\n\n" + print_ast(

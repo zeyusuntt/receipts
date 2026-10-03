@@ -1,0 +1,115 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /qutip/qutip/tests
+configfile: pytest.ini
+plugins: cov-7.0.0, fail-slow-0.6.0
+collecting ... collected 30 items
+
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[ket preserved] PASSED [  3%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[tensor-ket preserved] PASSED [  6%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[bra preserved] PASSED [ 10%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[tensor-bra preserved] PASSED [ 13%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[oper preserved] PASSED [ 16%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[tensor-oper preserved] PASSED [ 20%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[super-oper] PASSED [ 23%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[super-oper-uneven] FAILED [ 26%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[operator-ket] PASSED [ 30%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[operator-bra] PASSED [ 33%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[ket preserved] PASSED [ 36%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[tensor-ket preserved] PASSED [ 40%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[bra preserved] PASSED [ 43%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[tensor-bra preserved] PASSED [ 46%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[oper preserved] PASSED [ 50%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[tensor-oper preserved] PASSED [ 53%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[super-oper] PASSED [ 56%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[super-oper-uneven] FAILED [ 60%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[operator-ket] PASSED [ 63%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[operator-bra] PASSED [ 66%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[ket preserved] PASSED [ 70%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[tensor-ket preserved] PASSED [ 73%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[bra preserved] PASSED [ 76%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[tensor-bra preserved] PASSED [ 80%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[oper preserved] PASSED [ 83%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[tensor-oper preserved] PASSED [ 86%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[super-oper] PASSED [ 90%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[super-oper-uneven] PASSED [ 93%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[operator-ket] PASSED [ 96%]
+qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[operator-bra] PASSED [100%]
+
+=================================== FAILURES ===================================
+_ TestSuperOperatorDimsModification.test_dims_to_tensor_perm[super-oper-uneven] _
+
+self = <qutip.tests.core.test_dimensions.TestSuperOperatorDimsModification object at 0x7fffe9fcc5b0>
+indices = _Indices(base=[[[1], [2, 3]], [[4, 5], [6]]], permutation=[2, 0, 1, 4, 5, 3], shape=(2, 3, 1, 6, 4, 5))
+
+    def test_dims_to_tensor_perm(self, indices):
+        # This function might not need to be public, and consequently might not
+        # need to be tested here.
+>       assert dims_to_tensor_perm(indices.base) == indices.permutation
+E       AssertionError: assert [np.int64(1),..., np.int64(4)] == [2, 0, 1, 4, 5, 3]
+E         
+E         At index 0 diff: np.int64(1) != 2
+E         
+E         Full diff:
+E           [
+E         -     2,
+E         -     0,...
+E         
+E         ...Full output truncated (11 lines hidden), use '-vv' to show
+
+qutip/tests/core/test_dimensions.py:111: AssertionError
+_ TestSuperOperatorDimsModification.test_dims_idxs_to_tensor_idxs[super-oper-uneven] _
+
+self = <qutip.tests.core.test_dimensions.TestSuperOperatorDimsModification object at 0x7fffe9fcca00>
+indices = _Indices(base=[[[1], [2, 3]], [[4, 5], [6]]], permutation=[2, 0, 1, 4, 5, 3], shape=(2, 3, 1, 6, 4, 5))
+
+    def test_dims_idxs_to_tensor_idxs(self, indices):
+        test_indices = list(range(len(flatten(indices.base))))
+>       assert (dims_idxs_to_tensor_idxs(indices.base, test_indices)
+                == indices.permutation)
+E       AssertionError: assert [np.int64(1),..., np.int64(4)] == [2, 0, 1, 4, 5, 3]
+E         
+E         At index 0 diff: np.int64(1) != 2
+E         
+E         Full diff:
+E           [
+E         -     2,
+E         -     0,...
+E         
+E         ...Full output truncated (11 lines hidden), use '-vv' to show
+
+qutip/tests/core/test_dimensions.py:115: AssertionError
+==================================== PASSES ====================================
+------------ generated xml file: /opt/receipts/reports/agent1-8.xml ------------
+=========================== short test summary info ============================
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[ket preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[tensor-ket preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[bra preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[tensor-bra preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[oper preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[tensor-oper preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[super-oper]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[operator-ket]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[operator-bra]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[ket preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[tensor-ket preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[bra preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[tensor-bra preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[oper preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[tensor-oper preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[super-oper]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[operator-ket]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[operator-bra]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[ket preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[tensor-ket preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[bra preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[tensor-bra preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[oper preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[tensor-oper preserved]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[super-oper]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[super-oper-uneven]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[operator-ket]
+PASSED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[operator-bra]
+FAILED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_perm[super-oper-uneven]
+FAILED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_idxs_to_tensor_idxs[super-oper-uneven]
+========================= 2 failed, 28 passed in 0.15s =========================

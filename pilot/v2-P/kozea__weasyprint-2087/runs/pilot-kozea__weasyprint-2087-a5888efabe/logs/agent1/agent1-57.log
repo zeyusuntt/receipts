@@ -1,0 +1,79 @@
+@assert_no_logs
+def test_layout_table_fixed_4():
+    page, = render_pages('''
+      <table style="table-layout: fixed; border-spacing: 0;
+                    width: 100px; margin: 10px">
+        <colgroup>
+          <col />
+          <col style="width: 20px" />
+        </colgroup>
+        <tr>
+          <td></td>
+          <td style="width: 40px">a</td>
+        </tr>
+      </table>
+    ''')
+    html, = page.children
+    body, = html.children
+    table_wrapper, = body.children
+    table, = table_wrapper.children
+    row_group, = table.children
+--
+
+
+@assert_no_logs
+--
+@assert_no_logs
+def test_layout_table_auto_19():
+    # Column group width
+    page, = render_pages('''
+      <table style="width: 200px">
+        <colgroup style="width: 100px">
+          <col />
+          <col />
+        </colgroup>
+        <col style="width: 100px" />
+        <tbody>
+          <tr>
+            <td>a</td>
+            <td>a</td>
+            <td>abc</td>
+          </tr>
+        </tbody>
+      </table>
+    ''')
+    html, = page.children
+    body, = html.children
+    table_wrapper, = body.children
+    table, = table_wrapper.children
+    row_group, = table.children
+    row, = row_group.children
+--
+@assert_no_logs
+def test_layout_table_auto_21():
+    # Fixed-width table with column group with widths as percentages and pixels
+    page, = render_pages('''
+      <table style="width: 500px">
+        <colgroup style="width: 100px">
+          <col />
+          <col />
+        </colgroup>
+        <colgroup style="width: 30%">
+          <col />
+          <col />
+        </colgroup>
+        <tbody>
+          <tr>
+            <td>a</td>
+            <td>a</td>
+            <td>abc</td>
+            <td>abc</td>
+          </tr>
+        </tbody>
+--
+
+@assert_no_logs
+def test_layout_table_auto_41():
+    # Cell width as percentage in auto-width table
+    page, = render_pages('''
+      <div style="width: 100px">

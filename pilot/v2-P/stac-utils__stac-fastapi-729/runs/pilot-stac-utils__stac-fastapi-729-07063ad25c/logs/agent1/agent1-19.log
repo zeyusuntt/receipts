@@ -1,0 +1,17 @@
+=== Test with explicit field in make_dataclass ===
+Parent __post_init__: self type = <class 'types.Child'>, x = <class '__main__.Child'>
+Parent __post_init__ finished: x = <class '__main__.Child'>
+ERROR: 'Child' object is not callable
+
+=== Test: No fields in make_dataclass but field in parent ===
+Parent __post_init__: self type = <class 'types.Child2'>, x = <class '__main__.Child2'>
+Parent __post_init__ finished: x = <class '__main__.Child2'>
+ERROR: 'Child2' object is not callable
+Traceback (most recent call last):
+  File "/tmp/test3.py", line 21, in <module>
+    c = Child(x="hello")
+TypeError: 'Child' object is not callable
+Traceback (most recent call last):
+  File "/tmp/test3.py", line 34, in <module>
+    c2 = Child2(x="hello")
+TypeError: 'Child2' object is not callable

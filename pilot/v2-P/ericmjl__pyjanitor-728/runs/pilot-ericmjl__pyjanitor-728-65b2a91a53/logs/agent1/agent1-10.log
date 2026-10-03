@@ -1,0 +1,10 @@
+4:from janitor.timeseries import fill_missing_timestamps, _get_missing_timestamps
+8:@pytest.fixture
+9:def timeseries_dataframe() -> pd.DataFrame:
+13:    ts_index = pd.date_range("1/1/2019", periods=1000, freq="1H")
+15:    test_df = pd.DataFrame({"v1": v1}, index=ts_index)
+19:@pytest.mark.timeseries
+21:    """Test that filling missing timestamps works as expected."""
+24:    df1 = timeseries_dataframe.drop(timeseries_dataframe.index[random_number])
+33:    original_index = timeseries_dataframe.index
+34:    new_index = result.index

@@ -1,0 +1,28 @@
+diff --git a/gammapy/datasets/evaluator.py b/gammapy/datasets/evaluator.py
+index 160ad4c43..eb4cef4ec 100644
+--- a/gammapy/datasets/evaluator.py
++++ b/gammapy/datasets/evaluator.py
+@@ -387,8 +387,22 @@ class MapEvaluator:
+         if self.model.apply_irf["edisp"]:
+             return apply_edisp(npred, self.edisp)
+         else:
++            # No edisp application: map from true to reco using identity if needed
+             if "energy_true" in npred.geom.axes.names:
+-                return apply_edisp(npred, self._edisp_diagonal)
++                if self.edisp is None:
++                    # Create identity EDispKernel from geom energy axes
++                    energy_axis_true = self.geom.axes["energy_true"].copy()
++                    energy_axis = self.geom.axes["energy"].copy()
++                    # If axes differ, we cannot map; assume same binning and rename
++                    if energy_axis_true.nbin != energy_axis.nbin:
++                        # Fallback: reuse one axis for both
++                        energy_axis = energy_axis_true.copy(name="energy")
++                    return apply_edisp(npred,
++                                     EDispKernel.from_diagonal_response(
++                                         energy_axis_true=energy_axis_true,
++                                         energy_axis=energy_axis))
++                else:
++                    return apply_edisp(npred, self._edisp_diagonal)
+             else:
+                 return npred
+ 

@@ -1,0 +1,31 @@
+        if phase_info_parameterization is not None:
+            self.phase_info, self.post_mission_info = phase_info_parameterization(
+                self.phase_info, self.post_mission_info, self.aviary_inputs
+            )
+        else:
+            # Apply basic parameterization when no explicit function is provided
+            # Handle direct time_duration specification by converting to time_duration_bounds
+            for phase_name, phase_info_dict in self.phase_info.items():
+                if 'user_options' in phase_info_dict and 'time_duration' in phase_info_dict['user_options']:
+                    time_duration = phase_info_dict['user_options']['time_duration']
+                    # Convert direct time_duration to time_duration_bounds for compatibility
+                    # with phase builders that expect bounds format
+                    if time_duration[0] is not None:
+                        phase_info_dict['user_options']['time_duration_bounds'] = (time_duration, time_duration)
+
+        phase_info = self.phase_info
+
+        if self.analysis_scheme is AnalysisScheme.COLLOCATION:                if 'user_options' in phase_info_dict and 'time_duration' in phase_info_dict['user_options']:
+                    time_duration = phase_info_dict['user_options']['time_duration']
+                    # Convert direct time_duration to time_duration_bounds for compatibility
+                    # with phase builders that expect bounds format
+                    if time_duration[0] is not None:
+                        phase_info_dict['user_options']['time_duration_bounds'] = (time_duration, time_duration)
+
+        phase_info = self.phase_info
+
+        if self.analysis_scheme is AnalysisScheme.COLLOCATION:        if self.analysis_scheme is AnalysisScheme.COLLOCATION:
+            phases = list(phase_info.keys())
+            traj = self.model.add_subsystem('traj', dm.Trajectory(parallel_phases=parallel_phases))
+
+        elif self.analysis_scheme is AnalysisScheme.SHOOTING:

@@ -1,0 +1,139 @@
+diff --git a/lib/cartopy/feature/__init__.py b/lib/cartopy/feature/__init__.py
+index 9804f5c7..cc0c7ecf 100644
+--- a/lib/cartopy/feature/__init__.py
++++ b/lib/cartopy/feature/__init__.py
+@@ -258,21 +258,32 @@ class NaturalEarthFeature(Feature):
+             Keyword arguments to be used when drawing this feature.
+ 
+         """
+-        super().__init__(cartopy.crs.PlateCarree(), **kwargs)
+-        self.category = category
+-        self.name = name
+-
++        # Don't set CRS yet - we'll determine it from the data when loading
++        self._category = category
++        self._name = name
++        
+         # Cast the given scale to a (constant) Scaler if a string is passed.
+         if isinstance(scale, str):
+             scale = Scaler(scale)
+ 
+-        self.scaler = scale
++        self._scaler = scale
+         # Make sure this is a valid resolution
+         self._validate_scale()
++        
++        # Initialize CRS to None - will be set when geometries are loaded
++        super().__init__(None, **kwargs)
+ 
++    @property
++    def category(self):
++        return self._category
++
++    @property
++    def name(self):
++        return self._name
++        
+     @property
+     def scale(self):
+-        return self.scaler.scale
++        return self._scaler.scale
+ 
+     def _validate_scale(self):
+         if self.scale not in ('110m', '50m', '10m'):
+@@ -291,8 +302,13 @@ class NaturalEarthFeature(Feature):
+             path = shapereader.natural_earth(resolution=self.scale,
+                                              category=self.category,
+                                              name=self.name)
+-            geometries = tuple(shapereader.Reader(path).geometries())
++            reader = shapereader.Reader(path)
++            geometries = tuple(reader.geometries())
+             _NATURAL_EARTH_GEOM_CACHE[key] = geometries
++            
++            # Set the CRS on this feature if available from the reader
++            if reader.crs is not None and self.crs is None:
++                self._crs = reader.crs
+         else:
+             geometries = _NATURAL_EARTH_GEOM_CACHE[key]
+ 
+@@ -305,7 +321,7 @@ class NaturalEarthFeature(Feature):
+         The extent is assumed to be in the CRS of the feature.
+         If extent is None, the method returns all geometries for this dataset.
+         """
+-        self.scaler.scale_from_extent(extent)
++        self._scaler.scale_from_extent(extent)
+         return super().intersecting_geometries(extent)
+ 
+     def with_scale(self, new_scale):
+@@ -320,7 +336,7 @@ class NaturalEarthFeature(Feature):
+             respectively.
+ 
+         """
+-        return NaturalEarthFeature(self.category, self.name, new_scale,
++        return NaturalEarthFeature(self._category, self._name, new_scale,
+                                    **self.kwargs)
+ 
+ 
+diff --git a/lib/cartopy/io/shapereader.py b/lib/cartopy/io/shapereader.py
+index 704b2924..c28783ce 100644
+--- a/lib/cartopy/io/shapereader.py
++++ b/lib/cartopy/io/shapereader.py
+@@ -142,6 +142,26 @@ class BasicReader:
+                              "in '%s'." % filename)
+ 
+         self._fields = self._reader.fields
++        # Try to get CRS from accompanying .prj file
++        self._crs = None
++        prj_path = Path(filename).with_suffix('.prj')
++        if prj_path.exists():
++            try:
++                import cartopy.crs as ccrs
++                import pyproj
++                with open(prj_path, 'r') as prj_file:
++                    wkt = prj_file.read()
++                if wkt.strip():
++                    geographic_crs = pyproj.CRS.from_wkt(wkt)
++                    self._crs = ccrs.Projection(geographic_crs)
++            except Exception:
++                # If we can't parse the CRS, leave it as None
++                pass
++
++    @property
++    def crs(self):
++        """The cartopy CRS for the geometries in this shapefile, or None if not available."""
++        return self._crs
+ 
+     def close(self):
+         return self._reader.close()
+@@ -224,6 +244,19 @@ class FionaReader:
+                      if feature['geometry'] else None}
+                 d.update(feature['properties'])
+                 self._data.append(d)
++        
++        # Store CRS from fiona collection
++        try:
++            import cartopy.crs as ccrs
++            import pyproj
++            if hasattr(f, 'crs') and f.crs is not None:
++                geographic_crs = pyproj.CRS.from_wkt(f.crs.wkt)
++                self._crs = ccrs.Projection(geographic_crs)
++            else:
++                self._crs = None
++        except Exception:
++            # If we can't get or parse the CRS, leave it as None
++            self._crs = None
+ 
+     def close(self):
+         # TODO: Keep the Fiona handle open until this is called.
+@@ -259,6 +292,11 @@ class FionaReader:
+                               {key: value for key, value in
+                                item.items() if key != 'geometry'})
+ 
++    @property
++    def crs(self):
++        """The cartopy CRS for the geometries in this shapefile, or None if not available."""
++        return self._crs
++
+ 
+ Reader = FionaReader if _HAS_FIONA else BasicReader
+ """

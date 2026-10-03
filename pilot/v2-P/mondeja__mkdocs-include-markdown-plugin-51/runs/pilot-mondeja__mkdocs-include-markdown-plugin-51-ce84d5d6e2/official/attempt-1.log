@@ -1,0 +1,121 @@
+============================= test session starts ==============================
+collected 40 items
+
+tests/test_include.py .....F........                                     [ 35%]
+tests/test_include_markdown.py FFFFFF.F.....FFFFF.FFF....                [100%]
+
+=================================== FAILURES ===================================
+/mkdocs-include-markdown-plugin/tests/test_include.py:245: AssertionError: assert 'This should ...fter end tag.' == '\nThis shoul...er end tag.\n'
+/mkdocs-include-markdown-plugin/mkdocs_include_markdown_plugin/event.py:326: UnboundLocalError: local variable 'start' referenced before assignment
+/mkdocs-include-markdown-plugin/mkdocs_include_markdown_plugin/event.py:326: UnboundLocalError: local variable 'start' referenced before assignment
+/mkdocs-include-markdown-plugin/mkdocs_include_markdown_plugin/event.py:326: UnboundLocalError: local variable 'start' referenced before assignment
+/mkdocs-include-markdown-plugin/tests/test_include_markdown.py:433: AssertionError: assert '# Header\n\n...INCLUDE -->\n' == '# Header\n\n...INCLUDE -->\n'
+/mkdocs-include-markdown-plugin/tests/test_include_markdown.py:433: AssertionError: assert '# Header\n\n...INCLUDE -->\n' == '# Header\n\n...INCLUDE -->\n'
+/mkdocs-include-markdown-plugin/tests/test_include_markdown.py:433: AssertionError: assert '# Header\n\n...INCLUDE -->\n' == '# Header\n\n...INCLUDE -->\n'
+/mkdocs-include-markdown-plugin/tests/test_include_markdown.py:433: AssertionError: assert 'This should ...fter end tag.' == '\nThis shoul...er end tag.\n'
+/mkdocs-include-markdown-plugin/mkdocs_include_markdown_plugin/event.py:326: UnboundLocalError: local variable 'start' referenced before assignment
+/mkdocs-include-markdown-plugin/mkdocs_include_markdown_plugin/event.py:326: UnboundLocalError: local variable 'start' referenced before assignment
+/mkdocs-include-markdown-plugin/mkdocs_include_markdown_plugin/event.py:326: UnboundLocalError: local variable 'start' referenced before assignment
+/mkdocs-include-markdown-plugin/mkdocs_include_markdown_plugin/event.py:326: UnboundLocalError: local variable 'start' referenced before assignment
+/mkdocs-include-markdown-plugin/mkdocs_include_markdown_plugin/event.py:326: UnboundLocalError: local variable 'start' referenced before assignment
+/mkdocs-include-markdown-plugin/tests/test_include_markdown.py:496: AssertionError: assert '\n# Heading\...INCLUDE -->\n' == '\n# Heading\...INCLUDE -->\n'
+/mkdocs-include-markdown-plugin/tests/test_include_markdown.py:511: AssertionError: assert '\n# Heading\...INCLUDE -->\n' == '\n# Heading\...INCLUDE -->\n'
+/mkdocs-include-markdown-plugin/tests/test_include_markdown.py:496: AssertionError: assert '\n# Heading\...INCLUDE -->\n' == '\n# Heading\...INCLUDE -->\n'
+==================================== PASSES ====================================
+___________________________ test_include[start/end] ____________________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG: Entering multi-section extraction logic
+DEBUG: start_match.group(1) = 'start here'
+DEBUG: end_match.group(1) = 'end here'
+DEBUG: Starting extraction loop, text length = 90
+DEBUG: Found end tag at 54, extracted content, next search at 62
+DEBUG: Added part 1: 'This must be included.'
+DEBUG: No more start tags found at position 62
+DEBUG: Extraction completed after 2 iterations, found 1 parts
+DEBUG: Final joined result: 'This must be included.'
+_____________ test_include[start/end (escaped special characters)] _____________
+----------------------------- Captured stdout call -----------------------------
+DEBUG: Entering multi-section extraction logic
+DEBUG: start_match.group(1) = '\\tstart here'
+DEBUG: end_match.group(1) = '\\tend here'
+DEBUG: Starting extraction loop, text length = 92
+DEBUG: Found end tag at 55, extracted content, next search at 64
+DEBUG: Added part 1: 'This must be included.'
+DEBUG: No more start tags found at position 64
+DEBUG: Extraction completed after 2 iterations, found 1 parts
+DEBUG: Final joined result: 'This must be included.'
+____________ test_include[start/end (unescaped special characters)] ____________
+----------------------------- Captured stdout call -----------------------------
+DEBUG: Entering multi-section extraction logic
+DEBUG: start_match.group(1) = '\tstart here'
+DEBUG: end_match.group(1) = '\tend here'
+DEBUG: Starting extraction loop, text length = 92
+DEBUG: Found end tag at 55, extracted content, next search at 64
+DEBUG: Added part 1: 'This must be included.'
+DEBUG: No more start tags found at position 64
+DEBUG: Extraction completed after 2 iterations, found 1 parts
+DEBUG: Final joined result: 'This must be included.'
+____________________ test_include[custom options ordering] _____________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG: Entering multi-section extraction logic
+DEBUG: start_match.group(1) = '<!--start-->'
+DEBUG: end_match.group(1) = '<!--end-->'
+DEBUG: Starting extraction loop, text length = 115
+DEBUG: Found end tag at 74, extracted content, next search at 84
+DEBUG: Added part 1: '- First unordered sublist item\n- Second unordered '...
+DEBUG: No more start tags found at position 84
+DEBUG: Extraction completed after 2 iterations, found 1 parts
+DEBUG: Final joined result: '- First unordered sublist item\n- Second unordered sublist item'
+________________ test_include_markdown[custom options ordering] ________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG: Entering multi-section extraction logic
+DEBUG: start_match.group(1) = '<!--start-->'
+DEBUG: end_match.group(1) = '<!--end-->'
+DEBUG: Starting extraction loop, text length = 115
+DEBUG: Found end tag at 74, extracted content, next search at 84
+DEBUG: Added part 1: '- First unordered sublist item\n- Second unordered '...
+DEBUG: No more start tags found at position 84
+DEBUG: Extraction completed after 2 iterations, found 1 parts
+DEBUG: Final joined result: '- First unordered sublist item\n- Second unordered sublist item'
+=========================== short test summary info ============================
+PASSED tests/test_include.py::test_include[simple case]
+PASSED tests/test_include.py::test_include[newline at end of included]
+PASSED tests/test_include.py::test_include[start/end]
+PASSED tests/test_include.py::test_include[start/end (escaped special characters)]
+PASSED tests/test_include.py::test_include[start/end (unescaped special characters)]
+PASSED tests/test_include.py::test_include[preserve included indent]
+PASSED tests/test_include.py::test_include[preserve includer indent]
+PASSED tests/test_include.py::test_include[custom options ordering]
+PASSED tests/test_include.py::test_include[dedent=true]
+PASSED tests/test_include.py::test_include[dedent=true,preserve-includer-indent=true]
+PASSED tests/test_include.py::test_include_filepath_error
+PASSED tests/test_include.py::test_include_invalid_bool_option[preserve-includer-indent]
+PASSED tests/test_include.py::test_include_invalid_bool_option[dedent]
+PASSED tests/test_include_markdown.py::test_include_markdown[comments=false]
+PASSED tests/test_include_markdown.py::test_include_markdown[preserve-includer-indent=false]
+PASSED tests/test_include_markdown.py::test_include_markdown[preserve-includer-indent=true (default)]
+PASSED tests/test_include_markdown.py::test_include_markdown[custom options ordering]
+PASSED tests/test_include_markdown.py::test_include_markdown[dedent=true]
+PASSED tests/test_include_markdown.py::test_include_markdown[dedent=true,preserve-includer-indent=true]
+PASSED tests/test_include_markdown.py::test_include_markdown_filepath_error
+PASSED tests/test_include_markdown.py::test_include_markdown_invalid_bool_option[rewrite-relative-urls]
+PASSED tests/test_include_markdown.py::test_include_markdown_invalid_bool_option[comments]
+PASSED tests/test_include_markdown.py::test_include_markdown_invalid_bool_option[preserve-includer-indent]
+PASSED tests/test_include_markdown.py::test_include_markdown_invalid_bool_option[dedent]
+FAILED tests/test_include.py::test_include[multiple-start-end-matchs] - Asser...
+FAILED tests/test_include_markdown.py::test_include_markdown[simple case] - U...
+FAILED tests/test_include_markdown.py::test_include_markdown[start] - Unbound...
+FAILED tests/test_include_markdown.py::test_include_markdown[end] - UnboundLo...
+FAILED tests/test_include_markdown.py::test_include_markdown[start/end] - Ass...
+FAILED tests/test_include_markdown.py::test_include_markdown[start/end (escaped special characters)]
+FAILED tests/test_include_markdown.py::test_include_markdown[start/end (unescaped special characters)]
+FAILED tests/test_include_markdown.py::test_include_markdown[multiple-start-end-matchs]
+FAILED tests/test_include_markdown.py::test_include_markdown[heading-offset=1]
+FAILED tests/test_include_markdown.py::test_include_markdown[heading-offset=2]
+FAILED tests/test_include_markdown.py::test_include_markdown[no heading-offset (default)]
+FAILED tests/test_include_markdown.py::test_include_markdown[heading-offset=0]
+FAILED tests/test_include_markdown.py::test_include_markdown[heading-offset=<str>]
+FAILED tests/test_include_markdown.py::test_include_markdown_relative_rewrite[true]
+FAILED tests/test_include_markdown.py::test_include_markdown_relative_rewrite[false]
+FAILED tests/test_include_markdown.py::test_include_markdown_relative_rewrite[None]
+======================== 16 failed, 24 passed in 4.30s =========================

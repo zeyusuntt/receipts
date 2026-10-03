@@ -1,0 +1,59 @@
+diff --git a/pydoctor/astbuilder.py b/pydoctor/astbuilder.py
+index bb60cc6..eafdadc 100644
+--- a/pydoctor/astbuilder.py
++++ b/pydoctor/astbuilder.py
+@@ -322,9 +322,51 @@ class ModuleVistor(ast.NodeVisitor):
+                 if not self._handleOldSchoolDecoration(target, expr):
+                     self._handleAssignmentInClass(target, annotation, expr, lineno)
+         elif isinstance(targetNode, ast.Attribute):
+-            value = targetNode.value
+-            if isinstance(value, ast.Name) and value.id == 'self':
+-                self._handleInstanceVar(targetNode.attr, annotation, lineno)
++            # Handle __doc__ assignments to update docstrings after-the-fact
++            if targetNode.attr == '__doc__':
++                self._handleDocstringAssignment(targetNode.value, expr, lineno)
++            else:
++                value = targetNode.value
++                if isinstance(value, ast.Name) and value.id == 'self':
++                    self._handleInstanceVar(targetNode.attr, annotation, lineno)
++
++    def _handleDocstringAssignment(self, targetNode, valueNode, lineno):
++        """Handle assignments of the form object.__doc__ = "docstring"."""
++        # Only handle string literals for docstring values
++        if not isinstance(valueNode, ast.Str):
++            self.builder.warning(
++                ":{}:".format(lineno),
++                "Ignoring value assigned to __doc__: not a string"
++            )
++            return
++
++        # Resolve what the target refers to (e.g., 'fun' in 'fun.__doc__')
++        target_fullname = node2fullname(targetNode, self.builder.current)
++        if target_fullname is None:
++            self.builder.warning(
++                ":{}:".format(lineno),
++                "Unable to figure out target for __doc__ assignment"
++            )
++            return
++
++        # Find the object in our system
++        target_obj = self.system.objForFullName(target_fullname)
++        if target_obj is None:
++            target_source = astor.to_source(targetNode).strip()
++            self.builder.warning(
++                ":{}:".format(lineno),
++                "Unable to figure out target for __doc__ assignment: computed full name not found: {}".format(target_source)
++            )
++            return
++
++        # Update the docstring if it's a function, class, or module
++        if isinstance(target_obj, (model.Function, model.Class, model.Module)):
++            target_obj.docstring = valueNode.s
++        else:
++            self.builder.warning(
++                ":{}:".format(lineno),
++                "Unable to figure out value for __doc__ assignment: maybe too complex"
++            )
+ 
+     def visit_Assign(self, node):
+         lineno = node.lineno

@@ -1,0 +1,94 @@
+diff --git a/dynaconf/cli.py b/dynaconf/cli.py
+index b62d87e..5751fdb 100644
+--- a/dynaconf/cli.py
++++ b/dynaconf/cli.py
+@@ -372,7 +372,14 @@ def init(fileformat, path, env, _vars, _secrets, wg, y, django):
+     is_flag=True,
+     help="show dynaconf internal settings?",
+ )
+-def _list(env, key, more, loader, _all=False):
++@click.option(
++    "--output",
++    "-o",
++    default=None,
++    type=click.Path(),
++    help="Output file to export the data (format inferred from extension)",
++)
++def _list(env, key, more, loader, _all=False, output=None):
+     """Lists all user defined config values
+     and if `--all` is passed it also shows dynaconf internal variables.
+     """
+@@ -386,6 +393,8 @@ def _list(env, key, more, loader, _all=False):
+     if env:
+         settings.setenv(env)
+ 
++
++
+     cur_env = settings.current_env.lower()
+ 
+     click.echo(
+@@ -404,6 +413,9 @@ def _list(env, key, more, loader, _all=False):
+         data = settings._loaded_by_loaders.get(identifier, {})
+         data = data or settings._loaded_by_loaders.get(loader, {})
+ 
++    # Ensure data is a plain dict for consistent access
++    data = dict(data)
++
+     # remove to avoid displaying twice
+     data.pop("SETTINGS_MODULE", None)
+ 
+@@ -417,6 +429,7 @@ def _list(env, key, more, loader, _all=False):
+             return "blue"
+         return "green"
+ 
++
+     if not key:
+         datalines = "\n".join(
+             "%s: %s"
+@@ -429,14 +442,39 @@ def _list(env, key, more, loader, _all=False):
+         value = data.get(key)
+         if not value:
+             click.echo(click.style("Key not found", bg="red", fg="white"))
+-            return
+-        click.echo(
+-            "%s: %s"
+-            % (
+-                click.style(key.upper(), bg=color(key), fg="white"),
+-                pprint.pformat(value),
++
++        else:
++            click.echo(
++                "%s: %s"
++                % (
++                    click.style(key.upper(), bg=color(key), fg="white"),
++                    pprint.pformat(value),
++                )
++            )
++
++
++    # Export to file if requested
++    if output:
++        output_path = Path(output)
++        ext = output_path.suffix.lower()
++        if ext.startswith('.'):
++            ext = ext[1:]
++        if ext in EXTS:
++            # Determine what to export
++            if key:
++                export_data = {cur_env: {key.upper(): data.get(key.upper())}} if data.get(key.upper()) else {cur_env: {}}
++            else:
++                export_data = {cur_env: data}
++            loader_mod = importlib.import_module(f"dynaconf.loaders.{ext}_loader")
++            loader_mod.write(str(output_path), export_data, merge=False)
++        else:
++            click.echo(
++                click.style(
++                    f"Unsupported extension '{ext}' for output file",
++                    fg="white",
++                    bg="red",
++                )
+             )
+-        )
+ 
+     if env:
+         settings.setenv()

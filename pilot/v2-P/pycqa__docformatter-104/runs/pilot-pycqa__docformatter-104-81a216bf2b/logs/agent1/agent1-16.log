@@ -1,0 +1,53 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /docformatter
+configfile: pyproject.toml
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+tests/test_format_docstring.py::TestFormatWrap::test_force_wrap FAILED
+
+=================================== FAILURES ===================================
+________________________ TestFormatWrap.test_force_wrap ________________________
+
+self = <tests.test_format_docstring.TestFormatWrap object at 0x7ffff6e138e0>
+
+        @pytest.mark.unit
+        def test_force_wrap(self):
+            """Force even lists to be wrapped."""
+>           assert (
+                (
+                    '''\
+    """num_iterations is the number of updates -
+        instead of a better definition of
+        convergence."""\
+    '''
+                )
+                == docformatter.format_docstring(
+                    "    ",
+                    '''\
+    """
+    num_iterations is the number of updates - instead of a better definition of convergence.
+    """\
+    ''',
+                    description_wrap_length=50,
+                    summary_wrap_length=50,
+                    force_wrap=True,
+                )
+            )
+E           assert '"""num_itera...nvergence."""' == '"""num_itera...nce.\n    """'
+E             
+E               """num_iterations is the number of updates -
+E                   instead of a better definition of
+E             -     convergence.
+E             ?                 ^
+E             +     convergence."""
+E             ?                 ^^^
+E             -     """
+
+tests/test_format_docstring.py:403: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-16.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_format_docstring.py::TestFormatWrap::test_force_wrap - asse...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.07s ===============================

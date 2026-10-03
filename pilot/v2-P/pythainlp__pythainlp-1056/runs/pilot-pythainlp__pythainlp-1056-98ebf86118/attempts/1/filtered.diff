@@ -1,0 +1,40 @@
+diff --git a/pythainlp/util/syllable.py b/pythainlp/util/syllable.py
+index 58eef09f..c3733acb 100644
+--- a/pythainlp/util/syllable.py
++++ b/pythainlp/util/syllable.py
+@@ -81,8 +81,23 @@ def sound_syllable(syllable: str) -> str:
+         print(sound_syllable("เลข"))
+         # output: dead
+     """
+-    # get consonants
+-    consonants = [i for i in syllable if i in list(thai_consonants_all)]
++    # get consonants, ignoring sonorants ร,ล that are part of initial cluster
++    consonants = []
++    for idx, ch in enumerate(syllable):
++        if ch in list(thai_consonants_all):
++            # ignore sonorant ร or ล if it is preceded by a consonant and followed by a vowel
++            if ch in ("ร", "ล"):
++                if idx > 0 and syllable[idx - 1] in list(thai_consonants_all):
++                    # check if followed by a vowel (non-consonant and not tone mark?)
++                    if idx + 1 < len(syllable):
++                        nxt = syllable[idx + 1]
++                        if nxt not in list(thai_consonants_all):
++                            # likely a vowel or tone mark, treat as cluster, skip this sonorant
++                            continue
++            consonants.append(ch)
++    # if no consonants, treat as live (vowel-only syllable)
++    if not consonants:
++        return "live"
+     # get spelling consonants
+     spelling_consonant = consonants[-1]
+     # if len of syllable < 2
+@@ -241,6 +256,9 @@ def tone_detector(syllable: str) -> str:
+     s = sound_syllable(syllable)
+     # get consonants
+     consonants = [i for i in syllable if i in list(thai_consonants)]
++    if not consonants:
++        # vowel-only syllable, default to mid tone
++        return "m"
+     initial_consonant = consonants[0]
+     tone_mark = _tone_mark_detector(syllable)
+     syllable_check = syllable_open_close_detector(syllable)

@@ -1,0 +1,58 @@
+diff --git a/pydantic/fields.py b/pydantic/fields.py
+index 94a2ce7..c488293 100644
+--- a/pydantic/fields.py
++++ b/pydantic/fields.py
+@@ -1,4 +1,4 @@
+-from collections import defaultdict, deque
++from collections import Counter, defaultdict, deque
+ from collections.abc import Hashable as CollectionsHashable, Iterable as CollectionsIterable
+ from typing import (
+     TYPE_CHECKING,
+@@ -292,6 +292,7 @@ SHAPE_GENERIC = 10
+ SHAPE_DEQUE = 11
+ SHAPE_DICT = 12
+ SHAPE_DEFAULTDICT = 13
++SHAPE_COUNTER = 14
+ SHAPE_NAME_LOOKUP = {
+     SHAPE_LIST: 'List[{}]',
+     SHAPE_SET: 'Set[{}]',
+@@ -302,9 +303,10 @@ SHAPE_NAME_LOOKUP = {
+     SHAPE_DEQUE: 'Deque[{}]',
+     SHAPE_DICT: 'Dict[{}]',
+     SHAPE_DEFAULTDICT: 'DefaultDict[{}]',
++    SHAPE_COUNTER: 'Counter[{}]',
+ }
+ 
+-MAPPING_LIKE_SHAPES: Set[int] = {SHAPE_DEFAULTDICT, SHAPE_DICT, SHAPE_MAPPING}
++MAPPING_LIKE_SHAPES: Set[int] = {SHAPE_DEFAULTDICT, SHAPE_DICT, SHAPE_MAPPING, SHAPE_COUNTER}
+ 
+ 
+ class ModelField(Representation):
+@@ -630,6 +632,27 @@ class ModelField(Representation):
+             self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
+             self.type_ = get_args(self.type_)[1]
+             self.shape = SHAPE_DEFAULTDICT
++        elif issubclass(origin, Counter):
++            # Create self validators to ensure dicts are converted to Counter
++            def counter_validator(v):
++                if isinstance(v, dict):
++                    return Counter(v)
++                return v
++            
++            self.class_validators.update(
++                {'counter_pre': Validator(counter_validator, pre=True)}
++            )
++            
++            # Create self validators from Counter class if any
++            get_validators = getattr(self.type_, '__get_validators__', None)
++            if get_validators:
++                self.class_validators.update(
++                    {f'counter_{i}': Validator(validator, pre=True) for i, validator in enumerate(get_validators())}
++                )
++
++            self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
++            self.type_ = int
++            self.shape = SHAPE_COUNTER
+         elif issubclass(origin, Dict):
+             self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
+             self.type_ = get_args(self.type_)[1]

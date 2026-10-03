@@ -1,0 +1,14 @@
+=== Inspect what make_dataclass produces ===
+ChildCls = <class 'types.Child'>
+ChildCls.__mro__ = (<class 'types.Child'>, <class '__main__.SimpleParent'>, <class 'object'>)
+ChildCls.__dataclass_fields__ = {'x': Field(name='x',type=<class 'str'>,default=None,default_factory=<dataclasses._MISSING_TYPE object at 0x7ffff76c2770>,init=True,repr=True,hash=None,compare=True,metadata=mappingproxy({}),kw_only=False,_field_type=_FIELD)}
+
+=== Trying manual instantiation ===
+__init__ signature: (self, x: str = None) -> None
+Init error: 'NoneType' object has no attribute 'x'
+
+=== Correct way to test __init__ ===
+Created raw instance: Child(x=None)
+In dummy_init: self=<class 'types.Child'>, x=hello
+Calling __post_init__
+After init: x = 'hello'

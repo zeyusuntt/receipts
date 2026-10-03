@@ -1,0 +1,42 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-7.4.4, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pyanalyze
+collecting ... collected 2 items
+
+pyanalyze/test_runtime.py::test_is_compatible FAILED                     [ 50%]
+pyanalyze/test_runtime.py::test_get_compatibility_error FAILED           [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_is_compatible ______________________________
+
+    def test_is_compatible() -> None:
+>       assert not is_compatible(42, List[int])
+E       assert not True
+E        +  where True = is_compatible(42, typing.List[int])
+
+pyanalyze/test_runtime.py:10: AssertionError
+_________________________ test_get_compatibility_error _________________________
+
+    def test_get_compatibility_error() -> None:
+>       assert (
+            get_compatibility_error(42, List[int]) == "Cannot assign Literal[42] to list\n"
+        )
+E       AssertionError: assert None == 'Cannot assign Literal[42] to list\n'
+E        +  where None = get_compatibility_error(42, typing.List[int])
+
+pyanalyze/test_runtime.py:17: AssertionError
+=============================== warnings summary ===============================
+pyanalyze/test_name_check_visitor.py:343
+  /pyanalyze/pyanalyze/test_name_check_visitor.py:343: SyntaxWarning: 'list' object is not callable; perhaps you missed a comma?
+    print([1, 2]())  # E: not_callable
+
+pyanalyze/test_name_check_visitor.py:1300
+  /pyanalyze/pyanalyze/test_name_check_visitor.py:1300: SyntaxWarning: list indices must be integers or slices, not float; perhaps you missed a comma?
+    return [1, 2][3.0]  # E: unsupported_operation
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-22.xml ------------
+=========================== short test summary info ============================
+FAILED pyanalyze/test_runtime.py::test_is_compatible - assert not True
+FAILED pyanalyze/test_runtime.py::test_get_compatibility_error - AssertionErr...
+======================== 2 failed, 2 warnings in 0.54s =========================

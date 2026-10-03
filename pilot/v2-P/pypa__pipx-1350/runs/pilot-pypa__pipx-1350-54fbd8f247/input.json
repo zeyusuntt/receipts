@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Version check for standalone python is wrong.\n<!--\r\nThank you for filing a bug! Please feel free to answer as much or as little of this template as you can.\r\n\r\nPlease check pipx's Troubleshooting page to see if any of those solutions help solve your issue:\r\nhttps://pipx.pypa.io/stable/troubleshooting/\r\n-->\r\n\r\n**Describe the bug**\r\n\r\n<!-- Please be as detailed as possible! -->\r\nWhen specify python version to `3.1`, python 3.12 will be downloaded\r\n\r\n**How to reproduce**\r\n\r\n<!-- If possible, include output of `pipx --verbose ...` -->\r\n```shell\r\npipx install --python 3.1 --fetch-missing-python pycowsay\r\n```\r\n\r\n**Expected behavior**\r\n\r\n<!-- What should have happened? -->\r\nRaise an error that no valid Python found.\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/pypa-pipx:1350-4402362",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pypa__pipx-1350-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfaW5zdGFsbC5weSBiL3Rlc3RzL3Rlc3RfaW5zdGFsbC5weQppbmRleCAzNTliMmM2Li4yNjhjMjk3IDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X2luc3RhbGwucHkKKysrIGIvdGVzdHMvdGVzdF9pbnN0YWxsLnB5CkBAIC0zNjksOSArMzY5LDExIEBAIGRlZiB0ZXN0X3Bhc3NlZF9weXRob25fYW5kX2ZvcmNlX2ZsYWdfd2FybmluZyhwaXB4X3RlbXBfZW52LCBjYXBzeXMpOgogICAgICksICJTaG91bGQgbm90IHByaW50IHdhcm5pbmcgaWYgcGFja2FnZSBkb2VzIG5vdCBleGlzdCB5ZXQiCiAKIAotZGVmIHRlc3RfaW5zdGFsbF9ydW5faW5fc2VwYXJhdGVfZGlyZWN0b3J5KGNhcGxvZywgY2Fwc3lzLCBwaXB4X3RlbXBfZW52LCBtb25rZXlwYXRjaCwgdG1wX3BhdGgpOgotICAgIG1vbmtleXBhdGNoLmNoZGlyKHRtcF9wYXRoKQotICAgIGYgPSBQYXRoKCJhcmdwYXJzZS5weSIpCi0gICAgZi50b3VjaCgpCi0KLSAgICBpbnN0YWxsX3BhY2thZ2VzKGNhcHN5cywgcGlweF90ZW1wX2VudiwgY2FwbG9nLCBbInB5Y293c2F5Il0sIFsicHljb3dzYXkiXSkKK0BweXRlc3QubWFyay5wYXJhbWV0cml6ZSgKKyAgICAicHl0aG9uX3ZlcnNpb24iLAorICAgIFsiMy4wIiwgIjMuMSJdLAorKQorZGVmIHRlc3RfaW5zdGFsbF9mZXRjaF9taXNzaW5nX3B5dGhvbl9pbnZhbGlkKGNhcHN5cywgcHl0aG9uX3ZlcnNpb24pOgorICAgIGFzc2VydCBydW5fcGlweF9jbGkoWyJpbnN0YWxsIiwgIi0tcHl0aG9uIiwgcHl0aG9uX3ZlcnNpb24sICItLWZldGNoLW1pc3NpbmctcHl0aG9uIiwgInB5Y293c2F5Il0pCisgICAgY2FwdHVyZWQgPSBjYXBzeXMucmVhZG91dGVycigpCisgICAgYXNzZXJ0IGYiTm8gZXhlY3V0YWJsZSBmb3IgdGhlIHByb3ZpZGVkIFB5dGhvbiB2ZXJzaW9uICd7cHl0aG9uX3ZlcnNpb259JyBmb3VuZCIgaW4gY2FwdHVyZWQub3V0Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-pypa__pipx-1350-test.patch"
+    ],
+    "workdir": "/pipx"
+  },
+  "spec_paths": [
+    "tests/test_install.py"
+  ],
+  "spec_tests": [
+    "tests/test_install.py::test_install_fetch_missing_python_invalid[3.1]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_install.py"
+}

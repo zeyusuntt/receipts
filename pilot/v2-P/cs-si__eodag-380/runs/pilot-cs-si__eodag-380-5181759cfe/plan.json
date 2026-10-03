@@ -1,0 +1,14 @@
+{
+  "approach": "Enhance the product type guessing logic in stac_reader.py's load_stac_items function to detect COG-specific patterns in asset hrefs (like 's3://sentinel-s2-l2a/') and map them to appropriate product types such as S2_MSI_L2A_COG instead of returning None.",
+  "files_to_edit": [
+    "eodag/utils/stac_reader.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The issue occurs because load_stac_items does not correctly guess the product_type from STAC item properties when none is explicitly provided during static STAC loading. For Sentinel-2 COG assets, we need to infer S2_MSI_L2A_COG from asset href patterns indicating COG format.",
+  "retries": {},
+  "usage": {
+    "completion": 157,
+    "prompt": 10202,
+    "reasoning": 0
+  }
+}

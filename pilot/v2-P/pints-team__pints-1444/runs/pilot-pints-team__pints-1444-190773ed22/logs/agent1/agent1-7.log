@@ -1,0 +1,144 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pints
+plugins: anyio-4.12.1
+collecting ... collected 1 item
+
+pints/tests/test_evaluators.py::TestEvaluators::test_multi_sequential FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________________ TestEvaluators.test_multi_sequential _____________________
+
+self = <pints._evaluation.MultiSequentialEvaluator object at 0x7fffdc0d4520>
+functions = [<function f_args at 0x7fffd9d57a30>, <function f_args_plus1 at 0x7fffd9d57ac0>]
+args = [10, 20]
+
+    def __init__(self, functions, args=None):
+        # Convert to list to allow indexing etc
+        functions = list(functions)
+    
+        # Check functions
+        if not all(callable(f) for f in functions):
+            raise ValueError('All elements in functions must be callable.')
+        self._functions = functions
+    
+        # Check args
+        if args is None:
+            self._args = [()] * len(functions)
+        else:
+            try:
+                len(args)
+            except TypeError:
+                raise ValueError(
+                    'The argument `args` must be either None or a sequence.')
+            if len(args) != len(functions):
+                raise ValueError(
+                    'The argument `args` must have the same length as '
+                    '`functions`.')
+            for arg in args:
+                try:
+>                   len(arg)
+E                   TypeError: object of type 'int' has no len()
+
+pints/_evaluation.py:489: TypeError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_evaluators.TestEvaluators testMethod=test_multi_sequential>
+
+    def test_multi_sequential(self):
+    
+        # Create test data
+        xs = np.random.normal(0, 10, 100)
+        ys = [f(x) for x in xs]
+    
+        # Test sequential evaluator with multiple functions
+        e = pints.MultiSequentialEvaluator([f for _ in range(100)])
+        self.assertTrue(np.all(ys == e.evaluate(xs)))
+    
+        # check errors
+    
+        # not iterable
+        with self.assertRaises(TypeError):
+            e = pints.MultiSequentialEvaluator(3)
+    
+        # not callable
+        with self.assertRaises(ValueError):
+            e = pints.MultiSequentialEvaluator([f, 4])
+    
+        e = pints.MultiSequentialEvaluator([f for _ in range(100)])
+        # Argument must be sequence
+        with self.assertRaises(ValueError):
+            e.evaluate(1)
+    
+        # wrong number of arguments
+        with self.assertRaises(ValueError):
+            e.evaluate([1 for _ in range(99)])
+    
+        # Test args
+>       e = pints.MultiSequentialEvaluator([f_args, f_args_plus1], [10, 20])
+
+pints/tests/test_evaluators.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pints._evaluation.MultiSequentialEvaluator object at 0x7fffdc0d4520>
+functions = [<function f_args at 0x7fffd9d57a30>, <function f_args_plus1 at 0x7fffd9d57ac0>]
+args = [10, 20]
+
+    def __init__(self, functions, args=None):
+        # Convert to list to allow indexing etc
+        functions = list(functions)
+    
+        # Check functions
+        if not all(callable(f) for f in functions):
+            raise ValueError('All elements in functions must be callable.')
+        self._functions = functions
+    
+        # Check args
+        if args is None:
+            self._args = [()] * len(functions)
+        else:
+            try:
+                len(args)
+            except TypeError:
+                raise ValueError(
+                    'The argument `args` must be either None or a sequence.')
+            if len(args) != len(functions):
+                raise ValueError(
+                    'The argument `args` must have the same length as '
+                    '`functions`.')
+            for arg in args:
+                try:
+                    len(arg)
+                except TypeError:
+>                   raise ValueError(
+                        'Each element in `args` must be a sequence.')
+E                   ValueError: Each element in `args` must be a sequence.
+
+pints/_evaluation.py:491: ValueError
+=============================== warnings summary ===============================
+pints/_mcmc/_nuts.py:211
+  /pints/pints/_mcmc/_nuts.py:211: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
+
+pints/_mcmc/_nuts.py:231
+  /pints/pints/_mcmc/_nuts.py:231: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
+
+pints/_mcmc/_nuts.py:287
+  /pints/pints/_mcmc/_nuts.py:287: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def initialise_adaptor(
+
+pints/_mcmc/_nuts.py:320
+  /pints/pints/_mcmc/_nuts.py:320: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
+
+pints/_mcmc/_nuts.py:370
+  /pints/pints/_mcmc/_nuts.py:370: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def nuts_sampler(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /opt/receipts/reports/agent1-7.xml ------------
+=========================== short test summary info ============================
+FAILED pints/tests/test_evaluators.py::TestEvaluators::test_multi_sequential
+======================== 1 failed, 5 warnings in 1.63s =========================

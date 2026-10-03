@@ -1,0 +1,579 @@
+============================= test session starts ==============================
+collected 21 items
+
+test/integration/test_envvars.py sFEFEFE                                 [ 19%]
+test/unit/test_validators.py ..F............F.                           [100%]
+
+==================================== ERRORS ====================================
+______________ ERROR at teardown of TestEnvVars.test_not_present _______________
+E   ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+E   urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5f25210>: Failed to establish a new connection: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+E   elasticsearch.exceptions.ConnectionError: ConnectionError(<urllib3.connection.HTTPConnection object at 0x7ffff5f25210>: Failed to establish a new connection: [Errno 111] Connection refused) caused by: NewConnectionError(<urllib3.connection.HTTPConnection object at 0x7ffff5f25210>: Failed to establish a new connection: [Errno 111] Connection refused)
+------------------------------ Captured log call -------------------------------
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5ef73d0>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5f05090>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5f16150>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5f25210>: Failed to establish a new connection: [Errno 111] Connection refused
+________ ERROR at teardown of TestEnvVars.test_not_present_with_default ________
+E   ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+E   urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff60b9e90>: Failed to establish a new connection: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+E   elasticsearch.exceptions.ConnectionError: ConnectionError(<urllib3.connection.HTTPConnection object at 0x7ffff60b9e90>: Failed to establish a new connection: [Errno 111] Connection refused) caused by: NewConnectionError(<urllib3.connection.HTTPConnection object at 0x7ffff60b9e90>: Failed to establish a new connection: [Errno 111] Connection refused)
+------------------------------ Captured log call -------------------------------
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5eeb290>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5dffa90>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5e04b50>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff60b9e90>: Failed to establish a new connection: [Errno 111] Connection refused
+________________ ERROR at teardown of TestEnvVars.test_present _________________
+E   ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+E   urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5dcaad0>: Failed to establish a new connection: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+E   elasticsearch.exceptions.ConnectionError: ConnectionError(<urllib3.connection.HTTPConnection object at 0x7ffff5dcaad0>: Failed to establish a new connection: [Errno 111] Connection refused) caused by: NewConnectionError(<urllib3.connection.HTTPConnection object at 0x7ffff5dcaad0>: Failed to establish a new connection: [Errno 111] Connection refused)
+------------------------------ Captured log call -------------------------------
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5e1cf90>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5e29d90>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5db9a10>: Failed to establish a new connection: [Errno 111] Connection refused
+WARNING  elasticsearch:base.py:94 GET http://localhost:9200/_snapshot/_all [status:N/A request:0.000s]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/elasticsearch/connection/http_urllib3.py", line 109, in perform_request
+    response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/usr/local/lib/python3.7/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 723, in urlopen
+    chunked=chunked,
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py", line 416, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.7/http/client.py", line 1281, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1327, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1276, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.7/http/client.py", line 1036, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.7/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/usr/local/lib/python3.7/site-packages/urllib3/connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7ffff5dcaad0>: Failed to establish a new connection: [Errno 111] Connection refused
+=================================== FAILURES ===================================
+/curator/curator/utils.py:40: TypeError: load() missing 1 required positional argument: 'Loader'
+/curator/curator/utils.py:40: TypeError: load() missing 1 required positional argument: 'Loader'
+/curator/curator/utils.py:40: TypeError: load() missing 1 required positional argument: 'Loader'
+/usr/local/lib/python3.7/unittest/case.py:845: AssertionError: 1 != '1'
+/usr/local/lib/python3.7/unittest/case.py:845: AssertionError: 1.0 != '1.0'
+==================================== PASSES ====================================
+_____________ TestFilterTypes.test_space_field_stats_age_no_field ______________
+------------------------------ Captured log call -------------------------------
+ERROR    curator.validators.SchemaCheck:schemacheck.py:64 Schema error: required key not provided @ data['field']
+ERROR    curator.validators.SchemaCheck:schemacheck.py:64 Schema error: Configuration: filter: Location: None, filter #0: {'filtertype': 'space', 'disk_space': 1, 'use_age': True, 'exclude': False, 'source': 'field_stats'}: Bad Value: "(could not determine)", required key not provided @ data['field']. Check configuration file.
+__________________ TestFilterTypes.test_space_name_age_no_ts ___________________
+------------------------------ Captured log call -------------------------------
+ERROR    curator.validators.SchemaCheck:schemacheck.py:64 Schema error: required key not provided @ data['timestring']
+ERROR    curator.validators.SchemaCheck:schemacheck.py:64 Schema error: Configuration: filter: Location: None, filter #0: {'filtertype': 'space', 'disk_space': 1, 'use_age': True, 'exclude': False, 'source': 'name'}: Bad Value: "(could not determine)", required key not provided @ data['timestring']. Check configuration file.
+=========================== short test summary info ============================
+PASSED test/unit/test_validators.py::TestFilters::test_single_raises_configuration_error
+PASSED test/unit/test_validators.py::TestFilterTypes::test_age
+PASSED test/unit/test_validators.py::TestFilterTypes::test_alias
+PASSED test/unit/test_validators.py::TestFilterTypes::test_allocated
+PASSED test/unit/test_validators.py::TestFilterTypes::test_closed
+PASSED test/unit/test_validators.py::TestFilterTypes::test_count
+PASSED test/unit/test_validators.py::TestFilterTypes::test_forcemerged
+PASSED test/unit/test_validators.py::TestFilterTypes::test_kibana
+PASSED test/unit/test_validators.py::TestFilterTypes::test_opened
+PASSED test/unit/test_validators.py::TestFilterTypes::test_space_creation_date_age
+PASSED test/unit/test_validators.py::TestFilterTypes::test_space_field_stats_age
+PASSED test/unit/test_validators.py::TestFilterTypes::test_space_field_stats_age_no_field
+PASSED test/unit/test_validators.py::TestFilterTypes::test_space_name_age
+PASSED test/unit/test_validators.py::TestFilterTypes::test_space_name_age_no_ts
+PASSED test/unit/test_validators.py::TestFilterTypes::test_state
+SKIPPED [1] test/integration/test_envvars.py:63: Elasticsearch failed to start.
+ERROR test/integration/test_envvars.py::TestEnvVars::test_not_present - elast...
+ERROR test/integration/test_envvars.py::TestEnvVars::test_not_present_with_default
+ERROR test/integration/test_envvars.py::TestEnvVars::test_present - elasticse...
+FAILED test/integration/test_envvars.py::TestEnvVars::test_not_present - Type...
+FAILED test/integration/test_envvars.py::TestEnvVars::test_not_present_with_default
+FAILED test/integration/test_envvars.py::TestEnvVars::test_present - TypeErro...
+FAILED test/unit/test_validators.py::TestFilterTypes::test_age_with_string_unit_count
+FAILED test/unit/test_validators.py::TestFilterTypes::test_space_name_age_string_float
+============== 5 failed, 15 passed, 1 skipped, 3 errors in 10.52s ==============

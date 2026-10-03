@@ -1,0 +1,1296 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /fastcrud
+configfile: pyproject.toml
+plugins: anyio-4.12.1, asyncio-1.3.0
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/sqlalchemy/crud/test_get_joined.py::test_get_joined_nested_no_prefix_provided PASSED [ 33%]
+tests/sqlalchemy/crud/test_get_multi_joined.py::test_get_multi_joined_no_prefix_nested PASSED [ 66%]
+tests/sqlmodel/crud/test_get_multi_joined.py::test_get_multi_joined_no_prefix_nested PASSED [100%]
+
+==================================== PASSES ====================================
+__________________ test_get_joined_nested_no_prefix_provided ___________________
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 17:56:13,984 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:13,985 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("multi_pk")
+2026-10-03 17:56:13,985 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,985 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("multi_pk")
+2026-10-03 17:56:13,985 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,986 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("category")
+2026-10-03 17:56:13,986 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,986 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("category")
+2026-10-03 17:56:13,986 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,987 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("test")
+2026-10-03 17:56:13,987 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,987 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("test")
+2026-10-03 17:56:13,987 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,988 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("model_test_with_timestamp")
+2026-10-03 17:56:13,988 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,988 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("model_test_with_timestamp")
+2026-10-03 17:56:13,988 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,988 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("tier")
+2026-10-03 17:56:13,989 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,989 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("tier")
+2026-10-03 17:56:13,989 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,989 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("booking")
+2026-10-03 17:56:13,989 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,990 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("booking")
+2026-10-03 17:56:13,990 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,990 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects")
+2026-10-03 17:56:13,990 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,991 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("projects")
+2026-10-03 17:56:13,991 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,991 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("participants")
+2026-10-03 17:56:13,991 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,991 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("participants")
+2026-10-03 17:56:13,991 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,992 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects_participants_association")
+2026-10-03 17:56:13,992 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,992 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("projects_participants_association")
+2026-10-03 17:56:13,992 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:13,993 INFO sqlalchemy.engine.Engine 
+CREATE TABLE category (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+2026-10-03 17:56:13,993 INFO sqlalchemy.engine.Engine [no key 0.00012s] ()
+2026-10-03 17:56:13,994 INFO sqlalchemy.engine.Engine 
+CREATE TABLE tier (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+2026-10-03 17:56:13,994 INFO sqlalchemy.engine.Engine [no key 0.00018s] ()
+2026-10-03 17:56:13,994 INFO sqlalchemy.engine.Engine 
+CREATE TABLE projects (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	description VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+2026-10-03 17:56:13,994 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:13,995 INFO sqlalchemy.engine.Engine 
+CREATE TABLE participants (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	role VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+2026-10-03 17:56:13,995 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:13,995 INFO sqlalchemy.engine.Engine 
+CREATE TABLE test (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN, 
+	deleted_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+2026-10-03 17:56:13,995 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:13,996 INFO sqlalchemy.engine.Engine 
+CREATE TABLE model_test_with_timestamp (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN, 
+	deleted_at DATETIME, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+2026-10-03 17:56:13,996 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:13,997 INFO sqlalchemy.engine.Engine 
+CREATE TABLE projects_participants_association (
+	project_id INTEGER NOT NULL, 
+	participant_id INTEGER NOT NULL, 
+	PRIMARY KEY (project_id, participant_id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id), 
+	FOREIGN KEY(participant_id) REFERENCES participants (id)
+)
+
+
+2026-10-03 17:56:13,997 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:13,997 INFO sqlalchemy.engine.Engine 
+CREATE TABLE multi_pk (
+	id INTEGER NOT NULL, 
+	uuid VARCHAR(32) NOT NULL, 
+	name VARCHAR, 
+	test_id INTEGER, 
+	PRIMARY KEY (id, uuid), 
+	UNIQUE (name), 
+	FOREIGN KEY(test_id) REFERENCES test (id)
+)
+
+
+2026-10-03 17:56:13,997 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:13,998 INFO sqlalchemy.engine.Engine 
+CREATE TABLE booking (
+	id INTEGER NOT NULL, 
+	owner_id INTEGER NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	booking_date DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES test (id), 
+	FOREIGN KEY(user_id) REFERENCES test (id)
+)
+
+
+2026-10-03 17:56:13,998 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:13,998 INFO sqlalchemy.engine.Engine COMMIT
+------------------------------ Captured log setup ------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE category (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00012s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE tier (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00018s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE projects (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	description VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE participants (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	role VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE test (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN, 
+	deleted_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE model_test_with_timestamp (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN, 
+	deleted_at DATETIME, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE projects_participants_association (
+	project_id INTEGER NOT NULL, 
+	participant_id INTEGER NOT NULL, 
+	PRIMARY KEY (project_id, participant_id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id), 
+	FOREIGN KEY(participant_id) REFERENCES participants (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE multi_pk (
+	id INTEGER NOT NULL, 
+	uuid VARCHAR(32) NOT NULL, 
+	name VARCHAR, 
+	test_id INTEGER, 
+	PRIMARY KEY (id, uuid), 
+	UNIQUE (name), 
+	FOREIGN KEY(test_id) REFERENCES test (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE booking (
+	id INTEGER NOT NULL, 
+	owner_id INTEGER NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	booking_date DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES test (id), 
+	FOREIGN KEY(user_id) REFERENCES test (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+----------------------------- Captured stdout call -----------------------------
+2026-10-03 17:56:14,009 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,010 INFO sqlalchemy.engine.Engine INSERT INTO tier (id, name) VALUES (?, ?)
+2026-10-03 17:56:14,010 INFO sqlalchemy.engine.Engine [generated in 0.00017s] [(1, 'Premium'), (2, 'Basic')]
+2026-10-03 17:56:14,011 INFO sqlalchemy.engine.Engine COMMIT
+2026-10-03 17:56:14,011 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,012 INFO sqlalchemy.engine.Engine INSERT INTO test (id, name, tier_id, category_id, is_deleted, deleted_at) VALUES (?, ?, ?, ?, ?, ?)
+2026-10-03 17:56:14,012 INFO sqlalchemy.engine.Engine [generated in 0.00019s] [(1, 'Charlie', 1, 1, 0, None), (2, 'Alice', 2, 1, 0, None), (3, 'Bob', 1, 2, 0, None), (4, 'David', 2, 1, 0, None), (5, 'Eve', 1, 1, 0, None), (6, 'Frank', 2, 2, 0, None), (7, 'Grace', 1, 2, 0, None), (8, 'Hannah', 2, 1, 0, None)  ... displaying 10 of 11 total bound parameter sets ...  (10, 'Judy', 2, 2, 0, None), (11, 'Alice', 1, 1, 0, None)]
+2026-10-03 17:56:14,013 INFO sqlalchemy.engine.Engine COMMIT
+2026-10-03 17:56:14,013 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,014 INFO sqlalchemy.engine.Engine SELECT test.name, test.tier_id, test.category_id, tier.name AS tier_name 
+FROM test LEFT OUTER JOIN tier ON tier.id = test.tier_id
+2026-10-03 17:56:14,015 INFO sqlalchemy.engine.Engine [generated in 0.00016s] ()
+------------------------------ Captured log call -------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 INSERT INTO tier (id, name) VALUES (?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00017s] [(1, 'Premium'), (2, 'Basic')]
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 INSERT INTO test (id, name, tier_id, category_id, is_deleted, deleted_at) VALUES (?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00019s] [(1, 'Charlie', 1, 1, 0, None), (2, 'Alice', 2, 1, 0, None), (3, 'Bob', 1, 2, 0, None), (4, 'David', 2, 1, 0, None), (5, 'Eve', 1, 1, 0, None), (6, 'Frank', 2, 2, 0, None), (7, 'Grace', 1, 2, 0, None), (8, 'Hannah', 2, 1, 0, None)  ... displaying 10 of 11 total bound parameter sets ...  (10, 'Judy', 2, 2, 0, None), (11, 'Alice', 1, 1, 0, None)]
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 SELECT test.name, test.tier_id, test.category_id, tier.name AS tier_name 
+FROM test LEFT OUTER JOIN tier ON tier.id = test.tier_id
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00016s] ()
+--------------------------- Captured stdout teardown ---------------------------
+2026-10-03 17:56:14,021 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-10-03 17:56:14,021 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,022 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("multi_pk")
+2026-10-03 17:56:14,022 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,022 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("category")
+2026-10-03 17:56:14,022 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,023 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("test")
+2026-10-03 17:56:14,023 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,023 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("model_test_with_timestamp")
+2026-10-03 17:56:14,023 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,024 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("tier")
+2026-10-03 17:56:14,024 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,024 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("booking")
+2026-10-03 17:56:14,024 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,024 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects")
+2026-10-03 17:56:14,024 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,025 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("participants")
+2026-10-03 17:56:14,025 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,025 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects_participants_association")
+2026-10-03 17:56:14,025 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,026 INFO sqlalchemy.engine.Engine 
+DROP TABLE booking
+2026-10-03 17:56:14,026 INFO sqlalchemy.engine.Engine [no key 0.00012s] ()
+2026-10-03 17:56:14,026 INFO sqlalchemy.engine.Engine 
+DROP TABLE multi_pk
+2026-10-03 17:56:14,026 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,027 INFO sqlalchemy.engine.Engine 
+DROP TABLE projects_participants_association
+2026-10-03 17:56:14,027 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,027 INFO sqlalchemy.engine.Engine 
+DROP TABLE model_test_with_timestamp
+2026-10-03 17:56:14,027 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,028 INFO sqlalchemy.engine.Engine 
+DROP TABLE test
+2026-10-03 17:56:14,028 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,028 INFO sqlalchemy.engine.Engine 
+DROP TABLE participants
+2026-10-03 17:56:14,028 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,028 INFO sqlalchemy.engine.Engine 
+DROP TABLE projects
+2026-10-03 17:56:14,029 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,029 INFO sqlalchemy.engine.Engine 
+DROP TABLE tier
+2026-10-03 17:56:14,029 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,029 INFO sqlalchemy.engine.Engine 
+DROP TABLE category
+2026-10-03 17:56:14,029 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,030 INFO sqlalchemy.engine.Engine COMMIT
+---------------------------- Captured log teardown -----------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1126 ROLLBACK
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE booking
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00012s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE multi_pk
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE projects_participants_association
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE model_test_with_timestamp
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE test
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE participants
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE projects
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE tier
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE category
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+____________________ test_get_multi_joined_no_prefix_nested ____________________
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 17:56:14,032 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,033 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("multi_pk")
+2026-10-03 17:56:14,033 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,033 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("multi_pk")
+2026-10-03 17:56:14,033 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,034 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("category")
+2026-10-03 17:56:14,034 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,034 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("category")
+2026-10-03 17:56:14,034 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,034 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("test")
+2026-10-03 17:56:14,035 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,035 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("test")
+2026-10-03 17:56:14,035 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,035 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("model_test_with_timestamp")
+2026-10-03 17:56:14,035 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,036 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("model_test_with_timestamp")
+2026-10-03 17:56:14,036 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,036 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("tier")
+2026-10-03 17:56:14,036 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,037 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("tier")
+2026-10-03 17:56:14,037 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,037 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("booking")
+2026-10-03 17:56:14,037 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,038 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("booking")
+2026-10-03 17:56:14,038 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,038 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects")
+2026-10-03 17:56:14,038 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,038 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("projects")
+2026-10-03 17:56:14,038 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,039 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("participants")
+2026-10-03 17:56:14,039 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,039 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("participants")
+2026-10-03 17:56:14,039 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,040 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects_participants_association")
+2026-10-03 17:56:14,040 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,040 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("projects_participants_association")
+2026-10-03 17:56:14,040 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,041 INFO sqlalchemy.engine.Engine 
+CREATE TABLE category (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+2026-10-03 17:56:14,041 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:14,041 INFO sqlalchemy.engine.Engine 
+CREATE TABLE tier (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+2026-10-03 17:56:14,041 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,042 INFO sqlalchemy.engine.Engine 
+CREATE TABLE projects (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	description VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+2026-10-03 17:56:14,042 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,042 INFO sqlalchemy.engine.Engine 
+CREATE TABLE participants (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	role VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+2026-10-03 17:56:14,042 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,043 INFO sqlalchemy.engine.Engine 
+CREATE TABLE test (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN, 
+	deleted_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+2026-10-03 17:56:14,043 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:14,043 INFO sqlalchemy.engine.Engine 
+CREATE TABLE model_test_with_timestamp (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN, 
+	deleted_at DATETIME, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+2026-10-03 17:56:14,043 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,044 INFO sqlalchemy.engine.Engine 
+CREATE TABLE projects_participants_association (
+	project_id INTEGER NOT NULL, 
+	participant_id INTEGER NOT NULL, 
+	PRIMARY KEY (project_id, participant_id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id), 
+	FOREIGN KEY(participant_id) REFERENCES participants (id)
+)
+
+
+2026-10-03 17:56:14,044 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,044 INFO sqlalchemy.engine.Engine 
+CREATE TABLE multi_pk (
+	id INTEGER NOT NULL, 
+	uuid VARCHAR(32) NOT NULL, 
+	name VARCHAR, 
+	test_id INTEGER, 
+	PRIMARY KEY (id, uuid), 
+	UNIQUE (name), 
+	FOREIGN KEY(test_id) REFERENCES test (id)
+)
+
+
+2026-10-03 17:56:14,044 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,045 INFO sqlalchemy.engine.Engine 
+CREATE TABLE booking (
+	id INTEGER NOT NULL, 
+	owner_id INTEGER NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	booking_date DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES test (id), 
+	FOREIGN KEY(user_id) REFERENCES test (id)
+)
+
+
+2026-10-03 17:56:14,045 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,045 INFO sqlalchemy.engine.Engine COMMIT
+------------------------------ Captured log setup ------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE category (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE tier (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE projects (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	description VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE participants (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	role VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE test (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN, 
+	deleted_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE model_test_with_timestamp (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN, 
+	deleted_at DATETIME, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE projects_participants_association (
+	project_id INTEGER NOT NULL, 
+	participant_id INTEGER NOT NULL, 
+	PRIMARY KEY (project_id, participant_id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id), 
+	FOREIGN KEY(participant_id) REFERENCES participants (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE multi_pk (
+	id INTEGER NOT NULL, 
+	uuid VARCHAR(32) NOT NULL, 
+	name VARCHAR, 
+	test_id INTEGER, 
+	PRIMARY KEY (id, uuid), 
+	UNIQUE (name), 
+	FOREIGN KEY(test_id) REFERENCES test (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE booking (
+	id INTEGER NOT NULL, 
+	owner_id INTEGER NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	booking_date DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES test (id), 
+	FOREIGN KEY(user_id) REFERENCES test (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+----------------------------- Captured stdout call -----------------------------
+2026-10-03 17:56:14,047 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,047 INFO sqlalchemy.engine.Engine INSERT INTO tier (id, name) VALUES (?, ?)
+2026-10-03 17:56:14,047 INFO sqlalchemy.engine.Engine [cached since 0.03697s ago] [(1, 'Premium'), (2, 'Basic')]
+2026-10-03 17:56:14,047 INFO sqlalchemy.engine.Engine COMMIT
+2026-10-03 17:56:14,048 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,048 INFO sqlalchemy.engine.Engine INSERT INTO test (id, name, tier_id, category_id, is_deleted, deleted_at) VALUES (?, ?, ?, ?, ?, ?)
+2026-10-03 17:56:14,048 INFO sqlalchemy.engine.Engine [cached since 0.03648s ago] [(1, 'Charlie', 1, 1, 0, None), (2, 'Alice', 2, 1, 0, None), (3, 'Bob', 1, 2, 0, None), (4, 'David', 2, 1, 0, None), (5, 'Eve', 1, 1, 0, None), (6, 'Frank', 2, 2, 0, None), (7, 'Grace', 1, 2, 0, None), (8, 'Hannah', 2, 1, 0, None)  ... displaying 10 of 11 total bound parameter sets ...  (10, 'Judy', 2, 2, 0, None), (11, 'Alice', 1, 1, 0, None)]
+2026-10-03 17:56:14,049 INFO sqlalchemy.engine.Engine COMMIT
+2026-10-03 17:56:14,050 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,050 INFO sqlalchemy.engine.Engine SELECT test.name, test.tier_id, test.category_id, tier.name AS tier_name 
+FROM test LEFT OUTER JOIN tier ON test.tier_id = tier.id
+ LIMIT ? OFFSET ?
+2026-10-03 17:56:14,050 INFO sqlalchemy.engine.Engine [generated in 0.00015s] (10, 0)
+2026-10-03 17:56:14,052 INFO sqlalchemy.engine.Engine SELECT count(*) AS count_1 
+FROM test
+2026-10-03 17:56:14,052 INFO sqlalchemy.engine.Engine [generated in 0.00014s] ()
+------------------------------ Captured log call -------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 INSERT INTO tier (id, name) VALUES (?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1904 [cached since 0.03697s ago] [(1, 'Premium'), (2, 'Basic')]
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 INSERT INTO test (id, name, tier_id, category_id, is_deleted, deleted_at) VALUES (?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1904 [cached since 0.03648s ago] [(1, 'Charlie', 1, 1, 0, None), (2, 'Alice', 2, 1, 0, None), (3, 'Bob', 1, 2, 0, None), (4, 'David', 2, 1, 0, None), (5, 'Eve', 1, 1, 0, None), (6, 'Frank', 2, 2, 0, None), (7, 'Grace', 1, 2, 0, None), (8, 'Hannah', 2, 1, 0, None)  ... displaying 10 of 11 total bound parameter sets ...  (10, 'Judy', 2, 2, 0, None), (11, 'Alice', 1, 1, 0, None)]
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 SELECT test.name, test.tier_id, test.category_id, tier.name AS tier_name 
+FROM test LEFT OUTER JOIN tier ON test.tier_id = tier.id
+ LIMIT ? OFFSET ?
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00015s] (10, 0)
+INFO     sqlalchemy.engine.Engine:base.py:1899 SELECT count(*) AS count_1 
+FROM test
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00014s] ()
+--------------------------- Captured stdout teardown ---------------------------
+2026-10-03 17:56:14,053 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-10-03 17:56:14,053 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,054 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("multi_pk")
+2026-10-03 17:56:14,054 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,054 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("category")
+2026-10-03 17:56:14,054 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,055 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("test")
+2026-10-03 17:56:14,055 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,055 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("model_test_with_timestamp")
+2026-10-03 17:56:14,055 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,055 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("tier")
+2026-10-03 17:56:14,056 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,056 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("booking")
+2026-10-03 17:56:14,056 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,056 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects")
+2026-10-03 17:56:14,056 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,057 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("participants")
+2026-10-03 17:56:14,057 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,057 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects_participants_association")
+2026-10-03 17:56:14,057 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,058 INFO sqlalchemy.engine.Engine 
+DROP TABLE booking
+2026-10-03 17:56:14,058 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:14,058 INFO sqlalchemy.engine.Engine 
+DROP TABLE multi_pk
+2026-10-03 17:56:14,058 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,059 INFO sqlalchemy.engine.Engine 
+DROP TABLE projects_participants_association
+2026-10-03 17:56:14,059 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,059 INFO sqlalchemy.engine.Engine 
+DROP TABLE model_test_with_timestamp
+2026-10-03 17:56:14,059 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,059 INFO sqlalchemy.engine.Engine 
+DROP TABLE test
+2026-10-03 17:56:14,060 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,060 INFO sqlalchemy.engine.Engine 
+DROP TABLE participants
+2026-10-03 17:56:14,060 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,060 INFO sqlalchemy.engine.Engine 
+DROP TABLE projects
+2026-10-03 17:56:14,060 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,061 INFO sqlalchemy.engine.Engine 
+DROP TABLE tier
+2026-10-03 17:56:14,061 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,061 INFO sqlalchemy.engine.Engine 
+DROP TABLE category
+2026-10-03 17:56:14,061 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,061 INFO sqlalchemy.engine.Engine COMMIT
+---------------------------- Captured log teardown -----------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1126 ROLLBACK
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE booking
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE multi_pk
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE projects_participants_association
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE model_test_with_timestamp
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE test
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE participants
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE projects
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE tier
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE category
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+____________________ test_get_multi_joined_no_prefix_nested ____________________
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 17:56:14,064 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,065 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("multi_pk")
+2026-10-03 17:56:14,065 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,065 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("multi_pk")
+2026-10-03 17:56:14,065 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,066 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("category")
+2026-10-03 17:56:14,066 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,066 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("category")
+2026-10-03 17:56:14,066 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,067 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("test")
+2026-10-03 17:56:14,067 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,067 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("test")
+2026-10-03 17:56:14,067 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,067 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("model_test_with_timestamp")
+2026-10-03 17:56:14,067 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,068 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("model_test_with_timestamp")
+2026-10-03 17:56:14,068 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,068 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("tier")
+2026-10-03 17:56:14,068 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,069 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("tier")
+2026-10-03 17:56:14,069 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,069 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects_participants_association")
+2026-10-03 17:56:14,069 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,070 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("projects_participants_association")
+2026-10-03 17:56:14,070 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,070 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects")
+2026-10-03 17:56:14,070 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,070 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("projects")
+2026-10-03 17:56:14,070 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,071 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("participants")
+2026-10-03 17:56:14,071 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,071 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("participants")
+2026-10-03 17:56:14,071 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,072 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("booking")
+2026-10-03 17:56:14,072 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,072 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("booking")
+2026-10-03 17:56:14,072 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,073 INFO sqlalchemy.engine.Engine 
+CREATE TABLE category (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	PRIMARY KEY (id)
+)
+
+
+2026-10-03 17:56:14,073 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:14,073 INFO sqlalchemy.engine.Engine CREATE INDEX ix_category_name ON category (name)
+2026-10-03 17:56:14,073 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,074 INFO sqlalchemy.engine.Engine 
+CREATE TABLE tier (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+2026-10-03 17:56:14,074 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:14,074 INFO sqlalchemy.engine.Engine 
+CREATE TABLE projects (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	description VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+2026-10-03 17:56:14,075 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,075 INFO sqlalchemy.engine.Engine 
+CREATE TABLE participants (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	role VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+2026-10-03 17:56:14,075 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,076 INFO sqlalchemy.engine.Engine 
+CREATE TABLE test (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	tier_id INTEGER NOT NULL, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN NOT NULL, 
+	deleted_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+2026-10-03 17:56:14,076 INFO sqlalchemy.engine.Engine [no key 0.00012s] ()
+2026-10-03 17:56:14,076 INFO sqlalchemy.engine.Engine 
+CREATE TABLE model_test_with_timestamp (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN NOT NULL, 
+	deleted_at DATETIME, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+2026-10-03 17:56:14,076 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:14,077 INFO sqlalchemy.engine.Engine 
+CREATE TABLE projects_participants_association (
+	project_id INTEGER NOT NULL, 
+	participant_id INTEGER NOT NULL, 
+	PRIMARY KEY (project_id, participant_id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id), 
+	FOREIGN KEY(participant_id) REFERENCES participants (id)
+)
+
+
+2026-10-03 17:56:14,077 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,077 INFO sqlalchemy.engine.Engine 
+CREATE TABLE multi_pk (
+	id INTEGER NOT NULL, 
+	uuid VARCHAR(25) NOT NULL, 
+	name VARCHAR NOT NULL, 
+	test_id INTEGER, 
+	PRIMARY KEY (id, uuid), 
+	FOREIGN KEY(test_id) REFERENCES test (id)
+)
+
+
+2026-10-03 17:56:14,077 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,078 INFO sqlalchemy.engine.Engine CREATE INDEX ix_multi_pk_name ON multi_pk (name)
+2026-10-03 17:56:14,078 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,078 INFO sqlalchemy.engine.Engine 
+CREATE TABLE booking (
+	id INTEGER NOT NULL, 
+	owner_id INTEGER NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	booking_date DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES test (id), 
+	FOREIGN KEY(user_id) REFERENCES test (id)
+)
+
+
+2026-10-03 17:56:14,078 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,079 INFO sqlalchemy.engine.Engine COMMIT
+------------------------------ Captured log setup ------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA temp.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE category (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	PRIMARY KEY (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 CREATE INDEX ix_category_name ON category (name)
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE tier (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE projects (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	description VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE participants (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	role VARCHAR, 
+	PRIMARY KEY (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE test (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	tier_id INTEGER NOT NULL, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN NOT NULL, 
+	deleted_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00012s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE model_test_with_timestamp (
+	id INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	tier_id INTEGER, 
+	category_id INTEGER, 
+	is_deleted BOOLEAN NOT NULL, 
+	deleted_at DATETIME, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(tier_id) REFERENCES tier (id), 
+	FOREIGN KEY(category_id) REFERENCES category (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE projects_participants_association (
+	project_id INTEGER NOT NULL, 
+	participant_id INTEGER NOT NULL, 
+	PRIMARY KEY (project_id, participant_id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id), 
+	FOREIGN KEY(participant_id) REFERENCES participants (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE multi_pk (
+	id INTEGER NOT NULL, 
+	uuid VARCHAR(25) NOT NULL, 
+	name VARCHAR NOT NULL, 
+	test_id INTEGER, 
+	PRIMARY KEY (id, uuid), 
+	FOREIGN KEY(test_id) REFERENCES test (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 CREATE INDEX ix_multi_pk_name ON multi_pk (name)
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+CREATE TABLE booking (
+	id INTEGER NOT NULL, 
+	owner_id INTEGER NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	booking_date DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES test (id), 
+	FOREIGN KEY(user_id) REFERENCES test (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+----------------------------- Captured stdout call -----------------------------
+2026-10-03 17:56:14,088 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,089 INFO sqlalchemy.engine.Engine INSERT INTO tier (id, name) VALUES (?, ?)
+2026-10-03 17:56:14,089 INFO sqlalchemy.engine.Engine [generated in 0.00016s] [(1, 'Premium'), (2, 'Basic')]
+2026-10-03 17:56:14,090 INFO sqlalchemy.engine.Engine COMMIT
+2026-10-03 17:56:14,091 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,091 INFO sqlalchemy.engine.Engine INSERT INTO test (id, name, tier_id, category_id, is_deleted, deleted_at) VALUES (?, ?, ?, ?, ?, ?)
+2026-10-03 17:56:14,092 INFO sqlalchemy.engine.Engine [generated in 0.00018s] [(1, 'Charlie', 1, 1, 0, None), (2, 'Alice', 2, 1, 0, None), (3, 'Bob', 1, 2, 0, None), (4, 'David', 2, 1, 0, None), (5, 'Eve', 1, 1, 0, None), (6, 'Frank', 2, 2, 0, None), (7, 'Grace', 1, 2, 0, None), (8, 'Hannah', 2, 1, 0, None)  ... displaying 10 of 11 total bound parameter sets ...  (10, 'Judy', 2, 2, 0, None), (11, 'Alice', 1, 1, 0, None)]
+2026-10-03 17:56:14,092 INFO sqlalchemy.engine.Engine COMMIT
+2026-10-03 17:56:14,093 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,093 INFO sqlalchemy.engine.Engine SELECT test.name, test.tier_id, tier.name AS tier_name 
+FROM test LEFT OUTER JOIN tier ON test.tier_id = tier.id
+ LIMIT ? OFFSET ?
+2026-10-03 17:56:14,094 INFO sqlalchemy.engine.Engine [generated in 0.00014s] (10, 0)
+2026-10-03 17:56:14,094 INFO sqlalchemy.engine.Engine SELECT count(*) AS count_1 
+FROM test
+2026-10-03 17:56:14,095 INFO sqlalchemy.engine.Engine [generated in 0.00014s] ()
+------------------------------ Captured log call -------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 INSERT INTO tier (id, name) VALUES (?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00016s] [(1, 'Premium'), (2, 'Basic')]
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 INSERT INTO test (id, name, tier_id, category_id, is_deleted, deleted_at) VALUES (?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00018s] [(1, 'Charlie', 1, 1, 0, None), (2, 'Alice', 2, 1, 0, None), (3, 'Bob', 1, 2, 0, None), (4, 'David', 2, 1, 0, None), (5, 'Eve', 1, 1, 0, None), (6, 'Frank', 2, 2, 0, None), (7, 'Grace', 1, 2, 0, None), (8, 'Hannah', 2, 1, 0, None)  ... displaying 10 of 11 total bound parameter sets ...  (10, 'Judy', 2, 2, 0, None), (11, 'Alice', 1, 1, 0, None)]
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 SELECT test.name, test.tier_id, tier.name AS tier_name 
+FROM test LEFT OUTER JOIN tier ON test.tier_id = tier.id
+ LIMIT ? OFFSET ?
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00014s] (10, 0)
+INFO     sqlalchemy.engine.Engine:base.py:1899 SELECT count(*) AS count_1 
+FROM test
+INFO     sqlalchemy.engine.Engine:base.py:1904 [generated in 0.00014s] ()
+--------------------------- Captured stdout teardown ---------------------------
+2026-10-03 17:56:14,096 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-10-03 17:56:14,096 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-10-03 17:56:14,096 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("multi_pk")
+2026-10-03 17:56:14,096 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,097 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("category")
+2026-10-03 17:56:14,097 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,097 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("test")
+2026-10-03 17:56:14,097 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,098 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("model_test_with_timestamp")
+2026-10-03 17:56:14,098 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,098 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("tier")
+2026-10-03 17:56:14,098 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,099 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects_participants_association")
+2026-10-03 17:56:14,099 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,099 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects")
+2026-10-03 17:56:14,099 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,099 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("participants")
+2026-10-03 17:56:14,099 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,100 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("booking")
+2026-10-03 17:56:14,100 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-10-03 17:56:14,100 INFO sqlalchemy.engine.Engine 
+DROP TABLE booking
+2026-10-03 17:56:14,100 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,101 INFO sqlalchemy.engine.Engine 
+DROP TABLE multi_pk
+2026-10-03 17:56:14,101 INFO sqlalchemy.engine.Engine [no key 0.00011s] ()
+2026-10-03 17:56:14,101 INFO sqlalchemy.engine.Engine 
+DROP TABLE projects_participants_association
+2026-10-03 17:56:14,101 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,102 INFO sqlalchemy.engine.Engine 
+DROP TABLE model_test_with_timestamp
+2026-10-03 17:56:14,102 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,102 INFO sqlalchemy.engine.Engine 
+DROP TABLE test
+2026-10-03 17:56:14,102 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,102 INFO sqlalchemy.engine.Engine 
+DROP TABLE participants
+2026-10-03 17:56:14,103 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,103 INFO sqlalchemy.engine.Engine 
+DROP TABLE projects
+2026-10-03 17:56:14,103 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,103 INFO sqlalchemy.engine.Engine 
+DROP TABLE tier
+2026-10-03 17:56:14,103 INFO sqlalchemy.engine.Engine [no key 0.00009s] ()
+2026-10-03 17:56:14,104 INFO sqlalchemy.engine.Engine 
+DROP TABLE category
+2026-10-03 17:56:14,104 INFO sqlalchemy.engine.Engine [no key 0.00010s] ()
+2026-10-03 17:56:14,104 INFO sqlalchemy.engine.Engine COMMIT
+---------------------------- Captured log teardown -----------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1126 ROLLBACK
+INFO     sqlalchemy.engine.Engine:base.py:1094 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("multi_pk")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("category")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("test")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("model_test_with_timestamp")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("tier")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects_participants_association")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("participants")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 PRAGMA main.table_info("booking")
+INFO     sqlalchemy.engine.Engine:base.py:1904 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE booking
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE multi_pk
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00011s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE projects_participants_association
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE model_test_with_timestamp
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE test
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE participants
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE projects
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE tier
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00009s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1899 
+DROP TABLE category
+INFO     sqlalchemy.engine.Engine:base.py:1904 [no key 0.00010s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1143 COMMIT
+----------- generated xml file: /opt/receipts/reports/agent1-41.xml ------------
+=========================== short test summary info ============================
+PASSED tests/sqlalchemy/crud/test_get_joined.py::test_get_joined_nested_no_prefix_provided
+PASSED tests/sqlalchemy/crud/test_get_multi_joined.py::test_get_multi_joined_no_prefix_nested
+PASSED tests/sqlmodel/crud/test_get_multi_joined.py::test_get_multi_joined_no_prefix_nested
+============================== 3 passed in 0.22s ===============================

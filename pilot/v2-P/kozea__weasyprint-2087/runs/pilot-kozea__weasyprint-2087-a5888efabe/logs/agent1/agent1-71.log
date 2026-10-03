@@ -1,0 +1,15 @@
+    # Definitions for the rules generating anonymous table boxes
+    # https://www.w3.org/TR/CSS21/tables.html#anonymous-boxes
+    tabular_container = True
+
+    def all_children(self):
+        return itertools.chain(self.children, self.column_groups)
+
+    def translate(self, dx=0, dy=0, ignore_floats=False):
+        self.column_positions = [
+            position + dx for position in self.column_positions]
+        return super().translate(dx, dy, ignore_floats)
+
+    def page_values(self):
+        return (self.style['page'], self.style['page'])
+

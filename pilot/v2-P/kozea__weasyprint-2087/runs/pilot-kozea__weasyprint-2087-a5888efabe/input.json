@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Table not printed as shown in browser: weasyprint overrides \"table width\" with \"cell width\"\nIf the table (table) has a maximum width and the individual columns (td) have their own width - greater than the table width(!) - weasyprint interprets the width different as browsers will do:\r\n\r\nA Table with \"table width 500px\" and \"td width 3000px\" will shown as follows:\r\n\r\n- Browsers take the table-width as the relevant width -> Table will be 500px wide\r\n- Weasyprint takes the td-width as relevant width -> Table will be 3000px wide (table will be cut off!)\r\n\r\n![table-bug](https://github.com/Kozea/WeasyPrint/assets/5119643/1b2040bf-02ea-4a09-937d-6adc3a4601f9)\r\n\r\n### Example code\r\n\r\n```html\r\n<!DOCTYPE html><html class=\"view  chrome\"  lang=\"de\">\r\n<p> Table Width: 500px </p>\r\n<div>    \r\n<div style=\"overflow:auto\">      \r\n<div class=\"text-content\">            \r\n<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\" style=\"width:500px\">\t\t\t\t\t\r\n<tbody>\t\t\t\r\n<tr>\t\t\t\t\r\n<td style=\"width:3000px\">Width: 3000px</td>\t\t\t\t\r\n<td style=\"width:609px\">2</td>\t\t\t\r\n</tr>\t\t\t\r\n<tr>\t\t\t\t\r\n<td style=\"width:927px\">Width: 927px</td>\t\t\t\t\r\n<td style=\"width:609px\">2</td>\t\t\t\r\n</tr>\t\t\t\r\n<tr>\t\t\t\t\r\n<td style=\"width:927px\">Width: 927px</td>\t\t\t\t\r\n<td style=\"width:609px\">2</td>\t\t\t\r\n</tr>\t\t\r\n</tbody>\t     \r\n</table><p>&nbsp;</p>              \t\r\n</div>    \r\n</div>  \r\n</div>\r\n</html> \r\n``` \r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/kozea-weasyprint:2087-2c09a86",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-kozea__weasyprint-2087-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2xheW91dC90ZXN0X3RhYmxlLnB5IGIvdGVzdHMvbGF5b3V0L3Rlc3RfdGFibGUucHkKaW5kZXggYmZkMDk3ZGEuLmFmY2RlMmJhIDEwMDY0NAotLS0gYS90ZXN0cy9sYXlvdXQvdGVzdF90YWJsZS5weQorKysgYi90ZXN0cy9sYXlvdXQvdGVzdF90YWJsZS5weQpAQCAtNTE1LDcgKzUxNSw3IEBAIGRlZiB0ZXN0X2xheW91dF90YWJsZV9hdXRvXzgoKToKIEBhc3NlcnRfbm9fbG9ncwogZGVmIHRlc3RfbGF5b3V0X3RhYmxlX2F1dG9fOSgpOgogICAgIHBhZ2UsID0gcmVuZGVyX3BhZ2VzKCcnJwotICAgICAgPHRhYmxlIHN0eWxlPSJib3JkZXItc3BhY2luZzogMTBweDsgd2lkdGg6IDExMHB4OyBtYXJnaW46IDVweCI+CisgICAgICA8dGFibGUgc3R5bGU9ImJvcmRlci1zcGFjaW5nOiAxMHB4OyB3aWR0aDogMTIwcHg7IG1hcmdpbjogNXB4Ij4KICAgICAgICAgPHRyPgogICAgICAgICAgIDx0ZCBzdHlsZT0id2lkdGg6IDYwcHgiPjwvdGQ+CiAgICAgICAgICAgPHRkPjwvdGQ+CkBAIC0xMTEzLDggKzExMTMsOCBAQCBkZWYgdGVzdF9sYXlvdXRfdGFibGVfYXV0b18zMSgpOgogZGVmIHRlc3RfbGF5b3V0X3RhYmxlX2F1dG9fMzIoKToKICAgICAjIFRhYmxlIHdpdGggYSBjZWxsIGxhcmdlciB0aGFuIHRoZSB0YWJsZSdzIHdpZHRoCiAgICAgcGFnZSwgPSByZW5kZXJfcGFnZXMoJycnCi0gICAgICA8dGFibGUgc3R5bGU9IndpZHRoOiAzMDBweDsgbWFyZ2luOiAxMDBweCI+Ci0gICAgICAgIDx0ZCBzdHlsZT0id2lkdGg6IDQwMHB4Ij48L3RkPgorICAgICAgPHRhYmxlIHN0eWxlPSJ3aWR0aDogNDAwcHg7IG1hcmdpbjogMTAwcHgiPgorICAgICAgICA8dGQgc3R5bGU9IndpZHRoOiA1MDBweCI+PC90ZD4KICAgICAgIDwvdGFibGU+CiAgICAgJycnKQogICAgIGh0bWwsID0gcGFnZS5jaGlsZHJlbgo='\"'\"'))'",
+      "git apply /tmp/receipts-kozea__weasyprint-2087-test.patch"
+    ],
+    "workdir": "/WeasyPrint"
+  },
+  "spec_paths": [
+    "tests/layout/test_table.py"
+  ],
+  "spec_tests": [
+    "tests/layout/test_table.py::test_layout_table_auto_32"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/layout/test_table.py"
+}

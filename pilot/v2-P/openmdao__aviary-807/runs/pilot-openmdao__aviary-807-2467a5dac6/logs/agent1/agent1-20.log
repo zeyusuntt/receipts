@@ -1,0 +1,21 @@
+                    f'{phase_name}_distance_constraint.distance_resid',
+                    equals=0.0,
+                    ref=1e2,
+                )
+
+            # this is only used for analytic phases with a target duration
+            time_duration = user_options.get('time_duration', (None, 'min'))
+            time_duration = wrapped_convert_units(time_duration, 'min')
+            analytic = user_options.get('analytic', False)
+
+            if analytic and time_duration is not None:
+                self.post_mission.add_subsystem(
+                    f'{phase_name}_duration_constraint',
+                    om.ExecComp(
+                        'duration_resid = time_duration - (final_time - initial_time)',
+                        duration_resid={'units': 'min'},
+                        time_duration={'val': time_duration, 'units': 'min'},
+                        final_time={'units': 'min'},
+                        initial_time={'units': 'min'},
+                    ),
+                )

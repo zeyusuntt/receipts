@@ -1,0 +1,139 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /trackintel
+collecting ... collected 2 items
+
+tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints FAILED [ 50%]
+tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_error FAILED [100%]
+
+=================================== FAILURES ===================================
+__________________ TestMergeStaypoints.test_merge_staypoints ___________________
+
+self = <tests.preprocessing.test_staypoints.TestMergeStaypoints object at 0x7fffd26ac3d0>
+example_staypoints_merge = (    user_id                started_at  ...                  geom location_id
+id                                     ....0678 47.4)           4
+
+[8 rows x 5 columns], Empty GeoDataFrame
+Columns: [user_id, started_at, finished_at]
+Index: [])
+
+    def test_merge_staypoints(self, example_staypoints_merge):
+        """Test staypoint merging."""
+        sp, tpls = example_staypoints_merge
+        # first test with empty tpls
+        merged_sp = sp.as_staypoints.merge_staypoints(tpls, agg={"geom": "first"})
+        merged_sp = merged_sp.reindex(columns=sp.columns)
+        assert len(merged_sp) == len(sp) - 3
+        # some staypoints stay the same (not merged)
+>       assert (merged_sp.loc[1] == sp.loc[1]).all()
+E       AssertionError: assert np.False_
+E        +  where np.False_ = all()
+E        +    where all = user_id      ... dtype: object == user_id      ... dtype: object
+E             
+E             Full diff:
+E               user_id                                0
+E               started_at     1971-01-01 00:00:00+00:00
+E               finished_at    1971-01-02 05:00:00+00:00
+E               geom              POINT (8.5067847 47.4)
+E             - location_id                            1...
+E             
+E             ...Full output truncated (4 lines hidden), use '-vv' to show.all
+
+tests/preprocessing/test_staypoints.py:406: AssertionError
+_______________ TestMergeStaypoints.test_merge_staypoints_error ________________
+
+self = <tests.preprocessing.test_staypoints.TestMergeStaypoints object at 0x7fffd26ac040>
+example_staypoints_merge = (    user_id  ...                  geom
+id           ...                      
+1         0  ...  POINT (8.50678 47.4)
+...  POINT (8.50678 47.4)
+
+[8 rows x 4 columns], Empty GeoDataFrame
+Columns: [user_id, started_at, finished_at]
+Index: [])
+
+    def test_merge_staypoints_error(self, example_staypoints_merge):
+        sp, tpls = example_staypoints_merge
+        sp.drop(columns=["location_id"], inplace=True)
+        with pytest.raises(AssertionError) as excinfo:
+>           _ = sp.as_staypoints.merge_staypoints(tpls)
+
+tests/preprocessing/test_staypoints.py:467: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trackintel/model/staypoints.py:97: in merge_staypoints
+    return ti.preprocessing.staypoints.merge_staypoints(self._obj, *args, **kwargs)
+trackintel/preprocessing/staypoints.py:303: in merge_staypoints
+    sp_merge[["next_user_id", "next_started_at", "next_location_id"]] = sp_merge[
+/usr/local/lib/python3.10/site-packages/geopandas/geodataframe.py:1891: in __getitem__
+    result = super().__getitem__(key)
+/usr/local/lib/python3.10/site-packages/pandas/core/frame.py:4119: in __getitem__
+    indexer = self.columns._get_indexer_strict(key, "columns")[1]
+/usr/local/lib/python3.10/site-packages/pandas/core/indexes/base.py:6212: in _get_indexer_strict
+    self._raise_if_missing(keyarr, indexer, axis_name)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Index(['id', 'user_id', 'started_at', 'finished_at', 'geom', 'type',
+       'next_type', 'index_temp'],
+      dtype='object')
+key = Index(['user_id', 'started_at', 'location_id'], dtype='object')
+indexer = array([ 1,  2, -1]), axis_name = 'columns'
+
+    def _raise_if_missing(self, key, indexer, axis_name: str_t) -> None:
+        """
+        Check that indexer can be used to return a result.
+    
+        e.g. at least one element was found,
+        unless the list of keys was actually empty.
+    
+        Parameters
+        ----------
+        key : list-like
+            Targeted labels (only used to show correct error message).
+        indexer: array-like of booleans
+            Indices corresponding to the key,
+            (with -1 indicating not found).
+        axis_name : str
+    
+        Raises
+        ------
+        KeyError
+            If at least one key was requested but none was found.
+        """
+        if len(key) == 0:
+            return
+    
+        # Count missing values
+        missing_mask = indexer < 0
+        nmissing = missing_mask.sum()
+    
+        if nmissing:
+            if nmissing == len(indexer):
+                raise KeyError(f"None of [{key}] are in the [{axis_name}]")
+    
+            not_found = list(ensure_index(key)[missing_mask.nonzero()[0]].unique())
+>           raise KeyError(f"{not_found} not in index")
+E           KeyError: "['location_id'] not in index"
+
+/usr/local/lib/python3.10/site-packages/pandas/core/indexes/base.py:6264: KeyError
+=============================== warnings summary ===============================
+tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints
+tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_error
+  /trackintel/trackintel/model/staypoints.py:67: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+    assert pd.api.types.is_datetime64tz_dtype(
+
+tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints
+tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_error
+  /trackintel/trackintel/model/staypoints.py:70: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+    assert pd.api.types.is_datetime64tz_dtype(
+
+tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints
+tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_error
+  /trackintel/trackintel/preprocessing/staypoints.py:290: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+    sp_tpls = pd.concat([sp_merge, tpls_merge]).sort_values(by=["user_id", "started_at"])
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /opt/receipts/reports/agent1-8.xml ------------
+=========================== short test summary info ============================
+FAILED tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints
+FAILED tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_error
+======================== 2 failed, 6 warnings in 5.14s =========================

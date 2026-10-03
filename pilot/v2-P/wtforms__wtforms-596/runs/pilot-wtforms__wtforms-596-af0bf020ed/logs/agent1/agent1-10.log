@@ -1,0 +1,11 @@
+    def render_field(self, field, render_kw):
+        """
+        render_field allows customization of how widget rendering is done.
+
+        The default implementation calls ``field.widget(field, **render_kw)``
+        """
+        other_kw = getattr(field, "render_kw", None)
+        if other_kw is not None:
+            render_kw = dict(other_kw, **render_kw)
+        return field.widget(field, **render_kw)
+

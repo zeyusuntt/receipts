@@ -1,0 +1,28 @@
+Using repo dir: /tmp/tmpkh4_nz56
+Without create_patch:
+[]
+[<git.diff.Diff object at 0x7ffff69c80d0>]
+
+With create_patch:
+HEAD vs HEAD^: []
+index vs HEAD: []
+index vs working: [<git.diff.Diff object at 0x7ffff69c8040>]
+working tree vs HEAD: [<git.diff.Diff object at 0x7ffff6a517e0>]
+
+=== WITH EXTERNAL DIFF ===
+Without create_patch:
+Traceback (most recent call last):
+  File "/GitPython/reproduce_issue.py", line 42, in <module>
+    print("HEAD vs HEAD^:", repo.head.commit.diff("HEAD^"))  # tree vs tree
+  File "/GitPython/git/diff.py", line 207, in diff
+    index = Diff._index_from_raw_format(self.repo, proc)
+  File "/GitPython/git/diff.py", line 683, in _index_from_raw_format
+    handle_process_output(
+  File "/GitPython/git/cmd.py", line 207, in handle_process_output
+    finalizer(process)
+  File "/GitPython/git/util.py", line 483, in finalize_process
+    proc.wait(**kwargs)
+  File "/GitPython/git/cmd.py", line 657, in wait
+    raise GitCommandError(remove_password_if_present(self.args), status, errstr)
+git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+  cmdline: git diff-tree 9a9e661b8e5b2242924827eef1457636ee02908b HEAD^ -r --abbrev=40 --full-index -M --raw -z --no-color

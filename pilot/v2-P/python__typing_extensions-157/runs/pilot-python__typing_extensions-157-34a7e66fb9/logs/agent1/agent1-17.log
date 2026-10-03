@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /typing_extensions
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+src/test_typing_extensions.py::NewTypeTests::test_error_message_when_subclassing FAILED [100%]
+
+=================================== FAILURES ===================================
+_______________ NewTypeTests.test_error_message_when_subclassing _______________
+TypeError: NewType.__init__() takes 3 positional arguments but 4 were given
+
+During handling of the above exception, another exception occurred:
+
+self = <test_typing_extensions.NewTypeTests testMethod=test_error_message_when_subclassing>
+
+    def test_error_message_when_subclassing(self):
+>       with self.assertRaisesRegex(
+            TypeError,
+            re.escape(
+                "Cannot subclass an instance of NewType. Perhaps you were looking for: "
+                "`ProUserId = NewType('ProUserId', UserId)`"
+            )
+        ):
+E       AssertionError: "Cannot\ subclass\ an\ instance\ of\ NewType\.\ Perhaps\ you\ were\ looking\ for:\ `ProUserId\ =\ NewType\('ProUserId',\ UserId\)`" does not match "NewType.__init__() takes 3 positional arguments but 4 were given"
+
+src/test_typing_extensions.py:1617: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-17.xml ------------
+=========================== short test summary info ============================
+FAILED src/test_typing_extensions.py::NewTypeTests::test_error_message_when_subclassing
+============================== 1 failed in 0.25s ===============================

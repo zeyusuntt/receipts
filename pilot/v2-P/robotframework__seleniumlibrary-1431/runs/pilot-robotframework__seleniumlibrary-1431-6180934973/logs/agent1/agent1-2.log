@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /SeleniumLibrary
+collecting ... collected 1 item
+
+utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_easier_event_firing_webdriver_from_plugin FAILED [100%]
+
+=================================== FAILURES ===================================
+___ ExtendingSeleniumLibrary.test_easier_event_firing_webdriver_from_plugin ____
+
+self = <test.api.test_plugins.ExtendingSeleniumLibrary testMethod=test_easier_event_firing_webdriver_from_plugin>
+
+    def test_easier_event_firing_webdriver_from_plugin(self):
+        plugin_file = os.path.join(self.root_dir, 'plugin_with_event_firing_webdriver.py')
+        sl = SeleniumLibrary(plugins=plugin_file)
+        self.assertEqual(sl._plugin_keywords, ['tidii'])
+>       self.assertEqual(sl.event_firing_webdriver, 'event_firing_webdriver')
+E       AssertionError: None != 'event_firing_webdriver'
+
+utest/test/api/test_plugins.py:117: AssertionError
+------------ generated xml file: /opt/receipts/reports/agent1-2.xml ------------
+=========================== short test summary info ============================
+FAILED utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_easier_event_firing_webdriver_from_plugin
+============================== 1 failed in 0.30s ===============================

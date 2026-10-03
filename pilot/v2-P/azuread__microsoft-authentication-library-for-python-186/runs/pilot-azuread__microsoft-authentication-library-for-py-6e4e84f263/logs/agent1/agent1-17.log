@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /microsoft-authentication-library-for-python
+collecting ... collected 1 item
+
+tests/test_application.py::TestClientApplicationAcquireTokenSilentFociBehaviors::test_preexisting_family_app_will_attempt_frt_and_return_error FAILED [100%]
+
+=================================== FAILURES ===================================
+_ TestClientApplicationAcquireTokenSilentFociBehaviors.test_preexisting_family_app_will_attempt_frt_and_return_error _
+
+self = <tests.test_application.TestClientApplicationAcquireTokenSilentFociBehaviors testMethod=test_preexisting_family_app_will_attempt_frt_and_return_error>
+
+    def test_preexisting_family_app_will_attempt_frt_and_return_error(self):
+        error_response = '{"error": "invalid_grant", "error_description": "xyz"}'
+        def tester(url, data=None, **kwargs):
+            self.assertEqual(
+                self.frt, data.get("refresh_token"), "Should attempt the FRT")
+            return MinimalResponse(status_code=400, text=error_response)
+        app = ClientApplication(
+            "preexisting_family_app", authority=self.authority_url, token_cache=self.cache)
+        resp = app._acquire_token_silent_by_finding_rt_belongs_to_me_or_my_family(
+            self.authority, self.scopes, self.account, post=tester)
+        logger.debug("%s.cache = %s", self.id(), self.cache.serialize())
+>       self.assertEqual(json.loads(error_response), resp, "Error raised will be returned")
+E       AssertionError: {'error': 'invalid_grant', 'error_description': 'xyz'} != None : Error raised will be returned
+
+tests/test_application.py:190: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-17.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_application.py::TestClientApplicationAcquireTokenSilentFociBehaviors::test_preexisting_family_app_will_attempt_frt_and_return_error
+============================== 1 failed in 1.09s ===============================

@@ -1,0 +1,20 @@
+40:from music21 import harmony  # for chord symbols
+2155:        >>> m = stream.Measure([meter.TimeSignature('4/4'), harmony.ChordSymbol('C7')])
+2212:              and not m.recurse().notesAndRests.getElementsNotOfClass('Harmony')
+2336:        'harmony': 'xmlHarmony',
+2461:        # harmony, forward, note, direction
+2462:        if mxObject.tag in ('harmony', 'forward', 'note', 'direction'):
+5136:    def xmlHarmony(self, mxHarmony):
+5141:        h = self.xmlToChordSymbol(mxHarmony)
+5142:        chordOffset = self.xmlToOffset(mxHarmony)
+5144:                              mxHarmony, h)
+5148:        mxHarmony: ET.Element
+5149:    ) -> harmony.ChordSymbol|harmony.NoChord|tablature.ChordWithFretBoard:
+5152:        Convert a <harmony> tag to a harmony.ChordSymbol object:
+5157:        >>> elStr = '<harmony><root><root-step>D</root-step><root-alter>-1</root-alter>'
+5158:        >>> elStr += '</root><kind>major-seventh</kind></harmony>'
+5159:        >>> mxHarmony = EL(elStr)
+5161:        >>> cs = MP.xmlToChordSymbol(mxHarmony)
+5163:        <music21.harmony.ChordSymbol D-maj7>
+5179:        >>> mxHarmony.find('kind').text = 'major-sixth'
+5180:        >>> cs = MP.xmlToChordSymbol(mxHarmony)

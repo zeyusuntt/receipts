@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "pip command line warning\nRecently versions of `pip` (20.0+) emit the following warning when using the `pip` CLI (e.g. `pip install <package-name>`):\r\n\r\n```\r\nWARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.\r\nPlease see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.\r\nTo avoid this problem you can invoke Python with '-m pip' instead of running pip directly.\r\n```\r\n\r\nWe should go through and replace occurrences of using `pip` directly in the codebase with `python -m pip`. So things like `pip install <package-name>` should be replaced with `python -m pip install <package-name>`",
+  "source": {
+    "image": "docker.io/swerebenchv2/dask-dask:5861-f0b8bd4",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-dask__dask-5861-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2Rhc2svdGVzdHMvdGVzdF9kYXRhc2V0cy5weSBiL2Rhc2svdGVzdHMvdGVzdF9kYXRhc2V0cy5weQppbmRleCBiZmI5MTQxN2IuLjA5MDcyN2U1NiAxMDA2NDQKLS0tIGEvZGFzay90ZXN0cy90ZXN0X2RhdGFzZXRzLnB5CisrKyBiL2Rhc2svdGVzdHMvdGVzdF9kYXRhc2V0cy5weQpAQCAtMjQsNyArMjQsNyBAQCBkZWYgdGVzdF9ub19taW1lc2lzKCk6CiAgICAgICAgIHdpdGggcHl0ZXN0LnJhaXNlcyhFeGNlcHRpb24pIGFzIGluZm86CiAgICAgICAgICAgICBkYXNrLmRhdGFzZXRzLm1ha2VfcGVvcGxlKCkKIAotICAgICAgICBhc3NlcnQgInBpcCBpbnN0YWxsIG1pbWVzaXMiIGluIHN0cihpbmZvLnZhbHVlKQorICAgICAgICBhc3NlcnQgInB5dGhvbiAtbSBwaXAgaW5zdGFsbCBtaW1lc2lzIiBpbiBzdHIoaW5mby52YWx1ZSkKIAogCiBkZWYgdGVzdF9kZXRlcm1pbmlzdGljKCk6Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-dask__dask-5861-test.patch"
+    ],
+    "workdir": "/dask"
+  },
+  "spec_paths": [
+    "dask/tests/test_datasets.py"
+  ],
+  "spec_tests": [
+    "dask/tests/test_datasets.py::test_no_mimesis"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning dask/tests/test_datasets.py"
+}

@@ -1,0 +1,22 @@
+
+Failed to import /tmp/test_any_call.py due to TypeError('Cannot instantiate typing.Any') (code: import_failed)
+In /tmp/test_any_call.py at line 1
+   1: from typing import Any
+      ^
+   2: 
+   3: # This should trigger the error
+   4: x = Any(42)
+Traceback (most recent call last):
+  File "/pyanalyze/pyanalyze/name_check_visitor.py", line 1278, in _load_module
+    return importer.load_module_from_file(
+  File "/pyanalyze/pyanalyze/importer.py", line 102, in load_module_from_file
+    return import_module(str(abspath), abspath), False
+  File "/pyanalyze/pyanalyze/importer.py", line 110, in import_module
+    spec.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/tmp/test_any_call.py", line 4, in <module>
+    x = Any(42)
+  File "/usr/local/lib/python3.10/typing.py", line 387, in __call__
+    raise TypeError(f"Cannot instantiate {self!r}")
+TypeError: Cannot instantiate typing.Any

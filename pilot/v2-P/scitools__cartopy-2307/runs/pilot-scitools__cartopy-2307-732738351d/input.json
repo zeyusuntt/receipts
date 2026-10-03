@@ -1,0 +1,34 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "NaturalEarthFeature is hard-coded to PlateCarree()\nCurrently the `Feature` class takes a `crs` argument at `__init__` time; `NaturalEarthFeature` hard-codes this as `PlateCarree()`.  This is generally fine, as it matches the Natural Earth data. It would be more flexible, though to pull this from the dataset if available, since shapefiles can optionally have a `.prj` file that contains the CRS in WKT format. We'd need to read that manually for pyshp, but Fiona makes this available as the `.crs` attribute on the base collection. I've confirmed that the Natural Earth data do include such `.prj` files.\r\n\r\nThis is relevant because downstream in MetPy we subclass `Feature` to provide US counties and states, (now) from the U.S. Census Bureau. These data are lat/lons defined on NAD83 (which uses GRS80) rather than WGS84. Not a huge difference, but always best to use what's in the data when available. The current API of `Feature` doesn't have a good way to set the correct feature at data load time.",
+  "source": {
+    "image": "docker.io/swerebenchv2/scitools-cartopy:2307-aedaad9",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-scitools__cartopy-2307-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2xpYi9jYXJ0b3B5L3Rlc3RzL3Rlc3RfY3JzLnB5IGIvbGliL2NhcnRvcHkvdGVzdHMvdGVzdF9jcnMucHkKaW5kZXggYmY0MzM1MDQuLmNmZmUyMDg3IDEwMDY0NAotLS0gYS9saWIvY2FydG9weS90ZXN0cy90ZXN0X2Nycy5weQorKysgYi9saWIvY2FydG9weS90ZXN0cy90ZXN0X2Nycy5weQpAQCAtMzYwLDMgKzM2MCwyNSBAQCBkZWYgdGVzdF90cmFuc2Zvcm1fcG9pbnRfbm9fd2FybmluZygpOgogICAgIHdpdGggd2FybmluZ3MuY2F0Y2hfd2FybmluZ3MoKToKICAgICAgICAgd2FybmluZ3Muc2ltcGxlZmlsdGVyKCJlcnJvciIpCiAgICAgICAgIHAyLnRyYW5zZm9ybV9wb2ludCgxLCAyLCBwKQorCisKK2RlZiB0ZXN0X2dlb2dyYXBoaWNfYm91bmRzX25vX2FyZWFfb2ZfdXNlKCk6CisgICAgIyBTaG91bGQgZGVmYXVsdCB0byBnbG9iYWwgYm91bmRzIGlmIG5vIGFyZWEgb2YgdXNlCisgICAgd2t0ID0gKCdHRU9HQ1NbIkdDU19XR1NfMTk4NCIsREFUVU1bIkRfV0dTXzE5ODQiLCcKKyAgICAgICAgICAgJ1NQSEVST0lEWyJXR1NfMTk4NCIsNjM3ODEzNy4wLDI5OC4yNTcyMjM1NjNdXSwnCisgICAgICAgICAgICdQUklNRU1bIkdyZWVud2ljaCIsMC4wXSxVTklUWyJEZWdyZWUiLDAuMDE3NDUzMjkyNTE5OTQzMjk1XV0nKQorICAgIHAgPSBweXByb2ouQ1JTLmZyb21fd2t0KHdrdCkKKyAgICBhc3NlcnQgcC5pc19nZW9ncmFwaGljCisgICAgYXNzZXJ0IHAuYXJlYV9vZl91c2UgaXMgTm9uZQorICAgIHBfY2FydG9weSA9IGNjcnMuUHJvamVjdGlvbihwKQorICAgIGFzc2VydCBwX2NhcnRvcHkuYm91bmRzID09ICgtMTgwLCAxODAsIC05MCwgOTApCisKKworZGVmIHRlc3RfZ2VvZ3JhcGhpY19ib3VuZHNfd2l0aF9hcmVhX29mX3VzZSgpOgorICAgICMgU2hvdWxkIGRlZmF1bHQgdG8gYXJlYSBvZiB1c2UgYm91bmRzIGlmIGF2YWlsYWJsZQorICAgIHAgPSBweXByb2ouQ1JTLmZyb21fZXBzZyg0MjY3KQorICAgIGFzc2VydCBwLmlzX2dlb2dyYXBoaWMKKyAgICBhc3NlcnQgcC5hcmVhX29mX3VzZSBpcyBub3QgTm9uZQorICAgIHBfY2FydG9weSA9IGNjcnMuUHJvamVjdGlvbihwKQorICAgIHgwLCB4MSwgeTAsIHkxID0gcF9jYXJ0b3B5LmJvdW5kcworICAgIGFzc2VydF9hcnJheV9lcXVhbCgoeDEsIHkwLCB4MCwgeTEpLCBwLmFyZWFfb2ZfdXNlLmJvdW5kcykKZGlmZiAtLWdpdCBhL2xpYi9jYXJ0b3B5L3Rlc3RzL3Rlc3Rfc2hhcGVyZWFkZXIucHkgYi9saWIvY2FydG9weS90ZXN0cy90ZXN0X3NoYXBlcmVhZGVyLnB5CmluZGV4IDY2YzRlNGQ2Li5jMTNhM2M3NSAxMDA2NDQKLS0tIGEvbGliL2NhcnRvcHkvdGVzdHMvdGVzdF9zaGFwZXJlYWRlci5weQorKysgYi9saWIvY2FydG9weS90ZXN0cy90ZXN0X3NoYXBlcmVhZGVyLnB5CkBAIC02Miw2ICs2MiwxMCBAQCBjbGFzcyBUZXN0TGFrZXM6CiAgICAgICAgIGFzc2VydCBhY3R1YWwgPT0gZXhwZWN0ZWQKICAgICAgICAgYXNzZXJ0IGxha2VfcmVjb3JkLmdlb21ldHJ5ID09IHNlbGYudGVzdF9sYWtlX2dlb21ldHJ5CiAKKyAgICBkZWYgdGVzdF9ub19pbmNsdWRlZF9wcm9qZWN0aW9uX2ZpbGUoc2VsZik6CisgICAgICAgICMgTm8gLnByaiBmaWxlIGluY2x1ZGVkIHdpdGggdGhlIGxha2VzIHNoYXBlZmlsZQorICAgICAgICBhc3NlcnQgc2VsZi5yZWFkZXIuY3JzIGlzIE5vbmUKKwogICAgIGRlZiB0ZXN0X2JvdW5kcyhzZWxmKToKICAgICAgICAgaWYgaXNpbnN0YW5jZShzZWxmLnJlYWRlciwgc2hwLkJhc2ljUmVhZGVyKToKICAgICAgICAgICAgICMgdGVzdHMgdGhhdCBhIGZpbGUgd2hpY2ggaGFzIGEgcmVjb3JkIHdpdGggYSBiYm94IGNhbgpAQCAtMTIwLDMgKzEyNCwxNSBAQCBjbGFzcyBUZXN0Uml2ZXJzOgogICAgICAgICAgICAgaWYga2V5IGluIGV4cGVjdGVkX2F0dHJpYnV0ZXM6CiAgICAgICAgICAgICAgICAgYXNzZXJ0IHZhbHVlID09IGV4cGVjdGVkX2F0dHJpYnV0ZXNba2V5XQogICAgICAgICBhc3NlcnQgcml2ZXJfcmVjb3JkLmdlb21ldHJ5ID09IHNlbGYudGVzdF9yaXZlcl9nZW9tZXRyeQorCisgICAgZGVmIHRlc3RfaW5jbHVkZWRfcHJvamVjdGlvbl9maWxlKHNlbGYpOgorICAgICAgICAjIFRoaXMgc2hhcGVmaWxlIGluY2x1ZGVzIGEgLnByaiBkZWZpbml0aW9uCisgICAgICAgIHdrdCA9ICgnR0VPR0NSU1siV0dTIDg0IixEQVRVTVsiV29ybGQgR2VvZGV0aWMgU3lzdGVtIDE5ODQiLCcKKyAgICAgICAgICAgICdFTExJUFNPSURbIldHUyA4NCIsNjM3ODEzNywyOTguMjU3MjIzNTYzLExFTkdUSFVOSVRbIm1ldHJlIiwxXV0sJworICAgICAgICAgICAgJ0lEWyJFUFNHIiw2MzI2XV0sUFJJTUVNWyJHcmVlbndpY2giLDAsJworICAgICAgICAgICAgJ0FOR0xFVU5JVFsiRGVncmVlIiwwLjAxNzQ1MzI5MjUxOTk0MzNdXSxDU1tlbGxpcHNvaWRhbCwyXSwnCisgICAgICAgICAgICAnQVhJU1sibG9uZ2l0dWRlIixlYXN0LE9SREVSWzFdLCcKKyAgICAgICAgICAgICdBTkdMRVVOSVRbIkRlZ3JlZSIsMC4wMTc0NTMyOTI1MTk5NDMzXV0sJworICAgICAgICAgICAgJ0FYSVNbImxhdGl0dWRlIixub3J0aCxPUkRFUlsyXSwnCisgICAgICAgICAgICAnQU5HTEVVTklUWyJEZWdyZWUiLDAuMDE3NDUzMjkyNTE5OTQzM11dXScpCisgICAgICAgIGFzc2VydCBzZWxmLnJlYWRlci5jcnMudG9fd2t0KCkgPT0gd2t0Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-scitools__cartopy-2307-test.patch"
+    ],
+    "workdir": "/cartopy"
+  },
+  "spec_paths": [
+    "lib/cartopy/tests/test_crs.py",
+    "lib/cartopy/tests/test_shapereader.py"
+  ],
+  "spec_tests": [
+    "lib/cartopy/tests/test_crs.py::test_geographic_bounds_no_area_of_use",
+    "lib/cartopy/tests/test_shapereader.py::TestLakes::test_no_included_projection_file[0]",
+    "lib/cartopy/tests/test_shapereader.py::TestRivers::test_included_projection_file"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning lib/cartopy/tests/test_crs.py lib/cartopy/tests/test_shapereader.py"
+}

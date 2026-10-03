@@ -1,0 +1,33 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "html_params and class and class_\nHello,\r\n\r\nI have a form created with model_form of flask_mongoengine.wtf\r\n\r\n```python\r\n    field_args = {\r\n      'bio': {'render_kw':{'class_':\"summernote\"}},\r\n    }\r\n    exclude = ['created_at','created_by']\r\n    form = model_form(Author,exclude=exclude,field_args=field_args)\r\n```\r\n\r\nI have a HTML \r\n```jinja\r\n {{ field(class='form-control', **kwargs) }}\r\n```\r\n\r\nfor which the TextArea widget correctly outputs \r\n```jinja\r\n<textarea class=\"form-control\" class=\"summernote\" id=\"bio\" name=\"bio\">text</textarea>\r\n```\r\n\r\nHowever all browsers are removing the extra class tag. It would be good to rewrite the html_params so that multiple class tags are combined into one. \r\n\r\n**expected output:**\r\n```jinja\r\n<textarea class=\"form-control summernote\" id=\"bio\" name=\"bio\">text</textarea>\r\n```\r\n\r\nI am using \r\n\r\nPackage | Version\r\n--------  | --------\r\nFlask | 1.0.2\r\nFlask-WTF |   0.14.2\r\nflask-mongoengine | 0.9.5\r\nWTForms |  2.2.1\r\n\r\nThanks,\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/wtforms-wtforms:596-3149b38",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-wtforms__wtforms-596-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfZmllbGRzLnB5IGIvdGVzdHMvdGVzdF9maWVsZHMucHkKaW5kZXggYTgyYTNmOS4uZjM2Y2U3MSAxMDA2NDQKLS0tIGEvdGVzdHMvdGVzdF9maWVsZHMucHkKKysrIGIvdGVzdHMvdGVzdF9maWVsZHMucHkKQEAgLTI2Niw2ICsyNjYsNDIgQEAgY2xhc3MgVGVzdEZpZWxkOgogICAgICAgICAgICAgJ3R5cGU9InRleHQiIHZhbHVlPSJoZWxsbyI+JwogICAgICAgICApCiAKKyAgICBkZWYgdGVzdF9yZW5kZXJfc3BlY2lhbChzZWxmKToKKyAgICAgICAgY2xhc3MgRihGb3JtKToKKyAgICAgICAgICAgIHMgPSBTdHJpbmdGaWVsZChyZW5kZXJfa3c9eyJjbGFzc18iOiAiZm9vIn0pCisKKyAgICAgICAgYXNzZXJ0IEYoKS5zKCkgPT0gJzxpbnB1dCBjbGFzcz0iZm9vIiBpZD0icyIgbmFtZT0icyIgdHlwZT0idGV4dCIgdmFsdWU9IiI+JworICAgICAgICBhc3NlcnQgKAorICAgICAgICAgICAgRigpLnMoKip7ImNsYXNzIjogImJhciJ9KQorICAgICAgICAgICAgPT0gJzxpbnB1dCBjbGFzcz0iYmFyIiBpZD0icyIgbmFtZT0icyIgdHlwZT0idGV4dCIgdmFsdWU9IiI+JworICAgICAgICApCisgICAgICAgIGFzc2VydCAoCisgICAgICAgICAgICBGKCkucygqKnsiY2xhc3NfIjogImJhciJ9KQorICAgICAgICAgICAgPT0gJzxpbnB1dCBjbGFzcz0iYmFyIiBpZD0icyIgbmFtZT0icyIgdHlwZT0idGV4dCIgdmFsdWU9IiI+JworICAgICAgICApCisKKyAgICAgICAgY2xhc3MgRyhGb3JtKToKKyAgICAgICAgICAgIHMgPSBTdHJpbmdGaWVsZChyZW5kZXJfa3c9eyJjbGFzc19fIjogImZvbyJ9KQorCisgICAgICAgIGFzc2VydCBHKCkucygpID09ICc8aW5wdXQgY2xhc3M9ImZvbyIgaWQ9InMiIG5hbWU9InMiIHR5cGU9InRleHQiIHZhbHVlPSIiPicKKyAgICAgICAgYXNzZXJ0ICgKKyAgICAgICAgICAgIEcoKS5zKCoqeyJjbGFzc19fIjogImJhciJ9KQorICAgICAgICAgICAgPT0gJzxpbnB1dCBjbGFzcz0iYmFyIiBpZD0icyIgbmFtZT0icyIgdHlwZT0idGV4dCIgdmFsdWU9IiI+JworICAgICAgICApCisKKyAgICAgICAgY2xhc3MgSChGb3JtKToKKyAgICAgICAgICAgIHMgPSBTdHJpbmdGaWVsZChyZW5kZXJfa3c9eyJmb3JfIjogImZvbyJ9KQorCisgICAgICAgIGFzc2VydCBIKCkucygpID09ICc8aW5wdXQgZm9yPSJmb28iIGlkPSJzIiBuYW1lPSJzIiB0eXBlPSJ0ZXh0IiB2YWx1ZT0iIj4nCisgICAgICAgIGFzc2VydCAoCisgICAgICAgICAgICBIKCkucygqKnsiZm9yIjogImJhciJ9KQorICAgICAgICAgICAgPT0gJzxpbnB1dCBmb3I9ImJhciIgaWQ9InMiIG5hbWU9InMiIHR5cGU9InRleHQiIHZhbHVlPSIiPicKKyAgICAgICAgKQorICAgICAgICBhc3NlcnQgKAorICAgICAgICAgICAgSCgpLnMoKip7ImZvcl8iOiAiYmFyIn0pCisgICAgICAgICAgICA9PSAnPGlucHV0IGZvcj0iYmFyIiBpZD0icyIgbmFtZT0icyIgdHlwZT0idGV4dCIgdmFsdWU9IiI+JworICAgICAgICApCisKICAgICBkZWYgdGVzdF9zZWxlY3RfZmllbGRfY29waWVzX2Nob2ljZXMoc2VsZik6CiAgICAgICAgIGNsYXNzIEYoRm9ybSk6CiAgICAgICAgICAgICBpdGVtcyA9IFNlbGVjdEZpZWxkKGNob2ljZXM9W10pCmRpZmYgLS1naXQgYS90ZXN0cy90ZXN0X3dpZGdldHMucHkgYi90ZXN0cy90ZXN0X3dpZGdldHMucHkKaW5kZXggMTFkNzI0Yy4uOWJlZGVjNiAxMDA2NDQKLS0tIGEvdGVzdHMvdGVzdF93aWRnZXRzLnB5CisrKyBiL3Rlc3RzL3Rlc3Rfd2lkZ2V0cy5weQpAQCAtMjEsNyArMjEsNyBAQCBjbGFzcyBUZXN0SFRNTFBhcmFtczoKICAgICBkZWYgdGVzdF9iYXNpYyhzZWxmKToKICAgICAgICAgYXNzZXJ0IGh0bWxfcGFyYW1zKGZvbz05LCBrPSJ3dXV1IikgPT0gJ2Zvbz0iOSIgaz0id3V1dSInCiAgICAgICAgIGFzc2VydCBodG1sX3BhcmFtcyhjbGFzc189ImZvbyIpID09ICdjbGFzcz0iZm9vIicKLSAgICAgICAgYXNzZXJ0IGh0bWxfcGFyYW1zKGNsYXNzX189ImZvbyIpID09ICdjbGFzc189ImZvbyInCisgICAgICAgIGFzc2VydCBodG1sX3BhcmFtcyhjbGFzc19fPSJmb28iKSA9PSAnY2xhc3M9ImZvbyInCiAgICAgICAgIGFzc2VydCBodG1sX3BhcmFtcyhmb3JfPSJmb28iKSA9PSAnZm9yPSJmb28iJwogICAgICAgICBhc3NlcnQgaHRtbF9wYXJhbXMocmVhZG9ubHk9RmFsc2UsIGZvbz05KSA9PSAnZm9vPSI5IicKICAgICAgICAgYXNzZXJ0ICgK'\"'\"'))'",
+      "git apply /tmp/receipts-wtforms__wtforms-596-test.patch"
+    ],
+    "workdir": "/wtforms"
+  },
+  "spec_paths": [
+    "tests/test_fields.py",
+    "tests/test_widgets.py"
+  ],
+  "spec_tests": [
+    "tests/test_fields.py::TestField::test_render_special",
+    "tests/test_widgets.py::TestHTMLParams::test_basic"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_fields.py tests/test_widgets.py"
+}

@@ -1,0 +1,169 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pints
+plugins: anyio-4.12.1
+collecting ... collected 2 items
+
+pints/tests/test_evaluators.py::TestEvaluators::test_multi_sequential PASSED [ 50%]
+pints/tests/test_mcmc_controller.py::TestMCMCController::test_multi_logpdf ERROR [100%]
+
+==================================== ERRORS ====================================
+____________ ERROR at setup of TestMCMCController.test_multi_logpdf ____________
+
+cls = <class 'test_mcmc_controller.TestMCMCController'>
+
+    @classmethod
+    def setUpClass(cls):
+        """ Prepare problem for tests. """
+    
+        # Create toy model
+        model = pints.toy.LogisticModel()
+        cls.real_parameters = [0.015, 500]
+        times = np.linspace(0, 1000, 1000)
+        values = model.simulate(cls.real_parameters, times)
+    
+        # Add noise
+        np.random.seed(1)
+        cls.noise = 10
+        values += np.random.normal(0, cls.noise, values.shape)
+        cls.real_parameters.append(cls.noise)
+    
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(model, times, values)
+    
+        # Create a uniform prior over both the parameters and the new noise
+        # variable
+>       cls.log_prior = pints.UniformLogPrior(
+            [0.01, 400, cls.noise * 0.1],
+            [0.02, 600, cls.noise * 100]
+        )
+
+pints/tests/test_mcmc_controller.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pints/_log_priors.py:1248: in __init__
+    self._value = -np.log(np.product(self._boundaries.range()))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+attr = 'product'
+
+    def __getattr__(attr):
+        # Warn for expired attributes
+        import warnings
+    
+        if attr == "linalg":
+            import numpy.linalg as linalg
+            return linalg
+        elif attr == "fft":
+            import numpy.fft as fft
+            return fft
+        elif attr == "dtypes":
+            import numpy.dtypes as dtypes
+            return dtypes
+        elif attr == "random":
+            import numpy.random as random
+            return random
+        elif attr == "polynomial":
+            import numpy.polynomial as polynomial
+            return polynomial
+        elif attr == "ma":
+            import numpy.ma as ma
+            return ma
+        elif attr == "ctypeslib":
+            import numpy.ctypeslib as ctypeslib
+            return ctypeslib
+        elif attr == "exceptions":
+            import numpy.exceptions as exceptions
+            return exceptions
+        elif attr == "testing":
+            import numpy.testing as testing
+            return testing
+        elif attr == "matlib":
+            import numpy.matlib as matlib
+            return matlib
+        elif attr == "f2py":
+            import numpy.f2py as f2py
+            return f2py
+        elif attr == "typing":
+            import numpy.typing as typing
+            return typing
+        elif attr == "rec":
+            import numpy.rec as rec
+            return rec
+        elif attr == "char":
+            import numpy.char as char
+            return char
+        elif attr == "array_api":
+            raise AttributeError("`numpy.array_api` is not available from "
+                                 "numpy 2.0 onwards", name=None)
+        elif attr == "core":
+            import numpy.core as core
+            return core
+        elif attr == "strings":
+            import numpy.strings as strings
+            return strings
+        elif attr == "distutils":
+            if 'distutils' in __numpy_submodules__:
+                import numpy.distutils as distutils
+                return distutils
+            else:
+                raise AttributeError("`numpy.distutils` is not available from "
+                                     "Python 3.12 onwards", name=None)
+    
+        if attr in __future_scalars__:
+            # And future warnings for those that will change, but also give
+            # the AttributeError
+            warnings.warn(
+                f"In the future `np.{attr}` will be defined as the "
+                "corresponding NumPy scalar.", FutureWarning, stacklevel=2)
+    
+        if attr in __former_attrs__:
+            raise AttributeError(__former_attrs__[attr], name=None)
+    
+        if attr in __expired_attributes__:
+            raise AttributeError(
+                f"`np.{attr}` was removed in the NumPy 2.0 release. "
+                f"{__expired_attributes__[attr]}",
+                name=None
+            )
+    
+        if attr == "chararray":
+            warnings.warn(
+                "`np.chararray` is deprecated and will be removed from "
+                "the main namespace in the future. Use an array with a string "
+                "or bytes dtype instead.", DeprecationWarning, stacklevel=2)
+            import numpy.char as char
+            return char.chararray
+    
+>       raise AttributeError("module {!r} has no attribute "
+                             "{!r}".format(__name__, attr))
+E       AttributeError: module 'numpy' has no attribute 'product'
+
+/usr/local/lib/python3.10/site-packages/numpy/__init__.py:414: AttributeError
+=============================== warnings summary ===============================
+pints/_mcmc/_nuts.py:211
+  /pints/pints/_mcmc/_nuts.py:211: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
+
+pints/_mcmc/_nuts.py:231
+  /pints/pints/_mcmc/_nuts.py:231: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
+
+pints/_mcmc/_nuts.py:287
+  /pints/pints/_mcmc/_nuts.py:287: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def initialise_adaptor(
+
+pints/_mcmc/_nuts.py:320
+  /pints/pints/_mcmc/_nuts.py:320: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
+
+pints/_mcmc/_nuts.py:370
+  /pints/pints/_mcmc/_nuts.py:370: DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead
+    def nuts_sampler(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-26.xml ------------
+=========================== short test summary info ============================
+PASSED pints/tests/test_evaluators.py::TestEvaluators::test_multi_sequential
+ERROR pints/tests/test_mcmc_controller.py::TestMCMCController::test_multi_logpdf
+==================== 1 passed, 5 warnings, 1 error in 1.73s ====================

@@ -1,0 +1,24 @@
+diff --git a/git_machete/cmd.py b/git_machete/cmd.py
+index 03f722b..d5e182f 100644
+--- a/git_machete/cmd.py
++++ b/git_machete/cmd.py
+@@ -89,7 +89,7 @@ class MacheteClient:
+ 
+     def read_definition_file(self, verify_branches: bool = True) -> None:
+         with open(self._definition_file_path) as f:
+-            lines: List[str] = [line.rstrip() for line in f.readlines() if not line.isspace()]
++            lines: List[str] = [line.rstrip() for line in f.readlines()]
+ 
+         at_depth = {}
+         last_depth = -1
+@@ -98,6 +98,10 @@ class MacheteClient:
+ 
+         invalid_branches: List[str] = []
+         for index, line in enumerate(lines):
++            # Skip whitespace-only lines for processing but preserve original line numbering
++            stripped_line = line.strip()
++            if not stripped_line:
++                continue
+             prefix = "".join(itertools.takewhile(str.isspace, line))
+             if prefix and not self.__indent:
+                 self.__indent = prefix

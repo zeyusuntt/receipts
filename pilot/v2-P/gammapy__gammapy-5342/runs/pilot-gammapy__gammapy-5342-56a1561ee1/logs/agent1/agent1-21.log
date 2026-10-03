@@ -1,0 +1,148 @@
+
+Gammapy test data availability:
+gammapy-data ... no
+Gammapy environment variables:
+GAMMAPY_DATA = not set
+Setting matplotlib backend to "agg" for the tests.
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+hypothesis profile 'default'
+
+Running tests with gammapy version 1.3.dev554+gc9521d576.
+Running tests in gammapy/estimators/points/tests/test_sed.py::test_run_no_edip.
+
+Date: 2026-10-03T19:31:54
+
+Platform: Linux-7.0.6-x86_64-with-glibc2.41
+
+Executable: /usr/local/bin/python
+
+Full Python Version: 
+3.10.19 (main, Dec 30 2025, 00:42:16) [GCC 14.2.0]
+
+encodings: sys: utf-8, locale: UTF-8, filesystem: utf-8
+byteorder: little
+float info: dig: 15, mant_dig: 15
+
+Package versions: 
+Numpy: 2.2.6
+Scipy: 1.15.3
+Matplotlib: 3.10.8
+h5py: not available
+Pandas: not available
+cython: not available
+iminuit: 2.32.0
+matplotlib: 3.10.8
+astropy: 6.1.7
+regions: 0.10
+healpy: not available
+sherpa: not available
+gammapy: 1.3.dev554+gc9521d576
+naima: not available
+ray: not available
+
+Using Astropy options: remote_data: none.
+
+rootdir: /gammapy
+configfile: pyproject.toml (WARNING: ignoring pytest config in setup.cfg!)
+plugins: hypothesis-6.151.9, arraydiff-0.6.1, astropy-0.11.0, astropy-header-0.2.2, cov-7.0.0, doctestplus-1.7.1, filter-subpackage-0.2.0, mock-3.15.1, remotedata-0.4.1, xdist-3.8.0
+collecting ... collected 1 item
+
+gammapy/estimators/points/tests/test_sed.py::test_run_no_edip FAILED
+
+=================================== FAILURES ===================================
+_______________________________ test_run_no_edip _______________________________
+
+fpe_pwl = ([<gammapy.datasets.spectrum.SpectrumDatasetOnOff object at 0x7fffd67ac250>], <gammapy.estimators.points.sed.FluxPointsEstimator object at 0x7fffd5ecfe80>)
+tmpdir = local('/tmp/pytest-of-root/pytest-9/test_run_no_edip0')
+
+    def test_run_no_edip(fpe_pwl, tmpdir):
+        datasets, fpe = fpe_pwl
+    
+        datasets = datasets.copy()
+    
+        datasets[0].models["source"].apply_irf["edisp"] = False
+>       fp = fpe.run(datasets)
+
+gammapy/estimators/points/tests/test_sed.py:439: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gammapy/estimators/points/sed.py:155: in run
+    rows = parallel.run_multiprocessing(
+gammapy/utils/parallel.py:271: in run_multiprocessing
+    return run_loop(
+gammapy/utils/parallel.py:301: in run_loop
+    result = func(*arguments)
+gammapy/estimators/points/sed.py:208: in estimate_flux_point
+    return super().run(datasets=datasets_sliced)
+gammapy/estimators/flux.py:224: in run
+    result.update(super().run(datasets, model.norm))
+gammapy/estimators/parameter.py:336: in run
+    result = self.estimate_best_fit(datasets, parameter)
+gammapy/estimators/parameter.py:108: in estimate_best_fit
+    result = self.fit.run(datasets=datasets)
+gammapy/modeling/fit.py:174: in run
+    optimize_result = self.optimize(datasets=datasets)
+gammapy/modeling/fit.py:223: in optimize
+    factors, info, optimizer = compute(
+gammapy/modeling/iminuit.py:79: in optimize_iminuit
+    minuit.migrad(**migrad_opts)
+/usr/local/lib/python3.10/site-packages/iminuit/minuit.py:852: in migrad
+    fm = _robust_low_level_fit(
+/usr/local/lib/python3.10/site-packages/iminuit/minuit.py:2863: in _robust_low_level_fit
+    fm = migrad(ncall, tolerance)
+gammapy/modeling/iminuit.py:25: in fcn
+    total_stat = self.function()
+gammapy/datasets/core.py:240: in stat_sum
+    stat_sum += dataset.stat_sum()
+gammapy/datasets/map.py:2651: in stat_sum
+    return Dataset.stat_sum(self)
+gammapy/datasets/core.py:72: in stat_sum
+    stat = self.stat_array()
+gammapy/datasets/map.py:2412: in stat_array
+    mu_sig = self.npred_signal().data
+gammapy/datasets/map.py:731: in npred_signal
+    npred_total.stack(npred)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <gammapy.maps.region.ndmap.RegionNDMap object at 0x7fffd5ff4c40>
+other = <gammapy.maps.region.ndmap.RegionNDMap object at 0x7fffd5ff5d20>
+weights = None, nan_to_num = True
+
+    def stack(self, other, weights=None, nan_to_num=True):
+        """Stack other region map into map.
+    
+        Parameters
+        ----------
+        other : `RegionNDMap`
+            Other map to stack.
+        weights : `RegionNDMap`, optional
+            Array to be used as weights. The spatial geometry must be equivalent
+            to `other` and additional axes must be broadcastable.
+            Default is None.
+        nan_to_num: bool, optional
+            Non-finite values are replaced by zero if True.
+            Default is True.
+        """
+        data = other.quantity.to_value(self.unit).astype(self.data.dtype)
+    
+        # TODO: re-think stacking of regions. Is making the union reasonable?
+        # self.geom.union(other.geom)
+        if nan_to_num:
+            not_finite = ~np.isfinite(data)
+            if np.any(not_finite):
+                data = data.copy()
+                data[not_finite] = 0
+        if weights is not None:
+            if not other.geom.to_image() == weights.geom.to_image():
+                raise ValueError("Incompatible geoms between map and weights")
+            data = data * weights.data
+    
+>       self.data += data
+E       ValueError: operands could not be broadcast together with shapes (5,1,1) (20,1,1) (5,1,1)
+
+gammapy/maps/region/ndmap.py:708: ValueError
+----------- generated xml file: /opt/receipts/reports/agent1-21.xml ------------
+=========================== short test summary info ============================
+FAILED gammapy/estimators/points/tests/test_sed.py::test_run_no_edip - ValueE...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 1.00s ===============================

@@ -1,0 +1,109 @@
+diff --git a/msgpack/__init__.py b/msgpack/__init__.py
+index 7493c4c..2143ecb 100644
+--- a/msgpack/__init__.py
++++ b/msgpack/__init__.py
+@@ -1,6 +1,21 @@
+ # coding: utf-8
+ from msgpack._version import version
+-from msgpack.exceptions import *
++from msgpack.exceptions import (
++    UnpackException,
++    BufferFull,
++    OutOfData,
++    UnpackValueError,
++    ExtraData,
++    PackException,
++    PackValueError,
++    PackOverflowError,
++    InvalidSequence,
++    NestLimitExceeded,
++)
++
++# Aliases for backward compatibility / test expectations
++FormatError = InvalidSequence
++StackError = NestLimitExceeded
+ 
+ from collections import namedtuple
+ 
+diff --git a/msgpack/exceptions.py b/msgpack/exceptions.py
+index 5bee5b2..fe371c8 100644
+--- a/msgpack/exceptions.py
++++ b/msgpack/exceptions.py
+@@ -36,3 +36,18 @@ class ExtraData(UnpackValueError):
+ PackException = Exception
+ PackValueError = ValueError
+ PackOverflowError = OverflowError
++
++
++class InvalidSequence(ValueError):
++    """The data is not a valid msgpack sequence."""
++    pass
++
++
++class NestLimitExceeded(ValueError):
++    """The nesting limit has been exceeded."""
++    pass
++
++
++# Aliases for external compatibility
++FormatError = InvalidSequence
++StackError = NestLimitExceeded
+diff --git a/msgpack/fallback.py b/msgpack/fallback.py
+index 04fb5b9..b4ffc7e 100644
+--- a/msgpack/fallback.py
++++ b/msgpack/fallback.py
+@@ -52,7 +52,9 @@ else:
+ from msgpack.exceptions import (
+     BufferFull,
+     OutOfData,
+-    ExtraData)
++    ExtraData,
++    FormatError,
++    StackError)
+ 
+ from msgpack import ExtType
+ 
+@@ -561,11 +563,13 @@ class Unpacker(object):
+                 raise ValueError("%s exceeds max_map_len(%s)", n, self._max_map_len)
+             typ = TYPE_MAP
+         else:
+-            raise ValueError("Unknown header: 0x%x" % b)
++            raise FormatError("Unknown header: 0x%x" % b)
+         return typ, n, obj
+ 
+-    def _unpack(self, execute=EX_CONSTRUCT):
++    def _unpack(self, execute=EX_CONSTRUCT, _depth=0):
+         typ, n, obj = self._read_header(execute)
++        if _depth >= DEFAULT_RECURSE_LIMIT:
++            raise StackError("Nested too deep")
+ 
+         if execute == EX_READ_ARRAY_HEADER:
+             if typ != TYPE_ARRAY:
+@@ -584,7 +588,7 @@ class Unpacker(object):
+                 return
+             ret = newlist_hint(n)
+             for i in xrange(n):
+-                ret.append(self._unpack(EX_CONSTRUCT))
++                ret.append(self._unpack(EX_CONSTRUCT, _depth+1))
+             if self._list_hook is not None:
+                 ret = self._list_hook(ret)
+             # TODO is the interaction between `list_hook` and `use_list` ok?
+@@ -598,14 +602,14 @@ class Unpacker(object):
+                 return
+             if self._object_pairs_hook is not None:
+                 ret = self._object_pairs_hook(
+-                    (self._unpack(EX_CONSTRUCT),
+-                     self._unpack(EX_CONSTRUCT))
++                    (self._unpack(EX_CONSTRUCT, _depth+1),
++                     self._unpack(EX_CONSTRUCT, _depth+1))
+                     for _ in xrange(n))
+             else:
+                 ret = {}
+                 for _ in xrange(n):
+-                    key = self._unpack(EX_CONSTRUCT)
+-                    ret[key] = self._unpack(EX_CONSTRUCT)
++                    key = self._unpack(EX_CONSTRUCT, _depth+1)
++                    ret[key] = self._unpack(EX_CONSTRUCT, _depth+1)
+                 if self._object_hook is not None:
+                     ret = self._object_hook(ret)
+             return ret

@@ -1,0 +1,57 @@
+diff --git a/torch_geometric/utils/augmentation.py b/torch_geometric/utils/augmentation.py
+index 82b07a67..357ac1ed 100644
+--- a/torch_geometric/utils/augmentation.py
++++ b/torch_geometric/utils/augmentation.py
+@@ -204,7 +204,7 @@ def add_random_edge(edge_index, p: float, force_undirected: bool = False,
+         tensor([[0, 1, 2, 3, 4, 5, 3, 4, 1],
+                 [2, 3, 1, 4, 2, 1, 1, 3, 2]])
+         >>> added_edges
+-        tensor([[3, 4, 1],
++        tensor([[3, 4, 1]
+                 [1, 3, 2]])
+     """
+     if p < 0. or p > 1.:
+@@ -232,6 +232,40 @@ def add_random_edge(edge_index, p: float, force_undirected: bool = False,
+         mask = row < col
+         row, col = row[mask], col[mask]
+         row, col = torch.cat([row, col]), torch.cat([col, row])
+-    edge_index_to_add = torch.stack([row, col], dim=0).to(device)
++    
++    # Filter out edges that already exist in the original graph
++    # Convert to lists for efficient lookup
++    src_list = edge_index[0].tolist()
++    dst_list = edge_index[1].tolist()
++    
++    # Create mask for new edges that don't already exist
++    new_edge_mask = []
++    for i in range(len(row)):
++        s, d = row[i].item(), col[i].item()
++        # Check if edge (s,d) already exists
++        exists = False
++        for j in range(len(src_list)):
++            if src_list[j] == s and dst_list[j] == d:
++                exists = True
++                break
++        new_edge_mask.append(not exists)
++    
++    # Apply mask to keep only non-existing edges
++    if len(row) > 0:
++        mask_tensor = torch.tensor(new_edge_mask, dtype=torch.bool, device=device)
++        row = row[mask_tensor]
++        col = col[mask_tensor]
++        edge_index_to_add = torch.stack([row, col], dim=0)
++        
++        if force_undirected:
++            # For undirected case, we need to rebuild the symmetric pairs
++            # since filtering might have removed one direction but not the other
++            edge_index_to_add = torch.cat([
++                edge_index_to_add, 
++                torch.stack([col, row], dim=0)
++            ], dim=1)
++    else:
++        edge_index_to_add = torch.empty((2, 0), dtype=torch.long, device=device)
++    
+     edge_index = torch.cat([edge_index, edge_index_to_add], dim=1)
+-    return edge_index, edge_index_to_add
++    return edge_index, edge_index_to_add
+\ No newline at end of file

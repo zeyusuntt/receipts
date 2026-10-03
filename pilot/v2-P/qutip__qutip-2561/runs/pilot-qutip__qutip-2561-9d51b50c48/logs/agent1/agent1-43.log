@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0
+rootdir: /qutip/qutip/tests
+configfile: pytest.ini
+plugins: cov-7.0.0, fail-slow-0.6.0
+collected 1 item
+
+qutip/tests/core/test_dimensions.py F
+
+=================================== FAILURES ===================================
+_ TestSuperOperatorDimsModification.test_dims_to_tensor_shape[super-oper-uneven] _
+
+self = <qutip.tests.core.test_dimensions.TestSuperOperatorDimsModification object at 0x7fffda16cb50>
+indices = _Indices(base=[[[1], [2, 3]], [[4, 5], [6]]], permutation=[2, 0, 1, 4, 5, 3], shape=(2, 3, 1, 6, 4, 5))
+
+    def test_dims_to_tensor_shape(self, indices):
+>       assert dims_to_tensor_shape(indices.base) == indices.shape
+E       assert (3, 1, 2, 5, 6, 4) == (2, 3, 1, 6, 4, 5)
+E         
+E         At index 0 diff: 3 != 2
+E         Use -v to get more diff
+
+qutip/tests/core/test_dimensions.py:119: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-43.xml ------------
+=========================== short test summary info ============================
+FAILED qutip/tests/core/test_dimensions.py::TestSuperOperatorDimsModification::test_dims_to_tensor_shape[super-oper-uneven]
+============================== 1 failed in 0.11s ===============================

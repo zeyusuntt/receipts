@@ -1,0 +1,23 @@
+Creating serializer with mismatched lengths...
+Serializer created successfully
+Data length: 3
+Instance length: 2
+Exception raised: AttributeError: 'list' object has no attribute 'is_valid'
+/usr/local/lib/python3.10/site-packages/coreapi/utils.py:5: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Traceback (most recent call last):
+  File "/tmp/debug_test.py", line 70, in <module>
+    result = serializer.is_valid()
+  File "/django-rest-framework/rest_framework/serializers.py", line 770, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+  File "/django-rest-framework/rest_framework/serializers.py", line 640, in run_validation
+    value = self.to_internal_value(data)
+  File "/django-rest-framework/rest_framework/serializers.py", line 688, in to_internal_value
+    validated = self.child.run_validation(item)
+  File "/django-rest-framework/rest_framework/serializers.py", line 448, in run_validation
+    value = self.to_internal_value(data)
+  File "/django-rest-framework/rest_framework/serializers.py", line 507, in to_internal_value
+    validated_value = validate_method(validated_value)
+  File "/tmp/debug_test.py", line 45, in validate_value
+    if value and not self.instance.is_valid:
+AttributeError: 'list' object has no attribute 'is_valid'

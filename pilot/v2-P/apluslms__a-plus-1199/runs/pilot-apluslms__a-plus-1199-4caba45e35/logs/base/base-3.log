@@ -1,0 +1,376 @@
+============================= test session starts ==============================
+collected 45 items
+
+exercise/tests.py ...........................F.................          [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: 8 != 7
+----------------------------- Captured stdout call -----------------------------
+[2026-10-03 21:57:50,002: INFO/logging] CEF:0|Aalto|aplus|1.23.1|login||5|
+------------------------------ Captured log call -------------------------------
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|login||5|
+/usr/local/lib/python3.10/unittest/case.py:838: AssertionError: 8 != 7
+=============================== warnings summary ===============================
+../usr/local/lib/python3.10/site-packages/requests/__init__.py:113
+  /usr/local/lib/python3.10/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0dev0)/charset_normalizer (3.4.4) doesn't match a supported version!
+    warnings.warn(
+
+../usr/local/lib/python3.10/site-packages/model_utils/__init__.py:1
+  /usr/local/lib/python3.10/site-packages/model_utils/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    from pkg_resources import DistributionNotFound, get_distribution
+
+exercise/tests.py: 225 warnings
+  /usr/local/lib/python3.10/site-packages/django/db/models/options.py:210: RemovedInDjango51Warning: 'index_together' is deprecated. Use 'Meta.indexes' in 'course.UserTagging' instead.
+    warnings.warn(
+
+exercise/tests.py::ExerciseTest::test_uploading_and_viewing_file
+  /usr/local/lib/python3.10/site-packages/jwt/api_jwt.py:153: InsecureKeyLengthWarning: The RSA key is 2047 bits long, which is below the minimum recommended size of 2048 bits. See NIST SP 800-131A.
+    return self._jws.encode(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+____________________ ExerciseTest.test_exercise_staff_views ____________________
+----------------------------- Captured stdout call -----------------------------
+[2026-10-03 21:57:47,820: INFO/logging] CEF:0|Aalto|aplus|1.23.1|login||5|
+[2026-10-03 21:57:47,879: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/
+[2026-10-03 21:57:47,879: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/
+[2026-10-03 21:57:47,908: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+[2026-10-03 21:57:47,908: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+[2026-10-03 21:57:47,937: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+[2026-10-03 21:57:47,937: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+[2026-10-03 21:57:48,026: INFO/logging] CEF:0|Aalto|aplus|1.23.1|login||5|
+[2026-10-03 21:57:48,346: INFO/logging] CEF:0|Aalto|aplus|1.23.1|set-points|exercise: 1.1 test exercise, submission ID: 1, submitter: testUser, points: 0|5|src=127.0.0.1 suid=3 suser=staff
+[2026-10-03 21:57:48,350: ERROR/models] HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+[2026-10-03 21:57:48,460: INFO/logging] CEF:0|Aalto|aplus|1.23.1|login||5|
+[2026-10-03 21:57:48,662: WARNING/log] Forbidden (Permission denied): /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/a-plus/authorization/views.py", line 44, in dispatch
+    response = self.handle_exception(exc)
+  File "/a-plus/course/viewbase.py", line 186, in handle_exception
+    return super().handle_exception(exc)
+  File "/a-plus/authorization/views.py", line 27, in handle_exception
+    raise exc
+  File "/a-plus/authorization/views.py", line 42, in dispatch
+    response = super().dispatch(request, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/base.py", line 144, in dispatch
+    return handler(request, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/edit.py", line 153, in post
+    return self.form_valid(form)
+  File "/a-plus/exercise/staff_views.py", line 242, in form_valid
+    raise PermissionDenied()
+django.core.exceptions.PermissionDenied
+[2026-10-03 21:57:48,662: WARNING/log] Forbidden (Permission denied): /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/a-plus/authorization/views.py", line 44, in dispatch
+    response = self.handle_exception(exc)
+  File "/a-plus/course/viewbase.py", line 186, in handle_exception
+    return super().handle_exception(exc)
+  File "/a-plus/authorization/views.py", line 27, in handle_exception
+    raise exc
+  File "/a-plus/authorization/views.py", line 42, in dispatch
+    response = super().dispatch(request, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/base.py", line 144, in dispatch
+    return handler(request, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/edit.py", line 153, in post
+    return self.form_valid(form)
+  File "/a-plus/exercise/staff_views.py", line 242, in form_valid
+    raise PermissionDenied()
+django.core.exceptions.PermissionDenied
+[2026-10-03 21:57:48,718: INFO/logging] CEF:0|Aalto|aplus|1.23.1|set-points|exercise: 1.1 test exercise, submission ID: 1, submitter: testUser, points: 0|5|src=127.0.0.1 suid=2 suser=grader
+[2026-10-03 21:57:48,720: ERROR/models] HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+[2026-10-03 21:57:48,743: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/
+[2026-10-03 21:57:48,743: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/
+------------------------------ Captured log call -------------------------------
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|login||5|
+WARNING  django.request:log.py:246 Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/
+WARNING  django.request:log.py:246 Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+WARNING  django.request:log.py:246 Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|login||5|
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|set-points|exercise: 1.1 test exercise, submission ID: 1, submitter: testUser, points: 0|5|src=127.0.0.1 suid=3 suser=staff
+ERROR    aplus.hooks:models.py:1216 HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|login||5|
+WARNING  django.request:log.py:246 Forbidden (Permission denied): /Course-Url/T-00.1000_d1/test-module/b1/submissions/1/inspect/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/a-plus/authorization/views.py", line 44, in dispatch
+    response = self.handle_exception(exc)
+  File "/a-plus/course/viewbase.py", line 186, in handle_exception
+    return super().handle_exception(exc)
+  File "/a-plus/authorization/views.py", line 27, in handle_exception
+    raise exc
+  File "/a-plus/authorization/views.py", line 42, in dispatch
+    response = super().dispatch(request, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/base.py", line 144, in dispatch
+    return handler(request, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/views/generic/edit.py", line 153, in post
+    return self.form_valid(form)
+  File "/a-plus/exercise/staff_views.py", line 242, in form_valid
+    raise PermissionDenied()
+django.core.exceptions.PermissionDenied
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|set-points|exercise: 1.1 test exercise, submission ID: 1, submitter: testUser, points: 0|5|src=127.0.0.1 suid=2 suser=grader
+ERROR    aplus.hooks:models.py:1216 HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+WARNING  django.request:log.py:246 Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/
+_______________________ ExerciseTest.test_exercise_views _______________________
+----------------------------- Captured stdout call -----------------------------
+[2026-10-03 21:57:48,864: INFO/logging] CEF:0|Aalto|aplus|1.23.1|login||5|
+[2026-10-03 21:57:48,964: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/upcoming-module/sssss/
+[2026-10-03 21:57:48,964: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/upcoming-module/sssss/
+[2026-10-03 21:57:49,077: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/2/
+[2026-10-03 21:57:49,077: WARNING/log] Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/2/
+[2026-10-03 21:57:49,165: INFO/logging] CEF:0|Aalto|aplus|1.23.1|login||5|
+[2026-10-03 21:57:49,488: INFO/logging] CEF:0|Aalto|aplus|1.23.1|login||5|
+------------------------------ Captured log call -------------------------------
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|login||5|
+WARNING  django.request:log.py:246 Forbidden: /Course-Url/T-00.1000_d1/upcoming-module/sssss/
+WARNING  django.request:log.py:246 Forbidden: /Course-Url/T-00.1000_d1/test-module/b1/submissions/2/
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|login||5|
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|login||5|
+_____________________ ExerciseTest.test_submission_status ______________________
+----------------------------- Captured stdout call -----------------------------
+[2026-10-03 21:57:50,746: ERROR/models] HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+------------------------------ Captured log call -------------------------------
+ERROR    aplus.hooks:models.py:1216 HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+_________________ ExerciseTest.test_unofficial_max_submissions _________________
+----------------------------- Captured stdout call -----------------------------
+[2026-10-03 21:57:50,769: ERROR/models] HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+------------------------------ Captured log call -------------------------------
+ERROR    aplus.hooks:models.py:1216 HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+___________________ ExerciseTest.test_unofficial_submission ____________________
+----------------------------- Captured stdout call -----------------------------
+[2026-10-03 21:57:50,793: ERROR/models] HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+[2026-10-03 21:57:50,835: ERROR/models] HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+------------------------------ Captured log call -------------------------------
+ERROR    aplus.hooks:models.py:1216 HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+ERROR    aplus.hooks:models.py:1216 HTTP POST failed on post-grading hook to http://localhost/test_hook_url (123456 test course: Fall 2011 day 1); URLError: <urlopen error [Errno 111] Connection refused>
+_________________ ExerciseTest.test_uploading_and_viewing_file _________________
+----------------------------- Captured stdout call -----------------------------
+[2026-10-03 21:57:50,998: INFO/logging] CEF:0|Aalto|aplus|1.23.1|login||5|
+[2026-10-03 21:57:51,045: INFO/remote_page] POST http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+[2026-10-03 21:57:51,051: WARNING/remote_page] ConnectionError http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+[2026-10-03 21:57:51,051: INFO/remote_page] Sleep 5 sec before retry
+[2026-10-03 21:57:56,057: INFO/remote_page] POST http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+[2026-10-03 21:57:56,060: WARNING/remote_page] ConnectionError http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+[2026-10-03 21:57:56,060: INFO/remote_page] Sleep 5 sec before retry
+[2026-10-03 21:58:01,065: INFO/remote_page] POST http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+[2026-10-03 21:58:01,068: WARNING/remote_page] ConnectionError http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+[2026-10-03 21:58:01,068: ERROR/aplus] Failed to request http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/util/connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/usr/local/lib/python3.10/socket.py", line 967, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+    conn.request(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 500, in request
+    self.endheaders()
+  File "/usr/local/lib/python3.10/http/client.py", line 1278, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.10/http/client.py", line 1038, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.10/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 331, in connect
+    self.sock = self._new_conn()
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 211, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: HTTPConnection(host='grader.invalid', port=80): Failed to resolve 'grader.invalid' ([Errno -2] Name or service not known)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 644, in send
+    resp = conn.urlopen(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py", line 535, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='grader.invalid', port=80): Max retries exceeded with url: /testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en (Caused by NameResolutionError("HTTPConnection(host='grader.invalid', port=80): Failed to resolve 'grader.invalid' ([Errno -2] Name or service not known)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/a-plus/lib/remote_page.py", line 97, in request_for_response
+    raise e
+  File "/a-plus/lib/remote_page.py", line 67, in request_for_response
+    response = aplus_post(
+  File "/usr/local/lib/python3.10/site-packages/aplus_auth/requests.py", line 188, in wrapper
+    return func(session, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/aplus_auth/requests.py", line 177, in request
+    return super().request(method=method, url=url, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 677, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='grader.invalid', port=80): Max retries exceeded with url: /testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en (Caused by NameResolutionError("HTTPConnection(host='grader.invalid', port=80): Failed to resolve 'grader.invalid' ([Errno -2] Name or service not known)"))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/a-plus/exercise/protocol/aplus.py", line 55, in load_feedback_page
+    remote_page = RemotePage(url, post=True, data=data, files=files, instance_id=exercise.course_instance.id)
+  File "/a-plus/lib/remote_page.py", line 126, in __init__
+    self.response = request_for_response(url, post, data, files, stamp, instance_id)
+  File "/a-plus/lib/remote_page.py", line 107, in request_for_response
+    raise RemotePageException(format_lazy(
+lib.remote_page.RemotePageException: CONNECTING_TO_COURSE_SERVICE_FAILED -- -1
+------------------------------ Captured log call -------------------------------
+INFO     aplus.security:logging.py:46 CEF:0|Aalto|aplus|1.23.1|login||5|
+INFO     aplus.remote_page:remote_page.py:66 POST http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+WARNING  aplus.remote_page:remote_page.py:95 ConnectionError http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+INFO     aplus.remote_page:remote_page.py:98 Sleep 5 sec before retry
+INFO     aplus.remote_page:remote_page.py:66 POST http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+WARNING  aplus.remote_page:remote_page.py:95 ConnectionError http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+INFO     aplus.remote_page:remote_page.py:98 Sleep 5 sec before retry
+INFO     aplus.remote_page:remote_page.py:66 POST http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+WARNING  aplus.remote_page:remote_page.py:95 ConnectionError http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+ERROR    aplus.protocol:aplus.py:62 Failed to request http://grader.invalid/testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/util/connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/usr/local/lib/python3.10/socket.py", line 967, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+    conn.request(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 500, in request
+    self.endheaders()
+  File "/usr/local/lib/python3.10/http/client.py", line 1278, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.10/http/client.py", line 1038, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.10/http/client.py", line 976, in send
+    self.connect()
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 331, in connect
+    self.sock = self._new_conn()
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connection.py", line 211, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: HTTPConnection(host='grader.invalid', port=80): Failed to resolve 'grader.invalid' ([Errno -2] Name or service not known)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 644, in send
+    resp = conn.urlopen(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py", line 535, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='grader.invalid', port=80): Max retries exceeded with url: /testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en (Caused by NameResolutionError("HTTPConnection(host='grader.invalid', port=80): Failed to resolve 'grader.invalid' ([Errno -2] Name or service not known)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/a-plus/lib/remote_page.py", line 97, in request_for_response
+    raise e
+  File "/a-plus/lib/remote_page.py", line 67, in request_for_response
+    response = aplus_post(
+  File "/usr/local/lib/python3.10/site-packages/aplus_auth/requests.py", line 188, in wrapper
+    return func(session, *args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/aplus_auth/requests.py", line 177, in request
+    return super().request(method=method, url=url, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 677, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='grader.invalid', port=80): Max retries exceeded with url: /testServiceURL?max_points=50&max_submissions=0&submission_url=http%3A%2F%2Flocalhost%2Fapi%2Fv2%2Fsubmissions%2F7%2Fgrader%3Ftoken%3Ds7.arG5l9SJ5HIw8baCFvqaioe8lesA7Gch&post_url=http%3A%2F%2Flocalhost%2FCourse-Url%2FT-00.1000_d1%2Ftest-module%2Fbbb%2F&uid=1&ordinal_number=1&lang=en (Caused by NameResolutionError("HTTPConnection(host='grader.invalid', port=80): Failed to resolve 'grader.invalid' ([Errno -2] Name or service not known)"))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/a-plus/exercise/protocol/aplus.py", line 55, in load_feedback_page
+    remote_page = RemotePage(url, post=True, data=data, files=files, instance_id=exercise.course_instance.id)
+  File "/a-plus/lib/remote_page.py", line 126, in __init__
+    self.response = request_for_response(url, post, data, files, stamp, instance_id)
+  File "/a-plus/lib/remote_page.py", line 107, in request_for_response
+    raise RemotePageException(format_lazy(
+lib.remote_page.RemotePageException: CONNECTING_TO_COURSE_SERVICE_FAILED -- -1
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+=========================== short test summary info ============================
+PASSED exercise/tests.py::ExerciseTest::test_annotate_submitter_points
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_absolute_url
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_async_url
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_deadline_deviation
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_is_open
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_max_submissions
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_one_has_access
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_one_has_submissions
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_submission_allowed
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_submission_deviation
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_submissions_for_student
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_total_submission_count
+PASSED exercise/tests.py::ExerciseTest::test_base_exercise_unicode_string
+PASSED exercise/tests.py::ExerciseTest::test_can_be_shown_as_module_model_solution
+PASSED exercise/tests.py::ExerciseTest::test_can_show_model_solutions
+PASSED exercise/tests.py::ExerciseTest::test_early_submission
+PASSED exercise/tests.py::ExerciseTest::test_enrollment_exercise_access
+PASSED exercise/tests.py::ExerciseTest::test_enrollment_questionaire_opening_time
+PASSED exercise/tests.py::ExerciseTest::test_exercise_staff_views
+PASSED exercise/tests.py::ExerciseTest::test_exercise_upload_dir
+PASSED exercise/tests.py::ExerciseTest::test_exercise_views
+PASSED exercise/tests.py::ExerciseTest::test_exercise_with_attachment_files_to_submit
+PASSED exercise/tests.py::ExerciseTest::test_exercise_with_attachment_load
+PASSED exercise/tests.py::ExerciseTest::test_learning_object_category_unicode_string
+PASSED exercise/tests.py::ExerciseTest::test_learning_object_clean
+PASSED exercise/tests.py::ExerciseTest::test_learning_object_course_instance
+PASSED exercise/tests.py::ExerciseTest::test_module_reveal_state
+PASSED exercise/tests.py::ExerciseTest::test_reveal_rule
+PASSED exercise/tests.py::ExerciseTest::test_reveal_rule_full_points
+PASSED exercise/tests.py::ExerciseTest::test_reveal_rule_max_submissions
+PASSED exercise/tests.py::ExerciseTest::test_static_exercise_grade
+PASSED exercise/tests.py::ExerciseTest::test_static_exercise_load
+PASSED exercise/tests.py::ExerciseTest::test_submission_absolute_url
+PASSED exercise/tests.py::ExerciseTest::test_submission_draft
+PASSED exercise/tests.py::ExerciseTest::test_submission_files
+PASSED exercise/tests.py::ExerciseTest::test_submission_late_conversion
+PASSED exercise/tests.py::ExerciseTest::test_submission_late_penalty_applied
+PASSED exercise/tests.py::ExerciseTest::test_submission_points
+PASSED exercise/tests.py::ExerciseTest::test_submission_status
+PASSED exercise/tests.py::ExerciseTest::test_submission_unicode_string
+PASSED exercise/tests.py::ExerciseTest::test_submission_upload_dir
+PASSED exercise/tests.py::ExerciseTest::test_unofficial_max_submissions
+PASSED exercise/tests.py::ExerciseTest::test_unofficial_submission
+PASSED exercise/tests.py::ExerciseTest::test_uploading_and_viewing_file
+FAILED exercise/tests.py::ExerciseTest::test_next_unassessed_submitter_view
+================= 1 failed, 44 passed, 228 warnings in 23.29s ==================

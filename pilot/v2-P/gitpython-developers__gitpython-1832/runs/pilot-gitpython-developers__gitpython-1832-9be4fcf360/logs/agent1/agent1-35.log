@@ -1,0 +1,100 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /GitPython
+configfile: pyproject.toml
+plugins: cov-7.0.0, instafail-0.5.0, mock-3.15.1, sugar-1.1.1
+collecting ... collected 1 item
+
+test/test_diff.py::TestDiff::test_diff_patch_with_external_engine FAILED [100%]
+
+=================================== FAILURES ===================================
+________________ TestDiff.test_diff_patch_with_external_engine _________________
+
+self = <test.test_diff.TestDiff testMethod=test_diff_patch_with_external_engine>
+rw_dir = '/tmp/test_diff_patch_with_external_enginekdzosdc5'
+
+    @with_rw_directory
+    def test_diff_patch_with_external_engine(self, rw_dir):
+        repo = Repo.init(rw_dir)
+        gitignore = osp.join(rw_dir, ".gitignore")
+    
+        # First commit
+        with open(gitignore, "w") as f:
+            f.write("first_line\n")
+        repo.git.add(".gitignore")
+        repo.index.commit("first commit")
+    
+        # Adding second line and committing
+        with open(gitignore, "a") as f:
+            f.write("second_line\n")
+        repo.git.add(".gitignore")
+        repo.index.commit("second commit")
+    
+        # Adding third line and staging
+        with open(gitignore, "a") as f:
+            f.write("third_line\n")
+        repo.git.add(".gitignore")
+    
+        # Adding fourth line
+        with open(gitignore, "a") as f:
+            f.write("fourth_line\n")
+    
+        # Set the external diff engine
+        with repo.config_writer(config_level="repository") as writer:
+            writer.set_value("diff", "external", "bogus_diff_engine")
+    
+        head_against_head = repo.head.commit.diff("HEAD^", create_patch=True)
+        self.assertEqual(len(head_against_head), 1)
+        head_against_index = repo.head.commit.diff(create_patch=True)
+>       self.assertEqual(len(head_against_index), 1)
+E       AssertionError: 0 != 1
+
+test/test_diff.py:510: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-35.xml ------------
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+git/__init__.py                        32      6    81%
+git/cmd.py                            540    231    57%
+git/compat.py                          37     15    59%
+git/config.py                         438    176    60%
+git/db.py                              25      5    80%
+git/diff.py                           275    128    53%
+git/exc.py                             63     18    71%
+git/index/__init__.py                   2      0   100%
+git/index/base.py                     495    370    25%
+git/index/fun.py                      183    104    43%
+git/index/typ.py                       74     23    69%
+git/index/util.py                      50     21    58%
+git/objects/__init__.py                13      0   100%
+git/objects/base.py                    84     22    74%
+git/objects/blob.py                    17      4    76%
+git/objects/commit.py                 305    126    59%
+git/objects/fun.py                     92     70    24%
+git/objects/submodule/__init__.py       0      0   100%
+git/objects/submodule/base.py         570    460    19%
+git/objects/submodule/root.py         133    107    20%
+git/objects/submodule/util.py          44     23    48%
+git/objects/tag.py                     40     28    30%
+git/objects/tree.py                   144     89    38%
+git/objects/util.py                   211    124    41%
+git/refs/__init__.py                    6      0   100%
+git/refs/head.py                       94     61    35%
+git/refs/log.py                       146     74    49%
+git/refs/reference.py                  53     10    81%
+git/refs/remote.py                     29     15    48%
+git/refs/symbolic.py                  363    153    58%
+git/refs/tag.py                        43     24    44%
+git/remote.py                         448    342    24%
+git/repo/__init__.py                    1      0   100%
+git/repo/base.py                      574    361    37%
+git/repo/fun.py                       195    107    45%
+git/types.py                           38      5    87%
+git/util.py                           552    269    51%
+-------------------------------------------------------
+TOTAL                                6409   3571    44%
+=========================== short test summary info ============================
+FAILED test/test_diff.py::TestDiff::test_diff_patch_with_external_engine - As...
+============================== 1 failed in 0.80s ===============================

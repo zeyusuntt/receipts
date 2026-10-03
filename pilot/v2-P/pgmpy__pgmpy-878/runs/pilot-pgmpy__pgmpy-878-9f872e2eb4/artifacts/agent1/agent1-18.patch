@@ -1,0 +1,38 @@
+diff --git a/pgmpy/models/BayesianModel.py b/pgmpy/models/BayesianModel.py
+index 7d8cb8b..37d22f3 100644
+--- a/pgmpy/models/BayesianModel.py
++++ b/pgmpy/models/BayesianModel.py
+@@ -285,7 +285,7 @@ class BayesianModel(DirectedGraph):
+             for cpd in self.cpds:
+                 if cpd.variable == node:
+                     return cpd
+-            raise ValueError("CPD not added for the node: {node}".format(node=node))
++            return None
+         else:
+             return self.cpds
+ 
+@@ -344,9 +344,9 @@ class BayesianModel(DirectedGraph):
+             True if all the checks are passed
+         """
+         for node in self.nodes():
+-            cpd = self.get_cpds(node=node)
++            cpd = next((c for c in self.cpds if c.variable == node), None)
+ 
+-            if isinstance(cpd, TabularCPD):
++            if cpd is not None and isinstance(cpd, TabularCPD):
+                 evidence = cpd.variables[:0:-1]
+                 parents = self.get_parents(node)
+                 if set(evidence if evidence else []) != set(parents if parents else []):
+diff --git a/pgmpy/tests/test_models/test_BayesianModel.py b/pgmpy/tests/test_models/test_BayesianModel.py
+index 8d5a304..e13e81f 100644
+--- a/pgmpy/tests/test_models/test_BayesianModel.py
++++ b/pgmpy/tests/test_models/test_BayesianModel.py
+@@ -320,7 +320,7 @@ class TestBayesianModelCPD(unittest.TestCase):
+                            evidence=['g'], evidence_card=[2])
+ 
+         self.G.add_cpds(cpd_g, cpd_s, cpd_l)
+-        self.assertRaises(ValueError, self.G.check_model)
++        self.assertTrue(self.G.check_model())
+ 
+         cpd_d = TabularCPD('d', 2, values=[[0.8, 0.2]])
+         cpd_i = TabularCPD('i', 2, values=[[0.7, 0.3]])

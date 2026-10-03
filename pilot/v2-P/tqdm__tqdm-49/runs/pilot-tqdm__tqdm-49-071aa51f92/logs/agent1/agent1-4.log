@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /tqdm
+collecting ... collected 1 item
+
+tqdm/tests/tests_tqdm.py::test_smoothing FAILED                          [100%]
+
+=================================== FAILURES ===================================
+________________________________ test_smoothing ________________________________
+
+    def test_smoothing():
+        """ Test exponential weighted average smoothing """
+    
+        # -- Test disabling smoothing
+        our_file = StringIO()
+>       for i in tqdm(range(3), file=our_file, smoothing=None, leave=True):
+E       TypeError: __init__() got an unexpected keyword argument 'smoothing'
+
+tqdm/tests/tests_tqdm.py:318: TypeError
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+FAILED tqdm/tests/tests_tqdm.py::test_smoothing - TypeError: __init__() got a...
+============================== 1 failed in 0.06s ===============================

@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /TatSu
+configfile: tox.ini
+collecting ... collected 1 item
+
+test/grammar/constants_test.py::test_evaluate_constant FAILED            [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_evaluate_constant ____________________________
+
+    def test_evaluate_constant():
+        grammar = '''
+            @@grammar :: constants
+            start = int bool str null 'a' $;
+    
+            int = `42` ;
+            bool = `True` ;
+            str = `Something` ;
+            null = `None` ;
+        '''
+    
+        ast = parse(grammar, 'a')
+>       assert ast == (42, True, 'Something', None, 'a')
+E       AssertionError: assert 'a' == (42, True, 'Something', None, 'a')
+
+test/grammar/constants_test.py:53: AssertionError
+------------ generated xml file: /opt/receipts/reports/agent1-2.xml ------------
+=========================== short test summary info ============================
+FAILED test/grammar/constants_test.py::test_evaluate_constant - AssertionErro...
+============================== 1 failed in 0.11s ===============================

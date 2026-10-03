@@ -1,0 +1,44 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /tqdm
+collecting ... collected 1 item
+
+tqdm/tests/tests_tqdm.py::test_format_meter FAILED                       [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_format_meter _______________________________
+
+    def test_format_meter():
+        """ Test statistics and progress bar formatting """
+        try:
+            unich = unichr
+        except NameError:
+            unich = chr
+    
+        assert format_meter(0, 1000, 13) == \
+            "  0%|          | 0/1000 [00:13<?,  0.00it/s]"
+        assert format_meter(0, 1000, 13, ncols=68, prefix='desc: ') == \
+            "desc:   0%|                            | 0/1000 [00:13<?,  0.00it/s]"
+        assert format_meter(231, 1000, 392) == \
+            " 23%|" + unich(0x2588)*2 + unich(0x258e) + \
+            "       | 231/1000 [06:32<21:44,  0.59it/s]"
+        assert format_meter(10000, 1000, 13) == \
+            "10000it [00:13, 769.23it/s]"
+        assert format_meter(231, 1000, 392, ncols=56, ascii=True) == \
+            " 23%|" + '#'*3 + '6' + \
+            "            | 231/1000 [06:32<21:44,  0.59it/s]"
+        assert format_meter(100000, 1000, 13, unit_scale=True, unit='iB') == \
+            "100KiB [00:13, 7.69KiB/s]"
+>       assert format_meter(100, 1000, 12, ncols=0, rate=7.33) == \
+            " 10% 100/1000 [00:12<02:02,  7.33it/s]"
+E       AssertionError: assert ' 10% 100/100...8,  7.33it/s]' == ' 10% 100/100...2,  7.33it/s]'
+E         -  10% 100/1000 [00:12<02:02,  7.33it/s]
+E         ?                       ^ ^^
+E         +  10% 100/1000 [00:12<01:48,  7.33it/s]
+E         ?                       ^ ^^
+
+tqdm/tests/tests_tqdm.py:46: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-13.xml ------------
+=========================== short test summary info ============================
+FAILED tqdm/tests/tests_tqdm.py::test_format_meter - AssertionError: assert '...
+============================== 1 failed in 0.07s ===============================

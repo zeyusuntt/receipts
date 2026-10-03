@@ -1,0 +1,395 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /OpenMDAO
+collecting ... collected 1 item
+
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_viewer_data_with_submodel SUBFAILED(OPENMDAO_REPORTS='0')
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_viewer_data_with_submodel SUBFAILED(OPENMDAO_REPORTS='1')
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_viewer_data_with_submodel PASSED
+
+=================================== FAILURES ===================================
+_____ TestViewerData.test_viewer_data_with_submodel (OPENMDAO_REPORTS='0') _____
+
+self = <openmdao.visualization.n2_viewer.tests.test_viewmodeldata.TestViewerData testMethod=test_viewer_data_with_submodel>
+
+    def test_viewer_data_with_submodel(self):
+    
+        self.maxDiff = None
+    
+        def check_viewer_data_with_submodel(sql_filename):
+            # create sub problem
+            submodel = om.Group()
+            submodel.add_subsystem('subcomp', om.ExecComp('y = x1**2 + x2**2 + x3**2'), promotes=['*'])
+    
+            subprob = om.Problem(name='subproblem', model=submodel)
+    
+            # create top-level problem
+            p = om.Problem(name='top')
+            p.model.add_subsystem('submodelcomp',
+                                  om.SubmodelComp(problem=subprob, inputs=['*'], outputs=['*']),
+                                  promotes=['*'])
+            p.model.add_subsystem('supercomp',
+                                  om.ExecComp('z = 3 * y'),
+                                  promotes=['*'])
+    
+            p.model.add_recorder(om.SqliteRecorder(sql_filename))
+    
+            p.setup()
+            p.final_setup()
+    
+            # extract viewer data from N2 for problem and subproblem
+            om.n2(p, title='N2 for Problem', outfile='N2problem.html',
+                  show_browser=DEBUG_BROWSER)
+            problem_data = extract_compressed_model('N2problem.html')
+    
+            om.n2(subprob, title='N2 for SubProblem', outfile='N2subprob.html',
+                  show_browser=DEBUG_BROWSER)
+            subprob_data = extract_compressed_model('N2subprob.html')
+    
+            # check problem data generated from recording against data generated from problem
+            check_call(f"openmdao n2 {sql_filename} -o N2recording.html"
+                       f"{' --no_browser' if not DEBUG_BROWSER else ''}")
+            recording_data = extract_compressed_model('N2recording.html')
+    
+            self.assertDictEqual(problem_data, recording_data)
+    
+            # source for run script, copied from above (without the recorder)
+            src = """if __name__ == '__main__':
+            import openmdao.api as om
+    
+            # create sub problem
+            submodel = om.Group()
+            submodel.add_subsystem('subcomp', om.ExecComp('y = x1**2 + x2**2 + x3**2'), promotes=['*'])
+    
+            subprob = om.Problem(name='subproblem', model=submodel)
+    
+            # create top-level problem
+            p = om.Problem(name='top')
+            p.model.add_subsystem('submodelcomp',
+                                om.SubmodelComp(problem=subprob, inputs=['*'], outputs=['*']),
+                                promotes=['*'])
+            p.model.add_subsystem('supercomp',
+                                om.ExecComp('z = 3 * y'),
+                                promotes=['*'])
+    
+            p.setup()
+            p.final_setup()
+    
+            # verify model runs correctly
+            p.set_val('x1', 1)
+            p.set_val('x2', 2)
+            p.set_val('x3', 3)
+    
+            p.run_model()
+            """
+            with open("submodel_script.py", 'w') as f:
+                f.write(src)
+    
+            # check problem data generated from script against data generated from problem
+            check_call("openmdao n2 submodel_script.py -o N2_top.html"
+                       f"{' --no_browser' if not DEBUG_BROWSER else ''}")
+            n2_top_data = extract_compressed_model('N2_top.html')
+    
+            self.assertDictEqual(problem_data, n2_top_data)
+    
+            # check subproblem data generated from script against data generated from subproblem
+            # NOTE: design vars and responses are added in SubmodelComp's setup, which is not executed
+            #       when invoking the n2 command on the subproblem, which exits after subproblem setup
+            check_call("openmdao n2 submodel_script.py -o N2_subprob.html --problem=subproblem"
+                       f"{' --no_browser' if not DEBUG_BROWSER else ''}")
+            n2_sub_data = extract_compressed_model('N2_subprob.html')
+    
+            subprob_data['design_vars'] = {}
+            subprob_data['responses'] = {}
+    
+            self.assertDictEqual(subprob_data, n2_sub_data)
+    
+        # check that it works correctly regardless of whether the report system is active or not
+        # the n2 command should disable the reports system if active
+        for val in ('0', '1'):
+            with self.subTest(OPENMDAO_REPORTS=val):
+                with set_env_vars_context(OPENMDAO_REPORTS=val):
+                    from openmdao.core.problem import _clear_problem_names
+                    _clear_problem_names()
+    
+>                   check_viewer_data_with_submodel(f'recording{val}.sql')
+
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py:447: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py:421: in check_viewer_data_with_submodel
+    check_call("openmdao n2 submodel_script.py -o N2_top.html"
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = 'openmdao n2 submodel_script.py -o N2_top.html --no_browser'
+stdin = None, stdout = None, stderr = None, env = None, poll_delay = 0.0
+timeout = 0.0
+
+    def check_call(args, stdin=None, stdout=None, stderr=None, env=None,
+                   poll_delay=0., timeout=0.):
+        """
+        Run command with arguments.
+    
+        Raises :class:`CalledProcessError` if process returns an error code.
+    
+        Parameters
+        ----------
+        args : str or list
+            If a string, then this is the command line to execute, and the
+            :class:`subprocess.Popen` ``shell`` argument is set True.
+            Otherwise, this is a list of arguments; the first is the command
+            to execute.
+        stdin : str, file, or int
+            Specify handling of stdin stream. If a string, a file
+            of that name is opened. Otherwise, see the :mod:`subprocess`
+            documentation.
+        stdout : str, file, or int
+            Specify handling of stdout stream. If a string, a file
+            of that name is opened. Otherwise, see the :mod:`subprocess`
+            documentation.
+        stderr : str, file, or int
+            Specify handling of stderr stream. If a string, a file
+            of that name is opened. Otherwise, see the :mod:`subprocess`
+            documentation.
+        env : dict
+            Environment variables for the command.
+        poll_delay : float (seconds)
+            Time to delay between polling for command completion.
+            A value of zero uses an internal default.
+        timeout : float (seconds)
+            Maximum time to wait for command completion.
+            A value of zero implies an infinite maximum wait.
+        """
+        process = ShellProc(args, stdin, stdout, stderr, env)
+        return_code, error_msg = process.wait(poll_delay, timeout)
+        if return_code:
+>           raise CalledProcessError(return_code, args, error_msg)
+E           openmdao.utils.shell_proc.CalledProcessError: Command 'openmdao n2 submodel_script.py -o N2_top.html --no_browser' returned non-zero exit status 1:
+
+openmdao/utils/shell_proc.py:359: CalledProcessError
+_____ TestViewerData.test_viewer_data_with_submodel (OPENMDAO_REPORTS='1') _____
+
+self = <openmdao.visualization.n2_viewer.tests.test_viewmodeldata.TestViewerData testMethod=test_viewer_data_with_submodel>
+
+    def test_viewer_data_with_submodel(self):
+    
+        self.maxDiff = None
+    
+        def check_viewer_data_with_submodel(sql_filename):
+            # create sub problem
+            submodel = om.Group()
+            submodel.add_subsystem('subcomp', om.ExecComp('y = x1**2 + x2**2 + x3**2'), promotes=['*'])
+    
+            subprob = om.Problem(name='subproblem', model=submodel)
+    
+            # create top-level problem
+            p = om.Problem(name='top')
+            p.model.add_subsystem('submodelcomp',
+                                  om.SubmodelComp(problem=subprob, inputs=['*'], outputs=['*']),
+                                  promotes=['*'])
+            p.model.add_subsystem('supercomp',
+                                  om.ExecComp('z = 3 * y'),
+                                  promotes=['*'])
+    
+            p.model.add_recorder(om.SqliteRecorder(sql_filename))
+    
+            p.setup()
+            p.final_setup()
+    
+            # extract viewer data from N2 for problem and subproblem
+            om.n2(p, title='N2 for Problem', outfile='N2problem.html',
+                  show_browser=DEBUG_BROWSER)
+            problem_data = extract_compressed_model('N2problem.html')
+    
+            om.n2(subprob, title='N2 for SubProblem', outfile='N2subprob.html',
+                  show_browser=DEBUG_BROWSER)
+            subprob_data = extract_compressed_model('N2subprob.html')
+    
+            # check problem data generated from recording against data generated from problem
+            check_call(f"openmdao n2 {sql_filename} -o N2recording.html"
+                       f"{' --no_browser' if not DEBUG_BROWSER else ''}")
+            recording_data = extract_compressed_model('N2recording.html')
+    
+            self.assertDictEqual(problem_data, recording_data)
+    
+            # source for run script, copied from above (without the recorder)
+            src = """if __name__ == '__main__':
+            import openmdao.api as om
+    
+            # create sub problem
+            submodel = om.Group()
+            submodel.add_subsystem('subcomp', om.ExecComp('y = x1**2 + x2**2 + x3**2'), promotes=['*'])
+    
+            subprob = om.Problem(name='subproblem', model=submodel)
+    
+            # create top-level problem
+            p = om.Problem(name='top')
+            p.model.add_subsystem('submodelcomp',
+                                om.SubmodelComp(problem=subprob, inputs=['*'], outputs=['*']),
+                                promotes=['*'])
+            p.model.add_subsystem('supercomp',
+                                om.ExecComp('z = 3 * y'),
+                                promotes=['*'])
+    
+            p.setup()
+            p.final_setup()
+    
+            # verify model runs correctly
+            p.set_val('x1', 1)
+            p.set_val('x2', 2)
+            p.set_val('x3', 3)
+    
+            p.run_model()
+            """
+            with open("submodel_script.py", 'w') as f:
+                f.write(src)
+    
+            # check problem data generated from script against data generated from problem
+            check_call("openmdao n2 submodel_script.py -o N2_top.html"
+                       f"{' --no_browser' if not DEBUG_BROWSER else ''}")
+            n2_top_data = extract_compressed_model('N2_top.html')
+    
+            self.assertDictEqual(problem_data, n2_top_data)
+    
+            # check subproblem data generated from script against data generated from subproblem
+            # NOTE: design vars and responses are added in SubmodelComp's setup, which is not executed
+            #       when invoking the n2 command on the subproblem, which exits after subproblem setup
+            check_call("openmdao n2 submodel_script.py -o N2_subprob.html --problem=subproblem"
+                       f"{' --no_browser' if not DEBUG_BROWSER else ''}")
+            n2_sub_data = extract_compressed_model('N2_subprob.html')
+    
+            subprob_data['design_vars'] = {}
+            subprob_data['responses'] = {}
+    
+            self.assertDictEqual(subprob_data, n2_sub_data)
+    
+        # check that it works correctly regardless of whether the report system is active or not
+        # the n2 command should disable the reports system if active
+        for val in ('0', '1'):
+            with self.subTest(OPENMDAO_REPORTS=val):
+                with set_env_vars_context(OPENMDAO_REPORTS=val):
+                    from openmdao.core.problem import _clear_problem_names
+                    _clear_problem_names()
+    
+>                   check_viewer_data_with_submodel(f'recording{val}.sql')
+
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py:447: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py:421: in check_viewer_data_with_submodel
+    check_call("openmdao n2 submodel_script.py -o N2_top.html"
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = 'openmdao n2 submodel_script.py -o N2_top.html --no_browser'
+stdin = None, stdout = None, stderr = None, env = None, poll_delay = 0.0
+timeout = 0.0
+
+    def check_call(args, stdin=None, stdout=None, stderr=None, env=None,
+                   poll_delay=0., timeout=0.):
+        """
+        Run command with arguments.
+    
+        Raises :class:`CalledProcessError` if process returns an error code.
+    
+        Parameters
+        ----------
+        args : str or list
+            If a string, then this is the command line to execute, and the
+            :class:`subprocess.Popen` ``shell`` argument is set True.
+            Otherwise, this is a list of arguments; the first is the command
+            to execute.
+        stdin : str, file, or int
+            Specify handling of stdin stream. If a string, a file
+            of that name is opened. Otherwise, see the :mod:`subprocess`
+            documentation.
+        stdout : str, file, or int
+            Specify handling of stdout stream. If a string, a file
+            of that name is opened. Otherwise, see the :mod:`subprocess`
+            documentation.
+        stderr : str, file, or int
+            Specify handling of stderr stream. If a string, a file
+            of that name is opened. Otherwise, see the :mod:`subprocess`
+            documentation.
+        env : dict
+            Environment variables for the command.
+        poll_delay : float (seconds)
+            Time to delay between polling for command completion.
+            A value of zero uses an internal default.
+        timeout : float (seconds)
+            Maximum time to wait for command completion.
+            A value of zero implies an infinite maximum wait.
+        """
+        process = ShellProc(args, stdin, stdout, stderr, env)
+        return_code, error_msg = process.wait(poll_delay, timeout)
+        if return_code:
+>           raise CalledProcessError(return_code, args, error_msg)
+E           openmdao.utils.shell_proc.CalledProcessError: Command 'openmdao n2 submodel_script.py -o N2_top.html --no_browser' returned non-zero exit status 1:
+
+openmdao/utils/shell_proc.py:359: CalledProcessError
+=============================== warnings summary ===============================
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py: 18 warnings
+  /OpenMDAO/openmdao/core/group.py:4464: DeprecationWarning: `newshape` keyword argument is deprecated, use `shape=...` or pass shape positionally instead. (deprecated in NumPy 2.1)
+    val = np.reshape(value, newshape=val.shape)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+------------ generated xml file: /opt/receipts/reports/agent1-9.xml ------------
+=========================== short test summary info ============================
+PASSED openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_viewer_data_with_submodel
+SUBFAILED(OPENMDAO_REPORTS='0') openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_viewer_data_with_submodel
+SUBFAILED(OPENMDAO_REPORTS='1') openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_viewer_data_with_submodel
+=================== 2 failed, 1 passed, 18 warnings in 5.13s ===================
+Traceback (most recent call last):
+  File "/usr/local/bin/openmdao", line 7, in <module>
+    sys.exit(openmdao_cmd())
+  File "/OpenMDAO/openmdao/utils/om.py", line 658, in openmdao_cmd
+    options.executor(options, user_args)
+  File "/OpenMDAO/openmdao/visualization/n2_viewer/n2_viewer.py", line 814, in _n2_cmd
+    _load_and_exec(options.file[0], user_args)
+  File "/OpenMDAO/openmdao/utils/file_utils.py", line 196, in _load_and_exec
+    exec(code, globals_dict)  # nosec: private, internal use only
+  File "submodel_script.py", line 19, in <module>
+    p.setup()
+  File "/OpenMDAO/openmdao/core/problem.py", line 1016, in setup
+    model._setup(model_comm, mode, self._metadata)
+  File "/OpenMDAO/openmdao/core/group.py", line 728, in _setup
+    self._setup_procs(self.pathname, comm, mode, self._problem_meta)
+  File "/OpenMDAO/openmdao/core/group.py", line 633, in _setup_procs
+    subsys._setup_procs(subsys.pathname, sub_comm, mode, prob_meta)
+  File "/OpenMDAO/openmdao/core/component.py", line 222, in _setup_procs
+    self.setup()
+  File "/OpenMDAO/openmdao/components/submodel_comp.py", line 212, in setup
+    p.final_setup()
+  File "/OpenMDAO/openmdao/utils/hooks.py", line 132, in execute_hooks
+    _run_hooks(post_hooks, inst)
+  File "/OpenMDAO/openmdao/utils/hooks.py", line 96, in _run_hooks
+    hook(inst, **kwargs)
+  File "/OpenMDAO/openmdao/visualization/n2_viewer/n2_viewer.py", line 796, in _view_model_no_errors
+    full_path = prob._get_full_pathname()
+AttributeError: 'Problem' object has no attribute '_get_full_pathname'
+Traceback (most recent call last):
+  File "/usr/local/bin/openmdao", line 7, in <module>
+    sys.exit(openmdao_cmd())
+  File "/OpenMDAO/openmdao/utils/om.py", line 658, in openmdao_cmd
+    options.executor(options, user_args)
+  File "/OpenMDAO/openmdao/visualization/n2_viewer/n2_viewer.py", line 814, in _n2_cmd
+    _load_and_exec(options.file[0], user_args)
+  File "/OpenMDAO/openmdao/utils/file_utils.py", line 196, in _load_and_exec
+    exec(code, globals_dict)  # nosec: private, internal use only
+  File "submodel_script.py", line 19, in <module>
+    p.setup()
+  File "/OpenMDAO/openmdao/core/problem.py", line 1016, in setup
+    model._setup(model_comm, mode, self._metadata)
+  File "/OpenMDAO/openmdao/core/group.py", line 728, in _setup
+    self._setup_procs(self.pathname, comm, mode, self._problem_meta)
+  File "/OpenMDAO/openmdao/core/group.py", line 633, in _setup_procs
+    subsys._setup_procs(subsys.pathname, sub_comm, mode, prob_meta)
+  File "/OpenMDAO/openmdao/core/component.py", line 222, in _setup_procs
+    self.setup()
+  File "/OpenMDAO/openmdao/components/submodel_comp.py", line 212, in setup
+    p.final_setup()
+  File "/OpenMDAO/openmdao/utils/hooks.py", line 132, in execute_hooks
+    _run_hooks(post_hooks, inst)
+  File "/OpenMDAO/openmdao/utils/hooks.py", line 96, in _run_hooks
+    hook(inst, **kwargs)
+  File "/OpenMDAO/openmdao/visualization/n2_viewer/n2_viewer.py", line 796, in _view_model_no_errors
+    full_path = prob._get_full_pathname()
+AttributeError: 'Problem' object has no attribute '_get_full_pathname'

@@ -1,0 +1,54 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /crosstl
+collecting ... collected 2 items
+
+tests/test_backend/test_directx/test_codegen.py::test_while_codegen PASSED [ 50%]
+tests/test_backend/test_directx/test_parser.py::test_while_parsing PASSED [100%]
+
+==================================== PASSES ====================================
+______________________________ test_while_codegen ______________________________
+----------------------------- Captured stdout call -----------------------------
+shader main {
+    struct VSInput {
+        vec4 position @ POSITION;
+        vec4 color @ TEXCOORD0;
+    }
+    struct VSOutput {
+        vec4 out_position @ TEXCOORD0;
+    }
+    struct PSInput {
+        vec4 in_position @ TEXCOORD0;
+    }
+    struct PSOutput {
+        vec4 out_color @ gl_FragColor0;
+    }
+    // Vertex Shader
+    vertex {
+       VSOutput VSMain(VSInput input )  {
+        VSOutput output;
+        output.out_position = input.position;
+        int i = 0;
+                return  output;
+    }
+
+    }
+
+    // Fragment Shader
+    fragment {
+       PSOutput PSMain(PSInput input )  {
+        PSOutput output;
+        output.out_color = input.in_position;
+        int i = 0;
+                return  output;
+    }
+
+    }
+
+}
+
+----------- generated xml file: /opt/receipts/reports/agent1-10.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_backend/test_directx/test_codegen.py::test_while_codegen
+PASSED tests/test_backend/test_directx/test_parser.py::test_while_parsing
+============================== 2 passed in 0.08s ===============================

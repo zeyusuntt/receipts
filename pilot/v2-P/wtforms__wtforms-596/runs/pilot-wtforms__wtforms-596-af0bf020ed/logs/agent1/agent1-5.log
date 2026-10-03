@@ -1,0 +1,50 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /wtforms
+configfile: setup.cfg
+collecting ... collected 2 items
+
+tests/test_fields.py::TestField::test_render_special FAILED              [ 50%]
+tests/test_widgets.py::TestHTMLParams::test_basic FAILED                 [100%]
+
+=================================== FAILURES ===================================
+________________________ TestField.test_render_special _________________________
+
+self = <tests.test_fields.TestField object at 0x7ffff6c0a7d0>
+
+    def test_render_special(self):
+        class F(Form):
+            s = StringField(render_kw={"class_": "foo"})
+    
+        assert F().s() == '<input class="foo" id="s" name="s" type="text" value="">'
+>       assert (
+            F().s(**{"class": "bar"})
+            == '<input class="bar" id="s" name="s" type="text" value="">'
+        )
+E       assert Markup('<inpu...t" value="">') == '<input class...xt" value="">'
+E         
+E         - <input class="bar" id="s" name="s" type="text" value="">
+E         + <input class="foo bar" id="s" name="s" type="text" value="">
+E         ?               ++++
+
+tests/test_fields.py:274: AssertionError
+__________________________ TestHTMLParams.test_basic ___________________________
+
+self = <tests.test_widgets.TestHTMLParams object at 0x7ffff5e01720>
+
+    def test_basic(self):
+        assert html_params(foo=9, k="wuuu") == 'foo="9" k="wuuu"'
+        assert html_params(class_="foo") == 'class="foo"'
+>       assert html_params(class__="foo") == 'class="foo"'
+E       assert 'class_="foo"' == 'class="foo"'
+E         
+E         - class="foo"
+E         + class_="foo"
+E         ?      +
+
+tests/test_widgets.py:24: AssertionError
+------------ generated xml file: /opt/receipts/reports/agent1-5.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_fields.py::TestField::test_render_special - assert Markup('...
+FAILED tests/test_widgets.py::TestHTMLParams::test_basic - assert 'class_="fo...
+============================== 2 failed in 0.20s ===============================

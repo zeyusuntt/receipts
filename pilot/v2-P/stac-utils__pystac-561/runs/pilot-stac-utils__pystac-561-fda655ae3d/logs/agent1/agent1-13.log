@@ -1,0 +1,171 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pystac
+plugins: cov-7.0.0, mock-3.15.1, recording-0.13.4, requests-mock-1.12.1
+collecting ... collected 1 item
+
+tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema SUBFAILED(attr='type')
+tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema SUBFAILED(attr='size')
+tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema SUBFAILED(attr='name')
+tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema PASSED
+
+=================================== FAILURES ===================================
+_____________ PointcloudTest.test_pointcloud_schema (attr='type') ______________
+
+self = <tests.extensions.test_pointcloud.PointcloudTest testMethod=test_pointcloud_schema>
+
+    def test_pointcloud_schema(self) -> None:
+        props: Dict[str, Any] = {
+            "name": "test",
+            "size": 8,
+            "type": "floating",
+        }
+        schema = Schema(props)
+        self.assertEqual(props, schema.properties)
+    
+        # test all getters and setters
+        for k in props:
+            if isinstance(props[k], str):
+                val = props[k] + str(1)
+            else:
+                val = props[k] + 1
+            setattr(schema, k, val)
+            self.assertEqual(getattr(schema, k), val)
+    
+        schema = Schema.create("intensity", 16, SchemaType.UNSIGNED)
+        self.assertEqual(schema.name, "intensity")
+        self.assertEqual(schema.size, 16)
+        self.assertEqual(schema.type, "unsigned")
+    
+        with self.assertRaises(STACError):
+            schema.size = 0.5  # type: ignore
+    
+        empty_schema = Schema({})
+        for required_prop in {"size", "name", "type"}:
+            with self.subTest(attr=required_prop):
+                with self.assertRaises(RequiredPropertyMissing):
+>                   getattr(empty_schema, required_prop)
+
+tests/extensions/test_pointcloud.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pystac/extensions/pointcloud.py:120: in type
+    return get_required(self.properties.get("type"), self, "type")
+pystac/utils.py:359: in get_required
+    raise RequiredPropertyMissing(obj, prop)
+pystac/errors.py:65: in __init__
+    msg = msg or f"{repr(obj)} does not have required property {prop}"
+pystac/extensions/pointcloud.py:128: in __repr__
+    self.name, self.size, self.type
+pystac/extensions/pointcloud.py:109: in name
+    raise RequiredPropertyMissing(self, "name")
+pystac/errors.py:65: in __init__
+    msg = msg or f"{repr(obj)} does not have required property {prop}"
+E   RecursionError: maximum recursion depth exceeded while getting the repr of an object
+!!! Recursion detected (same locals & position)
+_____________ PointcloudTest.test_pointcloud_schema (attr='size') ______________
+
+self = <tests.extensions.test_pointcloud.PointcloudTest testMethod=test_pointcloud_schema>
+
+    def test_pointcloud_schema(self) -> None:
+        props: Dict[str, Any] = {
+            "name": "test",
+            "size": 8,
+            "type": "floating",
+        }
+        schema = Schema(props)
+        self.assertEqual(props, schema.properties)
+    
+        # test all getters and setters
+        for k in props:
+            if isinstance(props[k], str):
+                val = props[k] + str(1)
+            else:
+                val = props[k] + 1
+            setattr(schema, k, val)
+            self.assertEqual(getattr(schema, k), val)
+    
+        schema = Schema.create("intensity", 16, SchemaType.UNSIGNED)
+        self.assertEqual(schema.name, "intensity")
+        self.assertEqual(schema.size, 16)
+        self.assertEqual(schema.type, "unsigned")
+    
+        with self.assertRaises(STACError):
+            schema.size = 0.5  # type: ignore
+    
+        empty_schema = Schema({})
+        for required_prop in {"size", "name", "type"}:
+            with self.subTest(attr=required_prop):
+                with self.assertRaises(RequiredPropertyMissing):
+>                   getattr(empty_schema, required_prop)
+
+tests/extensions/test_pointcloud.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pystac/extensions/pointcloud.py:94: in size
+    raise RequiredPropertyMissing(self, "size")
+pystac/errors.py:65: in __init__
+    msg = msg or f"{repr(obj)} does not have required property {prop}"
+pystac/extensions/pointcloud.py:128: in __repr__
+    self.name, self.size, self.type
+pystac/extensions/pointcloud.py:109: in name
+    raise RequiredPropertyMissing(self, "name")
+pystac/errors.py:65: in __init__
+    msg = msg or f"{repr(obj)} does not have required property {prop}"
+E   RecursionError: maximum recursion depth exceeded
+!!! Recursion detected (same locals & position)
+_____________ PointcloudTest.test_pointcloud_schema (attr='name') ______________
+
+self = <tests.extensions.test_pointcloud.PointcloudTest testMethod=test_pointcloud_schema>
+
+    def test_pointcloud_schema(self) -> None:
+        props: Dict[str, Any] = {
+            "name": "test",
+            "size": 8,
+            "type": "floating",
+        }
+        schema = Schema(props)
+        self.assertEqual(props, schema.properties)
+    
+        # test all getters and setters
+        for k in props:
+            if isinstance(props[k], str):
+                val = props[k] + str(1)
+            else:
+                val = props[k] + 1
+            setattr(schema, k, val)
+            self.assertEqual(getattr(schema, k), val)
+    
+        schema = Schema.create("intensity", 16, SchemaType.UNSIGNED)
+        self.assertEqual(schema.name, "intensity")
+        self.assertEqual(schema.size, 16)
+        self.assertEqual(schema.type, "unsigned")
+    
+        with self.assertRaises(STACError):
+            schema.size = 0.5  # type: ignore
+    
+        empty_schema = Schema({})
+        for required_prop in {"size", "name", "type"}:
+            with self.subTest(attr=required_prop):
+                with self.assertRaises(RequiredPropertyMissing):
+>                   getattr(empty_schema, required_prop)
+
+tests/extensions/test_pointcloud.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pystac/extensions/pointcloud.py:109: in name
+    raise RequiredPropertyMissing(self, "name")
+pystac/errors.py:65: in __init__
+    msg = msg or f"{repr(obj)} does not have required property {prop}"
+pystac/extensions/pointcloud.py:128: in __repr__
+    self.name, self.size, self.type
+pystac/extensions/pointcloud.py:109: in name
+    raise RequiredPropertyMissing(self, "name")
+E   RecursionError: maximum recursion depth exceeded
+!!! Recursion detected (same locals & position)
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-13.xml ------------
+=========================== short test summary info ============================
+PASSED tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema
+SUBFAILED(attr='type') tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema
+SUBFAILED(attr='size') tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema
+SUBFAILED(attr='name') tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 3 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================= 3 failed, 1 passed in 0.28s ==========================

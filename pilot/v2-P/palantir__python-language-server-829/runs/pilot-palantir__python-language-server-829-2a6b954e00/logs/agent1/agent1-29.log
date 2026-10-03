@@ -1,0 +1,234 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /python-language-server
+configfile: setup.cfg
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+test/plugins/test_autopep8_format.py::test_hanging_indentation !!! ENTERING _FORMAT FUNCTION !!!
+DEBUG: Options being passed to autopep8: {}
+DEBUG: Trying fallback options: {'max_line_length': 79, 'aggressive': 0}
+DEBUG: Trying final options: {'max_line_length': 79, 'aggressive': 0}
+DEBUG: All attempts failed, returning original
+FAILED
+
+=================================== FAILURES ===================================
+___________________________ test_hanging_indentation ___________________________
+
+config = <pyls.config.config.Config object at 0x7ffff5624f10>
+workspace = <pyls.workspace.Workspace object at 0x7ffff697b4f0>
+
+    def test_hanging_indentation(config, workspace):
+        doc = Document(DOC_URI, workspace, INDENTED_DOC)
+        res = pyls_format_document(config, doc)
+    
+>       assert len(res) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+test/plugins/test_autopep8_format.py:70: AssertionError
+------------------------------ Captured log setup ------------------------------
+WARNING  pyls.config.config:config.py:55 Failed to load pyls entry point 'pylint': No module named 'pylint.epylint'
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin autopep8 from <module 'pyls.plugins.autopep8_format' from '/python-language-server/pyls/plugins/autopep8_format.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin flake8 from <module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin folding from <module 'pyls.plugins.folding' from '/python-language-server/pyls/plugins/folding.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_completion from <module 'pyls.plugins.jedi_completion' from '/python-language-server/pyls/plugins/jedi_completion.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_definition from <module 'pyls.plugins.definition' from '/python-language-server/pyls/plugins/definition.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_highlight from <module 'pyls.plugins.highlight' from '/python-language-server/pyls/plugins/highlight.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_hover from <module 'pyls.plugins.hover' from '/python-language-server/pyls/plugins/hover.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_references from <module 'pyls.plugins.references' from '/python-language-server/pyls/plugins/references.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_rename from <module 'pyls.plugins.jedi_rename' from '/python-language-server/pyls/plugins/jedi_rename.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_signature_help from <module 'pyls.plugins.signature' from '/python-language-server/pyls/plugins/signature.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_symbols from <module 'pyls.plugins.symbols' from '/python-language-server/pyls/plugins/symbols.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin mccabe from <module 'pyls.plugins.mccabe_lint' from '/python-language-server/pyls/plugins/mccabe_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin preload from <module 'pyls.plugins.preload_imports' from '/python-language-server/pyls/plugins/preload_imports.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pycodestyle from <module 'pyls.plugins.pycodestyle_lint' from '/python-language-server/pyls/plugins/pycodestyle_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pydocstyle from <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pyflakes from <module 'pyls.plugins.pyflakes_lint' from '/python-language-server/pyls/plugins/pyflakes_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin rope_completion from <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin rope_rename from <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin yapf from <module 'pyls.plugins.yapf_format' from '/python-language-server/pyls/plugins/yapf_format.py'>
+DEBUG    pyls.config.config:_tracing.py:44   pyls_settings [hook]
+      config: <pyls.config.config.Config object at 0x7ffff697b3d0>
+
+DEBUG    pyls.config.config:_tracing.py:44   finish pyls_settings --> [{'plugins': {'rope_rename': {'enabled': False}}}, {'plugins': {'rope_completion': {'enabled': False}}}, {'plugins': {'pydocstyle': {'enabled': False}}}, {'plugins': {'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}}, 'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}}, {'plugins': {'flake8': {'enabled': False}}}] [hook]
+
+DEBUG    pyls.config.config:config.py:121 Got user config from PyCodeStyleConfig: {}
+DEBUG    pyls.config.config:config.py:130 Got project config from PyCodeStyleConfig: {}
+DEBUG    pyls.config.config:config.py:133 With configuration: {'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'plugins': {'rope_rename': {'enabled': False}, 'rope_completion': {'enabled': False}, 'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'flake8': {'enabled': False}, 'pydocstyle': {'enabled': False}}}
+INFO     pyls.config.config:config.py:157 Disabled plugins: [<module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>, <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>, <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>, <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>]
+WARNING  pyls.config.config:config.py:55 Failed to load pyls entry point 'pylint': No module named 'pylint.epylint'
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin autopep8 from <module 'pyls.plugins.autopep8_format' from '/python-language-server/pyls/plugins/autopep8_format.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin flake8 from <module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin folding from <module 'pyls.plugins.folding' from '/python-language-server/pyls/plugins/folding.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_completion from <module 'pyls.plugins.jedi_completion' from '/python-language-server/pyls/plugins/jedi_completion.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_definition from <module 'pyls.plugins.definition' from '/python-language-server/pyls/plugins/definition.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_highlight from <module 'pyls.plugins.highlight' from '/python-language-server/pyls/plugins/highlight.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_hover from <module 'pyls.plugins.hover' from '/python-language-server/pyls/plugins/hover.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_references from <module 'pyls.plugins.references' from '/python-language-server/pyls/plugins/references.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_rename from <module 'pyls.plugins.jedi_rename' from '/python-language-server/pyls/plugins/jedi_rename.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_signature_help from <module 'pyls.plugins.signature' from '/python-language-server/pyls/plugins/signature.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_symbols from <module 'pyls.plugins.symbols' from '/python-language-server/pyls/plugins/symbols.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin mccabe from <module 'pyls.plugins.mccabe_lint' from '/python-language-server/pyls/plugins/mccabe_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin preload from <module 'pyls.plugins.preload_imports' from '/python-language-server/pyls/plugins/preload_imports.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pycodestyle from <module 'pyls.plugins.pycodestyle_lint' from '/python-language-server/pyls/plugins/pycodestyle_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pydocstyle from <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pyflakes from <module 'pyls.plugins.pyflakes_lint' from '/python-language-server/pyls/plugins/pyflakes_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin rope_completion from <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin rope_rename from <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin yapf from <module 'pyls.plugins.yapf_format' from '/python-language-server/pyls/plugins/yapf_format.py'>
+DEBUG    pyls.config.config:_tracing.py:44   pyls_settings [hook]
+      config: <pyls.config.config.Config object at 0x7ffff5624f10>
+
+DEBUG    pyls.config.config:_tracing.py:44   finish pyls_settings --> [{'plugins': {'rope_rename': {'enabled': False}}}, {'plugins': {'rope_completion': {'enabled': False}}}, {'plugins': {'pydocstyle': {'enabled': False}}}, {'plugins': {'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}}, 'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}}, {'plugins': {'flake8': {'enabled': False}}}] [hook]
+
+DEBUG    pyls.config.config:config.py:121 Got user config from PyCodeStyleConfig: {}
+DEBUG    pyls.config.config:config.py:130 Got project config from PyCodeStyleConfig: {}
+DEBUG    pyls.config.config:config.py:133 With configuration: {'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'plugins': {'rope_rename': {'enabled': False}, 'rope_completion': {'enabled': False}, 'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'flake8': {'enabled': False}, 'pydocstyle': {'enabled': False}}}
+INFO     pyls.config.config:config.py:157 Disabled plugins: [<module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>, <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>, <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>, <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>]
+------------------------------ Captured log call -------------------------------
+INFO     pyls.plugins.autopep8_format:autopep8_format.py:11 Formatting document file:///python-language-server/test/plugins/test_autopep8_format.py with autopep8
+DEBUG    pyls.config.config:config.py:121 Got user config from PyCodeStyleConfig: {}
+DEBUG    pyls.config.config:config.py:130 Got project config from PyCodeStyleConfig: {}
+DEBUG    pyls.config.config:config.py:133 With configuration: {'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'plugins': {'rope_rename': {'enabled': False}, 'rope_completion': {'enabled': False}, 'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'flake8': {'enabled': False}, 'pydocstyle': {'enabled': False}}}
+=============================== warnings summary ===============================
+pyls/config/config.py:3
+  /python-language-server/pyls/config/config.py:3: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-29.xml ------------
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                    Stmts   Miss  Cover
+-----------------------------------------------------------
+pyls/__init__.py                           13      2    85%
+pyls/__main__.py                           60     47    22%
+pyls/_utils.py                            116     67    42%
+pyls/config/__init__.py                     0      0   100%
+pyls/config/config.py                     100     19    81%
+pyls/config/flake8_conf.py                 21      9    57%
+pyls/config/pycodestyle_conf.py            15      0   100%
+pyls/config/source.py                      54     23    57%
+pyls/hookspecs.py                          69     22    68%
+pyls/lsp.py                                66      0   100%
+pyls/plugins/__init__.py                    0      0   100%
+pyls/plugins/autopep8_format.py            55     13    76%
+pyls/plugins/definition.py                 11      5    55%
+pyls/plugins/flake8_lint.py                70     55    21%
+pyls/plugins/folding.py                   152    135    11%
+pyls/plugins/highlight.py                  12      7    42%
+pyls/plugins/hover.py                      23     18    22%
+pyls/plugins/jedi_completion.py            94     78    17%
+pyls/plugins/jedi_rename.py                21     15    29%
+pyls/plugins/mccabe_lint.py                22     13    41%
+pyls/plugins/preload_imports.py            15      6    60%
+pyls/plugins/pycodestyle_lint.py           35     21    40%
+pyls/plugins/pydocstyle_lint.py            65     45    31%
+pyls/plugins/pyflakes_lint.py              25     16    36%
+pyls/plugins/pylint_lint.py                60     56     7%
+pyls/plugins/references.py                 10      5    50%
+pyls/plugins/rope_completion.py            40     29    28%
+pyls/plugins/rope_rename.py                24     13    46%
+pyls/plugins/signature.py                  33     22    33%
+pyls/plugins/symbols.py                    27     16    41%
+pyls/plugins/yapf_format.py                21     10    52%
+pyls/python_ls.py                         267    194    27%
+pyls/uris.py                               48     15    69%
+pyls/workspace.py                         168     96    43%
+test/__init__.py                            8      0   100%
+test/conftest.py                            4      0   100%
+test/fixtures.py                           41     15    63%
+test/plugins/__init__.py                    0      0   100%
+test/plugins/test_autopep8_format.py       27     12    56%
+test/plugins/test_completion.py           195    195     0%
+test/plugins/test_definitions.py           19     19     0%
+test/plugins/test_flake8_lint.py           52     52     0%
+test/plugins/test_folding.py               17     17     0%
+test/plugins/test_highlight.py             14     14     0%
+test/plugins/test_hover.py                 30     30     0%
+test/plugins/test_jedi_rename.py           34     34     0%
+test/plugins/test_mccabe_lint.py           22     22     0%
+test/plugins/test_pycodestyle_lint.py      55     55     0%
+test/plugins/test_pydocstyle_lint.py       25     25     0%
+test/plugins/test_pyflakes_lint.py         32     32     0%
+test/plugins/test_pylint_lint.py           58     58     0%
+test/plugins/test_references.py            40     40     0%
+test/plugins/test_rope_rename.py           20     20     0%
+test/plugins/test_signature.py             37     37     0%
+test/plugins/test_symbols.py               46     46     0%
+test/plugins/test_yapf_format.py           26     26     0%
+test/test_document.py                      42     42     0%
+test/test_language_server.py               50     50     0%
+test/test_uris.py                          22     22     0%
+test/test_utils.py                         58     58     0%
+test/test_workspace.py                    153    153     0%
+-----------------------------------------------------------
+TOTAL                                    2939   2146    27%
+Coverage HTML written to dir htmlcov
+=========================== short test summary info ============================
+FAILED test/plugins/test_autopep8_format.py::test_hanging_indentation - asser...
+========================= 1 failed, 1 warning in 1.19s =========================
+2026-10-03 01:40:52,898 UTC - WARNING - pyls.config.config - Failed to load pyls entry point 'pylint': No module named 'pylint.epylint'
+2026-10-03 01:40:53,099 UTC - INFO - pyls.config.config - Loaded pyls plugin autopep8 from <module 'pyls.plugins.autopep8_format' from '/python-language-server/pyls/plugins/autopep8_format.py'>
+2026-10-03 01:40:53,099 UTC - INFO - pyls.config.config - Loaded pyls plugin flake8 from <module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin folding from <module 'pyls.plugins.folding' from '/python-language-server/pyls/plugins/folding.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_completion from <module 'pyls.plugins.jedi_completion' from '/python-language-server/pyls/plugins/jedi_completion.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_definition from <module 'pyls.plugins.definition' from '/python-language-server/pyls/plugins/definition.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_highlight from <module 'pyls.plugins.highlight' from '/python-language-server/pyls/plugins/highlight.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_hover from <module 'pyls.plugins.hover' from '/python-language-server/pyls/plugins/hover.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_references from <module 'pyls.plugins.references' from '/python-language-server/pyls/plugins/references.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_rename from <module 'pyls.plugins.jedi_rename' from '/python-language-server/pyls/plugins/jedi_rename.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_signature_help from <module 'pyls.plugins.signature' from '/python-language-server/pyls/plugins/signature.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_symbols from <module 'pyls.plugins.symbols' from '/python-language-server/pyls/plugins/symbols.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin mccabe from <module 'pyls.plugins.mccabe_lint' from '/python-language-server/pyls/plugins/mccabe_lint.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin preload from <module 'pyls.plugins.preload_imports' from '/python-language-server/pyls/plugins/preload_imports.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin pycodestyle from <module 'pyls.plugins.pycodestyle_lint' from '/python-language-server/pyls/plugins/pycodestyle_lint.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin pydocstyle from <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin pyflakes from <module 'pyls.plugins.pyflakes_lint' from '/python-language-server/pyls/plugins/pyflakes_lint.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin rope_completion from <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>
+2026-10-03 01:40:53,100 UTC - INFO - pyls.config.config - Loaded pyls plugin rope_rename from <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>
+2026-10-03 01:40:53,101 UTC - INFO - pyls.config.config - Loaded pyls plugin yapf from <module 'pyls.plugins.yapf_format' from '/python-language-server/pyls/plugins/yapf_format.py'>
+2026-10-03 01:40:53,101 UTC - DEBUG - pyls.config.config -   pyls_settings [hook]
+      config: <pyls.config.config.Config object at 0x7ffff697b3d0>
+
+2026-10-03 01:40:53,101 UTC - DEBUG - pyls.config.config -   finish pyls_settings --> [{'plugins': {'rope_rename': {'enabled': False}}}, {'plugins': {'rope_completion': {'enabled': False}}}, {'plugins': {'pydocstyle': {'enabled': False}}}, {'plugins': {'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}}, 'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}}, {'plugins': {'flake8': {'enabled': False}}}] [hook]
+
+2026-10-03 01:40:53,101 UTC - DEBUG - pyls.config.config - Got user config from PyCodeStyleConfig: {}
+2026-10-03 01:40:53,102 UTC - DEBUG - pyls.config.config - Got project config from PyCodeStyleConfig: {}
+2026-10-03 01:40:53,102 UTC - DEBUG - pyls.config.config - With configuration: {'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'plugins': {'rope_rename': {'enabled': False}, 'rope_completion': {'enabled': False}, 'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'flake8': {'enabled': False}, 'pydocstyle': {'enabled': False}}}
+2026-10-03 01:40:53,102 UTC - INFO - pyls.config.config - Disabled plugins: [<module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>, <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>, <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>, <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>]
+2026-10-03 01:40:53,112 UTC - WARNING - pyls.config.config - Failed to load pyls entry point 'pylint': No module named 'pylint.epylint'
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin autopep8 from <module 'pyls.plugins.autopep8_format' from '/python-language-server/pyls/plugins/autopep8_format.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin flake8 from <module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin folding from <module 'pyls.plugins.folding' from '/python-language-server/pyls/plugins/folding.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_completion from <module 'pyls.plugins.jedi_completion' from '/python-language-server/pyls/plugins/jedi_completion.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_definition from <module 'pyls.plugins.definition' from '/python-language-server/pyls/plugins/definition.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_highlight from <module 'pyls.plugins.highlight' from '/python-language-server/pyls/plugins/highlight.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_hover from <module 'pyls.plugins.hover' from '/python-language-server/pyls/plugins/hover.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_references from <module 'pyls.plugins.references' from '/python-language-server/pyls/plugins/references.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_rename from <module 'pyls.plugins.jedi_rename' from '/python-language-server/pyls/plugins/jedi_rename.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_signature_help from <module 'pyls.plugins.signature' from '/python-language-server/pyls/plugins/signature.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin jedi_symbols from <module 'pyls.plugins.symbols' from '/python-language-server/pyls/plugins/symbols.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin mccabe from <module 'pyls.plugins.mccabe_lint' from '/python-language-server/pyls/plugins/mccabe_lint.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin preload from <module 'pyls.plugins.preload_imports' from '/python-language-server/pyls/plugins/preload_imports.py'>
+2026-10-03 01:40:53,122 UTC - INFO - pyls.config.config - Loaded pyls plugin pycodestyle from <module 'pyls.plugins.pycodestyle_lint' from '/python-language-server/pyls/plugins/pycodestyle_lint.py'>
+2026-10-03 01:40:53,123 UTC - INFO - pyls.config.config - Loaded pyls plugin pydocstyle from <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>
+2026-10-03 01:40:53,123 UTC - INFO - pyls.config.config - Loaded pyls plugin pyflakes from <module 'pyls.plugins.pyflakes_lint' from '/python-language-server/pyls/plugins/pyflakes_lint.py'>
+2026-10-03 01:40:53,123 UTC - INFO - pyls.config.config - Loaded pyls plugin rope_completion from <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>
+2026-10-03 01:40:53,123 UTC - INFO - pyls.config.config - Loaded pyls plugin rope_rename from <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>
+2026-10-03 01:40:53,123 UTC - INFO - pyls.config.config - Loaded pyls plugin yapf from <module 'pyls.plugins.yapf_format' from '/python-language-server/pyls/plugins/yapf_format.py'>
+2026-10-03 01:40:53,123 UTC - DEBUG - pyls.config.config -   pyls_settings [hook]
+      config: <pyls.config.config.Config object at 0x7ffff5624f10>
+
+2026-10-03 01:40:53,123 UTC - DEBUG - pyls.config.config -   finish pyls_settings --> [{'plugins': {'rope_rename': {'enabled': False}}}, {'plugins': {'rope_completion': {'enabled': False}}}, {'plugins': {'pydocstyle': {'enabled': False}}}, {'plugins': {'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}}, 'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}}, {'plugins': {'flake8': {'enabled': False}}}] [hook]
+
+2026-10-03 01:40:53,123 UTC - DEBUG - pyls.config.config - Got user config from PyCodeStyleConfig: {}
+2026-10-03 01:40:53,124 UTC - DEBUG - pyls.config.config - Got project config from PyCodeStyleConfig: {}
+2026-10-03 01:40:53,124 UTC - DEBUG - pyls.config.config - With configuration: {'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'plugins': {'rope_rename': {'enabled': False}, 'rope_completion': {'enabled': False}, 'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'flake8': {'enabled': False}, 'pydocstyle': {'enabled': False}}}
+2026-10-03 01:40:53,124 UTC - INFO - pyls.config.config - Disabled plugins: [<module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>, <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>, <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>, <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>]
+2026-10-03 01:40:53,124 UTC - INFO - pyls.plugins.autopep8_format - Formatting document file:///python-language-server/test/plugins/test_autopep8_format.py with autopep8
+2026-10-03 01:40:53,125 UTC - DEBUG - pyls.config.config - Got user config from PyCodeStyleConfig: {}
+2026-10-03 01:40:53,125 UTC - DEBUG - pyls.config.config - Got project config from PyCodeStyleConfig: {}
+2026-10-03 01:40:53,125 UTC - DEBUG - pyls.config.config - With configuration: {'rope': {'extensionModules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'plugins': {'rope_rename': {'enabled': False}, 'rope_completion': {'enabled': False}, 'preload': {'modules': ['OpenGL', 'PIL', 'array', 'audioop', 'binascii', 'cPickle', 'cStringIO', 'cmath', 'collections', 'datetime', 'errno', 'exceptions', 'gc', 'imageop', 'imp', 'itertools', 'marshal', 'math', 'matplotlib', 'mmap', 'mpmath', 'msvcrt', 'networkx', 'nose', 'nt', 'numpy', 'operator', 'os', 'os.path', 'pandas', 'parser', 'rgbimg', 'scipy', 'signal', 'skimage', 'sklearn', 'statsmodels', 'strop', 'sympy', 'sys', 'thread', 'time', 'wx', 'xxsubtype', 'zipimport', 'zlib']}, 'flake8': {'enabled': False}, 'pydocstyle': {'enabled': False}}}

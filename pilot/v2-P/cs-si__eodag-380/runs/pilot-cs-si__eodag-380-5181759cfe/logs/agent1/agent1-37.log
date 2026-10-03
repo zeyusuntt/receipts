@@ -1,0 +1,23 @@
+81-            self.child_cat, recursive=True, provider=self.stac_provider
+82-        )
+83-        self.assertIsInstance(items, SearchResult)
+84-        self.assertEqual(len(items), self.child_cat_len)
+85-        self.assertEqual(items[0].provider, self.stac_provider)
+86:        # if no product_type is provided, product_type should be guessed from properties
+87-        self.assertEqual(items[0].product_type, "S2_MSI_L1C")
+88-
+89-    def test_search_stac_static_load_root_not_recursive(self):
+90-        """load_stac_items from root must provide an empty list when no recursive"""
+91-        items = self.dag.load_stac_items(
+--
+118-        """load_stac_items from a single item must provide it"""
+119-        item = self.dag.load_stac_items(self.item, provider=self.stac_provider)
+120-        self.assertIsInstance(item, SearchResult)
+121-        self.assertEqual(len(item), 1)
+122-        self.assertEqual(item[0].provider, self.stac_provider)
+123:        # if no product_type is provided, product_type should be guessed from properties
+124-        self.assertEqual(item[0].product_type, "S2_MSI_L1C")
+125-
+126-    def test_search_stac_static_load_item_updated_provider(self):
+127-        """load_stac_items from a single item using updated provider"""
+128-        item = self.dag.load_stac_items(self.item, provider=self.stac_provider)

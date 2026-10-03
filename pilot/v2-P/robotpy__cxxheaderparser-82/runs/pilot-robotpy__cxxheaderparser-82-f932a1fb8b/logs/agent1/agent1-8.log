@@ -1,0 +1,352 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /cxxheaderparser
+collecting ... collected 2 items
+
+tests/test_fn.py::test_fn_trailing_return_with_body FAILED               [ 50%]
+tests/test_fn.py::test_method_trailing_return_with_body FAILED           [100%]
+
+=================================== FAILURES ===================================
+______________________ test_fn_trailing_return_with_body _______________________
+
+self = <cxxheaderparser.parser.CxxParser object at 0x7ffff6af8c10>
+
+    def parse(self) -> None:
+        """
+        Parse the header contents
+        """
+    
+        # non-ambiguous parsing functions for each token type
+        _translation_unit_tokens: typing.Dict[
+            str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
+        ] = {
+            "__attribute__": self._consume_gcc_attribute,
+            "__declspec": self._consume_declspec,
+            "alignas": self._consume_attribute_specifier_seq,
+            "extern": self._parse_extern,
+            "friend": self._parse_friend_decl,
+            "inline": self._parse_inline,
+            "namespace": self._parse_namespace,
+            "private": self._process_access_specifier,
+            "protected": self._process_access_specifier,
+            "public": self._process_access_specifier,
+            "static_assert": self._consume_static_assert,
+            "template": self._parse_template,
+            "typedef": self._parse_typedef,
+            "using": self._parse_using,
+            "{": self._on_empty_block_start,
+            "}": self._on_block_end,
+            "DBL_LBRACKET": self._consume_attribute_specifier_seq,
+            "INCLUDE_DIRECTIVE": self._process_include_directive,
+            "PRAGMA_DIRECTIVE": self._process_pragma_directive,
+            ";": lambda _1, _2: None,
+        }
+    
+        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+    
+        tok = None
+    
+        get_token_eof_ok = self.lex.token_eof_ok
+        get_doxygen = self.lex.get_doxygen
+    
+        doxygen = None
+    
+        try:
+            while True:
+                if doxygen is None:
+                    doxygen = get_doxygen()
+    
+                tok = get_token_eof_ok()
+                if not tok:
+                    break
+    
+                fn = _translation_unit_tokens.get(tok.type)
+                if fn:
+>                   fn(tok, doxygen)
+
+cxxheaderparser/parser.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <cxxheaderparser.parser.CxxParser object at 0x7ffff6af8c10>
+tok = LexToken({,'{',2,20), doxygen = None
+
+    def _on_empty_block_start(
+        self, tok: LexToken, doxygen: typing.Optional[str]
+    ) -> None:
+>       raise self._parse_error(tok)
+E       cxxheaderparser.errors.CxxParseError: unexpected '{'
+
+cxxheaderparser/parser.py:533: CxxParseError
+
+The above exception was the direct cause of the following exception:
+
+    def test_fn_trailing_return_with_body() -> None:
+        content = """
+          auto test() -> void
+          {
+          }
+        """
+>       data = parse_string(content, cleandoc=True)
+
+tests/test_fn.py:1205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+cxxheaderparser/simple.py:336: in parse_string
+    parser.parse()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <cxxheaderparser.parser.CxxParser object at 0x7ffff6af8c10>
+
+    def parse(self) -> None:
+        """
+        Parse the header contents
+        """
+    
+        # non-ambiguous parsing functions for each token type
+        _translation_unit_tokens: typing.Dict[
+            str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
+        ] = {
+            "__attribute__": self._consume_gcc_attribute,
+            "__declspec": self._consume_declspec,
+            "alignas": self._consume_attribute_specifier_seq,
+            "extern": self._parse_extern,
+            "friend": self._parse_friend_decl,
+            "inline": self._parse_inline,
+            "namespace": self._parse_namespace,
+            "private": self._process_access_specifier,
+            "protected": self._process_access_specifier,
+            "public": self._process_access_specifier,
+            "static_assert": self._consume_static_assert,
+            "template": self._parse_template,
+            "typedef": self._parse_typedef,
+            "using": self._parse_using,
+            "{": self._on_empty_block_start,
+            "}": self._on_block_end,
+            "DBL_LBRACKET": self._consume_attribute_specifier_seq,
+            "INCLUDE_DIRECTIVE": self._process_include_directive,
+            "PRAGMA_DIRECTIVE": self._process_pragma_directive,
+            ";": lambda _1, _2: None,
+        }
+    
+        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+    
+        tok = None
+    
+        get_token_eof_ok = self.lex.token_eof_ok
+        get_doxygen = self.lex.get_doxygen
+    
+        doxygen = None
+    
+        try:
+            while True:
+                if doxygen is None:
+                    doxygen = get_doxygen()
+    
+                tok = get_token_eof_ok()
+                if not tok:
+                    break
+    
+                fn = _translation_unit_tokens.get(tok.type)
+                if fn:
+                    fn(tok, doxygen)
+    
+                    if tok.type not in _keep_doxygen:
+                        doxygen = None
+                else:
+                    # this processes ambiguous declarations
+                    self._parse_declarations(tok, doxygen)
+                    doxygen = None
+    
+        except Exception as e:
+            if self.verbose:
+                raise
+            context = ""
+            if isinstance(e, CxxParseError):
+                context = ": " + str(e)
+                if e.tok:
+                    tok = e.tok
+    
+            if tok:
+                filename, lineno = tok.location
+                msg = f"{filename}:{lineno}: parse error evaluating '{tok.value}'{context}"
+            else:
+                msg = f"{self.filename}: parse error{context}"
+    
+>           raise CxxParseError(msg) from e
+E           cxxheaderparser.errors.CxxParseError: <str>:2: parse error evaluating '{': unexpected '{'
+
+cxxheaderparser/parser.py:368: CxxParseError
+____________________ test_method_trailing_return_with_body _____________________
+
+self = <cxxheaderparser.parser.CxxParser object at 0x7ffff71ffbb0>
+
+    def parse(self) -> None:
+        """
+        Parse the header contents
+        """
+    
+        # non-ambiguous parsing functions for each token type
+        _translation_unit_tokens: typing.Dict[
+            str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
+        ] = {
+            "__attribute__": self._consume_gcc_attribute,
+            "__declspec": self._consume_declspec,
+            "alignas": self._consume_attribute_specifier_seq,
+            "extern": self._parse_extern,
+            "friend": self._parse_friend_decl,
+            "inline": self._parse_inline,
+            "namespace": self._parse_namespace,
+            "private": self._process_access_specifier,
+            "protected": self._process_access_specifier,
+            "public": self._process_access_specifier,
+            "static_assert": self._consume_static_assert,
+            "template": self._parse_template,
+            "typedef": self._parse_typedef,
+            "using": self._parse_using,
+            "{": self._on_empty_block_start,
+            "}": self._on_block_end,
+            "DBL_LBRACKET": self._consume_attribute_specifier_seq,
+            "INCLUDE_DIRECTIVE": self._process_include_directive,
+            "PRAGMA_DIRECTIVE": self._process_pragma_directive,
+            ";": lambda _1, _2: None,
+        }
+    
+        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+    
+        tok = None
+    
+        get_token_eof_ok = self.lex.token_eof_ok
+        get_doxygen = self.lex.get_doxygen
+    
+        doxygen = None
+    
+        try:
+            while True:
+                if doxygen is None:
+                    doxygen = get_doxygen()
+    
+                tok = get_token_eof_ok()
+                if not tok:
+                    break
+    
+                fn = _translation_unit_tokens.get(tok.type)
+                if fn:
+>                   fn(tok, doxygen)
+
+cxxheaderparser/parser.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <cxxheaderparser.parser.CxxParser object at 0x7ffff71ffbb0>
+tok = LexToken({,'{',3,39), doxygen = None
+
+    def _on_empty_block_start(
+        self, tok: LexToken, doxygen: typing.Optional[str]
+    ) -> None:
+>       raise self._parse_error(tok)
+E       cxxheaderparser.errors.CxxParseError: unexpected '{'
+
+cxxheaderparser/parser.py:533: CxxParseError
+
+The above exception was the direct cause of the following exception:
+
+    def test_method_trailing_return_with_body() -> None:
+        content = """
+          struct X {
+              auto test() -> void
+              {
+              }
+          };
+        """
+>       data = parse_string(content, cleandoc=True)
+
+tests/test_fn.py:1232: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+cxxheaderparser/simple.py:336: in parse_string
+    parser.parse()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <cxxheaderparser.parser.CxxParser object at 0x7ffff71ffbb0>
+
+    def parse(self) -> None:
+        """
+        Parse the header contents
+        """
+    
+        # non-ambiguous parsing functions for each token type
+        _translation_unit_tokens: typing.Dict[
+            str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
+        ] = {
+            "__attribute__": self._consume_gcc_attribute,
+            "__declspec": self._consume_declspec,
+            "alignas": self._consume_attribute_specifier_seq,
+            "extern": self._parse_extern,
+            "friend": self._parse_friend_decl,
+            "inline": self._parse_inline,
+            "namespace": self._parse_namespace,
+            "private": self._process_access_specifier,
+            "protected": self._process_access_specifier,
+            "public": self._process_access_specifier,
+            "static_assert": self._consume_static_assert,
+            "template": self._parse_template,
+            "typedef": self._parse_typedef,
+            "using": self._parse_using,
+            "{": self._on_empty_block_start,
+            "}": self._on_block_end,
+            "DBL_LBRACKET": self._consume_attribute_specifier_seq,
+            "INCLUDE_DIRECTIVE": self._process_include_directive,
+            "PRAGMA_DIRECTIVE": self._process_pragma_directive,
+            ";": lambda _1, _2: None,
+        }
+    
+        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+    
+        tok = None
+    
+        get_token_eof_ok = self.lex.token_eof_ok
+        get_doxygen = self.lex.get_doxygen
+    
+        doxygen = None
+    
+        try:
+            while True:
+                if doxygen is None:
+                    doxygen = get_doxygen()
+    
+                tok = get_token_eof_ok()
+                if not tok:
+                    break
+    
+                fn = _translation_unit_tokens.get(tok.type)
+                if fn:
+                    fn(tok, doxygen)
+    
+                    if tok.type not in _keep_doxygen:
+                        doxygen = None
+                else:
+                    # this processes ambiguous declarations
+                    self._parse_declarations(tok, doxygen)
+                    doxygen = None
+    
+        except Exception as e:
+            if self.verbose:
+                raise
+            context = ""
+            if isinstance(e, CxxParseError):
+                context = ": " + str(e)
+                if e.tok:
+                    tok = e.tok
+    
+            if tok:
+                filename, lineno = tok.location
+                msg = f"{filename}:{lineno}: parse error evaluating '{tok.value}'{context}"
+            else:
+                msg = f"{self.filename}: parse error{context}"
+    
+>           raise CxxParseError(msg) from e
+E           cxxheaderparser.errors.CxxParseError: <str>:3: parse error evaluating '{': unexpected '{'
+
+cxxheaderparser/parser.py:368: CxxParseError
+------------ generated xml file: /opt/receipts/reports/agent1-8.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_fn.py::test_fn_trailing_return_with_body - cxxheaderparser....
+FAILED tests/test_fn.py::test_method_trailing_return_with_body - cxxheaderpar...
+============================== 2 failed in 0.21s ===============================

@@ -1,0 +1,227 @@
+============================= test session starts ==============================
+collected 31 items
+
+git_machete/tests/functional/test_machete.py ...F....................... [ 87%]
+....                                                                     [100%]
+
+=================================== FAILURES ===================================
+E   git_machete.exceptions.MacheteException: .git/machete, line 3: branch `develop` re-appears in the tree definition. Edit the definition file manually with `git machete edit`
+
+During handling of the above exception, another exception occurred:
+E   AssertionError: Actual Exception message: .git/machete, line 3: branch `develop` re-appears in the tree definition. Edit the definition file manually with `git machete edit` 
+    is not equal to expected message: .git/machete, line 5: branch `develop` re-appears in the tree definition. Edit the definition file manually with `git machete edit`
+/usr/local/lib/python3.10/unittest/case.py:675: AssertionError: Actual Exception message: .git/machete, line 3: branch `develop` re-appears in the tree definition. Edit the definition file manually with `git machete edit`
+==================================== PASSES ====================================
+_ MacheteTester.test_advance_with_few_possible_downstream_branches_and_yes_option _
+----------------------------- Captured stderr call -----------------------------
+
+More than one downstream (child) branch of `root` is connected to `root` with a green edge and `-y/--yes` option is specified
+____________ MacheteTester.test_advance_with_no_downstream_branches ____________
+----------------------------- Captured stderr call -----------------------------
+
+`root` does not have any downstream (child) branches to advance towards
+____________ MacheteTester.test_advance_with_one_downstream_branch _____________
+----------------------------- Captured stdout call -----------------------------
+Updating 047b729..7290989
+Fast-forward
+ FddIfoQgsMdanyJrFfNf.txt | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 FddIfoQgsMdanyJrFfNf.txt
+_________________ MacheteTester.test_discover_traverse_squash __________________
+----------------------------- Captured stdout call -----------------------------
+Deleted branch root (was d94f27e).
+branch 'allow-ownership-link' set up to track 'origin/allow-ownership-link'.
+branch 'build-chain' set up to track 'origin/build-chain'.
+branch 'call-ws' set up to track 'origin/call-ws'.
+branch 'drop-constraint' set up to track 'origin/drop-constraint'.
+branch 'hotfix/add-trigger' set up to track 'origin/hotfix/add-trigger'.
+----------------------------- Captured stderr call -----------------------------
+Rebasing (1/2)Rebasing (2/2)Successfully rebased and updated refs/heads/allow-ownership-link.
+To /tmp/tmp.ViL3AzeTLg
+ + a9fd2e1...479dc24 allow-ownership-link -> allow-ownership-link (forced update)
+Rebasing (1/1)Successfully rebased and updated refs/heads/build-chain.
+To /tmp/tmp.ViL3AzeTLg
+ * [new branch]      build-chain -> build-chain
+To /tmp/tmp.ViL3AzeTLg
+   8d674a4..0171161  call-ws -> call-ws
+Rebasing (1/1)Successfully rebased and updated refs/heads/drop-constraint.
+To /tmp/tmp.ViL3AzeTLg
+ * [new branch]      drop-constraint -> drop-constraint
+To /tmp/tmp.ViL3AzeTLg
+ + d262c86...7f78dcc hotfix/add-trigger -> hotfix/add-trigger (forced update)
+_______________ MacheteTester.test_go_first_root_with_downstream _______________
+----------------------------- Captured stderr call -----------------------------
+Switched to a new branch 'a-additional-root'
+__________________________ MacheteTester.test_go_last __________________________
+----------------------------- Captured stderr call -----------------------------
+Switched to a new branch 'x-additional-root'
+__________ MacheteTester.test_go_next_successor_on_another_root_tree ___________
+----------------------------- Captured stderr call -----------------------------
+Switched to a new branch 'x-additional-root'
+__________ MacheteTester.test_go_prev_successor_on_another_root_tree ___________
+----------------------------- Captured stderr call -----------------------------
+Switched to a new branch 'a-additional-root'
+__________________________ MacheteTester.test_go_root __________________________
+----------------------------- Captured stderr call -----------------------------
+Switched to a new branch 'additional-root'
+___________________________ MacheteTester.test_show ____________________________
+----------------------------- Captured stdout call -----------------------------
+Deleted branch root (was 379fd6c).
+________________________ MacheteTester.test_show_first _________________________
+----------------------------- Captured stderr call -----------------------------
+Switched to a new branch 'a-additional-root'
+_________________________ MacheteTester.test_show_last _________________________
+----------------------------- Captured stderr call -----------------------------
+Switched to a new branch 'x-additional-root'
+_________________________ MacheteTester.test_show_root _________________________
+----------------------------- Captured stderr call -----------------------------
+Switched to a new branch 'additional-root'
+_________________________ MacheteTester.test_slide_out _________________________
+----------------------------- Captured stdout call -----------------------------
+branch 'child_d' set up to track 'origin/child_d'.
+branch 'child_a' set up to track 'origin/child_a'.
+branch 'child_b' set up to track 'origin/child_b'.
+branch 'child_d' set up to track 'origin/child_d'.
+----------------------------- Captured stderr call -----------------------------
+Rebasing (1/1)Successfully rebased and updated refs/heads/child_d.
+To /tmp/tmp.wqS282vAsr
+ + a59f554...742253b child_d -> child_d (forced update)
+Rebasing (1/1)Successfully rebased and updated refs/heads/child_a.
+Rebasing (1/1)Successfully rebased and updated refs/heads/child_b.
+To /tmp/tmp.wqS282vAsr
+ + 2856480...1683628 child_a -> child_a (forced update)
+To /tmp/tmp.wqS282vAsr
+ + 9721759...0bd359f child_b -> child_b (forced update)
+Rebasing (1/1)Successfully rebased and updated refs/heads/child_d.
+To /tmp/tmp.wqS282vAsr
+ + 742253b...8d53622 child_d -> child_d (forced update)
+_______________________ MacheteTester.test_squash_merge ________________________
+----------------------------- Captured stdout call -----------------------------
+Updating 68a68ea..b4796aa
+Fast-forward
+Squash commit -- not updating HEAD
+ DrhTaJkTXKitzZCwkhLs.txt | 0
+ imyXgMfnYhyvcSLZzaGR.txt | 0
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 DrhTaJkTXKitzZCwkhLs.txt
+ create mode 100644 imyXgMfnYhyvcSLZzaGR.txt
+[develop 899ff92] squash_feature
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 DrhTaJkTXKitzZCwkhLs.txt
+ create mode 100644 imyXgMfnYhyvcSLZzaGR.txt
+branch 'develop' set up to track 'origin/develop'.
+branch 'child' set up to track 'origin/child'.
+Updating 899ff92..2d3d689
+Fast-forward
+Squash commit -- not updating HEAD
+ DvifLAjgjZzVCYiQYfYB.txt | 0
+ qmwpWVbnbVRnlFkhVqBT.txt | 0
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 DvifLAjgjZzVCYiQYfYB.txt
+ create mode 100644 qmwpWVbnbVRnlFkhVqBT.txt
+[upstream_squash 92a12a6] squash_child
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 DvifLAjgjZzVCYiQYfYB.txt
+ create mode 100644 qmwpWVbnbVRnlFkhVqBT.txt
+Deleted branch upstream_squash (was 92a12a6).
+Updating 899ff92..92a12a6
+Fast-forward
+ DvifLAjgjZzVCYiQYfYB.txt | 0
+ qmwpWVbnbVRnlFkhVqBT.txt | 0
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 DvifLAjgjZzVCYiQYfYB.txt
+ create mode 100644 qmwpWVbnbVRnlFkhVqBT.txt
+branch 'develop' set up to track 'origin/develop'.
+----------------------------- Captured stderr call -----------------------------
+To /tmp/tmp.ahyyDTxweI
+   68a68ea..899ff92  develop -> develop
+Rebasing (1/2)Rebasing (2/2)Successfully rebased and updated refs/heads/child.
+To /tmp/tmp.ahyyDTxweI
+ + d186d4e...2d3d689 child -> child (forced update)
+To /tmp/tmp.ahyyDTxweI
+   899ff92..92a12a6  upstream_squash -> develop
+_____________________ MacheteTester.test_traverse_no_push ______________________
+----------------------------- Captured stdout call -----------------------------
+Deleted branch root (was 7f5f3b3).
+----------------------------- Captured stderr call -----------------------------
+Rebasing (1/2)Rebasing (2/2)Successfully rebased and updated refs/heads/allow-ownership-link.
+Rebasing (1/1)Successfully rebased and updated refs/heads/build-chain.
+Rebasing (1/1)Successfully rebased and updated refs/heads/drop-constraint.
+_________________ MacheteTester.test_traverse_no_push_override _________________
+----------------------------- Captured stdout call -----------------------------
+Deleted branch root (was 239a3ce).
+branch 'allow-ownership-link' set up to track 'origin/allow-ownership-link'.
+branch 'build-chain' set up to track 'origin/build-chain'.
+branch 'call-ws' set up to track 'origin/call-ws'.
+branch 'drop-constraint' set up to track 'origin/drop-constraint'.
+branch 'hotfix/add-trigger' set up to track 'origin/hotfix/add-trigger'.
+----------------------------- Captured stderr call -----------------------------
+Rebasing (1/2)Rebasing (2/2)Successfully rebased and updated refs/heads/allow-ownership-link.
+To /tmp/tmp.uSBuK5JZOM
+ + 5ebe423...a34879b allow-ownership-link -> allow-ownership-link (forced update)
+Rebasing (1/1)Successfully rebased and updated refs/heads/build-chain.
+To /tmp/tmp.uSBuK5JZOM
+ * [new branch]      build-chain -> build-chain
+To /tmp/tmp.uSBuK5JZOM
+   7a3a558..86ec765  call-ws -> call-ws
+Rebasing (1/1)Successfully rebased and updated refs/heads/drop-constraint.
+To /tmp/tmp.uSBuK5JZOM
+ * [new branch]      drop-constraint -> drop-constraint
+To /tmp/tmp.uSBuK5JZOM
+ + 98b6070...fcf03fa hotfix/add-trigger -> hotfix/add-trigger (forced update)
+________________ MacheteTester.test_traverse_no_push_untracked _________________
+----------------------------- Captured stdout call -----------------------------
+Deleted branch root (was cd49fcc).
+branch 'allow-ownership-link' set up to track 'origin/allow-ownership-link'.
+branch 'call-ws' set up to track 'origin/call-ws'.
+branch 'hotfix/add-trigger' set up to track 'origin/hotfix/add-trigger'.
+----------------------------- Captured stderr call -----------------------------
+Rebasing (1/2)Rebasing (2/2)Successfully rebased and updated refs/heads/allow-ownership-link.
+To /tmp/tmp.eE4tKLkgLu
+ + a8ed145...ab8ff93 allow-ownership-link -> allow-ownership-link (forced update)
+Rebasing (1/1)Successfully rebased and updated refs/heads/build-chain.
+To /tmp/tmp.eE4tKLkgLu
+   ec93952..1e6cb55  call-ws -> call-ws
+Rebasing (1/1)Successfully rebased and updated refs/heads/drop-constraint.
+To /tmp/tmp.eE4tKLkgLu
+ + 36f97a6...100a604 hotfix/add-trigger -> hotfix/add-trigger (forced update)
+___________ MacheteTester.test_update_with_fork_point_not_specified ____________
+----------------------------- Captured stderr call -----------------------------
+Rebasing (1/1)Successfully rebased and updated refs/heads/level-1-branch.
+_____________ MacheteTester.test_update_with_fork_point_specified ______________
+----------------------------- Captured stderr call -----------------------------
+Rebasing (1/1)Successfully rebased and updated refs/heads/branch-1.
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+=========================== short test summary info ============================
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_advance_with_few_possible_downstream_branches_and_yes_option
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_advance_with_no_downstream_branches
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_advance_with_one_downstream_branch
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_discover_traverse_squash
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_down
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_first_root_with_downstream
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_first_root_without_downstream
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_last
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_next_successor_exists
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_next_successor_on_another_root_tree
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_prev_successor_exists
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_prev_successor_on_another_root_tree
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_root
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_go_up
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_help
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_show
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_show_down
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_show_first
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_show_last
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_show_next
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_show_prev
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_show_root
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_show_up
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_slide_out
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_squash_merge
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_traverse_no_push
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_traverse_no_push_override
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_traverse_no_push_untracked
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_update_with_fork_point_not_specified
+PASSED git_machete/tests/functional/test_machete.py::MacheteTester::test_update_with_fork_point_specified
+FAILED git_machete/tests/functional/test_machete.py::MacheteTester::test_branch_reappers_in_definition
+======================== 1 failed, 30 passed in 24.25s =========================

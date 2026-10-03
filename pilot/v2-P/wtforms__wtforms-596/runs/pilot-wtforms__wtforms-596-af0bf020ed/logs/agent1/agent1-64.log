@@ -1,0 +1,20 @@
+def html_params(**kwargs):
+    """
+    Generate HTML attribute syntax from inputted keyword arguments.
+
+    The output value is sorted by the passed keys, to provide consistent output
+    each time this function is called with the same parameters. Because of the
+    frequent use of the normally reserved keywords `class` and `for`, suffixing
+    these with an underscore will allow them to be used.
+
+    In order to facilitate the use of ``data-`` and ``aria-`` attributes, if the
+    name of the attribute begins with ``data_`` or ``aria_``, then every
+    underscore will be replaced with a hyphen in the generated attribute.
+
+    If multiple arguments resolve to the same attribute name (e.g. ``class`` and
+    ``class_``), the later value will override the earlier one.
+
+    >>> html_params(data_attr='user.name', aria_labeledby='name')
+    'data-attr="user.name" aria-labeledby="name"'
+
+    In addition, the values ``True`` and ``False`` are special:

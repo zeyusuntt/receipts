@@ -1,0 +1,56 @@
+Task options: {'source_branch': 'main', 'branch_prefix': 'feature/', 'update_future_releases': False, 'skip_future_releases': True, 'commit': '5a10f027a48cf12da0a7f84a23581a74'}
+skip_future_releases: True
+Type: <class 'bool'>
+/CumulusCI/cumulusci/__init__.py:8: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  __import__("pkg_resources").declare_namespace("cumulusci")
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 878, in urlopen
+    return self.urlopen(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 878, in urlopen
+    return self.urlopen(
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 878, in urlopen
+    return self.urlopen(
+  [Previous line repeated 7 more times]
+  File "/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 868, in urlopen
+    retries = retries.increment(method, url, response=response, _pool=self)
+  File "/CumulusCI/cumulusci/core/github.py", line 76, in increment
+    return super().increment(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.github.com', port=443): Max retries exceeded with url: /repos/TestOwner/TestRepo (Caused by ResponseError('too many 401 error responses'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/github3/models.py", line 201, in _request
+    return request_method(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 600, in get
+    return self.request("GET", url, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/github3/session.py", line 171, in request
+    response = super().request(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/requests/adapters.py", line 556, in send
+    raise RetryError(e, request=request)
+requests.exceptions.RetryError: HTTPSConnectionPool(host='api.github.com', port=443): Max retries exceeded with url: /repos/TestOwner/TestRepo (Caused by ResponseError('too many 401 error responses'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/debug_test.py", line 30, in <module>
+    task._init_task()
+  File "/CumulusCI/cumulusci/tasks/github/merge.py", line 61, in _init_task
+    self.repo = self.get_repo()
+  File "/CumulusCI/cumulusci/tasks/github/base.py", line 14, in get_repo
+    return self.github.repository(
+  File "/usr/local/lib/python3.10/site-packages/github3/github.py", line 2062, in repository
+    json = self._json(self._get(url), 200)
+  File "/usr/local/lib/python3.10/site-packages/github3/models.py", line 216, in _get
+    return self._request("get", url, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/github3/models.py", line 208, in _request
+    raise exceptions.TransportError(exc)
+github3.exceptions.TransportError: <class 'requests.exceptions.RetryError'>: An error occurred while making a request to GitHub: HTTPSConnectionPool(host='api.github.com', port=443): Max retries exceeded with url: /repos/TestOwner/TestRepo (Caused by ResponseError('too many 401 error responses'))

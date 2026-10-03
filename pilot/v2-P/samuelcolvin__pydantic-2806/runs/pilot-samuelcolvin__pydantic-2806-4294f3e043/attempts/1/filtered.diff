@@ -1,0 +1,41 @@
+diff --git a/pydantic/fields.py b/pydantic/fields.py
+index 94a2ce7..482d14e 100644
+--- a/pydantic/fields.py
++++ b/pydantic/fields.py
+@@ -1,4 +1,4 @@
+-from collections import defaultdict, deque
++from collections import Counter, defaultdict, deque
+ from collections.abc import Hashable as CollectionsHashable, Iterable as CollectionsIterable
+ from typing import (
+     TYPE_CHECKING,
+@@ -292,6 +292,7 @@ SHAPE_GENERIC = 10
+ SHAPE_DEQUE = 11
+ SHAPE_DICT = 12
+ SHAPE_DEFAULTDICT = 13
++SHAPE_COUNTER = 14
+ SHAPE_NAME_LOOKUP = {
+     SHAPE_LIST: 'List[{}]',
+     SHAPE_SET: 'Set[{}]',
+@@ -302,9 +303,10 @@ SHAPE_NAME_LOOKUP = {
+     SHAPE_DEQUE: 'Deque[{}]',
+     SHAPE_DICT: 'Dict[{}]',
+     SHAPE_DEFAULTDICT: 'DefaultDict[{}]',
++    SHAPE_COUNTER: 'Counter[{}]',
+ }
+ 
+-MAPPING_LIKE_SHAPES: Set[int] = {SHAPE_DEFAULTDICT, SHAPE_DICT, SHAPE_MAPPING}
++MAPPING_LIKE_SHAPES: Set[int] = {SHAPE_DEFAULTDICT, SHAPE_DICT, SHAPE_MAPPING, SHAPE_COUNTER}
+ 
+ 
+ class ModelField(Representation):
+@@ -630,6 +632,10 @@ class ModelField(Representation):
+             self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
+             self.type_ = get_args(self.type_)[1]
+             self.shape = SHAPE_DEFAULTDICT
++        elif issubclass(origin, Counter):
++            self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
++            self.type_ = int
++            self.shape = SHAPE_COUNTER
+         elif issubclass(origin, Dict):
+             self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
+             self.type_ = get_args(self.type_)[1]

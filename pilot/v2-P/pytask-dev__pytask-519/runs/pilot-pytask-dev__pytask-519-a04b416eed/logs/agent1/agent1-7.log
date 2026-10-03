@@ -1,0 +1,45 @@
+============================= test session starts ==============================
+collecting ... collected 0 items / 2 errors
+
+==================================== ERRORS ====================================
+___________________ ERROR collecting test_builtin_example.py ___________________
+src/_pytask/task_utils.py:97: in wrapper
+    raw_path = inspect.getfile(unwrapped)
+/usr/local/lib/python3.10/inspect.py:797: in getfile
+    raise TypeError('module, class, method, function, traceback, frame, or '
+E   TypeError: module, class, method, function, traceback, frame, or code object was expected, got builtin_function_or_method
+
+During handling of the above exception, another exception occurred:
+test_builtin_example.py:6: in <module>
+    task_build_time = pytask.task(produces=Path("build_time.txt"))(time.asctime)
+src/_pytask/task_utils.py:100: in wrapper
+    raise ValueError(msg)
+E   ValueError: Builtin functions cannot be wrapped
+___________________ ERROR collecting test_builtin_example.py ___________________
+src/_pytask/task_utils.py:97: in wrapper
+    raw_path = inspect.getfile(unwrapped)
+/usr/local/lib/python3.10/inspect.py:797: in getfile
+    raise TypeError('module, class, method, function, traceback, frame, or '
+E   TypeError: module, class, method, function, traceback, frame, or code object was expected, got builtin_function_or_method
+
+During handling of the above exception, another exception occurred:
+test_builtin_example.py:6: in <module>
+    task_build_time = pytask.task(produces=Path("build_time.txt"))(time.asctime)
+src/_pytask/task_utils.py:100: in wrapper
+    raise ValueError(msg)
+E   ValueError: Builtin functions cannot be wrapped
+=============================== warnings summary ===============================
+src/_pytask/click.py:13
+  /pytask/src/_pytask/click.py:13: DeprecationWarning: 'parser.split_opt' is deprecated and will be removed in Click 9.0. The old parser is available in 'optparse'.
+    from click.parser import split_opt
+
+src/_pytask/cli.py:23
+  /pytask/src/_pytask/cli.py:23: DeprecationWarning: The '__version__' attribute is deprecated and will be removed in Click 9.1. Use feature detection or 'importlib.metadata.version("click")' instead.
+    if parse_version(click.__version__) < parse_version("8"):  # pragma: no cover
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /opt/receipts/reports/agent1-7.xml ------------
+=========================== short test summary info ============================
+ERROR test_builtin_example.py - ValueError: Builtin functions cannot be wrapped
+ERROR test_builtin_example.py - ValueError: Builtin functions cannot be wrapped
+======================== 2 warnings, 2 errors in 1.33s =========================

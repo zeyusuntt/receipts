@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-6.2.5, py-1.11.0, pluggy-1.6.0 -- /usr/local/bin/python
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase('/pydantic/.hypothesis/examples')
+rootdir: /pydantic, configfile: setup.cfg
+plugins: cov-2.12.1, mock-3.6.1, sugar-0.9.4
+collecting ... collected 2 items
+
+tests/test_main.py::test_typing_coercion_counter FAILED                  [ 50%]
+tests/test_main.py::test_typing_counter_value_validation PASSED          [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_typing_coercion_counter _________________________
+
+    def test_typing_coercion_counter():
+        class Model(BaseModel):
+            x: Counter[str]
+    
+        assert Model.__fields__['x'].type_ is int
+>       assert repr(Model(x={'a': 10})) == "Model(x=Counter({'a': 10}))"
+E       assert "Model(x={'a': 10})" == "Model(x=Counter({'a': 10}))"
+E         - Model(x=Counter({'a': 10}))
+E         ?         --------          -
+E         + Model(x={'a': 10})
+
+tests/test_main.py:1995: AssertionError
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-26.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_main.py::test_typing_counter_value_validation
+FAILED tests/test_main.py::test_typing_coercion_counter - assert "Model(x={'a...
+========================= 1 failed, 1 passed in 0.16s ==========================

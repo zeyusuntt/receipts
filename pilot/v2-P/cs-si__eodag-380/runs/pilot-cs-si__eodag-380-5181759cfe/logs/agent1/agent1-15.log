@@ -1,0 +1,11 @@
+800-        :param provider: (optional) The provider on which to search the product.
+801-                         This may be useful for performance reasons when the user
+802-                         knows this product is available on the given provider
+803-        :type provider: str
+804-        :param kwargs: Search criteria to help finding the right product
+805-        :type kwargs: dict
+806-        :returns: A search result with one EO product or None at all, and the number
+807-                  of EO products retrieved (0 or 1)
+808-        :rtype: tuple(:class:`~eodag.api.search_result.SearchResult`, int)
+809-        """
+810:        for plugin in self._plugins_manager.get_search_plugins(provider=provider):

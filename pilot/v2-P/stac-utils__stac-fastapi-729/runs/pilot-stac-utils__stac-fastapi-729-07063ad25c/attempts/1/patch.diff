@@ -1,0 +1,43 @@
+diff --git a/stac_fastapi/api/stac_fastapi/api/models.py b/stac_fastapi/api/stac_fastapi/api/models.py
+index 1c2146d..4fb3c50 100644
+--- a/stac_fastapi/api/stac_fastapi/api/models.py
++++ b/stac_fastapi/api/stac_fastapi/api/models.py
+@@ -47,7 +47,30 @@ def create_request_model(
+ 
+     # Handle GET requests
+     if all([issubclass(m, APIRequest) for m in models]):
+-        return make_dataclass(model_name, [], bases=tuple(models))
++        # Collect fields from all parent models to avoid __post_init__ conflicts
++        for model in models:
++            if hasattr(model, '__dataclass_fields__'):
++                for k, field_info in model.__dataclass_fields__.items():
++                    if k not in fields:  # Avoid duplicates, parents take precedence
++                        fields[k] = (field_info.type, field_info.default)
++            elif hasattr(model, 'model_fields'):
++                for k, field_info in model.model_fields.items():
++                    if k not in fields:  # Avoid duplicates
++                        fields[k] = (field_info.annotation, field_info.default)
++        
++        # Create the dataclass with collected fields
++        Dataclass = make_dataclass(model_name, list(fields.items()), bases=tuple(models))
++        
++        # Add a __post_init__ method that properly chains to parent __post_init__ methods
++        def _post_init__(self):
++            """Chain to all parent __post_init__ methods."""
++            # Call __post_init__ on each parent class in MRO order (excluding self and object)
++            for cls in type(self).__mro__[1:-1]:  # Skip self (index 0) and object (last)
++                if hasattr(cls, '__post_init__'):
++                    cls.__post_init__(self)
++        
++        Dataclass.__post_init__ = _post_init__
++        return Dataclass
+ 
+     # Handle POST requests
+     elif all([issubclass(m, BaseModel) for m in models]):
+@@ -134,4 +157,4 @@ class GeoJSONResponse(JSONResponse):
+ class JSONSchemaResponse(JSONResponse):
+     """JSON with custom, vendor content-type."""
+ 
+-    media_type = "application/schema+json"
++    media_type = "application/schema+json"
+\ No newline at end of file

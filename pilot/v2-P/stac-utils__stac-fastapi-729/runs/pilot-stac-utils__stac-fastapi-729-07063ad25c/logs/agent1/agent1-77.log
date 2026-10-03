@@ -1,0 +1,971 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /stac-fastapi
+configfile: pyproject.toml
+plugins: anyio-4.12.1, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 9 items
+
+stac_fastapi/api/tests/test_app.py::test_client_response_type FAILED     [ 11%]
+stac_fastapi/api/tests/test_app.py::test_client_invalid_response_type[True] FAILED [ 22%]
+stac_fastapi/api/tests/test_app.py::test_client_invalid_response_type[False] FAILED [ 33%]
+stac_fastapi/api/tests/test_app.py::test_client_openapi PASSED           [ 44%]
+stac_fastapi/api/tests/test_app.py::test_filter_extension[True] FAILED   [ 55%]
+stac_fastapi/api/tests/test_app.py::test_filter_extension[False] FAILED  [ 66%]
+stac_fastapi/api/tests/test_app.py::test_fields_extension[True] FAILED   [ 77%]
+stac_fastapi/api/tests/test_app.py::test_fields_extension[False] FAILED  [ 88%]
+stac_fastapi/api/tests/test_app.py::test_request_model FAILED            [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_client_response_type ___________________________
+
+TestCoreClient = <class 'conftest.TestCoreClient.<locals>.CoreClient'>
+
+    def test_client_response_type(TestCoreClient):
+        """Test all GET endpoints. Verify that responses are valid STAC items."""
+    
+        test_app = app.StacApi(
+            settings=ApiSettings(),
+            client=TestCoreClient(),
+        )
+    
+>       with TestClient(test_app.app) as client:
+
+stac_fastapi/api/tests/test_app.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:688: in __enter__
+    portal.call(self.wait_startup)
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:334: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+/usr/local/lib/python3.10/concurrent/futures/_base.py:458: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:717: in wait_startup
+    message = await receive()
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:714: in receive
+    self.task.result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:704: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1134: in __call__
+    await super().__call__(scope, receive, send)
+/usr/local/lib/python3.10/site-packages/starlette/applications.py:106: in __call__
+    self.middleware_stack = self.build_middleware_stack()
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1042: in build_middleware_stack
+    app = cls(app, *args, **kwargs)
+stac_fastapi/api/stac_fastapi/api/middleware.py:35: in __init__
+    super().__init__(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <stac_fastapi.api.middleware.CORSMiddleware object at 0x7ffff499f970>
+app = <brotli_asgi.BrotliMiddleware object at 0x7ffff499f9d0>
+allow_origins = ('*',), allow_methods = ('OPTIONS', 'POST', 'GET')
+allow_headers = ('Content-Type',), allow_credentials = False
+allow_origin_regex = None, allow_private_network = (), expose_headers = 600
+max_age = 600
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        allow_origins: Sequence[str] = (),
+        allow_methods: Sequence[str] = ("GET",),
+        allow_headers: Sequence[str] = (),
+        allow_credentials: bool = False,
+        allow_origin_regex: str | None = None,
+        allow_private_network: bool = False,
+        expose_headers: Sequence[str] = (),
+        max_age: int = 600,
+    ) -> None:
+        if "*" in allow_methods:
+            allow_methods = ALL_METHODS
+    
+        compiled_allow_origin_regex = None
+        if allow_origin_regex is not None:
+            compiled_allow_origin_regex = re.compile(allow_origin_regex)
+    
+        allow_all_origins = "*" in allow_origins
+        allow_all_headers = "*" in allow_headers
+        preflight_explicit_allow_origin = not allow_all_origins or allow_credentials
+    
+        simple_headers: dict[str, str] = {}
+        if allow_all_origins:
+            simple_headers["Access-Control-Allow-Origin"] = "*"
+        if allow_credentials:
+            simple_headers["Access-Control-Allow-Credentials"] = "true"
+        if expose_headers:
+>           simple_headers["Access-Control-Expose-Headers"] = ", ".join(expose_headers)
+E           TypeError: can only join an iterable
+
+/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py:45: TypeError
+___________________ test_client_invalid_response_type[True] ____________________
+
+validate = True
+TestCoreClient = <class 'conftest.TestCoreClient.<locals>.CoreClient'>
+item_dict = {'assets': {}, 'bbox': [-180.0, -90.0, 180.0, 90.0], 'geometry': {'coordinates': [0.0, 0.0], 'type': 'Point'}, 'id': 'test_item', ...}
+
+    @pytest.mark.parametrize("validate", [True, False])
+    def test_client_invalid_response_type(validate, TestCoreClient, item_dict):
+        """Check if the build in response validation switch works."""
+    
+        class InValidResponseClient(TestCoreClient):
+            def get_item(self, item_id: str, collection_id: str, **kwargs) -> stac.Item:
+                item_dict.pop("bbox")
+                item_dict.pop("geometry")
+                return stac.Item(**item_dict)
+    
+        test_app = app.StacApi(
+            settings=ApiSettings(enable_response_models=validate),
+            client=InValidResponseClient(),
+        )
+    
+>       with TestClient(test_app.app) as client:
+
+stac_fastapi/api/tests/test_app.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:688: in __enter__
+    portal.call(self.wait_startup)
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:334: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:717: in wait_startup
+    message = await receive()
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:714: in receive
+    self.task.result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:704: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1134: in __call__
+    await super().__call__(scope, receive, send)
+/usr/local/lib/python3.10/site-packages/starlette/applications.py:106: in __call__
+    self.middleware_stack = self.build_middleware_stack()
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1042: in build_middleware_stack
+    app = cls(app, *args, **kwargs)
+stac_fastapi/api/stac_fastapi/api/middleware.py:35: in __init__
+    super().__init__(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <stac_fastapi.api.middleware.CORSMiddleware object at 0x7ffff4ed5bd0>
+app = <brotli_asgi.BrotliMiddleware object at 0x7ffff482f730>
+allow_origins = ('*',), allow_methods = ('OPTIONS', 'POST', 'GET')
+allow_headers = ('Content-Type',), allow_credentials = False
+allow_origin_regex = None, allow_private_network = (), expose_headers = 600
+max_age = 600
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        allow_origins: Sequence[str] = (),
+        allow_methods: Sequence[str] = ("GET",),
+        allow_headers: Sequence[str] = (),
+        allow_credentials: bool = False,
+        allow_origin_regex: str | None = None,
+        allow_private_network: bool = False,
+        expose_headers: Sequence[str] = (),
+        max_age: int = 600,
+    ) -> None:
+        if "*" in allow_methods:
+            allow_methods = ALL_METHODS
+    
+        compiled_allow_origin_regex = None
+        if allow_origin_regex is not None:
+            compiled_allow_origin_regex = re.compile(allow_origin_regex)
+    
+        allow_all_origins = "*" in allow_origins
+        allow_all_headers = "*" in allow_headers
+        preflight_explicit_allow_origin = not allow_all_origins or allow_credentials
+    
+        simple_headers: dict[str, str] = {}
+        if allow_all_origins:
+            simple_headers["Access-Control-Allow-Origin"] = "*"
+        if allow_credentials:
+            simple_headers["Access-Control-Allow-Credentials"] = "true"
+        if expose_headers:
+>           simple_headers["Access-Control-Expose-Headers"] = ", ".join(expose_headers)
+E           TypeError: can only join an iterable
+
+/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py:45: TypeError
+___________________ test_client_invalid_response_type[False] ___________________
+
+validate = False
+TestCoreClient = <class 'conftest.TestCoreClient.<locals>.CoreClient'>
+item_dict = {'assets': {}, 'bbox': [-180.0, -90.0, 180.0, 90.0], 'geometry': {'coordinates': [0.0, 0.0], 'type': 'Point'}, 'id': 'test_item', ...}
+
+    @pytest.mark.parametrize("validate", [True, False])
+    def test_client_invalid_response_type(validate, TestCoreClient, item_dict):
+        """Check if the build in response validation switch works."""
+    
+        class InValidResponseClient(TestCoreClient):
+            def get_item(self, item_id: str, collection_id: str, **kwargs) -> stac.Item:
+                item_dict.pop("bbox")
+                item_dict.pop("geometry")
+                return stac.Item(**item_dict)
+    
+        test_app = app.StacApi(
+            settings=ApiSettings(enable_response_models=validate),
+            client=InValidResponseClient(),
+        )
+    
+>       with TestClient(test_app.app) as client:
+
+stac_fastapi/api/tests/test_app.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:688: in __enter__
+    portal.call(self.wait_startup)
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:334: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:717: in wait_startup
+    message = await receive()
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:714: in receive
+    self.task.result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:704: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1134: in __call__
+    await super().__call__(scope, receive, send)
+/usr/local/lib/python3.10/site-packages/starlette/applications.py:106: in __call__
+    self.middleware_stack = self.build_middleware_stack()
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1042: in build_middleware_stack
+    app = cls(app, *args, **kwargs)
+stac_fastapi/api/stac_fastapi/api/middleware.py:35: in __init__
+    super().__init__(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <stac_fastapi.api.middleware.CORSMiddleware object at 0x7ffff4f7fd30>
+app = <brotli_asgi.BrotliMiddleware object at 0x7ffff4f7d090>
+allow_origins = ('*',), allow_methods = ('OPTIONS', 'POST', 'GET')
+allow_headers = ('Content-Type',), allow_credentials = False
+allow_origin_regex = None, allow_private_network = (), expose_headers = 600
+max_age = 600
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        allow_origins: Sequence[str] = (),
+        allow_methods: Sequence[str] = ("GET",),
+        allow_headers: Sequence[str] = (),
+        allow_credentials: bool = False,
+        allow_origin_regex: str | None = None,
+        allow_private_network: bool = False,
+        expose_headers: Sequence[str] = (),
+        max_age: int = 600,
+    ) -> None:
+        if "*" in allow_methods:
+            allow_methods = ALL_METHODS
+    
+        compiled_allow_origin_regex = None
+        if allow_origin_regex is not None:
+            compiled_allow_origin_regex = re.compile(allow_origin_regex)
+    
+        allow_all_origins = "*" in allow_origins
+        allow_all_headers = "*" in allow_headers
+        preflight_explicit_allow_origin = not allow_all_origins or allow_credentials
+    
+        simple_headers: dict[str, str] = {}
+        if allow_all_origins:
+            simple_headers["Access-Control-Allow-Origin"] = "*"
+        if allow_credentials:
+            simple_headers["Access-Control-Allow-Credentials"] = "true"
+        if expose_headers:
+>           simple_headers["Access-Control-Expose-Headers"] = ", ".join(expose_headers)
+E           TypeError: can only join an iterable
+
+/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py:45: TypeError
+_________________________ test_filter_extension[True] __________________________
+
+validate = True
+TestCoreClient = <class 'conftest.TestCoreClient.<locals>.CoreClient'>
+item_dict = {'assets': {}, 'bbox': [-180.0, -90.0, 180.0, 90.0], 'geometry': {'coordinates': [0.0, 0.0], 'type': 'Point'}, 'id': 'test_item', ...}
+
+    @pytest.mark.parametrize("validate", [True, False])
+    def test_filter_extension(validate, TestCoreClient, item_dict):
+        """Test if Filter Parameters are passed correctly."""
+    
+        class FilterClient(TestCoreClient):
+            def post_search(
+                self, search_request: BaseSearchPostRequest, **kwargs
+            ) -> stac.ItemCollection:
+                search_request.collections = ["test"]
+                search_request.filter = {}
+                search_request.filter_crs = "EPSG:4326"
+                search_request.filter_lang = "cql2-text"
+    
+                return stac.ItemCollection(
+                    type="FeatureCollection", features=[stac.Item(**item_dict)]
+                )
+    
+            def get_search(
+                self,
+                collections: Optional[List[str]] = None,
+                ids: Optional[List[str]] = None,
+                bbox: Optional[List[NumType]] = None,
+                intersects: Optional[str] = None,
+                datetime: Optional[Union[str, datetime]] = None,
+                limit: Optional[int] = 10,
+                filter: Optional[str] = None,
+                filter_crs: Optional[str] = None,
+                filter_lang: Optional[str] = None,
+                **kwargs,
+            ) -> stac.ItemCollection:
+                # Check if all filter parameters are passed correctly
+    
+                assert filter == "TEST"
+    
+                # FIXME: https://github.com/stac-utils/stac-fastapi/issues/638
+                # hyphen alias for filter_crs and filter_lang are currently not working
+                # Query parameters `filter-crs` and `filter-lang`
+                # should be recognized by the API
+                # They are present in the `request.query_params` but not in the `kwargs`
+    
+                # assert filter_crs == "EPSG:4326"
+                # assert filter_lang == "cql2-text"
+    
+                return stac.ItemCollection(
+                    type="FeatureCollection", features=[stac.Item(**item_dict)]
+                )
+    
+        post_request_model = create_post_request_model([FilterExtension()])
+    
+>       test_app = app.StacApi(
+            settings=ApiSettings(enable_response_models=validate),
+            client=FilterClient(post_request_model=post_request_model),
+            search_get_request_model=create_get_request_model([FilterExtension()]),
+            search_post_request_model=post_request_model,
+            extensions=[FilterExtension()],
+        )
+
+stac_fastapi/api/tests/test_app.py:170: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<attrs generated methods stac_fastapi.api.app.StacApi>:84: in __init__
+    self.__attrs_post_init__()
+stac_fastapi/api/stac_fastapi/api/app.py:452: in __attrs_post_init__
+    self.register_core()
+stac_fastapi/api/stac_fastapi/api/app.py:385: in register_core
+    self.register_get_search()
+stac_fastapi/api/stac_fastapi/api/app.py:254: in register_get_search
+    self.router.add_api_route(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:1064: in add_api_route
+    route = route_class(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:665: in __init__
+    self.dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:301: in get_dependant
+    sub_dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:279: in get_dependant
+    param_details = analyze_param(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:508: in analyze_param
+    field = create_model_field(
+/usr/local/lib/python3.10/site-packages/fastapi/utils.py:73: in create_model_field
+    return v2.ModelField(mode=mode, name=name, field_info=field_info)
+<string>:7: in __init__
+    ???
+/usr/local/lib/python3.10/site-packages/fastapi/_compat/v2.py:151: in __post_init__
+    Annotated[annotated_args],
+/usr/local/lib/python3.10/typing.py:312: in inner
+    return func(*args, **kwds)
+/usr/local/lib/python3.10/typing.py:1702: in __class_getitem__
+    origin = _type_check(params[0], msg, allow_special_forms=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+arg = (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None)
+msg = 'Annotated[t, ...]: t must be a type.', is_argument = True, module = None
+
+    def _type_check(arg, msg, is_argument=True, module=None, *, allow_special_forms=False):
+        """Check that the argument is a type, and return it (internal helper).
+    
+        As a special case, accept None and return type(None) instead. Also wrap strings
+        into ForwardRef instances. Consider several corner cases, for example plain
+        special forms like Union are not valid, while Union[int, str] is OK, etc.
+        The msg argument is a human-readable error message, e.g::
+    
+            "Union[arg, ...]: arg should be a type."
+    
+        We append the repr() of the actual value (truncated to 100 chars).
+        """
+        invalid_generic_forms = (Generic, Protocol)
+        if not allow_special_forms:
+            invalid_generic_forms += (ClassVar,)
+            if is_argument:
+                invalid_generic_forms += (Final,)
+    
+        arg = _type_convert(arg, module=module, allow_special_forms=allow_special_forms)
+        if (isinstance(arg, _GenericAlias) and
+                arg.__origin__ in invalid_generic_forms):
+            raise TypeError(f"{arg} is not valid as type argument")
+        if arg in (Any, NoReturn, Final, TypeAlias):
+            return arg
+        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
+            raise TypeError(f"Plain {arg} is not valid as type argument")
+        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec,
+                            ParamSpecArgs, ParamSpecKwargs)):
+            return arg
+        if not callable(arg):
+>           raise TypeError(f"{msg} Got {arg!r:.100}.")
+E           TypeError: Annotated[t, ...]: t must be a type. Got (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None).
+
+/usr/local/lib/python3.10/typing.py:176: TypeError
+_________________________ test_filter_extension[False] _________________________
+
+validate = False
+TestCoreClient = <class 'conftest.TestCoreClient.<locals>.CoreClient'>
+item_dict = {'assets': {}, 'bbox': [-180.0, -90.0, 180.0, 90.0], 'geometry': {'coordinates': [0.0, 0.0], 'type': 'Point'}, 'id': 'test_item', ...}
+
+    @pytest.mark.parametrize("validate", [True, False])
+    def test_filter_extension(validate, TestCoreClient, item_dict):
+        """Test if Filter Parameters are passed correctly."""
+    
+        class FilterClient(TestCoreClient):
+            def post_search(
+                self, search_request: BaseSearchPostRequest, **kwargs
+            ) -> stac.ItemCollection:
+                search_request.collections = ["test"]
+                search_request.filter = {}
+                search_request.filter_crs = "EPSG:4326"
+                search_request.filter_lang = "cql2-text"
+    
+                return stac.ItemCollection(
+                    type="FeatureCollection", features=[stac.Item(**item_dict)]
+                )
+    
+            def get_search(
+                self,
+                collections: Optional[List[str]] = None,
+                ids: Optional[List[str]] = None,
+                bbox: Optional[List[NumType]] = None,
+                intersects: Optional[str] = None,
+                datetime: Optional[Union[str, datetime]] = None,
+                limit: Optional[int] = 10,
+                filter: Optional[str] = None,
+                filter_crs: Optional[str] = None,
+                filter_lang: Optional[str] = None,
+                **kwargs,
+            ) -> stac.ItemCollection:
+                # Check if all filter parameters are passed correctly
+    
+                assert filter == "TEST"
+    
+                # FIXME: https://github.com/stac-utils/stac-fastapi/issues/638
+                # hyphen alias for filter_crs and filter_lang are currently not working
+                # Query parameters `filter-crs` and `filter-lang`
+                # should be recognized by the API
+                # They are present in the `request.query_params` but not in the `kwargs`
+    
+                # assert filter_crs == "EPSG:4326"
+                # assert filter_lang == "cql2-text"
+    
+                return stac.ItemCollection(
+                    type="FeatureCollection", features=[stac.Item(**item_dict)]
+                )
+    
+        post_request_model = create_post_request_model([FilterExtension()])
+    
+>       test_app = app.StacApi(
+            settings=ApiSettings(enable_response_models=validate),
+            client=FilterClient(post_request_model=post_request_model),
+            search_get_request_model=create_get_request_model([FilterExtension()]),
+            search_post_request_model=post_request_model,
+            extensions=[FilterExtension()],
+        )
+
+stac_fastapi/api/tests/test_app.py:170: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<attrs generated methods stac_fastapi.api.app.StacApi>:84: in __init__
+    self.__attrs_post_init__()
+stac_fastapi/api/stac_fastapi/api/app.py:452: in __attrs_post_init__
+    self.register_core()
+stac_fastapi/api/stac_fastapi/api/app.py:385: in register_core
+    self.register_get_search()
+stac_fastapi/api/stac_fastapi/api/app.py:254: in register_get_search
+    self.router.add_api_route(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:1064: in add_api_route
+    route = route_class(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:665: in __init__
+    self.dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:301: in get_dependant
+    sub_dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:279: in get_dependant
+    param_details = analyze_param(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:508: in analyze_param
+    field = create_model_field(
+/usr/local/lib/python3.10/site-packages/fastapi/utils.py:73: in create_model_field
+    return v2.ModelField(mode=mode, name=name, field_info=field_info)
+<string>:7: in __init__
+    ???
+/usr/local/lib/python3.10/site-packages/fastapi/_compat/v2.py:151: in __post_init__
+    Annotated[annotated_args],
+/usr/local/lib/python3.10/typing.py:312: in inner
+    return func(*args, **kwds)
+/usr/local/lib/python3.10/typing.py:1702: in __class_getitem__
+    origin = _type_check(params[0], msg, allow_special_forms=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+arg = (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None)
+msg = 'Annotated[t, ...]: t must be a type.', is_argument = True, module = None
+
+    def _type_check(arg, msg, is_argument=True, module=None, *, allow_special_forms=False):
+        """Check that the argument is a type, and return it (internal helper).
+    
+        As a special case, accept None and return type(None) instead. Also wrap strings
+        into ForwardRef instances. Consider several corner cases, for example plain
+        special forms like Union are not valid, while Union[int, str] is OK, etc.
+        The msg argument is a human-readable error message, e.g::
+    
+            "Union[arg, ...]: arg should be a type."
+    
+        We append the repr() of the actual value (truncated to 100 chars).
+        """
+        invalid_generic_forms = (Generic, Protocol)
+        if not allow_special_forms:
+            invalid_generic_forms += (ClassVar,)
+            if is_argument:
+                invalid_generic_forms += (Final,)
+    
+        arg = _type_convert(arg, module=module, allow_special_forms=allow_special_forms)
+        if (isinstance(arg, _GenericAlias) and
+                arg.__origin__ in invalid_generic_forms):
+            raise TypeError(f"{arg} is not valid as type argument")
+        if arg in (Any, NoReturn, Final, TypeAlias):
+            return arg
+        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
+            raise TypeError(f"Plain {arg} is not valid as type argument")
+        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec,
+                            ParamSpecArgs, ParamSpecKwargs)):
+            return arg
+        if not callable(arg):
+>           raise TypeError(f"{msg} Got {arg!r:.100}.")
+E           TypeError: Annotated[t, ...]: t must be a type. Got (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None).
+
+/usr/local/lib/python3.10/typing.py:176: TypeError
+_________________________ test_fields_extension[True] __________________________
+
+validate = True
+TestCoreClient = <class 'conftest.TestCoreClient.<locals>.CoreClient'>
+item_dict = {'assets': {}, 'bbox': [-180.0, -90.0, 180.0, 90.0], 'geometry': {'coordinates': [0.0, 0.0], 'type': 'Point'}, 'id': 'test_item', ...}
+
+    @pytest.mark.parametrize("validate", [True, False])
+    def test_fields_extension(validate, TestCoreClient, item_dict):
+        """Test if fields Parameters are passed correctly."""
+    
+        class BadCoreClient(BaseCoreClient):
+            def post_search(
+                self, search_request: BaseSearchPostRequest, **kwargs
+            ) -> stac.ItemCollection:
+                resp = {"not": "a proper stac item"}
+    
+                # if `fields` extension is enabled, then we return a JSONResponse
+                # to avoid Item validation
+                if getattr(search_request, "fields", None):
+                    return JSONResponse(content=resp)
+    
+                return resp
+    
+            def get_search(
+                self,
+                collections: Optional[List[str]] = None,
+                ids: Optional[List[str]] = None,
+                bbox: Optional[List[NumType]] = None,
+                intersects: Optional[str] = None,
+                datetime: Optional[Union[str, datetime]] = None,
+                limit: Optional[int] = 10,
+                **kwargs,
+            ) -> stac.ItemCollection:
+                resp = {"not": "a proper stac item"}
+    
+                # if `fields` extension is enabled, then we return a JSONResponse
+                # to avoid Item validation
+                if "fields" in kwargs:
+                    return JSONResponse(content=resp)
+    
+                return resp
+    
+            def get_item(self, item_id: str, collection_id: str, **kwargs) -> stac.Item:
+                raise NotImplementedError
+    
+            def all_collections(self, **kwargs) -> stac.Collections:
+                raise NotImplementedError
+    
+            def get_collection(self, collection_id: str, **kwargs) -> stac.Collection:
+                raise NotImplementedError
+    
+            def item_collection(
+                self,
+                collection_id: str,
+                bbox: Optional[List[Union[float, int]]] = None,
+                datetime: Optional[Union[str, datetime]] = None,
+                limit: int = 10,
+                token: str = None,
+                **kwargs,
+            ) -> stac.ItemCollection:
+                raise NotImplementedError
+    
+        # With FieldsExtension
+>       test_app = app.StacApi(
+            settings=ApiSettings(enable_response_models=validate),
+            client=BadCoreClient(),
+            search_get_request_model=create_get_request_model([FieldsExtension()]),
+            search_post_request_model=create_post_request_model([FieldsExtension()]),
+            extensions=[FieldsExtension()],
+        )
+
+stac_fastapi/api/tests/test_app.py:260: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<attrs generated methods stac_fastapi.api.app.StacApi>:84: in __init__
+    self.__attrs_post_init__()
+stac_fastapi/api/stac_fastapi/api/app.py:452: in __attrs_post_init__
+    self.register_core()
+stac_fastapi/api/stac_fastapi/api/app.py:385: in register_core
+    self.register_get_search()
+stac_fastapi/api/stac_fastapi/api/app.py:254: in register_get_search
+    self.router.add_api_route(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:1064: in add_api_route
+    route = route_class(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:665: in __init__
+    self.dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:301: in get_dependant
+    sub_dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:279: in get_dependant
+    param_details = analyze_param(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:508: in analyze_param
+    field = create_model_field(
+/usr/local/lib/python3.10/site-packages/fastapi/utils.py:73: in create_model_field
+    return v2.ModelField(mode=mode, name=name, field_info=field_info)
+<string>:7: in __init__
+    ???
+/usr/local/lib/python3.10/site-packages/fastapi/_compat/v2.py:151: in __post_init__
+    Annotated[annotated_args],
+/usr/local/lib/python3.10/typing.py:312: in inner
+    return func(*args, **kwds)
+/usr/local/lib/python3.10/typing.py:1702: in __class_getitem__
+    origin = _type_check(params[0], msg, allow_special_forms=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+arg = (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None)
+msg = 'Annotated[t, ...]: t must be a type.', is_argument = True, module = None
+
+    def _type_check(arg, msg, is_argument=True, module=None, *, allow_special_forms=False):
+        """Check that the argument is a type, and return it (internal helper).
+    
+        As a special case, accept None and return type(None) instead. Also wrap strings
+        into ForwardRef instances. Consider several corner cases, for example plain
+        special forms like Union are not valid, while Union[int, str] is OK, etc.
+        The msg argument is a human-readable error message, e.g::
+    
+            "Union[arg, ...]: arg should be a type."
+    
+        We append the repr() of the actual value (truncated to 100 chars).
+        """
+        invalid_generic_forms = (Generic, Protocol)
+        if not allow_special_forms:
+            invalid_generic_forms += (ClassVar,)
+            if is_argument:
+                invalid_generic_forms += (Final,)
+    
+        arg = _type_convert(arg, module=module, allow_special_forms=allow_special_forms)
+        if (isinstance(arg, _GenericAlias) and
+                arg.__origin__ in invalid_generic_forms):
+            raise TypeError(f"{arg} is not valid as type argument")
+        if arg in (Any, NoReturn, Final, TypeAlias):
+            return arg
+        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
+            raise TypeError(f"Plain {arg} is not valid as type argument")
+        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec,
+                            ParamSpecArgs, ParamSpecKwargs)):
+            return arg
+        if not callable(arg):
+>           raise TypeError(f"{msg} Got {arg!r:.100}.")
+E           TypeError: Annotated[t, ...]: t must be a type. Got (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None).
+
+/usr/local/lib/python3.10/typing.py:176: TypeError
+_________________________ test_fields_extension[False] _________________________
+
+validate = False
+TestCoreClient = <class 'conftest.TestCoreClient.<locals>.CoreClient'>
+item_dict = {'assets': {}, 'bbox': [-180.0, -90.0, 180.0, 90.0], 'geometry': {'coordinates': [0.0, 0.0], 'type': 'Point'}, 'id': 'test_item', ...}
+
+    @pytest.mark.parametrize("validate", [True, False])
+    def test_fields_extension(validate, TestCoreClient, item_dict):
+        """Test if fields Parameters are passed correctly."""
+    
+        class BadCoreClient(BaseCoreClient):
+            def post_search(
+                self, search_request: BaseSearchPostRequest, **kwargs
+            ) -> stac.ItemCollection:
+                resp = {"not": "a proper stac item"}
+    
+                # if `fields` extension is enabled, then we return a JSONResponse
+                # to avoid Item validation
+                if getattr(search_request, "fields", None):
+                    return JSONResponse(content=resp)
+    
+                return resp
+    
+            def get_search(
+                self,
+                collections: Optional[List[str]] = None,
+                ids: Optional[List[str]] = None,
+                bbox: Optional[List[NumType]] = None,
+                intersects: Optional[str] = None,
+                datetime: Optional[Union[str, datetime]] = None,
+                limit: Optional[int] = 10,
+                **kwargs,
+            ) -> stac.ItemCollection:
+                resp = {"not": "a proper stac item"}
+    
+                # if `fields` extension is enabled, then we return a JSONResponse
+                # to avoid Item validation
+                if "fields" in kwargs:
+                    return JSONResponse(content=resp)
+    
+                return resp
+    
+            def get_item(self, item_id: str, collection_id: str, **kwargs) -> stac.Item:
+                raise NotImplementedError
+    
+            def all_collections(self, **kwargs) -> stac.Collections:
+                raise NotImplementedError
+    
+            def get_collection(self, collection_id: str, **kwargs) -> stac.Collection:
+                raise NotImplementedError
+    
+            def item_collection(
+                self,
+                collection_id: str,
+                bbox: Optional[List[Union[float, int]]] = None,
+                datetime: Optional[Union[str, datetime]] = None,
+                limit: int = 10,
+                token: str = None,
+                **kwargs,
+            ) -> stac.ItemCollection:
+                raise NotImplementedError
+    
+        # With FieldsExtension
+>       test_app = app.StacApi(
+            settings=ApiSettings(enable_response_models=validate),
+            client=BadCoreClient(),
+            search_get_request_model=create_get_request_model([FieldsExtension()]),
+            search_post_request_model=create_post_request_model([FieldsExtension()]),
+            extensions=[FieldsExtension()],
+        )
+
+stac_fastapi/api/tests/test_app.py:260: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<attrs generated methods stac_fastapi.api.app.StacApi>:84: in __init__
+    self.__attrs_post_init__()
+stac_fastapi/api/stac_fastapi/api/app.py:452: in __attrs_post_init__
+    self.register_core()
+stac_fastapi/api/stac_fastapi/api/app.py:385: in register_core
+    self.register_get_search()
+stac_fastapi/api/stac_fastapi/api/app.py:254: in register_get_search
+    self.router.add_api_route(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:1064: in add_api_route
+    route = route_class(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:665: in __init__
+    self.dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:301: in get_dependant
+    sub_dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:279: in get_dependant
+    param_details = analyze_param(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:508: in analyze_param
+    field = create_model_field(
+/usr/local/lib/python3.10/site-packages/fastapi/utils.py:73: in create_model_field
+    return v2.ModelField(mode=mode, name=name, field_info=field_info)
+<string>:7: in __init__
+    ???
+/usr/local/lib/python3.10/site-packages/fastapi/_compat/v2.py:151: in __post_init__
+    Annotated[annotated_args],
+/usr/local/lib/python3.10/typing.py:312: in inner
+    return func(*args, **kwds)
+/usr/local/lib/python3.10/typing.py:1702: in __class_getitem__
+    origin = _type_check(params[0], msg, allow_special_forms=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+arg = (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None)
+msg = 'Annotated[t, ...]: t must be a type.', is_argument = True, module = None
+
+    def _type_check(arg, msg, is_argument=True, module=None, *, allow_special_forms=False):
+        """Check that the argument is a type, and return it (internal helper).
+    
+        As a special case, accept None and return type(None) instead. Also wrap strings
+        into ForwardRef instances. Consider several corner cases, for example plain
+        special forms like Union are not valid, while Union[int, str] is OK, etc.
+        The msg argument is a human-readable error message, e.g::
+    
+            "Union[arg, ...]: arg should be a type."
+    
+        We append the repr() of the actual value (truncated to 100 chars).
+        """
+        invalid_generic_forms = (Generic, Protocol)
+        if not allow_special_forms:
+            invalid_generic_forms += (ClassVar,)
+            if is_argument:
+                invalid_generic_forms += (Final,)
+    
+        arg = _type_convert(arg, module=module, allow_special_forms=allow_special_forms)
+        if (isinstance(arg, _GenericAlias) and
+                arg.__origin__ in invalid_generic_forms):
+            raise TypeError(f"{arg} is not valid as type argument")
+        if arg in (Any, NoReturn, Final, TypeAlias):
+            return arg
+        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
+            raise TypeError(f"Plain {arg} is not valid as type argument")
+        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec,
+                            ParamSpecArgs, ParamSpecKwargs)):
+            return arg
+        if not callable(arg):
+>           raise TypeError(f"{msg} Got {arg!r:.100}.")
+E           TypeError: Annotated[t, ...]: t must be a type. Got (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None).
+
+/usr/local/lib/python3.10/typing.py:176: TypeError
+______________________________ test_request_model ______________________________
+
+AsyncTestCoreClient = <class 'conftest.AsyncTestCoreClient.<locals>.AsyncCoreClient'>
+
+    def test_request_model(AsyncTestCoreClient):
+        """Test if request models are passed correctly."""
+    
+        @attr.s
+        class CollectionsRequest(APIRequest):
+            user: Annotated[str, Query(...)] = attr.ib()
+    
+        @attr.s
+        class CollectionRequest(APIRequest):
+            collection_id: Annotated[str, Path(description="Collection ID")] = attr.ib()
+            user: Annotated[str, Query(...)] = attr.ib()
+    
+        @attr.s
+        class ItemsRequest(APIRequest):
+            collection_id: Annotated[str, Path(description="Collection ID")] = attr.ib()
+            user: Annotated[str, Query(...)] = attr.ib()
+    
+        @attr.s
+        class ItemRequest(APIRequest):
+            collection_id: Annotated[str, Path(description="Collection ID")] = attr.ib()
+            item_id: Annotated[str, Path(description="Item ID")] = attr.ib()
+            user: Annotated[str, Query(...)] = attr.ib()
+    
+        test_app = app.StacApi(
+            settings=ApiSettings(),
+            client=AsyncTestCoreClient(),
+            collections_get_request_model=CollectionsRequest,
+            collection_get_request_model=CollectionRequest,
+            items_get_request_model=ItemsRequest,
+            item_get_request_model=ItemRequest,
+            extensions=[],
+        )
+    
+>       with TestClient(test_app.app) as client:
+
+stac_fastapi/api/tests/test_app.py:362: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:688: in __enter__
+    portal.call(self.wait_startup)
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:334: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:717: in wait_startup
+    message = await receive()
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:714: in receive
+    self.task.result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:704: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1134: in __call__
+    await super().__call__(scope, receive, send)
+/usr/local/lib/python3.10/site-packages/starlette/applications.py:106: in __call__
+    self.middleware_stack = self.build_middleware_stack()
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1042: in build_middleware_stack
+    app = cls(app, *args, **kwargs)
+stac_fastapi/api/stac_fastapi/api/middleware.py:35: in __init__
+    super().__init__(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <stac_fastapi.api.middleware.CORSMiddleware object at 0x7ffff3c54610>
+app = <brotli_asgi.BrotliMiddleware object at 0x7ffff3c566e0>
+allow_origins = ('*',), allow_methods = ('OPTIONS', 'POST', 'GET')
+allow_headers = ('Content-Type',), allow_credentials = False
+allow_origin_regex = None, allow_private_network = (), expose_headers = 600
+max_age = 600
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        allow_origins: Sequence[str] = (),
+        allow_methods: Sequence[str] = ("GET",),
+        allow_headers: Sequence[str] = (),
+        allow_credentials: bool = False,
+        allow_origin_regex: str | None = None,
+        allow_private_network: bool = False,
+        expose_headers: Sequence[str] = (),
+        max_age: int = 600,
+    ) -> None:
+        if "*" in allow_methods:
+            allow_methods = ALL_METHODS
+    
+        compiled_allow_origin_regex = None
+        if allow_origin_regex is not None:
+            compiled_allow_origin_regex = re.compile(allow_origin_regex)
+    
+        allow_all_origins = "*" in allow_origins
+        allow_all_headers = "*" in allow_headers
+        preflight_explicit_allow_origin = not allow_all_origins or allow_credentials
+    
+        simple_headers: dict[str, str] = {}
+        if allow_all_origins:
+            simple_headers["Access-Control-Allow-Origin"] = "*"
+        if allow_credentials:
+            simple_headers["Access-Control-Allow-Credentials"] = "true"
+        if expose_headers:
+>           simple_headers["Access-Control-Expose-Headers"] = ", ".join(expose_headers)
+E           TypeError: can only join an iterable
+
+/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py:45: TypeError
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-77.xml ------------
+=========================== short test summary info ============================
+PASSED stac_fastapi/api/tests/test_app.py::test_client_openapi
+FAILED stac_fastapi/api/tests/test_app.py::test_client_response_type - TypeEr...
+FAILED stac_fastapi/api/tests/test_app.py::test_client_invalid_response_type[True]
+FAILED stac_fastapi/api/tests/test_app.py::test_client_invalid_response_type[False]
+FAILED stac_fastapi/api/tests/test_app.py::test_filter_extension[True] - Type...
+FAILED stac_fastapi/api/tests/test_app.py::test_filter_extension[False] - Typ...
+FAILED stac_fastapi/api/tests/test_app.py::test_fields_extension[True] - Type...
+FAILED stac_fastapi/api/tests/test_app.py::test_fields_extension[False] - Typ...
+FAILED stac_fastapi/api/tests/test_app.py::test_request_model - TypeError: ca...
+========================= 8 failed, 1 passed in 1.35s ==========================

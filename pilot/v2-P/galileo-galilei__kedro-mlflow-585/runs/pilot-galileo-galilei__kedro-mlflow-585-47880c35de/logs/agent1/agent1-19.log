@@ -1,0 +1,29 @@
+Testing basic PipelineML creation...
+Created PipelineML: <class 'kedro_mlflow.pipeline.pipeline_ml.PipelineML'>
+Training pipeline: <class 'kedro.pipeline.pipeline.Pipeline'>
+Inference set: True
+
+Testing only_nodes_with_namespace...
+Log output: This method is not implemented because it does not make sense for 'PipelineML'. Manipulate directly the training pipeline and recreate the 'PipelineML' with 'pipeline_ml_factory' factory. (kedro-viz but should never be)
+Result type: <class 'kedro.pipeline.pipeline.Pipeline'>
+Is Pipeline: True
+Is NOT PipelineML: True
+Has expected log message: True
+
+Testing __sub__...
+
+💥 ERROR during testing: Failed to create node <lambda>([unused]) -> [unused].
+A node cannot have the same inputs and outputs even if they are transcoded: {'unused'}
+Traceback (most recent call last):
+  File "/tmp/verify_fix2.py", line 105, in <module>
+    test2_pass = test_subtraction(pipeline_ml)
+  File "/tmp/verify_fix2.py", line 83, in test_subtraction
+    other_pipeline = Pipeline([node(lambda x: x, inputs="unused", outputs="unused")])
+  File "/usr/local/lib/python3.10/site-packages/kedro/pipeline/node.py", line 660, in node
+    return Node(
+  File "/usr/local/lib/python3.10/site-packages/kedro/pipeline/node.py", line 151, in __init__
+    self._validate_inputs_dif_than_outputs()
+  File "/usr/local/lib/python3.10/site-packages/kedro/pipeline/node.py", line 565, in _validate_inputs_dif_than_outputs
+    raise ValueError(
+ValueError: Failed to create node <lambda>([unused]) -> [unused].
+A node cannot have the same inputs and outputs even if they are transcoded: {'unused'}

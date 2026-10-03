@@ -1,0 +1,11 @@
+        A list of models representing a perturbation at each grid square.^M$
+^M$
+        By default models have priors with limits at the edges of a grid square.^M$
+        These limits can be scaled using the limit_scale variable. If the variable^M$
+        is 2 then the priors will have width twice the step size.^M$
+        """^M$
+        half_step = self.limit_scale * self.step_size / 2^M$
+        for list_ in self._lists:^M$
+            limits = [^M$
+                (^M$
+                    prior.value_for(max(0.0, centre - half_step)),^M$

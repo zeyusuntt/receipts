@@ -1,0 +1,98 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /PythonFMU
+configfile: setup.cfg
+collecting ... collected 1 item
+
+pythonfmu/tests/test_csvslave.py::test_csvslave FAILED                   [100%]
+
+=================================== FAILURES ===================================
+________________________________ test_csvslave _________________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-5/test_csvslave0')
+
+    def test_csvslave(tmp_path):
+    
+        csv_file = Path(__file__).parent / "data/csvdemo.csv"
+    
+        fmu = CsvFmuBuilder.build_FMU(csv_file, dest=tmp_path)
+        assert fmu.exists()
+    
+        model_description = fmpy.read_model_description(fmu)
+        unzip_dir = fmpy.extract(fmu)
+    
+>       model = fmpy.fmi2.FMU2Slave(
+            guid=model_description.guid,
+            unzipDirectory=unzip_dir,
+            modelIdentifier=model_description.coSimulation.modelIdentifier,
+            instanceName='instance1')
+
+pythonfmu/tests/test_csvslave.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/fmpy/fmi2.py:674: in __init__
+    super(FMU2Slave, self).__init__(**kwargs)
+/usr/local/lib/python3.10/site-packages/fmpy/fmi2.py:103: in __init__
+    super(_FMU2, self).__init__(**kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fmpy.fmi2.FMU2Slave object at 0x7ffff6e732e0>
+guid = '1a25fb66-bf56-11f1-afc2-024b023d1803', modelIdentifier = 'Csvdemo'
+unzipDirectory = PosixPath('/tmp/tmpx4twvswk'), instanceName = 'instance1'
+libraryPath = '/tmp/tmpx4twvswk/binaries/linux64/Csvdemo.so'
+fmiCallLogger = None, requireFunctions = True
+
+    def __init__(
+        self,
+        guid,
+        modelIdentifier,
+        unzipDirectory,
+        instanceName=None,
+        libraryPath=None,
+        fmiCallLogger=None,
+        requireFunctions=True,
+    ):
+        """
+        Parameters:
+            guid             the GUI from the modelDescription.xml
+            modelIdentifier  the model identifier from the modelDescription.xml
+            unzipDirectory   folder where the FMU has been extracted
+            instanceName     the name of the FMU instance
+            libraryPath      path to the shared library
+            fmiCallLogger    logger callback that takes a message as input
+            requireFunctions assert required FMI functions in the shared library
+        """
+    
+        self.guid = guid
+        self.modelIdentifier = modelIdentifier
+        self.unzipDirectory = unzipDirectory
+        self.instanceName = (
+            instanceName if instanceName is not None else self.modelIdentifier
+        )
+        self.fmiCallLogger = fmiCallLogger
+        self.requireFunctions = requireFunctions
+    
+        self._functions: dict[str, ctypes._FuncPointer] = dict()
+        """Functions loaded from the shared library"""
+    
+        # remember the current working directory
+        work_dir = os.getcwd()
+    
+        if libraryPath is None:
+            library_dir = os.path.join(unzipDirectory, "binaries", platform)
+            library_dir = os.path.abspath(library_dir)
+            libraryPath = str(
+                os.path.join(library_dir, self.modelIdentifier + sharedLibraryExtension)
+            )
+        else:
+            library_dir = os.path.dirname(libraryPath)
+    
+        # check if shared library exists
+        if not os.path.isfile(libraryPath):
+>           raise Exception("Cannot find shared library %s." % libraryPath)
+E           Exception: Cannot find shared library /tmp/tmpx4twvswk/binaries/linux64/Csvdemo.so.
+
+/usr/local/lib/python3.10/site-packages/fmpy/fmi1.py:191: Exception
+----------- generated xml file: /opt/receipts/reports/agent1-11.xml ------------
+=========================== short test summary info ============================
+FAILED pythonfmu/tests/test_csvslave.py::test_csvslave - Exception: Cannot fi...
+============================== 1 failed in 0.42s ===============================

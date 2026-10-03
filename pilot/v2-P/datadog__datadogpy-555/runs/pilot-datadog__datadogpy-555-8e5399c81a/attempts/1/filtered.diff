@@ -1,0 +1,38 @@
+diff --git a/datadog/dogshell/wrap.py b/datadog/dogshell/wrap.py
+index 022b333..1ff0ed3 100644
+--- a/datadog/dogshell/wrap.py
++++ b/datadog/dogshell/wrap.py
+@@ -201,18 +201,30 @@ def build_event_body(cmd, returncode, stdout, stderr, notifications):
+     max_length = MAX_EVENT_BODY_LENGTH // 2 if stdout and stderr else MAX_EVENT_BODY_LENGTH
+ 
+     if stdout:
++        if isinstance(stdout, bytes):
++            stdout_decoded = stdout.decode("utf-8", "replace")
++        else:
++            stdout_decoded = stdout
+         fmt_stdout = u"**>>>> STDOUT <<<<**\n```\n{stdout} \n```\n".format(
+-            stdout=trim_text(stdout.decode("utf-8", "replace"), max_length)
++            stdout=trim_text(stdout_decoded, max_length)
+         )
+ 
+     if stderr:
++        if isinstance(stderr, bytes):
++            stderr_decoded = stderr.decode("utf-8", "replace")
++        else:
++            stderr_decoded = stderr
+         fmt_stderr = u"**>>>> STDERR <<<<**\n```\n{stderr} \n```\n".format(
+-            stderr=trim_text(stderr.decode("utf-8", "replace"), max_length)
++            stderr=trim_text(stderr_decoded, max_length)
+         )
+ 
+     if notifications:
++        if isinstance(notifications, bytes):
++            notifications_decoded = notifications.decode("utf-8", "replace")
++        else:
++            notifications_decoded = notifications
+         fmt_notifications = u"**>>>> NOTIFICATIONS <<<<**\n\n {notifications}\n".format(
+-            notifications=notifications.decode("utf-8", "replace")
++            notifications=notifications_decoded
+         )
+ 
+     return \

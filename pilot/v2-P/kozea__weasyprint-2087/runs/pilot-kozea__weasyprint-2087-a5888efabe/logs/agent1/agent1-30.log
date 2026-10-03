@@ -1,0 +1,343 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /WeasyPrint
+configfile: pyproject.toml
+plugins: xdist-3.8.0
+collecting ... collected 1 item
+
+tests/layout/test_table.py::test_layout_table_auto_32 FAILED
+
+=================================== FAILURES ===================================
+__________________________ test_layout_table_auto_32 ___________________________
+
+    @assert_no_logs
+    def test_layout_table_auto_32():
+        # Table with a cell larger than the table's width
+>       page, = render_pages('''
+          <table style="width: 400px; margin: 100px">
+            <td style="width: 500px"></td>
+          </table>
+        ''')
+
+tests/layout/test_table.py:1115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/testing_utils.py:220: in render_pages
+    FakeHTML(string=html_content, base_url=BASE_URL).render().pages]
+weasyprint/__init__.py:216: in render
+    return Document._render(self, font_config, counter_style, options)
+weasyprint/document.py:261: in _render
+    [Page(page_box) for page_box in page_boxes],
+weasyprint/document.py:261: in <listcomp>
+    [Page(page_box) for page_box in page_boxes],
+weasyprint/layout/__init__.py:130: in layout_document
+    pages = list(make_all_pages(context, root_box, html, pages))
+weasyprint/layout/page.py:905: in make_all_pages
+    page, resume_at = remake_page(i, context, root_box, html)
+weasyprint/layout/page.py:843: in remake_page
+    page, resume_at, next_page = make_page(
+weasyprint/layout/page.py:645: in make_page
+    root_box, resume_at, next_page, _, _, _ = block_level_layout(
+weasyprint/layout/block.py:59: in block_level_layout
+    return block_level_layout_switch(
+weasyprint/layout/block.py:75: in block_level_layout_switch
+    return block_box_layout(
+weasyprint/layout/block.py:120: in block_box_layout
+    result = block_container_layout(
+weasyprint/layout/block.py:709: in block_container_layout
+    next_page, new_children, new_max_lines) = _in_flow_layout(
+weasyprint/layout/block.py:502: in _in_flow_layout
+    collapsing_through, max_lines) = block_level_layout(
+weasyprint/layout/block.py:59: in block_level_layout
+    return block_level_layout_switch(
+weasyprint/layout/block.py:75: in block_level_layout_switch
+    return block_box_layout(
+weasyprint/layout/block.py:120: in block_box_layout
+    result = block_container_layout(
+weasyprint/layout/block.py:709: in block_container_layout
+    next_page, new_children, new_max_lines) = _in_flow_layout(
+weasyprint/layout/block.py:502: in _in_flow_layout
+    collapsing_through, max_lines) = block_level_layout(
+weasyprint/layout/block.py:59: in block_level_layout
+    return block_level_layout_switch(
+weasyprint/layout/block.py:75: in block_level_layout_switch
+    return block_box_layout(
+weasyprint/layout/block.py:116: in block_box_layout
+    table_wrapper_width(
+weasyprint/layout/table.py:820: in table_wrapper_width
+    auto_table_layout(context, wrapper, containing_block)
+weasyprint/layout/table.py:720: in auto_table_layout
+    table_and_columns_preferred_widths(context, box, outer=False)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+context = <weasyprint.layout.LayoutContext object at 0x7ffff423f190>
+box = <BlockBox table>, outer = False
+
+    def table_and_columns_preferred_widths(context, box, outer=True):
+        """Return content widths for the auto layout table and its columns.
+    
+        The tuple returned is
+        ``(table_min_content_width, table_max_content_width,
+           column_min_content_widths, column_max_content_widths,
+           column_intrinsic_percentages, constrainedness,
+           total_horizontal_border_spacing, grid)``
+    
+        https://dbaron.org/css/intrinsic/
+    
+        """
+        from .table import distribute_excess_width
+    
+        table = box.get_wrapped_table()
+        result = context.tables.get(table)
+        if result:
+            return result[outer]
+    
+        # Create the grid
+        grid_width, grid_height = 0, 0
+        row_number = 0
+        for row_group in table.children:
+            for row in row_group.children:
+                for cell in row.children:
+                    grid_width = max(cell.grid_x + cell.colspan, grid_width)
+                    grid_height = max(row_number + cell.rowspan, grid_height)
+                row_number += 1
+        grid = [[None] * grid_width for i in range(grid_height)]
+        row_number = 0
+        for row_group in table.children:
+            for row in row_group.children:
+                for cell in row.children:
+                    grid[row_number][cell.grid_x] = cell
+                row_number += 1
+    
+        zipped_grid = list(zip(*grid))
+    
+        # Define the total horizontal border spacing
+        if table.style['border_collapse'] == 'separate' and grid_width > 0:
+            total_horizontal_border_spacing = (
+                table.style['border_spacing'][0] *
+                (1 + len([column for column in zipped_grid if any(column)])))
+        else:
+            total_horizontal_border_spacing = 0
+    
+        if grid_width == 0 or grid_height == 0:
+            table.children = []
+            min_width = block_min_content_width(context, table, outer=False)
+            max_width = block_max_content_width(context, table, outer=False)
+            outer_min_width = adjust(
+                box, outer=True, width=block_min_content_width(context, table))
+            outer_max_width = adjust(
+                box, outer=True, width=block_max_content_width(context, table))
+            result = ([], [], [], [], total_horizontal_border_spacing, [])
+            context.tables[table] = result = {
+                False: (min_width, max_width) + result,
+                True: (outer_min_width, outer_max_width) + result,
+            }
+            return result[outer]
+    
+        column_groups = [None] * grid_width
+        columns = [None] * grid_width
+        column_number = 0
+        for column_group in table.column_groups:
+            for column in column_group.children:
+                column_groups[column_number] = column_group
+                columns[column_number] = column
+                column_number += 1
+                if column_number == grid_width:
+                    break
+            else:
+                continue
+            break
+    
+        colspan_cells = []
+    
+        # Define the intermediate content widths
+        min_content_widths = [0 for i in range(grid_width)]
+        max_content_widths = [0 for i in range(grid_width)]
+        intrinsic_percentages = [0 for i in range(grid_width)]
+    
+        # Intermediate content widths for span 1
+        for i in range(grid_width):
+            for groups in (column_groups, columns):
+                if groups[i]:
+                    min_content_widths[i] = max(
+                        min_content_widths[i],
+                        min_content_width(context, groups[i]))
+                    max_content_widths[i] = max(
+                        max_content_widths[i],
+                        max_content_width(context, groups[i]))
+                    intrinsic_percentages[i] = max(
+                        intrinsic_percentages[i],
+                        _percentage_contribution(groups[i]))
+            for cell in zipped_grid[i]:
+                if cell:
+                    if cell.colspan == 1:
+                        min_content_widths[i] = max(
+                            min_content_widths[i],
+                            min_content_width(context, cell))
+                        max_content_widths[i] = max(
+                            max_content_widths[i],
+                            max_content_width(context, cell))
+                        intrinsic_percentages[i] = max(
+                            intrinsic_percentages[i],
+                            _percentage_contribution(cell))
+                    else:
+                        colspan_cells.append(cell)
+    
+        # Intermediate content widths for span > 1 is wrong in the 4.1 section, as
+        # explained in its third issue. Min- and max-content widths are handled by
+        # the excess width distribution method, and percentages do not distribute
+        # widths to columns that have originating cells.
+    
+        # Intermediate intrinsic percentage widths for span > 1
+        for span in range(1, grid_width):
+            percentage_contributions = []
+            for i in range(grid_width):
+                percentage_contribution = intrinsic_percentages[i]
+                for j, cell in enumerate(zipped_grid[i]):
+                    indexes = [k for k in range(i + 1) if grid[j][k]]
+                    if not indexes:
+                        continue
+                    origin = max(indexes)
+                    origin_cell = grid[j][origin]
+                    if origin_cell.colspan - 1 != span:
+                        continue
+                    cell_slice = slice(origin, origin + origin_cell.colspan)
+                    baseline_percentage = sum(intrinsic_percentages[cell_slice])
+    
+                    # Cell contribution to intrinsic percentage width
+                    if intrinsic_percentages[i] == 0:
+                        diff = max(
+                            0,
+                            _percentage_contribution(origin_cell) -
+                            baseline_percentage)
+                        other_columns_contributions = [
+                            max_content_widths[j]
+                            for j in range(
+                                origin, origin + origin_cell.colspan)
+                            if intrinsic_percentages[j] == 0]
+                        other_columns_contributions_sum = sum(
+                            other_columns_contributions)
+                        if other_columns_contributions_sum == 0:
+                            if other_columns_contributions:
+                                ratio = 1 / len(other_columns_contributions)
+                            else:
+                                ratio = 1
+                        else:
+                            ratio = (
+                                max_content_widths[i] /
+                                other_columns_contributions_sum)
+                        percentage_contribution = max(
+                            percentage_contribution,
+                            diff * ratio)
+    
+                percentage_contributions.append(percentage_contribution)
+    
+            intrinsic_percentages = percentage_contributions
+    
+        # Define constrainedness
+        constrainedness = [False for i in range(grid_width)]
+        for i in range(grid_width):
+            if (column_groups[i] and column_groups[i].style['width'] != 'auto' and
+                    column_groups[i].style['width'].unit != '%'):
+                constrainedness[i] = True
+                continue
+            if (columns[i] and columns[i].style['width'] != 'auto' and
+                    columns[i].style['width'].unit != '%'):
+                constrainedness[i] = True
+                continue
+            for cell in zipped_grid[i]:
+                if (cell and cell.colspan == 1 and
+                        cell.style['width'] != 'auto' and
+                        cell.style['width'].unit != '%'):
+                    constrainedness[i] = True
+                    break
+    
+        intrinsic_percentages = [
+            min(percentage, 100 - sum(intrinsic_percentages[:i]))
+            for i, percentage in enumerate(intrinsic_percentages)]
+    
+        # Max- and min-content widths for span > 1
+        for cell in colspan_cells:
+            min_content = min_content_width(context, cell)
+            max_content = max_content_width(context, cell)
+            column_slice = slice(cell.grid_x, cell.grid_x + cell.colspan)
+            columns_min_content = sum(min_content_widths[column_slice])
+            columns_max_content = sum(max_content_widths[column_slice])
+            if table.style['border_collapse'] == 'separate':
+                spacing = (cell.colspan - 1) * table.style['border_spacing'][0]
+            else:
+                spacing = 0
+    
+            if min_content > columns_min_content + spacing:
+                excess_width = min_content - (columns_min_content + spacing)
+                distribute_excess_width(
+                    context, zipped_grid, excess_width, min_content_widths,
+                    constrainedness, intrinsic_percentages, max_content_widths,
+                    column_slice)
+    
+            if max_content > columns_max_content + spacing:
+                excess_width = max_content - (columns_max_content + spacing)
+                distribute_excess_width(
+                    context, zipped_grid, excess_width, max_content_widths,
+                    constrainedness, intrinsic_percentages, max_content_widths,
+                    column_slice)
+    
+        # Calculate the max- and min-content widths of table and columns
+        small_percentage_contributions = [
+            max_content_widths[i] / (intrinsic_percentages[i] / 100)
+            for i in range(grid_width)
+            if intrinsic_percentages[i]]
+        large_percentage_contribution_numerator = sum(
+            max_content_widths[i] for i in range(grid_width)
+            if intrinsic_percentages[i] == 0)
+        large_percentage_contribution_denominator = (
+            (100 - sum(intrinsic_percentages)) / 100)
+        if large_percentage_contribution_denominator == 0:
+            if large_percentage_contribution_numerator == 0:
+                large_percentage_contribution = 0
+            else:
+                # "the large percentage contribution of the table [is] an
+                # infinitely large number if the numerator is nonzero [and] the
+                # denominator of that ratio is 0."
+                #
+                # https://dbaron.org/css/intrinsic/#autotableintrinsic
+                #
+                # Please note that "an infinitely large number" is not "infinite",
+                # and that's probably not a coincindence: putting 'inf' here breaks
+                # some cases (see #305).
+                large_percentage_contribution = sys.maxsize
+        else:
+            large_percentage_contribution = (
+                large_percentage_contribution_numerator /
+                large_percentage_contribution_denominator)
+    
+        table_min_content_width = (
+            total_horizontal_border_spacing + sum(min_content_widths))
+        table_max_content_width = (
+            total_horizontal_border_spacing + max(
+                [sum(max_content_widths), large_percentage_contribution] +
+                small_percentage_contributions))
+    
+        if table.style['width'] != 'auto' and table.style['width'].unit == 'px':
+            # "percentages on the following properties are treated instead as
+            # though they were the following: width: auto"
+            # https://dbaron.org/css/intrinsic/#outer-intrinsic
+            table_min_width = table_max_width = table.style['width'].value
+        else:
+            table_min_width = table_min_content_width
+            table_max_width = table_max_content_width
+    
+        # DEBUG: Table intrinsic width calculation
+>       print(f"DEBUG: table.style.width = {table.style.width}")
+E       AttributeError: 'ComputedStyle' object has no attribute 'width'
+
+weasyprint/layout/preferred.py:639: AttributeError
+------------------------------ Captured log call -------------------------------
+INFO     weasyprint.progress:__init__.py:158 Step 1 - Fetching and parsing HTML - HTML string
+INFO     weasyprint.progress:__init__.py:67 Step 3 - Applying CSS
+INFO     weasyprint.progress:document.py:237 Step 4 - Creating formatting structure
+INFO     weasyprint.progress:page.py:899 Step 5 - Creating layout - Page 1
+----------- generated xml file: /opt/receipts/reports/agent1-30.xml ------------
+=========================== short test summary info ============================
+FAILED tests/layout/test_table.py::test_layout_table_auto_32 - AttributeError...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.41s ===============================

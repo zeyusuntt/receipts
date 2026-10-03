@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /music21
+configfile: pyproject.toml
+plugins: anyio-4.12.1, nbval-0.11.0
+collecting ... collected 1 item
+
+music21/musicxml/test_m21ToXml.py::Test::testExportChordSymbolWithInversions FAILED
+
+=================================== FAILURES ===================================
+___________________ Test.testExportChordSymbolWithInversions ___________________
+
+self = <music21.musicxml.test_m21ToXml.Test testMethod=testExportChordSymbolWithInversions>
+
+    def testExportChordSymbolWithInversions(self):
+        '''
+        This test checks for the issue in 1756 where a chord symbol imported
+        with both inversion and bass would not have them both set.
+    
+        There were multiple bugs fixed, so important to check.
+        '''
+        explicitFm6 = harmony.ChordSymbol(root='F', bass='A-', inversion=1, kind='minor')
+        et = self.getET(explicitFm6)
+        harmonyEls = et.findall('part/measure/harmony')
+        self.assertEqual(len(harmonyEls), 1)
+        harmonyEl = harmonyEls[0]
+        # helpers.dump(harmonyEl)
+        root = harmonyEl.find('root')
+        rootStep = root.find('root-step')

@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/usr/local/bin/openmdao", line 7, in <module>
+    sys.exit(openmdao_cmd())
+  File "/OpenMDAO/openmdao/utils/om.py", line 658, in openmdao_cmd
+    options.executor(options, user_args)
+  File "/OpenMDAO/openmdao/visualization/n2_viewer/n2_viewer.py", line 817, in _n2_cmd
+    _load_and_exec(options.file[0], user_args)
+  File "/OpenMDAO/openmdao/utils/file_utils.py", line 196, in _load_and_exec
+    exec(code, globals_dict)  # nosec: private, internal use only
+  File "/tmp/test_script.py", line 21, in <module>
+    p.final_setup()
+  File "/OpenMDAO/openmdao/utils/hooks.py", line 132, in execute_hooks
+    _run_hooks(post_hooks, inst)
+  File "/OpenMDAO/openmdao/utils/hooks.py", line 96, in _run_hooks
+    hook(inst, **kwargs)
+  File "/OpenMDAO/openmdao/visualization/n2_viewer/n2_viewer.py", line 802, in _view_model_no_errors
+    if is_target and prob._mpi_comm.rank == 0:
+AttributeError: 'Problem' object has no attribute '_mpi_comm'

@@ -1,0 +1,11 @@
+        if phase_info_parameterization is not None:
+            self.phase_info, self.post_mission_info = phase_info_parameterization(
+                self.phase_info, self.post_mission_info, self.aviary_inputs
+            )
+
+        phase_info = self.phase_info
+
+        if self.analysis_scheme is AnalysisScheme.COLLOCATION:
+            phases = list(phase_info.keys())
+            traj = self.model.add_subsystem('traj', dm.Trajectory(parallel_phases=parallel_phases))
+

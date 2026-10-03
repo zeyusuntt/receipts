@@ -1,0 +1,38 @@
+diff --git a/exercise/staff_views.py b/exercise/staff_views.py
+index 7c25404b..f39b6279 100644
+--- a/exercise/staff_views.py
++++ b/exercise/staff_views.py
+@@ -342,17 +342,23 @@ class NextUnassessedSubmitterView(ExerciseBaseView, BaseRedirectView):
+ 
+     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+         # Query submitters who have not been assessed yet.
++        # A student needs assessment if NONE of their submissions in this exercise have been graded.
+         submitter = None
+-        submitters = (UserProfile.objects
+-            .filter(submissions__exercise=self.exercise)
+-            .annotate(
+-                count_assessed=Count(
+-                    'submissions__id',
+-                    filter=(Q(submissions__grader__isnull=False)),
+-                ),
+-            )
+-            .filter(count_assessed=0)
+-            .order_by('id'))
++        
++        # Get all submitters who have submitted to this exercise
++        submitters_with_submissions = UserProfile.objects.filter(
++            submissions__exercise=self.exercise
++        ).distinct()
++        
++        # Exclude submitters who have ANY assessed submissions in this exercise
++        assessed_submitter_ids = UserProfile.objects.filter(
++            submissions__exercise=self.exercise,
++            submissions__grader__isnull=False
++        ).values_list('id', flat=True).distinct()
++        
++        submitters = submitters_with_submissions.exclude(
++            id__in=assessed_submitter_ids
++        ).order_by('id')
+ 
+         previous_user_id = request.GET.get('prev')
+         if previous_user_id:

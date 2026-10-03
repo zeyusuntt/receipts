@@ -1,0 +1,31 @@
+diff --git a/pyls/plugins/autopep8_format.py b/pyls/plugins/autopep8_format.py
+index 1e4e4e1..11633e2 100644
+--- a/pyls/plugins/autopep8_format.py
++++ b/pyls/plugins/autopep8_format.py
+@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
+ 
+ @hookimpl(tryfirst=True)  # Prefer autopep8 over YAPF
+ def pyls_format_document(config, document):
++    log.info("!!! ENTERING pyls_format_document !!!")
+     log.info("Formatting document %s with autopep8", document)
+     return _format(config, document)
+ 
+@@ -31,7 +32,17 @@ def _format(config, document, line_range=None):
+     if line_range:
+         options['line_range'] = list(line_range)
+ 
+-    new_source = fix_code(document.source, options=options)
++    try:
++        new_source = fix_code(document.source, options=options)
++    except ValueError as e:
++        # Handle case where autopep8 fails to parse indentation info properly
++        # This can happen with certain hanging indent patterns (#719 regression)
++        if "invalid literal for int()" in str(e) and "continuation" in str(e):
++            # Return original source to prevent crash - better than failing
++            return []
++        else:
++            # Re-raise unexpected ValueErrors
++            raise
+ 
+     if new_source == document.source:
+         return []

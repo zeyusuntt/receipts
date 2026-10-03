@@ -1,0 +1,21 @@
+790-        search plugins should be developed in the way that enable them to handle the
+791-        support of a search by id by the providers. The providers are requested one by
+792-        one, in the order defined by their priorities. Be aware that because of that,
+793-        the search can be slow, if the priority order is such that the provider that
+794-        contains the requested product has the lowest priority. However, you can always
+795-        speed up a little the search by passing the name of the provider on which to
+796-        perform the search, if this information is available
+797-
+798-        :param uid: The uid of the EO product
+799-        :type uid: str
+800-        :param provider: (optional) The provider on which to search the product.
+801-                         This may be useful for performance reasons when the user
+802-                         knows this product is available on the given provider
+803-        :type provider: str
+804-        :param kwargs: Search criteria to help finding the right product
+805-        :type kwargs: dict
+806-        :returns: A search result with one EO product or None at all, and the number
+807-                  of EO products retrieved (0 or 1)
+808-        :rtype: tuple(:class:`~eodag.api.search_result.SearchResult`, int)
+809-        """
+810:        for plugin in self._plugins_manager.get_search_plugins(provider=provider):

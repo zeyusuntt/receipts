@@ -1,0 +1,304 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /crosstl
+collecting ... collected 2 items
+
+tests/test_backend/test_directx/test_codegen.py::test_while_codegen FAILED [ 50%]
+tests/test_backend/test_directx/test_parser.py::test_while_parsing FAILED [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_while_codegen ______________________________
+
+    def test_while_codegen():
+        code = """
+        struct VSInput {
+        float4 position : POSITION;
+        float4 color : TEXCOORD0;
+        };
+    
+        struct VSOutput {
+            float4 out_position : TEXCOORD0;
+        };
+    
+        VSOutput VSMain(VSInput input) {
+            VSOutput output;
+            output.out_position = input.position;
+            int i = 0;
+            while (i < 10) {
+                output.out_position = input.color;
+                i = i + 1;  // Increment the loop variable
+            }
+            return output;
+        }
+    
+        struct PSInput {
+            float4 in_position : TEXCOORD0;
+        };
+    
+        struct PSOutput {
+            float4 out_color : SV_TARGET0;
+        };
+    
+        PSOutput PSMain(PSInput input) {
+            PSOutput output;
+            output.out_color = input.in_position;
+            int i = 0;
+            while (i < 10) {
+                output.out_color = float4(1.0, 1.0, 1.0, 1.0);
+                i = i + 1;  // Increment the loop variable
+            }
+            return output;
+        }
+        """
+        try:
+            tokens = tokenize_code(code)
+>           ast = parse_code(tokens)
+
+tests/test_backend/test_directx/test_codegen.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_backend/test_directx/test_codegen.py:28: in parse_code
+    return parser.parse()
+crosstl/src/backend/DirectX/DirectxParser.py:41: in parse
+    shader = self.parse_shader()
+crosstl/src/backend/DirectX/DirectxParser.py:64: in parse_shader
+    functions.append(self.parse_function())
+crosstl/src/backend/DirectX/DirectxParser.py:154: in parse_function
+    body = self.parse_block()
+crosstl/src/backend/DirectX/DirectxParser.py:178: in parse_block
+    statements.append(self.parse_statement())
+crosstl/src/backend/DirectX/DirectxParser.py:199: in parse_statement
+    return self.parse_expression_statement()
+crosstl/src/backend/DirectX/DirectxParser.py:350: in parse_expression_statement
+    expr = self.parse_expression()
+crosstl/src/backend/DirectX/DirectxParser.py:355: in parse_expression
+    return self.parse_assignment()
+crosstl/src/backend/DirectX/DirectxParser.py:358: in parse_assignment
+    left = self.parse_logical_or()
+crosstl/src/backend/DirectX/DirectxParser.py:375: in parse_logical_or
+    left = self.parse_logical_and()
+crosstl/src/backend/DirectX/DirectxParser.py:384: in parse_logical_and
+    left = self.parse_equality()
+crosstl/src/backend/DirectX/DirectxParser.py:393: in parse_equality
+    left = self.parse_relational()
+crosstl/src/backend/DirectX/DirectxParser.py:402: in parse_relational
+    left = self.parse_additive()
+crosstl/src/backend/DirectX/DirectxParser.py:416: in parse_additive
+    left = self.parse_multiplicative()
+crosstl/src/backend/DirectX/DirectxParser.py:425: in parse_multiplicative
+    left = self.parse_unary()
+crosstl/src/backend/DirectX/DirectxParser.py:439: in parse_unary
+    return self.parse_primary()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <crosstl.src.backend.DirectX.DirectxParser.HLSLParser object at 0x7ffff6c6b010>
+
+    def parse_primary(self):
+        if self.current_token[0] in ["IDENTIFIER", "FLOAT", "FVECTOR"]:
+            if self.current_token[0] == "IDENTIFIER":
+                name = self.current_token[1]
+                self.eat("IDENTIFIER")
+                if self.current_token[0] == "LPAREN":
+                    return self.parse_function_call(name)
+                elif self.current_token[0] == "DOT":
+                    return self.parse_member_access(name)
+                return VariableNode("", name)
+            if self.current_token[0] in ["FLOAT", "FVECTOR"]:
+                type_name = self.current_token[1]
+                self.eat(self.current_token[0])
+                if self.current_token[0] == "LPAREN":
+                    return self.parse_vector_constructor(type_name)
+            return self.parse_function_call_or_identifier()
+        elif self.current_token[0] == "NUMBER":
+            value = self.current_token[1]
+            self.eat("NUMBER")
+            if self.current_token[0] == "IDENTIFIER":
+                name = self.current_token[1]
+                self.eat("IDENTIFIER")
+                return VariableNode(value, name)
+            return value
+        elif self.current_token[0] == "LPAREN":
+            self.eat("LPAREN")
+            expr = self.parse_expression()
+            self.eat("RPAREN")
+            return expr
+        else:
+>           raise SyntaxError(
+                f"Unexpected token in expression: {self.current_token[0]}"
+            )
+E           SyntaxError: Unexpected token in expression: WHILE
+
+crosstl/src/backend/DirectX/DirectxParser.py:471: SyntaxError
+
+During handling of the above exception, another exception occurred:
+
+    def test_while_codegen():
+        code = """
+        struct VSInput {
+        float4 position : POSITION;
+        float4 color : TEXCOORD0;
+        };
+    
+        struct VSOutput {
+            float4 out_position : TEXCOORD0;
+        };
+    
+        VSOutput VSMain(VSInput input) {
+            VSOutput output;
+            output.out_position = input.position;
+            int i = 0;
+            while (i < 10) {
+                output.out_position = input.color;
+                i = i + 1;  // Increment the loop variable
+            }
+            return output;
+        }
+    
+        struct PSInput {
+            float4 in_position : TEXCOORD0;
+        };
+    
+        struct PSOutput {
+            float4 out_color : SV_TARGET0;
+        };
+    
+        PSOutput PSMain(PSInput input) {
+            PSOutput output;
+            output.out_color = input.in_position;
+            int i = 0;
+            while (i < 10) {
+                output.out_color = float4(1.0, 1.0, 1.0, 1.0);
+                i = i + 1;  // Increment the loop variable
+            }
+            return output;
+        }
+        """
+        try:
+            tokens = tokenize_code(code)
+            ast = parse_code(tokens)
+            generated_code = generate_code(ast)
+            print(generated_code)
+        except SyntaxError:
+>           pytest.fail("While loop parsing or code generation not implemented.")
+E           Failed: While loop parsing or code generation not implemented.
+
+tests/test_backend/test_directx/test_codegen.py:210: Failed
+______________________________ test_while_parsing ______________________________
+
+    def test_while_parsing():
+        code = """
+        VSOutput VSMain(VSInput input) {
+            VSOutput output;
+            int i = 0;
+            while (i < 10) {
+                output.out_position = input.position;
+                i = i + 1;
+            }
+            return output;
+        }
+        """
+        try:
+            tokens = tokenize_code(code)
+>           parse_code(tokens)
+
+tests/test_backend/test_directx/test_parser.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_backend/test_directx/test_parser.py:16: in parse_code
+    return parser.parse()
+crosstl/src/backend/DirectX/DirectxParser.py:41: in parse
+    shader = self.parse_shader()
+crosstl/src/backend/DirectX/DirectxParser.py:64: in parse_shader
+    functions.append(self.parse_function())
+crosstl/src/backend/DirectX/DirectxParser.py:154: in parse_function
+    body = self.parse_block()
+crosstl/src/backend/DirectX/DirectxParser.py:178: in parse_block
+    statements.append(self.parse_statement())
+crosstl/src/backend/DirectX/DirectxParser.py:199: in parse_statement
+    return self.parse_expression_statement()
+crosstl/src/backend/DirectX/DirectxParser.py:350: in parse_expression_statement
+    expr = self.parse_expression()
+crosstl/src/backend/DirectX/DirectxParser.py:355: in parse_expression
+    return self.parse_assignment()
+crosstl/src/backend/DirectX/DirectxParser.py:358: in parse_assignment
+    left = self.parse_logical_or()
+crosstl/src/backend/DirectX/DirectxParser.py:375: in parse_logical_or
+    left = self.parse_logical_and()
+crosstl/src/backend/DirectX/DirectxParser.py:384: in parse_logical_and
+    left = self.parse_equality()
+crosstl/src/backend/DirectX/DirectxParser.py:393: in parse_equality
+    left = self.parse_relational()
+crosstl/src/backend/DirectX/DirectxParser.py:402: in parse_relational
+    left = self.parse_additive()
+crosstl/src/backend/DirectX/DirectxParser.py:416: in parse_additive
+    left = self.parse_multiplicative()
+crosstl/src/backend/DirectX/DirectxParser.py:425: in parse_multiplicative
+    left = self.parse_unary()
+crosstl/src/backend/DirectX/DirectxParser.py:439: in parse_unary
+    return self.parse_primary()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <crosstl.src.backend.DirectX.DirectxParser.HLSLParser object at 0x7ffff75057e0>
+
+    def parse_primary(self):
+        if self.current_token[0] in ["IDENTIFIER", "FLOAT", "FVECTOR"]:
+            if self.current_token[0] == "IDENTIFIER":
+                name = self.current_token[1]
+                self.eat("IDENTIFIER")
+                if self.current_token[0] == "LPAREN":
+                    return self.parse_function_call(name)
+                elif self.current_token[0] == "DOT":
+                    return self.parse_member_access(name)
+                return VariableNode("", name)
+            if self.current_token[0] in ["FLOAT", "FVECTOR"]:
+                type_name = self.current_token[1]
+                self.eat(self.current_token[0])
+                if self.current_token[0] == "LPAREN":
+                    return self.parse_vector_constructor(type_name)
+            return self.parse_function_call_or_identifier()
+        elif self.current_token[0] == "NUMBER":
+            value = self.current_token[1]
+            self.eat("NUMBER")
+            if self.current_token[0] == "IDENTIFIER":
+                name = self.current_token[1]
+                self.eat("IDENTIFIER")
+                return VariableNode(value, name)
+            return value
+        elif self.current_token[0] == "LPAREN":
+            self.eat("LPAREN")
+            expr = self.parse_expression()
+            self.eat("RPAREN")
+            return expr
+        else:
+>           raise SyntaxError(
+                f"Unexpected token in expression: {self.current_token[0]}"
+            )
+E           SyntaxError: Unexpected token in expression: WHILE
+
+crosstl/src/backend/DirectX/DirectxParser.py:471: SyntaxError
+
+During handling of the above exception, another exception occurred:
+
+    def test_while_parsing():
+        code = """
+        VSOutput VSMain(VSInput input) {
+            VSOutput output;
+            int i = 0;
+            while (i < 10) {
+                output.out_position = input.position;
+                i = i + 1;
+            }
+            return output;
+        }
+        """
+        try:
+            tokens = tokenize_code(code)
+            parse_code(tokens)
+        except SyntaxError:
+>           pytest.fail("while parsing not implemented")
+E           Failed: while parsing not implemented
+
+tests/test_backend/test_directx/test_parser.py:94: Failed
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_backend/test_directx/test_codegen.py::test_while_codegen - ...
+FAILED tests/test_backend/test_directx/test_parser.py::test_while_parsing - F...
+============================== 2 failed in 0.21s ===============================

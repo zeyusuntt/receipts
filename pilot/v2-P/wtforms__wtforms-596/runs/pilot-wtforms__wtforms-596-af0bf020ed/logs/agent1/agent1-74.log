@@ -1,0 +1,16 @@
+
+    >>> html_params(name='text1', id='f', class_='text')
+    'class="text" id="f" name="text1"'
+    >>> html_params(checked=True, readonly=False, name="text1", abc="hello")
+    'abc="hello" checked name="text1"'
+
+    .. versionchanged:: 3.0
+        ``aria_`` args convert underscores to hyphens like ``data_``
+        args.
+
+    .. versionchanged:: 2.2
+        ``data_`` args convert all underscores to hyphens, instead of
+        only the first one.
+    """
+    params = []
+    for k, v in sorted(kwargs.items()):

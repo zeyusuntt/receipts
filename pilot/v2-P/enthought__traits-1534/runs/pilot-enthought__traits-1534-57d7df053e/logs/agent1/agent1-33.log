@@ -1,0 +1,13 @@
+=== Constants Issue Demo ===
+DefaultValue.constant = 0 (should be 7)
+traits.ctraits._CONSTANT_DEFAULT_VALUE = 0 (should be 7)
+
+This means in traits/constants.py:
+line: constant = traits.ctraits._CONSTANT_DEFAULT_VALUE
+evaluates to: constant = 0
+so DefaultValue.constant = 0
+
+The fix should be to change traits/ctraits to have:
+_CONSTANT_DEFAULT_VALUE = 7
+Or change traits/constants.py to use:
+constant = 7  # instead of traits.ctraits._CONSTANT_DEFAULT_VALUE

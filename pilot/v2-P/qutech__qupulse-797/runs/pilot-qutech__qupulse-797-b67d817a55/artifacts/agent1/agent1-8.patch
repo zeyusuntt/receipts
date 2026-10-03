@@ -1,0 +1,38 @@
+diff --git a/qupulse/_program/tabor.py b/qupulse/_program/tabor.py
+index b92c76f..4d0fb63 100644
+--- a/qupulse/_program/tabor.py
++++ b/qupulse/_program/tabor.py
+@@ -474,6 +474,9 @@ class TaborProgram(ProgramEntry):
+             raise TaborException('At least one waveform has a length that is smaller 192 or not a multiple of 16')
+ 
+         segments = []
++        waveform_to_index = {}  # Maps waveform identity to segment index for deduplication
++        segment_lengths_dedup = []  # Store corresponding lengths for deduplicated segments
++        
+         for i, waveform in enumerate(self._parsed_program.waveforms):
+             t = time_array[:segment_lengths[i]]
+             marker_time = t[::2]
+@@ -487,8 +490,21 @@ class TaborProgram(ProgramEntry):
+                                    ch_b=segment_b,
+                                    marker_a=marker_a,
+                                    marker_b=marker_b)
+-            segments.append(segment)
+-        return segments, segment_lengths
++            
++            # Check if we've already seen an equivalent segment
++            segment_hash = hash(segment)
++            if segment_hash in waveform_to_index:
++                # Reuse existing segment index
++                idx = waveform_to_index[segment_hash]
++            else:
++                # New unique segment
++                idx = len(segments)
++                segments.append(segment)
++                waveform_to_index[segment_hash] = idx
++                segment_lengths_dedup.append(segment_lengths[i])
++                
++        # Return deduplicated segments and their corresponding lengths
++        return segments, segment_lengths_dedup
+ 
+     def setup_single_sequence_mode(self) -> None:
+         assert self.program.depth() == 1

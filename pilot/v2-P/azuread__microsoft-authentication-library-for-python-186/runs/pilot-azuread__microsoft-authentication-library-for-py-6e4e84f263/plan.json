@@ -1,0 +1,14 @@
+{
+  "approach": "Preserve the last non-None response from silent acquisition attempts even when the final lookup yields no tokens, ensuring error responses from AAD are not discarded.",
+  "files_to_edit": [
+    "msal/application.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "In `acquire_token_silent_with_error`, when a silent call fails due to missing tokens (after refresh token eviction), the method incorrectly returns None instead of preserving the last AAD error.",
+  "retries": {},
+  "usage": {
+    "completion": 95,
+    "prompt": 9757,
+    "reasoning": 0
+  }
+}

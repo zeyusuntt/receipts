@@ -1,0 +1,33 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Plugins: surprising behaviour from schema.org fill plugin when implementation and metadata are both absent\nThe `lekkerensimpel` scraper includes test coverage where some test webpages contain `schema.org` recipe metadata, and some do not.\r\n\r\nIf we temporarily remove the `category` implementation -- as in the case during development of #1228 -- then we uncover a surprising change-in-behaviour: pages that do contain recipe (and category) metadata continue to return the expected result, but pages that do not now begin raising `NotImplementedError`.\r\n\r\nThat's confusing: the implementation has not changed based on the HTML input, and yet the exception seems to indicate that the method is sometimes implemented, and sometimes not.\r\n\r\nThe approximate cause appears to be this line of code: https://github.com/hhursev/recipe-scrapers/blob/141470384b9e8a486f3a14255d37e3b608d3383a/recipe_scrapers/plugins/schemaorg_fill.py#L60\r\n\r\nBasically: if no relevant `schema.org` recipe metadata was found on the page, then regardless of whether an implementation of the method exists, we re-raise the existing exception (a `NotImplementedError`, as [raised by the abstract scraper](https://github.com/hhursev/recipe-scrapers/blob/141470384b9e8a486f3a14255d37e3b608d3383a/recipe_scrapers/_abstract.py#L117-L119)).\r\n\r\nI think what we should probably do instead is to raise a different `SchemaOrgException` if we detect that no relevant `schema.org` recipe metadata exists -- there's no point in calling the function under those circumstances.",
+  "source": {
+    "image": "docker.io/swerebenchv2/hhursev-recipe-scrapers:1230-1414703",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-hhursev__recipe-scrapers-1230-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2xpYnJhcnkvdGVzdF9leGNlcHRpb25zLnB5IGIvdGVzdHMvbGlicmFyeS90ZXN0X2V4Y2VwdGlvbnMucHkKaW5kZXggMzczNzJhZTUuLmRkN2YxMDc3IDEwMDY0NAotLS0gYS90ZXN0cy9saWJyYXJ5L3Rlc3RfZXhjZXB0aW9ucy5weQorKysgYi90ZXN0cy9saWJyYXJ5L3Rlc3RfZXhjZXB0aW9ucy5weQpAQCAtMSw3ICsxLDkgQEAKIGltcG9ydCB1bml0dGVzdAogCiBmcm9tIHJlY2lwZV9zY3JhcGVycyBpbXBvcnQgKAorICAgIEFic3RyYWN0U2NyYXBlciwKICAgICBOb1NjaGVtYUZvdW5kSW5XaWxkTW9kZSwKKyAgICBSZWNpcGVTY2hlbWFOb3RGb3VuZCwKICAgICBXZWJzaXRlTm90SW1wbGVtZW50ZWRFcnJvciwKICAgICBzY3JhcGVfaHRtbCwKICkKQEAgLTE3LDMgKzE5LDEzIEBAIGNsYXNzIFRlc3RFeGNlcHRpb25zKHVuaXR0ZXN0LlRlc3RDYXNlKToKIAogICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGV4Y2VwdGlvbi51cmwsICJleGFtcGxlLmNvbSIpCiAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoZXhjZXB0aW9uLm1lc3NhZ2UsICJObyBSZWNpcGUgU2NoZW1hIGZvdW5kIGF0IGV4YW1wbGUuY29tLiIpCisKKyAgICBkZWYgdGVzdF9ub19zY2hlbWFfZm91bmRfZm9yX2ZpbGxfcGx1Z2luKHNlbGYpOgorICAgICAgICBjbGFzcyBUZXN0U2NyYXBlcihBYnN0cmFjdFNjcmFwZXIpOgorICAgICAgICAgICAgQGNsYXNzbWV0aG9kCisgICAgICAgICAgICBkZWYgaG9zdChjbHMpOgorICAgICAgICAgICAgICAgIHJldHVybiAiZXhhbXBsZS5jb20iCisKKyAgICAgICAgc2NyYXBlciA9IFRlc3RTY3JhcGVyKGh0bWw9IjxodG1sPjwvaHRtbD4iLCB1cmw9Imh0dHA6Ly9leGFtcGxlLmNvbS9yZWNpcGUiKQorICAgICAgICB3aXRoIHNlbGYuYXNzZXJ0UmFpc2VzKFJlY2lwZVNjaGVtYU5vdEZvdW5kKToKKyAgICAgICAgICAgIHNjcmFwZXIuY2F0ZWdvcnkoKQo='\"'\"'))'",
+      "git apply /tmp/receipts-hhursev__recipe-scrapers-1230-test.patch"
+    ],
+    "workdir": "/recipe-scrapers"
+  },
+  "spec_paths": [
+    "tests/library/test_exceptions.py"
+  ],
+  "spec_tests": [
+    "tests/library/test_exceptions.py::TestExceptions::test_no_schema_found_for_fill_plugin",
+    "tests/library/test_exceptions.py::TestExceptions::test_no_schema_found_in_wild_mode_error",
+    "tests/library/test_exceptions.py::TestExceptions::test_website_not_implemented_error"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/library/test_exceptions.py"
+}

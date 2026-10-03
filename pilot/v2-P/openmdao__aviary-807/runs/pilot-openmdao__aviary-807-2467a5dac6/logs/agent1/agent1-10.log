@@ -1,0 +1,252 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /Aviary
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________________ TestPhaseInfoAPI.test_time_duration ______________________
+
+self = <aviary.interface.test.test_phase_info.TestPhaseInfoAPI testMethod=test_time_duration>
+
+    def test_time_duration(self):
+        phase_info = {
+            'only_cruise': {
+                'user_options': {
+                    'num_segments': 5,
+                    'order': 3,
+                    'mach_initial': (0.72, 'unitless'),
+                    'mach_final': (0.72, 'unitless'),
+                    'altitude_initial': (32000.0, 'ft'),
+                    'altitude_final': (32000.0, 'ft'),
+                    'time_duration': (77, 's'),
+                },
+            },
+        }
+        prob = AviaryProblem()
+    
+        csv_path = 'models/test_aircraft/aircraft_for_bench_FwFm.csv'
+    
+        prob.load_inputs(csv_path, phase_info)
+        prob.check_and_preprocess_inputs()
+    
+        prob.add_pre_mission_systems()
+        prob.add_phases()
+        prob.add_post_mission_systems()
+    
+        prob.link_phases()
+    
+        prob.setup()
+        prob.set_initial_guesses()
+    
+        prob.run_aviary_problem()
+    
+        time = prob.get_val('traj.only_cruise.timeseries.time', units='s')[-1]
+>       assert_near_equal(time, 77.0, 1e-5)
+
+aviary/interface/test/test_phase_info.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+actual = array([1.]), desired = array([77.]), tolerance = 1e-05
+tol_type = 'rel'
+
+    def assert_near_equal(actual, desired, tolerance=1e-15, tol_type='rel'):
+        """
+        Check relative error.
+    
+        Determine that the relative error between `actual` and `desired`
+        is within `tolerance`. If `desired` is zero, then use absolute error.
+    
+        Can handle some data structures. Generates warnings for data types it cannot handle.
+    
+        Parameters
+        ----------
+        actual : float, array-like, dict
+            The value from the test.
+        desired : float, array-like, dict
+            The value expected.
+        tolerance : float
+            Maximum relative or absolute error.
+            For relative tolerance: ``(actual - desired) / desired``.
+            For absolute  tolerance: ``(actual - desired)``.
+        tol_type : {'rel', 'abs'}
+            Type of error to use: 'rel' for relative error, 'abs' for absolute error.
+            Default is set to 'rel'.
+    
+        Returns
+        -------
+        float
+            The error.
+        """
+        # Try to make similar things of the same type so they can be compared
+        # make arrays out of scalars
+        if type(actual) in [int, float, np.int64, np.float64, np.int32, np.complex128]:
+            actual = np.atleast_1d(actual)
+        if type(desired) in [int, float, np.int64, np.float64, np.int32, np.complex128]:
+            desired = np.atleast_1d(desired)
+    
+        # Handle jax arrays, if available
+        if JaxArray is not None:
+            if isinstance(actual, JaxArray):
+                actual = np.atleast_1d(actual)
+            if isinstance(desired, JaxArray):
+                desired = np.atleast_1d(desired)
+    
+        # if desired is numeric list or tuple, make ndarray out of it
+        if isinstance(actual, (list, tuple)):
+            actual = np.asarray(actual)
+        if isinstance(desired, (list, tuple)):
+            desired = np.asarray(desired)
+    
+        # In case they are PromAbsDict and other dict-like objects
+        if isinstance(actual, dict) and type(actual) is not dict:
+            actual = dict(actual)
+        if isinstance(desired, dict) and type(desired) is not dict:
+            desired = dict(desired)
+    
+        if type(actual) is not type(desired):
+            raise ValueError(f'actual {type(actual)}, desired {type(desired)} have different types')
+    
+        if isinstance(actual, type) and isinstance(desired, type):
+            if actual != desired:
+                raise ValueError(
+                    'actual type %s, and desired type %s are different' % (actual, desired))
+            return 0
+    
+        # The code below can only handle these data types
+        _supported_types = [dict, set, str, bool, np.ndarray, type(None)]
+        if type(actual) not in _supported_types:
+            warnings.warn(
+                f"The function, assert_near_equal, does not support the actual value type: '"
+                f"{type(actual)}'.")
+            return 0
+        if type(desired) not in _supported_types:
+            warnings.warn(
+                f"The function, assert_near_equal, does not support the desired value type: '"
+                f"{type(actual)}'.")
+            return 0
+    
+        if isinstance(actual, dict) and isinstance(desired, dict):
+            actual_keys = set(actual.keys())
+            desired_keys = set(desired.keys())
+    
+            if actual_keys.symmetric_difference(desired_keys):
+                msg = 'Actual and desired keys differ. Actual extra keys: {}, Desired extra keys: {}'
+                actual_extra = actual_keys.difference(desired_keys)
+                desired_extra = desired_keys.difference(actual_keys)
+                raise KeyError(msg.format(actual_extra, desired_extra))
+    
+            error = 0.
+    
+            for key in actual_keys:
+                try:
+                    new_error = assert_near_equal(actual[key], desired[key], tolerance, tol_type)
+                    error = max(error, new_error)
+                except ValueError as exception:
+                    msg = '{}: '.format(key) + str(exception)
+                    raise ValueError(msg) from None
+                except KeyError as exception:
+                    msg = '{}: '.format(key) + str(exception)
+                    raise KeyError(msg) from None
+    
+        elif isinstance(actual, set) and isinstance(desired, set):
+            if actual.symmetric_difference(desired):
+                actual_extra = actual.difference(desired)
+                desired = desired.difference(actual)
+                raise KeyError("Actual and desired sets differ. "
+                               f"Actual extra values: {actual_extra}, "
+                               f"Desired extra values: {desired_extra}")
+    
+            error = 0.
+    
+        elif isinstance(actual, str) and isinstance(desired, str):
+            if actual != desired:
+                raise ValueError(
+                    'actual %s, desired %s strings have different values' % (actual, desired))
+            error = 0.0
+    
+        elif isinstance(actual, bool) and isinstance(desired, bool):
+            if actual != desired:
+                raise ValueError(
+                    'actual %s, desired %s booleans have different values' % (actual, desired))
+            error = 0.0
+    
+        elif actual is None and desired is None:
+            error = 0.0
+    
+        # array values
+        elif isinstance(actual, np.ndarray) and isinstance(desired, np.ndarray):
+            if actual.dtype == object or desired.dtype == object:
+                if actual.dtype == object:
+                    warnings.warn(
+                        f"The function, assert_near_equal, does not support the actual value ndarray "
+                        f"type of: '"
+                        f"{type(actual.dtype)}'.")
+                if desired.dtype == object:
+                    warnings.warn(
+                        f"The function, assert_near_equal, does not support the desired value ndarray "
+                        f"type of: '"
+                        f"{type(desired.dtype)}'.")
+                error = 0.0
+            else:
+    
+                actual = np.atleast_1d(actual)
+                desired = np.atleast_1d(desired)
+                if actual.shape != desired.shape:
+                    raise ValueError(
+                        'actual and desired have differing shapes.'
+                        ' actual {}, desired {}'.format(actual.shape, desired.shape))
+                # check to see if the entire array is made of floats. If not, loop through all values
+    
+                if not np.all(np.isnan(actual) == np.isnan(desired)):
+                    if actual.size == 1 and desired.size == 1:
+                        raise ValueError('actual %s, desired %s' % (actual, desired))
+                    else:
+                        raise ValueError('actual and desired values have non-matching nan'
+                                         ' values')
+                if np.linalg.norm(desired) == 0 or tol_type == 'abs':
+                    error = np.linalg.norm(actual - desired)
+                else:
+                    error = np.linalg.norm(actual - desired) / np.linalg.norm(desired)
+    
+                if abs(error) > tolerance:
+                    if actual.size < 10 and desired.size < 10:
+>                       raise ValueError('actual %s, desired %s, %s error %s, tolerance %s'
+                                         % (actual, desired, tol_type, error, tolerance))
+E                       ValueError: actual [1.], desired [77.], rel error 0.987012987012987, tolerance 1e-05
+
+/usr/local/lib/python3.10/site-packages/openmdao/utils/assert_utils.py:733: ValueError
+=============================== warnings summary ===============================
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+  Warning: Phase time options have no effect because fix_duration=True or input_duration=True for phase 'traj.phases.only_cruise': duration_ref
+
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+  Warning: The 'solve_alpha' flag has been set, but is not used for FLOPS-based aerodynamics.
+
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+  Warning: <model> <class AviaryGroup>: Output 'takeoff.compute_mach.final_mach' with units of 'unitless' is connected to input 'mach_diff_comp.final_mach' which has no units.
+
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+  Warning: <model> <class AviaryGroup>: Output 'traj.phases.only_cruise.control_comp.control_values:mach' with units of 'unitless' is connected to input 'mach_diff_comp.initial_mach' which has no units.
+
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+  Warning: The following groups have a nonlinear solver that computes gradients and will be treated as atomic for the purposes of determining which systems are included in the optimization iteration: 
+  traj.phases.only_cruise.rhs_all.solver_sub
+
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+  Warning: DirectSolver in 'traj.phases.only_cruise.indep_states' <class StateIndependentsComp>: 'rhs_checking' is active but no redundant adjoint dependencies were found, so caching has been disabled.
+
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+  Warning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+
+aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+  Warning: boolean evaluation of DriverResult is temporarily implemented to mimick the previous `failed` return behavior of run_driver.
+  Use the `success` attribute of the returned DriverResult object to test for successful driver completion.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-10.xml ------------
+=========================== short test summary info ============================
+FAILED aviary/interface/test/test_phase_info.py::TestPhaseInfoAPI::test_time_duration
+======================== 1 failed, 8 warnings in 7.29s =========================

@@ -1,0 +1,40 @@
+diff --git a/fastcrud/crud/fast_crud.py b/fastcrud/crud/fast_crud.py
+index f813407..e2cc37b 100644
+--- a/fastcrud/crud/fast_crud.py
++++ b/fastcrud/crud/fast_crud.py
+@@ -918,10 +918,16 @@ class FastCRUD(
+                 else None
+             )
+ 
++            # Determine effective prefix for column selection to avoid conflicts
++            # If no explicit prefix provided, use table name + "_" to ensure uniqueness
++            effective_prefix = join.join_prefix
++            if effective_prefix is None:
++                effective_prefix = join.model.__tablename__ + "_"
++            
+             join_select = _extract_matching_columns_from_schema(
+                 model=join.model,
+                 schema=join.schema_to_select,
+-                prefix=join.join_prefix,
++                prefix=effective_prefix,
+                 alias=join.alias,
+             )
+ 
+@@ -1240,10 +1246,16 @@ class FastCRUD(
+                 else None
+             )
+ 
++            # Determine effective prefix for column selection to avoid conflicts
++            # If no explicit prefix provided, use table name + "_" to ensure uniqueness
++            effective_prefix = join.join_prefix
++            if effective_prefix is None:
++                effective_prefix = join.model.__tablename__ + "_"
++            
+             join_select = _extract_matching_columns_from_schema(
+                 model=join.model,
+                 schema=join.schema_to_select,
+-                prefix=join.join_prefix,
++                prefix=effective_prefix,
+                 alias=join.alias,
+             )
+ 

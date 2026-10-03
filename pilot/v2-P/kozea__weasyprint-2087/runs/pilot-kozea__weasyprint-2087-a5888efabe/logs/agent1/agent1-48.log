@@ -1,0 +1,60 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /WeasyPrint
+configfile: pyproject.toml
+plugins: xdist-3.8.0
+collecting ... collected 1 item
+
+tests/layout/test_table.py::test_layout_table_auto_19 DEBUG: table_min_content_width (after) = 300.0
+DEBUG: table_max_content_width (after) = 200.0
+DEBUG: table_min_content_width (after) = 300.0
+DEBUG: table_max_content_width (after) = 200.0
+FAILED
+
+=================================== FAILURES ===================================
+__________________________ test_layout_table_auto_19 ___________________________
+
+    @assert_no_logs
+    def test_layout_table_auto_19():
+        # Column group width
+        page, = render_pages('''
+          <table style="width: 200px">
+            <colgroup style="width: 100px">
+              <col />
+              <col />
+            </colgroup>
+            <col style="width: 100px" />
+            <tbody>
+              <tr>
+                <td>a</td>
+                <td>a</td>
+                <td>abc</td>
+              </tr>
+            </tbody>
+          </table>
+        ''')
+        html, = page.children
+        body, = html.children
+        table_wrapper, = body.children
+        table, = table_wrapper.children
+        row_group, = table.children
+        row, = row_group.children
+        td_1, td_2, td_3 = row.children
+        assert td_1.width == 100
+        assert td_2.width == 100
+        assert td_3.width == 100
+>       assert table.width == 300
+E       assert 200.0 == 300
+E        +  where 200.0 = <TableBox table>.width
+
+tests/layout/test_table.py:850: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     weasyprint.progress:__init__.py:158 Step 1 - Fetching and parsing HTML - HTML string
+INFO     weasyprint.progress:__init__.py:67 Step 3 - Applying CSS
+INFO     weasyprint.progress:document.py:237 Step 4 - Creating formatting structure
+INFO     weasyprint.progress:page.py:899 Step 5 - Creating layout - Page 1
+----------- generated xml file: /opt/receipts/reports/agent1-48.xml ------------
+=========================== short test summary info ============================
+FAILED tests/layout/test_table.py::test_layout_table_auto_19 - assert 200.0 =...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.31s ===============================

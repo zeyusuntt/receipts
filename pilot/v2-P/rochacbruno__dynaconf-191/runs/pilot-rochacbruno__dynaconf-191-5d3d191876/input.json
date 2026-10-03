@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Missing an isolated namespace [RFC]\n**Is your feature request related to a problem? Please describe.**\r\nA clear and concise description of what the problem is. Ex. I'm always frustrated when [...]\r\n\r\nThe Settings object should have a way of accessing and traversing the keys loaded from the settings files without having all of the Dynaconf options in there. When I call `config.keys()` I'm getting `['SETTINGS_MODULE', 'PROJECT_ROOT_FOR_DYNACONF', 'SETTINGS_MODULE_FOR_DYNACONF', ...`\r\n\r\n**Describe the solution you'd like**\r\nA clear and concise description of what you want to happen.\r\n\r\nIdeally when you call `keys()` and similar methods, it should only return values in the namespaces loaded by the file. Even if it involved doing this `config.current_env.keys()` it would be fine.\r\n\r\nAlso, having methods of exporting the current (possibly modified) settings would be nice. Basically I would like to be able to do this:\r\n\r\n```python \r\nwith open(output_file, 'w') as f:\r\n    yaml.dump(config.environments['development'].as_dict(), f)\r\n```\r\n\r\nAnd have that write out a flattened version of the development namespace.\r\n\r\n**Describe alternatives you've considered**\r\nA clear and concise description of any alternative solutions or features you've considered.\r\n\r\n**Additional context**\r\nAdd any other context or screenshots about the feature request here.\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/rochacbruno-dynaconf:191-77b7247",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-rochacbruno__dynaconf-191-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfY2xpLnB5IGIvdGVzdHMvdGVzdF9jbGkucHkKaW5kZXggNDFkZDEwYy4uNzU3MDA1OCAxMDA2NDQKLS0tIGEvdGVzdHMvdGVzdF9jbGkucHkKKysrIGIvdGVzdHMvdGVzdF9jbGkucHkKQEAgLTEsMTAgKzEsOCBAQAotaW1wb3J0IGlvCi1pbXBvcnQgb3MKK2ltcG9ydCBqc29uCiBmcm9tIHBhdGhsaWIgaW1wb3J0IFBhdGgKIAogaW1wb3J0IHB5dGVzdAogZnJvbSBjbGljay50ZXN0aW5nIGltcG9ydCBDbGlSdW5uZXIKLWZyb20gZG90ZW52IGltcG9ydCBjbGkgYXMgZG90ZW52X2NsaQogCiBmcm9tIGR5bmFjb25mIGltcG9ydCBkZWZhdWx0X3NldHRpbmdzCiBmcm9tIGR5bmFjb25mIGltcG9ydCBMYXp5U2V0dGluZ3MKQEAgLTkwLDYgKzg4LDIyIEBAIGRlZiB0ZXN0X2xpc3QodGVzdGRpcik6CiAgICAgYXNzZXJ0ICJHTE9CQUxfRU5WX0ZPUl9EWU5BQ09ORjogJ0RZTkFDT05GJyIgbm90IGluIHJlc3VsdAogCiAKK2RlZiB0ZXN0X2xpc3RfZXhwb3J0X2pzb24odGVzdGRpcik6CisgICAgcmVzdWx0ID0gcnVuKAorICAgICAgICBbImxpc3QiLCAiLW8iLCAic2V0cy5qc29uIl0sIGVudj17IlJPT1RfUEFUSF9GT1JfRFlOQUNPTkYiOiB0ZXN0ZGlyfQorICAgICkKKyAgICBhc3NlcnQgIkRPVEVOVl9TVFI6ICdoZWxsbyciIGluIHJlc3VsdAorICAgIGFzc2VydCAiRE9URU5WX1NUUiIgaW4gcmVhZF9maWxlKCJzZXRzLmpzb24iKQorICAgIGFzc2VydCAoCisgICAgICAgIGpzb24ubG9hZHMocmVhZF9maWxlKCJzZXRzLmpzb24iKSlbImRldmVsb3BtZW50Il1bIkRPVEVOVl9TVFIiXQorICAgICAgICA9PSAiaGVsbG8iCisgICAgKQorICAgIGFzc2VydCAoCisgICAgICAgIGpzb24ubG9hZHMocmVhZF9maWxlKCJzZXRzLmpzb24iKSlbImRldmVsb3BtZW50Il1bIkRPVEVOVl9GTE9BVCJdCisgICAgICAgID09IDQuMgorICAgICkKKworCiBkZWYgdGVzdF9saXN0X3dpdGhfYWxsKHRlc3RkaXIpOgogICAgICIiIlRlc3QgbGlzdCBjb21tYW5kIHdpdGggLS1hbGwgaW5jbHVkZXMgaW50ZXJ2YWwgdmFycyIiIgogICAgIHJlc3VsdCA9IHJ1bihbImxpc3QiLCAiLWEiXSwgZW52PXsiUk9PVF9QQVRIX0ZPUl9EWU5BQ09ORiI6IHRlc3RkaXJ9KQpAQCAtMTQ0LDYgKzE1OCwxOCBAQCBkZWYgdGVzdF9saXN0X3dpdGhfa2V5KCk6CiAgICAgYXNzZXJ0ICJET1RFTlZfU1RSOiAnaGVsbG8nIiBpbiByZXN1bHQKIAogCitkZWYgdGVzdF9saXN0X3dpdGhfa2V5X2V4cG9ydF9qc29uKHRtcGRpcik6CisgICAgcmVzdWx0ID0gcnVuKFsibGlzdCIsICItayIsICJET1RFTlZfU1RSIiwgIi1vIiwgInNldHMuanNvbiJdKQorICAgIGFzc2VydCAiRE9URU5WX1NUUjogJ2hlbGxvJyIgaW4gcmVzdWx0CisgICAgYXNzZXJ0ICJET1RFTlZfU1RSIiBpbiByZWFkX2ZpbGUoInNldHMuanNvbiIpCisgICAgYXNzZXJ0ICgKKyAgICAgICAganNvbi5sb2FkcyhyZWFkX2ZpbGUoInNldHMuanNvbiIpKVsiZGV2ZWxvcG1lbnQiXVsiRE9URU5WX1NUUiJdCisgICAgICAgID09ICJoZWxsbyIKKyAgICApCisgICAgd2l0aCBweXRlc3QucmFpc2VzKEtleUVycm9yKToKKyAgICAgICAganNvbi5sb2FkcyhyZWFkX2ZpbGUoInNldHMuanNvbiIpKVsiZGV2ZWxvcG1lbnQiXVsiRE9URU5WX0ZMT0FUIl0KKworCiBkZWYgdGVzdF9saXN0X3dpdGhfbWlzc2luZ19rZXkoKToKICAgICByZXN1bHQgPSBydW4oWyJsaXN0IiwgIi1rIiwgIk5PVEVYSVNUUyJdKQogICAgIGFzc2VydCAiS2V5IG5vdCBmb3VuZCIgaW4gcmVzdWx0Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-rochacbruno__dynaconf-191-test.patch"
+    ],
+    "workdir": "/dynaconf"
+  },
+  "spec_paths": [
+    "tests/test_cli.py"
+  ],
+  "spec_tests": [
+    "tests/test_cli.py::test_list_export_json",
+    "tests/test_cli.py::test_list_with_key_export_json"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_cli.py"
+}

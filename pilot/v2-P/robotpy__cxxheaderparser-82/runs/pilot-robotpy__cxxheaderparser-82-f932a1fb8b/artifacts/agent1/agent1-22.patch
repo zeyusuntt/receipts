@@ -1,0 +1,63 @@
+diff --git a/cxxheaderparser/lexer.py b/cxxheaderparser/lexer.py
+index 15dec34..d38d1a5 100644
+--- a/cxxheaderparser/lexer.py
++++ b/cxxheaderparser/lexer.py
+@@ -191,6 +191,7 @@ class PlyLexer:
+         "DBL_PIPE",
+         "ARROW",
+         "SHIFT_LEFT",
++        "MINUS",
+     ] + list(keywords)
+ 
+     literals = [
+@@ -211,7 +212,6 @@ class PlyLexer:
+         "^",
+         "!",
+         "*",
+-        "-",
+         "+",
+         "&",
+         "=",
+@@ -220,6 +220,8 @@ class PlyLexer:
+         "?",
+     ]
+ 
++    t_MINUS = r"-(?!\>)"
++
+     #
+     # Regexes for use in tokens (taken from pycparser)
+     #
+diff --git a/cxxheaderparser/parser.py b/cxxheaderparser/parser.py
+index a4217a2..d74b184 100644
+--- a/cxxheaderparser/parser.py
++++ b/cxxheaderparser/parser.py
+@@ -1917,8 +1917,11 @@ class CxxParser:
+         if self.lex.token_if("{"):
+             self._discard_contents("{", "}")
+             fn.has_body = True
+-        elif self.lex.token_if("ARROW"):
++        if self.lex.token_if("ARROW"):
+             self._parse_trailing_return_type(fn)
++            if self.lex.token_if("{"):
++                self._discard_contents("{", "}")
++                fn.has_body = True
+ 
+     def _parse_method_end(self, method: Method) -> None:
+         """
+@@ -1963,7 +1966,6 @@ class CxxParser:
+                 method.ref_qualifier = tok_value
+             elif tok_value == "->":
+                 self._parse_trailing_return_type(method)
+-                break
+             elif tok_value == "throw":
+                 tok = self._next_token_must_be("(")
+                 method.throw = self._create_value(self._consume_balanced_tokens(tok))
+@@ -2032,6 +2034,8 @@ class CxxParser:
+             else:
+                 template[-1].params.extend(at_params)
+ 
++
++
+         # A method outside of a class has multiple name segments
+         multiple_name_segments = len(pqname.segments) > 1
+ 

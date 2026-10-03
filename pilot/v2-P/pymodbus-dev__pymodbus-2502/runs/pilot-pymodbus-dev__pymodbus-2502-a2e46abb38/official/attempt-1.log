@@ -1,0 +1,92 @@
+============================= test session starts ==============================
+created: 4/4 workers
+4 workers [26 items]
+
+..........................                                               [100%]
+=============================== warnings summary ===============================
+test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[2-5098]
+test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[3-5098]
+test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[4-5098]
+test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[5-5098]
+test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[False-5098]
+test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[True-5098]
+  /pymodbus/pymodbus/transport/transport.py:396: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self.transport.write(data)  # type: ignore[attr-defined]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+__________ TestSyncTransaction.test_sync_transaction_execute[1-5098] ___________
+[gw1] linux -- Python 3.10.19 /usr/local/bin/python
+------------------------------ Captured log call -------------------------------
+ERROR    pymodbus.logging:pdu.py:122 Exception response 255 / 0
+__________ TestSyncTransaction.test_sync_transaction_execute[2-5098] ___________
+[gw1] linux -- Python 3.10.19 /usr/local/bin/python
+------------------------------ Captured log call -------------------------------
+ERROR    pymodbus.logging:pdu.py:122 Exception response 255 / 0
+__________ TestSyncTransaction.test_sync_transaction_execute[4-5098] ___________
+[gw1] linux -- Python 3.10.19 /usr/local/bin/python
+------------------------------ Captured log call -------------------------------
+ERROR    pymodbus.logging:transaction.py:119 No response received after 0 retries, continue with next request
+_______________ TestTransaction.test_transaction_execute[0-5098] _______________
+[gw0] linux -- Python 3.10.19 /usr/local/bin/python
+------------------------------ Captured log call -------------------------------
+WARNING  pymodbus.logging:transaction.py:129 Not connected, trying to connect!
+WARNING  pymodbus.logging:transport.py:250 Failed to connect Port 5098 not being listened on !
+_______________ TestTransaction.test_transaction_execute[1-5098] _______________
+[gw0] linux -- Python 3.10.19 /usr/local/bin/python
+------------------------------ Captured log call -------------------------------
+WARNING  pymodbus.logging:transaction.py:129 Not connected, trying to connect!
+ERROR    pymodbus.logging:transport.py:384 Cancel send, because not connected!
+___ TestSyncTransaction.test_sync_client_protocol_execute_outside[True-5098] ___
+[gw1] linux -- Python 3.10.19 /usr/local/bin/python
+------------------------------ Captured log call -------------------------------
+ERROR    pymodbus.logging:pdu.py:122 Exception response 255 / 0
+______ TestSyncTransaction.test_sync_client_protocol_execute_no_pdu[5098] ______
+[gw1] linux -- Python 3.10.19 /usr/local/bin/python
+------------------------------ Captured log call -------------------------------
+ERROR    pymodbus.logging:transaction.py:119 No response received after 0 retries, continue with next request
+_______________ TestTransaction.test_transaction_execute[4-5098] _______________
+[gw0] linux -- Python 3.10.19 /usr/local/bin/python
+------------------------------ Captured log call -------------------------------
+ERROR    pymodbus.logging:transaction.py:155 No response received after 0 retries, continue with next request
+============================= slowest 10 durations =============================
+0.20s call     test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[5-5098]
+0.20s call     test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[False-5098]
+0.20s call     test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[True-5098]
+0.10s call     test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[4-5098]
+0.10s call     test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[3-5098]
+0.10s teardown test/transaction/test_transaction.py::TestTransaction::test_transaction_receiver[5098]
+0.10s teardown test/transaction/test_transaction.py::TestTransaction::test_transaction_data[False-5098]
+0.10s teardown test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[True-5098]
+0.10s teardown test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_instance[5098]
+0.10s teardown test/transaction/test_transaction.py::TestTransaction::test_transaction_instance[5098]
+=========================== short test summary info ============================
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_instance[5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_instance[5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_manager_tid[5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[0-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_calls[5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[1-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_disconnect[5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[2-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_data[True-5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[3-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_data[False-5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[4-5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[5-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[0-5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_receiver[5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[1-5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_client_protocol_execute_outside[False-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[2-5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_client_protocol_execute_outside[True-5098]
+PASSED test/transaction/test_transaction.py::TestSyncTransaction::test_sync_client_protocol_execute_no_pdu[5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[3-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[4-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[5-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_transaction_receiver[5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[False-5098]
+PASSED test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[True-5098]
+======================== 26 passed, 6 warnings in 2.99s ========================

@@ -1,0 +1,33 @@
+diff --git a/pydatastructs/miscellaneous_data_structures/tests/test_stack.py b/pydatastructs/miscellaneous_data_structures/tests/test_stack.py
+index ca8495d..3f1d307 100644
+--- a/pydatastructs/miscellaneous_data_structures/tests/test_stack.py
++++ b/pydatastructs/miscellaneous_data_structures/tests/test_stack.py
+@@ -33,8 +33,8 @@ def test_LinkedListStack():
+     s.push(1)
+     s.push(2)
+     s.push(3)
+-    assert s.peek.data == 3
+-    assert str(s) == '[1, 2, 3]'
++    assert s.peek == 3
++    assert str(s) == '[3, 2, 1]'
+     assert s.pop().data == 3
+     assert s.pop().data == 2
+     assert s.pop().data == 1
+@@ -42,7 +42,7 @@ def test_LinkedListStack():
+     assert raises(IndexError, lambda : s.pop())
+     assert str(s) == '[]'
+     _s = Stack(implementation='linked_list',items=[1, 2, 3])
+-    assert str(_s) == '[1, 2, 3]'
++    assert str(_s) == '[3, 2, 1]'
+     assert len(_s) == 3
+ 
+     s = Stack(implementation='linked_list',items=['a',None,type,{}])
+@@ -50,5 +50,5 @@ def test_LinkedListStack():
+     assert s.size == 4
+ 
+     peek = s.peek
+-    assert peek.data == s.pop().data
+-    assert raises(TypeError, lambda: Stack(implementation='linked_list', items={0, 1}))
++    assert peek == s.pop().data
++    assert raises(TypeError, lambda: Stack(implementation='linked_list', items={0, 1}))
+\ No newline at end of file

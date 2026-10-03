@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "`guess=False` when `stream` or `lattice` is True\nSince tabula app works independently between guess, stream, and lattice, it should be better to off when `stream` or `lattice` option is on.",
+  "source": {
+    "image": "docker.io/swerebenchv2/chezou-tabula-py:135-3e6d403",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-chezou__tabula-py-135-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfcmVhZF9wZGZfdGFibGUucHkgYi90ZXN0cy90ZXN0X3JlYWRfcGRmX3RhYmxlLnB5CmluZGV4IGQwMTAyYjYuLmNkMDlkYmYgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3Rlc3RfcmVhZF9wZGZfdGFibGUucHkKKysrIGIvdGVzdHMvdGVzdF9yZWFkX3BkZl90YWJsZS5weQpAQCAtNDMsMTAgKzQzLDEwIEBAIGNsYXNzIFRlc3RSZWFkUGRmVGFibGUodW5pdHRlc3QuVGVzdENhc2UpOgogICAgICAgICBleHBlY3RlZF9jc3YyID0gJ3Rlc3RzL3Jlc291cmNlcy9kYXRhXzItMy5jc3YnCiAgICAgICAgIGV4cGVjdGVkX2RmMiA9IHBkLnJlYWRfY3N2KGV4cGVjdGVkX2NzdjIpCiAgICAgICAgIHNlbGYuYXNzZXJ0VHJ1ZSh0YWJ1bGEucmVhZF9wZGYocGRmX3BhdGgsIHBhZ2VzPTEpLmVxdWFscyhwZC5yZWFkX2NzdihleHBlY3RlZF9jc3YxKSkpCi0gICAgICAgIHNlbGYuYXNzZXJ0VHJ1ZSh0YWJ1bGEucmVhZF9wZGYocGRmX3BhdGgsIHBhZ2VzPScyLTMnLCBzdHJlYW09VHJ1ZSwKLSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBndWVzcz1GYWxzZSkuZXF1YWxzKGV4cGVjdGVkX2RmMikpCisgICAgICAgIHNlbGYuYXNzZXJ0VHJ1ZSh0YWJ1bGEucmVhZF9wZGYocGRmX3BhdGgsIHBhZ2VzPScyLTMnLCBzdHJlYW09VHJ1ZSkuZXF1YWxzKGV4cGVjdGVkX2RmMikpCisgICAgICAgIHNlbGYuYXNzZXJ0VHJ1ZSh0YWJ1bGEucmVhZF9wZGYocGRmX3BhdGgsIHBhZ2VzPSgyLCAzKSwgc3RyZWFtPVRydWUpLmVxdWFscyhleHBlY3RlZF9kZjIpKQogICAgICAgICBzZWxmLmFzc2VydFRydWUodGFidWxhLnJlYWRfcGRmKHBkZl9wYXRoLCBwYWdlcz0oMiwgMyksIHN0cmVhbT1UcnVlLAotICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGd1ZXNzPUZhbHNlKS5lcXVhbHMoZXhwZWN0ZWRfZGYyKSkKKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBndWVzcz1UcnVlKS5lcXVhbHMoZXhwZWN0ZWRfZGYyKSkKIAogICAgIGRlZiB0ZXN0X3JlYWRfcGRmX2ZpbGVfbGlrZV9vYmooc2VsZik6CiAgICAgICAgIHBkZl9wYXRoID0gJ3Rlc3RzL3Jlc291cmNlcy9kYXRhLnBkZicK'\"'\"'))'",
+      "git apply /tmp/receipts-chezou__tabula-py-135-test.patch"
+    ],
+    "workdir": "/tabula-py"
+  },
+  "spec_paths": [
+    "tests/test_read_pdf_table.py"
+  ],
+  "spec_tests": [
+    "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_with_option"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_read_pdf_table.py"
+}

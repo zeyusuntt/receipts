@@ -1,0 +1,37 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pipx
+configfile: pyproject.toml
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+tests/test_list.py::test_cli FAILED
+
+=================================== FAILURES ===================================
+___________________________________ test_cli ___________________________________
+
+pipx_temp_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffff696a440>
+capsys = <_pytest.capture.CaptureFixture object at 0x7ffff696a2f0>
+
+    def test_cli(pipx_temp_env, monkeypatch, capsys):
+        assert not run_pipx_cli(["list"])
+        captured = capsys.readouterr()
+>       assert "nothing has been installed with pipx" in captured.err
+E       AssertionError: assert 'nothing has been installed with pipx' in ''
+E        +  where '' = CaptureResult(out='nothing has been installed with pipx 😴\n', err='').err
+
+tests/test_list.py:22: AssertionError
+------------------------------ Captured log call -------------------------------
+DEBUG    pipx.main:main.py:715 2026-10-03 20:16:34
+DEBUG    pipx.main:main.py:716 pipx list
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-5/test_cli0/subdir/pipxhome/venvs
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-5/test_cli0/otherdir/pipxbindir
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-5/test_cli0/subdir/pipxhome/.cache
+DEBUG    pipx.main:main.py:776 pipx finished.
+------------ generated xml file: /opt/receipts/reports/agent1-8.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_list.py::test_cli - AssertionError: assert 'nothing has bee...
+============================== 1 failed in 0.06s ===============================

@@ -1,0 +1,56 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /curator
+collecting ... collected 2 items
+
+test/unit/test_validators.py::TestFilterTypes::test_age_with_string_unit_count FAILED [ 50%]
+test/unit/test_validators.py::TestFilterTypes::test_space_name_age_string_float FAILED [100%]
+
+=================================== FAILURES ===================================
+_______________ TestFilterTypes.test_age_with_string_unit_count ________________
+
+self = <test.unit.test_validators.TestFilterTypes testMethod=test_age_with_string_unit_count>
+
+    def test_age_with_string_unit_count(self):
+        action = 'delete_indices'
+        config = [
+            {
+                'filtertype' : 'age',
+                'direction' : 'older',
+                'unit' : 'days',
+                'unit_count' : "1",
+                'source' : 'field_stats',
+                'field'  : '@timestamp',
+            }
+        ]
+        result = shared_result(config, action)
+>       self.assertEqual(1, result[0]['unit_count'])
+E       AssertionError: 1 != '1'
+
+test/unit/test_validators.py:64: AssertionError
+_______________ TestFilterTypes.test_space_name_age_string_float _______________
+
+self = <test.unit.test_validators.TestFilterTypes testMethod=test_space_name_age_string_float>
+
+    def test_space_name_age_string_float(self):
+        action = 'delete_indices'
+        config = [
+            {
+                'filtertype' : 'space',
+                'disk_space' : "1.0",
+                'use_age' : True,
+                'exclude' : False,
+                'source' : 'name',
+                'timestring' : '%Y.%m.%d',
+            }
+        ]
+        result = shared_result(config, action)
+>       self.assertEqual(1.0, result[0]['disk_space'])
+E       AssertionError: 1.0 != '1.0'
+
+test/unit/test_validators.py:151: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-48.xml ------------
+=========================== short test summary info ============================
+FAILED test/unit/test_validators.py::TestFilterTypes::test_age_with_string_unit_count
+FAILED test/unit/test_validators.py::TestFilterTypes::test_space_name_age_string_float
+============================== 2 failed in 0.16s ===============================

@@ -1,0 +1,11 @@
+        phase_info = self.phase_info
+
+        if self.analysis_scheme is AnalysisScheme.COLLOCATION:                if 'user_options' in phase_info_dict and 'time_duration' in phase_info_dict['user_options']:
+                    time_duration = phase_info_dict['user_options']['time_duration']
+                    # Convert direct time_duration to time_duration_bounds for compatibility
+                    # with phase builders that expect bounds format
+                    if time_duration[0] is not None:
+                        phase_info_dict['user_options']['time_duration_bounds'] = (time_duration, time_duration)
+
+        phase_info = self.phase_info
+

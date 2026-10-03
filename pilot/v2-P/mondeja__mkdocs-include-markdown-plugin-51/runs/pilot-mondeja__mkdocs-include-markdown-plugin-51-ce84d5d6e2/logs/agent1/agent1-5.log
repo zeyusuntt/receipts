@@ -1,0 +1,21 @@
+132:            id='multiple-start-end-matchs',
+133-        ),
+134-
+135-        # Preserve included indent
+136-        pytest.param(
+137-            '''1. Ordered list item
+138-    {%
+139-      include "{filepath}"
+140-      preserve-includer-indent=false
+141-    %}''',
+142-            '''- Unordered sublist item
+143-    - Other unordered sublist item''',
+144-            '''1. Ordered list item
+145-    - Unordered sublist item
+146-    - Other unordered sublist item''',
+147-            id='preserve included indent',
+148-        ),
+149-
+150-        # Preserve includer indent
+151-        pytest.param(
+152-            '''1. Ordered list item

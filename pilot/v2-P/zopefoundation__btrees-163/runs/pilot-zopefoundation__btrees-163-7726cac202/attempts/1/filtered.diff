@@ -1,0 +1,26 @@
+diff --git a/src/BTrees/_datatypes.py b/src/BTrees/_datatypes.py
+index 5035144..b59e397 100644
+--- a/src/BTrees/_datatypes.py
++++ b/src/BTrees/_datatypes.py
+@@ -208,7 +208,20 @@ class O(KeyDataType):
+                 # TODO: Shouldn't we only check __cmp__ on Python 2?
+                 # Python 3 won't use it.
+                 and getattr(item, '__cmp__', None) is None):
+-            raise TypeError("Object has default comparison")
++            if isinstance(item, type):
++                # For type objects, check if they have default comparison.
++                # If __lt__ is the default from object, see if metaclass provides __lt__.
++                if getattr(item, '__lt__', None) is object.__lt__:
++                    # Check if metaclass defines __lt__
++                    mt = type(item)
++                    if '__lt__' in mt.__dict__:
++                        # metaclass provides custom comparison, allow
++                        return
++                # Either default __lt__ not overridden by metaclass, or no __lt__ at all
++                raise TypeError("Object has default comparison")
++            else:
++                raise TypeError("Object of class {} has default comparison".format(
++                    item.__class__.__name__))
+ 
+ 
+     def __call__(self, item):

@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "add_random_edge does not check existing edges\n### \ud83d\udc1b Describe the bug\r\n\r\nCalling add_random_edge may introduce duplicate edges that already existing in the graph. This may have unintended downstream consequences.\r\n\r\nMinimal code to reproduce.\r\n\r\n```python\r\nedge_index = torch.IntTensor(([0, 1, 2, 0, 1, 2, 0, 1, 2], [0, 0, 0, 1, 1, 1, 2, 2, 2]))\r\ntorch_geometric.utils.add_random_edge(edge_index, 0.4, num_nodes=3)\r\n```",
+  "source": {
+    "image": "docker.io/swerebenchv2/pyg-team-pytorch-geometric:7654-2ec1c4b",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pyg-team__pytorch_geometric-7654-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvdXRpbHMvdGVzdF9hdWdtZW50YXRpb24ucHkgYi90ZXN0L3V0aWxzL3Rlc3RfYXVnbWVudGF0aW9uLnB5CmluZGV4IDJjNmFkOGYyZi4uNjhjNGUzNDNjIDEwMDY0NAotLS0gYS90ZXN0L3V0aWxzL3Rlc3RfYXVnbWVudGF0aW9uLnB5CisrKyBiL3Rlc3QvdXRpbHMvdGVzdF9hdWdtZW50YXRpb24ucHkKQEAgLTEsNiArMSw3IEBACiBpbXBvcnQgcHl0ZXN0CiBpbXBvcnQgdG9yY2gKIAorZnJvbSB0b3JjaF9nZW9tZXRyaWMgaW1wb3J0IHNlZWRfZXZlcnl0aGluZwogZnJvbSB0b3JjaF9nZW9tZXRyaWMudXRpbHMgaW1wb3J0ICgKICAgICBhZGRfcmFuZG9tX2VkZ2UsCiAgICAgaXNfdW5kaXJlY3RlZCwKQEAgLTc3LDI4ICs3OCwyNiBAQCBkZWYgdGVzdF9hZGRfcmFuZG9tX2VkZ2UoKToKICAgICBhc3NlcnQgb3V0WzBdLnRvbGlzdCgpID09IGVkZ2VfaW5kZXgudG9saXN0KCkKICAgICBhc3NlcnQgb3V0WzFdLnRvbGlzdCgpID09IFtbXSwgW11dCiAKLSAgICB0b3JjaC5tYW51YWxfc2VlZCg1KQorICAgIHNlZWRfZXZlcnl0aGluZyg1KQogICAgIG91dCA9IGFkZF9yYW5kb21fZWRnZShlZGdlX2luZGV4LCBwPTAuNSkKLSAgICBhc3NlcnQgb3V0WzBdLnRvbGlzdCgpID09IFtbMCwgMSwgMSwgMiwgMiwgMywgMywgMiwgM10sCi0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgWzEsIDAsIDIsIDEsIDMsIDIsIDEsIDIsIDJdXQotCi0gICAgYXNzZXJ0IG91dFsxXS50b2xpc3QoKSA9PSBbWzMsIDIsIDNdLCBbMSwgMiwgMl1dCisgICAgYXNzZXJ0IG91dFswXS50b2xpc3QoKSA9PSBbWzAsIDEsIDEsIDIsIDIsIDMsIDMsIDEsIDJdLAorICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxLCAwLCAyLCAxLCAzLCAyLCAwLCAzLCAwXV0KKyAgICBhc3NlcnQgb3V0WzFdLnRvbGlzdCgpID09IFtbMywgMSwgMl0sIFswLCAzLCAwXV0KIAotICAgIHRvcmNoLm1hbnVhbF9zZWVkKDYpCisgICAgc2VlZF9ldmVyeXRoaW5nKDYpCiAgICAgb3V0ID0gYWRkX3JhbmRvbV9lZGdlKGVkZ2VfaW5kZXgsIHA9MC41LCBmb3JjZV91bmRpcmVjdGVkPVRydWUpCi0gICAgYXNzZXJ0IG91dFswXS50b2xpc3QoKSA9PSBbWzAsIDEsIDEsIDIsIDIsIDMsIDEsIDJdLAotICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxLCAwLCAyLCAxLCAzLCAyLCAyLCAxXV0KLSAgICBhc3NlcnQgb3V0WzFdLnRvbGlzdCgpID09IFtbMSwgMl0sIFsyLCAxXV0KKyAgICBhc3NlcnQgb3V0WzBdLnRvbGlzdCgpID09IFtbMCwgMSwgMSwgMiwgMiwgMywgMSwgM10sCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgWzEsIDAsIDIsIDEsIDMsIDIsIDMsIDFdXQorICAgIGFzc2VydCBvdXRbMV0udG9saXN0KCkgPT0gW1sxLCAzXSwgWzMsIDFdXQogICAgIGFzc2VydCBpc191bmRpcmVjdGVkKG91dFswXSkKICAgICBhc3NlcnQgaXNfdW5kaXJlY3RlZChvdXRbMV0pCiAKLSAgICAjIHRlc3Qgd2l0aCBiaXBhcnRpdGUgZ3JhcGgKLSAgICB0b3JjaC5tYW51YWxfc2VlZCg3KQorICAgICMgVGVzdCBmb3IgYmlwYXJ0aXRlIGdyYXBoOgorICAgIHNlZWRfZXZlcnl0aGluZyg3KQogICAgIGVkZ2VfaW5kZXggPSB0b3JjaC50ZW5zb3IoW1swLCAxLCAyLCAzLCA0LCA1XSwgWzIsIDMsIDEsIDQsIDIsIDFdXSkKLSAgICB3aXRoIHB5dGVzdC5yYWlzZXMoUnVudGltZUVycm9yLAotICAgICAgICAgICAgICAgICAgICAgICBtYXRjaD0ibm90IHN1cHBvcnRlZCBmb3IgaGV0ZXJvZ2VuZW91cyBncmFwaHMiKToKLSAgICAgICAgb3V0ID0gYWRkX3JhbmRvbV9lZGdlKGVkZ2VfaW5kZXgsIHA9MC41LCBmb3JjZV91bmRpcmVjdGVkPVRydWUsCi0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICBudW1fbm9kZXM9KDYsIDUpKQorICAgIHdpdGggcHl0ZXN0LnJhaXNlcyhSdW50aW1lRXJyb3IsIG1hdGNoPSJub3Qgc3VwcG9ydGVkIGZvciBiaXBhcnRpdGUiKToKKyAgICAgICAgYWRkX3JhbmRvbV9lZGdlKGVkZ2VfaW5kZXgsIGZvcmNlX3VuZGlyZWN0ZWQ9VHJ1ZSwgbnVtX25vZGVzPSg2LCA1KSkKICAgICBvdXQgPSBhZGRfcmFuZG9tX2VkZ2UoZWRnZV9pbmRleCwgcD0wLjUsIG51bV9ub2Rlcz0oNiwgNSkpCi0gICAgb3V0WzBdLnRvbGlzdCgpID09IFtbMCwgMSwgMiwgMywgNCwgNSwgMywgNCwgMV0sCi0gICAgICAgICAgICAgICAgICAgICAgICBbMiwgMywgMSwgNCwgMiwgMSwgMSwgMywgMl1dCisgICAgYXNzZXJ0IG91dFswXS50b2xpc3QoKSA9PSBbWzAsIDEsIDIsIDMsIDQsIDUsIDIsIDAsIDJdLAorICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsyLCAzLCAxLCA0LCAyLCAxLCAwLCA0LCAyXV0KKyAgICBhc3NlcnQgb3V0WzFdLnRvbGlzdCgpID09IFtbMiwgMCwgMl0sIFswLCA0LCAyXV0K'\"'\"'))'",
+      "git apply /tmp/receipts-pyg-team__pytorch_geometric-7654-test.patch"
+    ],
+    "workdir": "/pytorch_geometric"
+  },
+  "spec_paths": [
+    "test/utils/test_augmentation.py"
+  ],
+  "spec_tests": [
+    "test/utils/test_augmentation.py::test_add_random_edge"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/utils/test_augmentation.py"
+}

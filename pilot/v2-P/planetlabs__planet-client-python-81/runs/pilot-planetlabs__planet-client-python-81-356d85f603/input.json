@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Unable to get single mosaic metadata\nThe `planet mosaic` command appears to be broken in 0.0.3:\r\n\r\n```\r\n$ planet mosaic color_balance_mosaic\r\nError: MissingResource: <!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n<title>404 Not Found</title>\r\n<h1>Not Found</h1>\r\n<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>\r\n```\r\n\r\n`color_balance_mosaic` does appear when `planet mosaics` is run.",
+  "source": {
+    "image": "docker.io/swerebenchv2/planetlabs-planet-client-python:81-be25433",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-planetlabs__planet-client-python-81-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfbW9zYWljcy5weSBiL3Rlc3RzL3Rlc3RfbW9zYWljcy5weQppbmRleCAwNDg4MmE0Li44NGI0YjMwIDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X21vc2FpY3MucHkKKysrIGIvdGVzdHMvdGVzdF9tb3NhaWNzLnB5CkBAIC00Myw3ICs0Myw3IEBAIGRlZiB0ZXN0X2dldF9tb3NhaWMoKToKIAogICAgICAgICB0ZXh0ID0gcmVhZF9maXh0dXJlKCdnZXQtbW9zYWljLmpzb24nKQogICAgICAgICB1cmkgPSBvcy5wYXRoLmpvaW4oY2xpZW50LmJhc2VfdXJsLAotICAgICAgICAgICAgICAgICAgICAgICAgICAgJ21vc2FpY3MvJXMvJyAlIG1vc2FpY19uYW1lKQorICAgICAgICAgICAgICAgICAgICAgICAgICAgJ21vc2FpY3MvJXMnICUgbW9zYWljX25hbWUpCiAgICAgICAgIG0uZ2V0KHVyaSwgdGV4dD10ZXh0LCBzdGF0dXNfY29kZT0yMDApCiAKICAgICAgICAgciA9IGNsaWVudC5nZXRfbW9zYWljKG1vc2FpY19uYW1lKQo='\"'\"'))'",
+      "git apply /tmp/receipts-planetlabs__planet-client-python-81-test.patch"
+    ],
+    "workdir": "/planet-client-python"
+  },
+  "spec_paths": [
+    "tests/test_mosaics.py"
+  ],
+  "spec_tests": [
+    "tests/test_mosaics.py::test_get_mosaic"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_mosaics.py"
+}

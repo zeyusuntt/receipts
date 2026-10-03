@@ -1,0 +1,72 @@
+============================= test session starts ==============================
+collected 38 items
+
+tests/test_signal.py ..........F..............F...........               [ 97%]
+tests/test_utils.py F                                                    [100%]
+
+=================================== FAILURES ===================================
+E   AttributeError: module 'numpy' has no attribute 'complex'.
+    `np.complex` was a deprecated alias for the builtin `complex`. To avoid this error in existing code, use `complex` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.complex128` here.
+    The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+        https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+/usr/local/lib/python3.10/site-packages/numpy/__init__.py:397: AttributeError: module 'numpy' has no attribute 'complex'.
+E   AttributeError: module 'numpy' has no attribute 'complex'.
+    `np.complex` was a deprecated alias for the builtin `complex`. To avoid this error in existing code, use `complex` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.complex128` here.
+    The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+        https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+/usr/local/lib/python3.10/site-packages/numpy/__init__.py:397: AttributeError: module 'numpy' has no attribute 'complex'.
+E   AttributeError: 'Signal' object has no attribute 'copy'
+/pyfar/tests/test_utils.py:15: AttributeError: 'Signal' object has no attribute 'copy'
+=============================== warnings summary ===============================
+../usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:1428
+  /usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:1428: PytestConfigWarning: Unknown config option: collect_ignore
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+tests/test_signal.py::test_domain_setter_time_when_freq
+  /pyfar/pyfar/signal.py:82: UserWarning: Number of time samples not given, assuming an even number of samples from the number of frequency bins.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+=========================== short test summary info ============================
+PASSED tests/test_signal.py::test_signal_init
+PASSED tests/test_signal.py::test_signal_init_list
+PASSED tests/test_signal.py::test_signal_init_default_parameter
+PASSED tests/test_signal.py::test_signal_comment
+PASSED tests/test_signal.py::test_domain_getter_freq
+PASSED tests/test_signal.py::test_domain_getter_time
+PASSED tests/test_signal.py::test_domain_setter_error
+PASSED tests/test_signal.py::test_domain_setter_freq_when_freq
+PASSED tests/test_signal.py::test_domain_setter_freq_when_time
+PASSED tests/test_signal.py::test_domain_setter_time_when_time
+PASSED tests/test_signal.py::test_signal_init_val
+PASSED tests/test_signal.py::test_signal_init_false_coord
+PASSED tests/test_signal.py::test_n_samples
+PASSED tests/test_signal.py::test_n_bins
+PASSED tests/test_signal.py::test_times
+PASSED tests/test_signal.py::test_getter_time
+PASSED tests/test_signal.py::test_setter_time
+PASSED tests/test_signal.py::test_getter_freq
+PASSED tests/test_signal.py::test_setter_freq
+PASSED tests/test_signal.py::test_getter_sampling_rate
+PASSED tests/test_signal.py::test_setter_sampligrate
+PASSED tests/test_signal.py::test_getter_signal_type
+PASSED tests/test_signal.py::test_setter_signal_type
+PASSED tests/test_signal.py::test_getter_fft_norm
+PASSED tests/test_signal.py::test_dtype
+PASSED tests/test_signal.py::test_signal_length
+PASSED tests/test_signal.py::test_cshape
+PASSED tests/test_signal.py::test_magic_getitem
+PASSED tests/test_signal.py::test_magic_getitem_slice
+PASSED tests/test_signal.py::test_magic_getitem_allslice
+PASSED tests/test_signal.py::test_magic_setitem
+PASSED tests/test_signal.py::test_magic_setitem_wrong_sr
+PASSED tests/test_signal.py::test_magic_setitem_wrong_norm
+PASSED tests/test_signal.py::test_magic_setitem_wrong_n_samples
+PASSED tests/test_signal.py::test_magic_len
+FAILED tests/test_signal.py::test_domain_setter_time_when_freq - AttributeErr...
+FAILED tests/test_signal.py::test_setter_fft_norm - AttributeError: module 'n...
+FAILED tests/test_utils.py::test_copy - AttributeError: 'Signal' object has n...
+=================== 3 failed, 35 passed, 2 warnings in 2.67s ===================

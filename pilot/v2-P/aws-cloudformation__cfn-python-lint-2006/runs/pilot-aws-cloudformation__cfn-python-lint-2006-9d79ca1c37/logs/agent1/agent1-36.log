@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+collected 0 items / 1 error
+
+==================================== ERRORS ====================================
+__________ ERROR collecting test/unit/rules/mappings/test_key_name.py __________
+ImportError while importing test module '/cfn-python-lint/test/unit/rules/mappings/test_key_name.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+test/unit/rules/__init__.py:5: in <module>
+    from test.testlib.testcase import BaseTestCase
+test/testlib/testcase.py:6: in <module>
+    import cfnlint.decode.cfn_yaml
+src/cfnlint/__init__.py:10: in <module>
+    from cfnlint.transform import Transform
+src/cfnlint/transform.py:13: in <module>
+    from cfnlint.helpers import load_resource, convert_dict, format_json_string
+E   ImportError: cannot import name 'convert_dict' from 'cfnlint.helpers' (/cfn-python-lint/src/cfnlint/helpers.py)
+----------- generated xml file: /opt/receipts/reports/agent1-36.xml ------------
+=========================== short test summary info ============================
+ERROR test/unit/rules/mappings/test_key_name.py
+=============================== 1 error in 1.28s ===============================
+ERROR: found no collectors for /cfn-python-lint/test/unit/rules/mappings/test_key_name.py::TestKeyName::test_file_negative
+

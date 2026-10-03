@@ -1,0 +1,24 @@
+Testing that add_random_edge does not introduce duplicate edges...
+Original edges: [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1), (0, 2), (1, 2), (2, 2)]
+Run 1: Added edges: []
+Run 2: Added edges: []
+Run 3: Added edges: []
+Run 4: Added edges: []
+Run 5: Added edges: []
+Run 6: Added edges: []
+Run 7: Added edges: []
+Run 8: Added edges: []
+Run 9: Added edges: []
+Run 10: Added edges: []
+✓ No duplicates found in multiple runs
+
+Testing that basic functionality is preserved...
+Original edges: [(0, 1), (1, 0)]
+Traceback (most recent call last):
+  File "/tmp/comprehensive_test.py", line 53, in <module>
+    success2 = test_original_functionality_preserved()
+  File "/tmp/comprehensive_test.py", line 38, in test_original_functionality_preserved
+    result_edge_index, added_edges = add_random_edge(edge_index, p=2.0, num_nodes=10)  # Want to add 2*2=4 edges
+  File "/pytorch_geometric/torch_geometric/utils/augmentation.py", line 211, in add_random_edge
+    raise ValueError(f'Ratio of added edges has to be between 0 and 1 '
+ValueError: Ratio of added edges has to be between 0 and 1 (got 2.0

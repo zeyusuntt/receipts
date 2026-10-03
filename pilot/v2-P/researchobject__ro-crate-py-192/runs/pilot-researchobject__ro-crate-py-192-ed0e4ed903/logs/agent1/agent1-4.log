@@ -1,0 +1,65 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /ro-crate-py
+configfile: setup.cfg
+collecting ... collected 1 item
+
+test/test_model.py::test_entity_in_properties FAILED                     [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_entity_in_properties ___________________________
+
+tmpdir = PosixPath('/tmp/pytest-of-root/pytest-2/test_entity_in_properties0')
+
+    def test_entity_in_properties(tmpdir):
+        file_id = "data.csv"
+        file_path = tmpdir / file_id
+        with open(file_path, "wt") as fout:
+            fout.write("DATA\n")
+        crate = ROCrate()
+        alice_id = "https://orcid.org/0000-0000-0000-0000"
+        bob_id = "https://orcid.org/0000-0000-0000-0001"
+        alice = crate.add(Person(crate, alice_id, properties={
+            "name": "Alice Doe",
+            "affiliation": "University of Flatland",
+        }))
+        bob = crate.add(Person(crate, bob_id, properties={
+            "name": "Bob Doe",
+            "affiliation": "University of Flatland",
+        }))
+        data = crate.add_file(file_path, properties={
+            "name": "Data file",
+            "encodingFormat": "text/csv",
+            "author": [alice, bob],
+        })
+        authors = data["author"]
+        assert len(authors) == 2
+        assert authors[0] is alice
+        assert authors[1] is bob
+    
+>       book = crate.add(ContextEntity(crate, "#44cats", properties={
+            "@type": "Book",
+            "name": "44 Cats",
+            "author": alice,
+        }))
+
+test/test_model.py:544: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+rocrate/model/contextentity.py:35: in __init__
+    super(ContextEntity, self).__init__(crate, identifier, properties)
+rocrate/model/entity.py:40: in __init__
+    self[key] = value
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <#44cats Thing>, key = '@type', value = 'Book'
+
+    def __setitem__(self, key: str, value):
+        if key.startswith("@"):
+>           raise KeyError(f"cannot set '{key}'")
+E           KeyError: "cannot set '@type'"
+
+rocrate/model/entity.py:100: KeyError
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+FAILED test/test_model.py::test_entity_in_properties - KeyError: "cannot set ...
+============================== 1 failed in 0.11s ===============================

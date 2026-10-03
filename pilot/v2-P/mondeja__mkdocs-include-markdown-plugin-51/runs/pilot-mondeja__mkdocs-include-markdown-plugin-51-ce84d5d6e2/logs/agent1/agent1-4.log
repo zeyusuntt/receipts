@@ -1,0 +1,267 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-7.4.4, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /mkdocs-include-markdown-plugin
+collecting ... collected 1 item
+
+tests/test_include.py::test_include[multiple-start-end-matchs] FAILED    [100%]
+
+=================================== FAILURES ===================================
+___________________ test_include[multiple-start-end-matchs] ____________________
+
+includer_schema = '{%\n  include-markdown "{filepath}"\n  start="<!--start-tag-->"\n  end="<!--end-tag-->"\n  comments=false\n%}'
+content_to_include = "Some text\n\n<!--start-tag-->\nThis should be included.\n<!--end-tag-->\n\nThis shouldn't be included.\n\n<!--start-t...\n\n<!--start-->\n<!--end-->\n\nEtc\n<!--start-tag-->\nThis should be included even if hasn't defined after end tag.\n"
+expected_result = "\nThis should be included.\n\nThis should be included also.\n\nThis should be included even if hasn't defined after end tag.\n"
+page = <function page.<locals>._page at 0x7ffff6adda20>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-2/test_include_multiple_start_en0')
+
+    @pytest.mark.parametrize(
+        (
+            'includer_schema',
+            'content_to_include',
+            'expected_result',
+        ),
+        (
+            pytest.param(
+                '# Header\n\n{% include "{filepath}" %}\n',
+                'This must be included.',
+                '# Header\n\nThis must be included.\n',
+                id='simple case',
+            ),
+    
+            # Newline at the end of the included content
+            pytest.param(
+                '# Header\n\n{% include "{filepath}" %}\n',
+                'This must be included.\n',
+                '# Header\n\nThis must be included.\n',
+                id='newline at end of included',
+            ),
+    
+            # Start and end options
+            pytest.param(
+                '''# Header
+    
+    {%
+      include "{filepath}"
+      start="start here"
+      end="end here"
+    %}
+    ''',
+                '''This must be ignored.
+    start hereThis must be included.end here
+    This must be ignored also.
+    ''',
+                '''# Header
+    
+    This must be included.
+    ''',
+                id='start/end',
+            ),
+    
+            # Start and end options with escaped special characters
+            pytest.param(
+                '''# Header
+    
+    {%
+      include "{filepath}"
+      start="\\tstart here"
+      end="\\tend here"
+    %}
+    ''',
+                '''This must be ignored.
+    \tstart hereThis must be included.\tend here
+    This must be ignored also.
+    ''',
+                '''# Header
+    
+    This must be included.
+    ''',
+                id='start/end (escaped special characters)',
+            ),
+    
+            # Start and end options with unescaped special characters
+            pytest.param(
+                '''# Header
+    
+    {%
+      include "{filepath}"
+      start="\tstart here"
+      end="\tend here"
+    %}
+    ''',
+                '''This must be ignored.
+    \tstart hereThis must be included.\tend here
+    This must be ignored also.
+    ''',
+                '''# Header
+    
+    This must be included.
+    ''',
+                id='start/end (unescaped special characters)',
+            ),
+    
+            # Multiples start and end matchs
+            pytest.param(
+                '''{%
+      include-markdown "{filepath}"
+      start="<!--start-tag-->"
+      end="<!--end-tag-->"
+      comments=false
+    %}''',
+                '''Some text
+    
+    <!--start-tag-->
+    This should be included.
+    <!--end-tag-->
+    
+    This shouldn't be included.
+    
+    <!--start-tag-->
+    This should be included also.
+    <!--end-tag-->
+    
+    Here some text
+    that should be ignored.
+    
+    <!--start-->
+    <!--end-->
+    
+    Etc
+    <!--start-tag-->
+    This should be included even if hasn't defined after end tag.
+    ''',
+                '''
+    This should be included.
+    
+    This should be included also.
+    
+    This should be included even if hasn't defined after end tag.
+    ''',
+                id='multiple-start-end-matchs',
+            ),
+    
+            # Preserve included indent
+            pytest.param(
+                '''1. Ordered list item
+        {%
+          include "{filepath}"
+          preserve-includer-indent=false
+        %}''',
+                '''- Unordered sublist item
+        - Other unordered sublist item''',
+                '''1. Ordered list item
+        - Unordered sublist item
+        - Other unordered sublist item''',
+                id='preserve included indent',
+            ),
+    
+            # Preserve includer indent
+            pytest.param(
+                '''1. Ordered list item
+        {%
+          include "{filepath}"
+        %}''',
+                '''- First unordered sublist item
+    - Second unordered sublist item
+    - Third unordered sublist item''',
+                '''1. Ordered list item
+        - First unordered sublist item
+        - Second unordered sublist item
+        - Third unordered sublist item''',
+                id='preserve includer indent',
+            ),
+    
+            # Custom options ordering
+            pytest.param(
+                '''1. Ordered list item
+        {%
+          include "{filepath}"
+          preserve-includer-indent=true
+          end="<!--end-->"
+          start="<!--start-->"
+        %}''',
+                '''<!--start-->- First unordered sublist item
+    - Second unordered sublist item<!--end-->
+    - Third unordered sublist item''',
+                '''1. Ordered list item
+        - First unordered sublist item
+        - Second unordered sublist item''',
+                id='custom options ordering',
+            ),
+    
+            # Content unindentation
+            pytest.param(
+                '''# Header
+    
+    {%
+      include "{filepath}"
+      dedent=true
+    %}
+    ''',
+                '''    - Foo
+        - Bar
+            - Baz''',
+                '''# Header
+    
+    - Foo
+    - Bar
+        - Baz
+    ''',
+                id='dedent=true',
+            ),
+    
+            # Content unindentation + preserve includer indent
+            pytest.param(
+                '''# Header
+    
+        {%
+          include "{filepath}"
+          dedent=true
+          preserve-includer-indent=true
+        %}
+    ''',
+                '''        - Foo
+            - Bar
+                - Baz''',
+                '''# Header
+    
+        - Foo
+        - Bar
+            - Baz
+    ''',
+                id='dedent=true,preserve-includer-indent=true',
+            ),
+        ),
+    )
+    def test_include(
+        includer_schema, content_to_include, expected_result,
+        page, tmp_path,
+    ):
+        included_filepath = tmp_path / 'included.md'
+        includer_filepath = tmp_path / 'includer.md'
+    
+        included_filepath.write_text(content_to_include)
+        includer_filepath.write_text(
+            content_to_include.replace('{filepath}', included_filepath.as_posix()),
+        )
+    
+        page_content = includer_schema.replace(
+            '{filepath}', included_filepath.as_posix(),
+        )
+        includer_filepath.write_text(page_content)
+    
+>       assert on_page_markdown(
+            page_content, page(included_filepath),
+        ) == expected_result
+E       AssertionError: assert '\nThis shoul...luded also.\n' == '\nThis shoul...er end tag.\n'
+E           
+E           This should be included.
+E           
+E           This should be included also.
+E         - 
+E         - This should be included even if hasn't defined after end tag.
+
+tests/test_include.py:245: AssertionError
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_include.py::test_include[multiple-start-end-matchs] - Asser...
+============================== 1 failed in 0.04s ===============================

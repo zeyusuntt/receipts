@@ -1,0 +1,41 @@
+diff --git a/autofit/non_linear/grid/sensitivity/__init__.py b/autofit/non_linear/grid/sensitivity/__init__.py
+index fa19768c..50ddf826 100644
+--- a/autofit/non_linear/grid/sensitivity/__init__.py
++++ b/autofit/non_linear/grid/sensitivity/__init__.py
+@@ -253,15 +253,27 @@ class Sensitivity:
+         These limits can be scaled using the limit_scale variable. If the variable
+         is 2 then the priors will have width twice the step size.
+         """
+-        half_step = self.limit_scale * self.step_size / 2
+-        for list_ in self._lists:
+-            limits = [
+-                (
+-                    prior.value_for(max(0.0, centre - half_step)),
+-                    prior.value_for(min(1.0, centre + half_step)),
+-                )
+-                for centre, prior in zip(list_, self.perturb_model.priors_ordered_by_id)
+-            ]
++        if isinstance(self.step_size, tuple):
++            half_step = tuple(self.limit_scale * s / 2 for s in self.step_size)
++        else:
++            half_step = self.limit_scale * self.step_size / 2
++        for list_ in self._lists:
++            if isinstance(half_step, tuple):
++                limits = [
++                    (
++                        prior.value_for(max(0.0, centre - half_step[i])),
++                        prior.value_for(min(1.0, centre + half_step[i])),
++                    )
++                    for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
++                ]
++            else:
++                limits = [
++                    (
++                        prior.value_for(max(0.0, centre - half_step)),
++                        prior.value_for(min(1.0, centre + half_step)),
++                    )
++                    for centre, prior in zip(list_, self.perturb_model.priors_ordered_by_id)
++                ]
+             yield self.perturb_model.with_limits(limits)
+ 
+     def _make_jobs(self) -> Generator[Job, None, None]:

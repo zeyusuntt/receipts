@@ -1,0 +1,693 @@
+============================= test session starts ==============================
+collected 39 items
+
+tests/test_backend/test_directx/test_codegen.py ...F....                 [ 20%]
+tests/test_backend/test_directx/test_parser.py ...F....                  [ 41%]
+tests/test_translator/test_codegen/test_directx_codegen.py ...........   [ 69%]
+tests/test_translator/test_parser.py ............                        [100%]
+
+=================================== FAILURES ===================================
+E   SyntaxError: Expected SEMICOLON, got LBRACE
+
+During handling of the above exception, another exception occurred:
+E   Failed: While loop parsing or code generation not implemented.
+/crosstl/tests/test_backend/test_directx/test_codegen.py:210: Failed: While loop parsing or code generation not implemented.
+E   SyntaxError: Expected SEMICOLON, got LBRACE
+
+During handling of the above exception, another exception occurred:
+E   Failed: while parsing not implemented
+/crosstl/tests/test_backend/test_directx/test_parser.py:94: Failed: while parsing not implemented
+==================================== PASSES ====================================
+_____________________________ test_struct_codegen ______________________________
+----------------------------- Captured stdout call -----------------------------
+shader main {
+    struct VSInput {
+        vec4 position @ POSITION;
+        vec4 color @ TEXCOORD0;
+    }
+    struct VSOutput {
+        vec4 out_position @ TEXCOORD0;
+    }
+    struct PSInput {
+        vec4 in_position @ TEXCOORD0;
+    }
+    struct PSOutput {
+        vec4 out_color @ gl_FragColor0;
+    }
+    // Vertex Shader
+    vertex {
+       VSOutput VSMain(VSInput input )  {
+        VSOutput output;
+        output.out_position = input.position;
+        return  output;
+    }
+
+    }
+
+    // Fragment Shader
+    fragment {
+       PSOutput PSMain(PSInput input )  {
+        PSOutput output;
+        output.out_color = input.in_position;
+        return  output;
+    }
+
+    }
+
+}
+
+_______________________________ test_if_codegen ________________________________
+----------------------------- Captured stdout call -----------------------------
+shader main {
+    struct VSInput {
+        vec4 position @ POSITION;
+        vec4 color @ TEXCOORD0;
+    }
+    struct VSOutput {
+        vec4 out_position @ TEXCOORD0;
+    }
+    struct PSInput {
+        vec4 in_position @ TEXCOORD0;
+    }
+    struct PSOutput {
+        vec4 out_color @ gl_FragColor0;
+    }
+    // Vertex Shader
+    vertex {
+       VSOutput VSMain(VSInput input )  {
+        VSOutput output;
+        output.out_position = input.position;
+        if (input.color.r > 0.5) {
+            output.out_position = input.color;
+        }
+        return  output;
+    }
+
+    }
+
+    // Fragment Shader
+    fragment {
+       PSOutput PSMain(PSInput input )  {
+        PSOutput output;
+        output.out_color = input.in_position;
+        if (input.in_position.r > 0.5) {
+            output.out_color = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+        return  output;
+    }
+
+    }
+
+}
+
+_______________________________ test_for_codegen _______________________________
+----------------------------- Captured stdout call -----------------------------
+shader main {
+    struct VSInput {
+        vec4 position @ POSITION;
+        vec4 color @ TEXCOORD0;
+    }
+    struct VSOutput {
+        vec4 out_position @ TEXCOORD0;
+    }
+    struct PSInput {
+        vec4 in_position @ TEXCOORD0;
+    }
+    struct PSOutput {
+        vec4 out_color @ gl_FragColor0;
+    }
+    // Vertex Shader
+    vertex {
+       VSOutput VSMain(VSInput input )  {
+        VSOutput output;
+        output.out_position = input.position;
+        for (int i = 0;  i < 10;  i =  i + 1) {
+            output.out_position = input.color;
+        }
+        return  output;
+    }
+
+    }
+
+    // Fragment Shader
+    fragment {
+       PSOutput PSMain(PSInput input )  {
+        PSOutput output;
+        output.out_color = input.in_position;
+        for (int i = 0;  i < 10;  i =  i + 1) {
+            output.out_color = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+        return  output;
+    }
+
+    }
+
+}
+
+______________________________ test_else_codegen _______________________________
+----------------------------- Captured stdout call -----------------------------
+shader main {
+    struct VSInput {
+        vec4 position @ POSITION;
+        vec4 color @ TEXCOORD0;
+    }
+    struct VSOutput {
+        vec4 out_position @ TEXCOORD0;
+    }
+    struct PSInput {
+        vec4 in_position @ TEXCOORD0;
+    }
+    struct PSOutput {
+        vec4 out_color @ gl_FragColor0;
+    }
+    // Vertex Shader
+    vertex {
+       VSOutput VSMain(VSInput input )  {
+        VSOutput output;
+        output.out_position = input.position;
+        if (input.color.r > 0.5) {
+            output.out_position = input.color;
+        } else {
+            output.out_position = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+        return  output;
+    }
+
+    }
+
+    // Fragment Shader
+    fragment {
+       PSOutput PSMain(PSInput input )  {
+        PSOutput output;
+        output.out_color = input.in_position;
+        if (input.in_position.r > 0.5) {
+            output.out_color = vec4(1.0, 1.0, 1.0, 1.0);
+        } else {
+            output.out_color = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+        return  output;
+    }
+
+    }
+
+}
+
+__________________________ test_function_call_codegen __________________________
+----------------------------- Captured stdout call -----------------------------
+shader main {
+    struct VSInput {
+        vec4 position @ POSITION;
+        vec4 color @ TEXCOORD0;
+    }
+    struct VSOutput {
+        vec4 out_position @ TEXCOORD0;
+    }
+    struct PSInput {
+        vec4 in_position @ TEXCOORD0;
+    }
+    struct PSOutput {
+        vec4 out_color @ gl_FragColor0;
+    }
+       vec4 Add(vec4 a , vec4 b )  {
+        return  a +  b;
+    }
+
+    // Vertex Shader
+    vertex {
+       VSOutput VSMain(VSInput input )  {
+        VSOutput output;
+        output.out_position = input.position;
+        vec4 result = Add(input.position, input.color);
+        return  output;
+    }
+
+    }
+
+    // Fragment Shader
+    fragment {
+       PSOutput PSMain(PSInput input )  {
+        PSOutput output;
+        output.out_color = input.in_position;
+        vec4 result = Add(input.in_position, vec4(1.0, 1.0, 1.0, 1.0));
+        return  output;
+    }
+
+    }
+
+}
+
+_____________________________ test_else_if_codegen _____________________________
+----------------------------- Captured stdout call -----------------------------
+shader main {
+    struct VSInput {
+        vec4 position @ POSITION;
+        vec4 color @ TEXCOORD0;
+    }
+    struct VSOutput {
+        vec4 out_position @ TEXCOORD0;
+    }
+    struct PSInput {
+        vec4 in_position @ TEXCOORD0;
+    }
+    struct PSOutput {
+        vec4 out_color @ gl_FragColor0;
+    }
+    // Vertex Shader
+    vertex {
+       VSOutput VSMain(VSInput input )  {
+        VSOutput output;
+        output.out_position = input.position;
+        if (input.color.r > 0.5) {
+            output.out_position = input.color;
+        } else {
+            output.out_position = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+        return  output;
+    }
+
+    }
+
+    // Fragment Shader
+    fragment {
+       PSOutput PSMain(PSInput input )  {
+        PSOutput output;
+        if (input.in_position.r > 0.5) {
+            output.out_color = input.in_position;
+        } else if (input.in_position.r == 0.5) {
+            output.out_color = vec4(1.0, 1.0, 1.0, 1.0);
+        } else {
+            output.out_color = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+
+        return  output;
+    }
+
+    }
+
+}
+
+_________________________ test_assignment_ops_parsing __________________________
+----------------------------- Captured stdout call -----------------------------
+shader main {
+    // Fragment Shader
+    fragment {
+       PSOutput PSMain(PSInput input )  {
+        PSOutput output;
+        output.out_color = vec4(0.0, 0.0, 0.0, 1.0);
+        if (input.in_position.r > 0.5) {
+            output.out_color += input.in_position;
+        }
+        if (input.in_position.r < 0.5) {
+            output.out_color -= vec4(0.1, 0.1, 0.1, 0.1);
+        }
+        if (input.in_position.g > 0.5) {
+            output.out_color *= 2.0;
+        }
+        if (input.in_position.b > 0.5) {
+            out_color /= 2.0;
+        }
+        if (input.in_position.r == 0.5) {
+            uint redValue = asuint(output.out_color.r);
+            output.redValue ^= 0 x1;
+            output.out_color.r = asfloat( redValue);
+            outpu.redValue |= 0 x2;
+        }
+        return  output;
+    }
+
+    }
+
+}
+
+_________________________________ test_struct __________________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+
+______________________________ test_if_statement _______________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+    if (input.texCoord.x > 0.5) {
+         output.color = vec4(1.0, 1.0, 1.0, 1.0);
+    } else {
+         output.color = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+     output.color = vec4(input.texCoord, 0.0, 1.0);
+    return  output;
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    float brightness = texture( iChannel0, input.color.xy).r;
+    float bloom = max(0.0,  brightness - 0.5);
+    if ( bloom > 0.5) {
+         bloom = 0.5;
+    } else {
+         bloom = 0.0;
+    }
+    float3 texColor = texture( iChannel0, input.color.xy).rgb;
+    float3 colorWithBloom =  texColor + vec3( bloom);
+    return vec4( colorWithBloom, 1.0);
+}
+
+
+______________________________ test_for_statement ______________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+    for (int i = 0; i < 10; i++) {
+         output.color = vec4(1.0, 1.0, 1.0, 1.0);
+    }
+     output.color = vec4(input.texCoord, 0.0, 1.0);
+    return  output;
+}
+
+
+____________________________ test_else_if_statement ____________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+    if (input.texCoord.x > 0.5) {
+         output.color = vec4(1.0, 1.0, 1.0, 1.0);
+    } else if (input.texCoord.x < 0.5) {
+         output.color = vec4(0.0, 0.0, 0.0, 1.0);
+    } else {
+         output.color = vec4(0.5, 0.5, 0.5, 1.0);
+         output.color = vec4(input.texCoord, 0.0, 1.0);
+        return  output;
+    }
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    float brightness = texture( iChannel0, input.color.xy).r;
+    float bloom = max(0.0,  brightness - 0.5);
+    if ( bloom > 0.5) {
+         bloom = 0.5;
+    } else if ( bloom < 0.5) {
+         bloom = 0.0;
+    } else {
+         bloom = 0.5;
+    }
+    float3 texColor = texture( iChannel0, input.color.xy).rgb;
+    float3 colorWithBloom =  texColor + vec3( bloom);
+    return vec4( colorWithBloom, 1.0);
+}
+
+
+______________________________ test_function_call ______________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+float4 addColor(float4 color1 , float4 color2 )  {
+    return  color1 +  color2;
+}
+
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+     output.color = addColor(vec4(1.0, 1.0, 1.0, 1.0), vec4(0.5, 0.5, 0.5, 1.0));
+     output.color = vec4(input.texCoord, 0.0, 1.0);
+    return  output;
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    float brightness = texture( iChannel0, input.color.xy).r;
+    float bloom = max(0.0,  brightness - 0.5);
+    float3 texColor = texture( iChannel0, input.color.xy).rgb;
+    float3 colorWithBloom =  texColor + vec3( bloom);
+    return vec4( colorWithBloom, 1.0);
+}
+
+
+_________________________ test_assignment_or_operator __________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+     output.color = addColor(vec4(1.0, 1.0, 1.0, 1.0), vec4(0.5, 0.5, 0.5, 1.0));
+     vUV.x |= 3.0;
+     output.color = vec4(input.texCoord, 0.0, 1.0);
+    return  output;
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    float brightness = texture( iChannel0, input.color.xy).r;
+    float bloom = max(0.0,  brightness - 0.5);
+     vUV.x |= 3.0;
+    float3 texColor = texture( iChannel0, input.color.xy).rgb;
+    float3 colorWithBloom =  texColor + vec3( bloom);
+    return vec4( colorWithBloom, 1.0);
+}
+
+
+_______________________ test_assignment_modulus_operator _______________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+     output.color = addColor(vec4(1.0, 1.0, 1.0, 1.0), vec4(0.5, 0.5, 0.5, 1.0));
+    uint a ^=  b;
+     output.color = vec4(input.texCoord, 0.0, 1.0);
+    return  output;
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    float brightness = texture( iChannel0, input.color.xy).r;
+    float bloom = max(0.0,  brightness - 0.5);
+    uint a ^=  b;
+    float3 texColor = texture( iChannel0, input.color.xy).rgb;
+    float3 colorWithBloom =  texColor + vec3( bloom);
+    return vec4( colorWithBloom, 1.0);
+}
+
+
+_________________________ test_assignment_xor_operator _________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+     output.color = addColor(vec4(1.0, 1.0, 1.0, 1.0), vec4(0.5, 0.5, 0.5, 1.0));
+    uint a ^=  b;
+     output.color = vec4(input.texCoord, 0.0, 1.0);
+    return  output;
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    float brightness = texture( iChannel0, input.color.xy).r;
+    float bloom = max(0.0,  brightness - 0.5);
+    uint a ^=  b;
+    float3 texColor = texture( iChannel0, input.color.xy).rgb;
+    float3 colorWithBloom =  texColor + vec3( bloom);
+    return vec4( colorWithBloom, 1.0);
+}
+
+
+_______________________ test_assignment_shift_operators ________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+     output.color = addColor(vec4(1.0, 1.0, 1.0, 1.0), vec4(0.5, 0.5, 0.5, 1.0));
+    uint a >>= 1;
+    uint b <<= 2;
+     output.color = vec4(input.texCoord, 0.0, 1.0);
+    return  output;
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    float brightness = texture( iChannel0, input.color.xy).r;
+    float bloom = max(0.0,  brightness - 0.5);
+    uint a >>= 1;
+    uint b <<= 2;
+    float3 texColor = texture( iChannel0, input.color.xy).rgb;
+    float3 colorWithBloom =  texColor + vec3( bloom);
+    return vec4( colorWithBloom, 1.0);
+}
+
+
+____________________________ test_bitwise_operators ____________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+     output.color = addColor(vec4(1.0, 1.0, 1.0, 1.0), vec4(0.5, 0.5, 0.5, 1.0));
+     isLightOn = 2 BITWISE_AND 1;
+     isLightOn = 2 BITWISE_OR 1;
+     isLightOn = 2 ^ 1;
+     output.color = vec4(input.texCoord, 0.0, 1.0);
+    return  output;
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    float brightness = texture( iChannel0, input.color.xy).r;
+    float bloom = max(0.0,  brightness - 0.5);
+     isLightOn = 2 BITWISE_AND 1;
+     isLightOn = 2 BITWISE_OR 1;
+     isLightOn = 2 ^ 1;
+    float3 texColor = texture( iChannel0, input.color.xy).rgb;
+    float3 colorWithBloom =  texColor + vec3( bloom);
+    return vec4( colorWithBloom, 1.0);
+}
+
+
+__________________________ test_bitwise_and_operator ___________________________
+----------------------------- Captured stdout call -----------------------------
+
+struct VSInput {
+    float2 texCoord : TEXCOORD0;
+}
+struct VSOutput {
+    float4 color : COLOR;
+}
+// Texture Samplers
+Texture2D iChannel0 :register(t0);
+// Vertex Shader
+VSOutput VSMain(VSInput input )  {
+    VSOutput output;
+     output.color = vec4(float(int(input.texCoord.x * 100.0) BITWISE_AND 15), float(int(input.texCoord.y * 100.0) BITWISE_AND 15), 0.0, 1.0);
+    return  output;
+}
+
+// Fragment Shader
+float4 PSMain(VSOutput input ) : SV_TARGET {
+    return vec4(input.color.rgb, 1.0);
+}
+
+
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+=========================== short test summary info ============================
+PASSED tests/test_backend/test_directx/test_codegen.py::test_struct_codegen
+PASSED tests/test_backend/test_directx/test_codegen.py::test_if_codegen
+PASSED tests/test_backend/test_directx/test_codegen.py::test_for_codegen
+PASSED tests/test_backend/test_directx/test_codegen.py::test_else_codegen
+PASSED tests/test_backend/test_directx/test_codegen.py::test_function_call_codegen
+PASSED tests/test_backend/test_directx/test_codegen.py::test_else_if_codegen
+PASSED tests/test_backend/test_directx/test_codegen.py::test_assignment_ops_parsing
+PASSED tests/test_backend/test_directx/test_parser.py::test_struct_parsing
+PASSED tests/test_backend/test_directx/test_parser.py::test_if_parsing
+PASSED tests/test_backend/test_directx/test_parser.py::test_for_parsing
+PASSED tests/test_backend/test_directx/test_parser.py::test_else_parsing
+PASSED tests/test_backend/test_directx/test_parser.py::test_function_call_parsing
+PASSED tests/test_backend/test_directx/test_parser.py::test_else_if_parsing
+PASSED tests/test_backend/test_directx/test_parser.py::test_assignment_ops_parsing
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_struct
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_if_statement
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_for_statement
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_else_if_statement
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_function_call
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_assignment_or_operator
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_assignment_modulus_operator
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_assignment_xor_operator
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_assignment_shift_operators
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_bitwise_operators
+PASSED tests/test_translator/test_codegen/test_directx_codegen.py::test_bitwise_and_operator
+PASSED tests/test_translator/test_parser.py::test_struct_tokenization
+PASSED tests/test_translator/test_parser.py::test_if_statement
+PASSED tests/test_translator/test_parser.py::test_for_statement
+PASSED tests/test_translator/test_parser.py::test_else_if_statement
+PASSED tests/test_translator/test_parser.py::test_function_call
+PASSED tests/test_translator/test_parser.py::test_assign_shift_right
+PASSED tests/test_translator/test_parser.py::test_logical_operators
+PASSED tests/test_translator/test_parser.py::test_var_assignment
+PASSED tests/test_translator/test_parser.py::test_assign_ops
+PASSED tests/test_translator/test_parser.py::test_bitwise_operators
+PASSED tests/test_translator/test_parser.py::test_xor_operator
+PASSED tests/test_translator/test_parser.py::test_and_operator
+FAILED tests/test_backend/test_directx/test_codegen.py::test_while_codegen - ...
+FAILED tests/test_backend/test_directx/test_parser.py::test_while_parsing - F...
+========================= 2 failed, 37 passed in 0.25s =========================

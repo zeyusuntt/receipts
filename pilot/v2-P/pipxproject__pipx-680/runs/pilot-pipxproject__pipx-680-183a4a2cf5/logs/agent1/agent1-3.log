@@ -1,0 +1,239 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pipx
+configfile: pyproject.toml
+plugins: cov-7.0.0
+collecting ... collected 4 items
+
+tests/test_list.py::test_cli FAILED                                      [ 25%]
+tests/test_list.py::test_missing_interpreter FAILED                      [ 50%]
+tests/test_list.py::test_list_legacy_venv[None] FAILED                   [ 75%]
+tests/test_list.py::test_list_legacy_venv[0.1] FAILED                    [100%]
+
+=================================== FAILURES ===================================
+___________________________________ test_cli ___________________________________
+
+pipx_temp_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffff6c5a8c0>
+capsys = <_pytest.capture.CaptureFixture object at 0x7ffff6c5a5c0>
+
+    def test_cli(pipx_temp_env, monkeypatch, capsys):
+        assert not run_pipx_cli(["list"])
+        captured = capsys.readouterr()
+>       assert "nothing has been installed with pipx" in captured.err
+E       AssertionError: assert 'nothing has been installed with pipx' in ''
+E        +  where '' = CaptureResult(out='nothing has been installed with pipx 😴\n', err='').err
+
+tests/test_list.py:22: AssertionError
+------------------------------ Captured log call -------------------------------
+DEBUG    pipx.main:main.py:715 2026-10-03 20:15:14
+DEBUG    pipx.main:main.py:716 pipx list
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_cli0/subdir/pipxhome/venvs
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_cli0/otherdir/pipxbindir
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_cli0/subdir/pipxhome/.cache
+DEBUG    pipx.main:main.py:776 pipx finished.
+___________________________ test_missing_interpreter ___________________________
+
+pipx_temp_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffff6c5a560>
+capsys = <_pytest.capture.CaptureFixture object at 0x7ffff6c5b880>
+
+    def test_missing_interpreter(pipx_temp_env, monkeypatch, capsys):
+        assert not run_pipx_cli(["install", "pycowsay"])
+    
+        assert not run_pipx_cli(["list"])
+        captured = capsys.readouterr()
+        assert "package pycowsay has invalid interpreter" not in captured.err
+    
+        remove_venv_interpreter("pycowsay")
+    
+        assert run_pipx_cli(["list"])
+        captured = capsys.readouterr()
+>       assert "package pycowsay has invalid interpreter" in captured.err
+E       AssertionError: assert 'package pycowsay has invalid interpreter' in ''
+E        +  where '' = CaptureResult(out='venvs are in /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs\napps are exposed on your $PATH at /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/otherdir/pipxbindir\n   package pycowsay has invalid interpreter /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs/pycowsay/bin/python\n\nOne or more packages have a missing python interpreter.\n    To fix, execute: pipx reinstall-all\n\n', err='').err
+
+tests/test_list.py:36: AssertionError
+------------------------------ Captured log call -------------------------------
+DEBUG    pipx.main:main.py:715 2026-10-03 20:15:14
+DEBUG    pipx.main:main.py:716 pipx install pycowsay
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/otherdir/pipxbindir
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/.cache
+INFO     pipx.commands.common:common.py:320 Determined package name: pycowsay
+INFO     pipx.commands.common:common.py:321 Package name determined in 0.0s
+INFO     pipx.util:util.py:135 running /usr/local/bin/python -m venv --without-pip /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs/pycowsay
+DEBUG    pipx.util:util.py:148 stdout:
+DEBUG    pipx.util:util.py:150 stderr:
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /usr/local/bin/python -m venv --clear /tmp/pytest-of-root/pytest-2/session_shareddir0
+DEBUG    pipx.util:util.py:148 stdout:
+DEBUG    pipx.util:util.py:150 stderr:
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.shared_libs:shared_libs.py:91 Upgrading shared libraries in /tmp/pytest-of-root/pytest-2/session_shareddir0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/session_shareddir0/bin/python -m pip --disable-pip-version-check install --force-reinstall -q --upgrade pip setuptools wheel
+DEBUG    pipx.util:util.py:148 stdout:
+DEBUG    pipx.util:util.py:150 stderr:
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs/pycowsay/bin/python -c import sysconfig; print(sysconfig.get_path('purelib'))
+DEBUG    pipx.util:util.py:148 stdout: /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs/pycowsay/lib/python3.10/site-packages
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/session_shareddir0/bin/python -c import sysconfig; print(sysconfig.get_path('purelib'))
+DEBUG    pipx.util:util.py:148 stdout: /tmp/pytest-of-root/pytest-2/session_shareddir0/lib/python3.10/site-packages
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs/pycowsay/bin/python --version
+DEBUG    pipx.util:util.py:148 stdout: Python 3.10.19
+DEBUG    pipx.util:util.py:150 stderr:
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.package_specifier:package_specifier.py:128 cleaned package spec: pycowsay
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs/pycowsay/bin/python -m pip install pycowsay
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running <fetch_info_in_venv commands>
+DEBUG    pipx.util:util.py:148 stdout: {"sys_path": ["/usr/local/lib/python310.zip", "/usr/local/lib/python3.10", "/usr/local/lib/python3.10/lib-dynload", "/tmp/pytest-of-root/pytest-2/test_missing_interpreter0/subdir/pipxhome/venvs/pycowsay/lib/python3.10/site-packages", "/tmp/pytest-of-root/pytest-2/session_shareddir0/lib/python3.10/site-packages"], "python_version": "3.10.19", "environment": {"implementation_name": "cpython", "implementation_version": "3.10.19", "os_name": "posix", "platform_machine": "x86_64", "platform_release": "7.0.6", "platform_system": "Linux", "platform_version": "#1 SMP PREEMPT_DYNAMIC Mon Aug 24 09:29:13 UTC 2026", "python_full_version": "3.10.19", "platform_python_implementation": "CPython", "python_version": "3.10", "sys_platform": "linux"}}
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.venv:venv.py:303 get_venv_metadata_for_package: 27ms
+INFO     pipx.package_specifier:package_specifier.py:128 cleaned package spec: pycowsay
+DEBUG    pipx.main:main.py:776 pipx finished.
+DEBUG    pipx.main:main.py:715 2026-10-03 20:15:21
+DEBUG    pipx.main:main.py:716 pipx list
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+DEBUG    pipx.main:main.py:776 pipx finished.
+DEBUG    pipx.main:main.py:715 2026-10-03 20:15:21
+DEBUG    pipx.main:main.py:716 pipx list
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+DEBUG    pipx.main:main.py:776 pipx finished.
+_________________________ test_list_legacy_venv[None] __________________________
+
+pipx_temp_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffff6dfe590>
+capsys = <_pytest.capture.CaptureFixture object at 0x7ffff6dfc160>
+metadata_version = None
+
+    @pytest.mark.parametrize("metadata_version", [None, "0.1"])
+    def test_list_legacy_venv(pipx_temp_env, monkeypatch, capsys, metadata_version):
+        assert not run_pipx_cli(["install", "pycowsay"])
+        mock_legacy_venv("pycowsay", metadata_version=metadata_version)
+    
+        if metadata_version is None:
+            assert run_pipx_cli(["list"])
+            captured = capsys.readouterr()
+>           assert "package pycowsay has missing internal pipx metadata" in captured.err
+E           AssertionError: assert 'package pycowsay has missing internal pipx metadata' in 'done! ✨ 🌟 ✨\n'
+E            +  where 'done! ✨ 🌟 ✨\n' = CaptureResult(out='creating virtual environment...\ninstalling pycowsay...\n  installed package pycowsay 0.0.0.2, Python 3.10.19\n  These apps are now globally available\n    - pycowsay\nvenvs are in /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/venvs\napps are exposed on your $PATH at /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/otherdir/pipxbindir\n   package pycowsay has missing internal pipx metadata.\n\nOne or more packages have a missing internal pipx metadata.\n   They were likely installed using a pipx version before 0.15.0.0.\n   Please uninstall and install these package(s) to fix.\n\n', err='done! ✨ 🌟 ✨\n').err
+
+tests/test_list.py:56: AssertionError
+------------------------------ Captured log call -------------------------------
+DEBUG    pipx.main:main.py:715 2026-10-03 20:15:21
+DEBUG    pipx.main:main.py:716 pipx install pycowsay
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/venvs
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/otherdir/pipxbindir
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/.cache
+INFO     pipx.commands.common:common.py:320 Determined package name: pycowsay
+INFO     pipx.commands.common:common.py:321 Package name determined in 0.0s
+INFO     pipx.util:util.py:135 running /usr/local/bin/python -m venv --without-pip /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/venvs/pycowsay
+DEBUG    pipx.util:util.py:148 stdout:
+DEBUG    pipx.util:util.py:150 stderr:
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/venvs/pycowsay/bin/python -c import sysconfig; print(sysconfig.get_path('purelib'))
+DEBUG    pipx.util:util.py:148 stdout: /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/venvs/pycowsay/lib/python3.10/site-packages
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/session_shareddir0/bin/python -c import sysconfig; print(sysconfig.get_path('purelib'))
+DEBUG    pipx.util:util.py:148 stdout: /tmp/pytest-of-root/pytest-2/session_shareddir0/lib/python3.10/site-packages
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/venvs/pycowsay/bin/python --version
+DEBUG    pipx.util:util.py:148 stdout: Python 3.10.19
+DEBUG    pipx.util:util.py:150 stderr:
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.package_specifier:package_specifier.py:128 cleaned package spec: pycowsay
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/venvs/pycowsay/bin/python -m pip install pycowsay
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running <fetch_info_in_venv commands>
+DEBUG    pipx.util:util.py:148 stdout: {"sys_path": ["/usr/local/lib/python310.zip", "/usr/local/lib/python3.10", "/usr/local/lib/python3.10/lib-dynload", "/tmp/pytest-of-root/pytest-2/test_list_legacy_venv_None_0/subdir/pipxhome/venvs/pycowsay/lib/python3.10/site-packages", "/tmp/pytest-of-root/pytest-2/session_shareddir0/lib/python3.10/site-packages"], "python_version": "3.10.19", "environment": {"implementation_name": "cpython", "implementation_version": "3.10.19", "os_name": "posix", "platform_machine": "x86_64", "platform_release": "7.0.6", "platform_system": "Linux", "platform_version": "#1 SMP PREEMPT_DYNAMIC Mon Aug 24 09:29:13 UTC 2026", "python_full_version": "3.10.19", "platform_python_implementation": "CPython", "python_version": "3.10", "sys_platform": "linux"}}
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.venv:venv.py:303 get_venv_metadata_for_package: 27ms
+INFO     pipx.package_specifier:package_specifier.py:128 cleaned package spec: pycowsay
+INFO     pipx.shared_libs:shared_libs.py:69 Time since last upgrade of shared libs, in seconds: 1. Upgrade will be run by pipx if greater than 2592000.
+DEBUG    pipx.main:main.py:776 pipx finished.
+DEBUG    pipx.main:main.py:715 2026-10-03 20:15:21
+DEBUG    pipx.main:main.py:716 pipx list
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+DEBUG    pipx.main:main.py:776 pipx finished.
+__________________________ test_list_legacy_venv[0.1] __________________________
+
+pipx_temp_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffff75ff280>
+capsys = <_pytest.capture.CaptureFixture object at 0x7ffff75ff370>
+metadata_version = '0.1'
+
+    @pytest.mark.parametrize("metadata_version", [None, "0.1"])
+    def test_list_legacy_venv(pipx_temp_env, monkeypatch, capsys, metadata_version):
+        assert not run_pipx_cli(["install", "pycowsay"])
+        mock_legacy_venv("pycowsay", metadata_version=metadata_version)
+    
+        if metadata_version is None:
+            assert run_pipx_cli(["list"])
+            captured = capsys.readouterr()
+            assert "package pycowsay has missing internal pipx metadata" in captured.err
+        else:
+            assert not run_pipx_cli(["list"])
+            captured = capsys.readouterr()
+>           assert "package pycowsay 0.0.0.1," in captured.out
+E           AssertionError: assert 'package pycowsay 0.0.0.1,' in 'creating virtual environment...\ninstalling pycowsay...\n  installed package pycowsay 0.0.0.2, Python 3.10.19\n  These apps are now globally available\n    - pycowsay\nvenvs are in /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs\napps are exposed on your $PATH at /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/otherdir/pipxbindir\n   package pycowsay 0.0.0.2, Python 3.10.19\n    - pycowsay\n'
+E            +  where 'creating virtual environment...\ninstalling pycowsay...\n  installed package pycowsay 0.0.0.2, Python 3.10.19\n  These apps are now globally available\n    - pycowsay\nvenvs are in /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs\napps are exposed on your $PATH at /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/otherdir/pipxbindir\n   package pycowsay 0.0.0.2, Python 3.10.19\n    - pycowsay\n' = CaptureResult(out='creating virtual environment...\ninstalling pycowsay...\n  installed package pycowsay 0.0.0.2, Python 3.10.19\n  These apps are now globally available\n    - pycowsay\nvenvs are in /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs\napps are exposed on your $PATH at /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/otherdir/pipxbindir\n   package pycowsay 0.0.0.2, Python 3.10.19\n    - pycowsay\n', err='done! ✨ 🌟 ✨\n').out
+
+tests/test_list.py:60: AssertionError
+------------------------------ Captured log call -------------------------------
+DEBUG    pipx.main:main.py:715 2026-10-03 20:15:21
+DEBUG    pipx.main:main.py:716 pipx install pycowsay
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/otherdir/pipxbindir
+INFO     pipx.util:util.py:56 creating directory /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/.cache
+INFO     pipx.commands.common:common.py:320 Determined package name: pycowsay
+INFO     pipx.commands.common:common.py:321 Package name determined in 0.0s
+INFO     pipx.util:util.py:135 running /usr/local/bin/python -m venv --without-pip /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs/pycowsay
+DEBUG    pipx.util:util.py:148 stdout:
+DEBUG    pipx.util:util.py:150 stderr:
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs/pycowsay/bin/python -c import sysconfig; print(sysconfig.get_path('purelib'))
+DEBUG    pipx.util:util.py:148 stdout: /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs/pycowsay/lib/python3.10/site-packages
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/session_shareddir0/bin/python -c import sysconfig; print(sysconfig.get_path('purelib'))
+DEBUG    pipx.util:util.py:148 stdout: /tmp/pytest-of-root/pytest-2/session_shareddir0/lib/python3.10/site-packages
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs/pycowsay/bin/python --version
+DEBUG    pipx.util:util.py:148 stdout: Python 3.10.19
+DEBUG    pipx.util:util.py:150 stderr:
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.package_specifier:package_specifier.py:128 cleaned package spec: pycowsay
+INFO     pipx.util:util.py:135 running /tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs/pycowsay/bin/python -m pip install pycowsay
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.util:util.py:135 running <fetch_info_in_venv commands>
+DEBUG    pipx.util:util.py:148 stdout: {"sys_path": ["/usr/local/lib/python310.zip", "/usr/local/lib/python3.10", "/usr/local/lib/python3.10/lib-dynload", "/tmp/pytest-of-root/pytest-2/test_list_legacy_venv_0_1_0/subdir/pipxhome/venvs/pycowsay/lib/python3.10/site-packages", "/tmp/pytest-of-root/pytest-2/session_shareddir0/lib/python3.10/site-packages"], "python_version": "3.10.19", "environment": {"implementation_name": "cpython", "implementation_version": "3.10.19", "os_name": "posix", "platform_machine": "x86_64", "platform_release": "7.0.6", "platform_system": "Linux", "platform_version": "#1 SMP PREEMPT_DYNAMIC Mon Aug 24 09:29:13 UTC 2026", "python_full_version": "3.10.19", "platform_python_implementation": "CPython", "python_version": "3.10", "sys_platform": "linux"}}
+DEBUG    pipx.util:util.py:151 returncode: 0
+INFO     pipx.venv:venv.py:303 get_venv_metadata_for_package: 27ms
+INFO     pipx.package_specifier:package_specifier.py:128 cleaned package spec: pycowsay
+INFO     pipx.shared_libs:shared_libs.py:69 Time since last upgrade of shared libs, in seconds: 1. Upgrade will be run by pipx if greater than 2592000.
+DEBUG    pipx.main:main.py:776 pipx finished.
+DEBUG    pipx.main:main.py:715 2026-10-03 20:15:22
+DEBUG    pipx.main:main.py:716 pipx list
+INFO     pipx.main:main.py:717 pipx version is 0.16.2.0.1.dev0
+INFO     pipx.main:main.py:718 Default python interpreter is '/usr/local/bin/python'
+DEBUG    pipx.main:main.py:776 pipx finished.
+------------ generated xml file: /opt/receipts/reports/agent1-3.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_list.py::test_cli - AssertionError: assert 'nothing has bee...
+FAILED tests/test_list.py::test_missing_interpreter - AssertionError: assert ...
+FAILED tests/test_list.py::test_list_legacy_venv[None] - AssertionError: asse...
+FAILED tests/test_list.py::test_list_legacy_venv[0.1] - AssertionError: asser...
+============================== 4 failed in 7.25s ===============================

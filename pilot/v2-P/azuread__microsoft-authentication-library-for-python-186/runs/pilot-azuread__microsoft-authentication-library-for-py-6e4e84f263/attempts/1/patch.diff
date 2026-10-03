@@ -1,0 +1,38 @@
+diff --git a/msal/application.py b/msal/application.py
+index a17d359..ba17d22 100644
+--- a/msal/application.py
++++ b/msal/application.py
+@@ -616,6 +616,7 @@ class ClientApplication(object):
+             # "realm": authority.tenant,  # AAD RTs are tenant-independent
+             }
+         app_metadata = self._get_app_metadata(authority.instance)
++        last_error = None
+         if not app_metadata:  # Meaning this app is now used for the first time.
+             # When/if we have a way to directly detect current app's family,
+             # we'll rewrite this block, to support multiple families.
+@@ -633,16 +634,24 @@ class ClientApplication(object):
+                 **kwargs)
+             if at and "error" not in at:
+                 return at
++            else:
++                last_error = at
+         if app_metadata.get("family_id"):  # Meaning this app belongs to this family
+             at = self._acquire_token_silent_by_finding_specific_refresh_token(
+                 authority, scopes, dict(query, family_id=app_metadata["family_id"]),
+                 **kwargs)
+             if at and "error" not in at:
+                 return at
++            else:
++                last_error = at
+         # Either this app is an orphan, so we will naturally use its own RT;
+         # or all attempts above have failed, so we fall back to non-foci behavior.
+-        return self._acquire_token_silent_by_finding_specific_refresh_token(
++        at = self._acquire_token_silent_by_finding_specific_refresh_token(
+             authority, scopes, dict(query, client_id=self.client_id), **kwargs)
++        if at and "error" not in at:
++            return at
++        # Return the last error we saw if all attempts failed to get a token
++        return last_error if last_error is not None else at
+ 
+     def _get_app_metadata(self, environment):
+         apps = self.token_cache.find(  # Use find(), rather than token_cache.get(...)

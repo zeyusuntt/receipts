@@ -1,0 +1,94 @@
+diff --git a/pints/__init__.py b/pints/__init__.py
+index 51b3e350..492ab4d5 100644
+--- a/pints/__init__.py
++++ b/pints/__init__.py
+@@ -154,6 +154,7 @@ from ._error_measures import (
+ from ._evaluation import (
+     evaluate,
+     Evaluator,
++    MultiSequentialEvaluator,
+     ParallelEvaluator,
+     SequentialEvaluator,
+ )
+diff --git a/pints/_evaluation.py b/pints/_evaluation.py
+index 51d267ee..b957ac05 100644
+--- a/pints/_evaluation.py
++++ b/pints/_evaluation.py
+@@ -441,6 +441,77 @@ class SequentialEvaluator(Evaluator):
+         return scores
+ 
+ 
++class MultiSequentialEvaluator(Evaluator):
++    """
++    Evaluates a list of functions (or callable objects) on a corresponding
++    list of input values, and returns a list containing the calculated
++    function evaluations.
++
++    Runs sequentially, applying each function to the corresponding input
++    value. The number of functions must match the number of input values.
++
++    Extends :class:`Evaluator`.
++
++    Parameters
++    ----------
++    functions : list of callable
++        The functions to evaluate.
++    args : list of sequence
++        An optional list containing extra arguments for each function. If
++        ``args`` is specified, each function will be called as
++        ``f(x, *args)`` where ``x`` is the corresponding input value and
++        ``args`` is the corresponding extra argument tuple.
++    """
++    def __init__(self, functions, args=None):
++        # Convert to list to allow indexing etc
++        functions = list(functions)
++        
++        # Check functions
++        if not all(callable(f) for f in functions):
++            raise ValueError('All elements in functions must be callable.')
++        self._functions = functions
++
++        # Check args
++        if args is None:
++            self._args = [()] * len(functions)
++        else:
++            try:
++                len(args)
++            except TypeError:
++                raise ValueError(
++                    'The argument `args` must be either None or a sequence.')
++            # Args apply to all functions equally (like SequentialEvaluator)
++            # Convert args to tuple if it isn't already a sequence
++            # (but strings are treated as scalars here)
++            if isinstance(args, (list, tuple)):
++                processed_args = tuple(args)
++            else:
++                # Treat as single argument
++                processed_args = (args,)
++            # Apply the same args to all functions
++            self._args = [processed_args] * len(functions)
++
++    def _evaluate(self, positions):
++        """
++        See :meth:`evaluate()`.
++        """
++        try:
++            len(positions)
++        except TypeError:
++            raise ValueError(
++                'The argument `positions` must be a sequence of input values'
++                ' to the evaluator\'s functions.')
++        if len(self._functions) != len(positions):
++            raise ValueError(
++                'The length of `positions` must match the length of '
++                '`functions`.')
++        
++        scores = [0] * len(positions)
++        for k, (f, x, arg) in enumerate(zip(self._functions, positions, self._args)):
++            scores[k] = f(x, *arg)
++        return scores
++
++
+ #
+ # Note: For Windows multiprocessing to work, the _Worker can never be a nested
+ # class!

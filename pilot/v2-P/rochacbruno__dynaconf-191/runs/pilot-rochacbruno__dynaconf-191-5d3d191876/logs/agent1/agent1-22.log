@@ -1,0 +1,36 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /dynaconf
+plugins: cov-4.1.0, mock-3.11.1
+collecting ... collected 1 item
+
+tests/test_cli.py::test_list_export_json FAILED
+
+=================================== FAILURES ===================================
+____________________________ test_list_export_json _____________________________
+
+testdir = '/dynaconf/tests'
+
+    def test_list_export_json(testdir):
+        result = run(
+            ["list", "-o", "sets.json"], env={"ROOT_PATH_FOR_DYNACONF": testdir}
+        )
+        assert "DOTENV_STR: 'hello'" in result
+>       assert "DOTENV_STR" in read_file("sets.json")
+
+/dynaconf/tests/test_cli.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = 'sets.json', kwargs = {}, content = ''
+
+    def read_file(path, **kwargs):
+        content = ""
+>       with io.open(path, **kwargs) as open_file:
+E       FileNotFoundError: [Errno 2] No such file or directory: 'sets.json'
+
+/dynaconf/dynaconf/utils/files.py:93: FileNotFoundError
+----------- generated xml file: /opt/receipts/reports/agent1-22.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_cli.py::test_list_export_json - FileNotFoundError: [Errno 2...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.12s ===============================

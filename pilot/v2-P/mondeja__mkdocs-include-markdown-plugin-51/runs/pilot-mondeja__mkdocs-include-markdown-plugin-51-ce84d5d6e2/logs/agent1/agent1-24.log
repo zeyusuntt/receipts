@@ -1,0 +1,9 @@
+=== INPUT ===
+"Some text\n\n<!--start-tag-->\nThis should be included.\n<!--end-tag-->\n\nThis shouldn't be included.\n\n<!--start-tag-->\nThis should be included also.\n<!--end-tag-->\n\nHere some text\nthat should be ignored.\n\n<!--start-->\n<!--end-->\n\nEtc\n<!--start-tag-->\nThis should be included even if hasn't defined after end tag.\n"
+
+=== EXPECTED ===
+"This should be included.\n\nThis should be included also.\n\nThis should be included even if hasn't defined after end tag.\n"
+Traceback (most recent call last):
+  File "/tmp/debug_test_safe.py", line 77, in <module>
+    str.find = counted_find
+TypeError: cannot set 'find' attribute of immutable type 'str'

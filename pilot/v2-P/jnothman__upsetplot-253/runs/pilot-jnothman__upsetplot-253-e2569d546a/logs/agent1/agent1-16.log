@@ -1,0 +1,79 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /UpSetPlot
+configfile: setup.cfg
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+upsetplot/tests/test_upsetplot.py::test_filter_subsets_max_subset_rank_tie FAILED [100%]
+
+=================================== FAILURES ===================================
+___________________ test_filter_subsets_max_subset_rank_tie ____________________
+
+    def test_filter_subsets_max_subset_rank_tie():
+        data = generate_samples(seed=0, n_samples=5, n_categories=3)
+        tested_non_tie = False
+        tested_tie = True
+        full = UpSet(data, subset_size="count").intersections
+        prev = None
+        for max_rank in range(1, 5):
+            cur = UpSet(data, subset_size="count", max_subset_rank=max_rank).intersections
+            if prev is not None:
+                if cur.shape[0] > prev.shape[0]:
+                    # check we add rows only when they are new
+>                   assert cur.min() < prev.min()
+E                   assert np.int64(1) < np.int64(1)
+E                    +  where np.int64(1) = min()
+E                    +    where min = cat1  cat0   cat2 \nTrue  False  False    2\n      True   True     1\nName: size, dtype: int64.min
+E                    +  and   np.int64(1) = min()
+E                    +    where min = cat1  cat0  cat2\nTrue  True  True    1\nName: size, dtype: int64.min
+
+cur        = cat1  cat0   cat2 
+True  False  False    2
+      True   True     1
+Name: size, dtype: int64
+data       =                    index     value
+cat0  cat1  cat2                  
+False False False      0  1.554445
+True  True  True       1  2.532559
+False True  False      2  1.637462
+      False False      3  1.015454
+      True  False      4  1.235598
+full       = cat1   cat0   cat2 
+False  False  False    2
+True   False  False    2
+       True   True     1
+Name: size, dtype: int64
+max_rank   = 2
+prev       = cat1  cat0  cat2
+True  True  True    1
+Name: size, dtype: int64
+tested_non_tie = False
+tested_tie = True
+
+upsetplot/tests/test_upsetplot.py:844: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-16.xml ------------
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+upsetplot/__init__.py                   7      0   100%
+upsetplot/data.py                     103     81    21%
+upsetplot/plotting.py                 376    286    24%
+upsetplot/reformat.py                 122     57    53%
+upsetplot/tests/__init__.py             0      0   100%
+upsetplot/tests/test_data.py           91     91     0%
+upsetplot/tests/test_examples.py       13     13     0%
+upsetplot/tests/test_reformat.py       17     17     0%
+upsetplot/tests/test_upsetplot.py     476    386    19%
+upsetplot/util.py                      29     22    24%
+-------------------------------------------------------
+TOTAL                                1234    953    23%
+=========================== short test summary info ============================
+FAILED upsetplot/tests/test_upsetplot.py::test_filter_subsets_max_subset_rank_tie - assert np.int64(1) < np.int64(1)
+ +  where np.int64(1) = min()
+ +    where min = cat1  cat0   cat2 \nTrue  False  False    2\n      True   True     1\nName: size, dtype: int64.min
+ +  and   np.int64(1) = min()
+ +    where min = cat1  cat0  cat2\nTrue  True  True    1\nName: size, dtype: int64.min
+============================== 1 failed in 2.37s ===============================

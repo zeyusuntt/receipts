@@ -1,0 +1,58 @@
+
+Zero-pad single digit to 2 places
+  Version: <bumpversion.Version:buildmetadata=0, major=1, minor=2, patch=3, pre_l=, pre_n=0>
+  Pattern: {major}.{minor:02}.{patch}
+  Result:  '1.02.3'
+  Expected:'1.02.3'
+  PASS
+
+Zero-pad single digit to 3 places
+  Version: <bumpversion.Version:buildmetadata=0, major=1, minor=2, patch=3, pre_l=, pre_n=0>
+  Pattern: {major}.{minor:03}.{patch}
+  Result:  '1.002.3'
+  Expected:'1.002.3'
+  PASS
+
+No padding needed (already 2 digits)
+  Version: <bumpversion.Version:buildmetadata=0, major=1, minor=12, patch=3, pre_l=, pre_n=0>
+  Pattern: {major}.{minor:02}.{patch}
+  Result:  '1.12.3'
+  Expected:'1.12.3'
+  PASS
+
+Zero-pad to fewer digits than needed (should show full number)
+  Version: <bumpversion.Version:buildmetadata=0, major=1, minor=123, patch=3, pre_l=, pre_n=0>
+  Pattern: {major}.{minor:02}.{patch}
+  Result:  '1.123.3'
+  Expected:'1.123.3'
+  PASS
+
+Multiple zero-padded fields
+  Version: <bumpversion.Version:buildmetadata=0, major=1, minor=2, patch=3, pre_l=, pre_n=0>
+  Pattern: {major:02}.{minor:02}.{patch:02}
+  Result:  '01.02.03'
+  Expected:'01.02.03'
+  PASS
+
+Mixed padding and non-padding
+  Version: <bumpversion.Version:buildmetadata=0, major=1, minor=2, patch=3, pre_l=, pre_n=0>
+  Pattern: {major}.{minor:02}.{patch}
+  Result:  '1.02.3'
+  Expected:'1.02.3'
+  PASS
+
+Test with original issue values
+  Version: <bumpversion.Version:buildmetadata=0, major=5, minor=6, patch=0, pre_l=, pre_n=0>
+  Pattern: {major}.{minor:02}.{patch}
+  Result:  '5.06.0'
+  Expected:'5.06.0'
+  PASS
+
+After bumping minor from original issue
+  Version: <bumpversion.Version:buildmetadata=0, major=5, minor=7, patch=0, pre_l=, pre_n=0>
+  Pattern: {major}.{minor:02}.{patch}
+  Result:  '5.07.0'
+  Expected:'5.07.0'
+  PASS
+
+✅ All edge case tests passed!

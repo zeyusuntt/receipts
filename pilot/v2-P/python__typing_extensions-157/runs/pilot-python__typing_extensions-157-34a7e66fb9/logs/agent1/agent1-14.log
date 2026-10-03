@@ -1,0 +1,60 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /typing_extensions
+configfile: pyproject.toml
+collecting ... collected 8 items
+
+src/test_typing_extensions.py::NewTypeTests::test_basic PASSED           [ 12%]
+src/test_typing_extensions.py::NewTypeTests::test_error_message_when_subclassing FAILED [ 25%]
+src/test_typing_extensions.py::NewTypeTests::test_errors PASSED          [ 37%]
+src/test_typing_extensions.py::NewTypeTests::test_missing__name__ PASSED [ 50%]
+src/test_typing_extensions.py::NewTypeTests::test_or 
+src/test_typing_extensions.py::NewTypeTests::test_or PASSED              [ 62%]
+src/test_typing_extensions.py::NewTypeTests::test_pickle 
+src/test_typing_extensions.py::NewTypeTests::test_pickle PASSED          [ 75%]
+src/test_typing_extensions.py::NewTypeTests::test_repr PASSED            [ 87%]
+src/test_typing_extensions.py::NewTypeTests::test_special_attrs PASSED   [100%]
+
+=================================== FAILURES ===================================
+_______________ NewTypeTests.test_error_message_when_subclassing _______________
+TypeError: NewType.__init__() takes 3 positional arguments but 4 were given
+
+During handling of the above exception, another exception occurred:
+
+self = <test_typing_extensions.NewTypeTests testMethod=test_error_message_when_subclassing>
+
+    def test_error_message_when_subclassing(self):
+>       with self.assertRaisesRegex(
+            TypeError,
+            re.escape(
+                "Cannot subclass an instance of NewType. Perhaps you were looking for: "
+                "`ProUserId = NewType('ProUserId', UserId)`"
+            )
+        ):
+E       AssertionError: "Cannot\ subclass\ an\ instance\ of\ NewType\.\ Perhaps\ you\ were\ looking\ for:\ `ProUserId\ =\ NewType\('ProUserId',\ UserId\)`" does not match "NewType.__init__() takes 3 positional arguments but 4 were given"
+
+src/test_typing_extensions.py:1617: AssertionError
+==================================== PASSES ====================================
+_____________________________ NewTypeTests.test_or _____________________________
+----------------------------- Captured stdout call -----------------------------
+SUBPASSED(cls=<class 'int'>) [ 62%]
+src/test_typing_extensions.py::NewTypeTests::test_or SUBPASSED(cls=test_typing_extensions.NewTypeTests.UserName) [ 62%]
+___________________________ NewTypeTests.test_pickle ___________________________
+----------------------------- Captured stdout call -----------------------------
+SUBPASSED(proto=0) [ 75%]
+src/test_typing_extensions.py::NewTypeTests::test_pickle SUBPASSED(proto=1) [ 75%]
+src/test_typing_extensions.py::NewTypeTests::test_pickle SUBPASSED(proto=2) [ 75%]
+src/test_typing_extensions.py::NewTypeTests::test_pickle SUBPASSED(proto=3) [ 75%]
+src/test_typing_extensions.py::NewTypeTests::test_pickle SUBPASSED(proto=4) [ 75%]
+src/test_typing_extensions.py::NewTypeTests::test_pickle SUBPASSED(proto=5) [ 75%]
+----------- generated xml file: /opt/receipts/reports/agent1-14.xml ------------
+=========================== short test summary info ============================
+PASSED src/test_typing_extensions.py::NewTypeTests::test_basic
+PASSED src/test_typing_extensions.py::NewTypeTests::test_errors
+PASSED src/test_typing_extensions.py::NewTypeTests::test_missing__name__
+PASSED src/test_typing_extensions.py::NewTypeTests::test_or
+PASSED src/test_typing_extensions.py::NewTypeTests::test_pickle
+PASSED src/test_typing_extensions.py::NewTypeTests::test_repr
+PASSED src/test_typing_extensions.py::NewTypeTests::test_special_attrs
+FAILED src/test_typing_extensions.py::NewTypeTests::test_error_message_when_subclassing
+================ 1 failed, 7 passed, 8 subtests passed in 0.26s ================

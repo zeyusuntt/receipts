@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Bad default value handling for Union\nIn #1522, I introduced the following bug, which broke the Pyface test suite:\r\n\r\n```python\r\nPython 3.9.7 (default, Sep  1 2021, 04:00:27) \r\n[Clang 11.0.3 (clang-1103.0.32.62)] on darwin\r\nType \"help\", \"copyright\", \"credits\" or \"license\" for more information.\r\n>>> from traits.api import *\r\n>>> class A(HasTraits):\r\n...     foo = Union(None, Int)\r\n... \r\n>>> class B(A):\r\n...     foo = 5\r\n... \r\n>>> b = B()\r\n>>> b.foo -= 1\r\nTraceback (most recent call last):\r\n  File \"<stdin>\", line 1, in <module>\r\nTypeError: unsupported operand type(s) for -=: '_Undefined' and 'int'\r\n```\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/enthought-traits:1534-9f93433",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-enthought__traits-1534-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3RyYWl0cy90ZXN0cy90ZXN0X3VuaW9uLnB5IGIvdHJhaXRzL3Rlc3RzL3Rlc3RfdW5pb24ucHkKaW5kZXggOGIwZWNmNDkuLjQzNmJjMDY0IDEwMDY0NAotLS0gYS90cmFpdHMvdGVzdHMvdGVzdF91bmlvbi5weQorKysgYi90cmFpdHMvdGVzdHMvdGVzdF91bmlvbi5weQpAQCAtMTEsOCArMTEsOCBAQAogaW1wb3J0IHVuaXR0ZXN0CiAKIGZyb20gdHJhaXRzLmFwaSBpbXBvcnQgKAotICAgIEZsb2F0LCBJbnN0YW5jZSwgSW50LCBMaXN0LCBTdHIsIFRyYWl0RXJyb3IsIFRyYWl0VHlwZSwgSGFzVHJhaXRzLCBVbmlvbiwKLSAgICBUeXBlKQorICAgIEJ5dGVzLCBEZWZhdWx0VmFsdWUsIEZsb2F0LCBIYXNUcmFpdHMsIEluc3RhbmNlLCBJbnQsIExpc3QsIFN0ciwKKyAgICBUcmFpdEVycm9yLCBUcmFpdFR5cGUsIFR5cGUsIFVuaW9uKQogCiAKIGNsYXNzIEN1c3RvbUNsYXNzKEhhc1RyYWl0cyk6CkBAIC0xOTUsMTAgKzE5NSwyMSBAQCBjbGFzcyBUZXN0VW5pb24odW5pdHRlc3QuVGVzdENhc2UpOgogICAgICAgICBjbGFzcyBIYXNVbmlvbldpdGhMaXN0KEhhc1RyYWl0cyk6CiAgICAgICAgICAgICBmb28gPSBVbmlvbihJbnQoMjMpLCBGbG9hdCkKIAorICAgICAgICAgICAgbmVzdGVkID0gVW5pb24oVW5pb24oU3RyKCksIEJ5dGVzKCkpLCBVbmlvbihJbnQoKSwgRmxvYXQoKSwgTm9uZSkpCisKICAgICAgICAgaGFzX3VuaW9uID0gSGFzVW5pb25XaXRoTGlzdCgpCiAgICAgICAgIHZhbHVlID0gaGFzX3VuaW9uLmZvbwogICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHZhbHVlLCAyMykKIAorICAgICAgICBzZWxmLmFzc2VydEVxdWFsKAorICAgICAgICAgICAgaGFzX3VuaW9uLnRyYWl0KCJmb28iKS5kZWZhdWx0X3ZhbHVlKCksCisgICAgICAgICAgICAoRGVmYXVsdFZhbHVlLmNvbnN0YW50LCAyMyksCisgICAgICAgICkKKyAgICAgICAgc2VsZi5hc3NlcnRFcXVhbCgKKyAgICAgICAgICAgIGhhc191bmlvbi50cmFpdCgibmVzdGVkIikuZGVmYXVsdF92YWx1ZSgpLAorICAgICAgICAgICAgKERlZmF1bHRWYWx1ZS5jb25zdGFudCwgIiIpLAorICAgICAgICApCisKIAogaWYgX19uYW1lX18gPT0gJ19fbWFpbl9fJzoKICAgICB1bml0dGVzdC5tYWluKCkK'\"'\"'))'",
+      "git apply /tmp/receipts-enthought__traits-1534-test.patch"
+    ],
+    "workdir": "/traits"
+  },
+  "spec_paths": [
+    "traits/tests/test_union.py"
+  ],
+  "spec_tests": [
+    "traits/tests/test_union.py::TestUnion::test_constant_default"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning traits/tests/test_union.py"
+}

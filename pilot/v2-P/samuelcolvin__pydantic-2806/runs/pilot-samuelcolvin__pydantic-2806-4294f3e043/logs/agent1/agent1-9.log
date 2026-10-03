@@ -1,0 +1,302 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-6.2.5, py-1.11.0, pluggy-1.6.0 -- /usr/local/bin/python
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase('/pydantic/.hypothesis/examples')
+rootdir: /pydantic, configfile: setup.cfg
+plugins: cov-2.12.1, mock-3.6.1, sugar-0.9.4
+collecting ... collected 2 items
+
+tests/test_main.py::test_typing_coercion_counter FAILED                  [ 50%]
+tests/test_main.py::test_typing_counter_value_validation FAILED          [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_typing_coercion_counter _________________________
+
+    def test_typing_coercion_counter():
+>       class Model(BaseModel):
+
+tests/test_main.py:1991: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pydantic/main.py:190: in __new__
+    fields[ann_name] = ModelField.infer(
+pydantic/fields.py:439: in infer
+    return cls(
+pydantic/fields.py:370: in __init__
+    self.prepare()
+pydantic/fields.py:485: in prepare
+    self._type_analysis()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ModelField(name='x', type=Counter[str], required=PydanticUndefined)
+
+    def _type_analysis(self) -> None:  # noqa: C901 (ignore complexity)
+        # typing interface is horrible, we have to do some ugly checks
+        if lenient_issubclass(self.type_, JsonWrapper):
+            self.type_ = self.type_.inner_type
+            self.parse_json = True
+        elif lenient_issubclass(self.type_, Json):
+            self.type_ = Any
+            self.parse_json = True
+        elif isinstance(self.type_, TypeVar):
+            if self.type_.__bound__:
+                self.type_ = self.type_.__bound__
+            elif self.type_.__constraints__:
+                self.type_ = Union[self.type_.__constraints__]
+            else:
+                self.type_ = Any
+        elif is_new_type(self.type_):
+            self.type_ = new_type_supertype(self.type_)
+    
+        if self.type_ is Any or self.type_ is object:
+            if self.required is Undefined:
+                self.required = False
+            self.allow_none = True
+            return
+        elif self.type_ is Pattern:
+            # python 3.7 only, Pattern is a typing object but without sub fields
+            return
+        elif is_literal_type(self.type_):
+            return
+        elif is_typeddict(self.type_):
+            return
+    
+        origin = get_origin(self.type_)
+        # add extra check for `collections.abc.Hashable` for python 3.10+ where origin is not `None`
+        if origin is None or origin is CollectionsHashable:
+            # field is not "typing" object eg. Union, Dict, List etc.
+            # allow None for virtual superclasses of NoneType, e.g. Hashable
+            if isinstance(self.type_, type) and isinstance(None, self.type_):
+                self.allow_none = True
+            return
+        if origin is Annotated:
+            self.type_ = get_args(self.type_)[0]
+            self._type_analysis()
+            return
+        if origin is Callable:
+            return
+        if is_union_origin(origin):
+            types_ = []
+            for type_ in get_args(self.type_):
+                if type_ is NoneType:
+                    if self.required is Undefined:
+                        self.required = False
+                    self.allow_none = True
+                    continue
+                types_.append(type_)
+    
+            if len(types_) == 1:
+                # Optional[]
+                self.type_ = types_[0]
+                # this is the one case where the "outer type" isn't just the original type
+                self.outer_type_ = self.type_
+                # re-run to correctly interpret the new self.type_
+                self._type_analysis()
+            else:
+                self.sub_fields = [self._create_sub_type(t, f'{self.name}_{display_as_type(t)}') for t in types_]
+            return
+    
+        if issubclass(origin, Tuple):  # type: ignore
+            # origin == Tuple without item type
+            args = get_args(self.type_)
+            if not args:  # plain tuple
+                self.type_ = Any
+                self.shape = SHAPE_TUPLE_ELLIPSIS
+            elif len(args) == 2 and args[1] is Ellipsis:  # e.g. Tuple[int, ...]
+                self.type_ = args[0]
+                self.shape = SHAPE_TUPLE_ELLIPSIS
+                self.sub_fields = [self._create_sub_type(args[0], f'{self.name}_0')]
+            elif args == ((),):  # Tuple[()] means empty tuple
+                self.shape = SHAPE_TUPLE
+                self.type_ = Any
+                self.sub_fields = []
+            else:
+                self.shape = SHAPE_TUPLE
+                self.sub_fields = [self._create_sub_type(t, f'{self.name}_{i}') for i, t in enumerate(args)]
+            return
+    
+        if issubclass(origin, List):
+            # Create self validators
+            get_validators = getattr(self.type_, '__get_validators__', None)
+            if get_validators:
+                self.class_validators.update(
+                    {f'list_{i}': Validator(validator, pre=True) for i, validator in enumerate(get_validators())}
+                )
+    
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_LIST
+        elif issubclass(origin, Set):
+            # Create self validators
+            get_validators = getattr(self.type_, '__get_validators__', None)
+            if get_validators:
+                self.class_validators.update(
+                    {f'set_{i}': Validator(validator, pre=True) for i, validator in enumerate(get_validators())}
+                )
+    
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_SET
+        elif issubclass(origin, FrozenSet):
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_FROZENSET
+        elif issubclass(origin, Deque):
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_DEQUE
+        elif issubclass(origin, Sequence):
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_SEQUENCE
+        elif issubclass(origin, DefaultDict):
+            self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
+            self.type_ = get_args(self.type_)[1]
+            self.shape = SHAPE_DEFAULTDICT
+        elif issubclass(origin, Dict):
+            self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
+>           self.type_ = get_args(self.type_)[1]
+E           IndexError: tuple index out of range
+
+pydantic/fields.py:635: IndexError
+_____________________ test_typing_counter_value_validation _____________________
+
+    def test_typing_counter_value_validation():
+>       class Model(BaseModel):
+
+tests/test_main.py:1999: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pydantic/main.py:190: in __new__
+    fields[ann_name] = ModelField.infer(
+pydantic/fields.py:439: in infer
+    return cls(
+pydantic/fields.py:370: in __init__
+    self.prepare()
+pydantic/fields.py:485: in prepare
+    self._type_analysis()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ModelField(name='x', type=Counter[str], required=PydanticUndefined)
+
+    def _type_analysis(self) -> None:  # noqa: C901 (ignore complexity)
+        # typing interface is horrible, we have to do some ugly checks
+        if lenient_issubclass(self.type_, JsonWrapper):
+            self.type_ = self.type_.inner_type
+            self.parse_json = True
+        elif lenient_issubclass(self.type_, Json):
+            self.type_ = Any
+            self.parse_json = True
+        elif isinstance(self.type_, TypeVar):
+            if self.type_.__bound__:
+                self.type_ = self.type_.__bound__
+            elif self.type_.__constraints__:
+                self.type_ = Union[self.type_.__constraints__]
+            else:
+                self.type_ = Any
+        elif is_new_type(self.type_):
+            self.type_ = new_type_supertype(self.type_)
+    
+        if self.type_ is Any or self.type_ is object:
+            if self.required is Undefined:
+                self.required = False
+            self.allow_none = True
+            return
+        elif self.type_ is Pattern:
+            # python 3.7 only, Pattern is a typing object but without sub fields
+            return
+        elif is_literal_type(self.type_):
+            return
+        elif is_typeddict(self.type_):
+            return
+    
+        origin = get_origin(self.type_)
+        # add extra check for `collections.abc.Hashable` for python 3.10+ where origin is not `None`
+        if origin is None or origin is CollectionsHashable:
+            # field is not "typing" object eg. Union, Dict, List etc.
+            # allow None for virtual superclasses of NoneType, e.g. Hashable
+            if isinstance(self.type_, type) and isinstance(None, self.type_):
+                self.allow_none = True
+            return
+        if origin is Annotated:
+            self.type_ = get_args(self.type_)[0]
+            self._type_analysis()
+            return
+        if origin is Callable:
+            return
+        if is_union_origin(origin):
+            types_ = []
+            for type_ in get_args(self.type_):
+                if type_ is NoneType:
+                    if self.required is Undefined:
+                        self.required = False
+                    self.allow_none = True
+                    continue
+                types_.append(type_)
+    
+            if len(types_) == 1:
+                # Optional[]
+                self.type_ = types_[0]
+                # this is the one case where the "outer type" isn't just the original type
+                self.outer_type_ = self.type_
+                # re-run to correctly interpret the new self.type_
+                self._type_analysis()
+            else:
+                self.sub_fields = [self._create_sub_type(t, f'{self.name}_{display_as_type(t)}') for t in types_]
+            return
+    
+        if issubclass(origin, Tuple):  # type: ignore
+            # origin == Tuple without item type
+            args = get_args(self.type_)
+            if not args:  # plain tuple
+                self.type_ = Any
+                self.shape = SHAPE_TUPLE_ELLIPSIS
+            elif len(args) == 2 and args[1] is Ellipsis:  # e.g. Tuple[int, ...]
+                self.type_ = args[0]
+                self.shape = SHAPE_TUPLE_ELLIPSIS
+                self.sub_fields = [self._create_sub_type(args[0], f'{self.name}_0')]
+            elif args == ((),):  # Tuple[()] means empty tuple
+                self.shape = SHAPE_TUPLE
+                self.type_ = Any
+                self.sub_fields = []
+            else:
+                self.shape = SHAPE_TUPLE
+                self.sub_fields = [self._create_sub_type(t, f'{self.name}_{i}') for i, t in enumerate(args)]
+            return
+    
+        if issubclass(origin, List):
+            # Create self validators
+            get_validators = getattr(self.type_, '__get_validators__', None)
+            if get_validators:
+                self.class_validators.update(
+                    {f'list_{i}': Validator(validator, pre=True) for i, validator in enumerate(get_validators())}
+                )
+    
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_LIST
+        elif issubclass(origin, Set):
+            # Create self validators
+            get_validators = getattr(self.type_, '__get_validators__', None)
+            if get_validators:
+                self.class_validators.update(
+                    {f'set_{i}': Validator(validator, pre=True) for i, validator in enumerate(get_validators())}
+                )
+    
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_SET
+        elif issubclass(origin, FrozenSet):
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_FROZENSET
+        elif issubclass(origin, Deque):
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_DEQUE
+        elif issubclass(origin, Sequence):
+            self.type_ = get_args(self.type_)[0]
+            self.shape = SHAPE_SEQUENCE
+        elif issubclass(origin, DefaultDict):
+            self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
+            self.type_ = get_args(self.type_)[1]
+            self.shape = SHAPE_DEFAULTDICT
+        elif issubclass(origin, Dict):
+            self.key_field = self._create_sub_type(get_args(self.type_)[0], 'key_' + self.name, for_keys=True)
+>           self.type_ = get_args(self.type_)[1]
+E           IndexError: tuple index out of range
+
+pydantic/fields.py:635: IndexError
+------------ generated xml file: /opt/receipts/reports/agent1-9.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_main.py::test_typing_coercion_counter - IndexError: tuple i...
+FAILED tests/test_main.py::test_typing_counter_value_validation - IndexError:...
+============================== 2 failed in 0.25s ===============================

@@ -1,0 +1,548 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /GitPython
+configfile: pyproject.toml
+plugins: cov-7.0.0, instafail-0.5.0, mock-3.15.1, sugar-1.1.1
+collecting ... collected 1 item
+
+test/test_diff.py::TestDiff::test_diff_patch_with_external_engine FAILED [100%]
+
+=================================== FAILURES ===================================
+________________ TestDiff.test_diff_patch_with_external_engine _________________
+
+self = <git.Commit "203b381debc6cbc18b40fbce637cb97d78e6f0ef">, other = 'HEAD^'
+paths = None, create_patch = True, kwargs = {}
+args = ['--abbrev=40', '--full-index', '-M'], use_patch_format = True
+
+    def diff(
+        self,
+        other: Union[Type["Index"], "Tree", "Commit", None, str, object] = Index,
+        paths: Union[PathLike, List[PathLike], Tuple[PathLike, ...], None] = None,
+        create_patch: bool = False,
+        **kwargs: Any,
+    ) -> "DiffIndex":
+        """Create diffs between two items being trees, trees and index or an
+        index and the working tree. Detects renames automatically.
+    
+        :param other:
+            This the item to compare us with.
+    
+            * If None, we will be compared to the working tree.
+            * If :class:`~git.index.base.Treeish`, it will be compared against the
+              respective tree.
+            * If :class:`~Diffable.Index`, it will be compared against the index.
+            * If :attr:`git.NULL_TREE`, it will compare against the empty tree.
+            * It defaults to :class:`~Diffable.Index` so that the method will not by
+              default fail on bare repositories.
+    
+        :param paths:
+            This a list of paths or a single path to limit the diff to. It will only
+            include at least one of the given path or paths.
+    
+        :param create_patch:
+            If True, the returned :class:`Diff` contains a detailed patch that if
+            applied makes the self to other. Patches are somewhat costly as blobs have
+            to be read and diffed.
+    
+        :param kwargs:
+            Additional arguments passed to git-diff, such as ``R=True`` to swap both
+            sides of the diff.
+    
+        :return: git.DiffIndex
+    
+        :note:
+            On a bare repository, 'other' needs to be provided as
+            :class:`~Diffable.Index`, or as :class:`~git.objects.tree.Tree` or
+            :class:`~git.objects.commit.Commit`, or a git command error will occur.
+        """
+        args: List[Union[PathLike, Diffable, Type["Diffable.Index"], object]] = []
+        args.append("--abbrev=40")  # We need full shas.
+        args.append("--full-index")  # Get full index paths, not only filenames.
+    
+        # Remove default '-M' arg (check for renames) if user is overriding it.
+        if not any(x in kwargs for x in ("find_renames", "no_renames", "M")):
+            args.append("-M")
+    
+        # Check if external diff is configured - if so, we can't reliably use patch format
+        # as external diff tools don't produce the unified diff format we expect to parse
+        use_patch_format = create_patch
+        if use_patch_format:
+            try:
+                # Check if diff.external is configured
+>               external_diff = self.repo.git.config_get('diff', 'external')
+
+git/diff.py:162: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+git/cmd.py:800: in <lambda>
+    return lambda *args, **kwargs: self._call_process(name, *args, **kwargs)
+git/cmd.py:1386: in _call_process
+    return self.execute(call, **exec_kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <git.cmd.Git object at 0x7ffff560fe20>
+command = ['git', 'config-get', 'diff', 'external'], istream = None
+with_extended_output = False, with_exceptions = True, as_process = False
+output_stream = None, stdout_as_string = True, kill_after_timeout = None
+with_stdout = True, universal_newlines = False, shell = False
+env = {'GPG_KEY': 'A035C8C19219BA821ECEA86B64E628F8D684696D', 'LANG': 'C.UTF-8', 'LANGUAGE': 'C', 'LC_ALL': 'C', ...}
+max_chunk_size = 8192, strip_newline_in_stdout = True, subprocess_kwargs = {}
+redacted_command = ['git', 'config-get', 'diff', 'external']
+cwd = '/tmp/test_diff_patch_with_external_enginesjcd9cf9', inline_env = None
+cmd_not_found_exception = <class 'FileNotFoundError'>, stdout_sink = -1
+proc = <Popen: returncode: 1 args: ['git', 'config-get', 'diff', 'external']>
+
+    def execute(
+        self,
+        command: Union[str, Sequence[Any]],
+        istream: Union[None, BinaryIO] = None,
+        with_extended_output: bool = False,
+        with_exceptions: bool = True,
+        as_process: bool = False,
+        output_stream: Union[None, BinaryIO] = None,
+        stdout_as_string: bool = True,
+        kill_after_timeout: Union[None, float] = None,
+        with_stdout: bool = True,
+        universal_newlines: bool = False,
+        shell: Union[None, bool] = None,
+        env: Union[None, Mapping[str, str]] = None,
+        max_chunk_size: int = io.DEFAULT_BUFFER_SIZE,
+        strip_newline_in_stdout: bool = True,
+        **subprocess_kwargs: Any,
+    ) -> Union[str, bytes, Tuple[int, Union[str, bytes], str], AutoInterrupt]:
+        R"""Handle executing the command, and consume and return the returned
+        information (stdout).
+    
+        :param command:
+            The command argument list to execute.
+            It should be a sequence of program arguments, or a string. The
+            program to execute is the first item in the args sequence or string.
+    
+        :param istream:
+            Standard input filehandle passed to :class:`subprocess.Popen`.
+    
+        :param with_extended_output:
+            Whether to return a (status, stdout, stderr) tuple.
+    
+        :param with_exceptions:
+            Whether to raise an exception when git returns a non-zero status.
+    
+        :param as_process:
+            Whether to return the created process instance directly from which
+            streams can be read on demand. This will render `with_extended_output`
+            and `with_exceptions` ineffective - the caller will have to deal with
+            the details. It is important to note that the process will be placed
+            into an :class:`AutoInterrupt` wrapper that will interrupt the process
+            once it goes out of scope. If you use the command in iterators, you
+            should pass the whole process instance instead of a single stream.
+    
+        :param output_stream:
+            If set to a file-like object, data produced by the git command will be
+            output to the given stream directly.
+            This feature only has any effect if `as_process` is False. Processes will
+            always be created with a pipe due to issues with subprocess.
+            This merely is a workaround as data will be copied from the
+            output pipe to the given output stream directly.
+            Judging from the implementation, you shouldn't use this parameter!
+    
+        :param stdout_as_string:
+            If False, the command's standard output will be bytes. Otherwise, it will be
+            decoded into a string using the default encoding (usually UTF-8).
+            The latter can fail, if the output contains binary data.
+    
+        :param kill_after_timeout:
+            Specifies a timeout in seconds for the git command, after which the process
+            should be killed. This will have no effect if `as_process` is set to True.
+            It is set to None by default and will let the process run until the timeout
+            is explicitly specified. Uses of this feature should be carefully
+            considered, due to the following limitations:
+    
+            1. This feature is not supported at all on Windows.
+            2. Effectiveness may vary by operating system. ``ps --ppid`` is used to
+               enumerate child processes, which is available on most GNU/Linux systems
+               but not most others.
+            3. Deeper descendants do not receive signals, though they may sometimes
+               terminate as a consequence of their parent processes being killed.
+            4. `kill_after_timeout` uses ``SIGKILL``, which can have negative side
+               effects on a repository. For example, stale locks in case of ``git gc``
+               could render the repository incapable of accepting changes until the lock
+               is manually removed.
+    
+        :param with_stdout:
+            If True, default True, we open stdout on the created process.
+    
+        :param universal_newlines:
+            if True, pipes will be opened as text, and lines are split at
+            all known line endings.
+    
+        :param shell:
+            Whether to invoke commands through a shell (see `Popen(..., shell=True)`).
+            If this is not `None`, it overrides :attr:`USE_SHELL`.
+    
+            Passing ``shell=True`` to this or any other GitPython function should be
+            avoided, as it is unsafe under most circumstances. This is because it is
+            typically not feasible to fully consider and account for the effect of shell
+            expansions, especially when passing ``shell=True`` to other methods that
+            forward it to :meth:`Git.execute`. Passing ``shell=True`` is also no longer
+            needed (nor useful) to work around any known operating system specific
+            issues.
+    
+        :param env:
+            A dictionary of environment variables to be passed to :class:`subprocess.Popen`.
+    
+        :param max_chunk_size:
+            Maximum number of bytes in one chunk of data passed to the output_stream in
+            one invocation of write() method. If the given number is not positive then
+            the default value is used.
+    
+        :param strip_newline_in_stdout:
+            Whether to strip the trailing ``\n`` of the command stdout.
+    
+        :param subprocess_kwargs:
+            Keyword arguments to be passed to :class:`subprocess.Popen`. Please note
+            that some of the valid kwargs are already set by this method; the ones you
+            specify may not be the same ones.
+    
+        :return:
+            * str(output) if extended_output = False (Default)
+            * tuple(int(status), str(stdout), str(stderr)) if extended_output = True
+    
+            If output_stream is True, the stdout value will be your output stream:
+            * output_stream if extended_output = False
+            * tuple(int(status), output_stream, str(stderr)) if extended_output = True
+    
+            Note that git is executed with ``LC_MESSAGES="C"`` to ensure consistent
+            output regardless of system language.
+    
+        :raise GitCommandError:
+    
+        :note:
+           If you add additional keyword arguments to the signature of this method,
+           you must update the execute_kwargs tuple housed in this module.
+        """
+        # Remove password for the command if present.
+        redacted_command = remove_password_if_present(command)
+        if self.GIT_PYTHON_TRACE and (self.GIT_PYTHON_TRACE != "full" or as_process):
+            _logger.info(" ".join(redacted_command))
+    
+        # Allow the user to have the command executed in their working dir.
+        try:
+            cwd = self._working_dir or os.getcwd()  # type: Union[None, str]
+            if not os.access(str(cwd), os.X_OK):
+                cwd = None
+        except FileNotFoundError:
+            cwd = None
+    
+        # Start the process.
+        inline_env = env
+        env = os.environ.copy()
+        # Attempt to force all output to plain ASCII English, which is what some parsing
+        # code may expect.
+        # According to https://askubuntu.com/a/311796, we are setting LANGUAGE as well
+        # just to be sure.
+        env["LANGUAGE"] = "C"
+        env["LC_ALL"] = "C"
+        env.update(self._environment)
+        if inline_env is not None:
+            env.update(inline_env)
+    
+        if os.name == "nt":
+            cmd_not_found_exception = OSError
+            if kill_after_timeout is not None:
+                raise GitCommandError(
+                    redacted_command,
+                    '"kill_after_timeout" feature is not supported on Windows.',
+                )
+        else:
+            cmd_not_found_exception = FileNotFoundError
+        # END handle
+    
+        stdout_sink = PIPE if with_stdout else getattr(subprocess, "DEVNULL", None) or open(os.devnull, "wb")
+        if shell is None:
+            shell = self.USE_SHELL
+        _logger.debug(
+            "Popen(%s, cwd=%s, stdin=%s, shell=%s, universal_newlines=%s)",
+            redacted_command,
+            cwd,
+            "<valid stream>" if istream else "None",
+            shell,
+            universal_newlines,
+        )
+        try:
+            proc = safer_popen(
+                command,
+                env=env,
+                cwd=cwd,
+                bufsize=-1,
+                stdin=(istream or DEVNULL),
+                stderr=PIPE,
+                stdout=stdout_sink,
+                shell=shell,
+                universal_newlines=universal_newlines,
+                **subprocess_kwargs,
+            )
+        except cmd_not_found_exception as err:
+            raise GitCommandNotFound(redacted_command, err) from err
+        else:
+            # Replace with a typeguard for Popen[bytes]?
+            proc.stdout = cast(BinaryIO, proc.stdout)
+            proc.stderr = cast(BinaryIO, proc.stderr)
+    
+        if as_process:
+            return self.AutoInterrupt(proc, command)
+    
+        def kill_process(pid: int) -> None:
+            """Callback to kill a process."""
+            if os.name == "nt":
+                raise AssertionError("Bug: This callback would be ineffective and unsafe on Windows, stopping.")
+            p = Popen(["ps", "--ppid", str(pid)], stdout=PIPE)
+            child_pids = []
+            if p.stdout is not None:
+                for line in p.stdout:
+                    if len(line.split()) > 0:
+                        local_pid = (line.split())[0]
+                        if local_pid.isdigit():
+                            child_pids.append(int(local_pid))
+            try:
+                os.kill(pid, signal.SIGKILL)
+                for child_pid in child_pids:
+                    try:
+                        os.kill(child_pid, signal.SIGKILL)
+                    except OSError:
+                        pass
+                kill_check.set()  # Tell the main routine that the process was killed.
+            except OSError:
+                # It is possible that the process gets completed in the duration after
+                # timeout happens and before we try to kill the process.
+                pass
+            return
+    
+        # END kill_process
+    
+        if kill_after_timeout is not None:
+            kill_check = threading.Event()
+            watchdog = threading.Timer(kill_after_timeout, kill_process, args=(proc.pid,))
+    
+        # Wait for the process to return.
+        status = 0
+        stdout_value: Union[str, bytes] = b""
+        stderr_value: Union[str, bytes] = b""
+        newline = "\n" if universal_newlines else b"\n"
+        try:
+            if output_stream is None:
+                if kill_after_timeout is not None:
+                    watchdog.start()
+                stdout_value, stderr_value = proc.communicate()
+                if kill_after_timeout is not None:
+                    watchdog.cancel()
+                    if kill_check.is_set():
+                        stderr_value = 'Timeout: the command "%s" did not complete in %d ' "secs." % (
+                            " ".join(redacted_command),
+                            kill_after_timeout,
+                        )
+                        if not universal_newlines:
+                            stderr_value = stderr_value.encode(defenc)
+                # Strip trailing "\n".
+                if stdout_value.endswith(newline) and strip_newline_in_stdout:  # type: ignore
+                    stdout_value = stdout_value[:-1]
+                if stderr_value.endswith(newline):  # type: ignore
+                    stderr_value = stderr_value[:-1]
+    
+                status = proc.returncode
+            else:
+                max_chunk_size = max_chunk_size if max_chunk_size and max_chunk_size > 0 else io.DEFAULT_BUFFER_SIZE
+                stream_copy(proc.stdout, output_stream, max_chunk_size)
+                stdout_value = proc.stdout.read()
+                stderr_value = proc.stderr.read()
+                # Strip trailing "\n".
+                if stderr_value.endswith(newline):  # type: ignore
+                    stderr_value = stderr_value[:-1]
+                status = proc.wait()
+            # END stdout handling
+        finally:
+            proc.stdout.close()
+            proc.stderr.close()
+    
+        if self.GIT_PYTHON_TRACE == "full":
+            cmdstr = " ".join(redacted_command)
+    
+            def as_text(stdout_value: Union[bytes, str]) -> str:
+                return not output_stream and safe_decode(stdout_value) or "<OUTPUT_STREAM>"
+    
+            # END as_text
+    
+            if stderr_value:
+                _logger.info(
+                    "%s -> %d; stdout: '%s'; stderr: '%s'",
+                    cmdstr,
+                    status,
+                    as_text(stdout_value),
+                    safe_decode(stderr_value),
+                )
+            elif stdout_value:
+                _logger.info("%s -> %d; stdout: '%s'", cmdstr, status, as_text(stdout_value))
+            else:
+                _logger.info("%s -> %d", cmdstr, status)
+        # END handle debug printing
+    
+        if with_exceptions and status != 0:
+>           raise GitCommandError(redacted_command, status, stderr_value, stdout_value)
+E           git.exc.GitCommandError: Cmd('git') failed due to: exit code(1)
+E             cmdline: git config-get diff external
+E             stderr: 'git: 'config-get' is not a git command. See 'git --help'.'
+
+git/cmd.py:1183: GitCommandError
+
+During handling of the above exception, another exception occurred:
+
+self = <test.test_diff.TestDiff testMethod=test_diff_patch_with_external_engine>
+rw_dir = '/tmp/test_diff_patch_with_external_enginesjcd9cf9'
+
+    @with_rw_directory
+    def test_diff_patch_with_external_engine(self, rw_dir):
+        repo = Repo.init(rw_dir)
+        gitignore = osp.join(rw_dir, ".gitignore")
+    
+        # First commit
+        with open(gitignore, "w") as f:
+            f.write("first_line\n")
+        repo.git.add(".gitignore")
+        repo.index.commit("first commit")
+    
+        # Adding second line and committing
+        with open(gitignore, "a") as f:
+            f.write("second_line\n")
+        repo.git.add(".gitignore")
+        repo.index.commit("second commit")
+    
+        # Adding third line and staging
+        with open(gitignore, "a") as f:
+            f.write("third_line\n")
+        repo.git.add(".gitignore")
+    
+        # Adding fourth line
+        with open(gitignore, "a") as f:
+            f.write("fourth_line\n")
+    
+        # Set the external diff engine
+        with repo.config_writer(config_level="repository") as writer:
+            writer.set_value("diff", "external", "bogus_diff_engine")
+    
+>       head_against_head = repo.head.commit.diff("HEAD^", create_patch=True)
+
+test/test_diff.py:507: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <git.Commit "203b381debc6cbc18b40fbce637cb97d78e6f0ef">, other = 'HEAD^'
+paths = None, create_patch = True, kwargs = {}
+args = ['--abbrev=40', '--full-index', '-M'], use_patch_format = True
+
+    def diff(
+        self,
+        other: Union[Type["Index"], "Tree", "Commit", None, str, object] = Index,
+        paths: Union[PathLike, List[PathLike], Tuple[PathLike, ...], None] = None,
+        create_patch: bool = False,
+        **kwargs: Any,
+    ) -> "DiffIndex":
+        """Create diffs between two items being trees, trees and index or an
+        index and the working tree. Detects renames automatically.
+    
+        :param other:
+            This the item to compare us with.
+    
+            * If None, we will be compared to the working tree.
+            * If :class:`~git.index.base.Treeish`, it will be compared against the
+              respective tree.
+            * If :class:`~Diffable.Index`, it will be compared against the index.
+            * If :attr:`git.NULL_TREE`, it will compare against the empty tree.
+            * It defaults to :class:`~Diffable.Index` so that the method will not by
+              default fail on bare repositories.
+    
+        :param paths:
+            This a list of paths or a single path to limit the diff to. It will only
+            include at least one of the given path or paths.
+    
+        :param create_patch:
+            If True, the returned :class:`Diff` contains a detailed patch that if
+            applied makes the self to other. Patches are somewhat costly as blobs have
+            to be read and diffed.
+    
+        :param kwargs:
+            Additional arguments passed to git-diff, such as ``R=True`` to swap both
+            sides of the diff.
+    
+        :return: git.DiffIndex
+    
+        :note:
+            On a bare repository, 'other' needs to be provided as
+            :class:`~Diffable.Index`, or as :class:`~git.objects.tree.Tree` or
+            :class:`~git.objects.commit.Commit`, or a git command error will occur.
+        """
+        args: List[Union[PathLike, Diffable, Type["Diffable.Index"], object]] = []
+        args.append("--abbrev=40")  # We need full shas.
+        args.append("--full-index")  # Get full index paths, not only filenames.
+    
+        # Remove default '-M' arg (check for renames) if user is overriding it.
+        if not any(x in kwargs for x in ("find_renames", "no_renames", "M")):
+            args.append("-M")
+    
+        # Check if external diff is configured - if so, we can't reliably use patch format
+        # as external diff tools don't produce the unified diff format we expect to parse
+        use_patch_format = create_patch
+        if use_patch_format:
+            try:
+                # Check if diff.external is configured
+                external_diff = self.repo.git.config_get('diff', 'external')
+                if external_diff:
+                    use_patch_format = False
+>           except (AttributeError, GitCommandError):
+E           NameError: name 'GitCommandError' is not defined
+
+git/diff.py:165: NameError
+----------- generated xml file: /opt/receipts/reports/agent1-10.xml ------------
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+git/__init__.py                        32      6    81%
+git/cmd.py                            540    288    47%
+git/compat.py                          37     17    54%
+git/config.py                         438    176    60%
+git/db.py                              25      5    80%
+git/diff.py                           274    209    24%
+git/exc.py                             63     17    73%
+git/index/__init__.py                   2      0   100%
+git/index/base.py                     495    370    25%
+git/index/fun.py                      183    104    43%
+git/index/typ.py                       74     23    69%
+git/index/util.py                      50     21    58%
+git/objects/__init__.py                13      0   100%
+git/objects/base.py                    84     25    70%
+git/objects/blob.py                    17      4    76%
+git/objects/commit.py                 305    127    58%
+git/objects/fun.py                     92     70    24%
+git/objects/submodule/__init__.py       0      0   100%
+git/objects/submodule/base.py         570    472    17%
+git/objects/submodule/root.py         133    107    20%
+git/objects/submodule/util.py          44     27    39%
+git/objects/tag.py                     40     28    30%
+git/objects/tree.py                   144     89    38%
+git/objects/util.py                   211    129    39%
+git/refs/__init__.py                    6      0   100%
+git/refs/head.py                       94     61    35%
+git/refs/log.py                       146     74    49%
+git/refs/reference.py                  53     10    81%
+git/refs/remote.py                     29     15    48%
+git/refs/symbolic.py                  363    153    58%
+git/refs/tag.py                        43     24    44%
+git/remote.py                         448    342    24%
+git/repo/__init__.py                    1      0   100%
+git/repo/base.py                      574    366    36%
+git/repo/fun.py                       195    138    29%
+git/types.py                           38      5    87%
+git/util.py                           552    276    50%
+-------------------------------------------------------
+TOTAL                                6408   3778    41%
+=========================== short test summary info ============================
+FAILED test/test_diff.py::TestDiff::test_diff_patch_with_external_engine - Na...
+============================== 1 failed in 0.89s ===============================

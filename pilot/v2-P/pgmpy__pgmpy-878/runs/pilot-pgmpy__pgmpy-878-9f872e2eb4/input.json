@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Remove nodes without CPD\n[This line](https://github.com/pgmpy/pgmpy/blob/dev/pgmpy/models/BayesianModel.py#L165) checks whether the node has CPD by getting its CPD. However, get_cpds will raise an error if the node doesn't have a CPD. So that line will break when there is no CPD for the node.\r\n\r\n@ankurankan I can fix it, but I need your input on whether to have get_cpds return None if the CPD doesn't exist, or to check the existence of CPD in other ways?",
+  "source": {
+    "image": "docker.io/swerebenchv2/pgmpy-pgmpy:878-c302a5d",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pgmpy__pgmpy-878-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3BnbXB5L3Rlc3RzL3Rlc3RfbW9kZWxzL3Rlc3RfQmF5ZXNpYW5Nb2RlbC5weSBiL3BnbXB5L3Rlc3RzL3Rlc3RfbW9kZWxzL3Rlc3RfQmF5ZXNpYW5Nb2RlbC5weQppbmRleCA3Zjg3NjUxOS4uOGQ1YTMwNGUgMTAwNjQ0Ci0tLSBhL3BnbXB5L3Rlc3RzL3Rlc3RfbW9kZWxzL3Rlc3RfQmF5ZXNpYW5Nb2RlbC5weQorKysgYi9wZ21weS90ZXN0cy90ZXN0X21vZGVscy90ZXN0X0JheWVzaWFuTW9kZWwucHkKQEAgLTI4Miw3ICsyODIsNyBAQCBjbGFzcyBUZXN0QmF5ZXNpYW5Nb2RlbENQRCh1bml0dGVzdC5UZXN0Q2FzZSk6CiAgICAgICAgIHNlbGYuYXNzZXJ0UmFpc2VzKFZhbHVlRXJyb3IsIHNlbGYubW9kZWwuZ2V0X2NwZHMsICdCJykKIAogICAgICAgICBzZWxmLm1vZGVsLmFkZF9ub2RlKCdCJykKLSAgICAgICAgc2VsZi5hc3NlcnRSYWlzZXMoVmFsdWVFcnJvciwgc2VsZi5tb2RlbC5nZXRfY3BkcywgJ0InKQorICAgICAgICBzZWxmLmFzc2VydElzTm9uZShzZWxmLm1vZGVsLmdldF9jcGRzKCdCJykpCiAKICAgICBkZWYgdGVzdF9hZGRfc2luZ2xlX2NwZChzZWxmKToKICAgICAgICAgY3BkX3MgPSBUYWJ1bGFyQ1BEKCdzJywgMiwgbnAucmFuZG9tLnJhbmQoMiwgMiksIFsnaSddLCBbMl0pCg=='\"'\"'))'",
+      "git apply /tmp/receipts-pgmpy__pgmpy-878-test.patch"
+    ],
+    "workdir": "/pgmpy"
+  },
+  "spec_paths": [
+    "pgmpy/tests/test_models/test_BayesianModel.py"
+  ],
+  "spec_tests": [
+    "pgmpy/tests/test_models/test_BayesianModel.py::TestBayesianModelCPD::test_get_cpds1"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pgmpy/tests/test_models/test_BayesianModel.py"
+}

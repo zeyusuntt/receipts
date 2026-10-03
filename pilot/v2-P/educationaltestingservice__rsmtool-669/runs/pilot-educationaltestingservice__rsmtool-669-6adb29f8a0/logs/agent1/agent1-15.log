@@ -1,0 +1,73 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /rsmtool
+plugins: anyio-4.12.1
+collecting ... collected 1 item
+
+tests/test_cli.py::TestToolCLI::test_rsmpredict_run_features_file FAILED [100%]
+
+=================================== FAILURES ===================================
+________________ TestToolCLI.test_rsmpredict_run_features_file _________________
+
+self = <test_cli.TestToolCLI testMethod=test_rsmpredict_run_features_file>
+
+    def test_rsmpredict_run_features_file(self):
+        tempdir = TemporaryDirectory()
+        self.temporary_directories.append(tempdir)
+    
+        args = [
+            str(self.rsmpredict_config_file),
+            tempdir.name,
+            "--features",
+            f"{tempdir.name}/preprocessed_features.csv",
+        ]
+    
+>       self.check_tool_cmd("rsmpredict", args, tempdir.name, None)
+
+tests/test_cli.py:505: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli.py:324: in check_tool_cmd
+    main_function(args)
+rsmtool/rsmpredict.py:562: in main
+    args = parser.parse_args(args=args_to_pass)
+/usr/local/lib/python3.10/argparse.py:1833: in parse_args
+    args, argv = self.parse_known_args(args, namespace)
+/usr/local/lib/python3.10/argparse.py:1866: in parse_known_args
+    namespace, args = self._parse_known_args(args, namespace)
+/usr/local/lib/python3.10/argparse.py:2061: in _parse_known_args
+    positionals_end_index = consume_positionals(start_index)
+/usr/local/lib/python3.10/argparse.py:2038: in consume_positionals
+    take_action(action, args)
+/usr/local/lib/python3.10/argparse.py:1943: in take_action
+    action(self, namespace, argument_values, option_string)
+/usr/local/lib/python3.10/argparse.py:1221: in __call__
+    subnamespace, arg_strings = parser.parse_known_args(arg_strings, None)
+/usr/local/lib/python3.10/argparse.py:1866: in parse_known_args
+    namespace, args = self._parse_known_args(args, namespace)
+/usr/local/lib/python3.10/argparse.py:2107: in _parse_known_args
+    self.error(_('the following arguments are required: %s') %
+/usr/local/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='rsmpredict run', usage=None, description=None, formatter_class=<class 'argparse.HelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'rsmpredict run: error: the following arguments are required: output_file\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+/usr/local/lib/python3.10/argparse.py:2581: SystemExit
+=============================== warnings summary ===============================
+rsmtool/transformer.py:14
+  /rsmtool/rsmtool/transformer.py:14: DeprecationWarning: Please import `pearsonr` from the `scipy.stats` namespace; the `scipy.stats.stats` namespace is deprecated and will be removed in SciPy 2.0.0.
+    from scipy.stats.stats import pearsonr
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-15.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_cli.py::TestToolCLI::test_rsmpredict_run_features_file - Sy...
+========================= 1 failed, 1 warning in 9.20s =========================

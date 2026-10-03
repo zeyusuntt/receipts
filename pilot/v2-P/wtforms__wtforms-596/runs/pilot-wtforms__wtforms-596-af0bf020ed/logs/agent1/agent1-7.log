@@ -1,0 +1,20 @@
+        see the `__call__` method.
+        """
+        return self()
+
+    def __html__(self):
+        """
+        Returns a HTML representation of the field. For more powerful rendering,
+        see the :meth:`__call__` method.
+        """
+        return self()
+
+    def __call__(self, **kwargs):
+        """
+        Render this field as HTML, using keyword args as additional attributes.
+
+        This delegates rendering to
+        :meth:`meta.render_field <wtforms.meta.DefaultMeta.render_field>`
+        whose default behavior is to call the field's widget, passing any
+        keyword arguments from this call along to the widget.
+

@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /dynaconf
+plugins: cov-4.1.0, mock-3.11.1
+collecting ... collected 1 item
+
+tests/test_cli.py::test_list_with_key_export_json FAILED
+
+=================================== FAILURES ===================================
+________________________ test_list_with_key_export_json ________________________
+
+tmpdir = local('/tmp/pytest-of-root/pytest-5/test_list_with_key_export_json0')
+
+    def test_list_with_key_export_json(tmpdir):
+        result = run(["list", "-k", "DOTENV_STR", "-o", "sets.json"])
+>       assert "DOTENV_STR: 'hello'" in result
+E       assert "DOTENV_STR: 'hello'" in "Working in development environment \nKey not found\nDEBUG keys: ['TESTING']\n"
+
+/dynaconf/tests/test_cli.py:163: AssertionError

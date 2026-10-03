@@ -1,0 +1,42 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /traits
+collecting ... collected 1 item
+
+traits/tests/test_union.py::TestUnion::test_constant_default FAILED      [100%]
+
+=================================== FAILURES ===================================
+_______________________ TestUnion.test_constant_default ________________________
+
+self = <traits.tests.test_union.TestUnion testMethod=test_constant_default>
+
+    def test_constant_default(self):
+        # Exercise the branch where the default is constant.
+        class HasUnionWithList(HasTraits):
+            foo = Union(Int(23), Float)
+    
+            nested = Union(Union(Str(), Bytes()), Union(Int(), Float(), None))
+    
+        has_union = HasUnionWithList()
+        value = has_union.foo
+        self.assertEqual(value, 23)
+    
+>       self.assertEqual(
+            has_union.trait("foo").default_value(),
+            (DefaultValue.constant, 23),
+        )
+E       AssertionError: Tuples differ: (8, <bound method Union._get_default_value[52 chars]50>>) != (<DefaultValue.constant: 7>, 23)
+E       
+E       First differing element 0:
+E       8
+E       <DefaultValue.constant: 7>
+E       
+E       + (<DefaultValue.constant: 7>, 23)
+E       - (8,
+E       -  <bound method Union._get_default_value of <traits.trait_types.Union object at 0x7ffff433b250>>)
+
+traits/tests/test_union.py:204: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-44.xml ------------
+=========================== short test summary info ============================
+FAILED traits/tests/test_union.py::TestUnion::test_constant_default - Asserti...
+============================== 1 failed in 0.34s ===============================

@@ -1,0 +1,106 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /PyBaMM
+configfile: pyproject.toml
+plugins: anyio-4.12.1, nbmake-1.5.5, cov-7.0.0, doctestplus-1.7.1, xdist-3.8.0
+created: 4/4 workers
+4 workers [1 item]
+
+scheduling tests via LoadScheduling
+
+tests/unit/test_expression_tree/test_functions.py::TestFunction::test_to_equation 
+[gw1] [100%] FAILED tests/unit/test_expression_tree/test_functions.py::TestFunction::test_to_equation 
+
+=================================== FAILURES ===================================
+________________________ TestFunction.test_to_equation _________________________
+[gw1] linux -- Python 3.10.19 /usr/local/bin/python
+
+self = Symbol(-0x1f23636d0af53386, a, children=[], domains={'primary': ['test']})
+
+    def evaluate_for_shape(self):
+        """
+        Evaluate expression tree to find its shape.
+    
+        For symbols that cannot be evaluated directly (e.g. `Variable` or `Parameter`),
+        a vector of the appropriate shape is returned instead, using the symbol's
+        domain. See :meth:`pybamm.Symbol.evaluate()`
+        """
+        try:
+>           return self._saved_evaluate_for_shape
+E           AttributeError: 'Symbol' object has no attribute '_saved_evaluate_for_shape'. Did you mean: '_evaluate_for_shape'?
+
+pybamm/expression_tree/symbol.py:827: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.unit.test_expression_tree.test_functions.TestFunction testMethod=test_to_equation>
+
+    def test_to_equation(self):
+        a = pybamm.Symbol("a", domain="test")
+    
+        # Test print_name
+        func = pybamm.Arcsinh(a)
+        func.print_name = "test"
+>       self.assertEqual(func.to_equation(), sympy.Symbol("test"))
+
+tests/unit/test_expression_tree/test_functions.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pybamm/expression_tree/functions.py:232: in to_equation
+    if all(child.evaluates_to_constant_number() for child in self.children):
+pybamm/expression_tree/functions.py:232: in <genexpr>
+    if all(child.evaluates_to_constant_number() for child in self.children):
+pybamm/expression_tree/symbol.py:898: in evaluates_to_constant_number
+    return self.evaluates_to_number() and self.is_constant()
+pybamm/expression_tree/symbol.py:895: in evaluates_to_number
+    return self.shape_for_testing == ()
+pybamm/expression_tree/symbol.py:1046: in shape_for_testing
+    evaluated_self = self.evaluate_for_shape()
+pybamm/expression_tree/symbol.py:829: in evaluate_for_shape
+    self._saved_evaluate_for_shape = self._evaluate_for_shape()
+pybamm/expression_tree/symbol.py:834: in _evaluate_for_shape
+    return self.evaluate()
+pybamm/expression_tree/symbol.py:816: in evaluate
+    return self._base_evaluate(t, y, y_dot, inputs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Symbol(-0x1f23636d0af53386, a, children=[], domains={'primary': ['test']})
+t = None, y = None, y_dot = None, inputs = None
+
+    def _base_evaluate(
+        self,
+        t: float | None = None,
+        y: np.ndarray | None = None,
+        y_dot: np.ndarray | None = None,
+        inputs: dict | str | None = None,
+    ):
+        """
+        evaluate expression tree.
+    
+        will raise a ``NotImplementedError`` if this member function has not
+        been defined for the node. For example, :class:`Scalar` returns its
+        scalar value, but :class:`Variable` will raise ``NotImplementedError``
+    
+        Parameters
+        ----------
+    
+        t : float or numeric type, optional
+            time at which to evaluate (default None)
+    
+        y : numpy.array, optional
+            array with state values to evaluate when solving (default None)
+    
+        y_dot : numpy.array, optional
+            array with time derivatives of state values to evaluate when solving
+            (default None)
+        """
+>       raise NotImplementedError(
+            "method self.evaluate() not implemented for symbol "
+            f"{self!s} of type {type(self)}"
+        )
+E       NotImplementedError: method self.evaluate() not implemented for symbol a of type <class 'pybamm.expression_tree.symbol.Symbol'>
+
+pybamm/expression_tree/symbol.py:785: NotImplementedError
+----------- generated xml file: /opt/receipts/reports/agent1-28.xml ------------
+=========================== short test summary info ============================
+FAILED tests/unit/test_expression_tree/test_functions.py::TestFunction::test_to_equation - NotImplementedError: method self.evaluate() not implemented for symbol a of type <class 'pybamm.expression_tree.symbol.Symbol'>
+============================== 1 failed in 5.58s ===============================

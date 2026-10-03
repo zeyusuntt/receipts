@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "typing.Counter is not supported\n### Checks\r\n\r\n* [x] I added a descriptive title to this issue\r\n* [x] I have searched (google, github) for similar issues and couldn't find anything\r\n* [x] I have read and followed [the docs](https://pydantic-docs.helpmanual.io/) and still think this is a bug\r\n\r\n# Bug\r\n\r\nOutput of `python -c \"import pydantic.utils; print(pydantic.utils.version_info())\"`:\r\n```\r\n             pydantic version: 1.7\r\n            pydantic compiled: True\r\n                 install path: /home/user/app/.venv/lib/python3.8/site-packages/pydantic\r\n               python version: 3.8.6 (default, Sep 25 2020, 09:36:53)  [GCC 10.2.0]\r\n                     platform: Linux-5.9.0-1-amd64-x86_64-with-glibc2.29\r\n     optional deps. installed: ['typing-extensions']\r\n```\r\n\r\nMinimal example:\r\n\r\n```python\r\nfrom typing import Counter\r\nfrom pydantic import BaseModel\r\nclass ProcessedDoc(BaseModel):\r\n    named_entities: Counter[str]\r\n```\r\n\r\nResult:\r\n\r\n```text\r\nTraceback (most recent call last):\r\n  File \"<stdin>\", line 1, in <module>\r\n  File \"pydantic/main.py\", line 262, in pydantic.main.ModelMetaclass.__new__\r\n  File \"pydantic/fields.py\", line 315, in pydantic.fields.ModelField.infer\r\n  File \"pydantic/fields.py\", line 284, in pydantic.fields.ModelField.__init__\r\n  File \"pydantic/fields.py\", line 356, in pydantic.fields.ModelField.prepare\r\n  File \"pydantic/fields.py\", line 492, in pydantic.fields.ModelField._type_analysis\r\nIndexError: tuple index out of range\r\n```\r\n\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/samuelcolvin-pydantic:2806-2579086",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-samuelcolvin__pydantic-2806-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfbWFpbi5weSBiL3Rlc3RzL3Rlc3RfbWFpbi5weQppbmRleCAyN2VjZGZkZWUuLjRhOTY4MTA0YSAxMDA2NDQKLS0tIGEvdGVzdHMvdGVzdF9tYWluLnB5CisrKyBiL3Rlc3RzL3Rlc3RfbWFpbi5weQpAQCAtMiw3ICsyLDcgQEAgaW1wb3J0IHN5cwogZnJvbSBjb2xsZWN0aW9ucyBpbXBvcnQgZGVmYXVsdGRpY3QKIGZyb20gY29weSBpbXBvcnQgZGVlcGNvcHkKIGZyb20gZW51bSBpbXBvcnQgRW51bQotZnJvbSB0eXBpbmcgaW1wb3J0IEFueSwgQ2FsbGFibGUsIENsYXNzVmFyLCBEZWZhdWx0RGljdCwgRGljdCwgTGlzdCwgTWFwcGluZywgT3B0aW9uYWwsIFR5cGUsIGdldF90eXBlX2hpbnRzCitmcm9tIHR5cGluZyBpbXBvcnQgQW55LCBDYWxsYWJsZSwgQ2xhc3NWYXIsIENvdW50ZXIsIERlZmF1bHREaWN0LCBEaWN0LCBMaXN0LCBNYXBwaW5nLCBPcHRpb25hbCwgVHlwZSwgZ2V0X3R5cGVfaGludHMKIGZyb20gdXVpZCBpbXBvcnQgVVVJRCwgdXVpZDQKIAogaW1wb3J0IHB5dGVzdApAQCAtMTk4Nyw2ICsxOTg3LDMwIEBAIGRlZiB0ZXN0X3R5cGluZ19jb2VyY2lvbl9kZWZhdWx0ZGljdCgpOgogICAgIGFzc2VydCByZXByKG0pID09ICJNb2RlbCh4PWRlZmF1bHRkaWN0KDxjbGFzcyAnc3RyJz4sIHsxOiAnJywgJ2EnOiAnJ30pKSIKIAogCitkZWYgdGVzdF90eXBpbmdfY29lcmNpb25fY291bnRlcigpOgorICAgIGNsYXNzIE1vZGVsKEJhc2VNb2RlbCk6CisgICAgICAgIHg6IENvdW50ZXJbc3RyXQorCisgICAgYXNzZXJ0IE1vZGVsLl9fZmllbGRzX19bJ3gnXS50eXBlXyBpcyBpbnQKKyAgICBhc3NlcnQgcmVwcihNb2RlbCh4PXsnYSc6IDEwfSkpID09ICJNb2RlbCh4PUNvdW50ZXIoeydhJzogMTB9KSkiCisKKworZGVmIHRlc3RfdHlwaW5nX2NvdW50ZXJfdmFsdWVfdmFsaWRhdGlvbigpOgorICAgIGNsYXNzIE1vZGVsKEJhc2VNb2RlbCk6CisgICAgICAgIHg6IENvdW50ZXJbc3RyXQorCisgICAgd2l0aCBweXRlc3QucmFpc2VzKFZhbGlkYXRpb25FcnJvcikgYXMgZXhjX2luZm86CisgICAgICAgIE1vZGVsKHg9eydhJzogJ2EnfSkKKworICAgIGFzc2VydCBleGNfaW5mby52YWx1ZS5lcnJvcnMoKSA9PSBbCisgICAgICAgIHsKKyAgICAgICAgICAgICdsb2MnOiAoJ3gnLCAnYScpLAorICAgICAgICAgICAgJ21zZyc6ICd2YWx1ZSBpcyBub3QgYSB2YWxpZCBpbnRlZ2VyJywKKyAgICAgICAgICAgICd0eXBlJzogJ3R5cGVfZXJyb3IuaW50ZWdlcicsCisgICAgICAgIH0KKyAgICBdCisKKwogZGVmIHRlc3RfY2xhc3Nfa3dhcmdzX2NvbmZpZygpOgogICAgIGNsYXNzIEJhc2UoQmFzZU1vZGVsLCBleHRyYT0nZm9yYmlkJywgYWxpYXNfZ2VuZXJhdG9yPXN0ci51cHBlcik6CiAgICAgICAgIGE6IGludAo='\"'\"'))'",
+      "git apply /tmp/receipts-samuelcolvin__pydantic-2806-test.patch"
+    ],
+    "workdir": "/pydantic"
+  },
+  "spec_paths": [
+    "tests/test_main.py"
+  ],
+  "spec_tests": [
+    "tests/test_main.py::test_typing_coercion_counter",
+    "tests/test_main.py::test_typing_counter_value_validation"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_main.py"
+}

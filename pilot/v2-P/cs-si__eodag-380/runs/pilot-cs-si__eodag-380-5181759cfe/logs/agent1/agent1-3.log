@@ -1,0 +1,20 @@
+eodag/api/core.py:                self.guess_product_type(md5=self.product_types_config_md5)
+eodag/api/core.py:    def guess_product_type(self, **kwargs):
+eodag/api/core.py:                kwargs.get("productType", None) or self.guess_product_type(**kwargs)[0]
+eodag/api/core.py:                    # guess product type from properties
+eodag/api/core.py:                    guesses = self.guess_product_type(**results[0].properties)
+eodag/api/core.py:              * By params (e.g. 'platform'), see guess_product_type
+eodag/api/core.py:                       * search criteria to guess the product type
+eodag/api/core.py:                guesses = self.guess_product_type(**kwargs)
+eodag/api/core.py:                # guess_product_type raises a NoMatchingProductType error if no product
+eodag/api/core.py:    def load_stac_items(
+eodag/cli.py:    guessed_product_types = []
+eodag/cli.py:        guessed_product_types = dag.guess_product_type(
+eodag/cli.py:        if guessed_product_types:
+eodag/cli.py:                if pt["ID"] in guessed_product_types
+eodag/rest/stac.py:            guessed_product_types = self.eodag_api.guess_product_type(
+eodag/rest/stac.py:            guessed_product_types = []
+eodag/rest/stac.py:        if guessed_product_types:
+eodag/rest/stac.py:                if pt["ID"] in guessed_product_types
+eodag/rest/utils.py:        guessed_product_types = eodag_api.guess_product_type(
+eodag/rest/utils.py:        guessed_product_types = []

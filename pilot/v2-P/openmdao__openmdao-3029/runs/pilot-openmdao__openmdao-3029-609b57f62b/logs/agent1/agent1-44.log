@@ -1,0 +1,83 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /OpenMDAO
+collecting ... collected 1 item
+
+openmdao/visualization/n2_viewer/tests/gen_gui_test.py::gen_gui_test_case::test_gen_gui FAILED [100%]
+
+=================================== FAILURES ===================================
+________________________ gen_gui_test_case.test_gen_gui ________________________
+
+self = <openmdao.visualization.n2_viewer.tests.gen_gui_test.gen_gui_test_case testMethod=test_gen_gui>
+basename = 'create_generic_model.py'
+
+    @async_test(loop=my_loop)
+    async def test_gen_gui(self, basename = "create_generic_model.py"):
+        if (basename[:2] == "__"):
+            return
+    
+        print("\n" + LINE_STR + "\n" + basename + "\n" + LINE_STR)
+    
+        self.current_test_desc = ''
+        self.current_model = basename
+    
+        self.generate_html_file()
+    
+        async with async_playwright() as playwright:
+>           await self.run_gui_tests(playwright)
+
+openmdao/visualization/n2_viewer/tests/gen_gui_test.py:503: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openmdao/visualization/n2_viewer/tests/gen_gui_test.py:471: in run_gui_tests
+    await self.setup_browser(playwright)
+openmdao/utils/gui_testing_utils.py:74: in setup_browser
+    self.browser = await playwright.chromium.launch(args=['--start-fullscreen'])
+/usr/local/lib/python3.10/site-packages/playwright/async_api/_generated.py:14547: in launch
+    await self._impl_obj.launch(
+/usr/local/lib/python3.10/site-packages/playwright/_impl/_browser_type.py:97: in launch
+    await self._channel.send(
+/usr/local/lib/python3.10/site-packages/playwright/_impl/_connection.py:69: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <playwright._impl._connection.Connection object at 0x7ffff6cc3520>
+cb = <function Channel.send.<locals>.<lambda> at 0x7ffff5b2c0d0>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        st: List[inspect.FrameInfo] = getattr(
+            task, "__pw_stack__", None
+        ) or inspect.stack(0)
+    
+        parsed_st = _extract_stack_trace_information_from_stack(st, is_internal, title)
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at /workspace/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+E           ╔════════════════════════════════════════════════════════════╗
+E           ║ Looks like Playwright was just installed or updated.       ║
+E           ║ Please run the following command to download new browsers: ║
+E           ║                                                            ║
+E           ║     playwright install                                     ║
+E           ║                                                            ║
+E           ║ <3 Playwright Team                                         ║
+E           ╚════════════════════════════════════════════════════════════╝
+
+/usr/local/lib/python3.10/site-packages/playwright/_impl/_connection.py:559: Error
+----------------------------- Captured stdout call -----------------------------
+
+------------------------------------------------------------------------------
+create_generic_model.py
+------------------------------------------------------------------------------
+Creating /OpenMDAO/openmdao/visualization/n2_viewer/tests/gui_test_models/gen_diag_GEN_TEST.html
+----------- generated xml file: /opt/receipts/reports/agent1-44.xml ------------
+=========================== short test summary info ============================
+FAILED openmdao/visualization/n2_viewer/tests/gen_gui_test.py::gen_gui_test_case::test_gen_gui
+============================== 1 failed in 1.08s ===============================

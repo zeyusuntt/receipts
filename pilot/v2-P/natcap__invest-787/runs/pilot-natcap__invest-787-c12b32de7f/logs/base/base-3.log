@@ -1,0 +1,106 @@
+============================= test session starts ==============================
+collected 10 items
+
+tests/test_delineateit.py ...FFF.FFF                                     [100%]
+
+=================================== FAILURES ===================================
+E   RuntimeError: /invest/tests/../data/invest-test-data/delineateit/input/dem.tif: No such file or directory
+------------------------------ Captured log call -------------------------------
+ERROR    taskgraph.Task:Task.py:716 Something went wrong when adding task fill_pits (0), terminating taskgraph.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/taskgraph/Task.py", line 684, in add_task
+    new_task._call()
+  File "/usr/local/lib/python3.10/site-packages/taskgraph/Task.py", line 1103, in _call
+    payload = self._func(*self._args, **self._kwargs)
+  File "/usr/local/lib/python3.10/site-packages/pygeoprocessing/utils.py", line 32, in wrapper
+    return func(*args, **kwargs)
+  File "src/pygeoprocessing/routing/routing.pyx", line 338, in pygeoprocessing.routing.routing.fill_pits
+  File "/usr/local/lib/python3.10/site-packages/pygeoprocessing/utils.py", line 32, in wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/pygeoprocessing/geoprocessing.py", line 2104, in get_raster_info
+    raster = gdal.OpenEx(raster_path, gdal.OF_RASTER)
+  File "/usr/local/lib/python3.10/site-packages/osgeo/gdal.py", line 9278, in OpenEx
+    return _gdal.OpenEx(*args, **kwargs)
+RuntimeError: /invest/tests/../data/invest-test-data/delineateit/input/dem.tif: No such file or directory
+/usr/local/lib/python3.10/site-packages/osgeo/gdal.py:9278: RuntimeError: /invest/tests/../data/invest-test-data/delineateit/input/dem.tif: No such file or directory
+E   RuntimeError: /invest/tests/../data/invest-test-data/delineateit/input/dem.tif: No such file or directory
+------------------------------ Captured log call -------------------------------
+ERROR    taskgraph.Task:Task.py:716 Something went wrong when adding task fill_pits (0), terminating taskgraph.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/taskgraph/Task.py", line 684, in add_task
+    new_task._call()
+  File "/usr/local/lib/python3.10/site-packages/taskgraph/Task.py", line 1103, in _call
+    payload = self._func(*self._args, **self._kwargs)
+  File "/usr/local/lib/python3.10/site-packages/pygeoprocessing/utils.py", line 32, in wrapper
+    return func(*args, **kwargs)
+  File "src/pygeoprocessing/routing/routing.pyx", line 338, in pygeoprocessing.routing.routing.fill_pits
+  File "/usr/local/lib/python3.10/site-packages/pygeoprocessing/utils.py", line 32, in wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/pygeoprocessing/geoprocessing.py", line 2104, in get_raster_info
+    raster = gdal.OpenEx(raster_path, gdal.OF_RASTER)
+  File "/usr/local/lib/python3.10/site-packages/osgeo/gdal.py", line 9278, in OpenEx
+    return _gdal.OpenEx(*args, **kwargs)
+RuntimeError: /invest/tests/../data/invest-test-data/delineateit/input/dem.tif: No such file or directory
+/usr/local/lib/python3.10/site-packages/osgeo/gdal.py:9278: RuntimeError: /invest/tests/../data/invest-test-data/delineateit/input/dem.tif: No such file or directory
+E   RuntimeError: /invest/tests/../data/invest-test-data/delineateit/input/flow_dir_gura.tif: No such file or directory
+/usr/local/lib/python3.10/site-packages/osgeo/gdal.py:9278: RuntimeError: /invest/tests/../data/invest-test-data/delineateit/input/flow_dir_gura.tif: No such file or directory
+E   TypeError: snap_points_to_nearest_stream() takes 4 positional arguments but 5 were given
+/invest/tests/test_delineateit.py:229: TypeError: snap_points_to_nearest_stream() takes 4 positional arguments but 5 were given
+E   TypeError: snap_points_to_nearest_stream() takes 4 positional arguments but 5 were given
+/invest/tests/test_delineateit.py:392: TypeError: snap_points_to_nearest_stream() takes 4 positional arguments but 5 were given
+E   TypeError: snap_points_to_nearest_stream() takes 4 positional arguments but 5 were given
+/invest/tests/test_delineateit.py:328: TypeError: snap_points_to_nearest_stream() takes 4 positional arguments but 5 were given
+=============================== warnings summary ===============================
+tests/test_delineateit.py::DelineateItTests::test_calculate_pour_point_array
+  /invest/src/natcap/__init__.py:3: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+tests/test_delineateit.py::DelineateItTests::test_check_geometries
+tests/test_delineateit.py::DelineateItTests::test_check_geometries
+tests/test_delineateit.py::DelineateItTests::test_check_geometries
+  /invest/src/natcap/invest/delineateit/delineateit.py:412: FutureWarning: ReadingError is deprecated and will be removed in a future version. Use ShapelyError instead (functions previously raising {name} will now raise a ShapelyError instead).
+    except (shapely.errors.ReadingError, ValueError):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+____________________ DelineateItTests.test_check_geometries ____________________
+----------------------------- Captured stderr call -----------------------------
+Warning 1: Self-intersection at or near point 4 -4
+Warning 1: Ring Self-intersection at or near point 4 -4
+Warning 1: IllegalArgumentException: Points of LinearRing do not form a closed linestring
+------------------------------ Captured log call -------------------------------
+WARNING  natcap.invest.delineateit.delineateit:delineateit.py:432 Feature 1 has no geometry. Skipping
+WARNING  natcap.invest.delineateit.delineateit:delineateit.py:438 Feature 2 does not intersect the DEM. Skipping.
+WARNING  natcap.invest.delineateit.delineateit:delineateit.py:432 Feature 1 has no geometry. Skipping
+WARNING  natcap.invest.delineateit.delineateit:delineateit.py:438 Feature 2 does not intersect the DEM. Skipping.
+WARNING  natcap.invest.delineateit.delineateit:delineateit.py:425 The geometry at feature 4 is invalid and will not be included in the set of features to be delineated.
+WARNING  natcap.invest.delineateit.delineateit:delineateit.py:425 The geometry at feature 5 is invalid and will not be included in the set of features to be delineated.
+WARNING  natcap.invest.delineateit.delineateit:delineateit.py:425 The geometry at feature 6 is invalid and will not be included in the set of features to be delineated.
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+=========================== short test summary info ============================
+PASSED tests/test_delineateit.py::DelineateItTests::test_calculate_pour_point_array
+PASSED tests/test_delineateit.py::DelineateItTests::test_check_geometries
+PASSED tests/test_delineateit.py::DelineateItTests::test_delineateit_validate
+PASSED tests/test_delineateit.py::DelineateItTests::test_find_pour_points_by_block
+FAILED tests/test_delineateit.py::DelineateItTests::test_delineateit_willamette
+FAILED tests/test_delineateit.py::DelineateItTests::test_delineateit_willamette_detect_pour_points
+FAILED tests/test_delineateit.py::DelineateItTests::test_detect_pour_points
+FAILED tests/test_delineateit.py::DelineateItTests::test_point_snapping - Typ...
+FAILED tests/test_delineateit.py::DelineateItTests::test_point_snapping_break_ties
+FAILED tests/test_delineateit.py::DelineateItTests::test_point_snapping_multipoint
+=================== 6 failed, 4 passed, 4 warnings in 3.11s ====================
+Error processing line 1 of /usr/local/lib/python3.10/site-packages/natcap_invest-3.9.2.post75+g0604628a5-nspkg.pth:
+
+  Traceback (most recent call last):
+    File "/usr/local/lib/python3.10/site.py", line 195, in addpackage
+      exec(line)
+    File "<string>", line 1, in <module>
+    File "<frozen importlib._bootstrap>", line 568, in module_from_spec
+  AttributeError: 'NoneType' object has no attribute 'loader'
+
+Remainder of file ignored
+ERROR 1: sqlite3_exec(CREATE TABLE gpkg_extensions (table_name TEXT,column_name TEXT,extension_name TEXT NOT NULL,definition TEXT NOT NULL,scope TEXT NOT NULL,CONSTRAINT ge_tce UNIQUE (table_name, column_name, extension_name))) failed: attempt to write a readonly database
+ERROR 1: sqlite3_exec(UPDATE gpkg_contents SET min_x = 3, min_y = -5, max_x = 3, max_y = -5 WHERE lower(table_name) = lower('source_features') AND Lower(data_type) = 'features') failed: attempt to write a readonly database
+ERROR 1: sqlite3_exec(UPDATE gpkg_contents SET last_change = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE lower(table_name) = lower('source_features')) failed: attempt to write a readonly database
+ERROR 1: sqlite3_exec(CREATE TRIGGER "trigger_insert_feature_count_source_features" AFTER INSERT ON "source_features" BEGIN UPDATE gpkg_ogr_contents SET feature_count = feature_count + 1 WHERE lower(table_name) = lower('source_features'); END;) failed: attempt to write a readonly database
+ERROR 1: sqlite3_exec(CREATE TRIGGER "trigger_delete_feature_count_source_features" AFTER DELETE ON "source_features" BEGIN UPDATE gpkg_ogr_contents SET feature_count = feature_count - 1 WHERE lower(table_name) = lower('source_features'); END;) failed: attempt to write a readonly database

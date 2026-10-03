@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "prevent mixed results between earth_search and earth_search_cog\nSee #362 .\r\n\r\n@GriffinBabe pointed out that if we omit to specify the product type when searching on `earth_search_cog`, we get also results from `earth_search` that cannot be downloaded with the wrong download plugin:\r\n```py\r\nfrom eodag import EODataAccessGateway\r\n\r\ndag = EODataAccessGateway()\r\ndag.set_preferred_provider(\"earth_search_cog\")\r\n\r\n# Here I forget to specify which productType I am looking for\r\ncog_products, _ = dag.search()\r\npath = dag.download(cog_products[0])\r\n```\r\nRaises\r\n```\r\nrequests.exceptions.InvalidSchema: No connection adapters were found for 's3://sentinel-s2-l2a/tiles/42/F/UK/2021/11/23/0/qi/L2A_PVI.jp2'\r\n```\r\nTo prevent this, we'd have to:\r\n\r\n- [ ] only accept `S2_MSI_L2A_COG` product type with `earth_search_cog`\r\n- [ ] filter out `S2_MSI_L2A_COG` product type with `earth_search`\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/cs-si-eodag:380-6e6e689",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-cs-si__eodag-380-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2ludGVncmF0aW9uL3Rlc3Rfc2VhcmNoX3N0YWNfc3RhdGljLnB5IGIvdGVzdHMvaW50ZWdyYXRpb24vdGVzdF9zZWFyY2hfc3RhY19zdGF0aWMucHkKaW5kZXggZWUzNDgzYjAuLjcxYTMxYjRjIDEwMDY0NAotLS0gYS90ZXN0cy9pbnRlZ3JhdGlvbi90ZXN0X3NlYXJjaF9zdGFjX3N0YXRpYy5weQorKysgYi90ZXN0cy9pbnRlZ3JhdGlvbi90ZXN0X3NlYXJjaF9zdGFjX3N0YXRpYy5weQpAQCAtODMsOCArODMsOCBAQCBjbGFzcyBUZXN0U2VhcmNoU3RhY1N0YXRpYyh1bml0dGVzdC5UZXN0Q2FzZSk6CiAgICAgICAgIHNlbGYuYXNzZXJ0SXNJbnN0YW5jZShpdGVtcywgU2VhcmNoUmVzdWx0KQogICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGxlbihpdGVtcyksIHNlbGYuY2hpbGRfY2F0X2xlbikKICAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChpdGVtc1swXS5wcm92aWRlciwgc2VsZi5zdGFjX3Byb3ZpZGVyKQotICAgICAgICAjIGlmIG5vIHByb2R1Y3RfdHlwZSBpcyBwcm92aWRlZCwgcHJvZHVjdF90eXBlIGlzIE5vbmUKLSAgICAgICAgc2VsZi5hc3NlcnRJc05vbmUoaXRlbXNbMF0ucHJvZHVjdF90eXBlKQorICAgICAgICAjIGlmIG5vIHByb2R1Y3RfdHlwZSBpcyBwcm92aWRlZCwgcHJvZHVjdF90eXBlIHNob3VsZCBiZSBndWVzc2VkIGZyb20gcHJvcGVydGllcworICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGl0ZW1zWzBdLnByb2R1Y3RfdHlwZSwgIlMyX01TSV9MMUMiKQogCiAgICAgZGVmIHRlc3Rfc2VhcmNoX3N0YWNfc3RhdGljX2xvYWRfcm9vdF9ub3RfcmVjdXJzaXZlKHNlbGYpOgogICAgICAgICAiIiJsb2FkX3N0YWNfaXRlbXMgZnJvbSByb290IG11c3QgcHJvdmlkZSBhbiBlbXB0eSBsaXN0IHdoZW4gbm8gcmVjdXJzaXZlIiIiCkBAIC0xMjAsOCArMTIwLDggQEAgY2xhc3MgVGVzdFNlYXJjaFN0YWNTdGF0aWModW5pdHRlc3QuVGVzdENhc2UpOgogICAgICAgICBzZWxmLmFzc2VydElzSW5zdGFuY2UoaXRlbSwgU2VhcmNoUmVzdWx0KQogICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGxlbihpdGVtKSwgMSkKICAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChpdGVtWzBdLnByb3ZpZGVyLCBzZWxmLnN0YWNfcHJvdmlkZXIpCi0gICAgICAgICMgaWYgbm8gcHJvZHVjdF90eXBlIGlzIHByb3ZpZGVkLCBwcm9kdWN0X3R5cGUgaXMgTm9uZQotICAgICAgICBzZWxmLmFzc2VydElzTm9uZShpdGVtWzBdLnByb2R1Y3RfdHlwZSkKKyAgICAgICAgIyBpZiBubyBwcm9kdWN0X3R5cGUgaXMgcHJvdmlkZWQsIHByb2R1Y3RfdHlwZSBzaG91bGQgYmUgZ3Vlc3NlZCBmcm9tIHByb3BlcnRpZXMKKyAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChpdGVtWzBdLnByb2R1Y3RfdHlwZSwgIlMyX01TSV9MMUMiKQogCiAgICAgZGVmIHRlc3Rfc2VhcmNoX3N0YWNfc3RhdGljX2xvYWRfaXRlbV91cGRhdGVkX3Byb3ZpZGVyKHNlbGYpOgogICAgICAgICAiIiJsb2FkX3N0YWNfaXRlbXMgZnJvbSBhIHNpbmdsZSBpdGVtIHVzaW5nIHVwZGF0ZWQgcHJvdmlkZXIiIiIK'\"'\"'))'",
+      "git apply /tmp/receipts-cs-si__eodag-380-test.patch"
+    ],
+    "workdir": "/eodag"
+  },
+  "spec_paths": [
+    "tests/integration/test_search_stac_static.py"
+  ],
+  "spec_tests": [
+    "tests/integration/test_search_stac_static.py::TestSearchStacStatic::test_search_stac_static_load_child",
+    "tests/integration/test_search_stac_static.py::TestSearchStacStatic::test_search_stac_static_load_item"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/integration/test_search_stac_static.py"
+}

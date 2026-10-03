@@ -1,0 +1,43 @@
+diff --git a/more_itertools/more.py b/more_itertools/more.py
+index 7fa96ad..1da8184 100755
+--- a/more_itertools/more.py
++++ b/more_itertools/more.py
+@@ -1792,7 +1792,7 @@ def zip_offset(*iterables, offsets, longest=False, fillvalue=None):
+     return zip(*staggered)
+ 
+ 
+-def sort_together(iterables, key_list=(0,), key=None, reverse=False):
++def sort_together(iterables, key_list=(0,), key=None, reverse=False, strict=False):
+     """Return the input iterables sorted together, with *key_list* as the
+     priority for sorting. All iterables are trimmed to the length of the
+     shortest one.
+@@ -1831,7 +1831,29 @@ def sort_together(iterables, key_list=(0,), key=None, reverse=False):
+         >>> sort_together([(1, 2, 3), ('c', 'b', 'a')], reverse=True)
+         [(3, 2, 1), ('a', 'b', 'c')]
+ 
++    Set *strict* to ``True`` to raise ``UnequalIterablesError`` if the
++    iterables are not all the same length::
++
++        >>> sort_together([(4, 3, 2, 1), ('a', 'b', 'c')], strict=True)
++        Traceback (most recent call last):
++        ...
++        UnequalIterablesError: iterables are not the same length
++
+     """
++    if strict:
++        # Convert iterables to lists to check their lengths
++        lists = [list(it) for it in iterables]
++        if len(set(map(len, lists))) != 1:
++            # Find the first two iterables with different lengths for the error details
++            first_len = len(lists[0])
++            for i, lst in enumerate(lists[1:], 1):
++                if len(lst) != first_len:
++                    raise UnequalIterablesError(details=(first_len, i, len(lst)))
++            # Fallback (shouldn't reach here)
++            raise UnequalIterablesError()
++        # Use the lists for further processing
++        iterables = lists
++    
+     if key is None:
+         # if there is no key function, the key argument to sorted is an
+         # itemgetter

@@ -1,0 +1,10 @@
+        """
+        if not isinstance(data, np.ndarray):
+            data = data.to_numpy()
+
+        recovered_data = self._reverse_transform_helper(data)
+        data = recovered_data
+        if self.null_transformer and self.null_transformer.models_missing_values():
+            data = np.stack([recovered_data, data[:, -1]], axis=1)
+
+        return super()._reverse_transform(data)

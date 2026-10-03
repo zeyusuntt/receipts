@@ -1,0 +1,23 @@
+746-        """
+747-        # Get the search plugin and the maximized value
+748-        # of items_per_page if defined for the provider used.
+749-        try:
+750-            product_type = (
+751:                kwargs.get("productType", None) or self.guess_product_type(**kwargs)[0]
+752-            )
+753-        except NoMatchingProductType:
+754-            product_type = GENERIC_PRODUCT_TYPE
+755-        search_plugin = next(
+756-            self._plugins_manager.get_search_plugins(product_type=product_type)
+--
+815-            auth = self._plugins_manager.get_auth_plugin(plugin.provider)
+816-            results, _ = self._do_search(plugin, auth=auth, id=uid, **kwargs)
+817-            if len(results) == 1:
+818-                if not results[0].product_type:
+819-                    # guess product type from properties
+820:                    guesses = self.guess_product_type(**results[0].properties)
+821-                    results[0].product_type = guesses[0]
+822-                    # reset driver
+823-                    results[0].driver = results[0].get_driver()
+824-                return results, 1
+825-            elif len(results) > 1:

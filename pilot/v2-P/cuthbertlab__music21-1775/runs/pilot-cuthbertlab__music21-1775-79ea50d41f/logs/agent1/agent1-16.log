@@ -1,0 +1,61 @@
+    >>> sus.root()
+    <music21.pitch.Pitch D3>
+
+    Accepts a keyword 'updatePitches'. By default, it
+    is `True`, but can be set to `False` to initialize faster if pitches are not needed.
+    '''
+    # sort harmony just before notes and chords and other default objects
+    classSortOrder = base.Music21Object.classSortOrder - 1
+    _styleClass = style.TextStyle
+
+    # INITIALIZER #
+
+    def __init__(self,
+                 figure: str|None = None,
+                 root: str|pitch.Pitch|None = None,
+                 bass: str|pitch.Pitch|None = None,
+                 inversion: int|None = None,
+                 updatePitches: bool = True,
+                 **keywords
+                 ):
+        super().__init__(**keywords)
+        self._writeAsChord = False
+        # TODO: Deal with the roman numeral property of harmonies.
+        #       MusicXML documentation is ambiguous:
+        #       A root is a pitch name like C, D, E, where a function is an
+        #       indication like I, II, III. It is an either/or choice to avoid
+        #       data inconsistency.
+
+        # a romanNumeral numeral object, musicxml stores this within a node
+        # called <function> which might conflict with the Harmony
+        self._roman = None
+        # specify an array of degree alteration objects
+        self.chordStepModifications: list[ChordStepModification] = []
+        self._degreesList: list[str] = []
+        self._key = None
+        # senseless to parse inversion until chord members are populated
+        self._updateFromParameters(root=root, bass=bass)
+        # figure is the string representation of a Harmony object
+        # for example, for Chord Symbols the figure might be 'Cm7'
+        # for roman numerals, the figure might be 'I7'
+        self._figure = figure
+        if self._figure:
+            self._parseFigure()
+        # if the bass is not specified, but the root is,
+        # assume the bass and root are identical and
+        # assign the values accordingly
+        if 'bass' not in self._overrides and 'root' in self._overrides:
+            self.bass(self._overrides['root'], allow_add=True)
+
+        if (updatePitches
+                and (
+                    self._figure  # == '' or is not None
+                    or 'root' in self._overrides
+                    or 'bass' in self._overrides)):
+            self._updatePitches()
+        self._updateFromParameters(root=root, bass=bass, inversion=inversion)
+
+    # SPECIAL METHODS #
+
+    def _reprInternal(self):
+        summary = self.figure

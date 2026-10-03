@@ -1,0 +1,156 @@
+
+Gammapy test data availability:
+gammapy-data ... no
+Gammapy environment variables:
+GAMMAPY_DATA = not set
+Setting matplotlib backend to "agg" for the tests.
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+hypothesis profile 'default'
+
+Running tests with gammapy version 1.3.dev554+gc9521d576.
+Running tests in gammapy/estimators/points/tests/test_sed.py::test_run_no_edip.
+
+Date: 2026-10-03T19:33:19
+
+Platform: Linux-7.0.6-x86_64-with-glibc2.41
+
+Executable: /usr/local/bin/python
+
+Full Python Version: 
+3.10.19 (main, Dec 30 2025, 00:42:16) [GCC 14.2.0]
+
+encodings: sys: utf-8, locale: UTF-8, filesystem: utf-8
+byteorder: little
+float info: dig: 15, mant_dig: 15
+
+Package versions: 
+Numpy: 2.2.6
+Scipy: 1.15.3
+Matplotlib: 3.10.8
+h5py: not available
+Pandas: not available
+cython: not available
+iminuit: 2.32.0
+matplotlib: 3.10.8
+astropy: 6.1.7
+regions: 0.10
+healpy: not available
+sherpa: not available
+gammapy: 1.3.dev554+gc9521d576
+naima: not available
+ray: not available
+
+Using Astropy options: remote_data: none.
+
+rootdir: /gammapy
+configfile: pyproject.toml (WARNING: ignoring pytest config in setup.cfg!)
+plugins: hypothesis-6.151.9, arraydiff-0.6.1, astropy-0.11.0, astropy-header-0.2.2, cov-7.0.0, doctestplus-1.7.1, filter-subpackage-0.2.0, mock-3.15.1, remotedata-0.4.1, xdist-3.8.0
+collecting ... collected 1 item
+
+gammapy/estimators/points/tests/test_sed.py::test_run_no_edip FAILED
+
+=================================== FAILURES ===================================
+_______________________________ test_run_no_edip _______________________________
+
+fpe_pwl = ([<gammapy.datasets.spectrum.SpectrumDatasetOnOff object at 0x7fffd677d2d0>], <gammapy.estimators.points.sed.FluxPointsEstimator object at 0x7fffd5d30dc0>)
+tmpdir = local('/tmp/pytest-of-root/pytest-11/test_run_no_edip0')
+
+    def test_run_no_edip(fpe_pwl, tmpdir):
+        datasets, fpe = fpe_pwl
+    
+        datasets = datasets.copy()
+    
+        datasets[0].models["source"].apply_irf["edisp"] = False
+        fp = fpe.run(datasets)
+        table = fp.to_table()
+        actual = table["norm"].data
+        assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+    
+        datasets[0].edisp = None
+    
+>       fp = fpe.run(datasets)
+
+gammapy/estimators/points/tests/test_sed.py:446: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gammapy/estimators/points/sed.py:155: in run
+    rows = parallel.run_multiprocessing(
+gammapy/utils/parallel.py:271: in run_multiprocessing
+    return run_loop(
+gammapy/utils/parallel.py:301: in run_loop
+    result = func(*arguments)
+gammapy/estimators/points/sed.py:208: in estimate_flux_point
+    return super().run(datasets=datasets_sliced)
+gammapy/estimators/flux.py:224: in run
+    result.update(super().run(datasets, model.norm))
+gammapy/estimators/parameter.py:336: in run
+    result = self.estimate_best_fit(datasets, parameter)
+gammapy/estimators/parameter.py:108: in estimate_best_fit
+    result = self.fit.run(datasets=datasets)
+gammapy/modeling/fit.py:174: in run
+    optimize_result = self.optimize(datasets=datasets)
+gammapy/modeling/fit.py:223: in optimize
+    factors, info, optimizer = compute(
+gammapy/modeling/iminuit.py:79: in optimize_iminuit
+    minuit.migrad(**migrad_opts)
+/usr/local/lib/python3.10/site-packages/iminuit/minuit.py:852: in migrad
+    fm = _robust_low_level_fit(
+/usr/local/lib/python3.10/site-packages/iminuit/minuit.py:2863: in _robust_low_level_fit
+    fm = migrad(ncall, tolerance)
+gammapy/modeling/iminuit.py:25: in fcn
+    total_stat = self.function()
+gammapy/datasets/core.py:240: in stat_sum
+    stat_sum += dataset.stat_sum()
+gammapy/datasets/map.py:2651: in stat_sum
+    return Dataset.stat_sum(self)
+gammapy/datasets/core.py:72: in stat_sum
+    stat = self.stat_array()
+gammapy/datasets/map.py:2412: in stat_array
+    mu_sig = self.npred_signal().data
+gammapy/datasets/map.py:729: in npred_signal
+    npred = evaluator.compute_npred()
+gammapy/datasets/evaluator.py:446: in compute_npred
+    return self._compute_npred
+/usr/local/lib/python3.10/site-packages/astropy/utils/decorators.py:836: in __get__
+    val = self.fget(obj)
+gammapy/datasets/evaluator.py:422: in _compute_npred
+    values = method(self._computation_cache)
+gammapy/datasets/evaluator.py:395: in apply_edisp
+    energy_axis = self.geom.axes["energy"].copy()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <gammapy.maps.axes.MapAxes object at 0x7fffd6223460>, idx = 'energy'
+
+    def __getitem__(self, idx):
+        if isinstance(idx, int):
+            return self._axes[idx]
+        elif isinstance(idx, str):
+            for ax in self._axes:
+                if ax.name == idx:
+                    return ax
+>           raise KeyError(f"No axes: {idx!r}")
+E           KeyError: "No axes: 'energy'"
+
+gammapy/maps/axes.py:1815: KeyError
+------------------------------ Captured log call -------------------------------
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+WARNING  gammapy.modeling.iminuit:iminuit.py:117 Reoptimize = False ignored for iminuit backend
+=============================== warnings summary ===============================
+gammapy/estimators/points/tests/test_sed.py::test_run_no_edip
+  /usr/local/lib/python3.10/site-packages/astropy/units/quantity.py:671: RuntimeWarning: divide by zero encountered in divide
+    result = super().__array_ufunc__(function, method, *arrays, **kwargs)
+
+gammapy/estimators/points/tests/test_sed.py::test_run_no_edip
+  /usr/local/lib/python3.10/site-packages/astropy/units/quantity.py:671: RuntimeWarning: invalid value encountered in multiply
+    result = super().__array_ufunc__(function, method, *arrays, **kwargs)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-26.xml ------------
+=========================== short test summary info ============================
+FAILED gammapy/estimators/points/tests/test_sed.py::test_run_no_edip - KeyErr...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+======================== 1 failed, 2 warnings in 1.37s =========================

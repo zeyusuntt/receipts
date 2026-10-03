@@ -1,0 +1,23 @@
+diff --git a/rocrate/model/entity.py b/rocrate/model/entity.py
+index c18096e..c07bc3d 100644
+--- a/rocrate/model/entity.py
++++ b/rocrate/model/entity.py
+@@ -34,12 +34,13 @@ class Entity(MutableMapping):
+             self.__id = self.format_id(identifier)
+         else:
+             self.__id = f"#{uuid.uuid4()}"
++        self._jsonld = self._empty()
+         if properties:
+-            empty = self._empty()
+-            empty.update(properties)
+-            self._jsonld = empty
+-        else:
+-            self._jsonld = self._empty()
++            for key, value in properties.items():
++                if key.startswith("@"):
++                    self._jsonld[key] = value
++                else:
++                    self[key] = value
+ 
+     @property
+     def id(self):

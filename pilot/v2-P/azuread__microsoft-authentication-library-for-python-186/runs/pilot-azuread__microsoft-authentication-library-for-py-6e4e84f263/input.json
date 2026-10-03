@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Refresh token errors are discarded\n`acquire_token_silent_with_error` appears to be intended to return the last error response received from AAD, and the documentation implies it does so, but there are cases in which it does not.\r\n\r\nFor example, if AAD rejects a refresh token, its error response is discarded (`at` is the response):\r\nhttps://github.com/AzureAD/microsoft-authentication-library-for-python/blob/5c1f0f4ad18a61587393c290b1094b5f8fd014d4/msal/application.py#L601-L609\r\n\r\nWhen AAD rejected the token, that token was evicted from the cache:\r\nhttps://github.com/AzureAD/microsoft-authentication-library-for-python/blob/5c1f0f4ad18a61587393c290b1094b5f8fd014d4/msal/oauth2cli/oauth2.py#L449-L450\r\n\r\nSubsequent calls to `_acquire_token_silent_by_finding_specific_refresh_token` may now return `None` because no refresh token remains in the cache. In such a case, `acquire_token_silent_with_error` returns `None`.\r\n\r\nThis behavior arguably makes sense because the difference between \"no refresh token in the cache\" and \"only invalid refresh tokens in the cache\" may not be interesting. But the documentation on `acquire_token_silent_with_error` implies it will distinguish these cases, so I describe the inconsistency here for comment and clarification.",
+  "source": {
+    "image": "docker.io/swerebenchv2/azuread-microsoft-authentication-library-for-python:186-c235d4e",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-azuread__microsoft-authentication-library-for-python-186-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfYXBwbGljYXRpb24ucHkgYi90ZXN0cy90ZXN0X2FwcGxpY2F0aW9uLnB5CmluZGV4IDM5YmVjZDUuLjY1YjM2YjMgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3Rlc3RfYXBwbGljYXRpb24ucHkKKysrIGIvdGVzdHMvdGVzdF9hcHBsaWNhdGlvbi5weQpAQCAtMTc2LDYgKzE3NiwxOSBAQCBjbGFzcyBUZXN0Q2xpZW50QXBwbGljYXRpb25BY3F1aXJlVG9rZW5TaWxlbnRGb2NpQmVoYXZpb3JzKHVuaXR0ZXN0LlRlc3RDYXNlKToKIAogICAgICMgV2lsbCBub3QgdGVzdCBzY2VuYXJpbyBvZiBhcHAgbGVhdmluZyBmYW1pbHkuIFBlciBzcGVjcywgaXQgd29uJ3QgaGFwcGVuLgogCisgICAgZGVmIHRlc3RfcHJlZXhpc3RpbmdfZmFtaWx5X2FwcF93aWxsX2F0dGVtcHRfZnJ0X2FuZF9yZXR1cm5fZXJyb3Ioc2VsZik6CisgICAgICAgIGVycm9yX3Jlc3BvbnNlID0gJ3siZXJyb3IiOiAiaW52YWxpZF9ncmFudCIsICJlcnJvcl9kZXNjcmlwdGlvbiI6ICJ4eXoifScKKyAgICAgICAgZGVmIHRlc3Rlcih1cmwsIGRhdGE9Tm9uZSwgKiprd2FyZ3MpOgorICAgICAgICAgICAgc2VsZi5hc3NlcnRFcXVhbCgKKyAgICAgICAgICAgICAgICBzZWxmLmZydCwgZGF0YS5nZXQoInJlZnJlc2hfdG9rZW4iKSwgIlNob3VsZCBhdHRlbXB0IHRoZSBGUlQiKQorICAgICAgICAgICAgcmV0dXJuIE1pbmltYWxSZXNwb25zZShzdGF0dXNfY29kZT00MDAsIHRleHQ9ZXJyb3JfcmVzcG9uc2UpCisgICAgICAgIGFwcCA9IENsaWVudEFwcGxpY2F0aW9uKAorICAgICAgICAgICAgInByZWV4aXN0aW5nX2ZhbWlseV9hcHAiLCBhdXRob3JpdHk9c2VsZi5hdXRob3JpdHlfdXJsLCB0b2tlbl9jYWNoZT1zZWxmLmNhY2hlKQorICAgICAgICByZXNwID0gYXBwLl9hY3F1aXJlX3Rva2VuX3NpbGVudF9ieV9maW5kaW5nX3J0X2JlbG9uZ3NfdG9fbWVfb3JfbXlfZmFtaWx5KAorICAgICAgICAgICAgc2VsZi5hdXRob3JpdHksIHNlbGYuc2NvcGVzLCBzZWxmLmFjY291bnQsIHBvc3Q9dGVzdGVyKQorICAgICAgICBsb2dnZXIuZGVidWcoIiVzLmNhY2hlID0gJXMiLCBzZWxmLmlkKCksIHNlbGYuY2FjaGUuc2VyaWFsaXplKCkpCisgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoanNvbi5sb2FkcyhlcnJvcl9yZXNwb25zZSksIHJlc3AsICJFcnJvciByYWlzZWQgd2lsbCBiZSByZXR1cm5lZCIpCisKICAgICBkZWYgdGVzdF9mYW1pbHlfYXBwX3JlbW92ZV9hY2NvdW50KHNlbGYpOgogICAgICAgICBsb2dnZXIuZGVidWcoIiVzLmNhY2hlID0gJXMiLCBzZWxmLmlkKCksIHNlbGYuY2FjaGUuc2VyaWFsaXplKCkpCiAgICAgICAgIGFwcCA9IENsaWVudEFwcGxpY2F0aW9uKAo='\"'\"'))'",
+      "git apply /tmp/receipts-azuread__microsoft-authentication-library-for-python-186-test.patch"
+    ],
+    "workdir": "/microsoft-authentication-library-for-python"
+  },
+  "spec_paths": [
+    "tests/test_application.py"
+  ],
+  "spec_tests": [
+    "tests/test_application.py::TestClientApplicationAcquireTokenSilentFociBehaviors::test_preexisting_family_app_will_attempt_frt_and_return_error"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_application.py"
+}

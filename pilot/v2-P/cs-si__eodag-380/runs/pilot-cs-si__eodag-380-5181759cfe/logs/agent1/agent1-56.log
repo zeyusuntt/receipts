@@ -1,0 +1,72 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /eodag
+plugins: Faker-40.4.0
+collecting ... collected 1 item
+
+tests/integration/test_search_stac_static.py::TestSearchStacStatic::test_search_stac_static_load_item_updated_provider FAILED [100%]
+
+=================================== FAILURES ===================================
+___ TestSearchStacStatic.test_search_stac_static_load_item_updated_provider ____
+
+self = <tests.integration.test_search_stac_static.TestSearchStacStatic testMethod=test_search_stac_static_load_item_updated_provider>
+
+    def test_search_stac_static_load_item_updated_provider(self):
+        """load_stac_items from a single item using updated provider"""
+        item = self.dag.load_stac_items(self.item, provider=self.stac_provider)
+    
+>       self.assertEqual(item[0].properties["license"], "proprietary")
+E       AssertionError: 'other' != 'proprietary'
+E       - other
+E       + proprietary
+
+tests/integration/test_search_stac_static.py:130: AssertionError
+----------------------------- Captured stdout call -----------------------------
+DEBUG: kwargs content: {'productType': None}
+DEBUG: product_type is None, trying to guess
+DEBUG: guess_product_type raised NoMatchingProductType
+DEBUG: Mapped properties for guessing: ['datetime', 'start_datetime', 'end_datetime', 'license', 'platform', 'instrument', 'eo_cloud_cover', 'sat_orbit_state', 'sat_relative_orbit', 'sensorType', 'processingLevel']
+DEBUG: guess_product_type returned ['S2_MSI_L1C', 'S2_MSI_L2A', 'S2_MSI_L2A_COG', 'S2_MSI_L2A_MAJA', 'S2_MSI_L2B_MAJA_SNOW', 'S2_MSI_L2B_MAJA_WATER', 'S2_MSI_L3A_WASP', 'CBERS4_AWFI_L2', 'CBERS4_AWFI_L4', 'CBERS4_MUX_L2', 'CBERS4_MUX_L4', 'CBERS4_PAN10M_L2', 'CBERS4_PAN10M_L4', 'CBERS4_PAN5M_L2', 'CBERS4_PAN5M_L4', 'L57_REFLECTANCE', 'L8_OLI_TIRS_C1L1', 'L8_REFLECTANCE', 'LANDSAT_C2L1', 'LANDSAT_C2L2ALB_BT', 'LANDSAT_C2L2ALB_SR', 'LANDSAT_C2L2ALB_ST', 'LANDSAT_C2L2ALB_TA', 'LANDSAT_C2L2_SR', 'LANDSAT_C2L2_ST', 'MODIS_MCD43A4', 'NAIP', 'PLD_BUNDLE', 'PLD_PAN', 'PLD_PANSHARPENED', 'PLD_XS', 'S3_EFR', 'S3_ERR', 'S3_OLCI_L2LFR', 'S3_OLCI_L2LRR', 'S3_SLSTR_L1RBT', 'S3_SLSTR_L2LST', 'SPOT5_SPIRIT', 'SPOT_SWH', 'SPOT_SWH_OLD', 'VENUS_L1C', 'VENUS_L2A_MAJA', 'VENUS_L3A_MAJA']
+DEBUG: Set product 0 product_type to S2_MSI_L1C
+=============================== warnings summary ===============================
+eodag/api/core.py:24
+  /eodag/eodag/api/core.py:24: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/filters.py:50
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/filters.py:50: DeprecationWarning: invalid escape sequence '\w'
+    url_pattern = rcompile("""
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/filters.py:148
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/filters.py:148: DeprecationWarning: invalid escape sequence '\S'
+    """Interleaves the results of two or more filters (or filter chains).
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:37
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:37: DeprecationWarning: invalid escape sequence '\S'
+    """Given a set of words (or any object with a ``__contains__`` method),
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:224
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:224: DeprecationWarning: invalid escape sequence '\S'
+    """Splits words into subwords and performs optional transformations on
+
+../usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:285
+  /usr/local/lib/python3.10/site-packages/whoosh/analysis/intraword.py:285: DeprecationWarning: invalid escape sequence '\|'
+    def __init__(self, delims=u("-_'\"()!@#$%^&*[]{}<>\|;:,./?`~=+"),
+
+eodag/api/product/_product.py:25
+  /eodag/eodag/api/product/_product.py:25: DeprecationWarning: The 'shapely.geos' module is deprecated, and will be removed in a future version. All attributes of 'shapely.geos' are available directly from the top-level 'shapely' namespace (since shapely 2.0.0).
+    from shapely import geometry, geos, wkb, wkt
+
+../usr/local/lib/python3.10/site-packages/whoosh/codec/whoosh3.py:1116
+  /usr/local/lib/python3.10/site-packages/whoosh/codec/whoosh3.py:1116: SyntaxWarning: "is" with a literal. Did you mean "=="?
+    elif fixedsize is 0:
+
+tests/integration/test_search_stac_static.py::TestSearchStacStatic::test_search_stac_static_load_item_updated_provider
+  /eodag/tests/integration/test_search_stac_static.py:128: DeprecationWarning: Call to deprecated function/method load_stac_items (Use the StaticStacSearch search plugin instead) -- Deprecated since v2.2.1
+    item = self.dag.load_stac_items(self.item, provider=self.stac_provider)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-56.xml ------------
+=========================== short test summary info ============================
+FAILED tests/integration/test_search_stac_static.py::TestSearchStacStatic::test_search_stac_static_load_item_updated_provider
+======================== 1 failed, 9 warnings in 5.04s =========================

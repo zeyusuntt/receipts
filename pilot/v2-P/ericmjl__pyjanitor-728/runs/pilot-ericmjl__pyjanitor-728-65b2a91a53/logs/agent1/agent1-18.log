@@ -1,0 +1,123 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+hypothesis profile 'default'
+rootdir: /pyjanitor
+configfile: pytest.ini
+plugins: hypothesis-6.151.9, cov-7.0.0
+collecting ... collected 3 items
+
+tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically PASSED [ 33%]
+tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically_decreasing PASSED [ 66%]
+tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically_strict FAILED [100%]
+
+=================================== FAILURES ===================================
+__________________ test_sort_timestamps_monotonically_strict ___________________
+
+timeseries_dataframe =                        v1
+2019-01-01 00:00:00   644
+2019-01-01 01:00:00   768
+2019-01-01 02:00:00  1824
+2019-01-01 03:...1 12:00:00   448
+2019-02-11 13:00:00   944
+2019-02-11 14:00:00  1927
+2019-02-11 15:00:00   207
+
+[1000 rows x 1 columns]
+
+    @pytest.mark.timeseries
+    def test_sort_timestamps_monotonically_strict(timeseries_dataframe):
+        """Test sort_timestamps_monotonically for index duplication handling"""
+        df = timeseries_dataframe.shuffle(reset_index=False)
+        random_number = randint(1, len(timeseries_dataframe))
+>       df = df.append(
+            df.loc[df.index[random_number], :]
+        ).sort_timestamps_monotonically(direction="increasing", strict=True)
+
+tests/timeseries/test_sort_timestamps_monotonically.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self =                        v1
+2019-01-26 05:00:00  1273
+2019-01-27 07:00:00  1456
+2019-02-10 14:00:00   509
+2019-01-09 10:...9 15:00:00   395
+2019-01-07 09:00:00   128
+2019-01-24 02:00:00  1767
+2019-01-22 22:00:00  1967
+
+[1000 rows x 1 columns]
+name = 'append'
+
+    @final
+    def __getattr__(self, name: str):
+        """
+        After regular attribute access, try looking up the name
+        This allows simpler access to columns for interactive use.
+        """
+        # Note: obj.x will always call obj.__getattribute__('x') prior to
+        # calling obj.__getattr__('x').
+        if (
+            name not in self._internal_names_set
+            and name not in self._metadata
+            and name not in self._accessors
+            and self._info_axis._can_hold_identifiers_and_holds_name(name)
+        ):
+            return self[name]
+>       return object.__getattribute__(self, name)
+E       AttributeError: 'DataFrame' object has no attribute 'append'. Did you mean: '_append'?
+
+/usr/local/lib/python3.10/site-packages/pandas/core/generic.py:6321: AttributeError
+=============================== warnings summary ===============================
+tests/timeseries/test_sort_timestamps_monotonically.py:27
+  /pyjanitor/tests/timeseries/test_sort_timestamps_monotonically.py:27: PytestUnknownMarkWarning: Unknown pytest.mark.timeseries - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.timeseries
+
+tests/timeseries/test_sort_timestamps_monotonically.py:36
+  /pyjanitor/tests/timeseries/test_sort_timestamps_monotonically.py:36: PytestUnknownMarkWarning: Unknown pytest.mark.timeseries - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.timeseries
+
+tests/timeseries/test_sort_timestamps_monotonically.py:44
+  /pyjanitor/tests/timeseries/test_sort_timestamps_monotonically.py:44: PytestUnknownMarkWarning: Unknown pytest.mark.timeseries - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.timeseries
+
+tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically
+tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically_decreasing
+tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically_strict
+  /pyjanitor/tests/timeseries/test_sort_timestamps_monotonically.py:13: FutureWarning: 'H' is deprecated and will be removed in a future version, please use 'h' instead.
+    ts_index = pd.date_range("1/1/2019", periods=1000, freq="1H")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-18.xml ------------
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                  Stmts   Miss  Cover   Missing
+-------------------------------------------------------------------
+janitor/__init__.py                      12      3    75%   4-5, 21
+janitor/biology.py                       14     14     0%   5-84
+janitor/chemistry.py                     73     73     0%   5-461
+janitor/engineering.py                   21     21     0%   5-106
+janitor/errors.py                         2      0   100%
+janitor/finance.py                       85     85     0%   5-654
+janitor/functions.py                    718    535    25%   90-134, 180-223, 287-308, 313-325, 330, 346-347, 355-358, 366, 404-410, 445-446, 480-495, 534-548, 583-585, 614-616, 657-667, 717-727, 761-766, 800-806, 838-842, 878-890, 929-934, 975-985, 1076-1124, 1189-1193, 1252-1255, 1432-1469, 1515-1524, 1548, 1585-1600, 1725-1772, 1809-1812, 1897-1929, 2044-2055, 2167-2177, 2272-2281, 2361-2385, 2461-2489, 2544-2555, 2745-2779, 2814-2844, 2909-2944, 2960-2961, 2981, 3067-3069, 3095-3109, 3164-3170, 3201-3203, 3250-3270, 3286-3295, 3300, 3304, 3308, 3315-3326, 3367-3379, 3418-3433, 3466-3470, 3496, 3544-3545, 3598-3617, 3681-3698, 3733, 3818-3840, 3912-3913, 4006-4027, 4116-4127, 4224-4268, 4369-4387
+janitor/io.py                            24     24     0%   1-63
+janitor/math.py                          79     55    30%   31-42, 48, 57, 76-89, 95, 115-128, 153-160, 191-200
+janitor/ml.py                            15      8    47%   60-71
+janitor/spark/__init__.py                 1      1     0%   1
+janitor/spark/backend.py                 37     37     0%   3-102
+janitor/spark/functions.py               30     30     0%   5-182
+janitor/testing_utils/__init__.py         0      0   100%
+janitor/testing_utils/date_data.py        1      0   100%
+janitor/testing_utils/strategies.py      12     12     0%   5-69
+janitor/timeseries.py                    49     30    39%   46-60, 92, 96-97, 104-107, 132-147, 170-176
+janitor/utils.py                        164    129    21%   29-36, 54-60, 73-101, 105-106, 110-111, 133-136, 143-155, 177-202, 217-220, 250-251, 282-283, 304-314, 335-343, 366-372, 400-408, 423-470, 490-539
+janitor/xarray/__init__.py                1      0   100%
+janitor/xarray/functions.py              16      7    56%   71-86, 128-130
+-------------------------------------------------------------------
+TOTAL                                  1354   1064    21%
+=========================== short test summary info ============================
+PASSED tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically
+PASSED tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically_decreasing
+FAILED tests/timeseries/test_sort_timestamps_monotonically.py::test_sort_timestamps_monotonically_strict
+=================== 1 failed, 2 passed, 6 warnings in 1.26s ====================

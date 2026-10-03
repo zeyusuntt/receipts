@@ -1,0 +1,420 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /curator
+collecting ... collected 2 items
+
+test/unit/test_validators.py::TestFilterTypes::test_age_with_string_unit_count FAILED [ 50%]
+test/unit/test_validators.py::TestFilterTypes::test_space_name_age_string_float FAILED [100%]
+
+=================================== FAILURES ===================================
+_______________ TestFilterTypes.test_age_with_string_unit_count ________________
+
+self = <curator.validators.schemacheck.SchemaCheck object at 0x7ffff5f994d0>
+
+    def result(self):
+        try:
+>           return self.schema(self.config)
+
+curator/validators/schemacheck.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:287: in __call__
+    return self._compiled([], data)
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:611: in validate_dict
+    return base_validate(path, iteritems(data), out)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = []
+iterable = dict_items([('filtertype', 'age'), ('direction', 'older'), ('unit', 'days'), ('unit_count', '1'), ('source', 'field_stats'), ('field', '@timestamp')])
+out = {'direction': 'older', 'epoch': None, 'exclude': False, 'field': '@timestamp', ...}
+
+    def validate_mapping(path, iterable, out):
+        required_keys = all_required_keys.copy()
+    
+        # Build a map of all provided key-value pairs.
+        # The type(out) is used to retain ordering in case a ordered
+        # map type is provided as input.
+        key_value_map = type(out)()
+        for key, value in iterable:
+            key_value_map[key] = value
+    
+        # Insert default values for non-existing keys.
+        for key in all_default_keys:
+            if not isinstance(key.default, Undefined) and \
+               key.schema not in key_value_map:
+                # A default value has been specified for this missing
+                # key, insert it.
+                key_value_map[key.schema] = key.default()
+    
+        errors = []
+        for key, value in key_value_map.items():
+            key_path = path + [key]
+            remove_key = False
+    
+            # Optimization. Validate against the matching key first, then fallback to the rest
+            relevant_candidates = itertools.chain(candidates_by_key.get(key, []), additional_candidates)
+    
+            # compare each given key/value against all compiled key/values
+            # schema key, (compiled key, compiled value)
+            error = None
+            for skey, (ckey, cvalue) in relevant_candidates:
+                try:
+                    new_key = ckey(key_path, key)
+                except er.Invalid as e:
+                    if len(e.path) > len(key_path):
+                        raise
+                    if not error or len(e.path) > len(error.path):
+                        error = e
+                    continue
+                # Backtracking is not performed once a key is selected, so if
+                # the value is invalid we immediately throw an exception.
+                exception_errors = []
+                # check if the key is marked for removal
+                is_remove = new_key is Remove
+                try:
+                    cval = cvalue(key_path, value)
+                    # include if it's not marked for removal
+                    if not is_remove:
+                        out[new_key] = cval
+                    else:
+                        remove_key = True
+                        continue
+                except er.MultipleInvalid as e:
+                    exception_errors.extend(e.errors)
+                except er.Invalid as e:
+                    exception_errors.append(e)
+    
+                if exception_errors:
+                    if is_remove or remove_key:
+                        continue
+                    for err in exception_errors:
+                        if len(err.path) <= len(key_path):
+                            err.error_type = invalid_msg
+                        errors.append(err)
+                    # If there is a validation error for a required
+                    # key, this means that the key was provided.
+                    # Discard the required key so it does not
+                    # create an additional, noisy exception.
+                    required_keys.discard(skey)
+                    break
+    
+                # Key and value okay, mark as found in case it was
+                # a Required() field.
+                required_keys.discard(skey)
+    
+                break
+            else:
+                if error:
+                    errors.append(error)
+                elif remove_key:
+                    # remove key
+                    continue
+                elif self.extra == ALLOW_EXTRA:
+                    out[key] = value
+                elif self.extra != REMOVE_EXTRA:
+                    errors.append(er.Invalid('extra keys not allowed', key_path))
+                    # else REMOVE_EXTRA: ignore the key so it's removed from output
+    
+        # for any required keys left that weren't found and don't have defaults:
+        for key in required_keys:
+            msg = key.msg if hasattr(key, 'msg') and key.msg else 'required key not provided'
+            errors.append(er.RequiredFieldInvalid(msg, path + [key]))
+        if errors:
+>           raise er.MultipleInvalid(errors)
+E           voluptuous.error.MultipleInvalid: expected int for dictionary value @ data['unit_count']
+
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:449: MultipleInvalid
+
+During handling of the above exception, another exception occurred:
+
+self = <curator.validators.schemacheck.SchemaCheck object at 0x7ffff5fedd90>
+
+    def result(self):
+        try:
+>           return self.schema(self.config)
+
+curator/validators/schemacheck.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:287: in __call__
+    return self._compiled([], data)
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:834: in validate_callable
+    return schema(data)
+curator/validators/filters.py:67: in f
+    '{0}, filter #{1}: {2}'.format(location, idx, pruned)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <curator.validators.schemacheck.SchemaCheck object at 0x7ffff5f994d0>
+
+    def result(self):
+        try:
+            return self.schema(self.config)
+        except Exception as e:
+            try:
+                self.error = e.errors[0]
+            except:
+                self.error = '{0}'.format(e)
+            self.__parse_error()
+            self.loggit.error('Schema error: {0}'.format(self.error))
+            raise ConfigurationError(
+                'Configuration: {0}: Location: {1}: Bad Value: "{2}", {3}. '
+                'Check configuration file.'.format(
+>                   self.test_what, self.location, self.badvalue, self.error)
+            )
+E           curator.exceptions.ConfigurationError: Configuration: filter: Location: None, filter #0: {'filtertype': 'age', 'direction': 'older', 'unit': 'days', 'unit_count': '1', 'source': 'field_stats', 'field': '@timestamp'}: Bad Value: "1", expected int for dictionary value @ data['unit_count']. Check configuration file.
+
+curator/validators/schemacheck.py:68: ConfigurationError
+
+During handling of the above exception, another exception occurred:
+
+self = <test.unit.test_validators.TestFilterTypes testMethod=test_age_with_string_unit_count>
+
+    def test_age_with_string_unit_count(self):
+        action = 'delete_indices'
+        config = [
+            {
+                'filtertype' : 'age',
+                'direction' : 'older',
+                'unit' : 'days',
+                'unit_count' : "1",
+                'source' : 'field_stats',
+                'field'  : '@timestamp',
+            }
+        ]
+>       result = shared_result(config, action)
+
+test/unit/test_validators.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/unit/test_validators.py:14: in shared_result
+    'testing'
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <curator.validators.schemacheck.SchemaCheck object at 0x7ffff5fedd90>
+
+    def result(self):
+        try:
+            return self.schema(self.config)
+        except Exception as e:
+            try:
+                self.error = e.errors[0]
+            except:
+                self.error = '{0}'.format(e)
+            self.__parse_error()
+            self.loggit.error('Schema error: {0}'.format(self.error))
+            raise ConfigurationError(
+                'Configuration: {0}: Location: {1}: Bad Value: "{2}", {3}. '
+                'Check configuration file.'.format(
+>                   self.test_what, self.location, self.badvalue, self.error)
+            )
+E           curator.exceptions.ConfigurationError: Configuration: filters: Location: testing: Bad Value: "None", Configuration: filter: Location: None, filter #0: {'filtertype': 'age', 'direction': 'older', 'unit': 'days', 'unit_count': '1', 'source': 'field_stats', 'field': '@timestamp'}: Bad Value: "1", expected int for dictionary value @ data['unit_count']. Check configuration file.. Check configuration file.
+
+curator/validators/schemacheck.py:68: ConfigurationError
+------------------------------ Captured log call -------------------------------
+ERROR    curator.validators.SchemaCheck:schemacheck.py:64 Schema error: expected int for dictionary value @ data['unit_count']
+ERROR    curator.validators.SchemaCheck:schemacheck.py:64 Schema error: Configuration: filter: Location: None, filter #0: {'filtertype': 'age', 'direction': 'older', 'unit': 'days', 'unit_count': '1', 'source': 'field_stats', 'field': '@timestamp'}: Bad Value: "1", expected int for dictionary value @ data['unit_count']. Check configuration file.
+_______________ TestFilterTypes.test_space_name_age_string_float _______________
+
+self = <curator.validators.schemacheck.SchemaCheck object at 0x7ffff5d84c50>
+
+    def result(self):
+        try:
+>           return self.schema(self.config)
+
+curator/validators/schemacheck.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:287: in __call__
+    return self._compiled([], data)
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:611: in validate_dict
+    return base_validate(path, iteritems(data), out)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = []
+iterable = dict_items([('filtertype', 'space'), ('disk_space', '1.0'), ('use_age', True), ('exclude', False), ('source', 'name'), ('timestring', '%Y.%m.%d')])
+out = {'exclude': False, 'filtertype': 'space', 'reverse': True, 'source': 'name', ...}
+
+    def validate_mapping(path, iterable, out):
+        required_keys = all_required_keys.copy()
+    
+        # Build a map of all provided key-value pairs.
+        # The type(out) is used to retain ordering in case a ordered
+        # map type is provided as input.
+        key_value_map = type(out)()
+        for key, value in iterable:
+            key_value_map[key] = value
+    
+        # Insert default values for non-existing keys.
+        for key in all_default_keys:
+            if not isinstance(key.default, Undefined) and \
+               key.schema not in key_value_map:
+                # A default value has been specified for this missing
+                # key, insert it.
+                key_value_map[key.schema] = key.default()
+    
+        errors = []
+        for key, value in key_value_map.items():
+            key_path = path + [key]
+            remove_key = False
+    
+            # Optimization. Validate against the matching key first, then fallback to the rest
+            relevant_candidates = itertools.chain(candidates_by_key.get(key, []), additional_candidates)
+    
+            # compare each given key/value against all compiled key/values
+            # schema key, (compiled key, compiled value)
+            error = None
+            for skey, (ckey, cvalue) in relevant_candidates:
+                try:
+                    new_key = ckey(key_path, key)
+                except er.Invalid as e:
+                    if len(e.path) > len(key_path):
+                        raise
+                    if not error or len(e.path) > len(error.path):
+                        error = e
+                    continue
+                # Backtracking is not performed once a key is selected, so if
+                # the value is invalid we immediately throw an exception.
+                exception_errors = []
+                # check if the key is marked for removal
+                is_remove = new_key is Remove
+                try:
+                    cval = cvalue(key_path, value)
+                    # include if it's not marked for removal
+                    if not is_remove:
+                        out[new_key] = cval
+                    else:
+                        remove_key = True
+                        continue
+                except er.MultipleInvalid as e:
+                    exception_errors.extend(e.errors)
+                except er.Invalid as e:
+                    exception_errors.append(e)
+    
+                if exception_errors:
+                    if is_remove or remove_key:
+                        continue
+                    for err in exception_errors:
+                        if len(err.path) <= len(key_path):
+                            err.error_type = invalid_msg
+                        errors.append(err)
+                    # If there is a validation error for a required
+                    # key, this means that the key was provided.
+                    # Discard the required key so it does not
+                    # create an additional, noisy exception.
+                    required_keys.discard(skey)
+                    break
+    
+                # Key and value okay, mark as found in case it was
+                # a Required() field.
+                required_keys.discard(skey)
+    
+                break
+            else:
+                if error:
+                    errors.append(error)
+                elif remove_key:
+                    # remove key
+                    continue
+                elif self.extra == ALLOW_EXTRA:
+                    out[key] = value
+                elif self.extra != REMOVE_EXTRA:
+                    errors.append(er.Invalid('extra keys not allowed', key_path))
+                    # else REMOVE_EXTRA: ignore the key so it's removed from output
+    
+        # for any required keys left that weren't found and don't have defaults:
+        for key in required_keys:
+            msg = key.msg if hasattr(key, 'msg') and key.msg else 'required key not provided'
+            errors.append(er.RequiredFieldInvalid(msg, path + [key]))
+        if errors:
+>           raise er.MultipleInvalid(errors)
+E           voluptuous.error.MultipleInvalid: expected float for dictionary value @ data['disk_space']
+
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:449: MultipleInvalid
+
+During handling of the above exception, another exception occurred:
+
+self = <curator.validators.schemacheck.SchemaCheck object at 0x7ffff5f18510>
+
+    def result(self):
+        try:
+>           return self.schema(self.config)
+
+curator/validators/schemacheck.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:287: in __call__
+    return self._compiled([], data)
+/usr/local/lib/python3.7/site-packages/voluptuous/schema_builder.py:834: in validate_callable
+    return schema(data)
+curator/validators/filters.py:67: in f
+    '{0}, filter #{1}: {2}'.format(location, idx, pruned)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <curator.validators.schemacheck.SchemaCheck object at 0x7ffff5d84c50>
+
+    def result(self):
+        try:
+            return self.schema(self.config)
+        except Exception as e:
+            try:
+                self.error = e.errors[0]
+            except:
+                self.error = '{0}'.format(e)
+            self.__parse_error()
+            self.loggit.error('Schema error: {0}'.format(self.error))
+            raise ConfigurationError(
+                'Configuration: {0}: Location: {1}: Bad Value: "{2}", {3}. '
+                'Check configuration file.'.format(
+>                   self.test_what, self.location, self.badvalue, self.error)
+            )
+E           curator.exceptions.ConfigurationError: Configuration: filter: Location: None, filter #0: {'filtertype': 'space', 'disk_space': '1.0', 'use_age': True, 'exclude': False, 'source': 'name', 'timestring': '%Y.%m.%d'}: Bad Value: "1.0", expected float for dictionary value @ data['disk_space']. Check configuration file.
+
+curator/validators/schemacheck.py:68: ConfigurationError
+
+During handling of the above exception, another exception occurred:
+
+self = <test.unit.test_validators.TestFilterTypes testMethod=test_space_name_age_string_float>
+
+    def test_space_name_age_string_float(self):
+        action = 'delete_indices'
+        config = [
+            {
+                'filtertype' : 'space',
+                'disk_space' : "1.0",
+                'use_age' : True,
+                'exclude' : False,
+                'source' : 'name',
+                'timestring' : '%Y.%m.%d',
+            }
+        ]
+>       result = shared_result(config, action)
+
+test/unit/test_validators.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/unit/test_validators.py:14: in shared_result
+    'testing'
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <curator.validators.schemacheck.SchemaCheck object at 0x7ffff5f18510>
+
+    def result(self):
+        try:
+            return self.schema(self.config)
+        except Exception as e:
+            try:
+                self.error = e.errors[0]
+            except:
+                self.error = '{0}'.format(e)
+            self.__parse_error()
+            self.loggit.error('Schema error: {0}'.format(self.error))
+            raise ConfigurationError(
+                'Configuration: {0}: Location: {1}: Bad Value: "{2}", {3}. '
+                'Check configuration file.'.format(
+>                   self.test_what, self.location, self.badvalue, self.error)
+            )
+E           curator.exceptions.ConfigurationError: Configuration: filters: Location: testing: Bad Value: "None", Configuration: filter: Location: None, filter #0: {'filtertype': 'space', 'disk_space': '1.0', 'use_age': True, 'exclude': False, 'source': 'name', 'timestring': '%Y.%m.%d'}: Bad Value: "1.0", expected float for dictionary value @ data['disk_space']. Check configuration file.. Check configuration file.
+
+curator/validators/schemacheck.py:68: ConfigurationError
+------------------------------ Captured log call -------------------------------
+ERROR    curator.validators.SchemaCheck:schemacheck.py:64 Schema error: expected float for dictionary value @ data['disk_space']
+ERROR    curator.validators.SchemaCheck:schemacheck.py:64 Schema error: Configuration: filter: Location: None, filter #0: {'filtertype': 'space', 'disk_space': '1.0', 'use_age': True, 'exclude': False, 'source': 'name', 'timestring': '%Y.%m.%d'}: Bad Value: "1.0", expected float for dictionary value @ data['disk_space']. Check configuration file.
+----------- generated xml file: /opt/receipts/reports/agent1-52.xml ------------
+=========================== short test summary info ============================
+FAILED test/unit/test_validators.py::TestFilterTypes::test_age_with_string_unit_count
+FAILED test/unit/test_validators.py::TestFilterTypes::test_space_name_age_string_float
+============================== 2 failed in 0.24s ===============================

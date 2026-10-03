@@ -1,0 +1,20 @@
+        Returns
+        -------
+        Coordinates
+            A copy of the coordinates.
+        """
+            self._points[:, 1].copy(), 
+            self._points[:, 2].copy(),
+            domain=self._system['domain'],
+            convention=self._system['convention'],
+            unit=self._system['unit'],
+            weights=self._weights.copy() if self._weights is not None else None,
+            sh_order=self._sh_order,
+            comment=self._comment)
+
+    # def __setitem__(self, index, item):
+    #     """Set Coordinates at index
+    #     """
+    #     self.x[index] = item.x
+    #     self.y[index] = item.y
+    #     self.z[index] = item.z

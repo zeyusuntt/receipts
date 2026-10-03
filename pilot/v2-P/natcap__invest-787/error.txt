@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/orchestrate.py", line 443, in _collect_disclosure
+    digests = json.loads(_full_stdout(digest_receipt).strip())
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/json/decoder.py", line 341, in decode
+    raise JSONDecodeError("Extra data", s, end)
+json.decoder.JSONDecodeError: Extra data: line 2 column 1 (char 3029)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/pilot/runner.py", line 715, in run_instance
+    result = await fix(
+             ^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/orchestrate.py", line 606, in fix
+    disclosure = await _collect_disclosure(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/orchestrate.py", line 445, in _collect_disclosure
+    raise RuntimeError("test digest command returned invalid JSON") from exc
+RuntimeError: test digest command returned invalid JSON

@@ -1,0 +1,51 @@
+            Name of the requested phase.
+        phase_idx : int
+            Phase position in prob.phases. Can be used to identify first phase.
+        phase : Phase
+            Instantiated phase object.
+        user_options : dict
+            Subdictionary "user_options" from the phase_info.
+        """
+        time_units = 's'
+
+        try:
+            fix_initial = user_options['fix_initial']
+        except KeyError:
+            fix_initial = False
+
+        try:
+            fix_duration = user_options['fix_duration']
+        except KeyError:
+            fix_duration = False
+
+        if 'ascent' in phase_name:
+            phase.set_time_options(
+                units='s',
+                targets='t_curr',
+                input_initial=True,
+                input_duration=True,
+            )
+
+        elif 'cruise' in phase_name:
+            # Time here is really the independent variable through which we are integrating.
+            # In the case of the Breguet Range ODE, it's mass.
+            # We rely on mass being monotonically non-increasing across the phase.
+            phase.set_time_options(
+                name='mass',
+                fix_initial=False,
+                fix_duration=False,
+                units='lbm',
+                targets='mass',
+                initial_bounds=(0.0, 1.0e7),
+                initial_ref=100.0e3,
+                duration_bounds=(-1.0e7, -1),
+                duration_ref=50000,
+            )
+
+        elif 'descent' in phase_name:
+            duration_ref = wrapped_convert_units(user_options['time_duration_ref'], 's')
+            phase.set_time_options(
+                duration_bounds=duration_bounds,
+                fix_initial=fix_initial,
+                input_initial=input_initial,
+                units='s',

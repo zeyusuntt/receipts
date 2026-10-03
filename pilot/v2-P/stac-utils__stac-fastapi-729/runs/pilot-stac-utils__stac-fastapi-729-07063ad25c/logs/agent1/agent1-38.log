@@ -1,0 +1,114 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /stac-fastapi
+configfile: pyproject.toml
+plugins: anyio-4.12.1, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+stac_fastapi/api/tests/test_models.py::test_create_get_request_model FAILED [100%]
+
+=================================== FAILURES ===================================
+________________________ test_create_get_request_model _________________________
+
+    def test_create_get_request_model():
+        request_model = create_get_request_model(
+            extensions=[FilterExtension(), FieldsExtension()],
+            base_model=BaseSearchGetRequest,
+        )
+    
+        model = request_model(
+            collections="test1,test2",
+            ids="test1,test2",
+            bbox="0,0,1,1",
+            intersects=json.dumps(
+                {
+                    "type": "Polygon",
+                    "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+                }
+            ),
+            datetime="2020-01-01T00:00:00Z",
+            limit=10,
+            filter="test==test",
+            filter_crs="epsg:4326",
+            filter_lang="cql2-text",
+        )
+    
+        assert model.collections == ["test1", "test2"]
+        assert model.filter_crs == "epsg:4326"
+    
+        with pytest.raises(HTTPException):
+            request_model(datetime="yo")
+    
+        app = FastAPI()
+    
+        @app.get("/test")
+>       def route(model=Depends(request_model)):
+
+stac_fastapi/api/tests/test_models.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:1125: in decorator
+    self.add_api_route(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:1064: in add_api_route
+    route = route_class(
+/usr/local/lib/python3.10/site-packages/fastapi/routing.py:665: in __init__
+    self.dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:301: in get_dependant
+    sub_dependant = get_dependant(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:279: in get_dependant
+    param_details = analyze_param(
+/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py:508: in analyze_param
+    field = create_model_field(
+/usr/local/lib/python3.10/site-packages/fastapi/utils.py:73: in create_model_field
+    return v2.ModelField(mode=mode, name=name, field_info=field_info)
+<string>:7: in __init__
+    ???
+/usr/local/lib/python3.10/site-packages/fastapi/_compat/v2.py:151: in __post_init__
+    Annotated[annotated_args],
+/usr/local/lib/python3.10/typing.py:312: in inner
+    return func(*args, **kwds)
+/usr/local/lib/python3.10/typing.py:1702: in __class_getitem__
+    origin = _type_check(params[0], msg, allow_special_forms=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+arg = (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None)
+msg = 'Annotated[t, ...]: t must be a type.', is_argument = True, module = None
+
+    def _type_check(arg, msg, is_argument=True, module=None, *, allow_special_forms=False):
+        """Check that the argument is a type, and return it (internal helper).
+    
+        As a special case, accept None and return type(None) instead. Also wrap strings
+        into ForwardRef instances. Consider several corner cases, for example plain
+        special forms like Union are not valid, while Union[int, str] is OK, etc.
+        The msg argument is a human-readable error message, e.g::
+    
+            "Union[arg, ...]: arg should be a type."
+    
+        We append the repr() of the actual value (truncated to 100 chars).
+        """
+        invalid_generic_forms = (Generic, Protocol)
+        if not allow_special_forms:
+            invalid_generic_forms += (ClassVar,)
+            if is_argument:
+                invalid_generic_forms += (Final,)
+    
+        arg = _type_convert(arg, module=module, allow_special_forms=allow_special_forms)
+        if (isinstance(arg, _GenericAlias) and
+                arg.__origin__ in invalid_generic_forms):
+            raise TypeError(f"{arg} is not valid as type argument")
+        if arg in (Any, NoReturn, Final, TypeAlias):
+            return arg
+        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
+            raise TypeError(f"Plain {arg} is not valid as type argument")
+        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec,
+                            ParamSpecArgs, ParamSpecKwargs)):
+            return arg
+        if not callable(arg):
+>           raise TypeError(f"{msg} Got {arg!r:.100}.")
+E           TypeError: Annotated[t, ...]: t must be a type. Got (typing.Annotated[typing.Optional[str], Query(PydanticUndefined)], None).
+
+/usr/local/lib/python3.10/typing.py:176: TypeError
+----------- generated xml file: /opt/receipts/reports/agent1-38.xml ------------
+=========================== short test summary info ============================
+FAILED stac_fastapi/api/tests/test_models.py::test_create_get_request_model
+============================== 1 failed in 0.38s ===============================

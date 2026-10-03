@@ -1,0 +1,16 @@
+diff --git a/src/pipx/standalone_python.py b/src/pipx/standalone_python.py
+index 8d772f5..51322f4 100644
+--- a/src/pipx/standalone_python.py
++++ b/src/pipx/standalone_python.py
+@@ -193,8 +193,10 @@ def list_pythons() -> Dict[str, str]:
+ def resolve_python_version(requested_version: str):
+     pythons = list_pythons()
+ 
++    requested_parts = [int(part) for part in requested_version.split(".")]
+     for version, version_download_link in pythons.items():
+-        if version.startswith(requested_version):
++        version_parts = [int(part) for part in version.split(".")]
++        if version_parts[:len(requested_parts)] == requested_parts:
+             python_version = version
+             download_link = version_download_link
+             break

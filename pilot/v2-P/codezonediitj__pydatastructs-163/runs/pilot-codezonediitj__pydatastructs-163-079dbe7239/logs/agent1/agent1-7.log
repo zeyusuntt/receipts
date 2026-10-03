@@ -1,0 +1,21 @@
+def test_Queue():
+    q = Queue(implementation='array')
+    q1 = Queue()
+    assert _check_type(q, ArrayQueue) is True
+    assert _check_type(q1, ArrayQueue) is True
+    q2 = Queue(implementation='linked_list')
+    assert _check_type(q2, LinkedListQueue) is True
+    assert raises(NotImplementedError, lambda: Queue(implementation=''))
+
+def test_ArrayQueue():
+    q1 = Queue()
+    raises(IndexError, lambda: q1.popleft())
+    q1 = Queue(implementation='array', items=[0])
+    q1.append(1)
+    q1.append(2)
+    q1.append(3)
+    assert str(q1) == '[0, 1, 2, 3]'
+    assert len(q1) == 4
+    assert q1.popleft() == 0
+    assert q1.popleft() == 1
+    assert len(q1) == 2

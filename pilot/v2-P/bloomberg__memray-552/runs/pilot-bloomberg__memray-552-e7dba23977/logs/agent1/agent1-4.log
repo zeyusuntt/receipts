@@ -1,0 +1,129 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /memray
+configfile: pyproject.toml
+plugins: cov-7.0.0, textual-snapshot-1.1.0, syrupy-4.8.0
+collecting ... collected 1 item
+
+tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_module[-I] FAILED
+
+=================================== FAILURES ===================================
+_ TestRunSubcommand.test_suppressing_sys_manipulations_when_running_module[-I] _
+
+self = <tests.integration.test_main.TestRunSubcommand object at 0x7ffff5506710>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-3/test_suppressing_sys_manipulat0')
+isolation_flag = '-I'
+
+    @pytest.mark.parametrize(
+        "isolation_flag", ["-I"] + (["-P"] if sys.version_info > (3, 11) else [])
+    )
+    def test_suppressing_sys_manipulations_when_running_module(
+        self, tmp_path, isolation_flag
+    ):
+        # GIVEN
+        out_file = tmp_path / "result.bin"
+    
+        # WHEN
+>       proc = subprocess.run(
+            [
+                sys.executable,
+                isolation_flag,
+                "-c",
+                "import sys; from memray.commands import main; sys.exit(main())",
+                "run",
+                "--quiet",
+                "--output",
+                str(out_file),
+                "-m",
+                "site",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+tests/integration/test_main.py:382: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+input = None, capture_output = True, timeout = None, check = True
+popenargs = (['/usr/local/bin/python', '-I', '-c', 'import sys; from memray.commands import main; sys.exit(main())', 'run', '--quiet', ...],)
+kwargs = {'stderr': -1, 'stdout': -1, 'text': True}
+process = <Popen: returncode: 10 args: ['/usr/local/bin/python', '-I', '-c', 'import s...>
+stdout = '/usr/local/lib/python3.10/site.py [--user-base] [--user-site]\n\nWithout arguments print some useful information\nWit...d by user\n  2 - user site directory is disabled by super user\n      or for security reasons\n >2 - unknown error\n\n'
+stderr = '', retcode = 10
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout is given, and the process takes too long, a TimeoutExpired
+        exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['/usr/local/bin/python', '-I', '-c', 'import sys; from memray.commands import main; sys.exit(main())', 'run', '--quiet', '--output', '/tmp/pytest-of-root/pytest-3/test_suppressing_sys_manipulat0/result.bin', '-m', 'site']' returned non-zero exit status 10.
+
+/usr/local/lib/python3.10/subprocess.py:526: CalledProcessError
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+FAILED tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_module[-I]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.49s ===============================

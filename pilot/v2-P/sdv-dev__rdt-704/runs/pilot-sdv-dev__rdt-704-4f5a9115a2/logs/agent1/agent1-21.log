@@ -1,0 +1,93 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /RDT
+configfile: setup.cfg
+plugins: anyio-4.12.1, Faker-40.4.0, cov-7.0.0
+collecting ... collected 1 item
+
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__reverse_transform FAILED [100%]
+
+=================================== FAILURES ===================================
+______________ TestClusterBasedNormalizer.test__reverse_transform ______________
+
+self = <tests.unit.transformers.test_numerical.TestClusterBasedNormalizer testMethod=test__reverse_transform>
+
+    def test__reverse_transform(self):
+        """Test ``_reverse_transform``.
+    
+        Validate that the method correctly calls ``_reverse_transform_helper`` and produces the
+        appropriate output when passed pandas dataframe.
+    
+        Setup:
+            - create an instance of the ``ClusterBasedNormalizer`` where the ``output_columns``
+            is a list of two columns.
+            - mock the `_reverse_transform_helper` with the appropriate return value.
+    
+        Input:
+            - a dataframe containing the data to be reversed.
+    
+        Ouput:
+            - a pandas Series with the reverse transformed data.
+    
+        Side Effects:
+            - ``_reverse_transform_helper`` should be called once with the correct data.
+        """
+        # Setup
+        transformer = ClusterBasedNormalizer(max_clusters=3)
+        transformer.output_columns = ['col.normalized', 'col.component']
+        reversed_data = np.array([0.01, 0.02, -0.01, -0.01, 0.0, 0.99, 0.97, 1.02, 1.03, 0.97])
+        transformer.null_transformer = Mock()
+        transformer.null_transformer.reverse_transform.return_value = reversed_data
+        transformer._reverse_transform_helper = Mock()
+        transformer._reverse_transform_helper.return_value = reversed_data
+    
+        data = pd.DataFrame({
+            'col1': [-0.069, -0.061, -0.086, -0.086, -0.078, 0.073, 0.057, 0.098, 0.107, 0.057],
+            'col2': [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+        })
+    
+        # Run
+>       output = transformer._reverse_transform(data)
+
+tests/unit/transformers/test_numerical.py:1513: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ClusterBasedNormalizer(max_clusters=3)
+data = array([ 0.01,  0.02, -0.01, -0.01,  0.  ,  0.99,  0.97,  1.02,  1.03,
+        0.97])
+
+    def _reverse_transform(self, data):
+        """Convert data back into the original format.
+    
+        Args:
+            data (pd.DataFrame or numpy.ndarray):
+                Data to transform.
+    
+        Returns:
+            pandas.Series.
+        """
+        if not isinstance(data, np.ndarray):
+            data = data.to_numpy()
+    
+        recovered_data = self._reverse_transform_helper(data)
+        data = recovered_data
+        if self.null_transformer and self.null_transformer.models_missing_values():
+>           data = np.stack([recovered_data, data[:, -1]], axis=1)
+E           IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+rdt/transformers/numerical.py:564: IndexError
+=============================== warnings summary ===============================
+../usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:1428
+  /usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:1428: PytestConfigWarning: Unknown config option: collect_ignore
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../usr/local/lib/python3.10/site-packages/copulas/__init__.py:18
+  /usr/local/lib/python3.10/site-packages/copulas/__init__.py:18: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    from pkg_resources import iter_entry_points
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-21.xml ------------
+=========================== short test summary info ============================
+FAILED tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__reverse_transform
+======================== 1 failed, 2 warnings in 3.06s =========================

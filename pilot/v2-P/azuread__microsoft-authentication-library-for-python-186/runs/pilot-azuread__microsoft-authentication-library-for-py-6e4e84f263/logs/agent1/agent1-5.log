@@ -1,0 +1,13 @@
+111:        self.frt = "what the frt"
+114:        self.cache.add({  # Pre-populate a FRT
+121:                uid=self.uid, utid=self.utid, refresh_token=self.frt, foci="1"),
+124:    def test_unknown_orphan_app_will_attempt_frt_and_not_remove_it(self):
+130:            self.assertEqual(self.frt, data.get("refresh_token"), "Should attempt the FRT")
+135:            msal.TokenCache.CredentialType.REFRESH_TOKEN, query={"secret": self.frt}),
+136:            "The FRT should not be removed from the cache")
+138:    def test_known_orphan_app_will_skip_frt_and_only_use_its_own_rt(self):
+156:    def test_unknown_family_app_will_attempt_frt_and_join_family(self):
+159:                self.frt, data.get("refresh_token"), "Should attempt the FRT")
+175:    # Known family app will simply use FRT, which is largely the same as this one
+179:    def test_preexisting_family_app_will_attempt_frt_and_return_error(self):
+183:                self.frt, data.get("refresh_token"), "Should attempt the FRT")

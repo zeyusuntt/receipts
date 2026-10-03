@@ -1,0 +1,116 @@
+diff --git a/trackintel/io/file.py b/trackintel/io/file.py
+index f444527..44df4d5 100644
+--- a/trackintel/io/file.py
++++ b/trackintel/io/file.py
+@@ -116,10 +116,21 @@ def write_positionfixes_csv(positionfixes, filename, *args, **kwargs):
+     filename : str
+         The file to write to.
+ 
++    *args : tuple
++        Positional arguments to pass to pandas to_csv function.
++
++    **kwargs : dict
++        Keyword arguments to pass to pandas to_csv function.
++
+     Notes
+     -----
+     "longitude" and "latitude" is extracted from the geometry column and the orignal
+     geometry column is dropped.
++
++    Examples
++    --------
++    >>> trackintel.write_positionfixes_csv(positionfixes, 'data.csv')
++    >>> trackintel.write_positionfixes_csv(positionfixes, 'data.csv', sep=';')
+     """
+     gdf = positionfixes.copy()
+     gdf["longitude"] = positionfixes.geometry.apply(lambda p: p.coords[0][0])
+@@ -219,6 +230,17 @@ def write_triplegs_csv(triplegs, filename, *args, **kwargs):
+ 
+     filename : str
+         The file to write to.
++
++    *args : tuple
++        Positional arguments to pass to pandas to_csv function.
++
++    **kwargs : dict
++        Keyword arguments to pass to pandas to_csv function.
++
++    Examples
++    --------
++    >>> trackintel.write_triplegs_csv(triplegs, 'data.csv')
++    >>> trackintel.write_triplegs_csv(triplegs, 'data.csv', sep='|')
+     """
+     geo_col_name = triplegs.geometry.name
+     df = pd.DataFrame(triplegs, copy=True)
+@@ -317,6 +339,17 @@ def write_staypoints_csv(staypoints, filename, *args, **kwargs):
+ 
+     filename : str
+         The file to write to.
++
++    *args : tuple
++        Positional arguments to pass to pandas to_csv function.
++
++    **kwargs : dict
++        Keyword arguments to pass to pandas to_csv function.
++
++    Examples
++    --------
++    >>> trackintel.write_staypoints_csv(staypoints, 'data.csv')
++    >>> trackintel.write_staypoints_csv(staypoints, 'data.csv', sep='\t')
+     """
+     geo_col_name = staypoints.geometry.name
+     df = pd.DataFrame(staypoints, copy=True)
+@@ -404,6 +437,17 @@ def write_locations_csv(locations, filename, *args, **kwargs):
+ 
+     filename : str
+         The file to write to.
++
++    *args : tuple
++        Positional arguments to pass to pandas to_csv function.
++
++    **kwargs : dict
++        Keyword arguments to pass to pandas to_csv function.
++
++    Examples
++    --------
++    >>> trackintel.write_locations_csv(locations, 'data.csv')
++    >>> trackintel.write_locations_csv(locations, 'data.csv', sep=',', index=False)
+     """
+     df = pd.DataFrame(locations, copy=True)
+     df["center"] = locations["center"].apply(wkt.dumps)
+@@ -502,6 +546,17 @@ def write_trips_csv(trips, filename, *args, **kwargs):
+ 
+     filename : str
+         The file to write to.
++
++    *args : tuple
++        Positional arguments to pass to pandas to_csv function.
++
++    **kwargs : dict
++        Keyword arguments to pass to pandas to_csv function.
++
++    Examples
++    --------
++    >>> trackintel.write_trips_csv(trips, 'data.csv')
++    >>> trackintel.write_trips_csv(trips, 'data.csv', header=False)
+     """
+     df = trips.copy()
+     if isinstance(df, GeoDataFrame):
+@@ -571,6 +626,17 @@ def write_tours_csv(tours, filename, *args, **kwargs):
+ 
+     filename : str
+         The file to write to.
++
++    *args : tuple
++        Positional arguments to pass to pandas to_csv function.
++
++    **kwargs : dict
++        Keyword arguments to pass to pandas to_csv function.
++
++    Examples
++    --------
++    >>> trackintel.write_tours_csv(tours, 'data.csv')
++    >>> trackintel.write_tours_csv(tours, 'data.csv', columns=['user_id', 'started_at'])
+     """
+     tours.to_csv(filename, index=True, *args, **kwargs)
+ 

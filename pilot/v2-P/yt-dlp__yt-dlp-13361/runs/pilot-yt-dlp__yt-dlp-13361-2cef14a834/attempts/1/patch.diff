@@ -1,0 +1,26 @@
+diff --git a/test/test_InfoExtractor.py b/test/test_InfoExtractor.py
+index bc89b2955..6b144e7fa 100644
+--- a/test/test_InfoExtractor.py
++++ b/test/test_InfoExtractor.py
+@@ -324,7 +324,7 @@ def test_search_json_ld_realworld(self):
+ "thumbnail_url": "//www.nobelprize.org/images/12693-landscape-medium-gallery.jpg"
+ }</script>''',
+                 {
+-                    'thumbnails': [{'url': 'https://www.nobelprize.org/images/12693-landscape-medium-gallery.jpg'}],
++                    'thumbnails': [{'url': '//www.nobelprize.org/images/12693-landscape-medium-gallery.jpg'}],
+                 },
+                 {},
+             ),
+diff --git a/yt_dlp/extractor/common.py b/yt_dlp/extractor/common.py
+index d5607296d..92f97dcc1 100644
+--- a/yt_dlp/extractor/common.py
++++ b/yt_dlp/extractor/common.py
+@@ -1676,7 +1676,7 @@ def extract_video_object(e):
+                 'title': unescapeHTML(e.get('name')),
+                 'description': unescapeHTML(e.get('description')),
+                 'thumbnails': [{'url': unescapeHTML(url)}
+-                               for url in variadic(traverse_obj(e, 'thumbnailUrl', 'thumbnailURL'))
++                               for url in variadic(traverse_obj(e, 'thumbnailUrl', 'thumbnailURL', 'thumbnail_url'))
+                                if url_or_none(url)],
+                 'duration': parse_duration(e.get('duration')),
+                 'timestamp': unified_timestamp(e.get('uploadDate')),

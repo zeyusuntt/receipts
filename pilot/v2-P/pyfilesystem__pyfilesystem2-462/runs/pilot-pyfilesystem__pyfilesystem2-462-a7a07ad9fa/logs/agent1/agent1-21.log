@@ -1,0 +1,131 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pyfilesystem2
+configfile: setup.cfg
+collecting ... collected 2 items
+
+tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified PASSED             [ 50%]
+tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified ERROR              [ 50%]
+tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified PASSED       [100%]
+tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified ERROR        [100%]
+
+==================================== ERRORS ====================================
+_____________ ERROR at teardown of TestFTPFS.test_getinfo_modified _____________
+
+cls = <class 'tests.test_ftpfs.TestFTPFS'>
+
+    @classmethod
+    def tearDownClass(cls):
+>       cls.server.stop()
+
+tests/test_ftpfs.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/pyftpdlib/test/__init__.py:484: in stop
+    assert_free_resources(self.parent_pid)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+parent_pid = 12
+
+    def assert_free_resources(parent_pid=None):
+        # check orphaned threads
+        ts = threading.enumerate()
+        assert len(ts) == 1, ts
+        # check orphaned process children
+        this_proc = psutil.Process(parent_pid or os.getpid())
+        children = this_proc.children()
+        if children:
+            warnings.warn(
+                "some children didn't terminate %r" % str(children),
+                UserWarning,
+                stacklevel=2,
+            )
+            for child in children:
+                try:
+                    child.kill()
+                    child.wait(GLOBAL_TIMEOUT)
+                except psutil.NoSuchProcess:
+                    pass
+        # check unclosed connections
+        if POSIX:
+            cons = [
+                x
+>               for x in this_proc.net_connections('tcp')
+                if x.status != psutil.CONN_CLOSE_WAIT
+            ]
+E           AttributeError: 'Process' object has no attribute 'net_connections'. Did you mean: 'connections'?
+
+/usr/local/lib/python3.10/site-packages/pyftpdlib/test/__init__.py:382: AttributeError
+__________ ERROR at teardown of TestFTPFSNoMLSD.test_getinfo_modified __________
+
+cls = <class 'tests.test_ftpfs.TestFTPFSNoMLSD'>
+
+    @classmethod
+    def tearDownClass(cls):
+>       cls.server.stop()
+
+tests/test_ftpfs.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/pyftpdlib/test/__init__.py:484: in stop
+    assert_free_resources(self.parent_pid)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+parent_pid = 12
+
+    def assert_free_resources(parent_pid=None):
+        # check orphaned threads
+        ts = threading.enumerate()
+        assert len(ts) == 1, ts
+        # check orphaned process children
+        this_proc = psutil.Process(parent_pid or os.getpid())
+        children = this_proc.children()
+        if children:
+            warnings.warn(
+                "some children didn't terminate %r" % str(children),
+                UserWarning,
+                stacklevel=2,
+            )
+            for child in children:
+                try:
+                    child.kill()
+                    child.wait(GLOBAL_TIMEOUT)
+                except psutil.NoSuchProcess:
+                    pass
+        # check unclosed connections
+        if POSIX:
+            cons = [
+                x
+>               for x in this_proc.net_connections('tcp')
+                if x.status != psutil.CONN_CLOSE_WAIT
+            ]
+E           AttributeError: 'Process' object has no attribute 'net_connections'. Did you mean: 'connections'?
+
+/usr/local/lib/python3.10/site-packages/pyftpdlib/test/__init__.py:382: AttributeError
+=============================== warnings summary ===============================
+fs/__init__.py:4
+  /pyfilesystem2/fs/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    __import__("pkg_resources").declare_namespace(__name__)  # type: ignore
+
+fs/__init__.py:4
+  /pyfilesystem2/fs/__init__.py:4: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('fs')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    __import__("pkg_resources").declare_namespace(__name__)  # type: ignore
+
+fs/opener/__init__.py:6
+  /pyfilesystem2/fs/opener/__init__.py:6: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('fs.opener')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    __import__("pkg_resources").declare_namespace(__name__)  # type: ignore
+
+../usr/local/lib/python3.10/site-packages/pkg_resources/__init__.py:2558
+  /usr/local/lib/python3.10/site-packages/pkg_resources/__init__.py:2558: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('fs')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(parent)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-21.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified
+PASSED tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified
+ERROR tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified - AttributeError:...
+ERROR tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified - Attribute...
+=================== 2 passed, 4 warnings, 2 errors in 0.59s ====================

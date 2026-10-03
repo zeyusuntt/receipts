@@ -1,0 +1,99 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /ariadne-codegen
+configfile: pyproject.toml
+plugins: anyio-4.12.1, asyncio-1.3.0, httpx-0.36.0, mock-3.15.1
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_added_typename FAILED [ 25%]
+tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_used_fragments PASSED [ 50%]
+tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_fragment_used_by_another_fragment PASSED [ 75%]
+tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_representation_without_mixin_directive PASSED [100%]
+
+=================================== FAILURES ===================================
+__________ test_get_operation_as_str_returns_str_with_added_typename ___________
+
+self = <ariadne_codegen.client_generators.result_types.ResultTypesGenerator object at 0x7ffff54ffe20>
+type_name = 'CustomType1', field_name = '__typename'
+
+    def _get_field_from_schema(self, type_name: str, field_name: str) -> GraphQLField:
+        try:
+>           return cast(GraphQLObjectType, self.schema.type_map[type_name]).fields[
+                field_name
+            ]
+E           KeyError: '__typename'
+
+ariadne_codegen/client_generators/result_types.py:420: KeyError
+
+During handling of the above exception, another exception occurred:
+
+    def test_get_operation_as_str_returns_str_with_added_typename():
+        query_str = format_graphql_str(
+            """
+            query CustomQuery {
+                query4 {
+                    ... on CustomType1 {
+                        fielda
+                    }
+                    ... on CustomType2 {
+                        fieldb
+                    }
+                }
+            }
+            """
+        )
+        expected_result = format_graphql_str(
+            """
+            query CustomQuery {
+                query4 {
+                    __typename
+                    ... on CustomType1 {
+                        fielda
+                    }
+                    ... on CustomType2 {
+                        fieldb
+                    }
+                }
+            }
+            """
+        )
+>       generator = ResultTypesGenerator(
+            schema=build_ast_schema(parse(SCHEMA_STR)),
+            operation_definition=cast(
+                OperationDefinitionNode, parse(query_str).definitions[0]
+            ),
+            enums_module_name="enums",
+        )
+
+tests/client_generators/result_types_generator/test_get_operation_as_str.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+ariadne_codegen/client_generators/result_types.py:109: in __init__
+    self._class_defs = self._parse_type_definition(
+ariadne_codegen/client_generators/result_types.py:332: in _parse_type_definition
+    self._parse_field_selection_set_types(
+ariadne_codegen/client_generators/result_types.py:510: in _parse_field_selection_set_types
+    self._parse_type_definition(
+ariadne_codegen/client_generators/result_types.py:309: in _parse_type_definition
+    field_definition = self._get_field_from_schema(type_name, field.name.value)
+ariadne_codegen/client_generators/result_types.py:426: in _get_field_from_schema
+    type_=GraphQLNonNull(type_=GraphQLScalarType(name="String"))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'graphql.type.definition.GraphQLScalarType'>, name = 'String'
+_args = (), _kwargs = {}
+
+    def __new__(cls, name: str, *_args: Any, **_kwargs: Any) -> "GraphQLNamedType":
+        if name in cls.reserved_types:
+>           raise TypeError(f"Redefinition of reserved type {name!r}")
+E           TypeError: Redefinition of reserved type 'String'
+
+/usr/local/lib/python3.10/site-packages/graphql/type/definition.py:236: TypeError
+==================================== PASSES ====================================
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+PASSED tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_used_fragments
+PASSED tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_fragment_used_by_another_fragment
+PASSED tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_representation_without_mixin_directive
+FAILED tests/client_generators/result_types_generator/test_get_operation_as_str.py::test_get_operation_as_str_returns_str_with_added_typename
+========================= 1 failed, 3 passed in 0.45s ==========================

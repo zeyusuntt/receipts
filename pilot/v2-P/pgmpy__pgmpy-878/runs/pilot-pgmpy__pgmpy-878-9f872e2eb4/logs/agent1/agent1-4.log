@@ -1,0 +1,106 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /pgmpy
+collecting ... collected 1 item
+
+pgmpy/tests/test_models/test_BayesianModel.py::TestBayesianModelCPD::test_get_cpds1 FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________________ TestBayesianModelCPD.test_get_cpds1 ______________________
+
+self = <pgmpy.tests.test_models.test_BayesianModel.TestBayesianModelCPD testMethod=test_get_cpds1>
+
+    def test_get_cpds1(self):
+        self.model = BayesianModel([('A', 'AB')])
+        cpd_a = TabularCPD('A', 2, values=np.random.rand(2, 1))
+        cpd_ab = TabularCPD('AB', 2, values=np.random.rand(2, 2),
+                            evidence=['A'], evidence_card=[2])
+    
+        self.model.add_cpds(cpd_a, cpd_ab)
+        self.assertEqual(self.model.get_cpds('A').variable, 'A')
+        self.assertEqual(self.model.get_cpds('AB').variable, 'AB')
+        self.assertRaises(ValueError, self.model.get_cpds, 'B')
+    
+        self.model.add_node('B')
+>       self.assertIsNone(self.model.get_cpds('B'))
+
+pgmpy/tests/test_models/test_BayesianModel.py:285: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pgmpy.models.BayesianModel.BayesianModel object at 0x7fffe5f82390>
+node = 'B'
+
+    def get_cpds(self, node=None):
+        """
+        Returns the cpd of the node. If node is not specified returns all the CPDs
+        that have been added till now to the graph
+    
+        Parameter
+        ---------
+        node: any hashable python object (optional)
+            The node whose CPD we want. If node not specified returns all the
+            CPDs added to the model.
+    
+        Returns
+        -------
+        A list of TabularCPDs.
+    
+        Examples
+        --------
+        >>> from pgmpy.models import BayesianModel
+        >>> from pgmpy.factors.discrete import TabularCPD
+        >>> student = BayesianModel([('diff', 'grade'), ('intel', 'grade')])
+        >>> cpd = TabularCPD('grade', 2, [[0.1, 0.9, 0.2, 0.7],
+        ...                               [0.9, 0.1, 0.8, 0.3]],
+        ...                  ['intel', 'diff'], [2, 2])
+        >>> student.add_cpds(cpd)
+        >>> student.get_cpds()
+        """
+        if node:
+            if node not in self.nodes():
+                raise ValueError('Node not present in the Directed Graph')
+            for cpd in self.cpds:
+                if cpd.variable == node:
+                    return cpd
+>           raise ValueError("CPD not added for the node: {node}".format(node=node))
+E           ValueError: CPD not added for the node: B
+
+pgmpy/models/BayesianModel.py:288: ValueError
+=============================== warnings summary ===============================
+pgmpy/extern/tabulate.py:136
+  /pgmpy/pgmpy/extern/tabulate.py:136: DeprecationWarning: invalid escape sequence \h
+    "\\toprule" if booktabs else "\hline"])
+
+pgmpy/extern/tabulate.py:261
+  /pgmpy/pgmpy/extern/tabulate.py:261: DeprecationWarning: invalid escape sequence \[
+    _invisible_codes_bytes = re.compile(b"\x1b\[\d*m|\x1b\[\d*\;\d*\;\d*m")  # ANSI color codes
+
+pgmpy/extern/tabulate.py:886
+  /pgmpy/pgmpy/extern/tabulate.py:886: DeprecationWarning: invalid escape sequence \e
+    """
+
+pgmpy/independencies/Independencies.py:359
+  /pgmpy/pgmpy/independencies/Independencies.py:359: DeprecationWarning: invalid escape sequence \p
+    """
+
+pgmpy/independencies/Independencies.py:430
+  /pgmpy/pgmpy/independencies/Independencies.py:430: DeprecationWarning: invalid escape sequence \p
+    return ('%s \perp %s \mid %s' % (', '.join(self.event1), ', '.join(self.event2),
+
+pgmpy/models/MarkovModel.py:570
+  /pgmpy/pgmpy/models/MarkovModel.py:570: DeprecationWarning: invalid escape sequence \p
+    """
+
+pgmpy/models/MarkovModel.py:668
+  /pgmpy/pgmpy/models/MarkovModel.py:668: DeprecationWarning: invalid escape sequence \s
+    """
+
+pgmpy/models/FactorGraph.py:386
+  /pgmpy/pgmpy/models/FactorGraph.py:386: DeprecationWarning: invalid escape sequence \s
+    """
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+FAILED pgmpy/tests/test_models/test_BayesianModel.py::TestBayesianModelCPD::test_get_cpds1
+======================== 1 failed, 8 warnings in 1.03s =========================

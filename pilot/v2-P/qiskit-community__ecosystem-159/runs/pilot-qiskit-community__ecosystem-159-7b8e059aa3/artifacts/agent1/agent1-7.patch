@@ -1,0 +1,67 @@
+diff --git a/ecosystem/daos/jsondao.py b/ecosystem/daos/jsondao.py
+index 5087412..bad15f9 100644
+--- a/ecosystem/daos/jsondao.py
++++ b/ecosystem/daos/jsondao.py
+@@ -3,7 +3,7 @@ from typing import Optional, List
+ 
+ from tinydb import TinyDB, Query
+ 
+-from ecosystem.models import TestResult, StyleResult, CoverageResult
++from ecosystem.models import TestResult, StyleResult, CoverageResult, TestType
+ from ecosystem.models.repository import Repository
+ 
+ 
+@@ -93,6 +93,7 @@ class JsonDAO:
+     ) -> Optional[List[int]]:
+         """Adds test result for repository.
+         Overwrites latest test results and adds to historical test results.
++        Test results are kept in order: DEV_COMPATIBLE, STABLE_COMPATIBLE, STANDARD.
+ 
+         Args:
+             repo_url: url of the repo
+@@ -108,18 +109,36 @@ class JsonDAO:
+         if fetched_repo_json is not None:
+             repo = Repository.from_dict(fetched_repo_json)
+ 
+-            new_test_results = [
++            # Update test results, keeping only one per type and sorting by precedence
++            test_type_order = {
++                TestType.DEV_COMPATIBLE: 0,
++                TestType.STABLE_COMPATIBLE: 1,
++                TestType.STANDARD: 2,
++            }
++            # Remove existing entries of the same test type
++            filtered_tests = [
+                 tr for tr in repo.tests_results if tr.test_type != test_result.test_type
+-            ] + [test_result]
+-            repo.tests_results = new_test_results
+-
+-            new_historical_est_results = [
++            ]
++            # Append new result
++            filtered_tests.append(test_result)
++            # Sort according to predefined order
++            repo.tests_results = sorted(
++                filtered_tests, key=lambda tr: test_type_order[tr.test_type]
++            )
++
++            # Same for historical test results (also deduplicate by type+version)
++            filtered_historical = [
+                 tr
+                 for tr in repo.historical_test_results
+-                if tr.test_type != test_result.test_type
+-                or tr.terra_version != test_result.terra_version
+-            ] + [test_result]
+-            repo.historical_test_results = new_historical_est_results
++                if not (
++                    tr.test_type == test_result.test_type
++                    and tr.terra_version == test_result.terra_version
++                )
++            ]
++            filtered_historical.append(test_result)
++            repo.historical_test_results = sorted(
++                filtered_historical, key=lambda tr: test_type_order[tr.test_type]
++            )
+ 
+             return table.upsert(repo.to_dict(), repository.url == repo_url)
+         return None

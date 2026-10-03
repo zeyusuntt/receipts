@@ -1,0 +1,44 @@
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/mapper.py", line 2531, in get_property
+    return self._props[key]
+KeyError: 'tests'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/debug_test.py", line 75, in <module>
+    asyncio.run(test_nesting())
+  File "/usr/local/lib/python3.10/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/tmp/debug_test.py", line 47, in test_nesting
+    await init_db()
+  File "/tmp/debug_test.py", line 38, in init_db
+    tiers = [TierModel(id=1, name="Premium"), TierModel(id=2, name="Basic")]
+  File "<string>", line 4, in __init__
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/state.py", line 591, in _initialize_instance
+    manager.dispatch.init(self, args, kwargs)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/event/attr.py", line 515, in __call__
+    fn(*args, **kw)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/mapper.py", line 4419, in _event_on_init
+    instrumenting_mapper._check_configure()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/mapper.py", line 2410, in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/mapper.py", line 4227, in _configure_registries
+    _do_configure_registries(registries, cascade)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/mapper.py", line 4268, in _do_configure_registries
+    mapper._post_configure_properties()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/mapper.py", line 2427, in _post_configure_properties
+    prop.init()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/interfaces.py", line 595, in init
+    self.do_init()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/relationships.py", line 1660, in do_init
+    self._generate_backref()
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/relationships.py", line 2144, in _generate_backref
+    self._add_reverse_property(self.back_populates)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/relationships.py", line 1591, in _add_reverse_property
+    other = self.mapper.get_property(key, _configure_mappers=False)
+  File "/usr/local/lib/python3.10/site-packages/sqlalchemy/orm/mapper.py", line 2533, in get_property
+    raise sa_exc.InvalidRequestError(
+sqlalchemy.exc.InvalidRequestError: Mapper 'Mapper[TierModel(tier)]' has no property 'tests'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.

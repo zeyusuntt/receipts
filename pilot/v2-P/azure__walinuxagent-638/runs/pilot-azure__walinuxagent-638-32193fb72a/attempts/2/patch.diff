@@ -1,0 +1,43 @@
+diff --git a/azurelinuxagent/common/protocol/hostplugin.py b/azurelinuxagent/common/protocol/hostplugin.py
+index f4ece29..aa7737b 100644
+--- a/azurelinuxagent/common/protocol/hostplugin.py
++++ b/azurelinuxagent/common/protocol/hostplugin.py
+@@ -38,6 +38,16 @@ MAXIMUM_PAGEBLOB_PAGE_SIZE = 4 * 1024 * 1024  # Max page size: 4MB
+ 
+ 
+ class HostPluginProtocol(object):
++    _default_class_var = True
++    
++    @classmethod
++    def is_default_channel(cls):
++        return cls._default_class_var
++        
++    @classmethod
++    def set_default_channel(cls, flag):
++        cls._default_class_var = bool(flag)
++        
+     def __init__(self, endpoint, container_id, role_config_name):
+         if endpoint is None:
+             raise ProtocolError("HostGAPlugin: Endpoint not provided")
+diff --git a/debug_reverse.sh b/debug_reverse.sh
+new file mode 100755
+index 0000000..2760217
+--- /dev/null
++++ b/debug_reverse.sh
+@@ -0,0 +1,5 @@
++#!/bin/bash
++echo "=== Running wire test first ==="
++python -m pytest tests/protocol/test_wire.py::TestWireProtocolGetters::test_upload_status_blob_host_ga_plugin --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning -s 2>&1
++echo -e "\n=== Running hostplugin test second ==="
++python -m pytest tests/protocol/test_hostplugin.py::TestHostPlugin::test_fallback --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning -s 2>&1
+diff --git a/debug_with_prints.sh b/debug_with_prints.sh
+new file mode 100755
+index 0000000..b4c2cd1
+--- /dev/null
++++ b/debug_with_prints.sh
+@@ -0,0 +1,5 @@
++#!/bin/bash
++echo "=== Running hostplugin test first ==="
++python -m pytest tests/protocol/test_hostplugin.py::TestHostPlugin::test_fallback --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning -s 2>&1
++echo -e "\n=== Running wire test second ==="
++python -m pytest tests/protocol/test_wire.py::TestWireProtocolGetters::test_upload_status_blob_host_ga_plugin --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning -s 2>&1

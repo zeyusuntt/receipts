@@ -1,0 +1,34 @@
+diff --git a/eodag/api/core.py b/eodag/api/core.py
+index 0ce2f7f..c3f8cfe 100644
+--- a/eodag/api/core.py
++++ b/eodag/api/core.py
+@@ -871,6 +871,9 @@ class EODataAccessGateway(object):
+         if product_type is None:
+             try:
+                 guesses = self.guess_product_type(**kwargs)
++                # DEBUG: Print what we're working with
++                logger.info(f"guess_product_type called with {kwargs}")
++                logger.info(f"guess_product_type returned {guesses}")
+ 
+                 # guess_product_type raises a NoMatchingProductType error if no product
+                 # is found. Here, the supported search params are removed from the
+@@ -886,16 +889,17 @@ class EODataAccessGateway(object):
+ 
+                 # By now, only use the best bet
+                 product_type = guesses[0]
++                logger.info(f"Setting product_type to {product_type}")
++                kwargs["productType"] = product_type
+             except NoMatchingProductType:
+                 queried_id = kwargs.get("id", None)
+                 if queried_id is None:
+                     logger.info(
+                         "No product type could be guessed with provided arguments"
+                     )
++                    logger.debug(f"guess_product_type failed with kwargs: {kwargs}")
+                 else:
+                     return kwargs
+-
+-        kwargs["productType"] = product_type
+         if start is not None:
+             kwargs["startTimeFromAscendingNode"] = start
+         if end is not None:

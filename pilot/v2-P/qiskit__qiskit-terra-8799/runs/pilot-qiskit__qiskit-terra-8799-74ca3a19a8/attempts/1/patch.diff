@@ -1,0 +1,13 @@
+diff --git a/qiskit/dagcircuit/dagcircuit.py b/qiskit/dagcircuit/dagcircuit.py
+index 721497775..10319e600 100644
+--- a/qiskit/dagcircuit/dagcircuit.py
++++ b/qiskit/dagcircuit/dagcircuit.py
+@@ -1187,6 +1187,8 @@ class DAGCircuit:
+         for nd in node_block:
+             self._decrement_op(nd.op)
+ 
++        return new_node
++
+     def substitute_node_with_dag(self, node, input_dag, wires=None, propagate_condition=True):
+         """Replace one node with dag.
+ 

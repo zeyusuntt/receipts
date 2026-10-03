@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /planet-client-python
+plugins: requests-mock-1.12.1
+collecting ... collected 18 items / 17 deselected / 1 selected
+
+tests/test_cli.py::test_mosaic_quads PASSED                              [100%]
+
+=============================== warnings summary ===============================
+planet/api/dispatch.py:44
+  /planet-client-python/planet/api/dispatch.py:44: DeprecationWarning: invalid escape sequence \S
+    key = re.match('api-key (\S+)', existing_auth)
+
+planet/api/utils.py:167
+  /planet-client-python/planet/api/utils.py:167: DeprecationWarning: invalid escape sequence \w
+    matched = re.match('(\w+)\s*\([^)]+\)', text.strip())
+
+planet/scripts/__init__.py:199
+  /planet-client-python/planet/scripts/__init__.py:199: DeprecationWarning: invalid escape sequence \s
+    return re.split('\s+', value)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+------------ generated xml file: /opt/receipts/reports/agent1-6.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_cli.py::test_mosaic_quads
+================= 1 passed, 17 deselected, 3 warnings in 0.10s =================

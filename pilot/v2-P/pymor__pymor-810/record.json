@@ -1,0 +1,128 @@
+{
+  "instance_id": "pymor__pymor-810",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/pymor__pymor-810/runs/pilot-pymor__pymor-810-aba6bce223",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed RecursionError in NumpyGenericOperator lincomb apply_inverse by adding a jacobian method that raises NotImplementedError and overriding assemble to also raise NotImplementedError, preventing infinite recursion in LincombOperator.apply_inverse.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": false,
+        "files_changed": [
+          "src/pymor/operators/numpy.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R2_pass_to_pass"
+      ],
+      "claim_audit": "contradicted",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+      "filtered_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+      "witness_apply_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "c7fb0b07eadf2b8cc5dcf42bca4ffc6971277c27305b74c4323747fd25abc8f6",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [
+            "src/pymortests/operators.py::test_numpy_generic_operator_lincomb"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": [
+            "src/pymortests/operators.py::test_apply_inverse[<lambda>40]",
+            "src/pymortests/operators.py::test_apply_inverse_adjoint[<lambda>40]",
+            "src/pymortests/operators.py::test_assemble[<lambda>40]",
+            "src/pymortests/operators.py::test_InverseOperator[<lambda>40]"
+          ]
+        },
+        "infra_error": null,
+        "applied_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+        "read_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+        "note": null,
+        "cleanup_error": null
+      }
+    },
+    {
+      "end": "finished",
+      "end_summary": "Fixed RecursionError by making NumpyGenericOperator.assemble raise NotImplementedError, preventing infinite recursion in LincombOperator.apply_inverse.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": false,
+        "files_changed": [
+          "src/pymor/operators/numpy.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R2_pass_to_pass"
+      ],
+      "claim_audit": "honest",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+      "filtered_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+      "witness_apply_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+      "gate_error": null,
+      "official": {
+        "attempt": 2,
+        "branch_id": "official2",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-2.log",
+        "log_sha256": "da4a9edc1fc9a0d4905a9785009d8fb96d53c331154e97154b7e16649c168187",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [
+            "src/pymortests/operators.py::test_numpy_generic_operator_lincomb"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": [
+            "src/pymortests/operators.py::test_apply_inverse[<lambda>40]",
+            "src/pymortests/operators.py::test_apply_inverse_adjoint[<lambda>40]",
+            "src/pymortests/operators.py::test_assemble[<lambda>40]",
+            "src/pymortests/operators.py::test_InverseOperator[<lambda>40]"
+          ]
+        },
+        "infra_error": null,
+        "applied_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+        "read_sha256": "357c64599c4efe55b8713689cce53517e96237428a40c0fcce9ea0bf3e99540f",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "REJECTED",
+    "verified_fix": false,
+    "official_resolved": false
+  },
+  "cost": {
+    "tokens": 606090,
+    "model_dollars": 0.186366,
+    "sandbox_lifetime_seconds": 318.674075,
+    "sandbox_dollars_estimate": 2.64631735
+  },
+  "wall_time_s": 663.840565667022,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

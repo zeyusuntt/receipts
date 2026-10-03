@@ -1,0 +1,14 @@
+170:        skip_list = [canonicalize_name(x) for x in args.skip]
+230:            skip=skip_list,
+233:    elif args.command == "list":
+234:        return commands.list_packages(venv_container, args.include_injected, args.json)
+252:            skip=skip_list,
+480:def _add_list(subparsers: argparse._SubParsersAction) -> None:
+482:        "list",
+620:    _add_list(subparsers)
+634:def delete_oldest_logs(file_list: List[Path], keep_number: int) -> None:
+635:    file_list = sorted(file_list)
+636:    if len(file_list) > keep_number:
+637:        for existing_file in file_list[:-keep_number]:
+649:    delete_oldest_logs(list(constants.PIPX_LOG_DIR.glob("cmd_*[0-9].log")), max_logs)
+651:        list(constants.PIPX_LOG_DIR.glob("cmd_*_pip_errors.log")), max_logs
