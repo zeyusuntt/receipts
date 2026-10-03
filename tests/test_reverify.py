@@ -335,7 +335,7 @@ async def test_crlf_patch_is_applied_without_normalizing_bytes(tmp_path, local):
 def test_docker_unavailable_cli_is_infrastructure(tmp_path, monkeypatch, capsys):
     import receipts.cli as cli
 
-    async def unavailable():
+    async def unavailable(*_args, **_kwargs):
         return False, "Docker daemon is not running"
     monkeypatch.setattr(cli, "_docker_ready", unavailable)
     assert main(["reverify", str(write_bundle(tmp_path))]) == 2
@@ -476,8 +476,18 @@ def _docker_available():
 
 @pytest.mark.docker
 @pytest.mark.skipif(not _docker_available(), reason="Docker daemon is not reachable")
-async def test_docker_reverify_on_fresh_image(tmp_path):
+async def test_docker_reverify_on_fresh_image(tmp_path, monkeypatch):
     from receipts.sandbox.docker import DockerExecutor
+
+    # SWE-rebench images are linux/amd64 and to_task pins that platform. The fixture
+    # image here is built locally for the host's platform, so the pin is dropped.
+    original_to_task = module().to_task
+
+    def host_platform_task(instance):
+        task = original_to_task(instance)
+        return task.model_copy(update={"source": task.source.model_copy(update={"platform": None})})
+
+    monkeypatch.setattr(module(), "to_task", host_platform_task)
 
     def docker(*args, check=True):
         return subprocess.run(["docker", *args], capture_output=True, text=True, check=check, timeout=120)

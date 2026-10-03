@@ -210,7 +210,7 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-async def _docker_ready() -> tuple[bool, str]:
+async def _docker_ready(timeout_s: float = 10) -> tuple[bool, str]:
     executable = shutil.which("docker")
     if executable is None:
         return False, "docker executable not found"
@@ -221,20 +221,27 @@ async def _docker_ready() -> tuple[bool, str]:
         stderr=asyncio.subprocess.PIPE,
     )
     try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=10)
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout_s)
     except TimeoutError:
         process.kill()
         await process.communicate()
-        return False, "docker info timed out"
+        return False, (
+            f"docker info did not answer within {timeout_s:.0f} seconds; "
+            "is Docker Desktop running and finished starting?"
+        )
     if process.returncode != 0:
         detail = (stderr or stdout).decode(errors="replace").strip().splitlines()
         return False, detail[0] if detail else f"docker info exited {process.returncode}"
     return True, ""
 
 
-async def docker_ready() -> tuple[bool, str]:
-    """Expose the CLI's Docker readiness check for standalone re-verification."""
-    return await _docker_ready()
+async def docker_ready(timeout_s: float = 60) -> tuple[bool, str]:
+    """Expose the CLI's Docker readiness check for standalone re-verification.
+
+    Re-verification waits longer than `receipts fix`: a judge may have just started
+    Docker Desktop, whose first `docker info` can take tens of seconds.
+    """
+    return await _docker_ready(timeout_s)
 
 
 async def _doctor(live: bool, model: ModelClient | None) -> int:
