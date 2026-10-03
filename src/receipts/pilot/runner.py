@@ -614,6 +614,21 @@ async def _cleanup_executor(
     return sandbox_usage, cleanup_errors
 
 
+def baseline_guard(run_pytest: Any, limit_s: int) -> Any:
+    """Expose the pilot's per-run baseline limit without changing its policy."""
+    return _BaselineGuard(run_pytest, limit_s)
+
+
+def shield_cleanup_methods(executor: Any) -> Any:
+    """Expose the pilot's cancellation-safe executor lifecycle methods."""
+    return _shield_cleanup_methods(executor)
+
+
+async def complete_shielded(awaitable: Any) -> tuple[Any, bool, BaseException | None]:
+    """Expose the pilot's cleanup completion and cancellation accounting."""
+    return await _complete_shielded(awaitable)
+
+
 def _atomic_write_record(path: Path, record: InstanceRecord) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")

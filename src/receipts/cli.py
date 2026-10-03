@@ -112,6 +112,20 @@ def _parser() -> argparse.ArgumentParser:
     site_parser.add_argument("--out", required=True, type=Path)
     site_parser.add_argument("--title", default="Receipts")
 
+    export_parser = commands.add_parser("export", help="export portable final-attempt receipt bundles")
+    export_parser.add_argument("pilot_dir", type=Path)
+    export_parser.add_argument("--rows", required=True, type=Path, help="SWE-rebench row JSONL")
+    export_parser.add_argument("--out", required=True, type=Path)
+
+    reverify_parser = commands.add_parser(
+        "reverify", help="re-check a published receipt on fresh sandboxes",
+        description=("Re-check patch digest, gate and official grade. SWE-rebench images are "
+                     "linux/amd64 and run under emulation on Apple Silicon (slower)."),
+    )
+    reverify_parser.add_argument("bundle", type=Path)
+    reverify_parser.add_argument("--executor", choices=("docker", "tokenfactory"), default="docker",
+                                 help="sandbox executor; tokenfactory requires .env credentials")
+
     pilot_parser = commands.add_parser("pilot", help="run or report on the pilot")
     pilot_commands = pilot_parser.add_subparsers(
         dest="pilot_command",
@@ -216,6 +230,11 @@ async def _docker_ready() -> tuple[bool, str]:
         detail = (stderr or stdout).decode(errors="replace").strip().splitlines()
         return False, detail[0] if detail else f"docker info exited {process.returncode}"
     return True, ""
+
+
+async def docker_ready() -> tuple[bool, str]:
+    """Expose the CLI's Docker readiness check for standalone re-verification."""
+    return await _docker_ready()
 
 
 async def _doctor(live: bool, model: ModelClient | None) -> int:
@@ -403,6 +422,11 @@ def _load_pilot_candidates(candidates_path: Path, rows_path: Path) -> list[Insta
     return [by_id[instance_id] for instance_id in candidate_ids]
 
 
+def load_pilot_candidates(candidates_path: Path, rows_path: Path) -> list[Instance]:
+    """Expose the pilot row loader for portable receipt export."""
+    return _load_pilot_candidates(candidates_path, rows_path)
+
+
 def _load_id_file(path: Path) -> list[str]:
     return [
         line.strip().split(maxsplit=1)[0]
@@ -540,6 +564,11 @@ def _tokenfactory_executor_factory(
         return executor
 
     return make_executor
+
+
+def tokenfactory_executor_factory(executor_root: Path, api: Any, busybox: bytes):
+    """Expose the pilot's Token Factory executor construction for re-verification."""
+    return _tokenfactory_executor_factory(executor_root, api, busybox)
 
 
 def _default_run_budgets() -> RunBudgets:
@@ -739,6 +768,16 @@ async def _run_with_signal_cancellation(awaitable: Awaitable[int]) -> int:
 
 
 async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
+    if args.command == "export":
+        from receipts.reverify import export_bundles
+
+        paths = export_bundles(args.pilot_dir, args.rows, args.out)
+        print(f"Exported {len(paths)} bundle(s) to {args.out}")
+        return 0
+    if args.command == "reverify":
+        from receipts.reverify import reverify
+
+        return await _run_with_signal_cancellation(reverify(args.bundle, executor=args.executor))
     if args.command == "doctor":
         return await _doctor(args.live, model)
     if args.command == "preflight":
