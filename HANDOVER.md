@@ -48,7 +48,9 @@ Pilot finished Oct 1 (launch 3, 50 tasks): see `REPORT.md`. A: 4 of 23 claimed d
 ## Next agent actions
 
 - [x] Oct 2: followed the handoff's section 10. Health checks pass (337 passed, 2 skipped; `v1_evidence.py` matches; Daytona key correct, 0 snapshots). Three read-only Codex reviews of Plan 5 ran, their trust-boundary findings were verified in the main session, and Plan 5 was revised to revision 3.
-- [ ] v2 RUN (in progress since Oct 2, 17:00 PT). Scripts in `.build/` (gitignored), all guarded and under caffeinate:
+- [x] v2 P REPORTED (Oct 3, 14:39 PT): `REPORT-v2.md` (`1a56165`), records in `pilot/v2-P/` (`392b40a`). Headline H1: 17.9 percent of an unguarded agent's 'done' was false (12 of 67); Receipts shipped zero (66 verified, 59 first verdict, 7 on appeal); gate PASS agreed with the official grader 66 of 66; US$27.01 model spend. Two final infrastructure errors (Amendments 1 and 2), replaced by the reserve. Video runs by rule: featured `pyfilesystem__pyfilesystem2-462`, cold open `azure__walinuxagent-638`.
+- [ ] Lightning arm RUNNING since Oct 3, ~14:45 PT: `.build/v2-run-arm.sh` into `pilot/v2-arm-lightning/` (first 30 P tasks, `--model nvidia/Nemotron-3_5-Lightning`, monitor budget US$17.99 = 45 minus P's spend). Then report it separately and merge `build/submission` (S stays optional).
+- [x] v2 RUN (Oct 2, 17:00 PT to Oct 3, 14:39 PT). Scripts in `.build/` (gitignored), all guarded and under caffeinate:
   1. DONE: P screening, 17:00 to 18:13 PT: 110 included, 7 excluded, 2 final infrastructure errors (`docs/results/2026-10-02-v2-screen-P.md`).
   2. DONE: sample (positions 59 to 167) and reserve (168 to 177) committed with the ledger and logs in `43683d8`, before any agent run.
   3. DONE 18:21 to 18:54 PT, healthy (`docs/results/2026-10-02-v2-canary.md`): canary, `.build/v2-run-P.sh 10` (concurrency 4, watchdog with the US$45 model budget). Health check after 10 completed tasks: infrastructure errors, gate errors, gate-looser attempts, cost per task, budget endings (`receipts pilot report pilot/v2-P --screen-ledger pilot/v2-screen-P.jsonl`).
