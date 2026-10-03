@@ -1,35 +1,56 @@
 # Video script
 
-## The narration to record (revision 4, in the narrator's own voice)
+## Who is speaking (the narrator's persona)
 
-Read this as it is, in one take, the way you would explain it to a friend at a desk. Contractions are on purpose. Pause about a second at each `/`. Every claim here is true of our runs; nothing is invented. About 360 words, 2:45 to 2:50 at a relaxed pace.
+Grounded in the owner's own playbook (`~/Documents/beta fund/playbook/winning-playbook.md`, section 4.2) and in how this project was run, not invented:
+
+- An engineer who measures things for a living and doesn't take an agent's "done" on faith. The authority comes from having measured it, not from enthusiasm.
+- Calm, exact, a little dry. Numbers are said flatly; precision replaces charisma (the playbook's "Greg Brockman GPT-4 demo register").
+- Slow. Slower than feels natural; it reads as command.
+- Owns the mistake. The pilot's false fix is told plainly, because publishing it is the most credible thing in the video.
+- One human beat: the dry "They didn't." at the start, and "I got it wrong first" later.
+
+What winners do that this borrows: a first line that says who you are and why you care (Pulse: "I'm a cardiologist"; EcoLafaek: "I'm from Timor-Leste; my capital produces 300 tons of waste a day"); no hype words anywhere; one moment of humour or candour; a close said with conviction.
+
+## The narration to record (revision 5)
+
+Read it in one take, the way you'd explain it to a friend at a desk. Pause about a second at each `/`. Every claim is true of our runs. The line in [brackets] must be confirmed by the narrator before recording. About 330 words: at a slow 120 words a minute that is 2:45, which leaves room for the pauses, the silent cold open and the end card inside 3:00. Slow down rather than rush; if it runs long, I cut, you don't speed up.
 
 > This is a coding agent telling me it's done. All tests pass. /
 > They didn't. /
 >
-> I gave NVIDIA's Nemotron 3 Super a hundred real bugs from SWE-rebench, picked by a rule I wrote down before running anything. Sixty-seven times it said "done". Twelve of those weren't true, by SWE-rebench's own grader. /
+> I'm Zeyu. [I build evaluations for AI agents], and I hear "done" a lot. So I measured it. I gave NVIDIA's Nemotron 3 Super a hundred real bugs from SWE-rebench, picked by a rule I wrote down first. It said "done" sixty-seven times. Twelve of those weren't true, by SWE-rebench's own grader. /
 >
-> So I built Receipts: a coding agent that isn't allowed to grade its own homework. Nemotron still writes the fix, on Nebius Token Factory. It just doesn't get to say whether the fix works. A fresh Token Factory Sandbox it never touched runs the tests again, and plain code decides. /
+> That's why I built Receipts: a coding agent that isn't allowed to grade its own homework. Nemotron still writes the fix, on Nebius Token Factory. It just doesn't get a say in whether it works. A fresh Token Factory Sandbox it never touched runs the tests again, and plain code decides. /
 >
-> Here's one of the hundred, from PyFilesystem2. There's a failing test, and that test is the spec. Before anything changes, Receipts records what fails and what passes. /
+> Here's one, from PyFilesystem2. The failing test is the spec. /
 >
-> Nemotron reads the code, makes an edit, runs the tests, and says it's done. /
+> Nemotron edits the code, runs the tests, and says it's done. /
 >
 > Receipts doesn't take its word for it. It forks the original checkpoint into a new sandbox, applies only the source change, and runs the tests itself. / Rejected. The spec still fails. /
 >
 > The failure goes back to the agent exactly as it happened, once. It fixes the actual problem. New sandbox, same checks. / This time it passes. /
 >
-> The checks are simple. The spec passes. Nothing that passed before breaks. No test gets deleted or skipped. The patch stays out of your tests. And every step traces back to your code by a hash. No model decides any of it. SWE-rebench's official grader, run separately, agrees. /
+> Every check is plain code: the spec passes, nothing else breaks, no test is deleted or skipped, your tests stay untouched, and every step is hashed back to your code. SWE-rebench's grader, run separately, agrees. /
 >
-> You don't have to trust me either. Any receipt can be re-run, on Token Factory in about a minute, or with Docker and no account at all. Every check has to come out the same. /
+> You don't have to trust me. Anyone can re-run a receipt, on Token Factory in about a minute, or with Docker and no account. /
 >
-> Getting this right was the hard part. In my first pilot, the gate let one bad fix through: the agent hid a copy of the package where my test runner would find it. I'd written the rules down in advance, so I published it, fixed it, and ran everything again. /
+> I got this wrong first. In my first pilot, the gate let one bad fix through: the agent hid a copy of the package where my test runner would find it. I'd written the rules down in advance, so I published the mistake, fixed it, and started over. /
 >
-> On the hundred bugs: sixty-six verified fixes, zero false ones shipped, about forty cents of Nemotron tokens each. That's what I'd want before merging anything an agent wrote. /
+> On the hundred bugs: sixty-six verified fixes, zero false ones shipped, about forty cents of Nemotron tokens each. That's what I'd want to see before merging anything an agent wrote. /
 >
 > Agents can write the code. Receipts makes them show their work.
 
-What changed from revision 2, and why: first person and contractions, because it is one person explaining their own project; "tasks it had never seen" became "picked by a rule I wrote down before running anything", because we can show nobody looked at the tasks during development but cannot show the model never saw them in training; the slogans ("Do not take our word for it", "impossible to fool", "for every maintainer who...") became plain sentences; the numbers are the reported ones (`REPORT-v2.md`); "I" assumes a solo entry, so say "we" throughout if the team has more people.
+### How to say it (borrowed from the winners, fitted to this narrator)
+
+- The first two sentences, "Rejected. The spec still fails.", and the last two sentences are the anchors: say them slowest.
+- "They didn't." is dry, almost a shrug. Don't dramatize it.
+- Numbers flat and exact: "twelve", "sixty-six", "zero". Let the number do the work.
+- "I got this wrong first" is said plainly, not apologetically. It's the moment judges start trusting you.
+- The last line slower than everything else, with a full stop after "code".
+- Record in one take with a phone voice memo; if you stumble, pause, and restart the sentence. I'll cut the stumbles.
+
+What changed in revision 4 (kept in revision 5), and why: first person and contractions, because it is one person explaining their own project; "tasks it had never seen" became "picked by a rule I wrote down before running anything", because we can show nobody looked at the tasks during development but cannot show the model never saw them in training; the slogans ("Do not take our word for it", "impossible to fool", "for every maintainer who...") became plain sentences; the numbers are the reported ones (`REPORT-v2.md`); "I" assumes a solo entry, so say "we" throughout if the team has more people.
 
 The shot list below still holds for the picture; its narration column is revision 2 and is superseded by the text above.
 
