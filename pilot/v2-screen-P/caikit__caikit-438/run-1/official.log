@@ -1,0 +1,999 @@
+============================= test session starts ==============================
+collected 202 items
+
+tests/core/data_model/test_dataobject.py .............s................. [ 15%]
+........................................................................ [ 50%]
+..............................F.                                         [ 66%]
+tests/core/test_model_manager.py ....................................... [ 86%]
+.                                                                        [ 86%]
+tests/runtime/test_http_server.py ................F..........            [100%]
+
+=================================== FAILURES ===================================
+/caikit/tests/core/data_model/test_dataobject.py:1142: assert 'test_dataobj...s>.Foo(foo=1)' == '{\n  "foo": 1\n}'
+/usr/local/lib/python3.10/json/decoder.py:355: json.decoder.JSONDecodeError: Expecting value: line 1 column 2 (char 1)
+=============================== warnings summary ===============================
+tests/core/data_model/test_dataobject.py::test_render_dataobject_protos_valid_dir
+tests/core/data_model/test_dataobject.py::test_render_dataobject_protos_no_dir
+  /usr/local/lib/python3.10/site-packages/py_to_proto/descriptor_to_file.py:87: RuntimeWarning: descriptor.syntax is deprecated. It will be removed soon. Most usages are checking field descriptors. Consider to use has_presence, is_packed on field descriptors.
+    proto_file_lines.append(f'syntax = "{descriptor.syntax}";')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+__________________________ test_dataobject_with_oneof __________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "SCHEMA", "exception": null, "level": "error", "log_code": "<COR09282193E>", "message": "exception raised: TypeError('Received conflicting oneof args/kwargs for data_stream/foo')", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:35.986548"}
+{"channel": "SCHEMA", "exception": null, "level": "error", "log_code": "<COR59933157E>", "message": "exception raised: TypeError('Received multiple keyword arguments for oneof data_stream')", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:35.986789"}
+{"channel": "SCHEMA", "exception": null, "level": "error", "log_code": "<COR59933157E>", "message": "exception raised: TypeError('Received multiple keyword arguments for oneof data_stream')", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:35.986914"}
+------------------------------ Captured log call -------------------------------
+ERROR    SCHEMA:error_handler.py:80 {'log_code': '<COR09282193E>', 'message': "exception raised: TypeError('Received conflicting oneof args/kwargs for data_stream/foo')", 'args': None}
+ERROR    SCHEMA:error_handler.py:80 {'log_code': '<COR59933157E>', 'message': "exception raised: TypeError('Received multiple keyword arguments for oneof data_stream')", 'args': None}
+ERROR    SCHEMA:error_handler.py:80 {'log_code': '<COR59933157E>', 'message': "exception raised: TypeError('Received multiple keyword arguments for oneof data_stream')", 'args': None}
+______________________ test_dataobject_invocation_flavors ______________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "SCHEMA", "exception": null, "level": "error", "log_code": "<COR95184230E>", "message": "exception raised: ValueError('value check failed: Foo4 must inherit from DataObjectBase/Enum when using @dataobject')", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.007357"}
+------------------------------ Captured log call -------------------------------
+ERROR    SCHEMA:error_handler.py:80 {'log_code': '<COR95184230E>', 'message': "exception raised: ValueError('value check failed: Foo4 must inherit from DataObjectBase/Enum when using @dataobject')", 'args': None}
+_________________ TestModelManager.test_load_invalid_zip_file __________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "MDLMNG", "exception": null, "level": "error", "log_code": "<COR84410081E>", "message": "exception raised: FileNotFoundError('Unable to locate archive config within top two levels of /caikit/tests/fixtures/invalid.zip')", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.287388"}
+------------------------------ Captured log call -------------------------------
+ERROR    MDLMNG:error_handler.py:80 {'log_code': '<COR84410081E>', 'message': "exception raised: FileNotFoundError('Unable to locate archive config within top two levels of /caikit/tests/fixtures/invalid.zip')", 'args': None}
+______________ TestModelManager.test_load_model_with_no_module_id ______________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "MODULE_CFG", "exception": null, "level": "warning", "message": "No module_id found in config. Re-save the model to use module_id.", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.316544"}
+------------------------------ Captured log call -------------------------------
+WARNING  MODULE_CFG:config.py:66 No module_id found in config. Re-save the model to use module_id.
+________________ TestModelManager.test_load_raises_on_bad_paths ________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "MDLMNG", "exception": null, "level": "error", "log_code": "<COR80419785E>", "message": "exception raised: FileNotFoundError('Module load path `bad/path/to/model` does not contain a `config.yml` file.')", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.333054"}
+------------------------------ Captured log call -------------------------------
+ERROR    MDLMNG:error_handler.py:80 {'log_code': '<COR80419785E>', 'message': "exception raised: FileNotFoundError('Module load path `bad/path/to/model` does not contain a `config.yml` file.')", 'args': None}
+_ TestModelManager.test_resolve_and_load_rejects_things_that_are_not_strings_or_modules _
+----------------------------- Captured stderr call -----------------------------
+{"channel": "MDLMNG", "exception": null, "level": "error", "log_code": "<COR50266694E>", "message": "exception raised: TypeError(\"type check failed: variable `path_or_name_or_model_reference` has type `int` (fully qualified name `builtins.int`) not in `('str', 'ModuleBase')`\")", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.337531"}
+{"channel": "MDLMNG", "exception": null, "level": "error", "log_code": "<COR50266694E>", "message": "exception raised: TypeError(\"type check failed: variable `path_or_name_or_model_reference` has type `list` (fully qualified name `builtins.list`) not in `('str', 'ModuleBase')`\")", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.337683"}
+{"channel": "MDLMNG", "exception": null, "level": "error", "log_code": "<COR50266694E>", "message": "exception raised: TypeError(\"type check failed: variable `path_or_name_or_model_reference` has type `dict` (fully qualified name `builtins.dict`) not in `('str', 'ModuleBase')`\")", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.337804"}
+------------------------------ Captured log call -------------------------------
+ERROR    MDLMNG:error_handler.py:80 {'log_code': '<COR50266694E>', 'message': 'exception raised: TypeError("type check failed: variable `path_or_name_or_model_reference` has type `int` (fully qualified name `builtins.int`) not in `(\'str\', \'ModuleBase\')`")', 'args': None}
+ERROR    MDLMNG:error_handler.py:80 {'log_code': '<COR50266694E>', 'message': 'exception raised: TypeError("type check failed: variable `path_or_name_or_model_reference` has type `list` (fully qualified name `builtins.list`) not in `(\'str\', \'ModuleBase\')`")', 'args': None}
+ERROR    MDLMNG:error_handler.py:80 {'log_code': '<COR50266694E>', 'message': 'exception raised: TypeError("type check failed: variable `path_or_name_or_model_reference` has type `dict` (fully qualified name `builtins.dict`) not in `(\'str\', \'ModuleBase\')`")', 'args': None}
+________________ test_backend_supported_model_load_successfully ________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.345921"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.346563"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+______________________ test_local_model_load_successfully ______________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.356972"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.357505"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+_________________ test_local_model_loaded_backend_successfully _________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.368325"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.368847"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+____________________ test_backend_model_loaded_as_singleton ____________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.378970"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.379523"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+_____________________ test_singleton_cache_can_be_cleared ______________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.389785"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.390318"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+_________________ test_singleton_cache_with_different_backend __________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.392564"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.393056"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+___________________ test_load_fails_on_no_supported_backend ____________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.408360"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.408908"}
+{"channel": "MDLMNG", "exception": null, "level": "error", "log_code": "<COR50207494E>", "message": "exception raised: ValueError('value check failed: Unable to load model from /tmp/tmp7ktxnkto with MODULE_ID non-distributed')", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.418431"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+ERROR    MDLMNG:error_handler.py:80 {'log_code': '<COR50207494E>', 'message': "exception raised: ValueError('value check failed: Unable to load model from /tmp/tmp7ktxnkto with MODULE_ID non-distributed')", 'args': None}
+________________________ test_preferred_backend_enabled ________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.420737"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.421268"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+__________ test_module_backend_instance_is_passed_to_load_classmethod __________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.431416"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+_______________________ test_preferred_backend_disabled ________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.434497"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.434992"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+_______________________ test_non_local_supported_backend _______________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.444932"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.445448"}
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.445913"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+WARNING  WIPDC:wip_decorator.py:211 <function register_backend_type at 0x7fffea549d80> is still in the BETA phase and subject to change!
+_________________________ test_load_must_return_model __________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "SIG-PARSING", "exception": null, "level": "warning", "message": "Could not deduct output type from function train for module class _FunkyModel.", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.456403"}
+{"channel": "LLOAD", "exception": null, "level": "error", "log_code": "<COR40080753E>", "message": "exception raised: TypeError(\"type check failed: variable `model` has type `tuple` (fully qualified name `builtins.tuple`) not in `('ModuleBase',)`\")", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.459439"}
+------------------------------ Captured log call -------------------------------
+WARNING  SIG-PARSING:parsers.py:71 Could not deduct output type from function train for module class _FunkyModel.
+ERROR    LLOAD:error_handler.py:80 {'log_code': '<COR40080753E>', 'message': 'exception raised: TypeError("type check failed: variable `model` has type `tuple` (fully qualified name `builtins.tuple`) not in `(\'ModuleBase\',)`")', 'args': None}
+_____________________________ test_insecure_server _____________________________
+---------------------------- Captured stderr setup -----------------------------
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.563213"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.563407"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.563503"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.563587"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.563671"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.567688"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.567837"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.567931"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.568005"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.568081"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183426I>", "message": "Enabling HTTP inference service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.577169"}
+{"channel": "MODEL-MANAGR", "exception": null, "level": "warning", "log_code": "<RUN53709826W>", "message": "Invalid runtime.local_models_dir models. Does not exist", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.577445"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773776I>", "message": "Metering is disabled, to enable set `metering.enabled` in config to true", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.577550"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.577765"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.577868"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.577952"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.578025"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.578106"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773778I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.578292"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed inference service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.578587"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingSampleTaskPredict with input type .BidiStreamingSampleTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.605728"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingGeoSpatialTaskPredict with input type .BidiStreamingGeoSpatialTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.610143"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183427I>", "message": "Enabling HTTP training service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.610297"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.610598"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.610741"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.610832"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.610916"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611002"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611211"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611298"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611375"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611444"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611516"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611626"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611794"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611894"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.611989"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.612088"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773777I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.612190"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed train service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.612487"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [9]", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:36.677568"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:36.677890"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:36.678091"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:36.678545"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "HTTP Server is running in thread", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.679116"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:41558 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:36.686275"}
+----------------------------- Captured stderr call -----------------------------
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:41584 - \"GET /docs HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:36.698311"}
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.access:httptools_impl.py:483 127.0.0.1:41584 - "GET /docs HTTP/1.1" 200
+____________________________ test_basic_tls_server _____________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.803808"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.804053"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.804151"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.804276"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.804371"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.808235"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.808380"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.808475"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.808557"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.808637"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183426I>", "message": "Enabling HTTP inference service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.815216"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773776I>", "message": "Metering is disabled, to enable set `metering.enabled` in config to true", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.815375"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.815592"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.815691"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.815774"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.815851"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.815928"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773778I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.816107"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed inference service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.816462"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingSampleTaskPredict with input type .BidiStreamingSampleTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.821299"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingGeoSpatialTaskPredict with input type .BidiStreamingGeoSpatialTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.825018"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183427I>", "message": "Enabling HTTP training service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.825141"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.825390"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.825491"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.825575"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.825657"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.825747"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.825952"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826041"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826120"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826191"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826274"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826379"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826548"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826650"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826750"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826848"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773777I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.826948"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed train service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.827278"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN10001905I>", "message": "Running with TLS", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.845205"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [9]", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:36.851061"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:36.851253"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:36.851450"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on https://0.0.0.0:8889 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:36.851669"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "HTTP Server is running in thread", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:36.852794"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38438 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:36.858724"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38442 - \"GET /docs HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:36.862302"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:36.952912"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for connections to close. (CTRL+C to force quit)", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:37.053713"}
+{"channel": "uvicorn.error", "exception": null, "level": "error", "message": "Cancel 0 running task(s), timeout graceful shutdown exceeded", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:37.063300"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:37.063515"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:37.063690"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [9]", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:37.063826"}
+____________________ test_basic_tls_server_with_wrong_cert _____________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.181906"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.182172"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.182281"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.182369"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.182462"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.186397"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.186558"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.186653"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.186734"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.186816"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183426I>", "message": "Enabling HTTP inference service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.193023"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773776I>", "message": "Metering is disabled, to enable set `metering.enabled` in config to true", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.193211"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.193438"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.193537"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.193620"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.193699"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.193777"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773778I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.193975"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed inference service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.194330"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingSampleTaskPredict with input type .BidiStreamingSampleTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.199058"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingGeoSpatialTaskPredict with input type .BidiStreamingGeoSpatialTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.202701"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183427I>", "message": "Enabling HTTP training service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.202830"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203059"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203156"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203242"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203327"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203413"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203619"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203713"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203805"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203879"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.203953"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.204061"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.204235"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.204347"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.204445"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.204545"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773777I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.204646"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed train service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.204908"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN10001905I>", "message": "Running with TLS", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.222099"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.223747"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.223872"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.224035"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on https://0.0.0.0:8889 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.224252"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "HTTP Server is running in thread", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.224880"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38474 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.229343"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.324668"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.425444"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.425912"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.426044"}
+____________________________ test_mutual_tls_server ____________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.612135"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.612551"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.612653"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.612741"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.612838"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.618310"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.618483"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.618579"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.618666"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.618746"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183426I>", "message": "Enabling HTTP inference service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.662955"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773776I>", "message": "Metering is disabled, to enable set `metering.enabled` in config to true", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.663327"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.663621"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.663738"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.663830"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.663914"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.663995"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773778I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.664200"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed inference service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.664541"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingSampleTaskPredict with input type .BidiStreamingSampleTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.669154"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingGeoSpatialTaskPredict with input type .BidiStreamingGeoSpatialTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.672808"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183427I>", "message": "Enabling HTTP training service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.672954"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.673210"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.673314"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.673398"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.673477"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.673562"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.673768"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.673868"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.673946"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.674015"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.674087"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.674200"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.674363"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.674464"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.674567"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.674664"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773777I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.674761"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed train service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.675027"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN10001905I>", "message": "Running with TLS", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.692394"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN10001809I>", "message": "Running with mutual TLS", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.692630"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.694608"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.694809"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.695011"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on https://0.0.0.0:8889 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.695255"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "HTTP Server is running in thread", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:37.695824"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38496 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.702361"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38506 - \"GET /docs HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.707416"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.795885"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for connections to close. (CTRL+C to force quit)", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.896852"}
+{"channel": "uvicorn.error", "exception": null, "level": "error", "message": "Cancel 0 running task(s), timeout graceful shutdown exceeded", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.906462"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.906656"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.906838"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:37.906961"}
+____________________ test_mutual_tls_server_with_wrong_cert ____________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.051467"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.051754"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.051858"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.051949"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.052042"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.055964"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.056108"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.056211"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.056294"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.056378"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183426I>", "message": "Enabling HTTP inference service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.062637"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773776I>", "message": "Metering is disabled, to enable set `metering.enabled` in config to true", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.062825"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.063043"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.063144"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.063239"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.063323"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.063405"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773778I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.063588"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed inference service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.063964"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingSampleTaskPredict with input type .BidiStreamingSampleTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.068707"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingGeoSpatialTaskPredict with input type .BidiStreamingGeoSpatialTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.073607"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183427I>", "message": "Enabling HTTP training service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.073748"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.073988"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074094"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074191"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074275"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074366"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074573"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074664"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074745"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074818"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.074892"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.075003"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.075180"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.075294"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.075396"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.075497"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773777I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.075600"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed train service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.075875"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN10001905I>", "message": "Running with TLS", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.093005"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN10001809I>", "message": "Running with mutual TLS", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.093237"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.095235"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.095437"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.095641"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on https://0.0.0.0:8889 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.095873"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "HTTP Server is running in thread", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.096444"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38536 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.103247"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.196335"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.297227"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.297678"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.297805"}
+__________________ test_services_disabled[enabled_services0] ___________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.320884"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.321114"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.321230"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.321323"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.321423"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183426I>", "message": "Enabling HTTP inference service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.325563"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773776I>", "message": "Metering is disabled, to enable set `metering.enabled` in config to true", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.325700"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.325918"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.326017"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.326102"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.326195"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.326277"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773778I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.326463"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed inference service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.326814"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingSampleTaskPredict with input type .BidiStreamingSampleTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.331793"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingGeoSpatialTaskPredict with input type .BidiStreamingGeoSpatialTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.335551"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [9]", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.336446"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.336585"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.336771"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on http://0.0.0.0:8889 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.336963"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "HTTP Server is running in thread", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.337575"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38564 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.339974"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38566 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.341879"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.437290"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.538301"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.538826"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [9]", "num_indent": 0, "thread_id": 140736943089344, "timestamp": "2026-10-03T00:35:38.538975"}
+__________________ test_services_disabled[enabled_services1] ___________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.560884"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.561084"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.561191"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.561280"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.561377"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183427I>", "message": "Enabling HTTP training service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.568105"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.568427"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.568539"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.568629"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.568714"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.568803"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569012"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569101"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569185"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.nlp", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569259"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: tests", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569335"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569449"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569618"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569720"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569820"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.569925"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773777I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.570028"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed train service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.570379"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.590056"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.590384"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.590612"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on http://0.0.0.0:8889 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.590867"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "HTTP Server is running in thread", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.591290"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38596 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.593940"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38604 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.596052"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.691480"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.792339"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.792765"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.792918"}
+__________________ test_services_disabled[enabled_services2] ___________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.816645"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.816854"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.817049"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on http://0.0.0.0:8889 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.817281"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "HTTP Server is running in thread", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:38.817844"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38620 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.820538"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:38634 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.822599"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:38.918234"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.018952"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.019280"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [9]", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.019430"}
+__________________________________ test_docs ___________________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: GET http://testserver/docs \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.029234"}
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/docs "HTTP/1.1 200 OK"
+_____________________ test_docs_using_running_http_server ______________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:41644 - \"GET /docs HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:39.032889"}
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.access:httptools_impl.py:483 127.0.0.1:41644 - "GET /docs HTTP/1.1" 200
+__________________________ test_inference_sample_task __________________________
+---------------------------- Captured stderr setup -----------------------------
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89711114I>", "message": "Loading model 'test-any-model-0d7147ff-d129-4f4d-8200-9d7df4ef120e'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.034907"}
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89713784I>", "message": "Singleton cache: '{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.036543"}
+------------------------------ Captured log setup ------------------------------
+INFO     MODEL-LOADER:model_loader.py:114 {'log_code': '<RUN89711114I>', 'message': "Loading model '%s'", 'args': ('test-any-model-0d7147ff-d129-4f4d-8200-9d7df4ef120e',)}
+INFO     MODEL-LOADER:model_loader.py:152 {'log_code': '<RUN89713784I>', 'message': "Singleton cache: '%s'", 'args': ("{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}",)}
+----------------------------- Captured stderr call -----------------------------
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/test-any-model-0d7147ff-d129-4f4d-8200-9d7df4ef120e/task/sample \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.041443"}
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/test-any-model-0d7147ff-d129-4f4d-8200-9d7df4ef120e/task/sample "HTTP/1.1 200 OK"
+__________________ test_inference_sample_task_optional_field ___________________
+---------------------------- Captured stderr setup -----------------------------
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89711114I>", "message": "Loading model 'test-any-model-72a52dcd-4bdc-4992-b029-980dfb215258'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.087744"}
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89713784I>", "message": "Singleton cache: '{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.089252"}
+------------------------------ Captured log setup ------------------------------
+INFO     MODEL-LOADER:model_loader.py:114 {'log_code': '<RUN89711114I>', 'message': "Loading model '%s'", 'args': ('test-any-model-72a52dcd-4bdc-4992-b029-980dfb215258',)}
+INFO     MODEL-LOADER:model_loader.py:152 {'log_code': '<RUN89713784I>', 'message': "Singleton cache: '%s'", 'args': ("{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}",)}
+----------------------------- Captured stderr call -----------------------------
+{"channel": "GP-SERVICR-I", "exception": null, "level": "warning", "log_code": "<RUN49049070W>", "message": "RuntimeError('barf!')", "model_id": "test-any-model-72a52dcd-4bdc-4992-b029-980dfb215258", "num_indent": 0, "stack_trace": "Traceback (most recent call last):\n  File \"/caikit/caikit/runtime/servicers/global_predict_servicer.py\", line 283, in _handle_predict_exceptions\n    yield\n  File \"/caikit/caikit/runtime/servicers/global_predict_servicer.py\", line 262, in predict_model\n    response = model_run_fn(**kwargs)\n  File \"/caikit/tests/fixtures/sample_lib/modules/sample_task/sample_implementation.py\", line 52, in run\n    raise RuntimeError(\"barf!\")\nRuntimeError: barf!\n", "thread_id": 140736915814080, "timestamp": "2026-10-03T00:35:39.093781"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/test-any-model-72a52dcd-4bdc-4992-b029-980dfb215258/task/sample \"HTTP/1.1 500 Internal Server Error\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.094559"}
+------------------------------ Captured log call -------------------------------
+WARNING  GP-SERVICR-I:global_predict_servicer.py:325 {'log_code': '<RUN49049070W>', 'message': "RuntimeError('barf!')", 'model_id': 'test-any-model-72a52dcd-4bdc-4992-b029-980dfb215258', 'stack_trace': 'Traceback (most recent call last):\n  File "/caikit/caikit/runtime/servicers/global_predict_servicer.py", line 283, in _handle_predict_exceptions\n    yield\n  File "/caikit/caikit/runtime/servicers/global_predict_servicer.py", line 262, in predict_model\n    response = model_run_fn(**kwargs)\n  File "/caikit/tests/fixtures/sample_lib/modules/sample_task/sample_implementation.py", line 52, in run\n    raise RuntimeError("barf!")\nRuntimeError: barf!\n'}
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/test-any-model-72a52dcd-4bdc-4992-b029-980dfb215258/task/sample "HTTP/1.1 500 Internal Server Error"
+__________________________ test_inference_other_task ___________________________
+---------------------------- Captured stderr setup -----------------------------
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89711114I>", "message": "Loading model 'test-any-model-234dd517-6e0e-486b-b1cc-3031bb1b9a01'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.131636"}
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89713784I>", "message": "Singleton cache: '{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.133392"}
+------------------------------ Captured log setup ------------------------------
+INFO     MODEL-LOADER:model_loader.py:114 {'log_code': '<RUN89711114I>', 'message': "Loading model '%s'", 'args': ('test-any-model-234dd517-6e0e-486b-b1cc-3031bb1b9a01',)}
+INFO     MODEL-LOADER:model_loader.py:152 {'log_code': '<RUN89713784I>', 'message': "Singleton cache: '%s'", 'args': ("{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}",)}
+----------------------------- Captured stderr call -----------------------------
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/test-any-model-234dd517-6e0e-486b-b1cc-3031bb1b9a01/task/other \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.138057"}
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/test-any-model-234dd517-6e0e-486b-b1cc-3031bb1b9a01/task/other "HTTP/1.1 200 OK"
+____________ test_inference_other_task_request_throws_missing_field ____________
+---------------------------- Captured stderr setup -----------------------------
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89711114I>", "message": "Loading model 'test-any-model-5dbd1355-1007-4e78-a8b3-83a096ac978a'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.172050"}
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89713784I>", "message": "Singleton cache: '{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.173481"}
+------------------------------ Captured log setup ------------------------------
+INFO     MODEL-LOADER:model_loader.py:114 {'log_code': '<RUN89711114I>', 'message': "Loading model '%s'", 'args': ('test-any-model-5dbd1355-1007-4e78-a8b3-83a096ac978a',)}
+INFO     MODEL-LOADER:model_loader.py:152 {'log_code': '<RUN89713784I>', 'message': "Singleton cache: '%s'", 'args': ("{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}",)}
+----------------------------- Captured stderr call -----------------------------
+{"channel": "GP-SERVICR-I", "exception": null, "level": "warning", "log_code": "<RUN490439039W>", "message": "TypeError(\"OtherModule.run() missing 1 required positional argument: 'sample_input'\")", "model_id": "test-any-model-5dbd1355-1007-4e78-a8b3-83a096ac978a", "num_indent": 0, "stack_trace": "Traceback (most recent call last):\n  File \"/caikit/caikit/runtime/servicers/global_predict_servicer.py\", line 283, in _handle_predict_exceptions\n    yield\n  File \"/caikit/caikit/runtime/servicers/global_predict_servicer.py\", line 262, in predict_model\n    response = model_run_fn(**kwargs)\nTypeError: OtherModule.run() missing 1 required positional argument: 'sample_input'\n", "thread_id": 140736915814080, "timestamp": "2026-10-03T00:35:39.176851"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/test-any-model-5dbd1355-1007-4e78-a8b3-83a096ac978a/task/other \"HTTP/1.1 400 Bad Request\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.177662"}
+------------------------------ Captured log call -------------------------------
+WARNING  GP-SERVICR-I:global_predict_servicer.py:307 {'log_code': '<RUN490439039W>', 'message': 'TypeError("OtherModule.run() missing 1 required positional argument: \'sample_input\'")', 'model_id': 'test-any-model-5dbd1355-1007-4e78-a8b3-83a096ac978a', 'stack_trace': 'Traceback (most recent call last):\n  File "/caikit/caikit/runtime/servicers/global_predict_servicer.py", line 283, in _handle_predict_exceptions\n    yield\n  File "/caikit/caikit/runtime/servicers/global_predict_servicer.py", line 262, in predict_model\n    response = model_run_fn(**kwargs)\nTypeError: OtherModule.run() missing 1 required positional argument: \'sample_input\'\n'}
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/test-any-model-5dbd1355-1007-4e78-a8b3-83a096ac978a/task/other "HTTP/1.1 400 Bad Request"
+________ test_inference_other_task_response_throws_missing_producer_id _________
+---------------------------- Captured stderr setup -----------------------------
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89711114I>", "message": "Loading model 'test-any-model-05f7bd8e-9fc0-4bae-9d31-92ab1caae17d'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.210492"}
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89713784I>", "message": "Singleton cache: '{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.211939"}
+------------------------------ Captured log setup ------------------------------
+INFO     MODEL-LOADER:model_loader.py:114 {'log_code': '<RUN89711114I>', 'message': "Loading model '%s'", 'args': ('test-any-model-05f7bd8e-9fc0-4bae-9d31-92ab1caae17d',)}
+INFO     MODEL-LOADER:model_loader.py:152 {'log_code': '<RUN89713784I>', 'message': "Singleton cache: '%s'", 'args': ("{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}",)}
+----------------------------- Captured stderr call -----------------------------
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/test-any-model-05f7bd8e-9fc0-4bae-9d31-92ab1caae17d/task/other \"HTTP/1.1 500 Internal Server Error\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.215756"}
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/test-any-model-05f7bd8e-9fc0-4bae-9d31-92ab1caae17d/task/other "HTTP/1.1 500 Internal Server Error"
+___________ test_inference_other_task_request_throws_incorrect_field ___________
+---------------------------- Captured stderr setup -----------------------------
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89711114I>", "message": "Loading model 'test-any-model-b65b37a0-ae0a-4d29-a22a-dd99e85a2ebb'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.248471"}
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89713784I>", "message": "Singleton cache: '{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.249898"}
+------------------------------ Captured log setup ------------------------------
+INFO     MODEL-LOADER:model_loader.py:114 {'log_code': '<RUN89711114I>', 'message': "Loading model '%s'", 'args': ('test-any-model-b65b37a0-ae0a-4d29-a22a-dd99e85a2ebb',)}
+INFO     MODEL-LOADER:model_loader.py:152 {'log_code': '<RUN89713784I>', 'message': "Singleton cache: '%s'", 'args': ("{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}",)}
+----------------------------- Captured stderr call -----------------------------
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/test-any-model-b65b37a0-ae0a-4d29-a22a-dd99e85a2ebb/task/other \"HTTP/1.1 422 Unprocessable Entity\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.253063"}
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/test-any-model-b65b37a0-ae0a-4d29-a22a-dd99e85a2ebb/task/other "HTTP/1.1 422 Unprocessable Entity"
+_____________________________ test_model_not_found _____________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/this_is_not_a_model/task/sample \"HTTP/1.1 404 Not Found\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.329566"}
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/this_is_not_a_model/task/sample "HTTP/1.1 404 Not Found"
+______________ test_inference_sample_task_throws_incorrect_input _______________
+---------------------------- Captured stderr setup -----------------------------
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89711114I>", "message": "Loading model 'test-any-model-c19da2a1-2718-430f-b8d6-bfabe5b34266'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.331883"}
+{"channel": "MODEL-LOADER", "exception": null, "level": "info", "log_code": "<RUN89713784I>", "message": "Singleton cache: '{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}'", "num_indent": 0, "thread_id": 140736934696640, "timestamp": "2026-10-03T00:35:39.333427"}
+------------------------------ Captured log setup ------------------------------
+INFO     MODEL-LOADER:model_loader.py:114 {'log_code': '<RUN89711114I>', 'message': "Loading model '%s'", 'args': ('test-any-model-c19da2a1-2718-430f-b8d6-bfabe5b34266',)}
+INFO     MODEL-LOADER:model_loader.py:152 {'log_code': '<RUN89713784I>', 'message': "Singleton cache: '%s'", 'args': ("{'tests/fixtures/dummy_module_backend': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>, 'tests/fixtures/dummy_module_foo': <class 'tests.core.test_model_manager.setup_saved_model.<locals>.DummyBar'>}",)}
+----------------------------- Captured stderr call -----------------------------
+{"channel": "GP-SERVICR-I", "exception": null, "level": "warning", "log_code": "<RUN490439039W>", "message": "TypeError(\"SampleModule.run() missing 1 required positional argument: 'sample_input'\")", "model_id": "test-any-model-c19da2a1-2718-430f-b8d6-bfabe5b34266", "num_indent": 0, "stack_trace": "Traceback (most recent call last):\n  File \"/caikit/caikit/runtime/servicers/global_predict_servicer.py\", line 283, in _handle_predict_exceptions\n    yield\n  File \"/caikit/caikit/runtime/servicers/global_predict_servicer.py\", line 262, in predict_model\n    response = model_run_fn(**kwargs)\nTypeError: SampleModule.run() missing 1 required positional argument: 'sample_input'\n", "thread_id": 140736924206784, "timestamp": "2026-10-03T00:35:39.336211"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/test-any-model-c19da2a1-2718-430f-b8d6-bfabe5b34266/task/sample \"HTTP/1.1 400 Bad Request\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.336965"}
+------------------------------ Captured log call -------------------------------
+WARNING  GP-SERVICR-I:global_predict_servicer.py:307 {'log_code': '<RUN490439039W>', 'message': 'TypeError("SampleModule.run() missing 1 required positional argument: \'sample_input\'")', 'model_id': 'test-any-model-c19da2a1-2718-430f-b8d6-bfabe5b34266', 'stack_trace': 'Traceback (most recent call last):\n  File "/caikit/caikit/runtime/servicers/global_predict_servicer.py", line 283, in _handle_predict_exceptions\n    yield\n  File "/caikit/caikit/runtime/servicers/global_predict_servicer.py", line 262, in predict_model\n    response = model_run_fn(**kwargs)\nTypeError: SampleModule.run() missing 1 required positional argument: \'sample_input\'\n'}
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/test-any-model-c19da2a1-2718-430f-b8d6-bfabe5b34266/task/sample "HTTP/1.1 400 Bad Request"
+_____________________________ test_health_check_ok _____________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: GET http://testserver/health \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.376402"}
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
+__________________ test_http_server_shutdown_with_model_poll ___________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.859506"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.878805"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.878928"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.882679"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.882801"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.882888"}
+{"channel": "SERVR-BASE", "exception": null, "level": "info", "message": "Serving prometheus metrics on port 8086", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.891737"}
+{"channel": "SERVR-BASE", "duration": 0.00161, "exception": null, "level": "info", "message": "Booted metrics server in 0:00:00.001610", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.893531"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183426I>", "message": "Enabling HTTP inference service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.893668"}
+{"channel": "MODEL-MANAGR", "exception": null, "level": "info", "log_code": "<RUN44739400I>", "message": "Loading local models into Caikit Runtime...", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.893848"}
+{"channel": "MODEL-MANAGR", "exception": null, "level": "info", "message": "Initializing local_models_dir sync with period 0.1", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.894091"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773776I>", "message": "Metering is disabled, to enable set `metering.enabled` in config to true", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.894455"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.894616"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.894701"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.894779"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773778I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.894952"}
+{"channel": "GP-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed inference service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.895273"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingSampleTaskPredict with input type .BidiStreamingSampleTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.915708"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "message": "No support for input streaming on REST Server yet! Skipping this rpc BidiStreamingGeoSpatialTaskPredict with input type .BidiStreamingGeoSpatialTaskRequest", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.920241"}
+{"channel": "SERVR-HTTP", "exception": null, "level": "info", "log_code": "<RUN77183427I>", "message": "Enabling HTTP training service", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.920341"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.920535"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.920626"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.920699"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: sample_lib", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.920861"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.common", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.920938"}
+{"channel": "COM-LIB-INIT", "exception": null, "level": "info", "log_code": "<RUN11997772I>", "message": "Loading service module: caikit.interfaces.runtime", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.921007"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.921111"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.921228"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.921360"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.921447"}
+{"channel": "SERVICR-UTIL", "exception": null, "level": "warning", "log_code": "<RUN24024050W>", "message": "No Caikit Library CDM class for S3Path", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.921542"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76773777I>", "message": "Validated Caikit Library CDM successfully", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.921629"}
+{"channel": "GT-SERVICR-I", "exception": null, "level": "info", "log_code": "<RUN76884779I>", "message": "Constructed train service for library: sample_lib, version: unknown", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.921889"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Started server process [69]", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.963708"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application startup.", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.963834"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application startup complete.", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.964002"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Uvicorn running on http://0.0.0.0:8889 (Press CTRL+C to quit)", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.964346"}
+{"channel": "uvicorn.access", "exception": null, "level": "info", "message": "127.0.0.1:44836 - \"GET /health HTTP/1.1\" 200", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:39.971309"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.064500"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.165368"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.165813"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [69]", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.165955"}
+{"channel": "SERVR-BASE", "exception": null, "level": "info", "log_code": "<RUN87630120I>", "message": "Caikit Runtime received interrupt signal 2, shutting down", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.166117"}
+____________________________ test_train_sample_task ____________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<class 'caikit.interfaces.runtime.data_model.training_management.TrainingJob'> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140736915814080, "timestamp": "2026-10-03T00:35:40.233401"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/SampleTaskSampleModuleTrain \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.234355"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/sample_task_train/task/sample \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.236050"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <class 'caikit.interfaces.runtime.data_model.training_management.TrainingJob'> is still in the BETA phase and subject to change!
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/SampleTaskSampleModuleTrain "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/sample_task_train/task/sample "HTTP/1.1 200 OK"
+_________________ test_train_sample_task_throws_s3_value_error _________________
+----------------------------- Captured stderr call -----------------------------
+--- Logging error ---
+Traceback (most recent call last):
+  File "/caikit/caikit/runtime/http_server.py", line 382, in _handler
+    return await loop.run_in_executor(None, call)
+  File "/usr/local/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/caikit/caikit/runtime/servicers/global_train_servicer.py", line 221, in run_training_job
+    model_future = MODEL_MANAGER.train(**kwargs)
+  File "/caikit/caikit/core/model_manager.py", line 156, in train
+    model_future = trainer.train(
+  File "/caikit/caikit/core/model_management/local_model_trainer.py", line 297, in train
+    model_future = self.LocalModelFuture(
+  File "/caikit/caikit/core/model_management/local_model_trainer.py", line 83, in __init__
+    super().__init__(
+  File "/caikit/caikit/core/model_management/model_trainer_base.py", line 71, in __init__
+    raise ValueError("S3 output path not supported by this runtime")
+ValueError: S3 output path not supported by this runtime
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/logging/__init__.py", line 1100, in emit
+    msg = self.format(record)
+  File "/usr/local/lib/python3.10/logging/__init__.py", line 943, in format
+    return fmt.format(record)
+  File "/usr/local/lib/python3.10/site-packages/alog/alog.py", line 201, in format
+    return json.dumps(log_record, sort_keys=True)
+  File "/usr/local/lib/python3.10/json/__init__.py", line 238, in dumps
+    **kw).encode(obj)
+  File "/usr/local/lib/python3.10/json/encoder.py", line 199, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "/usr/local/lib/python3.10/json/encoder.py", line 257, in iterencode
+    return _iterencode(o, 0)
+  File "/usr/local/lib/python3.10/json/encoder.py", line 179, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type ValueError is not JSON serializable
+Call stack:
+  File "/usr/local/lib/python3.10/threading.py", line 973, in _bootstrap
+    self._bootstrap_inner()
+  File "/usr/local/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+    self.run()
+  File "/usr/local/lib/python3.10/threading.py", line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File "/usr/local/lib/python3.10/site-packages/anyio/from_thread.py", line 532, in run_blocking_portal
+    run_eventloop(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_core/_eventloop.py", line 77, in run
+    return async_backend.run(func, args, {}, backend_options)
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2342, in run
+    return runner.run(wrapper())
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 220, in run
+    return self._loop.run_until_complete(task)
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 636, in run_until_complete
+    self.run_forever()
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 603, in run_forever
+    self._run_once()
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 1909, in _run_once
+    handle._run()
+  File "/usr/local/lib/python3.10/asyncio/events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/local/lib/python3.10/site-packages/anyio/from_thread.py", line 259, in _call_func
+    retval = await retval_or_awaitable
+  File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 119, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 105, in app
+    response = await f(request)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 424, in app
+    raw_response = await run_endpoint_function(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 312, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/caikit/caikit/runtime/http_server.py", line 397, in _handler
+    log.error("<RUN51881106E>", err, exc_info=True)
+  File "/usr/local/lib/python3.10/site-packages/alog/alog.py", line 457, in <lambda>
+    lambda self, arg_one, *args, **kwargs: _log_with_code_method_override(
+  File "/usr/local/lib/python3.10/site-packages/alog/alog.py", line 438, in _log_with_code_method_override
+    self.log(
+Message: {'log_code': '<RUN51881106E>', 'message': ValueError('S3 output path not supported by this runtime'), 'args': None}
+Arguments: ()
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/SampleTaskSampleModuleTrain \"HTTP/1.1 500 Internal Server Error\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.253425"}
+------------------------------ Captured log call -------------------------------
+ERROR    SERVR-HTTP:http_server.py:397 {'log_code': '<RUN51881106E>', 'message': ValueError('S3 output path not supported by this runtime'), 'args': None}
+Traceback (most recent call last):
+  File "/caikit/caikit/runtime/http_server.py", line 382, in _handler
+    return await loop.run_in_executor(None, call)
+  File "/usr/local/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/caikit/caikit/runtime/servicers/global_train_servicer.py", line 221, in run_training_job
+    model_future = MODEL_MANAGER.train(**kwargs)
+  File "/caikit/caikit/core/model_manager.py", line 156, in train
+    model_future = trainer.train(
+  File "/caikit/caikit/core/model_management/local_model_trainer.py", line 297, in train
+    model_future = self.LocalModelFuture(
+  File "/caikit/caikit/core/model_management/local_model_trainer.py", line 83, in __init__
+    super().__init__(
+  File "/caikit/caikit/core/model_management/model_trainer_base.py", line 71, in __init__
+    raise ValueError("S3 output path not supported by this runtime")
+ValueError: S3 output path not supported by this runtime
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/SampleTaskSampleModuleTrain "HTTP/1.1 500 Internal Server Error"
+__________________________ test_train_primitive_task ___________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<class 'caikit.interfaces.runtime.data_model.training_management.TrainingJob'> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140736915814080, "timestamp": "2026-10-03T00:35:40.262594"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/SampleTaskSamplePrimitiveModuleTrain \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.263269"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/primitive_task_train/task/sample \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.264813"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <class 'caikit.interfaces.runtime.data_model.training_management.TrainingJob'> is still in the BETA phase and subject to change!
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/SampleTaskSamplePrimitiveModuleTrain "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/primitive_task_train/task/sample "HTTP/1.1 200 OK"
+____________________________ test_train_other_task _____________________________
+----------------------------- Captured stderr call -----------------------------
+{"channel": "WIPDC", "exception": null, "level": "warning", "message": "<class 'caikit.interfaces.runtime.data_model.training_management.TrainingJob'> is still in the BETA phase and subject to change!", "num_indent": 0, "thread_id": 140736924206784, "timestamp": "2026-10-03T00:35:40.273752"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/OtherTaskOtherModuleTrain \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.274456"}
+{"channel": "httpx", "exception": null, "level": "info", "message": "HTTP Request: POST http://testserver/api/v1/other_task_train/task/other \"HTTP/1.1 200 OK\"", "num_indent": 0, "thread_id": 140737353845696, "timestamp": "2026-10-03T00:35:40.275893"}
+------------------------------ Captured log call -------------------------------
+WARNING  WIPDC:wip_decorator.py:211 <class 'caikit.interfaces.runtime.data_model.training_management.TrainingJob'> is still in the BETA phase and subject to change!
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/OtherTaskOtherModuleTrain "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/other_task_train/task/other "HTTP/1.1 200 OK"
+--------------------------- Captured stderr teardown ---------------------------
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Shutting down", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:40.375417"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Waiting for application shutdown.", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:40.476332"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Application shutdown complete.", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:40.476797"}
+{"channel": "uvicorn.error", "exception": null, "level": "info", "message": "Finished server process [9]", "num_indent": 0, "thread_id": 140737064728256, "timestamp": "2026-10-03T00:35:40.476932"}
+---------------------------- Captured log teardown -----------------------------
+INFO     uvicorn.error:server.py:272 Shutting down
+INFO     uvicorn.error:on.py:67 Waiting for application shutdown.
+INFO     uvicorn.error:on.py:76 Application shutdown complete.
+INFO     uvicorn.error:server.py:102 Finished server process [9]
+=========================== short test summary info ============================
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_native_types
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_nested_objects
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_nested_enums
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_top_level_enums
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_arrays
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_simple_dict
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_obj_refs_no_opt_types
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_obj_refs_with_optional_types
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_additional_methods
+PASSED tests/core/data_model/test_dataobject.py::test_render_dataobject_protos_valid_dir
+PASSED tests/core/data_model/test_dataobject.py::test_render_dataobject_protos_no_dir
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_with_oneof
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_with_same_type_of_oneof
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_primitive_oneof_round_trips
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_oneof_from_backend
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_oneof_numeric_type_precedence
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_round_trip_json
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_round_trip_proto
+PASSED tests/core/data_model/test_dataobject.py::test_dir_on_instance
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_invocation_flavors
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_pre_existing_dataclass
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_dataclass_non_default_init
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_dataclass_default_factory
+PASSED tests/core/data_model/test_dataobject.py::test_enum_value_dereference
+PASSED tests/core/data_model/test_dataobject.py::test_np_dtypes
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[0]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[1]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[2]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[3]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[4]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[5]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[6]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[7]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[8]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[9]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[10]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[11]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[12]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[13]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[14]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[15]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[16]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[17]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[18]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[19]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[20]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[21]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[22]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[23]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[24]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[25]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[26]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[27]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[28]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[29]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[30]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[31]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[32]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[33]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[34]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[35]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[36]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[37]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[38]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[39]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[40]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[41]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[42]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[43]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[44]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[45]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[46]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[47]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[48]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[49]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[50]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[51]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[52]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[53]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[54]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[55]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[56]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[57]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[58]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[59]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[60]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[61]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[62]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[63]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[64]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[65]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[66]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[67]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[68]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[69]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[70]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[71]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[72]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[73]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[74]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[75]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[76]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[77]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[78]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[79]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[80]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[81]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[82]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[83]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[84]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[85]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[86]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[87]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[88]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[89]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[90]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[91]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[92]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[93]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[94]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[95]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[96]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[97]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[98]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict[99]
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_jsondict_repeated
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_to_kwargs
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_inheritance
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_union_repeated
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_function_inheritance
+PASSED tests/core/data_model/test_dataobject.py::test_make_dataobject_no_optionals
+PASSED tests/core/data_model/test_dataobject.py::test_make_dataobject_with_optionals
+PASSED tests/core/data_model/test_dataobject.py::test_dataobject_custom_repr
+PASSED tests/core/test_model_manager.py::TestModelManager::test_extract
+PASSED tests/core/test_model_manager.py::TestModelManager::test_import_module_registry
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_can_load_a_module_as_a_singleton
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_can_load_a_module_with_singleton_disabled
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_can_return_a_module
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_invalid_zip_file
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_model_with_artifacts_from_bytes
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_model_with_artifacts_from_file_like
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_model_with_artifacts_from_zip_str
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_model_with_no_module_id
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_model_with_no_nesting
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_path
+PASSED tests/core/test_model_manager.py::TestModelManager::test_load_raises_on_bad_paths
+PASSED tests/core/test_model_manager.py::TestModelManager::test_resolve_and_load_can_load_a_model_from_a_path
+PASSED tests/core/test_model_manager.py::TestModelManager::test_resolve_and_load_rejects_things_that_are_not_strings_or_modules
+PASSED tests/core/test_model_manager.py::TestModelManager::test_resolve_and_load_returns_back_a_model_reference
+PASSED tests/core/test_model_manager.py::TestModelManager::test_singleton_cache_can_be_cleared
+PASSED tests/core/test_model_manager.py::test_backend_supported_model_load_successfully
+PASSED tests/core/test_model_manager.py::test_local_model_load_successfully
+PASSED tests/core/test_model_manager.py::test_local_model_loaded_backend_successfully
+PASSED tests/core/test_model_manager.py::test_backend_model_loaded_as_singleton
+PASSED tests/core/test_model_manager.py::test_singleton_cache_can_be_cleared
+PASSED tests/core/test_model_manager.py::test_singleton_cache_with_different_backend
+PASSED tests/core/test_model_manager.py::test_fall_back_to_local
+PASSED tests/core/test_model_manager.py::test_load_fails_on_no_supported_backend
+PASSED tests/core/test_model_manager.py::test_preferred_backend_enabled
+PASSED tests/core/test_model_manager.py::test_module_backend_instance_is_passed_to_load_classmethod
+PASSED tests/core/test_model_manager.py::test_preferred_backend_disabled
+PASSED tests/core/test_model_manager.py::test_non_local_supported_backend
+PASSED tests/core/test_model_manager.py::test_load_must_return_model
+PASSED tests/core/test_model_manager.py::test_load_with_two_shared_initializers_of_the_same_type
+PASSED tests/core/test_model_manager.py::test_load_does_not_read_config_yml_if_loader_does_not_require_it
+PASSED tests/core/test_model_manager.py::test_load_loader_finder_by_name
+PASSED tests/core/test_model_manager.py::test_load_loader_finder_by_value
+PASSED tests/core/test_model_manager.py::test_initialize_all_components
+PASSED tests/core/test_model_manager.py::test_find_without_on_disk_model
+PASSED tests/core/test_model_manager.py::test_train_by_module_class
+PASSED tests/core/test_model_manager.py::test_train_by_module_id
+PASSED tests/core/test_model_manager.py::test_train_with_wait
+PASSED tests/core/test_model_manager.py::test_train_with_save_path
+PASSED tests/runtime/test_http_server.py::test_insecure_server
+PASSED tests/runtime/test_http_server.py::test_basic_tls_server
+PASSED tests/runtime/test_http_server.py::test_basic_tls_server_with_wrong_cert
+PASSED tests/runtime/test_http_server.py::test_mutual_tls_server
+PASSED tests/runtime/test_http_server.py::test_mutual_tls_server_with_wrong_cert
+PASSED tests/runtime/test_http_server.py::test_services_disabled[enabled_services0]
+PASSED tests/runtime/test_http_server.py::test_services_disabled[enabled_services1]
+PASSED tests/runtime/test_http_server.py::test_services_disabled[enabled_services2]
+PASSED tests/runtime/test_http_server.py::test_docs
+PASSED tests/runtime/test_http_server.py::test_docs_using_running_http_server
+PASSED tests/runtime/test_http_server.py::test_inference_sample_task
+PASSED tests/runtime/test_http_server.py::test_inference_sample_task_optional_field
+PASSED tests/runtime/test_http_server.py::test_inference_other_task
+PASSED tests/runtime/test_http_server.py::test_inference_other_task_request_throws_missing_field
+PASSED tests/runtime/test_http_server.py::test_inference_other_task_response_throws_missing_producer_id
+PASSED tests/runtime/test_http_server.py::test_inference_other_task_request_throws_incorrect_field
+PASSED tests/runtime/test_http_server.py::test_model_not_found
+PASSED tests/runtime/test_http_server.py::test_inference_sample_task_throws_incorrect_input
+PASSED tests/runtime/test_http_server.py::test_health_check_ok
+PASSED tests/runtime/test_http_server.py::test_pydantic_wrapping_with_enums
+PASSED tests/runtime/test_http_server.py::test_pydantic_wrapping_with_lists
+PASSED tests/runtime/test_http_server.py::test_http_server_shutdown_with_model_poll
+PASSED tests/runtime/test_http_server.py::test_train_sample_task
+PASSED tests/runtime/test_http_server.py::test_train_sample_task_throws_s3_value_error
+PASSED tests/runtime/test_http_server.py::test_train_primitive_task
+PASSED tests/runtime/test_http_server.py::test_train_other_task
+SKIPPED [1] tests/core/data_model/test_dataobject.py:485: Currently, we do not have a way to use static BoolSequence in caikit core. See Issue #409
+FAILED tests/core/data_model/test_dataobject.py::test_dataobject_repr_data_base
+FAILED tests/runtime/test_http_server.py::test_inference_streaming_sample_module
+============= 2 failed, 199 passed, 1 skipped, 2 warnings in 4.82s =============

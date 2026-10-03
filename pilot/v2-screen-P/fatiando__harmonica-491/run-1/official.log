@@ -1,0 +1,90 @@
+============================= test session starts ==============================
+collected 53 items
+
+harmonica/tests/test_eq_sources_cartesian.py .F......................... [ 50%]
+........................FF                                               [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: 
+    Not equal to tolerance rtol=1e-07, atol=0.0111806
+    
+    Mismatched elements: 1139 / 1600 (71.2%)
+    Max absolute difference among violations: 0.1263712
+    Max relative difference among violations: 3.07606341
+     ACTUAL: array([[ 6.440338,  6.551781,  6.576848, ..., -6.576848, -6.551781,
+            -6.440338],
+           [ 6.111346,  6.205634,  6.219963, ..., -6.219963, -6.205634,...
+     DESIRED: array([[ 6.321485,  6.440085,  6.468793, ..., -6.469036, -6.44057 ,
+            -6.322237],
+           [ 6.100646,  6.20581 ,  6.225803, ..., -6.22589 , -6.206132,...
+/harmonica/harmonica/tests/test_eq_sources_cartesian.py:127: AssertionError:
+E   AttributeError: 'EquivalentSources' object has no attribute 'depth_'. Did you mean: 'depth'?
+/harmonica/harmonica/tests/test_eq_sources_cartesian.py:442: AttributeError: 'EquivalentSources' object has no attribute 'depth_'. Did you mean: 'depth'?
+E   Failed: DID NOT RAISE <class 'ValueError'>
+/harmonica/harmonica/tests/test_eq_sources_cartesian.py:451: Failed: DID NOT RAISE <class 'ValueError'>
+=============================== warnings summary ===============================
+harmonica/tests/test_eq_sources_cartesian.py: 11 warnings
+  /usr/local/lib/python3.10/site-packages/verde/blockreduce.py:179: FutureWarning: The provided callable <function median at 0x7ffff43eb010> is currently using DataFrameGroupBy.median. In a future version of pandas, the provided callable will be used directly. To keep current behavior pass the string "median" instead.
+    blocked = pd.DataFrame(columns).groupby("block").aggregate(reduction)
+
+harmonica/tests/test_eq_sources_cartesian.py: 11 warnings
+  /usr/local/lib/python3.10/site-packages/verde/blockreduce.py:236: FutureWarning: The provided callable <function median at 0x7ffff43eb010> is currently using DataFrameGroupBy.median. In a future version of pandas, the provided callable will be used directly. To keep current behavior pass the string "median" instead.
+    grouped = table.groupby("block").aggregate(self.reduction)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_cartesian[default]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_small_data_cartesian
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_build_points
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_block_averaging_coordinates[block_size as float]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_block_averaging_coordinates[block_size as tuple]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_build_points_block_average
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_points_depth
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_custom_points_cartesian
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_scatter_not_implemented
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_jacobian_cartesian
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_cartesian_parallel
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping_none-no_weights-no_points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping_none-no_weights-no_points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping_none-no_weights-points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping_none-no_weights-points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping_none-weights-no_points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping_none-weights-no_points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping_none-weights-points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping_none-weights-points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping-no_weights-no_points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping-no_weights-no_points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping-no_weights-points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping-no_weights-points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping-weights-no_points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping-weights-no_points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping-weights-points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float64-damping-weights-points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping_none-no_weights-no_points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping_none-no_weights-no_points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping_none-no_weights-points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping_none-no_weights-points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping_none-weights-no_points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping_none-weights-no_points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping_none-weights-points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping_none-weights-points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping-no_weights-no_points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping-no_weights-no_points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping-no_weights-points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping-no_weights-points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping-weights-no_points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping-weights-no_points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping-weights-points-no_blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_dtype[float32-damping-weights-points-blocks]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_jacobian_dtype[float64]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_jacobian_dtype[float32]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_error_deprecated_args[deprecated_args0]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_error_deprecated_args[deprecated_args1]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_error_deprecated_args[deprecated_args2]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_error_deprecated_args[deprecated_args3]
+PASSED harmonica/tests/test_eq_sources_cartesian.py::test_error_ignored_args
+FAILED harmonica/tests/test_eq_sources_cartesian.py::test_equivalent_sources_cartesian[float32]
+FAILED harmonica/tests/test_eq_sources_cartesian.py::test_default_depth - Att...
+FAILED harmonica/tests/test_eq_sources_cartesian.py::test_invalid_depth - Fai...
+================== 3 failed, 50 passed, 22 warnings in 12.01s ==================

@@ -1,0 +1,122 @@
+============================= test session starts ==============================
+collected 65 items
+
+pvlib/test/test_pvsystem.py .......FF...F....F....FFssssssssss..FFFF.... [ 67%]
+..F...............F.F                                                    [100%]
+
+=================================== FAILURES ===================================
+/pvlib-python/pvlib/test/test_pvsystem.py:163: TypeError: __new__() got an unexpected keyword argument 'start'
+/pvlib-python/pvlib/test/test_pvsystem.py:207: TypeError: __new__() got an unexpected keyword argument 'start'
+/pvlib-python/pvlib/test/test_pvsystem.py:232: TypeError: __new__() got an unexpected keyword argument 'start'
+/pvlib-python/pvlib/test/test_pvsystem.py:268: TypeError: __new__() got an unexpected keyword argument 'start'
+/pvlib-python/pvlib/test/test_pvsystem.py:319: TypeError: __new__() got an unexpected keyword argument 'start'
+/pvlib-python/pvlib/test/test_pvsystem.py:342: TypeError: __new__() got an unexpected keyword argument 'start'
+/usr/local/lib/python3.7/site-packages/pandas/core/generic.py:5487: AttributeError: 'DataFrame' object has no attribute 'ix'
+/usr/local/lib/python3.7/site-packages/pandas/core/generic.py:5487: AttributeError: 'DataFrame' object has no attribute 'ix'
+/pvlib-python/pvlib/test/test_pvsystem.py:540: TypeError: __new__() got an unexpected keyword argument 'start'
+/pvlib-python/pvlib/test/test_pvsystem.py:556: TypeError: __new__() got an unexpected keyword argument 'start'
+/pvlib-python/pvlib/test/test_pvsystem.py:629: TypeError: __new__() got an unexpected keyword argument 'start'
+pandas/_libs/testing.pyx:168: AssertionError: Series are different
+/pvlib-python/pvlib/pvsystem.py:516: KeyError: 'eta_inv_nom'
+=============================== warnings summary ===============================
+pvlib/test/test_pvsystem.py:11
+  /pvlib-python/pvlib/test/test_pvsystem.py:11: FutureWarning: pandas.util.testing is deprecated. Use the functions in the public API at pandas.testing instead.
+    from pandas.util.testing import assert_series_equal, assert_frame_equal
+
+pvlib/solarposition.py:325
+  /pvlib-python/pvlib/solarposition.py:325: FutureWarning: casting datetime64[ns] values to int64 with .astype(...) is deprecated and will raise in a future version. Use .view(...) instead.
+    unixtime = np.array(time.astype(np.int64)/10**9)
+
+../usr/local/lib/python3.7/site-packages/pandas/io/parsers/base_parser.py:1055
+  /usr/local/lib/python3.7/site-packages/pandas/io/parsers/base_parser.py:1055: FutureWarning: 
+          Use pd.to_datetime instead.
+  
+    return generic_parser(date_parser, *date_cols)
+
+pvlib/test/test_pvsystem.py::test_physicaliam
+pvlib/test/test_pvsystem.py::test_PVSystem_physicaliam
+  /pvlib-python/pvlib/pvsystem.py:803: RuntimeWarning: invalid value encountered in true_divide
+    ((tools.sind(thetar_deg + aoi)) ** 2) +
+
+pvlib/test/test_pvsystem.py::test_physicaliam
+pvlib/test/test_pvsystem.py::test_PVSystem_physicaliam
+  /pvlib-python/pvlib/pvsystem.py:805: RuntimeWarning: invalid value encountered in true_divide
+    ((tools.tand(thetar_deg + aoi)) ** 2))))))
+
+pvlib/test/test_pvsystem.py::test_sapm_spectral_loss[airmass2-expected2]
+  /pvlib-python/pvlib/test/test_pvsystem.py:224: FutureWarning: The 'check_less_precise' keyword in testing.assert_*_equal is deprecated and will be removed in a future version. You can stop passing 'check_less_precise' to silence this warning.
+    assert_series_equal(out, expected, check_less_precise=4)
+
+pvlib/test/test_pvsystem.py::test_sapm_aoi_loss[aoi2-expected2]
+  /pvlib-python/pvlib/test/test_pvsystem.py:249: FutureWarning: The 'check_less_precise' keyword in testing.assert_*_equal is deprecated and will be removed in a future version. You can stop passing 'check_less_precise' to silence this warning.
+    assert_series_equal(out, expected, check_less_precise=4)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED pvlib/test/test_pvsystem.py::test_systemdef_tmy3
+PASSED pvlib/test/test_pvsystem.py::test_systemdef_tmy2
+PASSED pvlib/test/test_pvsystem.py::test_systemdef_dict
+PASSED pvlib/test/test_pvsystem.py::test_ashraeiam
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_ashraeiam
+PASSED pvlib/test/test_pvsystem.py::test_physicaliam
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_physicaliam
+PASSED pvlib/test/test_pvsystem.py::test_sapm_spectral_loss[1.5-1.00028714375]
+PASSED pvlib/test/test_pvsystem.py::test_sapm_spectral_loss[airmass1-expected1]
+PASSED pvlib/test/test_pvsystem.py::test_sapm_spectral_loss[airmass2-expected2]
+PASSED pvlib/test/test_pvsystem.py::test_sapm_aoi_loss[45-0.9975036250000002]
+PASSED pvlib/test/test_pvsystem.py::test_sapm_aoi_loss[aoi1-expected1]
+PASSED pvlib/test/test_pvsystem.py::test_sapm_aoi_loss[aoi2-expected2]
+PASSED pvlib/test/test_pvsystem.py::test_sapm_aoi_loss_limits
+PASSED pvlib/test/test_pvsystem.py::test_sapm_effective_irradiance[test_input0-1.1400510967821877]
+PASSED pvlib/test/test_pvsystem.py::test_sapm_effective_irradiance[test_input1-expected1]
+PASSED pvlib/test/test_pvsystem.py::test_sapm_effective_irradiance[test_input2-expected2]
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_sapm_effective_irradiance
+PASSED pvlib/test/test_pvsystem.py::test_scale_voltage_current_power
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_scale_voltage_current_power
+PASSED pvlib/test/test_pvsystem.py::test_snlinverter
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_snlinverter
+PASSED pvlib/test/test_pvsystem.py::test_snlinverter_float
+PASSED pvlib/test/test_pvsystem.py::test_snlinverter_Pnt_micro
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_creation
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_get_aoi
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_localize_with_location
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_localize_with_latlon
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem___repr__
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_localize___repr__
+PASSED pvlib/test/test_pvsystem.py::test_LocalizedPVSystem_creation
+PASSED pvlib/test/test_pvsystem.py::test_LocalizedPVSystem___repr__
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_dc_scalars
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_dc_arrays
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_dc_series
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_ac_scalars
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_ac_arrays
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_ac_series
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_losses_default
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_losses_arrays
+PASSED pvlib/test/test_pvsystem.py::test_pvwatts_losses_series
+PASSED pvlib/test/test_pvsystem.py::test_PVSystem_pvwatts_losses
+SKIPPED [1] pvlib/test/test_pvsystem.py:355: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:361: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:367: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:375: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:381: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:388: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:403: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:423: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:445: requires scipy
+SKIPPED [1] pvlib/test/test_pvsystem.py:462: requires scipy
+FAILED pvlib/test/test_pvsystem.py::test_sapm - TypeError: __new__() got an u...
+FAILED pvlib/test/test_pvsystem.py::test_PVSystem_sapm - TypeError: __new__()...
+FAILED pvlib/test/test_pvsystem.py::test_PVSystem_sapm_spectral_loss - TypeEr...
+FAILED pvlib/test/test_pvsystem.py::test_PVSystem_sapm_aoi_loss - TypeError: ...
+FAILED pvlib/test/test_pvsystem.py::test_calcparams_desoto - TypeError: __new...
+FAILED pvlib/test/test_pvsystem.py::test_PVSystem_calcparams_desoto - TypeErr...
+FAILED pvlib/test/test_pvsystem.py::test_sapm_celltemp - AttributeError: 'Dat...
+FAILED pvlib/test/test_pvsystem.py::test_sapm_celltemp_dict_like - AttributeE...
+FAILED pvlib/test/test_pvsystem.py::test_sapm_celltemp_with_index - TypeError...
+FAILED pvlib/test/test_pvsystem.py::test_PVSystem_sapm_celltemp - TypeError: ...
+FAILED pvlib/test/test_pvsystem.py::test_PVSystem_get_irradiance - TypeError:...
+FAILED pvlib/test/test_pvsystem.py::test_PVSystem_pvwatts_dc - AssertionError...
+FAILED pvlib/test/test_pvsystem.py::test_PVSystem_pvwatts_ac - KeyError: 'eta...
+============ 13 failed, 42 passed, 10 skipped, 9 warnings in 1.75s =============
