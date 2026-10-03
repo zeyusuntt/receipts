@@ -107,6 +107,11 @@ def _parser() -> argparse.ArgumentParser:
     show_parser = commands.add_parser("show", help="print a run's Markdown receipt")
     show_parser.add_argument("run_dir", type=Path)
 
+    site_parser = commands.add_parser("site", help="build a static receipt website")
+    site_parser.add_argument("pilot_dirs", nargs="+", type=Path)
+    site_parser.add_argument("--out", required=True, type=Path)
+    site_parser.add_argument("--title", default="Receipts")
+
     pilot_parser = commands.add_parser("pilot", help="run or report on the pilot")
     pilot_commands = pilot_parser.add_subparsers(
         dest="pilot_command",
@@ -742,6 +747,12 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
         return await _run_fix(args, model)
     if args.command == "show":
         return _show(args.run_dir)
+    if args.command == "site":
+        from receipts.site import build_site
+
+        summary = build_site(args.pilot_dirs, args.out, repo_root=Path.cwd(), title=args.title)
+        print(f"SITE {summary.out_dir / 'index.html'} pilots={summary.pilots} instances={summary.instances}")
+        return 0
     if args.command == "pilot" and args.pilot_command == "run":
         return await _run_with_signal_cancellation(_run_pilot(args, model))
     if args.command == "pilot" and args.pilot_command == "screen":

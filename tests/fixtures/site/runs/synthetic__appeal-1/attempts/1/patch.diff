@@ -1,0 +1,282 @@
+diff --git a/_templates/default.md b/_templates/default.md
+new file mode 100644
+index 0000000..4a5a07d
+--- /dev/null
++++ b/_templates/default.md
+@@ -0,0 +1,58 @@
++{% if render_title %}
++{% if versiondata.name %}
++# {{ versiondata.name }} {{ versiondata.version }} ({{ versiondata.date }})
++{% else %}
++# {{ versiondata.version }} ({{ versiondata.date }})
++{% endif %}
++{% endif %}
++{% for section, _ in sections.items() %}
++{% if section %}
++
++## {{section}}
++{% endif %}
++
++{% if sections[section] %}
++{% for category, val in definitions.items() if category in sections[section] %}
++##{% if section %}#{% endif %} {{ definitions[category]['name'] }}
++
++{% for text, values in sections[section][category].items() %}
++- {{ text }}
++{%- if values %}
++{% if "\n  - " in text or '\n  * ' in text %}
++
++
++  (
++{%- else %}
++{% if text %} ({% endif %}
++{%- endif -%}
++{%- for issue in values %}
++{{ issue.split(": ", 1)[0] }}{% if not loop.last %}, {% endif %}
++{%- endfor %}
++{% if text %}){% endif %}
++
++{% else %}
++
++{% endif %}
++{% endfor %}
++
++{% if issues_by_category[section][category] and "]: " in issues_by_category[section][category][0] %}
++{% for issue in issues_by_category[section][category] %}
++{{ issue }}
++{% endfor %}
++
++{% endif %}
++{% if sections[section][category]|length == 0 %}
++No significant changes.
++
++{% else %}
++{% endif %}
++{% endfor %}
++{% else %}
++No significant changes.
++
++{% endif %}
++{% endfor +%}
++{#
++This comment adds one more newline at the end of the rendered newsfile content.
++In this way the there are 2 newlines between the latest release and the previous release content.
++#}
+diff --git a/foo/__init__.py b/foo/__init__.py
+new file mode 100644
+index 0000000..10aa336
+--- /dev/null
++++ b/foo/__init__.py
+@@ -0,0 +1 @@
++__version__ = "1.2.3"
+diff --git a/foo/newsfragments/123.feature b/foo/newsfragments/123.feature
+new file mode 100644
+index 0000000..0d7b749
+--- /dev/null
++++ b/foo/newsfragments/123.feature
+@@ -0,0 +1 @@
++Adds levitation
+diff --git a/pyproject.toml b/pyproject.toml
+index 77fd061..e79ad5c 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,175 +1,5 @@
+-[build-system]
+-requires = ["hatchling"]
+-build-backend = "hatchling.build"
+-
+-
+-[project]
+-name = "towncrier"
+-# For dev   - 23.11.0.dev0
+-# For RC    - 23.11.0rc1  (release candidate starts at 1)
+-# For final - 23.11.0
+-# make sure to follow PEP440
+-version = "24.8.0.dev0"
+-description = "Building newsfiles for your project."
+-readme = "README.rst"
+-license = "MIT"
+-# Keep version list in-sync with noxfile/tests & ci.yml/test-linux.
+-classifiers = [
+-    "Intended Audience :: Developers",
+-    "License :: OSI Approved :: MIT License",
+-    "Operating System :: POSIX :: Linux",
+-    "Operating System :: MacOS :: MacOS X",
+-    "Operating System :: Microsoft :: Windows",
+-    "Programming Language :: Python :: 3.8",
+-    "Programming Language :: Python :: 3.9",
+-    "Programming Language :: Python :: 3.10",
+-    "Programming Language :: Python :: 3.11",
+-    "Programming Language :: Python :: 3.12",
+-    "Programming Language :: Python :: Implementation :: CPython",
+-    "Programming Language :: Python :: Implementation :: PyPy",
+-]
+-requires-python = ">=3.8"
+-dependencies = [
+-    "click",
+-    "importlib-resources>=5; python_version<'3.10'",
+-    "importlib-metadata>=4.6; python_version<'3.10'",
+-    "jinja2",
+-    "tomli; python_version<'3.11'",
+-]
+-
+-[project.optional-dependencies]
+-dev = [
+-    "packaging",
+-    "sphinx >= 5",
+-    "furo >= 2024.05.06",
+-    "twisted",
+-    "nox",
+-]
+-
+-[project.scripts]
+-towncrier = "towncrier._shell:cli"
+-
+-[project.urls]
+-Documentation = "https://towncrier.readthedocs.io/"
+-Chat = "https://web.libera.chat/?channels=%23twisted"
+-"Mailing list" = "https://mail.python.org/mailman3/lists/twisted.python.org/"
+-Issues = "https://github.com/twisted/towncrier/issues"
+-Repository = "https://github.com/twisted/towncrier"
+-Tests = "https://github.com/twisted/towncrier/actions?query=branch%3Atrunk"
+-Coverage = "https://codecov.io/gh/twisted/towncrier"
+-Distribution = "https://pypi.org/project/towncrier"
+-
+-[tool.hatch.build]
+-exclude = [
+-    "admin",
+-    "bin",
+-    ".github",
+-    ".git-blame-ignore-revs",
+-    ".pre-commit-config.yaml",
+-    ".pre-commit-hooks.yaml",
+-    ".readthedocs.yaml",
+-    "src/towncrier/newsfragments",
+-]
+-
+-
+ [tool.towncrier]
+-    package = "towncrier"
+-    package_dir = "src"
+-    filename = "NEWS.rst"
+-    issue_format = "`#{issue} <https://github.com/twisted/towncrier/issues/{issue}>`_"
+-
+-    [[tool.towncrier.section]]
+-        path = ""
+-
+-    [[tool.towncrier.type]]
+-        directory = "feature"
+-        name = "Features"
+-        showcontent = true
+-
+-    [[tool.towncrier.type]]
+-        directory = "bugfix"
+-        name = "Bugfixes"
+-        showcontent = true
+-
+-    [[tool.towncrier.type]]
+-        directory = "doc"
+-        name = "Improved Documentation"
+-        showcontent = true
+-
+-    [[tool.towncrier.type]]
+-        directory = "removal"
+-        name = "Deprecations and Removals"
+-        showcontent = true
+-
+-    [[tool.towncrier.type]]
+-        directory = "misc"
+-        name = "Misc"
+-        showcontent = false
+-
+-
+-[tool.black]
+-exclude = '''
+-
+-(
+-  /(
+-      \.eggs         # exclude a few common directories in the
+-    | \.git          # root of the project
+-    | \.nox
+-    | \.venv
+-    | \.env
+-    | env
+-    | _build
+-    | _trial_temp.*
+-    | build
+-    | dist
+-    | debian
+-  )/
+-)
+-'''
+-
+-
+-[tool.isort]
+-profile = "attrs"
+-line_length = 88
+-
+-
+-[tool.ruff.isort]
+-# Match isort's "attrs" profile
+-lines-after-imports = 2
+-lines-between-types = 1
+-
+-
+-[tool.mypy]
+-strict = true
+-# 2022-09-04: Trial's API isn't annotated yet, which limits the usefulness of type-checking
+-#             the unit tests. Therefore they have not been annotated yet.
+-exclude = '^src/towncrier/test/test_.*\.py$'
+-
+-[[tool.mypy.overrides]]
+-module = 'towncrier.click_default_group'
+-# Vendored module without type annotations.
+-ignore_errors = true
+-
+-[tool.coverage.run]
+-parallel = true
+-branch = true
+-source = ["towncrier"]
+-
+-[tool.coverage.paths]
+-source = ["src", ".nox/tests-*/**/site-packages"]
++package = "foo"
++filename = "NEWS.md"
++title_format = "[{project_date}] CUSTOM RELEASE for {name} version {version}"
+ 
+-[tool.coverage.report]
+-show_missing = true
+-skip_covered = true
+-exclude_lines = [
+-    "pragma: no cover",
+-    "if TYPE_CHECKING:",
+-    # Empty functions of a Protocol definition (used in _vcs.py) can never be
+-    # executed. Ignoring them.
+-    ": \\.\\.\\.$",
+-]
+-omit = [
+-    "src/towncrier/__main__.py",
+-    "src/towncrier/test/*",
+-    "src/towncrier/click_default_group.py",
+-]
+diff --git a/src/towncrier/build.py b/src/towncrier/build.py
+index e56c367..1829b6f 100644
+--- a/src/towncrier/build.py
++++ b/src/towncrier/build.py
+@@ -231,6 +231,8 @@ def __main(
+         top_line = config.title_format.format(
+             name=project_name, version=project_version, project_date=project_date
+         )
++        # Calculate title level for markdown headers (count of '#' characters)
++        title_level = top_line.count('#') if is_markdown else 0
+         if is_markdown:
+             parts = [top_line]
+         else:
+@@ -239,6 +241,7 @@ def __main(
+         content = "\n".join(parts)
+     else:
+         top_line = ""
++        title_level = 0
+         content = rendered
+ 
+     if draft:
