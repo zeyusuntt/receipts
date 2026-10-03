@@ -397,3 +397,7 @@ Two seen rehearsal tasks ran at `500b9af` (`pilot/v2-smoke-tf/`): `pypa__twine-1
 - Reading a directory failed: the live API answers 422 to a directory download and names listed entries relative to the directory. `read_file` now lists the directory, as on Daytona, and still refuses an entry outside it. Checked on the live API.
 
 The worker's wall budget includes time waiting for the model and the sandbox API, so a slow provider could end an attempt. Rather than change the budget a day before the freeze, records now keep the worker's end summary and the report counts attempts by the budget that ended them; the pre-registration states the limit. In v1, 1 of 79 attempts ended on the wall budget and 28 on turns.
+
+### Final smoke and freeze (Oct 2)
+
+The final smoke ran at `9bf8a9a` under `caffeinate` (`pilot/v2-smoke-tf-2/`): `pypa__twine-1066` on Super and `astropy__pyvo-204` on Lightning both verified on the first verdict, with the gate and the official grade agreeing, every patch digest agreeing, no infrastructure or cleanup error, and about 85 seconds each. v2 was pre-registered in `4a1d8c2` (`PREREGISTRATION-v2.md` and `pilot/v2-exclusions.txt`), frozen at `9bf8a9a`. Runs start from the repository checkout behind a guard (`.build/v2-guard.sh`) that refuses to launch unless `src/`, `pyproject.toml` and `uv.lock` match `9bf8a9a`; v1's separate worktree left absolute paths in its records, which broke when the repository moved. P screening started at 17:00 PT on Token Factory at concurrency 6 (`.build/v2-screen-P.sh`).
