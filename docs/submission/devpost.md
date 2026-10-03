@@ -8,7 +8,7 @@ The coding agent that is not allowed to grade its own homework.
 
 ## Inspiration
 
-Coding agents say "done, all tests pass" and nobody checks. We measured it: on 100 SWE-rebench tasks the agent had never seen, 17.9% of an unguarded Nemotron agent's "done" was false, by SWE-rebench's own grader. A maintainer cannot merge a fix on the agent's word, so the fix is worth little until someone re-runs the tests. We built the someone.
+Coding agents say "done, all tests pass" and nobody checks. We measured it: on 100 SWE-rebench tasks that nobody had looked at during development, chosen by a rule committed in advance, 17.9% of an unguarded Nemotron agent's "done" was false, by SWE-rebench's own grader. A maintainer cannot merge a fix on the agent's word, so the fix is worth little until someone re-runs the tests. We built the someone.
 
 ## What it does
 

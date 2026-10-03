@@ -3,7 +3,7 @@
 You write the failing test. Receipts writes the fix with NVIDIA Nemotron 3 Super on Nebius Token Factory, re-runs your tests itself in a clean Token Factory Sandbox the agent never touched, and hands you a receipt anyone can re-verify.</p>
 <p align="center"><a href="https://zeyusuntt.github.io/receipts/"><b>Receipts from real runs</b></a> · <a href="https://youtu.be/{video_id}"><b>Video (2:50)</b></a> · <a href="REPORT-v2.md"><b>False-Done Report</b></a> · <a href="#re-verify-it-yourself"><b>Re-verify it yourself</b></a></p>
 
-| | On 100 SWE-rebench tasks the agent had never seen | Proof |
+| | On 100 SWE-rebench tasks held out from development, chosen by a rule fixed in advance | Proof |
 |---:|---|---|
 | **17.9%** | of an unguarded Nemotron agent's "done" was false (12 of 67, 95% interval 10.6 to 28.7%) | [every trace](REPORT-v2.md) |
 | **0** | of 66 fixes Receipts shipped fail SWE-rebench's official grader (7 won on appeal) | [every receipt](https://zeyusuntt.github.io/receipts/) |

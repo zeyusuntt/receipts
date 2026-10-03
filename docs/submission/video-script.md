@@ -1,4 +1,41 @@
-# Video script, revision 2 (2:50, narrated, no face)
+# Video script
+
+## The narration to record (revision 4, in the narrator's own voice)
+
+Read this as it is, in one take, the way you would explain it to a friend at a desk. Contractions are on purpose. Pause about a second at each `/`. Every claim here is true of our runs; nothing is invented. About 360 words, 2:45 to 2:50 at a relaxed pace.
+
+> This is a coding agent telling me it's done. All tests pass. /
+> They didn't. /
+>
+> I gave NVIDIA's Nemotron 3 Super a hundred real bugs from SWE-rebench, picked by a rule I wrote down before running anything. Sixty-seven times it said "done". Twelve of those weren't true, by SWE-rebench's own grader. /
+>
+> So I built Receipts: a coding agent that isn't allowed to grade its own homework. Nemotron still writes the fix, on Nebius Token Factory. It just doesn't get to say whether the fix works. A fresh Token Factory Sandbox it never touched runs the tests again, and plain code decides. /
+>
+> Here's one of the hundred, from PyFilesystem2. There's a failing test, and that test is the spec. Before anything changes, Receipts records what fails and what passes. /
+>
+> Nemotron reads the code, makes an edit, runs the tests, and says it's done. /
+>
+> Receipts doesn't take its word for it. It forks the original checkpoint into a new sandbox, applies only the source change, and runs the tests itself. / Rejected. The spec still fails. /
+>
+> The failure goes back to the agent exactly as it happened, once. It fixes the actual problem. New sandbox, same checks. / This time it passes. /
+>
+> The checks are simple. The spec passes. Nothing that passed before breaks. No test gets deleted or skipped. The patch stays out of your tests. And every step traces back to your code by a hash. No model decides any of it. SWE-rebench's official grader, run separately, agrees. /
+>
+> You don't have to trust me either. Any receipt can be re-run, on Token Factory in about a minute, or with Docker and no account at all. Every check has to come out the same. /
+>
+> Getting this right was the hard part. In my first pilot, the gate let one bad fix through: the agent hid a copy of the package where my test runner would find it. I'd written the rules down in advance, so I published it, fixed it, and ran everything again. /
+>
+> On the hundred bugs: sixty-six verified fixes, zero false ones shipped, about forty cents of Nemotron tokens each. That's what I'd want before merging anything an agent wrote. /
+>
+> Agents can write the code. Receipts makes them show their work.
+
+What changed from revision 2, and why: first person and contractions, because it is one person explaining their own project; "tasks it had never seen" became "picked by a rule I wrote down before running anything", because we can show nobody looked at the tasks during development but cannot show the model never saw them in training; the slogans ("Do not take our word for it", "impossible to fool", "for every maintainer who...") became plain sentences; the numbers are the reported ones (`REPORT-v2.md`); "I" assumes a solo entry, so say "we" throughout if the team has more people.
+
+The shot list below still holds for the picture; its narration column is revision 2 and is superseded by the text above.
+
+---
+
+## Shot list (revision 2 timing, revision 3 picture)
 
 Revises E0 section 4 (`2026-10-02-e0-script-and-readme.md`) after the video research: the organizers ask that Token Factory and the NVIDIA model be named in the narration, not in passing, and winning videos run at 106 to 163 words per minute (E0 ran at about 85). This revision is about 345 words over 170 seconds, about 120 words per minute. Numbers in `{braces}` come from `REPORT-v2.md` by code, never estimated. Every run on screen is a real, unmodified run with its id shown; anything sped up shows its speed.
 
