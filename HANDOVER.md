@@ -48,10 +48,10 @@ Pilot finished Oct 1 (launch 3, 50 tasks): see `REPORT.md`. A: 4 of 23 claimed d
 ## Next agent actions
 
 - [x] Oct 2: followed the handoff's section 10. Health checks pass (337 passed, 2 skipped; `v1_evidence.py` matches; Daytona key correct, 0 snapshots). Three read-only Codex reviews of Plan 5 ran, their trust-boundary findings were verified in the main session, and Plan 5 was revised to revision 3.
-- [ ] v2 RUN (in progress Oct 2, 17:00 PT). Scripts in `.build/` (gitignored), all guarded and under caffeinate:
-  1. P screening is running: `.build/v2-screen-P.sh` (pid in `.build/v2-screen-P.pid`, log `.build/v2-screen-P.log`, ledger `pilot/v2-screen-P.jsonl`). It is resumable: rerun the script if it stops.
-  2. When it exits: `PYTHONPATH=src .venv/bin/python .build/v2-make-sample.py` writes `pilot/v2-sample-P.txt` (first 100 included) and `pilot/v2-reserve-P.txt` (next 10); commit the ledger, the screening logs under `pilot/v2-screen-P/` and both lists before any agent runs.
-  3. Canary: `.build/v2-run-P.sh 10` (concurrency 4, watchdog with the US$45 model budget). Health check after 10 completed tasks: infrastructure errors, gate errors, gate-looser attempts, cost per task, budget endings (`receipts pilot report pilot/v2-P --screen-ledger pilot/v2-screen-P.jsonl`).
+- [ ] v2 RUN (in progress since Oct 2, 17:00 PT). Scripts in `.build/` (gitignored), all guarded and under caffeinate:
+  1. DONE: P screening, 17:00 to 18:13 PT: 110 included, 7 excluded, 2 final infrastructure errors (`docs/results/2026-10-02-v2-screen-P.md`).
+  2. DONE: sample (positions 59 to 167) and reserve (168 to 177) committed with the ledger and logs in `43683d8`, before any agent run.
+  3. RUNNING since 18:21 PT: canary, `.build/v2-run-P.sh 10` (concurrency 4, watchdog with the US$45 model budget). Health check after 10 completed tasks: infrastructure errors, gate errors, gate-looser attempts, cost per task, budget endings (`receipts pilot report pilot/v2-P --screen-ledger pilot/v2-screen-P.jsonl`).
   4. Resume: `.build/v2-run-P.sh 100`. Stop rule: Oct 12, 23:59 PT, or US$45 model spend across all v2 runs.
   5. Exploratory arm: Lightning (`--model nvidia/Nemotron-3_5-Lightning`) on P's first 30 tasks, into its own directory, after P. S (v1's 50, on Daytona) last, and only if time and budget allow.
 - [x] Oct 2: Zeyu approved Plan 5 revision 3 with every recommended decision (see the plan's status line). Standing permission: one commit per reviewed task, plain message, no attribution.
