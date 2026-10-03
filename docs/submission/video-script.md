@@ -29,3 +29,15 @@ Total: about 350 words in 170 seconds.
 - Quiet room, soft furnishings around you, phone or laptop microphone 20 to 30 cm away, 48 kHz WAV if the app allows.
 - Pause a full second after "It wasn't true", after "Rejected", and after "Verified". Stress "never touched" and "plain code".
 - Numbers are read as written in the final script, which will spell them out (for example "twenty-four").
+
+## Revision 3: picture changes from the video study
+
+The narration above is unchanged. What is on screen changes as follows (reasons in `video-study.md`):
+
+- **0:00 cold open, on black** (SecondVoice): the agent's real finish message types out in monospace, "All tests pass. The fix is complete." A beat of silence. "Was it?" in serif. Cut to the witness's real result: the spec test, FAILED, in red. The narration lands on "It wasn't true."
+- **One architecture map** (Province, EcoLafaek): introduced at 0:18 as the three-step strip expanding into the map: your failing test → Nemotron 3 Super on Nebius Token Factory (agent branch) → a Token Factory Sandbox forked from the checkpoint (witness) → the gate, plain code → the receipt, with SWE-rebench's official grader to the side. It returns at 0:45, 0:55, 1:15 and 1:32 with the active node lit. The same diagram goes into the README and the Devpost text.
+- **Sponsor technology on screen** (Nomi, EcoLafaek): at 0:45 a lower third shows the real model id from the run's disclosure (`nvidia/nemotron-3-super-120b-a12b`, Token Factory); at 0:55 the real sandbox image and operation ids from the receipt. If the owner captures the Token Factory console's Sandboxes page, it appears for two seconds at 0:55.
+- **0:55 the mechanism, animated** (JohnKeats): the patch travels from the agent branch to the witness; test files fall away at the filter; the five checks light up in order; the failing one turns red; REJECTED stamps. Two seconds of silence.
+- **1:32 proof, two labelled panes** (EcoLafaek): the receipt page and the official grader's log side by side, red circles on the lines that matter.
+- **Captions burned in throughout**, one visual system from the receipt site: paper, ink, accent blue, verified green, rejected orange; IBM Plex Sans and Mono; serif only for the cold-open lines.
+- **2:45 close**: "Nemotron writes the fix. Plain code decides." as on-screen text under the spoken line, then the URL and a QR code to the receipts site, held four seconds.
