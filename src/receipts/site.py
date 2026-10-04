@@ -6,7 +6,6 @@ import html
 import json
 import posixpath
 import re
-from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -564,7 +563,8 @@ def build_site(
     root = repo_root.resolve()
     if not pilot_dirs:
         raise ValueError("at least one pilot directory is required")
-    pilots = sorted({_confined(Path(p), root) for p in pilot_dirs})
+    # The order given is the order of importance: the first pilot keeps short URLs.
+    pilots = list(dict.fromkeys(_confined(Path(p), root) for p in pilot_dirs))
     groups = []
     for pilot in pilots:
         if not pilot.is_dir():
@@ -578,7 +578,9 @@ def build_site(
             _load_run(p, root)
         _confined(pilot / "progress.jsonl", root)
         groups.append((pilot, _ordered(runs, pilot)))
-    counts = Counter(run.iid for _, runs in groups for run in runs)
+    names = [pilot.name for pilot, _ in groups]
+    if len(set(names)) != len(names):
+        raise ValueError("pilot directories must have distinct names")
     out = out_dir.resolve()
     if out == root or any(out == pilot or out.is_relative_to(pilot) or pilot.is_relative_to(out) for pilot in pilots):
         raise ValueError("output directory must be separate from pilot inputs")
@@ -592,10 +594,13 @@ def build_site(
     # Load and render before writing, so invalid input does not publish half a site.
     pages: dict[str, str] = {}
     raw_files: dict[str, Path] = {}
-    for n, (pilot, runs) in enumerate(groups, 1):
+    claimed: set[str] = set()
+    for pilot, runs in groups:
         report = build_report_from_directory(pilot)
+        namespace = _safe_component(pilot.name, "pilot directory")
         for run in runs:
-            run.key = f"pilot-{n}/{run.iid}" if counts[run.iid] > 1 else run.iid
+            run.key = run.iid if run.iid not in claimed else f"{namespace}/{run.iid}"
+            claimed.add(run.iid)
             pages[f"run/{run.key}.html"] = _run_page(run, title)
             pages[f"receipt/{run.key}.html"] = _receipt_page(run, title)
             for name, source in sorted(run.raw.items()):

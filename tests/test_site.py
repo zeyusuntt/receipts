@@ -221,10 +221,14 @@ def test_repeated_instance_across_pilots_has_distinct_pages(bundle, tmp_path):
     repo, pilot, out = bundle
     other = repo / "other-pilot"
     shutil.copytree(pilot, other)
-    summary = build_site([other, pilot], out, repo_root=repo)
+    summary = build_site([pilot, other], out, repo_root=repo)
     assert summary.instances == 6
     pages = list((out / "run").rglob("*.html"))
     assert len(pages) == 6
+    # The first pilot given keeps short URLs; a repeat is namespaced by its directory.
+    assert (out / "run" / f"{VERIFIED}.html").is_file()
+    assert (out / "run" / "other-pilot" / f"{VERIFIED}.html").is_file()
+    assert not list(out.rglob("pilot-*"))
     for p in out.rglob("*.html"):
         for link in Page(p).links:
             if urlsplit(link).netloc in ALLOWED_EXTERNAL:
