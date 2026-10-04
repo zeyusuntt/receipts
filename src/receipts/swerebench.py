@@ -74,8 +74,16 @@ def _patch_path(instance: Instance) -> PurePosixPath:
 
 
 def _setup_commands(instance: Instance) -> list[str]:
-    path = _patch_path(instance)
-    encoded = base64.b64encode(instance.test_patch.encode()).decode("ascii")
+    return _test_patch_setup_commands(instance.test_patch, _patch_path(instance))
+
+
+def _test_patch_setup_commands(
+    patch: str,
+    path: PurePosixPath,
+) -> list[str]:
+    """Write and apply a test patch inside a sandbox image."""
+
+    encoded = base64.b64encode(patch.encode()).decode("ascii")
     script = (
         "import base64; from pathlib import Path; "
         f"Path({str(path)!r}).write_bytes(base64.b64decode({encoded!r}))"
@@ -112,17 +120,24 @@ def _test_files_from_patch(patch: str) -> list[str]:
     return files
 
 
+def _spec_paths_from_test_patch(patch: str, *, context: str) -> list[str]:
+    """Return every path in a test patch, failing closed on ambiguous paths."""
+
+    summary = summarize_patch(patch)
+    if any(changed.category == "unparseable" for changed in summary.files):
+        raise UnparseableTestPatch(
+            f"{context}: test patch contains an unparseable path",
+        )
+    return [changed.path for changed in summary.files]
+
+
 def to_task(instance: Instance) -> SweTask:
     """Convert one dataset row into the inputs accepted by orchestrate.fix."""
 
-    test_patch_summary = summarize_patch(instance.test_patch)
-    if any(
-        changed.category == "unparseable"
-        for changed in test_patch_summary.files
-    ):
-        raise UnparseableTestPatch(
-            f"{instance.instance_id}: test patch contains an unparseable path",
-        )
+    spec_paths = _spec_paths_from_test_patch(
+        instance.test_patch,
+        context=instance.instance_id,
+    )
 
     # The gate runs the instance's own pytest arguments (the suite named by test_cmd,
     # with its warning filters and options), so its runs match the official grader's.
@@ -135,7 +150,9 @@ def to_task(instance: Instance) -> SweTask:
     elif tokens[1:3] == ["-m", "pytest"]:
         suite = tokens[3:]
     else:
-        suite = _test_files_from_command(instance.test_cmd) or _test_files_from_patch(instance.test_patch)
+        suite = _test_files_from_command(instance.test_cmd) or _test_files_from_patch(
+            instance.test_patch,
+        )
     return SweTask(
         source=ImageSource(
             image=instance.image_name,
@@ -146,7 +163,7 @@ def to_task(instance: Instance) -> SweTask:
         ),
         issue=instance.problem_statement,
         spec_tests=list(instance.fail_to_pass),
-        spec_paths=[changed.path for changed in test_patch_summary.files],
+        spec_paths=spec_paths,
         suite_scope=shlex.join(suite),
     )
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 from pathlib import Path
 
@@ -25,6 +26,7 @@ from receipts.orchestrate import (
     RunInput,
     RunResult,
 )
+from receipts.receipt_text import render
 from receipts.sandbox.protocol import ImageSource
 from receipts.swerebench import Instance
 from tests.fixtures.repo_factory import make_repo
@@ -267,8 +269,13 @@ def test_fix_runs_offline_with_fake_model_and_local_executor(
     result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
     assert status == 0
     assert result["final_verdict"]["status"] == "PASS"
-    assert "**Verdict: VERIFIED**" in output
-    assert TARGET in output
+    assert "VERIFIED in" in output
+    assert "receipt: …/run/receipt.md" in output
+    assert "/private/" not in output
+    assert "**Verdict: VERIFIED**" not in output
+    assert (run_dir / "receipt.md").read_text(encoding="utf-8") == render(
+        RunResult.model_validate(result),
+    )
 
 
 def test_fix_builds_daytona_executor_for_an_image_source(
@@ -299,7 +306,18 @@ def test_fix_builds_daytona_executor_for_an_image_source(
         async def close(self):
             self.closed = True
 
-    async def fake_fix(executor, model, source, issue, tests, suite, out, *, budgets):
+    async def fake_fix(
+        executor,
+        model,
+        source,
+        issue,
+        tests,
+        suite,
+        out,
+        *,
+        budgets,
+        progress,
+    ):
         captured["source"] = source
         captured["issue"] = issue
         captured["tests"] = tests
@@ -352,7 +370,213 @@ def test_fix_builds_daytona_executor_for_an_image_source(
     assert captured["budgets"].worker.max_completion_tokens == 96_000
     assert captured["budgets"].worker.prompt_token_budget == 160_000
     assert captured["executor"].closed is True
-    assert "**Verdict: VERIFIED**" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "VERIFIED in 3s · $0.01 of Nemotron tokens" in output
+    assert "**Verdict: VERIFIED**" not in output
+    assert (run_dir / "receipt.md").read_text(encoding="utf-8") == render(
+        _sample_result(),
+    )
+
+
+def test_fix_persists_receipt_before_executor_cleanup(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+):
+    import receipts.cli as cli
+
+    issue_file = tmp_path / "issue.txt"
+    issue_file.write_text("Repair the formatter.\n", encoding="utf-8")
+    run_dir = tmp_path / "run"
+
+    class FakeDaytonaClient:
+        def __init__(self, config):
+            self.config = config
+
+    class FakeDaytonaExecutor:
+        def __init__(self, root, sink, run_id, api):
+            pass
+
+        async def close(self):
+            raise RuntimeError("cleanup failed")
+
+    async def fake_fix(
+        executor,
+        model,
+        source,
+        issue,
+        tests,
+        suite,
+        out,
+        *,
+        budgets,
+        progress,
+    ):
+        return _sample_result()
+
+    monkeypatch.setenv("DAYTONA_API_KEY", "test-daytona-key")
+    monkeypatch.setattr(cli, "AsyncDaytona", FakeDaytonaClient)
+    monkeypatch.setattr(cli, "DaytonaExecutor", FakeDaytonaExecutor)
+    monkeypatch.setattr(cli, "fix", fake_fix)
+
+    status = main(
+        [
+            "fix",
+            "--image",
+            "swerebench/example:1",
+            "--workdir",
+            "/example",
+            "--test",
+            TARGET,
+            "--issue-file",
+            str(issue_file),
+            "--executor",
+            "daytona",
+            "--out",
+            str(run_dir),
+        ],
+        model=_honest_model(),
+    )
+
+    output = capsys.readouterr().out
+    assert status == 1
+    assert "VERIFIED in 3s · $0.01 of Nemotron tokens" in output
+    assert "ERROR: cleanup failed" in output
+    assert (run_dir / "receipt.md").read_text(encoding="utf-8") == render(
+        _sample_result(),
+    )
+
+
+def test_fix_test_patch_configures_sandbox_setup_and_protects_test_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    import receipts.cli as cli
+
+    issue_file = tmp_path / "issue.txt"
+    issue_file.write_text("Repair the formatter.\n", encoding="utf-8")
+    test_patch = (
+        "diff --git a/tests/test_widget.py b/tests/test_widget.py\n"
+        "new file mode 100644\n"
+        "--- /dev/null\n"
+        "+++ b/tests/test_widget.py\n"
+        "@@ -0,0 +1,2 @@\n"
+        "+def test_widget():\n"
+        "+    assert False\n"
+        "diff --git a/tests/fixtures/widget.yaml b/tests/fixtures/widget.yaml\n"
+        "new file mode 100644\n"
+        "--- /dev/null\n"
+        "+++ b/tests/fixtures/widget.yaml\n"
+        "@@ -0,0 +1 @@\n"
+        "+enabled: true\n"
+    )
+    patch_file = tmp_path / "failing-test.patch"
+    patch_file.write_text(test_patch, encoding="utf-8")
+    captured: dict[str, object] = {}
+
+    class FakeDaytonaClient:
+        def __init__(self, config):
+            captured["config"] = config
+
+    class FakeDaytonaExecutor:
+        def __init__(self, root, sink, run_id, api):
+            captured["executor"] = self
+
+        async def close(self):
+            pass
+
+    async def fake_fix(
+        executor,
+        model,
+        source,
+        issue,
+        tests,
+        suite,
+        out,
+        *,
+        budgets,
+        spec_paths,
+        progress,
+    ):
+        captured["source"] = source
+        captured["spec_paths"] = spec_paths
+        return _sample_result()
+
+    monkeypatch.setenv("DAYTONA_API_KEY", "test-daytona-key")
+    monkeypatch.setattr(cli, "AsyncDaytona", FakeDaytonaClient)
+    monkeypatch.setattr(cli, "DaytonaExecutor", FakeDaytonaExecutor)
+    monkeypatch.setattr(cli, "fix", fake_fix)
+
+    status = main(
+        [
+            "fix",
+            "--image",
+            "swerebench/example:1",
+            "--workdir",
+            "/example",
+            "--test",
+            "tests/test_widget.py::test_widget",
+            "--test-patch",
+            str(patch_file),
+            "--issue-file",
+            str(issue_file),
+            "--executor",
+            "daytona",
+            "--out",
+            str(tmp_path / "run"),
+        ],
+        model=_honest_model(),
+    )
+
+    source = captured["source"]
+    assert status == 0
+    assert isinstance(source, ImageSource)
+    assert len(source.setup) == 2
+    assert base64.b64encode(test_patch.encode()).decode("ascii") in source.setup[0]
+    assert source.setup[1] == "git apply /tmp/receipts-cli-test.patch"
+    assert captured["spec_paths"] == [
+        "tests/test_widget.py",
+        "tests/fixtures/widget.yaml",
+    ]
+
+
+@pytest.mark.parametrize("executor", ["local", "docker"])
+def test_fix_rejects_test_patch_for_repository_executors(
+    tmp_path: Path,
+    executor: str,
+    capsys,
+):
+    issue_file = tmp_path / "issue.txt"
+    issue_file.write_text("Repair it.\n", encoding="utf-8")
+    patch_file = tmp_path / "failing-test.patch"
+    patch_file.write_text("diff --git a/tests/test_a.py b/tests/test_a.py\n", encoding="utf-8")
+
+    status = main(
+        [
+            "fix",
+            "--repo",
+            str(tmp_path / "repo"),
+            "--commit",
+            "HEAD",
+            "--test",
+            "tests/test_a.py::test_a",
+            "--test-patch",
+            str(patch_file),
+            "--issue-file",
+            str(issue_file),
+            "--executor",
+            executor,
+            "--out",
+            str(tmp_path / "run"),
+        ],
+        model=_honest_model(),
+    )
+
+    assert status == 1
+    assert capsys.readouterr().out == (
+        "ERROR: --test-patch is only supported with tokenfactory or daytona; "
+        "commit the test for local or docker\n"
+    )
 
 
 @pytest.mark.parametrize(
@@ -447,7 +671,18 @@ def test_fix_selects_tokenfactory_executor_and_closes_one_api_client(
         async def close(self):
             self.closed = True
 
-    async def fake_fix(executor, model, source, issue, tests, suite, out, *, budgets):
+    async def fake_fix(
+        executor,
+        model,
+        source,
+        issue,
+        tests,
+        suite,
+        out,
+        *,
+        budgets,
+        progress,
+    ):
         captured.update(source=source, issue=issue, tests=tests, suite=suite, out=out)
         return _sample_result()
 
@@ -486,6 +721,207 @@ def test_fix_selects_tokenfactory_executor_and_closes_one_api_client(
     )
     assert captured["executor"].closed is True
     assert api.close_calls == 1
+
+
+def test_fix_prints_live_progress_and_writes_full_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+):
+    import receipts.cli as cli
+    import receipts.orchestrate as orchestrate
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("NO_COLOR", "1")
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    issue_file = Path("issue.txt")
+    issue_summary = (
+        "Repair the formatter at /Users/example/project without changing compatibility "
+        "across every supported Python version"
+    )
+    issue_file.write_text(
+        issue_summary + "\nMore context.\n",
+        encoding="utf-8",
+    )
+    result = _sample_result()
+
+    class FakeApi:
+        async def aclose(self):
+            pass
+
+    class FakeApiType:
+        @classmethod
+        def from_env(cls):
+            return FakeApi()
+
+    class FakeExecutor:
+        def __init__(self, root, sink, run_id, api, *, busybox):
+            self.api = api
+
+        async def close(self):
+            pass
+
+    async def fake_fix(
+        executor,
+        model,
+        source,
+        issue,
+        tests,
+        suite,
+        out,
+        *,
+        budgets,
+        progress,
+    ):
+        event = orchestrate.ProgressEvent
+        progress(event(kind="baseline", message="1 specification test fails; 1 test passes", duration_s=1.2))
+        progress(event(kind="checkpoint", message="swerebenchv2/example:1; checkpoint-1", duration_s=2.0))
+        progress(
+            event(
+                kind="agent_tool",
+                action="read",
+                message="/tmp/local-private-name/token.txt",
+            ),
+        )
+        progress(event(kind="agent_tool", action="edit", message="/Users/example/project/calc.py"))
+        progress(event(kind="agent_tool", action="write", message="/Users/example/project/notes.txt"))
+        progress(
+            event(
+                kind="agent_tool",
+                action="run",
+                message=(
+                    "/opt/receipts-abcd/bin/busybox python -I\n"
+                    "/opt/receipts-abcd/receipts_pytest.py --no-header -rA "
+                    "--tb=line --color=no -p no:cacheprovider "
+                    "-W ignore::DeprecationWarning tests/test_calc.py "
+                    "-o junit_family=xunit1 --continue-on-collection-errors "
+                    "--junitxml=/opt/receipts/reports/a.xml"
+                ),
+                exit_code=0,
+                duration_s=0.4,
+            ),
+        )
+        progress(
+            event(
+                kind="agent_finish",
+                message=(
+                    "\033[35mCorrected subtraction.\033[0m "
+                    "Details in /opt/receipts-private/report.txt"
+                ),
+            ),
+        )
+        progress(
+            event(
+                kind="witness",
+                message=(
+                    "w1; fresh sandbox from checkpoint checkpoi; "
+                    "applied calc.py; dropped none"
+                ),
+                duration_s=0.5,
+            ),
+        )
+        for number, message in enumerate(
+            (
+                "1 of 1 target tests pass",
+                "1 of 1 baseline-passing tests still pass",
+                "all 2 baseline tests collected",
+                "1 changed file is in scope",
+                "agent and witness chains are intact",
+            ),
+            start=1,
+        ):
+            progress(
+                event(
+                    kind="check",
+                    check_id=f"R{number}",
+                    message=message,
+                    passed=True,
+                ),
+            )
+        progress(event(kind="verdict", message="VERIFIED", passed=True))
+        return result
+
+    monkeypatch.setattr(cli, "TokenFactorySandboxApi", FakeApiType)
+    monkeypatch.setattr(cli, "TokenFactoryExecutor", FakeExecutor)
+    monkeypatch.setattr(cli, "load_busybox", lambda: b"trusted-busybox")
+    monkeypatch.setattr(cli, "fix", fake_fix)
+    model = _honest_model()
+    model.config = {"model": "fake-model"}
+
+    status = main(
+        [
+            "fix",
+            "--image",
+            "swerebenchv2/example:1",
+            "--workdir",
+            "/repo",
+            "--test",
+            TARGET,
+            "--issue-file",
+            str(issue_file),
+            "--executor",
+            "tokenfactory",
+            "--out",
+            "run",
+        ],
+        model=model,
+    )
+
+    output = capsys.readouterr().out
+    assert status == 0
+    header = output.splitlines()[0]
+    assert header.startswith("Fixing Repair the formatter")
+    assert header.endswith("with fake-model on Nebius Token Factory Sandboxes")
+    assert all(f"  · {verb} " in output for verb in ("reads", "edits", "writes", "runs"))
+    assert "pytest tests/test_calc.py" in output
+    assert all(f"✓ {label}" in output for label in ("spec passes", "nothing breaks", "none removed",
+                                                     "tests untouched", "hash chain"))
+    assert "verdict" not in output
+    assert "VERIFIED in 3s · $0.01 of Nemotron tokens" in output
+    assert "receipt: run/receipt.md" in output
+    assert "**Verdict: VERIFIED**" not in output
+    assert "/opt/receipts-" not in output
+    assert "/Users/example" not in output
+    assert "/tmp/local-private-name" not in output
+    assert "\033[" not in output
+    assert all(len(line) <= 100 for line in output.splitlines())
+    assert (Path("run") / "receipt.md").read_text(encoding="utf-8") == render(result)
+
+
+def test_fix_progress_header_clips_a_long_model_id(capsys):
+    import receipts.cli as cli
+
+    model = _honest_model()
+    model.config = {"model": "model-" + "x" * 160}
+
+    cli._FixProgressRenderer("Repair subtraction.", model, "tokenfactory")
+
+    header = capsys.readouterr().out.splitlines()[0]
+    assert len(header) <= 100
+    assert "…" in header
+    assert header.endswith("on Nebius Token Factory Sandboxes")
+
+
+def test_fix_progress_keeps_applied_and_dropped_witness_paths(capsys):
+    import receipts.cli as cli
+    from receipts.orchestrate import ProgressEvent
+
+    renderer = cli._FixProgressRenderer("Repair subtraction.", _honest_model(), "daytona")
+    renderer(
+        ProgressEvent(
+            kind="witness",
+            message=(
+                "w1; fresh sandbox from checkpoint checkpoi; "
+                "files applied calc/__init__.py; dropped tests/test_calc.py"
+            ),
+            duration_s=0.5,
+        ),
+    )
+
+    line = capsys.readouterr().out.splitlines()[-1]
+    assert "applied __init__.py" in line
+    assert "dropped test_calc.py" in line
+    assert len(line) <= 100
 
 
 def test_show_prints_the_serialized_run_receipt(tmp_path: Path, capsys):

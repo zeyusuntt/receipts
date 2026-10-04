@@ -9,6 +9,7 @@ import posixpath
 import re
 import shlex
 import time
+from collections.abc import Callable
 from typing import Any, Literal, TextIO
 
 from pydantic import (
@@ -220,6 +221,13 @@ class WorkerOutcome(BaseModel):
     summary: str
     turns: int
     receipt_ids: list[str]
+
+
+class WorkerToolProgress(BaseModel):
+    action: Literal["read", "edit", "write", "run"]
+    value: str
+    exit_code: int | None = None
+    duration_s: float
 
 
 class _ReadFileArgs(BaseModel):
@@ -741,6 +749,7 @@ class Worker:
         writer: TextIO,
         repo_root: str | None = None,
         scratch_path: str | None = None,
+        progress: Callable[[WorkerToolProgress], None] | None = None,
     ) -> None:
         self.model = model
         self.executor = executor
@@ -761,6 +770,7 @@ class Worker:
             {"role": "user", "content": initial_message},
         ]
         self.repo_root = repo_root
+        self.progress = progress
         self._receipt_ids: list[str] = []
         self._successful_write = False
         self._premature_finish_refused = False
@@ -1082,6 +1092,7 @@ class Worker:
                 0.0,
                 budget.max_wall_seconds - (time.monotonic() - started),
             )
+            tool_started = time.monotonic()
             try:
                 result, finished, result_class = await self._execute_tool(
                     primary,
@@ -1183,6 +1194,28 @@ class Worker:
             else:
                 consecutive_protocol_errors = 0
                 result = _with_alias(alias_target, result)
+
+            if primary.name != "finish" and self.progress is not None:
+                argument = "command" if primary.name == "run_command" else "path"
+                value = primary.arguments.get(argument, "")
+                exit_code = None
+                if primary.name == "run_command":
+                    match = re.search(r"(?:^|\n)exit (-?\d+)(?:\n|$)", result)
+                    if match is not None:
+                        exit_code = int(match.group(1))
+                self.progress(
+                    WorkerToolProgress(
+                        action={
+                            "read_file": "read",
+                            "edit_file": "edit",
+                            "write_file": "write",
+                            "run_command": "run",
+                        }[primary.name],
+                        value=str(value),
+                        exit_code=exit_code,
+                        duration_s=time.monotonic() - tool_started,
+                    ),
+                )
 
             if finished is not None:
                 summary, claims = finished
@@ -1409,5 +1442,6 @@ __all__ = [
     "Worker",
     "WorkerBudget",
     "WorkerOutcome",
+    "WorkerToolProgress",
     "pytest_args",
 ]

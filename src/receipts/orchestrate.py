@@ -6,15 +6,22 @@ import base64
 import hashlib
 import importlib.metadata
 import json
+import re
 import shlex
 import time
+from collections.abc import Callable
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 from receipts.agent.planner import Plan, make_plan
-from receipts.agent.worker import Worker, WorkerBudget, WorkerOutcome
+from receipts.agent.worker import (
+    Worker,
+    WorkerBudget,
+    WorkerOutcome,
+    WorkerToolProgress,
+)
 from receipts.cost import (
     CostMeter,
     TokenUsage,
@@ -135,6 +142,62 @@ class RunResult(BaseModel):
     checkpoint_id: str
     agent_branch_id: str
     cleanup_error: str | None = None
+
+
+class ProgressEvent(BaseModel):
+    kind: Literal[
+        "baseline",
+        "checkpoint",
+        "agent_tool",
+        "agent_finish",
+        "witness",
+        "check",
+        "appeal",
+        "verdict",
+    ]
+    message: str
+    duration_s: float | None = None
+    action: Literal["read", "edit", "write", "run"] | None = None
+    exit_code: int | None = None
+    check_id: str | None = None
+    passed: bool | None = None
+    attempt: int | None = None
+
+
+ProgressCallback = Callable[[ProgressEvent], None]
+
+
+def _emit(progress: ProgressCallback | None, event: ProgressEvent) -> None:
+    if progress is not None:
+        progress(event)
+
+
+def _first_sentence(summary: str) -> str:
+    text = " ".join(summary.strip().split())
+    match = re.match(r"^.*?[.!?](?=\s|$)", text)
+    return match.group(0) if match is not None else text
+
+
+def _predicate_progress_message(
+    predicate: Any,
+    baseline: Baseline,
+    changed_files: int,
+) -> str:
+    if not predicate.passed:
+        return predicate.evidence
+    if predicate.id == "R1_fail_to_pass":
+        count = len(baseline.target)
+        return f"{count} of {count} target tests pass"
+    if predicate.id == "R2_pass_to_pass":
+        count = len(baseline.protected)
+        return f"{count} of {count} baseline-passing tests still pass"
+    if predicate.id == "R3_no_shrink":
+        return f"all {len(baseline.collected_ids)} baseline tests collected; skips unchanged"
+    if predicate.id == "R4_patch_scope":
+        return f"{changed_files} changed file(s), all in scope"
+    if predicate.id == "R5_provenance":
+        return "agent and witness chains are intact; applied digest matches"
+    return predicate.evidence
 
 
 class _ReceiptCollector:
@@ -567,6 +630,7 @@ async def fix(
     appeals: int = 1,
     budgets: RunBudgets | None = None,
     spec_paths: list[str] | None = None,
+    progress: ProgressCallback | None = None,
 ) -> RunResult:
     if appeals < 0:
         raise ValueError("appeals cannot be negative")
@@ -612,6 +676,7 @@ async def fix(
 
     try:
         base = await recording.prepare(source)
+        baseline_started = time.monotonic()
         baseline = await establish_baseline(
             recording,
             base,
@@ -619,6 +684,17 @@ async def fix(
             spec_tests,
             budget.baseline_limit_s,
             spec_paths=effective_spec_paths,
+        )
+        _emit(
+            progress,
+            ProgressEvent(
+                kind="baseline",
+                message=(
+                    f"{len(baseline.target)} specification test(s) fail; "
+                    f"{len(baseline.protected)} tests pass"
+                ),
+                duration_s=time.monotonic() - baseline_started,
+            ),
         )
 
         disclosure = await _collect_disclosure(
@@ -645,6 +721,15 @@ async def fix(
         baseline = baseline.model_copy(update={"scope": scope})
         run_directory.write_json("baseline.json", baseline)
         checkpoint = await recording.checkpoint(base)
+        source_name = source.image if isinstance(source, ImageSource) else source.url
+        _emit(
+            progress,
+            ProgressEvent(
+                kind="checkpoint",
+                message=f"{source_name}; {checkpoint.id[:8]}",
+                duration_s=time.monotonic() - started,
+            ),
+        )
         await recording.release(base)
         (agent,) = await recording.fork(checkpoint, 1, prefix="agent")
         scratch_path = recording.scratch_path(agent)
@@ -667,6 +752,18 @@ async def fix(
         selected_patch_path: str | None = None
         worker_log = run_directory.path("agent/worker.jsonl")
         with worker_log.open("a", encoding="utf-8") as writer:
+            def report_tool(event: WorkerToolProgress) -> None:
+                _emit(
+                    progress,
+                    ProgressEvent(
+                        kind="agent_tool",
+                        action=event.action,
+                        message=event.value,
+                        exit_code=event.exit_code,
+                        duration_s=event.duration_s,
+                    ),
+                )
+
             worker = Worker(
                 model=model,
                 executor=recording,
@@ -682,10 +779,20 @@ async def fix(
                 writer=writer,
                 repo_root=source.workdir if isinstance(source, ImageSource) else None,
                 scratch_path=scratch_path,
+                progress=report_tool if progress is not None else None,
             )
             outcome = await worker.attempt(budget.worker)
+            _emit(
+                progress,
+                ProgressEvent(
+                    kind="agent_finish",
+                    message=_first_sentence(outcome.summary),
+                    attempt=1,
+                ),
+            )
 
             for attempt_number in range(1, appeals + 2):
+                witness_started = time.monotonic()
                 verified = await verify_attempt(
                     recording,
                     agent,
@@ -696,6 +803,42 @@ async def fix(
                     attempt_number,
                     spec_paths=baseline.spec_paths,
                     scope=baseline.scope,
+                )
+                changed_paths = (
+                    [changed.path for changed in verified.patch.diff.files]
+                    if verified.patch.diff is not None
+                    else []
+                )
+                dropped = set(verified.dropped)
+                apply_succeeded = verified.apply.exit_code == 0
+                applied_paths = (
+                    [path for path in changed_paths if path not in dropped]
+                    if apply_succeeded
+                    else []
+                )
+                witness_origin = (
+                    f"fresh sandbox from checkpoint {checkpoint.id[:8]}"
+                    if verified.witness_provisioned
+                    else f"witness not provisioned from checkpoint {checkpoint.id[:8]}"
+                )
+                apply_status = (
+                    ""
+                    if apply_succeeded
+                    else f"; apply failed (exit {verified.apply.exit_code})"
+                )
+                _emit(
+                    progress,
+                    ProgressEvent(
+                        kind="witness",
+                        message=(
+                            f"{verified.witness.id}; {witness_origin}; files applied "
+                            f"{', '.join(applied_paths) if applied_paths else 'none'}; "
+                            f"dropped {', '.join(verified.dropped) if verified.dropped else 'none'}"
+                            f"{apply_status}"
+                        ),
+                        duration_s=time.monotonic() - witness_started,
+                        attempt=attempt_number,
+                    ),
                 )
                 load_confirmation = None
                 if (
@@ -739,6 +882,35 @@ async def fix(
                     ),
                 )
                 verdict_history.append(verdict)
+                changed_files = len(changed_paths)
+                for predicate in verdict.predicates:
+                    if predicate.id == "R6_claim_audit":
+                        if verdict.claim_audit == "contradicted":
+                            _emit(
+                                progress,
+                                ProgressEvent(
+                                    kind="check",
+                                    check_id="R6 advisory",
+                                    message=verdict.claim_evidence,
+                                    passed=False,
+                                    attempt=attempt_number,
+                                ),
+                            )
+                        continue
+                    _emit(
+                        progress,
+                        ProgressEvent(
+                            kind="check",
+                            check_id=predicate.id,
+                            message=_predicate_progress_message(
+                                predicate,
+                                baseline,
+                                changed_files,
+                            ),
+                            passed=predicate.passed,
+                            attempt=attempt_number,
+                        ),
+                    )
 
                 attempt_root = f"attempts/{attempt_number}"
                 patch_path = f"{attempt_root}/patch.diff"
@@ -795,12 +967,42 @@ async def fix(
                     break
                 if verdict.status != "REJECTED" or attempt_number > appeals:
                     break
+                appeal_message = _appeal_evidence(verdict)
+                _emit(
+                    progress,
+                    ProgressEvent(
+                        kind="appeal",
+                        message=appeal_message.replace("\n", "; "),
+                        attempt=attempt_number,
+                    ),
+                )
                 outcome = await worker.appeal(
-                    _appeal_evidence(verdict),
+                    appeal_message,
                     budget.worker,
+                )
+                _emit(
+                    progress,
+                    ProgressEvent(
+                        kind="agent_finish",
+                        message=_first_sentence(outcome.summary),
+                        attempt=attempt_number + 1,
+                    ),
                 )
 
         final_verdict = verdict_history[-1]
+        _emit(
+            progress,
+            ProgressEvent(
+                kind="verdict",
+                message={
+                    "PASS": "VERIFIED",
+                    "REJECTED": "REJECTED",
+                    "ERROR": "ERROR",
+                }[final_verdict.status],
+                passed=final_verdict.status == "PASS",
+                attempt=len(verdict_history),
+            ),
+        )
         cost = _cost_summary(model, disclosure, collector, worker_log, plan)
         run_directory.write_json("cost.json", cost)
         result = RunResult(
@@ -840,6 +1042,7 @@ __all__ = [
     "RunBudgets",
     "RunInput",
     "RunResult",
+    "ProgressEvent",
     "fix",
     "worker_initial_message",
 ]

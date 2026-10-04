@@ -8,12 +8,13 @@ import importlib
 import inspect
 import json
 import os
+import re
 import signal
 import shutil
 import tempfile
 import uuid
 from collections.abc import Awaitable, Sequence
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from pydantic import BaseModel
@@ -27,7 +28,7 @@ from receipts.llm import (
     _parse_dotenv,
     load_config,
 )
-from receipts.orchestrate import RunBudgets, RunResult, fix
+from receipts.orchestrate import ProgressEvent, RunBudgets, RunResult, fix
 from receipts.pilot.cleanup import cleanup_manifests, render_cleanup
 from receipts.pilot.replay import summary_line as replay_summary_line
 from receipts.pilot.replay import write_replay
@@ -48,11 +49,27 @@ from receipts.sandbox.protocol import ImageSource, RepoAtCommit
 from receipts.sandbox.sink import MemorySink, RunSink
 from receipts.sandbox.tokenfactory import TokenFactoryExecutor
 from receipts.sandbox.tokenfactory_api import TokenFactorySandboxApi
-from receipts.swerebench import Instance
+from receipts.swerebench import (
+    Instance,
+    _spec_paths_from_test_patch,
+    _test_patch_setup_commands,
+)
 
 
 _REQUIRED_ENV = ("OPENAI_API_KEY", "OPENAI_BASE_URL", "NEMOTRON_MODEL")
 _PILOT_ROWS_PATH = Path("data/rebench-v2-python.jsonl")
+_FIX_LINE_LIMIT = 100
+_FIX_LABEL_WIDTH = 16
+# The gate's five checks, named the way the receipt page and the video name them.
+_CHECK_LABELS = {
+    "R1": "spec passes",
+    "R2": "nothing breaks",
+    "R3": "none removed",
+    "R4": "tests untouched",
+    "R5": "hash chain",
+}
+_ANSI_ESCAPE = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+_LOCAL_ABSOLUTE_PATH = re.compile(r"(?<![:/\w.])/(?!/)[^\s;]+")
 
 
 class _DoctorResponse(BaseModel):
@@ -77,6 +94,11 @@ def _parser() -> argparse.ArgumentParser:
         help="pytest node id that must fail before the fix",
     )
     fix_parser.add_argument("--issue-file", required=True, type=Path)
+    fix_parser.add_argument(
+        "--test-patch",
+        type=Path,
+        help="unified diff that adds or changes the failing test in a sandbox",
+    )
     fix_parser.add_argument("--install", default="true", help="installation command")
     fix_parser.add_argument("--suite", default="tests", help="pytest suite arguments")
     fix_parser.add_argument(
@@ -252,6 +274,200 @@ async def docker_ready(timeout_s: float = 60) -> tuple[bool, str]:
     return await _docker_ready(timeout_s)
 
 
+def _fix_model_id(model: ModelClient) -> str:
+    config = getattr(model, "config", None)
+    if isinstance(config, BaseModel):
+        value = config.model_dump().get("model")
+    elif isinstance(config, dict):
+        value = config.get("model")
+    else:
+        value = None
+    return str(value or type(model).__name__)
+
+
+def _fix_executor_name(executor: str) -> str:
+    return {
+        "tokenfactory": "Nebius Token Factory Sandboxes",
+        "daytona": "Daytona",
+        "docker": "Docker",
+        "local": "the local executor",
+    }[executor]
+
+
+def _clip(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    if limit <= 1:
+        return "…"[:limit]
+    return text[: limit - 1].rstrip() + "…"
+
+
+def _hide_local_paths(text: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        value = match.group(0)
+        trailing = ""
+        while value and value[-1] in ",.)]":
+            trailing = value[-1] + trailing
+            value = value[:-1]
+        return (PurePosixPath(value).name or "~") + trailing
+
+    return _LOCAL_ABSOLUTE_PATH.sub(replace, text)
+
+
+def _console_text(text: str) -> str:
+    """Make external text safe to render as one terminal line."""
+
+    without_ansi = _ANSI_ESCAPE.sub("", text)
+    return _hide_local_paths(" ".join(without_ansi.split()))
+
+
+def _fix_duration(seconds: float) -> str:
+    rounded = int(seconds + 0.5)
+    minutes, remaining = divmod(rounded, 60)
+    if minutes:
+        return f"{minutes}m {remaining}s"
+    return f"{remaining}s"
+
+
+def _display_receipt_path(path: Path) -> str:
+    if not path.is_absolute():
+        return str(path)
+    try:
+        return str(path.relative_to(Path.cwd()))
+    except ValueError:
+        return f"…/{path.parent.name}/{path.name}"
+
+
+def _compact_path_list(value: str) -> str:
+    if value == "none":
+        return value
+    paths = [PurePosixPath(item.strip()).name for item in value.split(",")]
+    if len(paths) <= 2:
+        return ", ".join(paths)
+    return f"{paths[0]}, +{len(paths) - 1}"
+
+
+def _compact_witness_message(message: str) -> str:
+    parts: list[str] = []
+    for part in message.split(";"):
+        part = part.strip()
+        if part.startswith("fresh sandbox from checkpoint "):
+            part = "fresh checkpoint " + part.removeprefix(
+                "fresh sandbox from checkpoint ",
+            )
+        elif part.startswith("witness not provisioned from checkpoint "):
+            part = "not provisioned checkpoint " + part.removeprefix(
+                "witness not provisioned from checkpoint ",
+            )
+        elif part.startswith("files applied "):
+            part = "applied " + _compact_path_list(
+                part.removeprefix("files applied "),
+            )
+        elif part.startswith("dropped "):
+            part = "dropped " + _compact_path_list(part.removeprefix("dropped "))
+        parts.append(part)
+    return "; ".join(parts)
+
+
+class _FixProgressRenderer:
+    def __init__(self, issue: str, model: ModelClient, executor: str) -> None:
+        first_line = issue.splitlines()[0].strip() if issue.splitlines() else "issue"
+        first_line = _console_text(first_line)
+        model_id = _console_text(_fix_model_id(model))
+        executor_name = _fix_executor_name(executor)
+        fixed_width = len("Fixing ") + len(" with ") + len(" on ") + len(executor_name)
+        content_width = max(_FIX_LINE_LIMIT - fixed_width, 2)
+        model_limit = min(24, max(content_width // 2, 1))
+        model_id = _clip(model_id, model_limit)
+        issue_limit = max(content_width - len(model_id), 1)
+        suffix = f" with {model_id} on {executor_name}"
+        print(f"Fixing {_clip(first_line, issue_limit)}{suffix}")
+        print()
+
+    @staticmethod
+    def _mark(event: ProgressEvent) -> str:
+        from receipts.reverify import _color
+
+        if event.kind == "check" or event.kind == "verdict":
+            if event.passed:
+                return _color("✓", "32")
+            return _color("✗", "31")
+        return "·"
+
+    @staticmethod
+    def _label(event: ProgressEvent) -> str:
+        if event.kind == "agent_tool":
+            return {"read": "reads", "edit": "edits", "write": "writes", "run": "runs"}.get(
+                event.action or "", "agent",
+            )
+        if event.kind == "agent_finish":
+            return "says done"
+        if event.kind == "check":
+            if event.check_id == "R6 advisory":
+                return "claim (advisory)"
+            return _CHECK_LABELS.get((event.check_id or "").split("_", 1)[0], "check")
+        return event.kind
+
+    @staticmethod
+    def _body(event: ProgressEvent) -> str:
+        if event.kind == "agent_tool" and event.action == "run":
+            from receipts.site import _display_command
+
+            body = _display_command(
+                {
+                    "kind": "command",
+                    "cmd": event.message,
+                    "exit_code": event.exit_code,
+                },
+            )
+        elif event.kind == "agent_tool" and event.message.startswith("/"):
+            body = PurePosixPath(event.message).name
+        elif event.kind == "witness":
+            body = _compact_witness_message(event.message)
+        else:
+            body = event.message
+        return _console_text(body)
+
+    def __call__(self, event: ProgressEvent) -> None:
+        if event.kind == "verdict":
+            return  # the summary line after the run says it
+        label = self._label(event)
+        mark = self._mark(event)
+        plain_prefix = f"  · {label:<{_FIX_LABEL_WIDTH}} "
+        rendered_prefix = f"  {mark} {label:<{_FIX_LABEL_WIDTH}} "
+        suffix = ""
+        if event.exit_code is not None:
+            suffix += f" · exit {event.exit_code}"
+        if event.duration_s is not None:
+            suffix += f" ({event.duration_s:.1f}s)"
+        available = _FIX_LINE_LIMIT - len(plain_prefix) - len(suffix)
+        print(rendered_prefix + _clip(self._body(event), max(available, 1)) + suffix)
+
+    def finish(self, result: RunResult, receipt_path: Path) -> None:
+        elapsed = _fix_duration(result.wall_time_s)
+        estimated_dollars = result.cost.get("estimated_dollars")
+        cost = (
+            f"${float(estimated_dollars):.2f} of Nemotron tokens"
+            if estimated_dollars is not None
+            else "token cost unavailable"
+        )
+        if result.final_verdict.status == "PASS":
+            summary = f"VERIFIED in {elapsed} · {cost}"
+        elif result.final_verdict.status == "REJECTED":
+            failed = result.final_verdict.failed_predicate_ids()
+            suffix = f" at {', '.join(item.split('_', 1)[0] for item in failed)}" if failed else ""
+            summary = f"REJECTED{suffix} in {elapsed} · {cost}"
+        else:
+            summary = f"ERROR in {elapsed} · {cost}"
+        print("\n" + _clip(summary, _FIX_LINE_LIMIT))
+        print(
+            _clip(
+                f"receipt: {_display_receipt_path(receipt_path)}",
+                _FIX_LINE_LIMIT,
+            ),
+        )
+
+
 async def _doctor(live: bool, model: ModelClient | None) -> int:
     env_path = Path(".env")
     values = _parse_dotenv(env_path)
@@ -289,10 +505,25 @@ async def _doctor(live: bool, model: ModelClient | None) -> int:
 
 async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
     issue = args.issue_file.read_text(encoding="utf-8").strip()
+    setup: list[str] = []
+    spec_paths: list[str] | None = None
+    if args.test_patch is not None:
+        if args.executor in {"local", "docker"}:
+            raise ValueError(
+                "--test-patch is only supported with tokenfactory or daytona; "
+                "commit the test for local or docker",
+            )
+        test_patch = args.test_patch.read_text(encoding="utf-8")
+        setup = _test_patch_setup_commands(
+            test_patch,
+            PurePosixPath("/tmp/receipts-cli-test.patch"),
+        )
+        spec_paths = _spec_paths_from_test_patch(test_patch, context="--test-patch")
     selected_model = model or TokenFactoryClient(
         load_config(env_path=Path(".env")),
         env_path=Path(".env"),
     )
+    progress = _FixProgressRenderer(issue, selected_model, args.executor)
     if args.executor in {"daytona", "tokenfactory"}:
         if not args.image or not args.workdir:
             raise ValueError(
@@ -302,6 +533,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
             image=args.image,
             workdir=args.workdir,
             python=args.python,
+            setup=setup,
         )
     else:
         if not args.repo or not args.commit:
@@ -313,34 +545,36 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
         )
     run_id = f"receipts-{uuid.uuid4().hex[:12]}"
     budgets = _default_run_budgets()
+    fix_options: dict[str, Any] = {"budgets": budgets, "progress": progress}
+    if spec_paths is not None:
+        fix_options["spec_paths"] = spec_paths
+
+    async def run_and_persist(executor: Any) -> RunResult:
+        result = await fix(
+            executor,
+            selected_model,
+            source,
+            issue,
+            args.tests,
+            args.suite,
+            args.out,
+            **fix_options,
+        )
+        receipt_path = args.out / "receipt.md"
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt_path.write_text(render(result), encoding="utf-8")
+        progress.finish(result, receipt_path)
+        return result
 
     with tempfile.TemporaryDirectory(prefix="receipts-executor-") as executor_root:
         sink = RunSink(args.out)
         if args.executor == "local":
             executor: Any = LocalExecutor(Path(executor_root), sink, run_id)
-            result = await fix(
-                executor,
-                selected_model,
-                source,
-                issue,
-                args.tests,
-                args.suite,
-                args.out,
-                budgets=budgets,
-            )
+            result = await run_and_persist(executor)
         elif args.executor == "docker":
             executor = DockerExecutor(Path(executor_root), sink, run_id)
             try:
-                result = await fix(
-                    executor,
-                    selected_model,
-                    source,
-                    issue,
-                    args.tests,
-                    args.suite,
-                    args.out,
-                    budgets=budgets,
-                )
+                result = await run_and_persist(executor)
             finally:
                 await executor.close()
         elif args.executor == "daytona":
@@ -351,16 +585,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
             api = AsyncDaytonaApi(AsyncDaytona(DaytonaConfig(api_key=api_key)))
             executor = DaytonaExecutor(Path(executor_root), sink, run_id, api)
             try:
-                result = await fix(
-                    executor,
-                    selected_model,
-                    source,
-                    issue,
-                    args.tests,
-                    args.suite,
-                    args.out,
-                    budgets=budgets,
-                )
+                result = await run_and_persist(executor)
             finally:
                 await executor.close()
         else:
@@ -377,22 +602,12 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
                 if getattr(executor, "api", None) is api:
                     executor.api = _BorrowedTokenFactorySandboxApi(api)
                 try:
-                    result = await fix(
-                        executor,
-                        selected_model,
-                        source,
-                        issue,
-                        args.tests,
-                        args.suite,
-                        args.out,
-                        budgets=budgets,
-                    )
+                    result = await run_and_persist(executor)
                 finally:
                     await executor.close()
             finally:
                 await api.aclose()
 
-    print(render(result), end="")
     return 0 if result.verified_fix else 1
 
 

@@ -225,6 +225,7 @@ async def _run(
     src_layout: bool = False,
     spec_tests: list[str] | None = None,
     extra_files: dict[str, str] | None = None,
+    progress=None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
@@ -267,6 +268,8 @@ async def _run(
             fail_agent_release=fail_agent_release,
         )
     extra = {} if spec_paths is None else {"spec_paths": spec_paths}
+    if progress is not None:
+        extra["progress"] = progress
     result = await orchestrate.fix(
         executor,
         model,
@@ -289,6 +292,78 @@ async def _run(
         **extra,
     )
     return result, run_dir, repo, model
+
+
+async def test_verified_fix_reports_progress_in_execution_order(tmp_path: Path):
+    events = []
+    model = _model(
+        [
+            _turn(
+                _call(
+                    "edit_file",
+                    {
+                        "path": "calc/__init__.py",
+                        "old_text": (
+                            "def sub(a, b):\n"
+                            "    return a + b  # bug: should be a - b\n"
+                        ),
+                        "new_text": "def sub(a, b):\n    return a - b\n",
+                    },
+                    "edit-source",
+                ),
+            ),
+            _turn(
+                _call(
+                    "run_command",
+                    {"command": "python -m pytest -q"},
+                    "run-suite",
+                ),
+            ),
+            _finish(
+                "finish",
+                summary="Corrected subtraction. Ran the full suite.",
+                changed=["calc/__init__.py"],
+                green=True,
+            ),
+        ],
+    )
+
+    result, _, _, _ = await _run(tmp_path, model, progress=events.append)
+
+    assert result.final_verdict.status == "PASS"
+    assert [event.kind for event in events] == [
+        "baseline",
+        "checkpoint",
+        "agent_tool",
+        "agent_tool",
+        "agent_finish",
+        "witness",
+        "check",
+        "check",
+        "check",
+        "check",
+        "check",
+        "verdict",
+    ]
+    assert [event.action for event in events if event.kind == "agent_tool"] == [
+        "edit",
+        "run",
+    ]
+    assert [event.check_id for event in events if event.kind == "check"] == [
+        "R1_fail_to_pass",
+        "R2_pass_to_pass",
+        "R3_no_shrink",
+        "R4_patch_scope",
+        "R5_provenance",
+    ]
+    assert all(event.passed for event in events if event.kind == "check")
+    assert next(event for event in events if event.kind == "agent_finish").message == (
+        "Corrected subtraction."
+    )
+    assert "fresh sandbox from checkpoint" in next(
+        event.message for event in events if event.kind == "witness"
+    )
+    assert events[-1].message == "VERIFIED"
 
 
 async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path: Path):
@@ -713,6 +788,7 @@ async def test_image_source_workdir_reaches_worker_prompt(tmp_path: Path):
 
 
 async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path):
+    events = []
     malicious_test = "def test_sub():\n    assert True\n"
     model = _model(
         [
@@ -760,7 +836,12 @@ async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path)
     )
 
     released: list[str] = []
-    result, run_dir, _, model = await _run(tmp_path, model, released=released)
+    result, run_dir, _, model = await _run(
+        tmp_path,
+        model,
+        released=released,
+        progress=events.append,
+    )
 
     assert result.final_verdict.status == "PASS"
     assert [verdict.status for verdict in result.verdict_history] == [
@@ -805,6 +886,18 @@ async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path)
     assert "tests/test_calc.py" in markdown
     assert "Changed the test and claimed success." in markdown
     assert "Restored the test, fixed the source, and ran the suite." in markdown
+
+    kinds = [event.kind for event in events]
+    appeal_index = kinds.index("appeal")
+    assert kinds[:appeal_index].count("witness") == 1
+    assert kinds[:appeal_index].count("check") == 5
+    assert kinds[appeal_index + 1 :].count("witness") == 1
+    assert kinds[appeal_index + 1 :].count("check") == 5
+    assert kinds[appeal_index + 1] == "agent_tool"
+    assert events[appeal_index].attempt == 1
+    assert "R4_patch_scope" in events[appeal_index].message
+    assert events[-1].kind == "verdict"
+    assert events[-1].message == "VERIFIED"
 
 
 async def test_agent_release_failure_after_result_is_recorded_and_returned(
@@ -922,18 +1015,25 @@ async def test_checkpoint_tampering_does_not_release_a_synthetic_witness(tmp_pat
         ],
     )
     released: list[str] = []
+    events = []
 
     result, run_dir, _, _ = await _run(
         tmp_path,
         model,
         appeals=0,
         released=released,
+        progress=events.append,
     )
 
     assert result.final_verdict.status == "ERROR"
     assert released == ["base", "agent1"]
     assert (run_dir / "attempts" / "1" / "verdict.json").is_file()
     assert (run_dir / "result.json").is_file()
+    witness = next(event for event in events if event.kind == "witness")
+    assert "witness not provisioned" in witness.message
+    assert "files applied none" in witness.message
+    assert "apply failed (exit 1)" in witness.message
+    assert "fresh sandbox" not in witness.message
 
 
 async def test_reproduced_load_failure_is_rejected_and_appealed(tmp_path: Path):

@@ -23,6 +23,21 @@ uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json
 
 It checks the patch digests, starts the task's public image, rebuilds the original checkpoint, replays the agent's patch through the same filter and gate on a fresh witness, grades the shipped patch with SWE-rebench's official grader, and must agree with the receipt on every check (about two minutes per receipt on Token Factory). With a Nebius account, add `--executor tokenfactory` to run it on Token Factory Sandboxes instead of Docker. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
 
+### Run it on another repo
+
+```sh
+uv run receipts fix \
+  --image ghcr.io/your-org/your-repo:test \
+  --workdir /workspace \
+  --test tests/test_widget.py::test_regression \
+  --test-patch failing-test.patch \
+  --issue-file issue.md \
+  --executor tokenfactory \
+  --out .receipts/widget-fix
+```
+
+It prints each agent and verification step as it happens, then writes the full Markdown receipt to `.receipts/widget-fix/receipt.md`.
+
 ## How it works
 
 ![Your failing test goes to Nemotron 3 Super on Nebius Token Factory, which works on an agent branch; a Token Factory Sandbox forked from the same checkpoint is the witness; plain-code gate; receipt. SWE-rebench's official grader runs separately.](docs/assets/architecture.png)
