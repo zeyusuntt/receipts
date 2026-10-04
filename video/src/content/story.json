@@ -27,6 +27,224 @@
     ]
   },
   "featured": {
+    "agent_steps": [
+      {
+        "display": "git ls-files -z",
+        "duration_s": 0.003746,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 0.0,
+        "receipt_id": "agent1-1",
+        "seq": 1
+      },
+      {
+        "display": "grep -n \"_parse_ftp_time\" fs/ftpfs.py",
+        "duration_s": 0.003298,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 12.098747,
+        "receipt_id": "agent1-2",
+        "seq": 2
+      },
+      {
+        "display": "find . -name \"*.py\" -exec grep -l \"def getmodified\" {} \\;",
+        "duration_s": 0.13487300000000002,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 17.114966,
+        "receipt_id": "agent1-3",
+        "seq": 3
+      },
+      {
+        "display": "grep -n \"test_getinfo_modified\" tests/test_ftpfs.py",
+        "duration_s": 0.003239,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 20.921476,
+        "receipt_id": "agent1-4",
+        "seq": 4
+      },
+      {
+        "display": "grep -n \"test_copy_preserve_time\" tests/test_memoryfs.py",
+        "duration_s": 0.003256,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 25.004017,
+        "receipt_id": "agent1-5",
+        "seq": 5
+      },
+      {
+        "display": "find . -name \"*.py\" -path \"./fs/*\" -exec grep -l \"def getmodified\" {} \\;",
+        "duration_s": 0.068263,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 29.157564,
+        "receipt_id": "agent1-6",
+        "seq": 6
+      },
+      {
+        "display": "grep -r \"getmodified\" fs/ | head -10",
+        "duration_s": 0.006417,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 31.897577,
+        "receipt_id": "agent1-7",
+        "seq": 7
+      },
+      {
+        "display": "grep -n \"def.*time\" fs/ftpfs.py",
+        "duration_s": 0.003121,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 35.083405,
+        "receipt_id": "agent1-8",
+        "seq": 8
+      },
+      {
+        "display": "grep -n \"def get\" fs/ftpfs.py | head -10",
+        "duration_s": 0.004699,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 37.244922,
+        "receipt_id": "agent1-9",
+        "seq": 9
+      },
+      {
+        "display": "grep -i \"mdtm\" fs/ftpfs.py",
+        "duration_s": 0.003297,
+        "exit_code": 1,
+        "kind": "command",
+        "offset_s": 43.846486,
+        "receipt_id": "agent1-10",
+        "seq": 10
+      },
+      {
+        "display": "write fs/ftpfs.py",
+        "duration_s": 0.004799,
+        "exit_code": 0,
+        "kind": "write",
+        "offset_s": 49.872106,
+        "receipt_id": "agent1-11",
+        "seq": 11
+      },
+      {
+        "display": "pytest tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified -v",
+        "duration_s": 0.844959,
+        "exit_code": 1,
+        "kind": "command",
+        "offset_s": 54.58773,
+        "receipt_id": "agent1-12",
+        "seq": 12
+      },
+      {
+        "display": "pytest tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified -v",
+        "duration_s": 0.865899,
+        "exit_code": 1,
+        "kind": "command",
+        "offset_s": 61.869568,
+        "receipt_id": "agent1-13",
+        "seq": 13
+      },
+      {
+        "display": "pytest tests/test_memoryfs.py::TestMemoryFS::test_copy_preserve_time -v",
+        "duration_s": 0.6970259999999999,
+        "exit_code": 1,
+        "kind": "command",
+        "offset_s": 69.021445,
+        "receipt_id": "agent1-14",
+        "seq": 14
+      },
+      {
+        "display": "pytest tests/test_ftpfs.py -v --tb=no -q",
+        "duration_s": 5.880048,
+        "exit_code": 1,
+        "kind": "command",
+        "offset_s": 78.908072,
+        "receipt_id": "agent1-15",
+        "seq": 15
+      },
+      {
+        "display": "python -c \"\nimport tempfile\nimport os\nfrom fs.memoryfs import MemoryFS\n\n# Test that basic functionality still works\nfs = MemoryFS()\nfs.makedir('test')\nfs.touch('test/file.txt')\nprint('MemoryFS basic test passed')\n\"",
+        "duration_s": 0.163824,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 98.454203,
+        "receipt_id": "agent1-16",
+        "seq": 16
+      },
+      {
+        "display": "write /tmp/test_ftpfs_getmodified.py",
+        "duration_s": 0.004356,
+        "exit_code": 0,
+        "kind": "write",
+        "offset_s": 103.758734,
+        "receipt_id": "agent1-17",
+        "seq": 17
+      },
+      {
+        "display": "python /tmp/test_ftpfs_getmodified.py",
+        "duration_s": 0.147096,
+        "exit_code": 1,
+        "kind": "command",
+        "offset_s": 106.254684,
+        "receipt_id": "agent1-18",
+        "seq": 18
+      },
+      {
+        "display": "write /tmp/test_mdtm_logic.py",
+        "duration_s": 0.004927,
+        "exit_code": 0,
+        "kind": "write",
+        "offset_s": 113.172249,
+        "receipt_id": "agent1-19",
+        "seq": 19
+      },
+      {
+        "display": "python /tmp/test_mdtm_logic.py",
+        "duration_s": 0.13750600000000002,
+        "exit_code": 0,
+        "kind": "command",
+        "offset_s": 116.252998,
+        "receipt_id": "agent1-20",
+        "seq": 20
+      },
+      {
+        "display": "pytest tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified -v",
+        "duration_s": 0.898323,
+        "exit_code": 1,
+        "kind": "command",
+        "offset_s": 119.611559,
+        "receipt_id": "agent1-21",
+        "seq": 21
+      },
+      {
+        "display": "pytest tests/test_ftpfs.py::TestFTPFS::test_getinfo tests/test_ftpfs.py::TestFTPFS::test_ftp_url tests/test_ftpfs.py::TestFTPFS::test_binary -v",
+        "duration_s": 0.763006,
+        "exit_code": 4,
+        "kind": "command",
+        "offset_s": 128.852518,
+        "receipt_id": "agent1-22",
+        "seq": 22
+      },
+      {
+        "display": "pytest tests/test_ftpfs.py::TestFTPFS::test_getinfo tests/test_ftpfs.py::TestFTPFS::test_ftp_url tests/test_ftpfs.py::TestFTPFS::test_exists -v",
+        "duration_s": 0.8562409999999999,
+        "exit_code": 1,
+        "kind": "command",
+        "offset_s": 136.356987,
+        "receipt_id": "agent1-23",
+        "seq": 23
+      },
+      {
+        "display": "capture patch",
+        "duration_s": 0.05575679196044803,
+        "exit_code": 0,
+        "kind": "diff",
+        "offset_s": 151.131982,
+        "receipt_id": "agent1-24",
+        "seq": 24
+      }
+    ],
     "agreement": [
       "agree_fail",
       "agree_pass"
@@ -214,6 +432,24 @@
       "w1": 2,
       "w2": 2
     },
+    "replay_windows": [
+      {
+        "duration_s": 5,
+        "start_s": 12.098747
+      },
+      {
+        "duration_s": 5,
+        "start_s": 49.872106
+      },
+      {
+        "duration_s": 5,
+        "start_s": 78.908072
+      },
+      {
+        "duration_s": 5,
+        "start_s": 151.131982
+      }
+    ],
     "repo": "PyFilesystem/pyfilesystem2",
     "run_id": "pilot-pyfilesystem__pyfilesystem2-462-a7a07ad9fa",
     "spec_tests": [
@@ -221,7 +457,35 @@
       "tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified",
       "tests/test_memoryfs.py::TestMemoryFS::test_copy_preserve_time"
     ],
-    "wall_time_s": 354.8896532920189
+    "wall_time_s": 354.8896532920189,
+    "witness_operations": [
+      {
+        "image_after": "26d63f5e-57f4-42ad-8a3e-0c159f8503fa",
+        "image_before": "bc230a98-942d-4bba-aa48-77d6b5ef8faa",
+        "kind": "apply",
+        "receipt_id": "w1-1"
+      },
+      {
+        "image_after": "59411d3d-7ab9-4d9c-aa59-2268d640f17b",
+        "image_before": "26d63f5e-57f4-42ad-8a3e-0c159f8503fa",
+        "kind": "verification",
+        "receipt_id": "w1-2"
+      }
+    ]
+  },
+  "media": {
+    "reverify": {
+      "command_end_s": 5.8,
+      "command_start_s": 1,
+      "duration_s": 104.12,
+      "fps": 25,
+      "height": 1440,
+      "path": "captures/reverify-tf.mp4",
+      "result_end_s": 102.2,
+      "result_start_s": 100.6,
+      "source": "ffprobe of public/captures/reverify-tf.mp4 and frame inspection at 0, 5, 6, 99 to 102 seconds; original tape ends after the real result.",
+      "width": 2560
+    }
   },
   "numbers": {
     "appeal": 7,
@@ -259,6 +523,7 @@
     "instance": "scikit-build__scikit-build-core-254",
     "launch": "v1 launch 2, commit ecc6dae (2026-10-01)",
     "official_resolved": false,
+    "real_build_package": "src/scikit_build_core/build/",
     "real_package": "src/scikit_build_core/",
     "shipped_files": [
       "scikit_build_core/__init__.py",
@@ -266,8 +531,212 @@
       "scikit_build_core/build/_scripts.py"
     ]
   },
+  "presentation": {
+    "appeal": {
+      "checks_title": "Same five checks.",
+      "cues": {
+        "checks": "same checks",
+        "fork": "New sandbox",
+        "patch": "It fixes",
+        "return": "goes back",
+        "verified": "This time it passes"
+      },
+      "files_title": "The second patch",
+      "title": "The evidence goes back. Once.",
+      "verified_title": "This time it passes.",
+      "witness_title": "New sandbox. Same checkpoint."
+    },
+    "architecture": {
+      "agent": "Nemotron 3 Super",
+      "agent_detail": "on Nebius Token Factory",
+      "agent_role": "agent branch",
+      "checkpoint": "checkpoint",
+      "gate": "Gate",
+      "gate_detail": "plain code",
+      "hash": "SHA-256",
+      "official": "SWE-rebench official grader",
+      "patch": "source patch",
+      "receipt": "Receipt",
+      "run": "run",
+      "test": "Your failing test",
+      "title": "Nemotron writes the fix. Plain code decides.",
+      "witness": "Token Factory Sandbox",
+      "witness_detail": "forked from the checkpoint",
+      "witness_role": "witness"
+    },
+    "byline": "Zeyu · builds evaluations for AI agents",
+    "close": {
+      "first": "Agents can write the code.",
+      "repo_url": "github.com/zeyusuntt/receipts",
+      "second": "Receipts makes them show their work.",
+      "second_cue": "Receipts makes",
+      "site_url": "https://zeyusuntt.github.io/receipts/",
+      "tagline": "Nemotron writes the fix. Plain code decides.",
+      "url_cue": "show their work"
+    },
+    "cold_open": {
+      "agent_label": "The agent said",
+      "cue": "They didn't",
+      "failed": "FAILED",
+      "question": "Was it?",
+      "run_short_chars": 8,
+      "witness_label": "witness sandbox · Azure WALinuxAgent · run {run}"
+    },
+    "corner": "Nebius Token Factory · NVIDIA Nemotron",
+    "cues": {
+      "agent": "Nemotron still",
+      "claimed": "It said \"done\"",
+      "false": "Twelve",
+      "fork": "forks",
+      "gate": "plain code",
+      "patch": "applies",
+      "rate": "by SWE-rebench's own grader",
+      "rejected": "Rejected",
+      "tasks": "a hundred",
+      "tests": "runs the tests",
+      "title": "That's why",
+      "who": "I'm Zeyu",
+      "witness": "A fresh"
+    },
+    "featured": {
+      "agent_title": "The agent works.",
+      "checks": [
+        {
+          "id": "R1_fail_to_pass",
+          "label": "spec passes"
+        },
+        {
+          "id": "R2_pass_to_pass",
+          "label": "nothing that passed breaks"
+        },
+        {
+          "id": "R3_no_shrink",
+          "label": "no test removed or skipped"
+        },
+        {
+          "id": "R4_patch_scope",
+          "label": "patch stays out of your tests"
+        },
+        {
+          "id": "R5_provenance",
+          "label": "every step traces back by hash"
+        }
+      ],
+      "claim_label": "What it said",
+      "fail": "FAIL",
+      "label": "a real task from the {tasks} · PyFilesystem2",
+      "model_suffix": "on Nebius Token Factory",
+      "pass": "PASS",
+      "plan_box": "The plan",
+      "rejected_title": "The spec still fails.",
+      "replay_label": "selected recorded steps",
+      "replay_speed": 10,
+      "spec": "The failing test is the spec.",
+      "speed_suffix": "x",
+      "witness_label": "Token Factory Sandbox · witness {branch}"
+    },
+    "numbers": {
+      "claimed": "said ‘done’ {claimed} times",
+      "confidence": 95,
+      "false": "{false_dones} of those weren't true",
+      "grader": "SWE-rebench's own grader",
+      "interval": "{confidence}% interval {low} to {high}%",
+      "legend": [
+        "said ‘done’",
+        "‘done’ that wasn't true",
+        "didn't claim done"
+      ],
+      "percent": "%",
+      "rate": "of the unguarded agent's ‘done’ was false",
+      "rule": "picked by a rule fixed in advance",
+      "tasks": "{tasks} real SWE-rebench bugs"
+    },
+    "pilot": {
+      "copy_label": "a copy the agent put at the repository root",
+      "cues": {
+        "fixed": "fixed it",
+        "published": "I published",
+        "rerun": "started over",
+        "tree": "a copy of the package",
+        "verdict": "the gate let"
+      },
+      "fixed": "fixed in {commit}: the runner no longer puts the repository root on sys.path",
+      "gate_label": "The gate",
+      "official_label": "The official grader",
+      "published": "published as Amendment 2 (2026-10-01)",
+      "real_label": "the real package",
+      "rerun": "every task run again",
+      "title": "First pilot · Oct 1 · launch 2",
+      "tree_title": "Where the test runner looked"
+    },
+    "proof": {
+      "agreement": {
+        "agree_fail": "agrees with the gate",
+        "agree_pass": "agrees with the gate",
+        "gate_looser": "disagrees: the gate passed it",
+        "gate_stricter": "disagrees: the gate rejected it"
+      },
+      "check_cues": [
+        "the spec passes",
+        "nothing else breaks",
+        "no test is deleted",
+        "your tests stay untouched",
+        "every step is hashed"
+      ],
+      "digest_label": "applied digest matches",
+      "no_model": "No model decides any of it.",
+      "no_model_cues": [
+        "No model decides any of it",
+        "No model",
+        "plain code"
+      ],
+      "not_resolved": "not resolved",
+      "official_cues": [
+        "SWE-rebench's official grader",
+        "SWE-rebench's grader"
+      ],
+      "official_label": "SWE-rebench's official grader, run separately",
+      "receipt_box": "RECEIPTS",
+      "receipt_label": "The receipt",
+      "resolved": "resolved",
+      "title": "Every check is plain code."
+    },
+    "results": {
+      "agreement": "the gate and SWE-rebench's grader agreed on {resolved} of {passes} passes",
+      "cost": "of Nemotron tokens per fix",
+      "cues": {
+        "cost": "about forty cents",
+        "false": "zero false",
+        "verified": "sixty-six verified fixes"
+      },
+      "false": "false fixes shipped",
+      "title": "On the {tasks} bugs.",
+      "verified": "verified fixes"
+    },
+    "reverify": {
+      "docker_cue": "Docker",
+      "docker_label": "or Docker, no account",
+      "hold_label": "result held",
+      "label": "Nebius Token Factory Sandboxes · re-run from the published receipt",
+      "recording_note": "real recording · the waits are sped up",
+      "result_lines": [
+        "Official grade resolved AGREES",
+        "Every check agrees with the receipt."
+      ],
+      "speed_suffix": "x",
+      "wait_label": "waiting"
+    },
+    "tagline": "the coding agent that isn't allowed to grade its own homework",
+    "title": "Receipts",
+    "verdicts": {
+      "REJECTED": "REJECTED",
+      "VERIFIED": "VERIFIED"
+    }
+  },
   "sources": {
+    "agent_steps": "Featured branches/agent1/receipts.jsonl, first 24 receipts (attempt 1); replay_windows select four 5-second excerpts.",
     "records": "pilot/v2-P/ (committed), pilot/v2-arm-lightning/, pilot/aborted-2026-10-01-launch2/",
-    "rule": "docs/submission/2026-10-02-e0-script-and-readme.md, section 5"
+    "rule": "docs/submission/2026-10-02-e0-script-and-readme.md, section 5",
+    "video_copy": "Approved Task V1, V2a and V2b display copy and docs/submission/video-script.md revision 5; run facts are unchanged."
   }
 }

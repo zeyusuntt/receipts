@@ -4,6 +4,13 @@
   "version": "0.1.0",
   "description": "The Receipts demo video, built with Remotion from real run records.",
   "scripts": {
+    "qr": "node scripts/generate-qr.mjs",
+    "prestudio": "npm run qr",
+    "prestill": "npm run qr",
+    "prestills": "npm run qr",
+    "prerender": "npm run qr",
+    "check": "tsc --noEmit && node --test scripts/check-video.mjs && node scripts/check-frames.mjs",
+    "stills": "node scripts/render-stills.mjs",
     "studio": "remotion studio src/index.ts",
     "still": "remotion still src/index.ts Receipts out/still.png",
     "render": "remotion render src/index.ts Receipts out/receipts.mp4 --concurrency=4"

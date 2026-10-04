@@ -20,7 +20,7 @@ const pages = {
   cold_open_run: "run/azure__walinuxagent-638.html",
 };
 
-const SELECTORS = "section, .card, table, .paper, .badge, pre.diff, .comparison, .metrics, h1, h2, h3";
+const SELECTORS = "section, .card, table, .paper, .badge, pre.diff, .comparison, .metrics, h1, h2, h3, dt, dd";
 
 await mkdir(outDir, { recursive: true });
 const browser = await chromium.launch();
@@ -45,6 +45,20 @@ for (const [name, path] of Object.entries(pages)) {
       };
     }),
   );
+  // Capture the first issue line separately so the video can magnify its text.
+  const issueLine = await page.evaluate(() => {
+    const label = [...document.querySelectorAll('dt')].find((el) => el.textContent.trim() === 'Issue');
+    const value = label?.nextElementSibling;
+    const text = value?.firstChild;
+    if (!text || text.nodeType !== Node.TEXT_NODE) return null;
+    const firstLine = text.textContent.split('\n')[0];
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, firstLine.length);
+    const r = range.getBoundingClientRect();
+    return {tag: 'issue-line', text: firstLine, x: r.x + window.scrollX, y: r.y + window.scrollY, width: r.width, height: r.height};
+  });
+  if (issueLine) boxes.push({...issueLine, index: boxes.length, className: ''});
   const size = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight }));
   await writeFile(resolve(outDir, `${name}.json`), JSON.stringify({ page: path, scale: 2, size, boxes }, null, 2) + "\n");
   console.log(`${name}: ${size.width}x${size.height} css px, ${boxes.length} boxes`);

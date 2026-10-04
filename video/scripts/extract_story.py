@@ -1,8 +1,8 @@
 """Extract every fact the video shows from the run records, so nothing on screen is typed by hand.
 
-Usage, from the submission worktree:
+Usage, from the repository root:
     PYTHONPATH=src .venv/bin/python video/scripts/extract_story.py \
-        --repo /Users/sunzeyu/dev/nebius-hackathon --out video/src/content/story.json
+        --repo . --out video/src/content/story.json
 
 `--repo` is the checkout that holds the records (v2 P is committed; v1's launch-2 archive is
 not). Runs are the ones chosen by the rule in docs/submission/2026-10-02-e0-script-and-readme.md,
@@ -16,12 +16,14 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from receipts.agent.worker import APPEAL_INSTRUCTION
 from receipts.models import Verdict
 from receipts.orchestrate import _appeal_evidence
+from receipts.site import _display_command
 
 COLD_OPEN = "azure__walinuxagent-638"
 FEATURED = "pyfilesystem__pyfilesystem2-462"
@@ -99,6 +101,18 @@ def _featured(repo: Path) -> dict[str, Any]:
         branch.parent.name: sum(1 for line in branch.read_text().splitlines() if line.strip())
         for branch in sorted((run / "branches").glob("*/receipts.jsonl"))
     }
+    agent_rows = [json.loads(line) for line in (run / "branches/agent1/receipts.jsonl").read_text().splitlines() if line.strip()]
+    # Attempt 1 ends at its first diff receipt. Later rows belong to the appeal.
+    first_diff = next(i for i, row in enumerate(agent_rows) if row["kind"] == "diff")
+    agent_rows = agent_rows[:first_diff + 1]
+    origin = datetime.fromisoformat(agent_rows[0]["started_at"])
+    agent_steps = [{
+        "receipt_id": row["receipt_id"], "seq": row["seq"], "kind": row["kind"],
+        "display": _display_command(row),
+        "offset_s": (datetime.fromisoformat(row["started_at"]) - origin).total_seconds(),
+        "duration_s": row["duration_s"], "exit_code": row["exit_code"],
+    } for row in agent_rows]
+    witness_rows = [json.loads(line) for line in (run / "branches/w1/receipts.jsonl").read_text().splitlines() if line.strip()]
     return {
         "instance": FEATURED,
         "run_id": run.name,
@@ -118,6 +132,9 @@ def _featured(repo: Path) -> dict[str, Any]:
         "receipts_per_branch": receipts,
         "patch_files": [line.split(" b/", 1)[1] for line in patch.splitlines() if line.startswith("diff --git ")],
         "patch_excerpt": patch.splitlines()[:40],
+        "agent_steps": agent_steps,
+        "replay_windows": [{"start_s": agent_steps[i]["offset_s"], "duration_s": 5} for i in [1, 10, 14, 23]],
+        "witness_operations": [{"receipt_id": row["receipt_id"], "image_before": row["image_before"], "image_after": row["image_after"], "kind": row["kind"]} for row in witness_rows],
     }
 
 
@@ -132,6 +149,7 @@ def _pilot_v1(repo: Path) -> dict[str, Any]:
         "official_resolved": record["attempts"][0]["official_resolved"],
         "shipped_files": [line.split(" b/", 1)[1] for line in patch.splitlines() if line.startswith("diff --git ")],
         "real_package": "src/scikit_build_core/",
+        "real_build_package": "src/scikit_build_core/build/",
         "amendment": "PREREGISTRATION.md, Amendment 2 (2026-10-01)",
         "fix_commit": "3a5579b",
         "fix": "the trusted runner no longer adds the repository root to sys.path",
@@ -185,9 +203,19 @@ def main() -> int:
         "pilot_v1": _pilot_v1(repo),
         "numbers": _numbers(repo),
     }
+    # Approved display copy stays in the content source when facts are refreshed.
+    if args.out.exists():
+        previous = _json(args.out)
+        if "presentation" in previous:
+            story["presentation"] = previous["presentation"]
+        if "media" in previous:
+            story["media"] = previous["media"]
+        for key in ("video_copy", "agent_steps"):
+            if key in previous.get("sources", {}):
+                story["sources"][key] = previous["sources"][key]
     text = json.dumps(story, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    if str(Path.home()) in text:
-        raise SystemExit("refusing to write a local path into the video data")
+    if any(prefix in text for prefix in ("/opt/homebrew", "/opt/receipts-", "/Users/", "/private/")):
+        raise SystemExit("refusing to write a local or executor path into the video data")
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(text, encoding="utf-8")
     print(f"wrote {args.out}: {len(text)} bytes")

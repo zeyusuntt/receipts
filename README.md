@@ -21,9 +21,11 @@ uv sync
 uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json
 ```
 
-It checks the patch digests, starts the task's public image, rebuilds the original checkpoint, replays the agent's patch through the same filter and gate on a fresh witness, grades the shipped patch with SWE-rebench's official grader, and must agree with the receipt on every check (about a minute per receipt on Token Factory). With a Nebius account, add `--executor tokenfactory` to run it on Token Factory Sandboxes instead of Docker. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
+It checks the patch digests, starts the task's public image, rebuilds the original checkpoint, replays the agent's patch through the same filter and gate on a fresh witness, grades the shipped patch with SWE-rebench's official grader, and must agree with the receipt on every check (about two minutes per receipt on Token Factory). With a Nebius account, add `--executor tokenfactory` to run it on Token Factory Sandboxes instead of Docker. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
 
 ## How it works
+
+![Your failing test goes to Nemotron 3 Super on Nebius Token Factory, which works on an agent branch; a Token Factory Sandbox forked from the same checkpoint is the witness; plain-code gate; receipt. SWE-rebench's official grader runs separately.](docs/assets/architecture.png)
 
 1. **You write the failing test.** It is the specification. Receipts runs the suite twice on the original code to record what fails and what passes (the baseline).
 2. **The agent works on its own branch.** Nemotron 3 Super reads, edits and runs tests through five tools, in a Token Factory Sandbox forked from the checkpoint of your code. It finishes with a claim: what it changed and which tests it says pass.
