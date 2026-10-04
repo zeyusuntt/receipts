@@ -1,0 +1,72 @@
+{
+  "claims": {
+    "claim_audit": "no_claim",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "c235d4e9dea9e4954cf0699bd46bb57ddce959be",
+    "fail_to_pass": [
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentFociBehaviors::test_preexisting_family_app_will_attempt_frt_and_return_error"
+    ],
+    "image_name": "docker.io/swerebenchv2/azuread-microsoft-authentication-library-for-python:186-c235d4e",
+    "instance_id": "azuread__microsoft-authentication-library-for-python-186",
+    "pass_to_pass": [
+      "tests/test_application.py::TokenCacheTestCase::testAddByAad",
+      "tests/test_application.py::TokenCacheTestCase::testAddByAdfs",
+      "tests/test_application.py::TokenCacheTestCase::test_key_id_is_also_recorded",
+      "tests/test_application.py::TestHelperExtractCerts::test_extract_a_tag_enclosed_cert",
+      "tests/test_application.py::TestHelperExtractCerts::test_extract_a_tag_less_public_cert",
+      "tests/test_application.py::TestHelperExtractCerts::test_extract_multiple_tag_enclosed_certs",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentErrorBehaviors::test_acquire_token_silent_will_suppress_error",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentErrorBehaviors::test_acquire_token_silent_with_error_will_return_error",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentErrorBehaviors::test_atswe_will_map_some_suberror_to_classification_as_is",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentErrorBehaviors::test_atswe_will_map_some_suberror_to_classification_to_empty_string",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentErrorBehaviors::test_cache_empty_will_be_returned_as_None",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentFociBehaviors::test_family_app_remove_account",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentFociBehaviors::test_known_orphan_app_will_skip_frt_and_only_use_its_own_rt",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentFociBehaviors::test_unknown_family_app_will_attempt_frt_and_join_family",
+      "tests/test_application.py::TestClientApplicationAcquireTokenSilentFociBehaviors::test_unknown_orphan_app_will_attempt_frt_and_not_remove_it",
+      "tests/test_application.py::TestClientApplicationForAuthorityMigration::test_acquire_token_silent",
+      "tests/test_application.py::TestClientApplicationForAuthorityMigration::test_get_accounts"
+    ],
+    "problem_statement": "Refresh token errors are discarded\n`acquire_token_silent_with_error` appears to be intended to return the last error response received from AAD, and the documentation implies it does so, but there are cases in which it does not.\r\n\r\nFor example, if AAD rejects a refresh token, its error response is discarded (`at` is the response):\r\nhttps://github.com/AzureAD/microsoft-authentication-library-for-python/blob/5c1f0f4ad18a61587393c290b1094b5f8fd014d4/msal/application.py#L601-L609\r\n\r\nWhen AAD rejected the token, that token was evicted from the cache:\r\nhttps://github.com/AzureAD/microsoft-authentication-library-for-python/blob/5c1f0f4ad18a61587393c290b1094b5f8fd014d4/msal/oauth2cli/oauth2.py#L449-L450\r\n\r\nSubsequent calls to `_acquire_token_silent_by_finding_specific_refresh_token` may now return `None` because no refresh token remains in the cache. In such a case, `acquire_token_silent_with_error` returns `None`.\r\n\r\nThis behavior arguably makes sense because the difference between \"no refresh token in the cache\" and \"only invalid refresh tokens in the cache\" may not be interesting. But the documentation on `acquire_token_silent_with_error` implies it will distinguish these cases, so I describe the inconsistency here for comment and clarification.",
+    "repo": "AzureAD/microsoft-authentication-library-for-python",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_application.py",
+    "test_patch": "diff --git a/tests/test_application.py b/tests/test_application.py\nindex 39becd5..65b36b3 100644\n--- a/tests/test_application.py\n+++ b/tests/test_application.py\n@@ -176,6 +176,19 @@ class TestClientApplicationAcquireTokenSilentFociBehaviors(unittest.TestCase):\n \n     # Will not test scenario of app leaving family. Per specs, it won't happen.\n \n+    def test_preexisting_family_app_will_attempt_frt_and_return_error(self):\n+        error_response = '{\"error\": \"invalid_grant\", \"error_description\": \"xyz\"}'\n+        def tester(url, data=None, **kwargs):\n+            self.assertEqual(\n+                self.frt, data.get(\"refresh_token\"), \"Should attempt the FRT\")\n+            return MinimalResponse(status_code=400, text=error_response)\n+        app = ClientApplication(\n+            \"preexisting_family_app\", authority=self.authority_url, token_cache=self.cache)\n+        resp = app._acquire_token_silent_by_finding_rt_belongs_to_me_or_my_family(\n+            self.authority, self.scopes, self.account, post=tester)\n+        logger.debug(\"%s.cache = %s\", self.id(), self.cache.serialize())\n+        self.assertEqual(json.loads(error_response), resp, \"Error raised will be returned\")\n+\n     def test_family_app_remove_account(self):\n         logger.debug(\"%s.cache = %s\", self.id(), self.cache.serialize())\n         app = ClientApplication(\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-azuread__microsoft-authentication-library-for-py-6e4e84f263"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/msal/application.py b/msal/application.py\nindex a17d359..ba17d22 100644\n--- a/msal/application.py\n+++ b/msal/application.py\n@@ -616,6 +616,7 @@ class ClientApplication(object):\n             # \"realm\": authority.tenant,  # AAD RTs are tenant-independent\n             }\n         app_metadata = self._get_app_metadata(authority.instance)\n+        last_error = None\n         if not app_metadata:  # Meaning this app is now used for the first time.\n             # When/if we have a way to directly detect current app's family,\n             # we'll rewrite this block, to support multiple families.\n@@ -633,16 +634,24 @@ class ClientApplication(object):\n                 **kwargs)\n             if at and \"error\" not in at:\n                 return at\n+            else:\n+                last_error = at\n         if app_metadata.get(\"family_id\"):  # Meaning this app belongs to this family\n             at = self._acquire_token_silent_by_finding_specific_refresh_token(\n                 authority, scopes, dict(query, family_id=app_metadata[\"family_id\"]),\n                 **kwargs)\n             if at and \"error\" not in at:\n                 return at\n+            else:\n+                last_error = at\n         # Either this app is an orphan, so we will naturally use its own RT;\n         # or all attempts above have failed, so we fall back to non-foci behavior.\n-        return self._acquire_token_silent_by_finding_specific_refresh_token(\n+        at = self._acquire_token_silent_by_finding_specific_refresh_token(\n             authority, scopes, dict(query, client_id=self.client_id), **kwargs)\n+        if at and \"error\" not in at:\n+            return at\n+        # Return the last error we saw if all attempts failed to get a token\n+        return last_error if last_error is not None else at\n \n     def _get_app_metadata(self, environment):\n         apps = self.token_cache.find(  # Use find(), rather than token_cache.get(...)\n",
+    "agent_patch_sha256": "bc2a3f8e4146dde4df243761a138b6f394acd6b172ae96ea777a4eabde487926",
+    "filtered_sha256": "bc2a3f8e4146dde4df243761a138b6f394acd6b172ae96ea777a4eabde487926",
+    "number": 1,
+    "patch": "diff --git a/msal/application.py b/msal/application.py\nindex a17d359..ba17d22 100644\n--- a/msal/application.py\n+++ b/msal/application.py\n@@ -616,6 +616,7 @@ class ClientApplication(object):\n             # \"realm\": authority.tenant,  # AAD RTs are tenant-independent\n             }\n         app_metadata = self._get_app_metadata(authority.instance)\n+        last_error = None\n         if not app_metadata:  # Meaning this app is now used for the first time.\n             # When/if we have a way to directly detect current app's family,\n             # we'll rewrite this block, to support multiple families.\n@@ -633,16 +634,24 @@ class ClientApplication(object):\n                 **kwargs)\n             if at and \"error\" not in at:\n                 return at\n+            else:\n+                last_error = at\n         if app_metadata.get(\"family_id\"):  # Meaning this app belongs to this family\n             at = self._acquire_token_silent_by_finding_specific_refresh_token(\n                 authority, scopes, dict(query, family_id=app_metadata[\"family_id\"]),\n                 **kwargs)\n             if at and \"error\" not in at:\n                 return at\n+            else:\n+                last_error = at\n         # Either this app is an orphan, so we will naturally use its own RT;\n         # or all attempts above have failed, so we fall back to non-foci behavior.\n-        return self._acquire_token_silent_by_finding_specific_refresh_token(\n+        at = self._acquire_token_silent_by_finding_specific_refresh_token(\n             authority, scopes, dict(query, client_id=self.client_id), **kwargs)\n+        if at and \"error\" not in at:\n+            return at\n+        # Return the last error we saw if all attempts failed to get a token\n+        return last_error if last_error is not None else at\n \n     def _get_app_metadata(self, environment):\n         apps = self.token_cache.find(  # Use find(), rather than token_cache.get(...)\n",
+    "sha256": "bc2a3f8e4146dde4df243761a138b6f394acd6b172ae96ea777a4eabde487926"
+  }
+}

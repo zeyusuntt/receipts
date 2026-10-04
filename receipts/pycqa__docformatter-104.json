@@ -1,0 +1,83 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "b108a208536f94da786211a28ea3bda4f55a04a4",
+    "fail_to_pass": [
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_for_multi_line_summary_alone",
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_for_one_line_summary_alone_but_too_long"
+    ],
+    "image_name": "docker.io/swerebenchv2/pycqa-docformatter:104-b108a20",
+    "instance_id": "pycqa__docformatter-104",
+    "pass_to_pass": [
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_with_summary_that_ends_in_quote",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_with_bad_indentation",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_with_too_much_indentation",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_with_trailing_whitespace",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_with_empty_docstring",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_with_no_period",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_with_single_quotes",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_with_single_quotes_multi_line",
+      "tests/test_format_docstring.py::TestFormatDocstring::test_format_docstring_leave_underlined_summaries_alone",
+      "tests/test_format_docstring.py::TestFormatLists::test_format_docstring_should_ignore_numbered_lists",
+      "tests/test_format_docstring.py::TestFormatLists::test_format_docstring_should_ignore_parameter_lists",
+      "tests/test_format_docstring.py::TestFormatLists::test_format_docstring_should_ignore_colon_parameter_lists",
+      "tests/test_format_docstring.py::TestFormatLists::test_format_docstring_should_leave_list_alone",
+      "tests/test_format_docstring.py::TestFormatWrap::test_unwrap_summary",
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_with_wrap",
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_with_weird_indentation_and_punctuation",
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_with_description_wrapping",
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_should_ignore_multi_paragraph",
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_should_ignore_doctests",
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_should_ignore_doctests_in_summary",
+      "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_should_maintain_indentation_of_doctest",
+      "tests/test_format_docstring.py::TestFormatWrap::test_force_wrap",
+      "tests/test_format_docstring.py::TestFormatStyleOptions::test_format_docstring_with_no_post_description_blank",
+      "tests/test_format_docstring.py::TestFormatStyleOptions::test_format_docstring_with_pre_summary_newline",
+      "tests/test_format_docstring.py::TestFormatStyleOptions::test_format_docstring_make_summary_multi_line",
+      "tests/test_format_docstring.py::TestFormatStyleOptions::test_format_docstring_pre_summary_space"
+    ],
+    "problem_statement": "\"\"\" getting placed at end of comment line instead of its own line\ndocformatter is resulting in this diff:\n\n```\n-    \"\"\"\n-    return a map mapping appliance_ids for a house back to themselves\n-    except for multiphase appliances\n-    \"\"\"\n+    \"\"\"return a map mapping appliance_ids for a house back to themselves except\n+    for multiphase appliances.\"\"\"\n```\n\nI'm ok with putting the word return immediately after the triple quotes, but shouldn't the final set of triple quotes be on their own line?\n",
+    "repo": "PyCQA/docformatter",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_format_docstring.py",
+    "test_patch": "diff --git a/tests/test_format_docstring.py b/tests/test_format_docstring.py\nindex fc51f76..b63e51a 100644\n--- a/tests/test_format_docstring.py\n+++ b/tests/test_format_docstring.py\n@@ -285,7 +285,6 @@ class TestFormatWrap:\n                 ),\n                 summary_wrap_length=max_length,\n             )\n-\n             for line in formatted_text.split(\"\\n\"):\n                 # It is not the formatter's fault if a word is too long to\n                 # wrap.\n@@ -442,6 +441,47 @@ num_iterations is the number of updates - instead of a better definition of conv\n             tab_width=4,\n         )\n \n+    @pytest.mark.unit\n+    def test_format_docstring_for_multi_line_summary_alone(self):\n+        \"\"\"Place closing quotes on newline when wrapping one-liner.\"\"\"\n+        assert (\n+            (\n+                '''\\\n+\"\"\"This one-line docstring will be multi-line because it's quite\n+    long.\n+    \"\"\"\\\n+'''\n+            )\n+            == docformatter.format_docstring(\n+                \"    \",\n+                '''\\\n+\"\"\"This one-line docstring will be multi-line because it's quite long.\"\"\"\\\n+''',\n+                summary_wrap_length=69,\n+                close_quotes_on_newline=True,\n+            )\n+        )\n+\n+    @pytest.mark.unit\n+    def test_format_docstring_for_one_line_summary_alone_but_too_long(self):\n+        \"\"\"\"\"\"\n+        assert (\n+            (\n+                '''\\\n+\"\"\"This one-line docstring will not be wrapped and quotes will be in-line.\"\"\"\\\n+'''\n+            )\n+            == docformatter.format_docstring(\n+                \"    \",\n+                '''\\\n+\"\"\"This one-line docstring will not be wrapped and quotes will be \n+in-line.\"\"\"\\\n+''',\n+                summary_wrap_length=88,\n+                close_quotes_on_newline=True,\n+            )\n+        )\n+\n \n class TestFormatStyleOptions:\n     \"\"\"Class for testing format_docstring() when requesting style options.\"\"\"\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-pycqa__docformatter-104-81a216bf2b"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/docformatter.py b/docformatter.py\nindex 37140c0..4cc469d 100755\n--- a/docformatter.py\n+++ b/docformatter.py\n@@ -491,6 +491,7 @@ def format_docstring(\n     post_description_blank=False,\n     force_wrap=False,\n     strict=True,\n+    close_quotes_on_newline=True,\n ):\n     \"\"\"Return formatted version of docstring.\n \n@@ -555,12 +556,23 @@ def format_docstring(\n '''\n     else:\n         if not make_summary_multi_line:\n-            return wrap_summary(\n-                open_quote + normalize_summary(contents) + '\"\"\"',\n+            combined = open_quote + normalize_summary(contents) + '\"\"\"'\n+            # Determine if the combined summary (without newlines from wrapping) fits\n+            # within the summary wrap limit.\n+            combined_len = len(open_quote + normalize_summary(contents))\n+            fits_on_one_line = summary_wrap_length == 0 or combined_len <= summary_wrap_length\n+            wrapped = wrap_summary(\n+                combined,\n                 wrap_length=summary_wrap_length,\n                 initial_indent=indentation,\n                 subsequent_indent=indentation,\n             ).strip()\n+            if close_quotes_on_newline and not fits_on_one_line and not force_wrap and wrapped.rstrip().strip() != '\"\"\"':\n+                # Move closing quotes to a new line\n+                without_close = wrapped.rsplit('\"\"\"', 1)[0].rstrip()\n+                return without_close + '\\n' + indentation + '\"\"\"'\n+            else:\n+                return wrapped\n         beginning = f\"{open_quote}\\n{indentation}\"\n         ending = f'\\n{indentation}\"\"\"'\n         summary_wrapped = wrap_summary(\n",
+    "agent_patch_sha256": "bbbfa80639a823bbeccdfadbf73863ea6efce9e073a589c2f2d7659a8348d521",
+    "filtered_sha256": "bbbfa80639a823bbeccdfadbf73863ea6efce9e073a589c2f2d7659a8348d521",
+    "number": 1,
+    "patch": "diff --git a/docformatter.py b/docformatter.py\nindex 37140c0..4cc469d 100755\n--- a/docformatter.py\n+++ b/docformatter.py\n@@ -491,6 +491,7 @@ def format_docstring(\n     post_description_blank=False,\n     force_wrap=False,\n     strict=True,\n+    close_quotes_on_newline=True,\n ):\n     \"\"\"Return formatted version of docstring.\n \n@@ -555,12 +556,23 @@ def format_docstring(\n '''\n     else:\n         if not make_summary_multi_line:\n-            return wrap_summary(\n-                open_quote + normalize_summary(contents) + '\"\"\"',\n+            combined = open_quote + normalize_summary(contents) + '\"\"\"'\n+            # Determine if the combined summary (without newlines from wrapping) fits\n+            # within the summary wrap limit.\n+            combined_len = len(open_quote + normalize_summary(contents))\n+            fits_on_one_line = summary_wrap_length == 0 or combined_len <= summary_wrap_length\n+            wrapped = wrap_summary(\n+                combined,\n                 wrap_length=summary_wrap_length,\n                 initial_indent=indentation,\n                 subsequent_indent=indentation,\n             ).strip()\n+            if close_quotes_on_newline and not fits_on_one_line and not force_wrap and wrapped.rstrip().strip() != '\"\"\"':\n+                # Move closing quotes to a new line\n+                without_close = wrapped.rsplit('\"\"\"', 1)[0].rstrip()\n+                return without_close + '\\n' + indentation + '\"\"\"'\n+            else:\n+                return wrapped\n         beginning = f\"{open_quote}\\n{indentation}\"\n         ending = f'\\n{indentation}\"\"\"'\n         summary_wrapped = wrap_summary(\n",
+    "sha256": "bbbfa80639a823bbeccdfadbf73863ea6efce9e073a589c2f2d7659a8348d521"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "f0b8bd47733dc8f80a345490966d35d3a5368485",
+    "fail_to_pass": [
+      "dask/tests/test_datasets.py::test_no_mimesis"
+    ],
+    "image_name": "docker.io/swerebenchv2/dask-dask:5861-f0b8bd4",
+    "instance_id": "dask__dask-5861",
+    "pass_to_pass": [],
+    "problem_statement": "pip command line warning\nRecently versions of `pip` (20.0+) emit the following warning when using the `pip` CLI (e.g. `pip install <package-name>`):\r\n\r\n```\r\nWARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.\r\nPlease see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.\r\nTo avoid this problem you can invoke Python with '-m pip' instead of running pip directly.\r\n```\r\n\r\nWe should go through and replace occurrences of using `pip` directly in the codebase with `python -m pip`. So things like `pip install <package-name>` should be replaced with `python -m pip install <package-name>`",
+    "repo": "dask/dask",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning dask/tests/test_datasets.py",
+    "test_patch": "diff --git a/dask/tests/test_datasets.py b/dask/tests/test_datasets.py\nindex bfb91417b..090727e56 100644\n--- a/dask/tests/test_datasets.py\n+++ b/dask/tests/test_datasets.py\n@@ -24,7 +24,7 @@ def test_no_mimesis():\n         with pytest.raises(Exception) as info:\n             dask.datasets.make_people()\n \n-        assert \"pip install mimesis\" in str(info.value)\n+        assert \"python -m pip install mimesis\" in str(info.value)\n \n \n def test_deterministic():\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-dask__dask-5861-afdf49683a"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/dask/datasets.py b/dask/datasets.py\nindex f8b1d47d..22610e87 100644\n--- a/dask/datasets.py\n+++ b/dask/datasets.py\n@@ -145,7 +145,7 @@ def make_people(npartitions=10, records_per_partition=1000, seed=None, locale=\"e\n     import_required(\n         \"mimesis\",\n         \"The mimesis module is required for this function.  Try:\\n\"\n-        \"  pip install mimesis\",\n+        \"  python -m pip install mimesis\",\n     )\n \n     schema = lambda field: {\n",
+    "agent_patch_sha256": "3911473827f10c86b9d0c86d62e8f73f45595ef3eb548694878c88f1831852fb",
+    "filtered_sha256": "3911473827f10c86b9d0c86d62e8f73f45595ef3eb548694878c88f1831852fb",
+    "number": 1,
+    "patch": "diff --git a/dask/datasets.py b/dask/datasets.py\nindex f8b1d47d..22610e87 100644\n--- a/dask/datasets.py\n+++ b/dask/datasets.py\n@@ -145,7 +145,7 @@ def make_people(npartitions=10, records_per_partition=1000, seed=None, locale=\"e\n     import_required(\n         \"mimesis\",\n         \"The mimesis module is required for this function.  Try:\\n\"\n-        \"  pip install mimesis\",\n+        \"  python -m pip install mimesis\",\n     )\n \n     schema = lambda field: {\n",
+    "sha256": "3911473827f10c86b9d0c86d62e8f73f45595ef3eb548694878c88f1831852fb"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "405786bd59f0c02c8d3595b2c8b52b926b41596c",
+    "fail_to_pass": [
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_easier_event_firing_webdriver_from_plugin"
+    ],
+    "image_name": "docker.io/swerebenchv2/robotframework-seleniumlibrary:1431-405786b",
+    "instance_id": "robotframework__seleniumlibrary-1431",
+    "pass_to_pass": [
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_comma_and_space",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_comma_and_space_with_arg",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_no_libraries",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_no_library_component_inherit",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_parse_libraries",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_parse_library",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_parse_library_with_args",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_parse_plugin_with_kw_args",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_plugin_as_last_in_init",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_plugin_does_not_exist",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_plugin_wrong_import_with_path",
+      "utest/test/api/test_plugins.py::ExtendingSeleniumLibrary::test_sl_with_kw_args_plugin"
+    ],
+    "problem_statement": "Add better support for plugin to add event firing WebDriver\nFor plugins, it would be easier to do something like this:\r\n```\r\nclass MyPlugin(LibraryComponent):\r\n\r\n    def __init__(self, ctx):\r\n        LibraryComponent.__init__(self, ctx)\r\n        self.event_firing_webdriver  = WhatEverYouWant\r\n```",
+    "repo": "robotframework/SeleniumLibrary",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning utest/test/api/plugin_with_event_firing_webdriver.py utest/test/api/test_plugins.py",
+    "test_patch": "diff --git a/utest/test/api/plugin_with_event_firing_webdriver.py b/utest/test/api/plugin_with_event_firing_webdriver.py\nnew file mode 100644\nindex 00000000..8dbf13c7\n--- /dev/null\n+++ b/utest/test/api/plugin_with_event_firing_webdriver.py\n@@ -0,0 +1,12 @@\n+from SeleniumLibrary.base import LibraryComponent, keyword\n+\n+\n+class plugin_with_event_firing_webdriver(LibraryComponent):\n+\n+    def __init__(self, ctx):\n+        LibraryComponent.__init__(self, ctx)\n+        self.event_firing_webdriver = 'event_firing_webdriver'\n+\n+    @keyword\n+    def tidii(self):\n+        self.info('foo')\ndiff --git a/utest/test/api/test_plugins.py b/utest/test/api/test_plugins.py\nindex d84a8d16..b9aa4cb4 100644\n--- a/utest/test/api/test_plugins.py\n+++ b/utest/test/api/test_plugins.py\n@@ -109,3 +109,9 @@ class ExtendingSeleniumLibrary(unittest.TestCase):\n         event_firing_wd = os.path.join(self.root_dir, 'MyListener.py')\n         sl = SeleniumLibrary(plugins=plugin_file, event_firing_webdriver=event_firing_wd)\n         self.assertEqual(sl.event_firing_webdriver, 'should be last')\n+\n+    def test_easier_event_firing_webdriver_from_plugin(self):\n+        plugin_file = os.path.join(self.root_dir, 'plugin_with_event_firing_webdriver.py')\n+        sl = SeleniumLibrary(plugins=plugin_file)\n+        self.assertEqual(sl._plugin_keywords, ['tidii'])\n+        self.assertEqual(sl.event_firing_webdriver, 'event_firing_webdriver')\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-robotframework__seleniumlibrary-1431-6180934973"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/src/SeleniumLibrary/base/librarycomponent.py b/src/SeleniumLibrary/base/librarycomponent.py\nindex f386d24..340503c 100644\n--- a/src/SeleniumLibrary/base/librarycomponent.py\n+++ b/src/SeleniumLibrary/base/librarycomponent.py\n@@ -79,3 +79,11 @@ class LibraryComponent(ContextAware):\n             return os.path.dirname(logfile)\n         except RobotNotRunningError:\n             return os.getcwdu() if PY2 else os.getcwd()\n+\n+    @property\n+    def event_firing_webdriver(self):\n+        return self.ctx.event_firing_webdriver\n+\n+    @event_firing_webdriver.setter\n+    def event_firing_webdriver(self, value):\n+        self.ctx.event_firing_webdriver = value\n",
+    "agent_patch_sha256": "f21dca6d113ad505869fe34988038a754e1587dcf59336c478432c79be4c666a",
+    "filtered_sha256": "f21dca6d113ad505869fe34988038a754e1587dcf59336c478432c79be4c666a",
+    "number": 1,
+    "patch": "diff --git a/src/SeleniumLibrary/base/librarycomponent.py b/src/SeleniumLibrary/base/librarycomponent.py\nindex f386d24..340503c 100644\n--- a/src/SeleniumLibrary/base/librarycomponent.py\n+++ b/src/SeleniumLibrary/base/librarycomponent.py\n@@ -79,3 +79,11 @@ class LibraryComponent(ContextAware):\n             return os.path.dirname(logfile)\n         except RobotNotRunningError:\n             return os.getcwdu() if PY2 else os.getcwd()\n+\n+    @property\n+    def event_firing_webdriver(self):\n+        return self.ctx.event_firing_webdriver\n+\n+    @event_firing_webdriver.setter\n+    def event_firing_webdriver(self, value):\n+        self.ctx.event_firing_webdriver = value\n",
+    "sha256": "f21dca6d113ad505869fe34988038a754e1587dcf59336c478432c79be4c666a"
+  }
+}

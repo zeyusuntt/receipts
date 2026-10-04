@@ -1,0 +1,80 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "e5e9d8b2341b644d0b1e1284513b613c8445d3ab",
+    "fail_to_pass": [
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_merge_to_future_release_branches_noskip_future"
+    ],
+    "image_name": "docker.io/swerebenchv2/sfdo-tooling-cumulusci:3624-e5e9d8b",
+    "instance_id": "sfdo-tooling__cumulusci-3624",
+    "pass_to_pass": [
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_branch_does_not_exist",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_no_descendents_of_main",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_feature_branch_no_diff",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_task_output__feature_branch_merge",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_feature_branch_merge_github_error",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_task_output__feature_branch_merge_conflict",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_merge__error_on_merge_conflict_pr",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_task_output__feature_branch_existing_pull",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_task_output__main_parent_with_child_pr",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_task_output__main_merge_to_feature",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_branches_to_merge__main_to_feature_and_next_release",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_branches_to_merge__no_prefix_merge_to_feature",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_branches_to_merge__merge_feature_to_children",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_branches_to_merge__merge_feature_child_to_grandchildren",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_branches_to_merge__feature_merge_no_children",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_merge_to_future_release_branches",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_merge_to_future_release_branches_skip",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_merge_to_future_release_branches_skip_future",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_merge_to_future_release_branches_missing_slash",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_branches_to_merge__future_release_branches_and_children",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_merge_to_children_not_future_releases_output",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_branches_to_merge__children_not_future_releases",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_is_release_branch",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_set_next_release",
+      "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_is_future_release_branch"
+    ],
+    "problem_statement": "Setting `skip_future_releases` option for `github_automerge_feature` task in cumulusci.yml to false is ignored.\n### Describe the bug\n\nWhenever I attempt to change the option `skip_future_releases` to `False` and run `github_automerge_main` it appears to be ignored. This is confirmed when I attempt to do the same in a flow like `release_beta` and run it.\n\n### Reproduction steps\n\n1. Create `feature/001`, `feature/002`, and `feature/003` branches.\r\n2. Make a commit on your main branch.\r\n3. Add the following to your `cumulusci.yml` file:\r\n```\r\n    github_automerge_main:\r\n        options:\r\n            skip_future_releases: False\r\n```\r\n5. Run `github_automerge_main`\r\n\r\nResult: Not all branches are updated with commit on main.\r\n\r\nExpected Result: All branches are updated by a commit on main.\r\n\n\n### Your CumulusCI and Python versions\n\nCumulusCI version: 3.75.1 (/Users/julianjoseph/.local/bin/cci)\r\nPython version: 3.10.0 (/Users/julianjoseph/.local/pipx/venvs/cumulusci/bin/python)\n\n### Operating System\n\nMacOS 13.3.1 (a)\n\n### Windows environment\n\n_No response_\n\n### CumulusCI installation method\n\npipx\n\n### Error Gist\n\n_No response_\n\n### Additional information\n\nThis is very obvious when you run `github_automerge_main` task within a flow since you get CLI logs like this:\r\n\r\n```\r\n                    ------------------------------------------------------------                      \r\n                    Running task: github_automerge_main                                               \r\n                    ------------------------------------------------------------                      \r\n                                                                                                      \r\n                    Options:                                                                          \r\n                      commit: e1d00d5cfa27d0fdabeb8a5e952fde8ca21732fe                                \r\n                      source_branch: main                                                             \r\n                      branch_prefix: feature.                                                         \r\n                      skip_future_releases: True                                                      \r\n                      update_future_releases: False  \r\n```\r\n\r\nA workaround is running `github_automerge_main` within the command task:\r\n\r\n```\r\n            4:\r\n                task: command\r\n                options:\r\n                    command: cci task run github_automerge_main --skip_future_releases false\r\n```",
+    "repo": "SFDO-Tooling/CumulusCI",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning cumulusci/tasks/github/tests/test_merge.py",
+    "test_patch": "diff --git a/cumulusci/tasks/github/tests/test_merge.py b/cumulusci/tasks/github/tests/test_merge.py\nindex def544935..f84b62f29 100644\n--- a/cumulusci/tasks/github/tests/test_merge.py\n+++ b/cumulusci/tasks/github/tests/test_merge.py\n@@ -641,7 +641,13 @@ class TestMergeBranch(MockUtilBase):\n     def test_merge_to_future_release_branches(self):\n         \"\"\"Tests that commits to the main branch are merged to the expected feature branches\"\"\"\n         self._setup_mocks(\n-            [\"main\", \"feature/230\", \"feature/232\", \"feature/300\", \"feature/work-item\"]\n+            [\n+                \"main\",\n+                \"feature/230\",\n+                \"feature/232\",\n+                \"feature/300\",\n+                \"feature/work-item\",\n+            ]\n         )\n \n         task = self._create_task(\n@@ -660,6 +666,104 @@ class TestMergeBranch(MockUtilBase):\n         assert [\"feature/232\", \"feature/300\"] == actual_branches\n         assert 2 == len(responses.calls)\n \n+    @responses.activate\n+    def test_merge_to_future_release_branches_skip(self):\n+        \"\"\"Tests that commits to the main branch are merged to the expected feature branches\"\"\"\n+        self._setup_mocks(\n+            [\n+                \"main\",\n+                \"feature/230\",\n+                \"feature/232\",\n+                \"feature/300\",\n+                \"feature/302\",\n+                \"feature/work-item\",\n+            ]\n+        )\n+\n+        task = self._create_task(\n+            task_config={\n+                \"options\": {\n+                    \"source_branch\": \"feature/230\",\n+                    \"branch_prefix\": \"feature/\",\n+                    \"update_future_releases\": False,\n+                }\n+            }\n+        )\n+        task._init_task()\n+\n+        actual_branches = [branch.name for branch in task._get_branches_to_merge()]\n+\n+        assert [] == actual_branches\n+        assert 2 == len(responses.calls)\n+\n+    @responses.activate\n+    def test_merge_to_future_release_branches_skip_future(self):\n+        \"\"\"\n+        Tests that commits are not merged to \"release\" (numeric) branches\n+        \"\"\"\n+\n+        self._setup_mocks(\n+            [\n+                \"main\",\n+                \"feature/230\",\n+                \"feature/232\",\n+                \"feature/300\",\n+                \"feature/work-item\",\n+            ]\n+        )\n+\n+        task = self._create_task(\n+            task_config={\n+                \"options\": {\n+                    \"source_branch\": \"main\",\n+                    \"branch_prefix\": \"feature/\",\n+                    \"update_future_releases\": False,\n+                    \"skip_future_releases\": True,\n+                }\n+            }\n+        )\n+        task._init_task()\n+\n+        actual_branches = [branch.name for branch in task._get_branches_to_merge()]\n+\n+        assert [\"feature/230\", \"feature/work-item\"] == actual_branches\n+        assert 2 == len(responses.calls)\n+\n+    @responses.activate\n+    def test_merge_to_future_release_branches_noskip_future(self):\n+        \"\"\"Tests that commits to the main branch are merged to the expected feature branches\"\"\"\n+        self._setup_mocks(\n+            [\n+                \"main\",\n+                \"feature/230\",\n+                \"feature/232\",\n+                \"feature/300\",\n+                \"feature/work-item\",\n+            ]\n+        )\n+\n+        task = self._create_task(\n+            task_config={\n+                \"options\": {\n+                    \"source_branch\": \"main\",\n+                    \"branch_prefix\": \"feature/\",\n+                    \"update_future_releases\": False,\n+                    \"skip_future_releases\": False,\n+                }\n+            }\n+        )\n+        task._init_task()\n+\n+        actual_branches = [branch.name for branch in task._get_branches_to_merge()]\n+\n+        assert [\n+            \"feature/230\",\n+            \"feature/232\",\n+            \"feature/300\",\n+            \"feature/work-item\",\n+        ] == actual_branches\n+        assert 2 == len(responses.calls)\n+\n     @responses.activate\n     def test_merge_to_future_release_branches_missing_slash(self):\n         \"\"\"Tests that commits to the main branch are merged to the expected feature branches\"\"\"\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-sfdo-tooling__cumulusci-3624-ed46a8ec8d"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/cumulusci/tasks/github/merge.py b/cumulusci/tasks/github/merge.py\nindex 1134de004..19893b08a 100644\n--- a/cumulusci/tasks/github/merge.py\n+++ b/cumulusci/tasks/github/merge.py\n@@ -50,10 +50,10 @@ class MergeBranch(BaseGithubTask):\n                 \"source_branch\"\n             ] = self.project_config.project__git__default_branch\n         self.options[\"skip_future_releases\"] = process_bool_arg(\n-            self.options.get(\"skip_future_releases\") or True\n+            self.options.get(\"skip_future_releases\", True)\n         )\n         self.options[\"update_future_releases\"] = process_bool_arg(\n-            self.options.get(\"update_future_releases\") or False\n+            self.options.get(\"update_future_releases\", False)\n         )\n \n     def _init_task(self):\n",
+    "agent_patch_sha256": "ee256eca0d573614e93b00ee23bff37f6ec9a8fcc077f5d3b96e7ca85f31bd5b",
+    "filtered_sha256": "ee256eca0d573614e93b00ee23bff37f6ec9a8fcc077f5d3b96e7ca85f31bd5b",
+    "number": 1,
+    "patch": "diff --git a/cumulusci/tasks/github/merge.py b/cumulusci/tasks/github/merge.py\nindex 1134de004..19893b08a 100644\n--- a/cumulusci/tasks/github/merge.py\n+++ b/cumulusci/tasks/github/merge.py\n@@ -50,10 +50,10 @@ class MergeBranch(BaseGithubTask):\n                 \"source_branch\"\n             ] = self.project_config.project__git__default_branch\n         self.options[\"skip_future_releases\"] = process_bool_arg(\n-            self.options.get(\"skip_future_releases\") or True\n+            self.options.get(\"skip_future_releases\", True)\n         )\n         self.options[\"update_future_releases\"] = process_bool_arg(\n-            self.options.get(\"update_future_releases\") or False\n+            self.options.get(\"update_future_releases\", False)\n         )\n \n     def _init_task(self):\n",
+    "sha256": "ee256eca0d573614e93b00ee23bff37f6ec9a8fcc077f5d3b96e7ca85f31bd5b"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "claims": {
+    "claim_audit": "unsupported",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "b5ccd44ba36d569b22b3f8bf79e67eba589f3367",
+    "fail_to_pass": [
+      "tests/test_core.py::test_from_json_to_json"
+    ],
+    "image_name": "docker.io/swerebenchv2/s-knibbs-dataclasses-jsonschema:93-b5ccd44",
+    "instance_id": "s-knibbs__dataclasses-jsonschema-93",
+    "pass_to_pass": [
+      "tests/test_core.py::test_field_with_default_factory",
+      "tests/test_core.py::test_field_with_default_dataclass",
+      "tests/test_core.py::test_embeddable_json_schema",
+      "tests/test_core.py::test_json_schema",
+      "tests/test_core.py::test_serialise_deserialise",
+      "tests/test_core.py::test_invalid_data",
+      "tests/test_core.py::test_newtype_field_validation",
+      "tests/test_core.py::test_recursive_data",
+      "tests/test_core.py::test_recursive_validation",
+      "tests/test_core.py::test_non_string_keys",
+      "tests/test_core.py::test_type_union_schema",
+      "tests/test_core.py::test_type_union_serialise",
+      "tests/test_core.py::test_type_union_deserialise",
+      "tests/test_core.py::test_default_values",
+      "tests/test_core.py::test_default_factory",
+      "tests/test_core.py::test_read_only_field",
+      "tests/test_core.py::test_read_only_field_no_default",
+      "tests/test_core.py::test_field_types",
+      "tests/test_core.py::test_field_metadata",
+      "tests/test_core.py::test_final_field",
+      "tests/test_core.py::test_literal_types",
+      "tests/test_core.py::test_from_object",
+      "tests/test_core.py::test_serialise_deserialise_opaque_data",
+      "tests/test_core.py::test_inherited_schema",
+      "tests/test_core.py::test_optional_union",
+      "tests/test_core.py::test_nullable_field",
+      "tests/test_core.py::test_underscore_fields",
+      "tests/test_core.py::test_discriminators"
+    ],
+    "problem_statement": "Add to_json and from_json convenience methods\nIt'd be nice to add `from_json` and `to_json` methods for convenience",
+    "repo": "s-knibbs/dataclasses-jsonschema",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_core.py",
+    "test_patch": "diff --git a/tests/test_core.py b/tests/test_core.py\nindex 793e572..51ac7df 100644\n--- a/tests/test_core.py\n+++ b/tests/test_core.py\n@@ -219,6 +219,41 @@ def test_serialise_deserialise():\n     assert data == f.to_dict()\n \n \n+def test_from_json_to_json():\n+    data = \"\"\"\n+{\n+  \"a\": \"2018-06-03T12:00:00+00:00\",\n+  \"b\": [\n+    {\n+      \"z\": 1.2,\n+      \"y\": 1.5\n+    }\n+  ],\n+  \"c\": {\n+    \"Mon\": 1,\n+    \"Tue\": 2\n+  },\n+  \"d\": \"Wednesday\",\n+  \"f\": [\n+    \"xyz\",\n+    6\n+  ],\n+  \"g\": [\n+    \"abc\"\n+  ],\n+  \"e\": \"testing\",\n+  \"h\": {\n+    \"z\": 0.5,\n+    \"y\": 1.0\n+  }\n+}\n+\"\"\"\n+    f = Foo.from_json(data)\n+    assert f.f == ('xyz', 6)\n+    assert f.g == ('abc',)\n+    assert data.strip() == f.to_json(indent=2)\n+\n+\n def test_invalid_data():\n     with pytest.raises(ValidationError):\n         Point.from_dict({'z': 3.14, 'y': 'wrong'})\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-s-knibbs__dataclasses-jsonschema-93-dfd35c894a"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/dataclasses_jsonschema/__init__.py b/dataclasses_jsonschema/__init__.py\nindex b17098d..0c2dacb 100644\n--- a/dataclasses_jsonschema/__init__.py\n+++ b/dataclasses_jsonschema/__init__.py\n@@ -487,6 +487,45 @@ class JsonSchemaMixin:\n             setattr(instance, field_name, value)\n         return instance\n \n+    @classmethod\n+    def from_json(cls: Type[T], json_str: str, *, encoding: str = \"utf-8\", validate: bool = True, skip_invalid: bool = False) -> T:\n+        \"\"\"Creates a dataclass instance from a JSON string.\n+        \n+        Args:\n+            json_str: JSON string to parse\n+            encoding: Text encoding to use (default: utf-8)\n+            validate: Whether to validate against JSON schema (default: True)\n+            skip_invalid: Whether to skip invalid fields during parsing (default: False)\n+            \n+        Returns:\n+            Instance of the dataclass\n+        \"\"\"\n+        import json\n+        data = json.loads(json_str)\n+        if skip_invalid:\n+            # Filter out fields that don't exist in the dataclass\n+            valid_fields = {f.name for f in fields(cls)}\n+            data = {k: v for k, v in data.items() if k in valid_fields or cls.field_mapping().get(k) in valid_fields}\n+            # Reverse map field mapping for validation\n+            reverse_mapping = {v: k for k, v in cls.field_mapping().items()}\n+            data = {reverse_mapping.get(k, k): v for k, v in data.items()}\n+        return cls.from_dict(data, validate=validate)\n+\n+    def to_json(self, *, indent: int = None, ensure_ascii: bool = True, validate: bool = False) -> str:\n+        \"\"\"Serializes the dataclass instance to a JSON string.\n+        \n+        Args:\n+            indent: Indentation level for pretty-printing (default: None)\n+            ensure_ascii: Whether to escape non-ASCII characters (default: True)\n+            validate: Whether to validate against JSON schema before serializing (default: False)\n+            \n+        Returns:\n+            JSON string representation of the instance\n+        \"\"\"\n+        import json\n+        data = self.to_dict(validate=validate)\n+        return json.dumps(data, indent=indent, ensure_ascii=ensure_ascii)\n+\n     @staticmethod\n     def _is_json_schema_subclass(field_type) -> bool:\n         return issubclass_safe(field_type, JsonSchemaMixin)\n",
+    "agent_patch_sha256": "f1dbc1fde956a4d13a4960a3ee8d5bdd5eed9f43e131bb3eef54c884c672927f",
+    "filtered_sha256": "f1dbc1fde956a4d13a4960a3ee8d5bdd5eed9f43e131bb3eef54c884c672927f",
+    "number": 1,
+    "patch": "diff --git a/dataclasses_jsonschema/__init__.py b/dataclasses_jsonschema/__init__.py\nindex b17098d..0c2dacb 100644\n--- a/dataclasses_jsonschema/__init__.py\n+++ b/dataclasses_jsonschema/__init__.py\n@@ -487,6 +487,45 @@ class JsonSchemaMixin:\n             setattr(instance, field_name, value)\n         return instance\n \n+    @classmethod\n+    def from_json(cls: Type[T], json_str: str, *, encoding: str = \"utf-8\", validate: bool = True, skip_invalid: bool = False) -> T:\n+        \"\"\"Creates a dataclass instance from a JSON string.\n+        \n+        Args:\n+            json_str: JSON string to parse\n+            encoding: Text encoding to use (default: utf-8)\n+            validate: Whether to validate against JSON schema (default: True)\n+            skip_invalid: Whether to skip invalid fields during parsing (default: False)\n+            \n+        Returns:\n+            Instance of the dataclass\n+        \"\"\"\n+        import json\n+        data = json.loads(json_str)\n+        if skip_invalid:\n+            # Filter out fields that don't exist in the dataclass\n+            valid_fields = {f.name for f in fields(cls)}\n+            data = {k: v for k, v in data.items() if k in valid_fields or cls.field_mapping().get(k) in valid_fields}\n+            # Reverse map field mapping for validation\n+            reverse_mapping = {v: k for k, v in cls.field_mapping().items()}\n+            data = {reverse_mapping.get(k, k): v for k, v in data.items()}\n+        return cls.from_dict(data, validate=validate)\n+\n+    def to_json(self, *, indent: int = None, ensure_ascii: bool = True, validate: bool = False) -> str:\n+        \"\"\"Serializes the dataclass instance to a JSON string.\n+        \n+        Args:\n+            indent: Indentation level for pretty-printing (default: None)\n+            ensure_ascii: Whether to escape non-ASCII characters (default: True)\n+            validate: Whether to validate against JSON schema before serializing (default: False)\n+            \n+        Returns:\n+            JSON string representation of the instance\n+        \"\"\"\n+        import json\n+        data = self.to_dict(validate=validate)\n+        return json.dumps(data, indent=indent, ensure_ascii=ensure_ascii)\n+\n     @staticmethod\n     def _is_json_schema_subclass(field_type) -> bool:\n         return issubclass_safe(field_type, JsonSchemaMixin)\n",
+    "sha256": "f1dbc1fde956a4d13a4960a3ee8d5bdd5eed9f43e131bb3eef54c884c672927f"
+  }
+}

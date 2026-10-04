@@ -1,0 +1,56 @@
+{
+  "claims": {
+    "claim_audit": "unsupported",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "8b6ce53cce40e528af7cce89f358f7dde1a09289",
+    "fail_to_pass": [
+      "test/test_except.py::test_raise_on_find_unsupported_value",
+      "test/test_except.py::test_raise_from_object_hook",
+      "test/test_except.py::test_invalidvalue"
+    ],
+    "image_name": "docker.io/swerebenchv2/msgpack-msgpack-python:331-8b6ce53",
+    "instance_id": "msgpack__msgpack-python-331",
+    "pass_to_pass": [],
+    "problem_statement": "Add msgpack specific exception types\n### Unpacker\r\n\r\nInvalidSequence -- it's not msgpack.\r\nNestLimitExceeded -- too nested.\r\n\r\nany more ?\r\n\r\n### Packer\r\n\r\nany?",
+    "repo": "msgpack/msgpack-python",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/test_except.py",
+    "test_patch": "diff --git a/test/test_except.py b/test/test_except.py\nindex 361d4ea..626c8be 100644\n--- a/test/test_except.py\n+++ b/test/test_except.py\n@@ -2,7 +2,7 @@\n # coding: utf-8\n \n from pytest import raises\n-from msgpack import packb, unpackb\n+from msgpack import packb, unpackb, Unpacker, FormatError, StackError, OutOfData\n \n import datetime\n \n@@ -19,13 +19,34 @@ def test_raise_on_find_unsupported_value():\n def test_raise_from_object_hook():\n     def hook(obj):\n         raise DummyException\n+\n     raises(DummyException, unpackb, packb({}), object_hook=hook)\n-    raises(DummyException, unpackb, packb({'fizz': 'buzz'}), object_hook=hook)\n-    raises(DummyException, unpackb, packb({'fizz': 'buzz'}), object_pairs_hook=hook)\n-    raises(DummyException, unpackb, packb({'fizz': {'buzz': 'spam'}}), object_hook=hook)\n-    raises(DummyException, unpackb, packb({'fizz': {'buzz': 'spam'}}), object_pairs_hook=hook)\n+    raises(DummyException, unpackb, packb({\"fizz\": \"buzz\"}), object_hook=hook)\n+    raises(DummyException, unpackb, packb({\"fizz\": \"buzz\"}), object_pairs_hook=hook)\n+    raises(DummyException, unpackb, packb({\"fizz\": {\"buzz\": \"spam\"}}), object_hook=hook)\n+    raises(\n+        DummyException,\n+        unpackb,\n+        packb({\"fizz\": {\"buzz\": \"spam\"}}),\n+        object_pairs_hook=hook,\n+    )\n \n \n def test_invalidvalue():\n+    incomplete = b\"\\xd9\\x97#DL_\"  # raw8 - length=0x97\n     with raises(ValueError):\n-        unpackb(b'\\xd9\\x97#DL_')\n+        unpackb(incomplete)\n+\n+    with raises(OutOfData):\n+        unpacker = Unpacker()\n+        unpacker.feed(incomplete)\n+        unpacker.unpack()\n+\n+    with raises(FormatError):\n+        unpackb(b\"\\xc1\")  # (undefined tag)\n+\n+    with raises(FormatError):\n+        unpackb(b\"\\x91\\xc1\")  # fixarray(len=1) [ (undefined tag) ]\n+\n+    with raises(StackError):\n+        unpackb(b\"\\x91\" * 3000)  # nested fixarray(len=1)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-msgpack__msgpack-python-331-45d53df8fe"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/msgpack/__init__.py b/msgpack/__init__.py\nindex 7493c4c..2143ecb 100644\n--- a/msgpack/__init__.py\n+++ b/msgpack/__init__.py\n@@ -1,6 +1,21 @@\n # coding: utf-8\n from msgpack._version import version\n-from msgpack.exceptions import *\n+from msgpack.exceptions import (\n+    UnpackException,\n+    BufferFull,\n+    OutOfData,\n+    UnpackValueError,\n+    ExtraData,\n+    PackException,\n+    PackValueError,\n+    PackOverflowError,\n+    InvalidSequence,\n+    NestLimitExceeded,\n+)\n+\n+# Aliases for backward compatibility / test expectations\n+FormatError = InvalidSequence\n+StackError = NestLimitExceeded\n \n from collections import namedtuple\n \ndiff --git a/msgpack/exceptions.py b/msgpack/exceptions.py\nindex 5bee5b2..fe371c8 100644\n--- a/msgpack/exceptions.py\n+++ b/msgpack/exceptions.py\n@@ -36,3 +36,18 @@ class ExtraData(UnpackValueError):\n PackException = Exception\n PackValueError = ValueError\n PackOverflowError = OverflowError\n+\n+\n+class InvalidSequence(ValueError):\n+    \"\"\"The data is not a valid msgpack sequence.\"\"\"\n+    pass\n+\n+\n+class NestLimitExceeded(ValueError):\n+    \"\"\"The nesting limit has been exceeded.\"\"\"\n+    pass\n+\n+\n+# Aliases for external compatibility\n+FormatError = InvalidSequence\n+StackError = NestLimitExceeded\ndiff --git a/msgpack/fallback.py b/msgpack/fallback.py\nindex 04fb5b9..b4ffc7e 100644\n--- a/msgpack/fallback.py\n+++ b/msgpack/fallback.py\n@@ -52,7 +52,9 @@ else:\n from msgpack.exceptions import (\n     BufferFull,\n     OutOfData,\n-    ExtraData)\n+    ExtraData,\n+    FormatError,\n+    StackError)\n \n from msgpack import ExtType\n \n@@ -561,11 +563,13 @@ class Unpacker(object):\n                 raise ValueError(\"%s exceeds max_map_len(%s)\", n, self._max_map_len)\n             typ = TYPE_MAP\n         else:\n-            raise ValueError(\"Unknown header: 0x%x\" % b)\n+            raise FormatError(\"Unknown header: 0x%x\" % b)\n         return typ, n, obj\n \n-    def _unpack(self, execute=EX_CONSTRUCT):\n+    def _unpack(self, execute=EX_CONSTRUCT, _depth=0):\n         typ, n, obj = self._read_header(execute)\n+        if _depth >= DEFAULT_RECURSE_LIMIT:\n+            raise StackError(\"Nested too deep\")\n \n         if execute == EX_READ_ARRAY_HEADER:\n             if typ != TYPE_ARRAY:\n@@ -584,7 +588,7 @@ class Unpacker(object):\n                 return\n             ret = newlist_hint(n)\n             for i in xrange(n):\n-                ret.append(self._unpack(EX_CONSTRUCT))\n+                ret.append(self._unpack(EX_CONSTRUCT, _depth+1))\n             if self._list_hook is not None:\n                 ret = self._list_hook(ret)\n             # TODO is the interaction between `list_hook` and `use_list` ok?\n@@ -598,14 +602,14 @@ class Unpacker(object):\n                 return\n             if self._object_pairs_hook is not None:\n                 ret = self._object_pairs_hook(\n-                    (self._unpack(EX_CONSTRUCT),\n-                     self._unpack(EX_CONSTRUCT))\n+                    (self._unpack(EX_CONSTRUCT, _depth+1),\n+                     self._unpack(EX_CONSTRUCT, _depth+1))\n                     for _ in xrange(n))\n             else:\n                 ret = {}\n                 for _ in xrange(n):\n-                    key = self._unpack(EX_CONSTRUCT)\n-                    ret[key] = self._unpack(EX_CONSTRUCT)\n+                    key = self._unpack(EX_CONSTRUCT, _depth+1)\n+                    ret[key] = self._unpack(EX_CONSTRUCT, _depth+1)\n                 if self._object_hook is not None:\n                     ret = self._object_hook(ret)\n             return ret\n",
+    "agent_patch_sha256": "574a496887cd412b13e83e1fb655a48da3aa8dfabacb411cc69d273ce1c3e15e",
+    "filtered_sha256": "574a496887cd412b13e83e1fb655a48da3aa8dfabacb411cc69d273ce1c3e15e",
+    "number": 1,
+    "patch": "diff --git a/msgpack/__init__.py b/msgpack/__init__.py\nindex 7493c4c..2143ecb 100644\n--- a/msgpack/__init__.py\n+++ b/msgpack/__init__.py\n@@ -1,6 +1,21 @@\n # coding: utf-8\n from msgpack._version import version\n-from msgpack.exceptions import *\n+from msgpack.exceptions import (\n+    UnpackException,\n+    BufferFull,\n+    OutOfData,\n+    UnpackValueError,\n+    ExtraData,\n+    PackException,\n+    PackValueError,\n+    PackOverflowError,\n+    InvalidSequence,\n+    NestLimitExceeded,\n+)\n+\n+# Aliases for backward compatibility / test expectations\n+FormatError = InvalidSequence\n+StackError = NestLimitExceeded\n \n from collections import namedtuple\n \ndiff --git a/msgpack/exceptions.py b/msgpack/exceptions.py\nindex 5bee5b2..fe371c8 100644\n--- a/msgpack/exceptions.py\n+++ b/msgpack/exceptions.py\n@@ -36,3 +36,18 @@ class ExtraData(UnpackValueError):\n PackException = Exception\n PackValueError = ValueError\n PackOverflowError = OverflowError\n+\n+\n+class InvalidSequence(ValueError):\n+    \"\"\"The data is not a valid msgpack sequence.\"\"\"\n+    pass\n+\n+\n+class NestLimitExceeded(ValueError):\n+    \"\"\"The nesting limit has been exceeded.\"\"\"\n+    pass\n+\n+\n+# Aliases for external compatibility\n+FormatError = InvalidSequence\n+StackError = NestLimitExceeded\ndiff --git a/msgpack/fallback.py b/msgpack/fallback.py\nindex 04fb5b9..b4ffc7e 100644\n--- a/msgpack/fallback.py\n+++ b/msgpack/fallback.py\n@@ -52,7 +52,9 @@ else:\n from msgpack.exceptions import (\n     BufferFull,\n     OutOfData,\n-    ExtraData)\n+    ExtraData,\n+    FormatError,\n+    StackError)\n \n from msgpack import ExtType\n \n@@ -561,11 +563,13 @@ class Unpacker(object):\n                 raise ValueError(\"%s exceeds max_map_len(%s)\", n, self._max_map_len)\n             typ = TYPE_MAP\n         else:\n-            raise ValueError(\"Unknown header: 0x%x\" % b)\n+            raise FormatError(\"Unknown header: 0x%x\" % b)\n         return typ, n, obj\n \n-    def _unpack(self, execute=EX_CONSTRUCT):\n+    def _unpack(self, execute=EX_CONSTRUCT, _depth=0):\n         typ, n, obj = self._read_header(execute)\n+        if _depth >= DEFAULT_RECURSE_LIMIT:\n+            raise StackError(\"Nested too deep\")\n \n         if execute == EX_READ_ARRAY_HEADER:\n             if typ != TYPE_ARRAY:\n@@ -584,7 +588,7 @@ class Unpacker(object):\n                 return\n             ret = newlist_hint(n)\n             for i in xrange(n):\n-                ret.append(self._unpack(EX_CONSTRUCT))\n+                ret.append(self._unpack(EX_CONSTRUCT, _depth+1))\n             if self._list_hook is not None:\n                 ret = self._list_hook(ret)\n             # TODO is the interaction between `list_hook` and `use_list` ok?\n@@ -598,14 +602,14 @@ class Unpacker(object):\n                 return\n             if self._object_pairs_hook is not None:\n                 ret = self._object_pairs_hook(\n-                    (self._unpack(EX_CONSTRUCT),\n-                     self._unpack(EX_CONSTRUCT))\n+                    (self._unpack(EX_CONSTRUCT, _depth+1),\n+                     self._unpack(EX_CONSTRUCT, _depth+1))\n                     for _ in xrange(n))\n             else:\n                 ret = {}\n                 for _ in xrange(n):\n-                    key = self._unpack(EX_CONSTRUCT)\n-                    ret[key] = self._unpack(EX_CONSTRUCT)\n+                    key = self._unpack(EX_CONSTRUCT, _depth+1)\n+                    ret[key] = self._unpack(EX_CONSTRUCT, _depth+1)\n                 if self._object_hook is not None:\n                     ret = self._object_hook(ret)\n             return ret\n",
+    "sha256": "574a496887cd412b13e83e1fb655a48da3aa8dfabacb411cc69d273ce1c3e15e"
+  }
+}

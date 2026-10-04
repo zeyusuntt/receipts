@@ -1,0 +1,78 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "0ba1a1d7583b2cae3b6c558e7a7433cdd69419a4",
+    "fail_to_pass": [
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_statistics"
+    ],
+    "image_name": "docker.io/swerebenchv2/stac-utils-pystac:561-0ba1a1d",
+    "instance_id": "stac-utils__pystac-561",
+    "pass_to_pass": [
+      "tests/extensions/test_pointcloud.py::TestCases::test_case_1",
+      "tests/extensions/test_pointcloud.py::TestCases::test_case_2",
+      "tests/extensions/test_pointcloud.py::TestCases::test_case_3",
+      "tests/extensions/test_pointcloud.py::TestCases::test_case_4",
+      "tests/extensions/test_pointcloud.py::TestCases::test_case_5",
+      "tests/extensions/test_pointcloud.py::TestCases::test_case_6",
+      "tests/extensions/test_pointcloud.py::TestCases::test_case_7",
+      "tests/extensions/test_pointcloud.py::TestCases::test_case_8",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_apply",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_asset_ext_add_to",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_asset_extension",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_ext",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_extension_not_implemented",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_item_ext_add_to",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_pointcloud_schema",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_statistics",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_statistics_accessor_when_no_stats",
+      "tests/extensions/test_pointcloud.py::PointcloudTest::test_to_from_dict",
+      "tests/extensions/test_pointcloud.py::PointcloudSummariesTest::test_count",
+      "tests/extensions/test_pointcloud.py::PointcloudSummariesTest::test_density",
+      "tests/extensions/test_pointcloud.py::PointcloudSummariesTest::test_encoding",
+      "tests/extensions/test_pointcloud.py::PointcloudSummariesTest::test_statistics",
+      "tests/extensions/test_pointcloud.py::PointcloudSummariesTest::test_type"
+    ],
+    "problem_statement": "Implement RequiredPropertyMissing exception where appropriate\n#309 implements an exception that raises when a required property is missing, using the `repr` of an object in the message to give users as much detail as possible to identify where the error is. This issue will apply after that PR is merged, and the goal of the issue is to implement throwing this exception (normally via the `get_required` utility method) where appropriate and ensuring that object `repr`s give details for any object that is throwing this exception.",
+    "repo": "stac-utils/pystac",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/extensions/test_pointcloud.py",
+    "test_patch": "diff --git a/tests/extensions/test_pointcloud.py b/tests/extensions/test_pointcloud.py\nindex f89cff5e..7f21a7cf 100644\n--- a/tests/extensions/test_pointcloud.py\n+++ b/tests/extensions/test_pointcloud.py\n@@ -6,7 +6,7 @@ import unittest\n \n import pystac\n from pystac.asset import Asset\n-from pystac.errors import ExtensionTypeError, STACError\n+from pystac.errors import ExtensionTypeError, STACError, RequiredPropertyMissing\n from pystac.extensions.pointcloud import (\n     AssetPointcloudExtension,\n     PhenomenologyType,\n@@ -193,12 +193,10 @@ class PointcloudTest(unittest.TestCase):\n             schema.size = 0.5  # type: ignore\n \n         empty_schema = Schema({})\n-        with self.assertRaises(STACError):\n-            empty_schema.size\n-        with self.assertRaises(STACError):\n-            empty_schema.name\n-        with self.assertRaises(STACError):\n-            empty_schema.type\n+        for required_prop in {\"size\", \"name\", \"type\"}:\n+            with self.subTest(attr=required_prop):\n+                with self.assertRaises(RequiredPropertyMissing):\n+                    getattr(empty_schema, required_prop)\n \n     def test_pointcloud_statistics(self) -> None:\n         props: Dict[str, Any] = {\n@@ -251,7 +249,7 @@ class PointcloudTest(unittest.TestCase):\n         self.assertNotIn(\"variance\", stat.properties)\n \n         empty_stat = Statistic({})\n-        with self.assertRaises(STACError):\n+        with self.assertRaises(RequiredPropertyMissing):\n             empty_stat.name\n \n     def test_statistics_accessor_when_no_stats(self) -> None:\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-stac-utils__pystac-561-fda655ae3d"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/pystac/extensions/pointcloud.py b/pystac/extensions/pointcloud.py\nindex 67fb62e..fb1d3e6 100644\n--- a/pystac/extensions/pointcloud.py\n+++ b/pystac/extensions/pointcloud.py\n@@ -14,6 +14,7 @@ from pystac.extensions.base import (\n from pystac.extensions.hooks import ExtensionHooks\n from pystac.summaries import RangeSummary\n from pystac.utils import map_opt, get_required\n+from pystac.errors import RequiredPropertyMissing\n \n T = TypeVar(\"T\", pystac.Item, pystac.Asset)\n \n@@ -90,9 +91,7 @@ class Schema:\n         \"\"\"Gets or sets the size value.\"\"\"\n         result: Optional[int] = self.properties.get(\"size\")\n         if result is None:\n-            raise pystac.STACError(\n-                f\"Pointcloud schema does not have size property: {self.properties}\"\n-            )\n+            raise RequiredPropertyMissing(self, \"size\")\n         return result\n \n     @size.setter\n@@ -107,9 +106,7 @@ class Schema:\n         \"\"\"Gets or sets the name property for this Schema.\"\"\"\n         result: Optional[str] = self.properties.get(\"name\")\n         if result is None:\n-            raise pystac.STACError(\n-                f\"Pointcloud schema does not have name property: {self.properties}\"\n-            )\n+            raise RequiredPropertyMissing(self, \"name\")\n         return result\n \n     @name.setter\n@@ -127,9 +124,10 @@ class Schema:\n         self.properties[\"type\"] = v\n \n     def __repr__(self) -> str:\n-        return \"<Schema name={} size={} type={}>\".format(\n-            self.name, self.size, self.type\n-        )\n+        name = self.properties.get(\"name\", \"<missing>\")\n+        size = self.properties.get(\"size\", \"<missing>\")\n+        typ = self.properties.get(\"type\", \"<missing>\")\n+        return f\"<Schema name={name} size={size} type={typ}>\"\n \n     def to_dict(self) -> Dict[str, Any]:\n         \"\"\"Returns a JSON-like dictionary representing this ``Schema``.\"\"\"\n@@ -219,9 +217,7 @@ class Statistic:\n         \"\"\"Gets or sets the name property.\"\"\"\n         result: Optional[str] = self.properties.get(\"name\")\n         if result is None:\n-            raise pystac.STACError(\n-                f\"Pointcloud statistics does not have name property: {self.properties}\"\n-            )\n+            raise RequiredPropertyMissing(self, \"name\")\n         return result\n \n     @name.setter\n",
+    "agent_patch_sha256": "1fc79b4529ba8a081eee17e4d1bb1c0cd20d52e25134e5b5dfeb88414c3a7da2",
+    "filtered_sha256": "1fc79b4529ba8a081eee17e4d1bb1c0cd20d52e25134e5b5dfeb88414c3a7da2",
+    "number": 1,
+    "patch": "diff --git a/pystac/extensions/pointcloud.py b/pystac/extensions/pointcloud.py\nindex 67fb62e..fb1d3e6 100644\n--- a/pystac/extensions/pointcloud.py\n+++ b/pystac/extensions/pointcloud.py\n@@ -14,6 +14,7 @@ from pystac.extensions.base import (\n from pystac.extensions.hooks import ExtensionHooks\n from pystac.summaries import RangeSummary\n from pystac.utils import map_opt, get_required\n+from pystac.errors import RequiredPropertyMissing\n \n T = TypeVar(\"T\", pystac.Item, pystac.Asset)\n \n@@ -90,9 +91,7 @@ class Schema:\n         \"\"\"Gets or sets the size value.\"\"\"\n         result: Optional[int] = self.properties.get(\"size\")\n         if result is None:\n-            raise pystac.STACError(\n-                f\"Pointcloud schema does not have size property: {self.properties}\"\n-            )\n+            raise RequiredPropertyMissing(self, \"size\")\n         return result\n \n     @size.setter\n@@ -107,9 +106,7 @@ class Schema:\n         \"\"\"Gets or sets the name property for this Schema.\"\"\"\n         result: Optional[str] = self.properties.get(\"name\")\n         if result is None:\n-            raise pystac.STACError(\n-                f\"Pointcloud schema does not have name property: {self.properties}\"\n-            )\n+            raise RequiredPropertyMissing(self, \"name\")\n         return result\n \n     @name.setter\n@@ -127,9 +124,10 @@ class Schema:\n         self.properties[\"type\"] = v\n \n     def __repr__(self) -> str:\n-        return \"<Schema name={} size={} type={}>\".format(\n-            self.name, self.size, self.type\n-        )\n+        name = self.properties.get(\"name\", \"<missing>\")\n+        size = self.properties.get(\"size\", \"<missing>\")\n+        typ = self.properties.get(\"type\", \"<missing>\")\n+        return f\"<Schema name={name} size={size} type={typ}>\"\n \n     def to_dict(self) -> Dict[str, Any]:\n         \"\"\"Returns a JSON-like dictionary representing this ``Schema``.\"\"\"\n@@ -219,9 +217,7 @@ class Statistic:\n         \"\"\"Gets or sets the name property.\"\"\"\n         result: Optional[str] = self.properties.get(\"name\")\n         if result is None:\n-            raise pystac.STACError(\n-                f\"Pointcloud statistics does not have name property: {self.properties}\"\n-            )\n+            raise RequiredPropertyMissing(self, \"name\")\n         return result\n \n     @name.setter\n",
+    "sha256": "1fc79b4529ba8a081eee17e4d1bb1c0cd20d52e25134e5b5dfeb88414c3a7da2"
+  }
+}

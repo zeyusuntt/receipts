@@ -1,0 +1,66 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [
+      "R2_pass_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "8a2558d486033713dc911bd719415ffc24d34e19",
+    "fail_to_pass": [
+      "pytransform3d/test/test_rotations.py::test_angle_between_close_vectors"
+    ],
+    "image_name": "docker.io/swerebenchv2/rock-learning-pytransform3d:48-8a2558d",
+    "instance_id": "rock-learning__pytransform3d-48",
+    "pass_to_pass": [
+      "pytransform3d/test/test_rotations.py::test_norm_vector",
+      "pytransform3d/test/test_rotations.py::test_norm_zero_vector",
+      "pytransform3d/test/test_rotations.py::test_norm_angle",
+      "pytransform3d/test/test_rotations.py::test_norm_axis_angle",
+      "pytransform3d/test/test_rotations.py::test_perpendicular_to_vectors",
+      "pytransform3d/test/test_rotations.py::test_angle_to_zero_vector_is_nan",
+      "pytransform3d/test/test_rotations.py::test_cross_product_matrix",
+      "pytransform3d/test/test_rotations.py::test_matrix_from_angle",
+      "pytransform3d/test/test_rotations.py::test_compact_axis_angle"
+    ],
+    "problem_statement": "Angle between similar Quaternions sometimes nan\n\r\nRan into a weird issue of dot product of checked/normalized quaternions becoming >1. Didn't have time to look deeper into it, maybe after the weekend. \r\n```python\r\nimport pytransform3d.rotations as pr\r\n\r\na = ((0.9689124217106448 , 0.24740395925452294 , 0.0 , 0.0))\r\nb = ((0.9689124217106448 , 0.247403959254523 , 0.0 , 0.0))\r\na = pr.check_quaternion(a)\r\nb = pr.check_quaternion(b)\r\n\r\nprint(\"dot:\" , np.dot(a,b))\r\nprint(\"divisor:\", np.linalg.norm(a)*np.linalg.norm(a))\r\nprint(\"angle between quaternions:\", pr.angle_between_vectors(a,b))\r\n```\r\n\r\n>dot: 1.0000000000000002\r\n>divisor: 1.0\r\n>angle between quaternions: nan\r\n",
+    "repo": "rock-learning/pytransform3d",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pytransform3d/test/test_rotations.py",
+    "test_patch": "diff --git a/pytransform3d/test/test_rotations.py b/pytransform3d/test/test_rotations.py\nindex 23b7739d..ec71963d 100644\n--- a/pytransform3d/test/test_rotations.py\n+++ b/pytransform3d/test/test_rotations.py\n@@ -1,3 +1,4 @@\n+import warnings\n import numpy as np\n from numpy.testing import assert_array_almost_equal, assert_array_equal\n from nose.tools import (assert_almost_equal, assert_equal, assert_true,\n@@ -91,6 +92,27 @@ def test_angle_between_vectors():\n     assert_almost_equal(angle_between_vectors(vR, v), a[-1])\n \n \n+def test_angle_between_close_vectors():\n+    \"\"\"Test angle between close vectors.\n+\n+    See issue #47.\n+    \"\"\"\n+    a = np.array([0.9689124217106448 , 0.24740395925452294 , 0.0 , 0.0])\n+    b = np.array([0.9689124217106448 , 0.247403959254523 , 0.0 , 0.0])\n+    angle = angle_between_vectors(a, b)\n+    assert_almost_equal(angle, 0.0)\n+\n+\n+def test_angle_to_zero_vector_is_nan():\n+    \"\"\"Test angle to zero vector.\"\"\"\n+    a = np.array([1.0, 0.0])\n+    b = np.array([0.0, 0.0])\n+    with warnings.catch_warnings(record=True) as w:\n+        angle = angle_between_vectors(a, b)\n+        assert_equal(len(w), 1)\n+    assert_true(np.isnan(angle))\n+\n+\n def test_cross_product_matrix():\n     \"\"\"Test cross-product matrix.\"\"\"\n     random_state = np.random.RandomState(0)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-rock-learning__pytransform3d-48-33599d5630"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/pytransform3d/rotations.py b/pytransform3d/rotations.py\nindex 19bd0e2..d7248e4 100644\n--- a/pytransform3d/rotations.py\n+++ b/pytransform3d/rotations.py\n@@ -133,8 +133,10 @@ def angle_between_vectors(a, b, fast=False):\n         Angle between a and b\n     \"\"\"\n     if len(a) != 3 or fast:\n-        return np.arccos(np.dot(a, b) /\n-                         (np.linalg.norm(a) * np.linalg.norm(b)))\n+        cos_angle = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))\n+        # Clip due to floating point errors\n+        cos_angle = min(1.0, max(-1.0, cos_angle))\n+        return np.arccos(cos_angle)\n     else:\n         return np.arctan2(np.linalg.norm(np.cross(a, b)), np.dot(a, b))\n \n",
+    "agent_patch_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+    "filtered_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+    "number": 2,
+    "patch": "diff --git a/pytransform3d/rotations.py b/pytransform3d/rotations.py\nindex 19bd0e2..d7248e4 100644\n--- a/pytransform3d/rotations.py\n+++ b/pytransform3d/rotations.py\n@@ -133,8 +133,10 @@ def angle_between_vectors(a, b, fast=False):\n         Angle between a and b\n     \"\"\"\n     if len(a) != 3 or fast:\n-        return np.arccos(np.dot(a, b) /\n-                         (np.linalg.norm(a) * np.linalg.norm(b)))\n+        cos_angle = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))\n+        # Clip due to floating point errors\n+        cos_angle = min(1.0, max(-1.0, cos_angle))\n+        return np.arccos(cos_angle)\n     else:\n         return np.arctan2(np.linalg.norm(np.cross(a, b)), np.dot(a, b))\n \n",
+    "sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9"
+  }
+}

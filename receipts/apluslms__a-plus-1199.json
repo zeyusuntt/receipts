@@ -1,0 +1,101 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "8afbc2aa857bd8b719fe04321274e56231a26434",
+    "fail_to_pass": [
+      "exercise/tests.py::ExerciseTest::test_next_unassessed_submitter_view"
+    ],
+    "image_name": "docker.io/swerebenchv2/apluslms-a-plus:1199-8afbc2a",
+    "instance_id": "apluslms__a-plus-1199",
+    "pass_to_pass": [
+      "exercise/tests.py::ExerciseTest::test_annotate_submitter_points",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_absolute_url",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_async_url",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_deadline_deviation",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_is_open",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_max_submissions",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_one_has_access",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_one_has_submissions",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_submission_allowed",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_submission_deviation",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_submissions_for_student",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_total_submission_count",
+      "exercise/tests.py::ExerciseTest::test_base_exercise_unicode_string",
+      "exercise/tests.py::ExerciseTest::test_can_be_shown_as_module_model_solution",
+      "exercise/tests.py::ExerciseTest::test_can_show_model_solutions",
+      "exercise/tests.py::ExerciseTest::test_early_submission",
+      "exercise/tests.py::ExerciseTest::test_enrollment_exercise_access",
+      "exercise/tests.py::ExerciseTest::test_enrollment_questionaire_opening_time",
+      "exercise/tests.py::ExerciseTest::test_exercise_staff_views",
+      "exercise/tests.py::ExerciseTest::test_exercise_upload_dir",
+      "exercise/tests.py::ExerciseTest::test_exercise_views",
+      "exercise/tests.py::ExerciseTest::test_exercise_with_attachment_files_to_submit",
+      "exercise/tests.py::ExerciseTest::test_exercise_with_attachment_load",
+      "exercise/tests.py::ExerciseTest::test_learning_object_category_unicode_string",
+      "exercise/tests.py::ExerciseTest::test_learning_object_clean",
+      "exercise/tests.py::ExerciseTest::test_learning_object_course_instance",
+      "exercise/tests.py::ExerciseTest::test_module_reveal_state",
+      "exercise/tests.py::ExerciseTest::test_reveal_rule",
+      "exercise/tests.py::ExerciseTest::test_reveal_rule_full_points",
+      "exercise/tests.py::ExerciseTest::test_reveal_rule_max_submissions",
+      "exercise/tests.py::ExerciseTest::test_static_exercise_grade",
+      "exercise/tests.py::ExerciseTest::test_static_exercise_load",
+      "exercise/tests.py::ExerciseTest::test_submission_absolute_url",
+      "exercise/tests.py::ExerciseTest::test_submission_draft",
+      "exercise/tests.py::ExerciseTest::test_submission_files",
+      "exercise/tests.py::ExerciseTest::test_submission_late_conversion",
+      "exercise/tests.py::ExerciseTest::test_submission_late_penalty_applied",
+      "exercise/tests.py::ExerciseTest::test_submission_points",
+      "exercise/tests.py::ExerciseTest::test_submission_status",
+      "exercise/tests.py::ExerciseTest::test_submission_unicode_string",
+      "exercise/tests.py::ExerciseTest::test_submission_upload_dir",
+      "exercise/tests.py::ExerciseTest::test_unofficial_max_submissions",
+      "exercise/tests.py::ExerciseTest::test_unofficial_submission",
+      "exercise/tests.py::ExerciseTest::test_uploading_and_viewing_file"
+    ],
+    "problem_statement": "The next submitter link for manual assessment\nAfter merging the PR #1167 for the issue #1110, we found bugs in the new implementation. The pull request #1167 includes more comments about the details.\r\n\r\n\r\n* The selected next submitter may be such a student who has already received manual grading on a submission other than the latest one. A student should be considered manually graded once any one of his/her submissions has been manually graded. The \"next submitter\" link should not repeat a student who has been manually graded.\r\n* The \"next submitter\" link may repeat the same student who was already being inspected. This happens when the student's earlier submission (but not the latest) has been manually graded even though other students have not received any manual grading.\r\n* When all students have received manual grading, the \"next submitter\" link must stop cycling between students like the old implementation had done. The old code has an if statement with the comment \"There are no more unassessed submitters\". It redirects back to the submission list.\r\n\r\n_Originally posted by @Mankro in https://github.com/apluslms/a-plus/pull/1167#pullrequestreview-1474236719_\r\n            ",
+    "repo": "apluslms/a-plus",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning exercise/tests.py",
+    "test_patch": "diff --git a/exercise/tests.py b/exercise/tests.py\nindex 50198e29..d328a1cf 100644\n--- a/exercise/tests.py\n+++ b/exercise/tests.py\n@@ -1513,3 +1513,94 @@ class ExerciseTest(ExerciseTestBase):\n             self.enrollment_exercise.check_submission_allowed(self.user.userprofile)[0],\n             BaseExercise.SUBMIT_STATUS.CANNOT_ENROLL,\n         )\n+\n+    def test_next_unassessed_submitter_view(self):\n+        # parses the user ID from the URL response of NextUnassessedSubmitterView for convenience. If the URL format is\n+        # different (e.g. redirect when all have been graded) return just the url\n+        def get_url_user_id(args=''):\n+            response = self.client.get(\n+                f\"{exercise.get_absolute_url()}submitters/next-unassessed/{args}\")\n+            try:\n+                return int(response.url.split('/submissions/')[1].split('/inspect/')[0])\n+            except Exception:\n+                return response.url\n+\n+        def create_submission(user, submission_time):\n+            submission = Submission.objects.create(\n+                exercise=exercise,\n+            )\n+            submission.submitters.add(user)\n+            submission.submission_time = submission_time\n+            submission.save()\n+            return submission\n+\n+        self.client.login(username=\"staff\", password=\"staffPassword\")\n+\n+        exercise = BaseExercise.objects.create(\n+            order=10,\n+            name=\"Unassessed Exercise Submitter View\",\n+            course_module=self.course_module,\n+            category=self.learning_object_category,\n+            url=\"unassessed\",\n+            max_submissions=1,\n+        )\n+        exercise.save()\n+\n+        user_submission = create_submission(self.user.userprofile, self.yesterday)\n+\n+        user2_submission = create_submission(self.user2.userprofile, self.today)\n+\n+        # user submission day before user2\n+        self.assertEqual(user_submission.id, get_url_user_id())\n+        self.assertEqual(user2_submission.id,\n+                         get_url_user_id(f\"?prev={self.user.id}\"))\n+\n+        user2_submission.submission_time = self.yesterday - timedelta(days=1)\n+        user2_submission.save()\n+\n+        # now user2 submission is earlier\n+        self.assertEqual(user2_submission.id, get_url_user_id())\n+\n+        # we should now expect to get user1's submission first since user2s earlier submission has been graded\n+        user2_submission.grader = self.teacher.userprofile\n+        user2_submission.save()\n+        self.assertEqual(user_submission.id, get_url_user_id())\n+\n+        # test with prev parameter\n+        self.assertEqual(user_submission.id, get_url_user_id(f\"?prev={self.user2.id}\"))\n+\n+        # remove grader for further tests\n+        user2_submission.grader = None\n+        user2_submission.save()\n+\n+        # create a submission for user so the newest submission was made by user again and not user2\n+        user_earlier_submission = create_submission(self.user.userprofile, self.yesterday - timedelta(days=2))\n+\n+        self.assertEqual(user_submission.id, get_url_user_id())\n+\n+        user2_other_exercise_submission  = Submission.objects.create(\n+            exercise=self.exercise_with_attachment\n+        )\n+        user2_other_exercise_submission.submitters.add(self.user2.userprofile)\n+        user2_other_exercise_submission.submission_time = self.yesterday - timedelta(days=3)\n+        user2_other_exercise_submission.save()\n+\n+        # an even earlier submission in another exercise doesn't matter\n+        self.assertEqual(user_submission.id, get_url_user_id())\n+\n+        # we should now expect user2's submission to be shown because user1's latest submission has been graded\n+        user_earlier_submission.grader = self.teacher.userprofile\n+        user_earlier_submission.save()\n+        self.assertEqual(user2_submission.id, get_url_user_id())\n+\n+        # grading in an older submission (not latest) should also mean user1 is skipped\n+        user_earlier_submission.grader = self.teacher.userprofile\n+        user_earlier_submission.save()\n+        user_submission.grader = None\n+        user_submission.save()\n+        self.assertEqual(user2_submission.id, get_url_user_id())\n+\n+        # everything has been graded (we should get the submissions list)\n+        user2_submission.grader = self.teacher.userprofile\n+        user2_submission.save()\n+        self.assertEqual(exercise.get_submission_list_url(), get_url_user_id())\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-apluslms__a-plus-1199-4caba45e35"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/exercise/staff_views.py b/exercise/staff_views.py\nindex 7c25404b..33681109 100644\n--- a/exercise/staff_views.py\n+++ b/exercise/staff_views.py\n@@ -343,16 +343,11 @@ class NextUnassessedSubmitterView(ExerciseBaseView, BaseRedirectView):\n     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:\n         # Query submitters who have not been assessed yet.\n         submitter = None\n-        submitters = (UserProfile.objects\n-            .filter(submissions__exercise=self.exercise)\n-            .annotate(\n-                count_assessed=Count(\n-                    'submissions__id',\n-                    filter=(Q(submissions__grader__isnull=False)),\n-                ),\n-            )\n-            .filter(count_assessed=0)\n-            .order_by('id'))\n+        submitters = UserProfile.objects.filter(\n+            submissions__exercise=self.exercise\n+        ).exclude(\n+            submissions__grader__isnull=False\n+        ).distinct().order_by('id')\n \n         previous_user_id = request.GET.get('prev')\n         if previous_user_id:\n",
+    "agent_patch_sha256": "e666386a7cb508a3e30e74eb34d67e363c794fc578b126cf0d50dafd4f559b49",
+    "filtered_sha256": "e666386a7cb508a3e30e74eb34d67e363c794fc578b126cf0d50dafd4f559b49",
+    "number": 2,
+    "patch": "diff --git a/exercise/staff_views.py b/exercise/staff_views.py\nindex 7c25404b..33681109 100644\n--- a/exercise/staff_views.py\n+++ b/exercise/staff_views.py\n@@ -343,16 +343,11 @@ class NextUnassessedSubmitterView(ExerciseBaseView, BaseRedirectView):\n     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:\n         # Query submitters who have not been assessed yet.\n         submitter = None\n-        submitters = (UserProfile.objects\n-            .filter(submissions__exercise=self.exercise)\n-            .annotate(\n-                count_assessed=Count(\n-                    'submissions__id',\n-                    filter=(Q(submissions__grader__isnull=False)),\n-                ),\n-            )\n-            .filter(count_assessed=0)\n-            .order_by('id'))\n+        submitters = UserProfile.objects.filter(\n+            submissions__exercise=self.exercise\n+        ).exclude(\n+            submissions__grader__isnull=False\n+        ).distinct().order_by('id')\n \n         previous_user_id = request.GET.get('prev')\n         if previous_user_id:\n",
+    "sha256": "e666386a7cb508a3e30e74eb34d67e363c794fc578b126cf0d50dafd4f559b49"
+  }
+}

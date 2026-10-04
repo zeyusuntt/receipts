@@ -1,0 +1,57 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [
+      "R3_no_shrink"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "d55866d55d20a0e54730dbb354bea04bba8a7973",
+    "fail_to_pass": [
+      "datalad/support/tests/test_github_.py::test_get_repo_url",
+      "datalad/support/tests/test_github_.py::test__make_github_repos"
+    ],
+    "image_name": "docker.io/swerebenchv2/datalad-datalad:5603-d55866d",
+    "instance_id": "datalad__datalad-5603",
+    "pass_to_pass": [],
+    "problem_statement": "Incompatible with PyGithub v1.55\n```\r\n======================================================================\r\nERROR: datalad.support.tests.test_github_.test__make_github_repos\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"/tmp/dl-miniconda-z1552950/lib/python3.8/site-packages/nose/case.py\", line 198, in runTest\r\n    self.test(*self.arg)\r\n  File \"/tmp/dl-miniconda-z1552950/lib/python3.8/site-packages/datalad/support/tests/test_github_.py\", line 110, in test__make_github_repos\r\n    res = list(github_._make_github_repos_(*args))\r\n  File \"/tmp/dl-miniconda-z1552950/lib/python3.8/site-packages/datalad/support/github_.py\", line 212, in _make_github_repos_\r\n    res_ = _make_github_repo(\r\n  File \"/tmp/dl-miniconda-z1552950/lib/python3.8/site-packages/datalad/support/tests/test_github_.py\", line 104, in _make_github_repo\r\n    raise gh.BadCredentialsException(\"very bad status\", \"some data\")\r\nTypeError: __init__() missing 1 required positional argument: 'headers'\r\n```\r\n\r\nhttps://travis-ci.com/github/datalad/datalad/jobs/501116612#L2417",
+    "repo": "datalad/datalad",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning datalad/support/tests/test_github_.py",
+    "test_patch": "diff --git a/datalad/support/tests/test_github_.py b/datalad/support/tests/test_github_.py\nindex a8eaa212b..acbc22cda 100644\n--- a/datalad/support/tests/test_github_.py\n+++ b/datalad/support/tests/test_github_.py\n@@ -33,6 +33,7 @@ from .. import github_\n from ..github_ import (\n     _gen_github_entity,\n     _get_github_cred,\n+    _gh_exception,\n     _token_str,\n     get_repo_url,\n )\n@@ -105,7 +106,8 @@ def test__make_github_repos():\n \n     def _make_github_repo(github_login, entity, reponame, *args):\n         if entity == 'entity1':\n-            raise gh.BadCredentialsException(\"very bad status\", \"some data\")\n+            raise _gh_exception(gh.BadCredentialsException,\n+                                \"very bad status\", \"some data\")\n         return reponame\n \n     with mock.patch.object(github_, '_gen_github_entity', _gen_github_entity), \\\n@@ -117,7 +119,8 @@ def test__make_github_repos():\n \n     def _make_github_repo(github_login, entity, reponame, *args):\n         # Always throw an exception\n-        raise gh.BadCredentialsException(\"very bad status\", \"some data\")\n+        raise _gh_exception(gh.BadCredentialsException,\n+                            \"very bad status\", \"some data\")\n \n     with mock.patch.object(github_, '_gen_github_entity', _gen_github_entity), \\\n             mock.patch.object(github_, '_make_github_repo', _make_github_repo):\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-datalad__datalad-5603-ad232ce16e"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/datalad/support/github_.py b/datalad/support/github_.py\nindex 6848a6785..85ddaa345 100644\n--- a/datalad/support/github_.py\n+++ b/datalad/support/github_.py\n@@ -60,6 +60,17 @@ def _token_str(token):\n     return token[:3] + '...'\n \n \n+def _gh_exception(exc_cls, *args):\n+    \"\"\"Instantiate a GitHub exception, compatible with changes in PyGithub.\n+    Some exceptions (e.g. BadCredentialsException) now require a ``headers``\n+    argument. If only two arguments are provided, assume ``headers=None``.\n+    \"\"\"\n+    if exc_cls is gh.BadCredentialsException and len(args) == 2:\n+        # status, data -> add headers\n+        return exc_cls(args[0], args[1], None)\n+    return exc_cls(*args)\n+\n+\n def _get_tokens_for_login(login, tokens):\n     selected_tokens = []\n     for t in tokens:\n",
+    "agent_patch_sha256": "bb3ba164b232ad98a427e51a32cae45f57b5e9243221d59a1e3e039d05f3e2df",
+    "filtered_sha256": "bb3ba164b232ad98a427e51a32cae45f57b5e9243221d59a1e3e039d05f3e2df",
+    "number": 2,
+    "patch": "diff --git a/datalad/support/github_.py b/datalad/support/github_.py\nindex 6848a6785..85ddaa345 100644\n--- a/datalad/support/github_.py\n+++ b/datalad/support/github_.py\n@@ -60,6 +60,17 @@ def _token_str(token):\n     return token[:3] + '...'\n \n \n+def _gh_exception(exc_cls, *args):\n+    \"\"\"Instantiate a GitHub exception, compatible with changes in PyGithub.\n+    Some exceptions (e.g. BadCredentialsException) now require a ``headers``\n+    argument. If only two arguments are provided, assume ``headers=None``.\n+    \"\"\"\n+    if exc_cls is gh.BadCredentialsException and len(args) == 2:\n+        # status, data -> add headers\n+        return exc_cls(args[0], args[1], None)\n+    return exc_cls(*args)\n+\n+\n def _get_tokens_for_login(login, tokens):\n     selected_tokens = []\n     for t in tokens:\n",
+    "sha256": "bb3ba164b232ad98a427e51a32cae45f57b5e9243221d59a1e3e039d05f3e2df"
+  }
+}

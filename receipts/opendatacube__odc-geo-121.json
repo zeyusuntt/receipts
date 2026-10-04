@@ -1,0 +1,80 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "2d5abdef46bc8b9677f87047f038e384e701fd1e",
+    "fail_to_pass": [
+      "tests/test_crs.py::test_crs_units_issue_120"
+    ],
+    "image_name": "docker.io/swerebenchv2/opendatacube-odc-geo:121-2d5abde",
+    "instance_id": "opendatacube__odc-geo-121",
+    "pass_to_pass": [
+      "tests/test_crs.py::test_common_crs",
+      "tests/test_crs.py::TestCRSEqualityComparisons::test_comparison_edge_cases",
+      "tests/test_crs.py::TestCRSEqualityComparisons::test_australian_albers_comparison",
+      "tests/test_crs.py::test_no_epsg",
+      "tests/test_crs.py::test_crs",
+      "tests/test_crs.py::test_crs_compat",
+      "tests/test_crs.py::test_crs_int[4326]",
+      "tests/test_crs.py::test_crs_int[3577]",
+      "tests/test_crs.py::test_crs_int[3587]",
+      "tests/test_crs.py::test_crs_hash",
+      "tests/test_crs.py::test_crs_units_per_degree",
+      "tests/test_crs.py::test_rio_crs__no_epsg",
+      "tests/test_crs.py::test_norm_crs",
+      "tests/test_crs.py::test_crs_utm[-180-32601]",
+      "tests/test_crs.py::test_crs_utm[x1-32701]",
+      "tests/test_crs.py::test_crs_utm[x2-32631]",
+      "tests/test_crs.py::test_crs_utm[x3-32660]",
+      "tests/test_crs.py::test_crs_utm[x4-32632]",
+      "tests/test_crs.py::test_crs_utm[x5-32732]",
+      "tests/test_crs.py::test_crs_utm[x6-32632]",
+      "tests/test_crs.py::test_crs_utm[x7-32632]",
+      "tests/test_crs.py::test_crs_utm[x8-32632]",
+      "tests/test_crs.py::test_crs_utm[x9-32631]",
+      "tests/test_crs.py::test_crs_utm[x10-32631]",
+      "tests/test_crs.py::test_crs_utm[x11-32632]"
+    ],
+    "problem_statement": "`ValueError: too many values to unpack` when inspecting GeoBox\nI have a raster in Bathymetry Attributed Grid (bag) format ([supported by GDAL](https://gdal.org/drivers/raster/bag.html)).\r\n\r\nI'm attempting to load it with `rioxarray`, then analyse and reproject it with `odc-geo` tools. However, when I attempt to inspect its GeoBox via `.odc.geobox`, I get a `ValueError: too many values to unpack (expected 2)` error:\r\n```\r\nimport rioxarray\r\nimport odc.geo.xr\r\n\r\npath = 'https://dotazprdauegisextpubst01.blob.core.windows.net/transport-wa-public/bathymetry/rasters/PS20190310_Laser.bag'\r\nds = rioxarray.open_rasterio(path, masked=True).to_dataset(dim=\"band\")\r\nds.odc.geobox\r\n```\r\n\r\nIs this a problem with going from `rioxarray` > `odc.geo`, or something about the data's CRS or data format itself?\r\n\r\n\r\nFull error:\r\n```\r\n---------------------------------------------------------------------------\r\nValueError                                Traceback (most recent call last)\r\nFile /env/lib/python3.10/site-packages/IPython/core/formatters.py:344, in BaseFormatter.__call__(self, obj)\r\n    342     method = get_real_method(obj, self.print_method)\r\n    343     if method is not None:\r\n--> 344         return method()\r\n    345     return None\r\n    346 else:\r\n\r\nFile /env/lib/python3.10/site-packages/odc/geo/geobox.py:286, in GeoBoxBase._repr_html_(self)\r\n    284 def _repr_html_(self):\r\n    285     # pylint: disable=protected-access\r\n--> 286     return self._ui._repr_html_()\r\n\r\nFile /env/lib/python3.10/site-packages/odc/geo/ui.py:338, in PixelGridDisplay._repr_html_(self)\r\n    336     authority = crs.authority\r\n    337     wkt = crs.to_wkt(pretty=True).replace(\"\\n\", \"<br/>\").replace(\" \", \"&nbsp;\")\r\n--> 338     units = crs.units[0]\r\n    339     svg_global_txt = svg_base_map(\r\n    340         sz=200, target=self._src.geographic_extent.centroid.coords[0]\r\n    341     )\r\n    343 if authority == (\"\", \"\"):\r\n\r\nFile /env/lib/python3.10/site-packages/odc/geo/crs.py:216, in CRS.units(self)\r\n    213     return \"degrees_north\", \"degrees_east\"\r\n    215 if self.projected:\r\n--> 216     x, y = self._crs.axis_info\r\n    217     return x.unit_name, y.unit_name\r\n    219 raise ValueError(\"Neither projected nor geographic\")\r\n\r\nValueError: too many values to unpack (expected 2)\r\n```\r\nGDAL info:\r\n```\r\nDriver: BAG/Bathymetry Attributed Grid\r\nFiles: none associated\r\nSize is 1920, 1600\r\nCoordinate System is:\r\nCOMPOUNDCRS[\"GDA94 / MGA zone 50 + Instantaneous Water Level Height\",\r\n    PROJCRS[\"GDA94 / MGA zone 50\",\r\n        BASEGEOGCRS[\"GDA94\",\r\n            DATUM[\"Geocentric Datum of Australia 1994\",\r\n                ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\r\n                    LENGTHUNIT[\"metre\",1]]],\r\n            PRIMEM[\"Greenwich\",0,\r\n                ANGLEUNIT[\"degree\",0.0174532925199433]],\r\n            ID[\"EPSG\",4283]],\r\n        CONVERSION[\"UTM zone 50S\",\r\n            METHOD[\"Transverse Mercator\",\r\n                ID[\"EPSG\",9807]],\r\n            PARAMETER[\"Latitude of natural origin\",0,\r\n                ANGLEUNIT[\"degree\",0.0174532925199433],\r\n                ID[\"EPSG\",8801]],\r\n            PARAMETER[\"Longitude of natural origin\",117,\r\n                ANGLEUNIT[\"degree\",0.0174532925199433],\r\n                ID[\"EPSG\",8802]],\r\n            PARAMETER[\"Scale factor at natural origin\",0.9996,\r\n                SCALEUNIT[\"unity\",1],\r\n                ID[\"EPSG\",8805]],\r\n            PARAMETER[\"False easting\",500000,\r\n                LENGTHUNIT[\"metre\",1],\r\n                ID[\"EPSG\",8806]],\r\n            PARAMETER[\"False northing\",10000000,\r\n                LENGTHUNIT[\"metre\",1],\r\n                ID[\"EPSG\",8807]]],\r\n        CS[Cartesian,2],\r\n            AXIS[\"easting\",east,\r\n                ORDER[1],\r\n                LENGTHUNIT[\"metre\",1]],\r\n            AXIS[\"northing\",north,\r\n                ORDER[2],\r\n                LENGTHUNIT[\"metre\",1]],\r\n        ID[\"EPSG\",28350]],\r\n    VERTCRS[\"Instantaneous Water Level Height\",\r\n        VDATUM[\"Instantaneous Water Level\"],\r\n        CS[vertical,1],\r\n            AXIS[\"up\",up,\r\n                LENGTHUNIT[\"metre\",1]],\r\n        ID[\"EPSG\",5829]]]\r\nData axis to CRS axis mapping: 1,2,3\r\nOrigin = (518748.000000000000000,7718414.000000000000000)\r\nPixel Size = (1.000000000000000,-1.000000000000000)\r\nMetadata:\r\n  AREA_OR_POINT=Point\r\n  BagVersion=1.6.2\r\n  BAG_DATETIME=2019-03-27T05:06:54Z\r\nCorner Coordinates:\r\nUpper Left  (  518748.000, 7718414.000) (117d10'47.84\"E, 20d38' 0.23\"S)\r\nLower Left  (  518748.000, 7716814.000) (117d10'47.91\"E, 20d38'52.28\"S)\r\nUpper Right (  520668.000, 7718414.000) (117d11'54.19\"E, 20d38' 0.16\"S)\r\nLower Right (  520668.000, 7716814.000) (117d11'54.26\"E, 20d38'52.21\"S)\r\nCenter      (  519708.000, 7717614.000) (117d11'21.05\"E, 20d38'26.22\"S)\r\nBand 1 Block=1920x1 Type=Float32, ColorInterp=Undefined\r\n  Description = elevation\r\n  Min=-1.758 Max=21.531 \r\n  NoData Value=1e+06\r\nBand 2 Block=1920x1 Type=Float32, ColorInterp=Undefined\r\n  Description = uncertainty\r\n  Min=0.000 Max=23.503 \r\n  NoData Value=1e+06\r\n```",
+    "repo": "opendatacube/odc-geo",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_crs.py",
+    "test_patch": "diff --git a/tests/test_crs.py b/tests/test_crs.py\nindex 8e8507a..a3b5195 100644\n--- a/tests/test_crs.py\n+++ b/tests/test_crs.py\n@@ -283,3 +283,48 @@ def test_crs_utm(x, expected_epsg):\n \n     with pytest.raises(ValueError):\n         _ = CRS.utm(x, datum_name=\"no such datum\")\n+\n+\n+def test_crs_units_issue_120():\n+    compound_crs_wkt = \"\"\"COMPOUNDCRS[\"GDA94 / MGA zone 50 + Instantaneous Water Level Height\",\n+    PROJCRS[\"GDA94 / MGA zone 50\",\n+        BASEGEOGCRS[\"GDA94\",\n+            DATUM[\"Geocentric Datum of Australia 1994\",\n+                ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\n+                    LENGTHUNIT[\"metre\",1]]],\n+            PRIMEM[\"Greenwich\",0,\n+                ANGLEUNIT[\"degree\",0.0174532925199433]],\n+            ID[\"EPSG\",4283]],\n+        CONVERSION[\"UTM zone 50S\",\n+            METHOD[\"Transverse Mercator\",\n+                ID[\"EPSG\",9807]],\n+            PARAMETER[\"Latitude of natural origin\",0,\n+                ANGLEUNIT[\"degree\",0.0174532925199433],\n+                ID[\"EPSG\",8801]],\n+            PARAMETER[\"Longitude of natural origin\",117,\n+                ANGLEUNIT[\"degree\",0.0174532925199433],\n+                ID[\"EPSG\",8802]],\n+            PARAMETER[\"Scale factor at natural origin\",0.9996,\n+                SCALEUNIT[\"unity\",1],\n+                ID[\"EPSG\",8805]],\n+            PARAMETER[\"False easting\",500000,\n+                LENGTHUNIT[\"metre\",1],\n+                ID[\"EPSG\",8806]],\n+            PARAMETER[\"False northing\",10000000,\n+                LENGTHUNIT[\"metre\",1],\n+                ID[\"EPSG\",8807]]],\n+        CS[Cartesian,2],\n+            AXIS[\"easting\",east,\n+                ORDER[1],\n+                LENGTHUNIT[\"metre\",1]],\n+            AXIS[\"northing\",north,\n+                ORDER[2],\n+                LENGTHUNIT[\"metre\",1]],\n+        ID[\"EPSG\",28350]],\n+    VERTCRS[\"Instantaneous Water Level Height\",\n+        VDATUM[\"Instantaneous Water Level\"],\n+        CS[vertical,1],\n+            AXIS[\"up\",up,\n+                LENGTHUNIT[\"metre\",1]],\n+        ID[\"EPSG\",5829]]]\"\"\"\n+    assert CRS(compound_crs_wkt).units == (\"metre\", \"metre\")\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-opendatacube__odc-geo-121-153f4bb468"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/odc/geo/crs.py b/odc/geo/crs.py\nindex 6c208aa..42e002a 100644\n--- a/odc/geo/crs.py\n+++ b/odc/geo/crs.py\n@@ -213,8 +213,15 @@ class CRS:\n             return \"degrees_north\", \"degrees_east\"\n \n         if self.projected:\n-            x, y = self._crs.axis_info\n-            return x.unit_name, y.unit_name\n+            # Handle compound CRS by taking the first two spatial axes (typically easting, northing)\n+            axis_info = self._crs.axis_info\n+            if len(axis_info) >= 2:\n+                # Take the first two axes which should be the spatial dimensions\n+                x, y = axis_info[0], axis_info[1]\n+                return x.unit_name, y.unit_name\n+            else:\n+                # Fallback for unexpected cases\n+                raise ValueError(\"Expected at least 2 axes in projected CRS\")\n \n         raise ValueError(\"Neither projected nor geographic\")  # pragma: no cover\n \n",
+    "agent_patch_sha256": "7d95935cf8026da56790a1db26ee7eef0cb94feb2a924a0942b4f1c662a2373a",
+    "filtered_sha256": "7d95935cf8026da56790a1db26ee7eef0cb94feb2a924a0942b4f1c662a2373a",
+    "number": 1,
+    "patch": "diff --git a/odc/geo/crs.py b/odc/geo/crs.py\nindex 6c208aa..42e002a 100644\n--- a/odc/geo/crs.py\n+++ b/odc/geo/crs.py\n@@ -213,8 +213,15 @@ class CRS:\n             return \"degrees_north\", \"degrees_east\"\n \n         if self.projected:\n-            x, y = self._crs.axis_info\n-            return x.unit_name, y.unit_name\n+            # Handle compound CRS by taking the first two spatial axes (typically easting, northing)\n+            axis_info = self._crs.axis_info\n+            if len(axis_info) >= 2:\n+                # Take the first two axes which should be the spatial dimensions\n+                x, y = axis_info[0], axis_info[1]\n+                return x.unit_name, y.unit_name\n+            else:\n+                # Fallback for unexpected cases\n+                raise ValueError(\"Expected at least 2 axes in projected CRS\")\n \n         raise ValueError(\"Neither projected nor geographic\")  # pragma: no cover\n \n",
+    "sha256": "7d95935cf8026da56790a1db26ee7eef0cb94feb2a924a0942b4f1c662a2373a"
+  }
+}

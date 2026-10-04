@@ -1,0 +1,62 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [
+      "R4_patch_scope"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "34a2eaf9d98f104c7759b8d2e50f95b507067561",
+    "fail_to_pass": [
+      "pydatastructs/miscellaneous_data_structures/tests/test_stack.py::test_LinkedListStack"
+    ],
+    "image_name": "docker.io/swerebenchv2/codezonediitj-pydatastructs:163-34a2eaf",
+    "instance_id": "codezonediitj__pydatastructs-163",
+    "pass_to_pass": [
+      "pydatastructs/miscellaneous_data_structures/tests/test_queue.py::test_Queue",
+      "pydatastructs/miscellaneous_data_structures/tests/test_queue.py::test_ArrayQueue",
+      "pydatastructs/miscellaneous_data_structures/tests/test_queue.py::test_LinkedListQueue",
+      "pydatastructs/miscellaneous_data_structures/tests/test_stack.py::test_Stack",
+      "pydatastructs/miscellaneous_data_structures/tests/test_stack.py::test_ArrayStack"
+    ],
+    "problem_statement": "Multiple tests written under single test name.\n#### Description of the problem\r\ngenerally one module has one test which has all of the tests implemented in it.\r\n\r\n#### Example of the problem\r\n```\r\ndef test_Queue():\r\n\r\n    q1 = Queue(implementation='array', items=[0])\r\n    q1.append(1)\r\n    q1.append(2)\r\n    q1.append(3)\r\n\r\n    q1 = Queue(implementation='linked_list')\r\n    q1.append(1)\r\n    assert raises(TypeError, lambda: Queue(implementation='linked_list', items={0, 1}))\r\n    q1 = Queue(implementation='linked_list', items = [0, 1])\r\n    q1.append(2)\r\n    q1.append(3)\r\n```\r\nThis can be changed to\r\n```\r\ntest_Queue():\r\n   <tests for Queue abstract class>\r\n\r\ntest_ArrayQueue():\r\n   <tests for ArrayQueue class>\r\n\r\ntest_LinkedListQueue():\r\n    <tests for LinkedListQueue class>\r\n```\r\nThis will increase readability, and maintaining tests would be easier. ",
+    "repo": "codezonediitj/pydatastructs",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pydatastructs/miscellaneous_data_structures/tests/test_queue.py pydatastructs/miscellaneous_data_structures/tests/test_stack.py",
+    "test_patch": "diff --git a/pydatastructs/miscellaneous_data_structures/tests/test_queue.py b/pydatastructs/miscellaneous_data_structures/tests/test_queue.py\nindex 3600b8e..cf07115 100644\n--- a/pydatastructs/miscellaneous_data_structures/tests/test_queue.py\n+++ b/pydatastructs/miscellaneous_data_structures/tests/test_queue.py\n@@ -1,8 +1,20 @@\n from pydatastructs.miscellaneous_data_structures import Queue\n+from pydatastructs.miscellaneous_data_structures.queue import ArrayQueue, LinkedListQueue\n from pydatastructs.utils.raises_util import raises\n+from pydatastructs.utils.misc_util import _check_type\n \n def test_Queue():\n+    q = Queue(implementation='array')\n+    q1 = Queue()\n+    assert _check_type(q, ArrayQueue) is True\n+    assert _check_type(q1, ArrayQueue) is True\n+    q2 = Queue(implementation='linked_list')\n+    assert _check_type(q2, LinkedListQueue) is True\n+    assert raises(NotImplementedError, lambda: Queue(implementation=''))\n \n+def test_ArrayQueue():\n+    q1 = Queue()\n+    raises(IndexError, lambda: q1.popleft())\n     q1 = Queue(implementation='array', items=[0])\n     q1.append(1)\n     q1.append(2)\n@@ -16,9 +28,7 @@ def test_Queue():\n     assert q1.popleft() == 3\n     assert len(q1) == 0\n \n-    q1 = Queue()\n-    raises(IndexError, lambda: q1.popleft())\n-\n+def test_LinkedListQueue():\n     q1 = Queue(implementation='linked_list')\n     q1.append(1)\n     assert raises(TypeError, lambda: Queue(implementation='linked_list', items={0, 1}))\ndiff --git a/pydatastructs/miscellaneous_data_structures/tests/test_stack.py b/pydatastructs/miscellaneous_data_structures/tests/test_stack.py\nindex a35f9b6..ca8495d 100644\n--- a/pydatastructs/miscellaneous_data_structures/tests/test_stack.py\n+++ b/pydatastructs/miscellaneous_data_structures/tests/test_stack.py\n@@ -1,10 +1,19 @@\n from pydatastructs.miscellaneous_data_structures import Stack\n-from pydatastructs.linear_data_structures import OneDimensionalArray\n+from pydatastructs.miscellaneous_data_structures.stack import ArrayStack, LinkedListStack\n from pydatastructs.utils.raises_util import raises\n+from pydatastructs.utils.misc_util import _check_type\n \n def test_Stack():\n+    s = Stack(implementation='array')\n+    s1 = Stack()\n+    assert _check_type(s, ArrayStack) is True\n+    assert _check_type(s1, ArrayStack) is True\n+    s2 = Stack(implementation='linked_list')\n+    assert _check_type(s2, LinkedListStack) is True\n+    assert raises(NotImplementedError, lambda: Stack(implementation=''))\n \n-    s = Stack()\n+def test_ArrayStack():\n+    s = Stack(implementation='array')\n     s.push(1)\n     s.push(2)\n     s.push(3)\n@@ -18,30 +27,28 @@ def test_Stack():\n     _s = Stack(items=[1, 2, 3])\n     assert str(_s) == '[1, 2, 3]'\n     assert len(_s) == 3\n-    assert raises(NotImplementedError, lambda: Stack(implementation=''))\n \n+def test_LinkedListStack():\n     s = Stack(implementation='linked_list')\n     s.push(1)\n     s.push(2)\n     s.push(3)\n-    assert s.peek == 3\n-    assert str(s) == '[3, 2, 1]'\n+    assert s.peek.data == 3\n+    assert str(s) == '[1, 2, 3]'\n     assert s.pop().data == 3\n     assert s.pop().data == 2\n     assert s.pop().data == 1\n     assert s.is_empty is True\n     assert raises(IndexError, lambda : s.pop())\n+    assert str(s) == '[]'\n     _s = Stack(implementation='linked_list',items=[1, 2, 3])\n-    assert str(_s) == '[3, 2, 1]'\n+    assert str(_s) == '[1, 2, 3]'\n     assert len(_s) == 3\n \n     s = Stack(implementation='linked_list',items=['a',None,type,{}])\n     assert len(s) == 4\n     assert s.size == 4\n \n-    top = s.top\n-    assert top.data == s.pop().data\n-\n     peek = s.peek\n-    assert peek == s.pop().data\n+    assert peek.data == s.pop().data\n     assert raises(TypeError, lambda: Stack(implementation='linked_list', items={0, 1}))\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-codezonediitj__pydatastructs-163-079dbe7239"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/pydatastructs/miscellaneous_data_structures/stack.py b/pydatastructs/miscellaneous_data_structures/stack.py\nindex 2aa2feb..c25f914 100644\n--- a/pydatastructs/miscellaneous_data_structures/stack.py\n+++ b/pydatastructs/miscellaneous_data_structures/stack.py\n@@ -150,7 +150,7 @@ class LinkedListStack(Stack):\n \n     @property\n     def peek(self):\n-        return self.top.data\n+        return self.top\n \n     @property\n     def top(self):\n@@ -164,4 +164,12 @@ class LinkedListStack(Stack):\n         return self.stack.size\n \n     def __str__(self):\n-        return str(self.stack)\n+        # Return items in bottom-to-top order like ArrayStack\n+        items = []\n+        current = self.stack.head\n+        while current:\n+            items.append(current.data)\n+            current = current.next\n+        # Reverse to get bottom-to-top order\n+        items.reverse()\n+        return str(items)\ndiff --git a/pydatastructs/miscellaneous_data_structures/tests/test_stack.py b/pydatastructs/miscellaneous_data_structures/tests/test_stack.py\nindex ca8495d..6f2bdd1 100644\n--- a/pydatastructs/miscellaneous_data_structures/tests/test_stack.py\n+++ b/pydatastructs/miscellaneous_data_structures/tests/test_stack.py\n@@ -51,4 +51,4 @@ def test_LinkedListStack():\n \n     peek = s.peek\n     assert peek.data == s.pop().data\n-    assert raises(TypeError, lambda: Stack(implementation='linked_list', items={0, 1}))\n+    assert raises(TypeError, lambda: Stack(implementation='linked_list', items={0, 1}))\n\\ No newline at end of file\n",
+    "agent_patch_sha256": "2cb414d70a539b561aa3e89458b1e622ed3397bdb58fdb43d53bf87af5cbdb04",
+    "filtered_sha256": "6be820da8e365fc944c4b7242da3795edaf8729d9a9d46195ee12cf9d4faae87",
+    "number": 2,
+    "patch": "diff --git a/pydatastructs/miscellaneous_data_structures/stack.py b/pydatastructs/miscellaneous_data_structures/stack.py\nindex 2aa2feb..c25f914 100644\n--- a/pydatastructs/miscellaneous_data_structures/stack.py\n+++ b/pydatastructs/miscellaneous_data_structures/stack.py\n@@ -150,7 +150,7 @@ class LinkedListStack(Stack):\n \n     @property\n     def peek(self):\n-        return self.top.data\n+        return self.top\n \n     @property\n     def top(self):\n@@ -164,4 +164,12 @@ class LinkedListStack(Stack):\n         return self.stack.size\n \n     def __str__(self):\n-        return str(self.stack)\n+        # Return items in bottom-to-top order like ArrayStack\n+        items = []\n+        current = self.stack.head\n+        while current:\n+            items.append(current.data)\n+            current = current.next\n+        # Reverse to get bottom-to-top order\n+        items.reverse()\n+        return str(items)\n",
+    "sha256": "6be820da8e365fc944c4b7242da3795edaf8729d9a9d46195ee12cf9d4faae87"
+  }
+}

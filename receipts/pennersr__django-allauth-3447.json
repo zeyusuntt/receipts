@@ -1,0 +1,86 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "aaa0b67f3e7459908d3bc0d4dd1993b794287889",
+    "fail_to_pass": [
+      "allauth/account/tests/test_signup.py::test_get_initial_with_valid_email",
+      "allauth/socialaccount/tests/test_signup.py::test_email_address_conflict_removes_conflicting_email"
+    ],
+    "image_name": "docker.io/swerebenchv2/pennersr-django-allauth:3447-aaa0b67",
+    "instance_id": "pennersr__django-allauth-3447",
+    "pass_to_pass": [
+      "allauth/account/tests/test_signup.py::CustomSignupFormTests::test_custom_form_field_order",
+      "allauth/account/tests/test_signup.py::CustomSignupFormTests::test_user_class_attribute",
+      "allauth/account/tests/test_signup.py::BaseSignupFormTests::test_signup_email_verification",
+      "allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_in_blacklist",
+      "allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_maxlength",
+      "allauth/account/tests/test_signup.py::BaseSignupFormTests::test_username_not_in_blacklist",
+      "allauth/account/tests/test_signup.py::SignupTests::test_django_password_validation",
+      "allauth/account/tests/test_signup.py::SignupTests::test_signup_email_twice",
+      "allauth/account/tests/test_signup.py::SignupTests::test_signup_other_email_verified_externally",
+      "allauth/account/tests/test_signup.py::SignupTests::test_signup_password_twice_form_error",
+      "allauth/account/tests/test_signup.py::SignupTests::test_signup_same_email_verified_externally",
+      "allauth/account/tests/test_signup.py::test_prevent_enumeration_with_mandatory_verification",
+      "allauth/account/tests/test_signup.py::test_prevent_enumeration_off",
+      "allauth/account/tests/test_signup.py::test_prevent_enumeration_strictly",
+      "allauth/account/tests/test_signup.py::test_prevent_enumeration_on",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_disconnect",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_email_address_clash_username_auto_signup",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_email_address_clash_username_not_required",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_email_address_clash_username_required",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_email_address_created",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_populate_username_in_blacklist",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_social_account_taken_at_signup",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_unique_email_validation_signup",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_unverified_email_change_at_signup",
+      "allauth/socialaccount/tests/test_signup.py::SignupTests::test_verified_email_change_at_signup",
+      "allauth/socialaccount/tests/test_signup.py::test_email_address_required_missing_from_sociallogin",
+      "allauth/socialaccount/tests/test_signup.py::test_email_address_conflict_at_social_signup_form",
+      "allauth/socialaccount/tests/test_signup.py::test_email_address_conflict_during_auto_signup"
+    ],
+    "problem_statement": "Feature Request: Prefill option for E-Mail on signup form\nHi,\r\n\r\nwould be nice if I could send a link to a customer with a prefilled version of the registration form.\r\n\r\nFor example:\r\nhttps://www.exmaple.com/accounts/signup/?email=cumter@email.de",
+    "repo": "pennersr/django-allauth",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning allauth/account/tests/test_signup.py allauth/socialaccount/conftest.py allauth/socialaccount/tests/test_signup.py",
+    "test_patch": "diff --git a/allauth/account/tests/test_signup.py b/allauth/account/tests/test_signup.py\nindex 0619539a..79408515 100644\n--- a/allauth/account/tests/test_signup.py\n+++ b/allauth/account/tests/test_signup.py\n@@ -10,6 +10,7 @@ from django.test.client import Client, RequestFactory\n from django.test.utils import override_settings\n from django.urls import reverse\n \n+import pytest\n from pytest_django.asserts import assertTemplateUsed\n \n from allauth.account import app_settings\n@@ -371,3 +372,16 @@ def test_prevent_enumeration_on(settings, user_factory):\n     assert resp.context[\"form\"].errors == {\n         \"email\": [\"A user is already registered with this email address.\"]\n     }\n+\n+\n+@pytest.mark.django_db\n+def test_get_initial_with_valid_email():\n+    \"\"\"Test that the email field is populated with a valid email.\"\"\"\n+    request = RequestFactory().get(\"/signup/?email=test@example.com\")\n+    from allauth.account.views import signup\n+\n+    SessionMiddleware(lambda request: None).process_request(request)\n+    request.user = AnonymousUser()\n+    with context.request_context(request):\n+        view = signup(request)\n+    assert view.context_data[\"view\"].get_initial()[\"email\"] == \"test@example.com\"\ndiff --git a/allauth/socialaccount/conftest.py b/allauth/socialaccount/conftest.py\nindex a3bf68f8..43109a36 100644\n--- a/allauth/socialaccount/conftest.py\n+++ b/allauth/socialaccount/conftest.py\n@@ -6,13 +6,19 @@ from allauth.socialaccount.models import SocialAccount, SocialLogin\n \n @pytest.fixture\n def sociallogin_factory(user_factory):\n-    def factory(email=None, with_email=True, provider=\"unittest-server\", uid=\"123\"):\n+    def factory(\n+        email=None,\n+        with_email=True,\n+        provider=\"unittest-server\",\n+        uid=\"123\",\n+        email_verified=True,\n+    ):\n         user = user_factory(email=email, commit=False, with_email=with_email)\n         account = SocialAccount(provider=provider, uid=uid)\n         sociallogin = SocialLogin(user=user, account=account)\n         if with_email:\n             sociallogin.email_addresses = [\n-                EmailAddress(email=user.email, verified=True, primary=True)\n+                EmailAddress(email=user.email, verified=email_verified, primary=True)\n             ]\n         return sociallogin\n \ndiff --git a/allauth/socialaccount/tests/test_signup.py b/allauth/socialaccount/tests/test_signup.py\nindex ccba05c1..28390a50 100644\n--- a/allauth/socialaccount/tests/test_signup.py\n+++ b/allauth/socialaccount/tests/test_signup.py\n@@ -489,3 +489,38 @@ def test_email_address_conflict_during_auto_signup(\n     resp = complete_social_login(request, sociallogin)\n     assert resp[\"location\"] == reverse(\"account_email_verification_sent\")\n     assert mailoutbox[0].subject == \"[example.com] Account Already Exists\"\n+\n+\n+def test_email_address_conflict_removes_conflicting_email(\n+    db, settings, user_factory, sociallogin_factory, client, rf, mailoutbox\n+):\n+    \"\"\"Tests that when an already existing email is given at the social signup\n+    form, enumeration preventation kicks in.\n+    \"\"\"\n+    settings.ACCOUNT_EMAIL_REQUIRED = True\n+    settings.ACCOUNT_UNIQUE_EMAIL = True\n+    settings.ACCOUNT_USERNAME_REQUIRED = False\n+    settings.ACCOUNT_AUTHENTICATION_METHOD = \"email\"\n+    settings.ACCOUNT_EMAIL_VERIFICATION = \"optional\"\n+    settings.SOCIALACCOUNT_AUTO_SIGNUP = True\n+    settings.SOCIALACCOUNT_EMAIL_AUTHENTICATION = False\n+\n+    user = user_factory(email_verified=False)\n+    sociallogin = sociallogin_factory(email=user.email, email_verified=False)\n+\n+    request = rf.get(\"/\")\n+    request.session = {}\n+    request.user = AnonymousUser()\n+\n+    resp = complete_social_login(request, sociallogin)\n+    # Auto signup does not kick in as the `sociallogin` has a conflicting email.\n+    assert resp[\"location\"] == reverse(\"socialaccount_signup\")\n+\n+    session = client.session\n+    session[\"socialaccount_sociallogin\"] = sociallogin.serialize()\n+    session.save()\n+    # Here, we input the already existing email.\n+    resp = client.post(reverse(\"socialaccount_signup\"), {\"email\": \"other@email.org\"})\n+    assert mailoutbox[0].subject == \"[example.com] Please Confirm Your Email Address\"\n+    assert resp[\"location\"] == settings.LOGIN_REDIRECT_URL\n+    assert EmailAddress.objects.filter(email=user.email).count() == 1\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-pennersr__django-allauth-3447-f2542e9e53"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/allauth/account/views.py b/allauth/account/views.py\nindex d2ab9163..380da665 100644\n--- a/allauth/account/views.py\n+++ b/allauth/account/views.py\n@@ -264,6 +264,13 @@ class SignupView(\n         except ImmediateHttpResponse as e:\n             return e.response\n \n+    def get_initial(self):\n+        initial = super(SignupView, self).get_initial()\n+        email = get_request_param(self.request, \"email\")\n+        if email:\n+            initial[\"email\"] = email\n+        return initial\n+\n     def get_context_data(self, **kwargs):\n         ret = super(SignupView, self).get_context_data(**kwargs)\n         form = ret[\"form\"]\n",
+    "agent_patch_sha256": "e026e2a8af20c0ccd8c3501f1bb274d9ffafc4a45adb5d3f62fb0141558b55ac",
+    "filtered_sha256": "e026e2a8af20c0ccd8c3501f1bb274d9ffafc4a45adb5d3f62fb0141558b55ac",
+    "number": 2,
+    "patch": "diff --git a/allauth/account/views.py b/allauth/account/views.py\nindex d2ab9163..380da665 100644\n--- a/allauth/account/views.py\n+++ b/allauth/account/views.py\n@@ -264,6 +264,13 @@ class SignupView(\n         except ImmediateHttpResponse as e:\n             return e.response\n \n+    def get_initial(self):\n+        initial = super(SignupView, self).get_initial()\n+        email = get_request_param(self.request, \"email\")\n+        if email:\n+            initial[\"email\"] = email\n+        return initial\n+\n     def get_context_data(self, **kwargs):\n         ret = super(SignupView, self).get_context_data(**kwargs)\n         form = ret[\"form\"]\n",
+    "sha256": "e026e2a8af20c0ccd8c3501f1bb274d9ffafc4a45adb5d3f62fb0141558b55ac"
+  }
+}

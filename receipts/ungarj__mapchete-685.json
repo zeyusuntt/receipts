@@ -1,0 +1,82 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [
+      "R2_pass_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "f71307a329abe43fdde69602ceb1e80dae782acb",
+    "fail_to_pass": [
+      "test/test_examples.py::test_example[example_custom_tile_size]"
+    ],
+    "image_name": "docker.io/swerebenchv2/ungarj-mapchete:685-f71307a",
+    "instance_id": "ungarj__mapchete-685",
+    "pass_to_pass": [
+      "test/cli/default/test_convert.py::test_geodetic",
+      "test/cli/default/test_convert.py::test_mercator",
+      "test/cli/default/test_convert.py::test_custom_grid",
+      "test/cli/default/test_convert.py::test_png",
+      "test/cli/default/test_convert.py::test_bidx",
+      "test/cli/default/test_convert.py::test_single_gtiff",
+      "test/cli/default/test_convert.py::test_single_gtiff_cog",
+      "test/cli/default/test_convert.py::test_single_gtiff_overviews",
+      "test/cli/default/test_convert.py::test_dtype",
+      "test/cli/default/test_convert.py::test_scale_ratio",
+      "test/cli/default/test_convert.py::test_scale_offset",
+      "test/cli/default/test_convert.py::test_clip",
+      "test/cli/default/test_convert.py::test_zoom[3-tiles0]",
+      "test/cli/default/test_convert.py::test_zoom[3,4-tiles1]",
+      "test/cli/default/test_convert.py::test_zoom[4,3-tiles2]",
+      "test/cli/default/test_convert.py::test_mapchete",
+      "test/cli/default/test_convert.py::test_tiledir",
+      "test/cli/default/test_convert.py::test_geojson",
+      "test/cli/default/test_convert.py::test_vrt",
+      "test/cli/default/test_convert.py::test_errors",
+      "test/test_examples.py::test_example[example_clip]",
+      "test/test_examples.py::test_example[example_contours]",
+      "test/test_examples.py::test_example[example_custom_grid]",
+      "test/test_examples.py::test_example[example_file_groups]",
+      "test/test_examples.py::test_example[example_hillshade]"
+    ],
+    "problem_statement": "Support changing tile size in the pyramid\nThe tile size of the pyramid seems to be restricted to 256.\n\nWhen the config is parsed a tile_size parameter for the pyramid is not taken taken but a BufferedTilePyramid can handle different size of tile_size for pyramid. \n\nIs there a restriction to use another tile_size ?\n\nI want to process a data set in a custom grid without reprojection, I am using a custom grid ( over EPSG:2154) but to fully handle that grid in native resolution I would need a tile_size of 1000 pixels.\n\n",
+    "repo": "ungarj/mapchete",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/cli/default/__init__.py test/conftest.py test/test_examples.py",
+    "test_patch": "diff --git a/test/cli/default/__init__.py b/test/cli/default/__init__.py\nindex 9f81e5f..d70fb33 100644\n--- a/test/cli/default/__init__.py\n+++ b/test/cli/default/__init__.py\n@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)\n def run_cli(\n     args, expected_exit_code=0, output_contains=None, raise_exc=True, cli=mapchete_cli\n ):\n-    result = CliRunner(env=dict(MAPCHETE_TEST=\"TRUE\"), mix_stderr=True).invoke(\n+    result = CliRunner(env=dict(MAPCHETE_TEST=\"TRUE\")).invoke(\n         cli, list(map(str, args)), catch_exceptions=True, standalone_mode=True\n     )\n     if output_contains:\ndiff --git a/test/conftest.py b/test/conftest.py\nindex 12285ea..7ea60dd 100644\n--- a/test/conftest.py\n+++ b/test/conftest.py\n@@ -1132,6 +1132,16 @@ def example_custom_grid(mp_tmpdir):\n         yield example\n \n \n+@pytest.fixture\n+def example_custom_tile_size(mp_tmpdir):\n+    \"\"\"Fixture for examples/custom_tile_size/custom_tile_size.mapchete.\"\"\"\n+    with ProcessFixture(\n+        EXAMPLES_DIR / \"custom_tile_size/custom_tile_size.mapchete\",\n+        output_tempdir=mp_tmpdir,\n+    ) as example:\n+        yield example\n+\n+\n @pytest.fixture\n def example_file_groups(mp_tmpdir):\n     \"\"\"Fixture for examples/file_groups/file_groups.mapchete.\"\"\"\ndiff --git a/test/test_examples.py b/test/test_examples.py\nindex c590d86..ea08737 100644\n--- a/test/test_examples.py\n+++ b/test/test_examples.py\n@@ -11,6 +11,7 @@ from mapchete.testing import ProcessFixture\n         lazy_fixture(\"example_clip\"),\n         lazy_fixture(\"example_contours\"),\n         lazy_fixture(\"example_custom_grid\"),\n+        lazy_fixture(\"example_custom_tile_size\"),\n         lazy_fixture(\"example_file_groups\"),\n         lazy_fixture(\"example_hillshade\"),\n     ],\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-ungarj__mapchete-685-07a94cd33c"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/examples/custom_tile_size/custom_tile_size.mapchete b/examples/custom_tile_size/custom_tile_size.mapchete\nnew file mode 100644\nindex 0000000..ef00c61\n--- /dev/null\n+++ b/examples/custom_tile_size/custom_tile_size.mapchete\n@@ -0,0 +1,30 @@\n+process: mapchete.processes.convert\n+input:\n+  inp: ../../test/testdata/custom_grid_points.geojson\n+output:\n+  format: GeoJSON\n+  path: output\n+  schema:\n+    properties:\n+      name: str\n+    geometry: Unknown\n+pyramid:\n+  grid:\n+    shape:\n+    - 1525\n+    - 125\n+    bounds:\n+    - 166020\n+    - 0\n+    - 934020\n+    - 9369600\n+    is_global: false\n+    proj: +proj=utm +zone=32 +datum=WGS84 +units=m +no_defs\n+  metatiling: 4\n+  tile_size: 1000\n+zoom_levels: 3\n+bounds:\n+- 166020\n+- 0\n+- 934020\n+- 9369600\n\\ No newline at end of file\ndiff --git a/mapchete/config/models.py b/mapchete/config/models.py\nindex 969018d..9e68204 100644\n--- a/mapchete/config/models.py\n+++ b/mapchete/config/models.py\n@@ -29,6 +29,7 @@ class PyramidConfig(BaseModel):\n     grid: Union[str, dict]\n     metatiling: MetatilingValue = 1\n     pixelbuffer: NonNegativeInt = 0\n+    tile_size: Optional[NonNegativeInt] = None\n \n \n class DaskAdaptOptions(BaseModel):\ndiff --git a/mapchete/config/parse.py b/mapchete/config/parse.py\nindex 5f5dbac..324f83c 100644\n--- a/mapchete/config/parse.py\n+++ b/mapchete/config/parse.py\n@@ -62,9 +62,11 @@ def raw_conf_process_pyramid(\n     BufferedTilePyramid\n     \"\"\"\n     pixelbuffer = 0 if reset_pixelbuffer else raw_conf[\"pyramid\"].get(\"pixelbuffer\", 0)\n+    tile_size = raw_conf[\"pyramid\"].get(\"tile_size\", 256)\n     return BufferedTilePyramid(\n         raw_conf[\"pyramid\"][\"grid\"],\n         metatiling=raw_conf[\"pyramid\"].get(\"metatiling\", 1),\n+        tile_size=tile_size,\n         pixelbuffer=pixelbuffer,\n     )\n \n@@ -82,11 +84,13 @@ def raw_conf_output_pyramid(raw_conf: dict) -> BufferedTilePyramid:\n     -------\n     BufferedTilePyramid\n     \"\"\"\n+    tile_size = raw_conf[\"pyramid\"].get(\"tile_size\", 256)\n     return BufferedTilePyramid(\n         raw_conf[\"pyramid\"][\"grid\"],\n         metatiling=raw_conf[\"output\"].get(\n             \"metatiling\", raw_conf[\"pyramid\"].get(\"metatiling\", 1)\n         ),\n+        tile_size=tile_size,\n         pixelbuffer=raw_conf[\"pyramid\"].get(\n             \"pixelbuffer\", raw_conf[\"pyramid\"].get(\"pixelbuffer\", 0)\n         ),\n",
+    "agent_patch_sha256": "aefa0ba32d8faf5281d3a513defaf5c23a5166211be28044644766b25832f44c",
+    "filtered_sha256": "aefa0ba32d8faf5281d3a513defaf5c23a5166211be28044644766b25832f44c",
+    "number": 2,
+    "patch": "diff --git a/examples/custom_tile_size/custom_tile_size.mapchete b/examples/custom_tile_size/custom_tile_size.mapchete\nnew file mode 100644\nindex 0000000..ef00c61\n--- /dev/null\n+++ b/examples/custom_tile_size/custom_tile_size.mapchete\n@@ -0,0 +1,30 @@\n+process: mapchete.processes.convert\n+input:\n+  inp: ../../test/testdata/custom_grid_points.geojson\n+output:\n+  format: GeoJSON\n+  path: output\n+  schema:\n+    properties:\n+      name: str\n+    geometry: Unknown\n+pyramid:\n+  grid:\n+    shape:\n+    - 1525\n+    - 125\n+    bounds:\n+    - 166020\n+    - 0\n+    - 934020\n+    - 9369600\n+    is_global: false\n+    proj: +proj=utm +zone=32 +datum=WGS84 +units=m +no_defs\n+  metatiling: 4\n+  tile_size: 1000\n+zoom_levels: 3\n+bounds:\n+- 166020\n+- 0\n+- 934020\n+- 9369600\n\\ No newline at end of file\ndiff --git a/mapchete/config/models.py b/mapchete/config/models.py\nindex 969018d..9e68204 100644\n--- a/mapchete/config/models.py\n+++ b/mapchete/config/models.py\n@@ -29,6 +29,7 @@ class PyramidConfig(BaseModel):\n     grid: Union[str, dict]\n     metatiling: MetatilingValue = 1\n     pixelbuffer: NonNegativeInt = 0\n+    tile_size: Optional[NonNegativeInt] = None\n \n \n class DaskAdaptOptions(BaseModel):\ndiff --git a/mapchete/config/parse.py b/mapchete/config/parse.py\nindex 5f5dbac..324f83c 100644\n--- a/mapchete/config/parse.py\n+++ b/mapchete/config/parse.py\n@@ -62,9 +62,11 @@ def raw_conf_process_pyramid(\n     BufferedTilePyramid\n     \"\"\"\n     pixelbuffer = 0 if reset_pixelbuffer else raw_conf[\"pyramid\"].get(\"pixelbuffer\", 0)\n+    tile_size = raw_conf[\"pyramid\"].get(\"tile_size\", 256)\n     return BufferedTilePyramid(\n         raw_conf[\"pyramid\"][\"grid\"],\n         metatiling=raw_conf[\"pyramid\"].get(\"metatiling\", 1),\n+        tile_size=tile_size,\n         pixelbuffer=pixelbuffer,\n     )\n \n@@ -82,11 +84,13 @@ def raw_conf_output_pyramid(raw_conf: dict) -> BufferedTilePyramid:\n     -------\n     BufferedTilePyramid\n     \"\"\"\n+    tile_size = raw_conf[\"pyramid\"].get(\"tile_size\", 256)\n     return BufferedTilePyramid(\n         raw_conf[\"pyramid\"][\"grid\"],\n         metatiling=raw_conf[\"output\"].get(\n             \"metatiling\", raw_conf[\"pyramid\"].get(\"metatiling\", 1)\n         ),\n+        tile_size=tile_size,\n         pixelbuffer=raw_conf[\"pyramid\"].get(\n             \"pixelbuffer\", raw_conf[\"pyramid\"].get(\"pixelbuffer\", 0)\n         ),\n",
+    "sha256": "aefa0ba32d8faf5281d3a513defaf5c23a5166211be28044644766b25832f44c"
+  }
+}

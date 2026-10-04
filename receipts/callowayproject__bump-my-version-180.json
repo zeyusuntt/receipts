@@ -1,0 +1,75 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "c3d89a3ec6a0d03c4696ad652ea2e8c734e7ebfc",
+    "fail_to_pass": [
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestRendersFormat::test_zero_padding"
+    ],
+    "image_name": "docker.io/swerebenchv2/callowayproject-bump-my-version:180-c3d89a3",
+    "instance_id": "callowayproject__bump-my-version-180",
+    "pass_to_pass": [
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_empty_version_returns_empty_dict",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_empty_parse_pattern_returns_empty_dict",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_parses_version_and_returns_full_dict[parse-version]",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_parses_version_and_returns_full_dict[parse-prerelease]",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_parses_version_and_returns_full_dict[parse-buildmetadata]",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_parses_version_and_returns_full_dict[parse-prerelease-buildmetadata]",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_unmatched_pattern_returns_empty_dict",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_invalid_parse_pattern_raises_error",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_parse_pattern_with_newlines",
+      "tests/test_versioning/test_serialization.py::TestParseVersion::test_parse_pattern_with_zero_padding",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_string_with_fewest_required_labels[major-minor-patch]",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_string_with_fewest_required_labels[major-minor-patch-zero]",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_string_with_fewest_required_labels[major-minor-zero-patch-zero]",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_renderable_pattern_with_fewest_labels",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_is_first_pattern_with_fewest_labels",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_includes_optional_component_when_dependent_is_not_optional",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestFormatSelection::test_selects_first_pattern_when_all_are_invalid",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestRendersFormat::test_with_newlines",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestRendersFormat::test_with_additional_context",
+      "tests/test_versioning/test_serialization.py::TestSerialize::TestRaisesError::test_if_context_is_missing_values"
+    ],
+    "problem_statement": "Zero-padded version parts are not working\n              It seems that this fix was removed with some refactoring happened in #112. Tried with version 0.20.1 and the following config parameters:\r\n```\r\ncurrent_version = \"5.06.0\"\r\nparse = \"(?P<major>\\\\d+)\\\\.(?P<minor>\\\\d+)\\\\.(?P<patch>\\\\d+)\"\r\nserialize = [\"{major}.{minor:02}.{patch}\"]\r\nsearch = \"{current_version}\"\r\nreplace = \"{new_version}\"\r\n```\r\nIncreasing minor would result in version 5.70.0 which is obviously wrong. Any chances we get this functionality back? Or is there any other possibility to have fixed length version numbers?\r\n\r\n_Originally posted by @reindlt in https://github.com/callowayproject/bump-my-version/issues/26#issuecomment-2071756686_\r\n            ",
+    "repo": "callowayproject/bump-my-version",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_versioning/test_serialization.py",
+    "test_patch": "diff --git a/tests/test_versioning/test_serialization.py b/tests/test_versioning/test_serialization.py\nindex 3cb9e56c..0bf99315 100644\n--- a/tests/test_versioning/test_serialization.py\n+++ b/tests/test_versioning/test_serialization.py\n@@ -68,6 +68,11 @@ class TestParseVersion:\n         pattern = r\"MAJOR=(?P<major>\\d+)\\nMINOR=(?P<minor>\\d+)\\nPATCH=(?P<patch>\\d+)\\n\"\n         assert parse_version(\"MAJOR=31\\nMINOR=0\\nPATCH=3\\n\", pattern) == {\"major\": \"31\", \"minor\": \"0\", \"patch\": \"3\"}\n \n+    def test_parse_pattern_with_zero_padding(self):\n+        \"\"\"A parse pattern with zero padding should be parsed correctly.\"\"\"\n+        pattern = r\"(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)\"\n+        assert parse_version(\"5.06.0\", pattern) == {\"major\": \"5\", \"minor\": \"06\", \"patch\": \"0\"}\n+\n \n class TestSerialize:\n     \"\"\"Test the serialize function.\"\"\"\n@@ -196,6 +201,11 @@ class TestSerialize:\n                 == \"1.2.3+build.1\"\n             )\n \n+        def test_zero_padding(self):\n+            \"\"\"A numeric component with zero-padding notation should be rendered correctly.\"\"\"\n+            version = semver_spec().create_version({\"major\": \"1\", \"minor\": \"2\", \"patch\": \"3\"})\n+            assert serialize(version, serialize_patterns=[\"{major}.{minor:02}.{patch}\"], context={}) == \"1.02.3\"\n+\n     class TestRaisesError:\n         def test_if_context_is_missing_values(self):\n             \"\"\"An error is raised if not all parts required in the format have values.\"\"\"\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-callowayproject__bump-my-version-180-d9d7632c82"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/bumpversion/versioning/serialization.py b/bumpversion/versioning/serialization.py\nindex b119d65..0bc9772 100644\n--- a/bumpversion/versioning/serialization.py\n+++ b/bumpversion/versioning/serialization.py\n@@ -103,7 +103,8 @@ def serialize(version: Version, serialize_patterns: List[str], context: MutableM\n     logger.indent()\n \n     local_context = copy(context)\n-    local_context.update(version.values())\n+    # Use VersionComponent objects instead of raw string values to preserve formatting capabilities\n+    local_context.update({key: component for key, component in version.components.items()})\n     local_context_keys = set(local_context.keys())\n     required_component_labels = set(version.required_components())\n \n",
+    "agent_patch_sha256": "eadb29a6b670341468544a39dd71b9be8d512b687ecbe0dd04951c6a4bd0bf5a",
+    "filtered_sha256": "eadb29a6b670341468544a39dd71b9be8d512b687ecbe0dd04951c6a4bd0bf5a",
+    "number": 1,
+    "patch": "diff --git a/bumpversion/versioning/serialization.py b/bumpversion/versioning/serialization.py\nindex b119d65..0bc9772 100644\n--- a/bumpversion/versioning/serialization.py\n+++ b/bumpversion/versioning/serialization.py\n@@ -103,7 +103,8 @@ def serialize(version: Version, serialize_patterns: List[str], context: MutableM\n     logger.indent()\n \n     local_context = copy(context)\n-    local_context.update(version.values())\n+    # Use VersionComponent objects instead of raw string values to preserve formatting capabilities\n+    local_context.update({key: component for key, component in version.components.items()})\n     local_context_keys = set(local_context.keys())\n     required_component_labels = set(version.required_components())\n \n",
+    "sha256": "eadb29a6b670341468544a39dd71b9be8d512b687ecbe0dd04951c6a4bd0bf5a"
+  }
+}

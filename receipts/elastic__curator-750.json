@@ -1,0 +1,73 @@
+{
+  "claims": {
+    "claim_audit": "unsupported",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "95dd25568057f0a918f3c4f9625ffd7d93f732db",
+    "fail_to_pass": [
+      "test/unit/test_validators.py::TestFilterTypes::test_age_with_string_unit_count",
+      "test/unit/test_validators.py::TestFilterTypes::test_space_name_age_string_float"
+    ],
+    "image_name": "docker.io/swerebenchv2/elastic-curator:750-95dd255",
+    "instance_id": "elastic__curator-750",
+    "pass_to_pass": [
+      "test/unit/test_validators.py::TestFilters::test_single_raises_configuration_error",
+      "test/unit/test_validators.py::TestFilterTypes::test_age",
+      "test/unit/test_validators.py::TestFilterTypes::test_alias",
+      "test/unit/test_validators.py::TestFilterTypes::test_allocated",
+      "test/unit/test_validators.py::TestFilterTypes::test_closed",
+      "test/unit/test_validators.py::TestFilterTypes::test_count",
+      "test/unit/test_validators.py::TestFilterTypes::test_forcemerged",
+      "test/unit/test_validators.py::TestFilterTypes::test_kibana",
+      "test/unit/test_validators.py::TestFilterTypes::test_opened",
+      "test/unit/test_validators.py::TestFilterTypes::test_space_creation_date_age",
+      "test/unit/test_validators.py::TestFilterTypes::test_space_field_stats_age",
+      "test/unit/test_validators.py::TestFilterTypes::test_space_field_stats_age_no_field",
+      "test/unit/test_validators.py::TestFilterTypes::test_space_name_age",
+      "test/unit/test_validators.py::TestFilterTypes::test_space_name_age_no_ts",
+      "test/unit/test_validators.py::TestFilterTypes::test_state"
+    ],
+    "problem_statement": "Use environment variables with Curator v4\nI'm using 3.5 and it accepts flags. this works well with environment variables such as\r\n\r\n`--port ${PORT}`, etc.\r\n\r\nIt's unclear in the v4 docs on how to do this with the change to a configuration file.\r\nThe config file has everything I need, but it doesn't show if it accepts environment variables/overrides. Is it possible without modifying the file to do string replacements?",
+    "repo": "elastic/curator",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/integration/test_envvars.py test/integration/testvars.py test/unit/test_validators.py",
+    "test_patch": "diff --git a/test/integration/test_envvars.py b/test/integration/test_envvars.py\nnew file mode 100644\nindex 0000000..6b00a39\n--- /dev/null\n+++ b/test/integration/test_envvars.py\n@@ -0,0 +1,91 @@\n+import elasticsearch\n+import curator\n+import os\n+import json\n+import string, random, tempfile\n+import click\n+from click import testing as clicktest\n+from mock import patch, Mock\n+\n+from . import CuratorTestCase\n+from . import testvars as testvars\n+\n+import logging\n+logger = logging.getLogger(__name__)\n+\n+host, port = os.environ.get('TEST_ES_SERVER', 'localhost:9200').split(':')\n+port = int(port) if port else 9200\n+\n+def random_envvar(size):\n+    return ''.join(\n+        random.SystemRandom().choice(\n+            string.ascii_uppercase + string.digits\n+        ) for _ in range(size)\n+    )\n+\n+class TestEnvVars(CuratorTestCase):\n+    def test_present(self):\n+        evar = random_envvar(8)\n+        os.environ[evar] = \"1234\"\n+        dollar = '${' + evar + '}'\n+        self.write_config(\n+            self.args['configfile'],\n+            testvars.client_config_envvars.format(dollar, port, 30)\n+        )\n+        cfg = curator.get_yaml(self.args['configfile'])\n+        self.assertEqual(\n+            cfg['client']['hosts'],\n+            os.environ.get(evar)\n+        )\n+        del os.environ[evar]\n+    def test_not_present(self):\n+        evar = random_envvar(8)\n+        dollar = '${' + evar + '}'\n+        self.write_config(\n+            self.args['configfile'],\n+            testvars.client_config_envvars.format(dollar, port, 30)\n+        )\n+        cfg = curator.get_yaml(self.args['configfile'])\n+        self.assertIsNone(cfg['client']['hosts'])\n+    def test_not_present_with_default(self):\n+        evar = random_envvar(8)\n+        default = random_envvar(8)\n+        dollar = '${' + evar + ':' + default + '}'\n+        self.write_config(\n+            self.args['configfile'],\n+            testvars.client_config_envvars.format(dollar, port, 30)\n+        )\n+        cfg = curator.get_yaml(self.args['configfile'])\n+        self.assertEqual(\n+            cfg['client']['hosts'],\n+            default\n+        )\n+    def test_do_something_with_int_value(self):\n+        self.create_indices(10)\n+        evar = random_envvar(8)\n+        os.environ[evar] = \"1234\"\n+        dollar = '${' + evar + '}'\n+        self.write_config(\n+            self.args['configfile'],\n+            testvars.client_config_envvars.format(host, port, dollar)\n+        )\n+        cfg = curator.get_yaml(self.args['configfile'])\n+        self.assertEqual(\n+            cfg['client']['timeout'],\n+            os.environ.get(evar)\n+        )\n+        self.write_config(self.args['actionfile'],\n+            testvars.delete_proto.format(\n+                'age', 'name', 'older', '\\'%Y.%m.%d\\'', 'days', 5, ' ', ' ', ' '\n+            )\n+        )\n+        test = clicktest.CliRunner()\n+        result = test.invoke(\n+                    curator.cli,\n+                    [\n+                        '--config', self.args['configfile'],\n+                        self.args['actionfile']\n+                    ],\n+                    )\n+        self.assertEquals(5, len(curator.get_indices(self.client)))\n+        del os.environ[evar]\ndiff --git a/test/integration/testvars.py b/test/integration/testvars.py\nindex c3dc52f..c243484 100644\n--- a/test/integration/testvars.py\n+++ b/test/integration/testvars.py\n@@ -20,6 +20,19 @@ client_config = ('---\\n'\n '  logformat: default\\n'\n '  blacklist: []\\n')\n \n+client_config_envvars = ('---\\n'\n+'client:\\n'\n+'  hosts: {0}\\n'\n+'  port: {1}\\n'\n+'  timeout: {2}\\n'\n+'  master_only: False\\n'\n+'\\n'\n+'logging:\\n'\n+'  loglevel: DEBUG\\n'\n+'  logfile:\\n'\n+'  logformat: default\\n'\n+'  blacklist: []\\n')\n+\n bad_client_config = ('---\\n'\n 'misspelled:\\n'\n '  hosts: {0}\\n'\ndiff --git a/test/unit/test_validators.py b/test/unit/test_validators.py\nindex c713687..34f8589 100644\n--- a/test/unit/test_validators.py\n+++ b/test/unit/test_validators.py\n@@ -48,6 +48,20 @@ class TestFilterTypes(TestCase):\n             }\n         ]\n         self.assertEqual(config, shared_result(config, action))\n+    def test_age_with_string_unit_count(self):\n+        action = 'delete_indices'\n+        config = [\n+            {\n+                'filtertype' : 'age',\n+                'direction' : 'older',\n+                'unit' : 'days',\n+                'unit_count' : \"1\",\n+                'source' : 'field_stats',\n+                'field'  : '@timestamp',\n+            }\n+        ]\n+        result = shared_result(config, action)\n+        self.assertEqual(1, result[0]['unit_count'])\n     def test_allocated(self):\n         action = 'delete_indices'\n         config = [\n@@ -121,6 +135,20 @@ class TestFilterTypes(TestCase):\n             }\n         ]\n         self.assertEqual(config, shared_result(config, action))\n+    def test_space_name_age_string_float(self):\n+        action = 'delete_indices'\n+        config = [\n+            {\n+                'filtertype' : 'space',\n+                'disk_space' : \"1.0\",\n+                'use_age' : True,\n+                'exclude' : False,\n+                'source' : 'name',\n+                'timestring' : '%Y.%m.%d',\n+            }\n+        ]\n+        result = shared_result(config, action)\n+        self.assertEqual(1.0, result[0]['disk_space'])\n     def test_space_name_age_no_ts(self):\n         action = 'delete_indices'\n         config = [\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-elastic__curator-750-7088759c68"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/curator/validators/filter_elements.py b/curator/validators/filter_elements.py\nindex 484f1a4..1f8460f 100644\n--- a/curator/validators/filter_elements.py\n+++ b/curator/validators/filter_elements.py\n@@ -13,7 +13,7 @@ def allocation_type(**kwargs):\n \n def count(**kwargs):\n     # This setting is only used with the count filtertype and is required\n-    return { Required('count'): All(int, Range(min=1)) }\n+    return { Required('count'): All(int, Range(min=1), Coerce(int)) }\n \n def direction(**kwargs):\n     # This setting is only used with the age filtertype.\n@@ -21,7 +21,7 @@ def direction(**kwargs):\n \n def disk_space(**kwargs):\n     # This setting is only used with the space filtertype and is required\n-    return { Required('disk_space'): Any(float, int) }\n+    return { Required('disk_space'): All(Any(float, int), Coerce(float)) }\n \n def epoch(**kwargs):\n     # This setting is only used with the age filtertype.\n@@ -106,7 +106,7 @@ def unit(**kwargs):\n def unit_count(**kwargs):\n     # This setting is only used with the age filtertype, or with the space\n     # filtertype if use_age is set to True.\n-    return { Required('unit_count'): int }\n+    return { Required('unit_count'): All(int, Coerce(int)) }\n \n def use_age(**kwargs):\n     # Use of this setting requires the additional setting, source.\n",
+    "agent_patch_sha256": "c506f6ed40465488a1c0073fb45db3c40584680684ef8b938a4c3f667f6d2a23",
+    "filtered_sha256": "c506f6ed40465488a1c0073fb45db3c40584680684ef8b938a4c3f667f6d2a23",
+    "number": 2,
+    "patch": "diff --git a/curator/validators/filter_elements.py b/curator/validators/filter_elements.py\nindex 484f1a4..1f8460f 100644\n--- a/curator/validators/filter_elements.py\n+++ b/curator/validators/filter_elements.py\n@@ -13,7 +13,7 @@ def allocation_type(**kwargs):\n \n def count(**kwargs):\n     # This setting is only used with the count filtertype and is required\n-    return { Required('count'): All(int, Range(min=1)) }\n+    return { Required('count'): All(int, Range(min=1), Coerce(int)) }\n \n def direction(**kwargs):\n     # This setting is only used with the age filtertype.\n@@ -21,7 +21,7 @@ def direction(**kwargs):\n \n def disk_space(**kwargs):\n     # This setting is only used with the space filtertype and is required\n-    return { Required('disk_space'): Any(float, int) }\n+    return { Required('disk_space'): All(Any(float, int), Coerce(float)) }\n \n def epoch(**kwargs):\n     # This setting is only used with the age filtertype.\n@@ -106,7 +106,7 @@ def unit(**kwargs):\n def unit_count(**kwargs):\n     # This setting is only used with the age filtertype, or with the space\n     # filtertype if use_age is set to True.\n-    return { Required('unit_count'): int }\n+    return { Required('unit_count'): All(int, Coerce(int)) }\n \n def use_age(**kwargs):\n     # Use of this setting requires the additional setting, source.\n",
+    "sha256": "c506f6ed40465488a1c0073fb45db3c40584680684ef8b938a4c3f667f6d2a23"
+  }
+}

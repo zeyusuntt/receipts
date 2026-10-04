@@ -1,0 +1,82 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "9883a4e24767e495c7e8842f4b979f6bcee37ef3",
+    "fail_to_pass": [
+      "tests/test_fn.py::test_fn_trailing_return_with_body",
+      "tests/test_fn.py::test_method_trailing_return_with_body"
+    ],
+    "image_name": "docker.io/swerebenchv2/robotpy-cxxheaderparser:82-9883a4e",
+    "instance_id": "robotpy__cxxheaderparser-82",
+    "pass_to_pass": [
+      "tests/test_fn.py::test_fn_returns_class",
+      "tests/test_fn.py::test_fn_returns_typename",
+      "tests/test_fn.py::test_fn_returns_typename_const",
+      "tests/test_fn.py::test_fn_pointer_params",
+      "tests/test_fn.py::test_fn_void_is_no_params",
+      "tests/test_fn.py::test_fn_array_param",
+      "tests/test_fn.py::test_fn_typename_param",
+      "tests/test_fn.py::test_fn_weird_refs",
+      "tests/test_fn.py::test_fn_too_many_parens",
+      "tests/test_fn.py::test_fn_same_line",
+      "tests/test_fn.py::test_fn_auto_template",
+      "tests/test_fn.py::test_fn_template_ptr",
+      "tests/test_fn.py::test_fn_with_impl",
+      "tests/test_fn.py::test_fn_return_std_function",
+      "tests/test_fn.py::test_fn_return_std_function_trailing",
+      "tests/test_fn.py::test_fn_trailing_return_simple",
+      "tests/test_fn.py::test_fn_trailing_return_std_function",
+      "tests/test_fn.py::test_inline_volatile_fn",
+      "tests/test_fn.py::test_method_w_reference",
+      "tests/test_fn.py::test_fn_w_mvreference",
+      "tests/test_fn.py::test_msvc_conventions",
+      "tests/test_fn.py::test_throw_empty",
+      "tests/test_fn.py::test_throw_dynamic",
+      "tests/test_fn.py::test_noexcept_empty",
+      "tests/test_fn.py::test_noexcept_contents",
+      "tests/test_fn.py::test_auto_decltype_return"
+    ],
+    "problem_statement": "[PARSE BUG]:  function with trailing return type\n### Problem description\n\n**function with trailing return type having implementation won't parse**\r\nparse error evaluating '{': unexpected '{'\r\nauto test() -> void\r\n{\r\n}\r\n\r\nthe declaration parses correctly\r\nauto test2() -> void;\r\n\r\nordinary return type having implementation parses\r\nvoid test3()\r\n{\r\n}\r\n\r\nI double checked  https://robotpy.github.io/cxxheaderparser/ has the same error\n\n### C++ code that can't be parsed correctly (please double-check that https://robotpy.github.io/cxxheaderparser/ has the same error)\n\n```text\nauto test() -> void\r\n{\r\n}\n```\n",
+    "repo": "robotpy/cxxheaderparser",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_fn.py",
+    "test_patch": "diff --git a/tests/test_fn.py b/tests/test_fn.py\nindex 77facfb..1a4fb4e 100644\n--- a/tests/test_fn.py\n+++ b/tests/test_fn.py\n@@ -1194,3 +1194,67 @@ def test_auto_decltype_return() -> None:\n             ]\n         )\n     )\n+\n+\n+def test_fn_trailing_return_with_body() -> None:\n+    content = \"\"\"\n+      auto test() -> void\n+      {\n+      }\n+    \"\"\"\n+    data = parse_string(content, cleandoc=True)\n+\n+    assert data == ParsedData(\n+        namespace=NamespaceScope(\n+            functions=[\n+                Function(\n+                    return_type=Type(\n+                        typename=PQName(segments=[FundamentalSpecifier(name=\"void\")])\n+                    ),\n+                    name=PQName(segments=[NameSpecifier(name=\"test\")]),\n+                    parameters=[],\n+                    has_body=True,\n+                    has_trailing_return=True,\n+                )\n+            ]\n+        )\n+    )\n+\n+\n+def test_method_trailing_return_with_body() -> None:\n+    content = \"\"\"\n+      struct X {\n+          auto test() -> void\n+          {\n+          }\n+      };\n+    \"\"\"\n+    data = parse_string(content, cleandoc=True)\n+\n+    assert data == ParsedData(\n+        namespace=NamespaceScope(\n+            classes=[\n+                ClassScope(\n+                    class_decl=ClassDecl(\n+                        typename=PQName(\n+                            segments=[NameSpecifier(name=\"X\")], classkey=\"struct\"\n+                        )\n+                    ),\n+                    methods=[\n+                        Method(\n+                            return_type=Type(\n+                                typename=PQName(\n+                                    segments=[FundamentalSpecifier(name=\"void\")]\n+                                )\n+                            ),\n+                            name=PQName(segments=[NameSpecifier(name=\"test\")]),\n+                            parameters=[],\n+                            has_body=True,\n+                            has_trailing_return=True,\n+                            access=\"public\",\n+                        )\n+                    ],\n+                )\n+            ]\n+        )\n+    )\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-robotpy__cxxheaderparser-82-f932a1fb8b"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/cxxheaderparser/lexer.py b/cxxheaderparser/lexer.py\nindex 15dec34..d38d1a5 100644\n--- a/cxxheaderparser/lexer.py\n+++ b/cxxheaderparser/lexer.py\n@@ -191,6 +191,7 @@ class PlyLexer:\n         \"DBL_PIPE\",\n         \"ARROW\",\n         \"SHIFT_LEFT\",\n+        \"MINUS\",\n     ] + list(keywords)\n \n     literals = [\n@@ -211,7 +212,6 @@ class PlyLexer:\n         \"^\",\n         \"!\",\n         \"*\",\n-        \"-\",\n         \"+\",\n         \"&\",\n         \"=\",\n@@ -220,6 +220,8 @@ class PlyLexer:\n         \"?\",\n     ]\n \n+    t_MINUS = r\"-(?!\\>)\"\n+\n     #\n     # Regexes for use in tokens (taken from pycparser)\n     #\ndiff --git a/cxxheaderparser/parser.py b/cxxheaderparser/parser.py\nindex a4217a2..d74b184 100644\n--- a/cxxheaderparser/parser.py\n+++ b/cxxheaderparser/parser.py\n@@ -1917,8 +1917,11 @@ class CxxParser:\n         if self.lex.token_if(\"{\"):\n             self._discard_contents(\"{\", \"}\")\n             fn.has_body = True\n-        elif self.lex.token_if(\"ARROW\"):\n+        if self.lex.token_if(\"ARROW\"):\n             self._parse_trailing_return_type(fn)\n+            if self.lex.token_if(\"{\"):\n+                self._discard_contents(\"{\", \"}\")\n+                fn.has_body = True\n \n     def _parse_method_end(self, method: Method) -> None:\n         \"\"\"\n@@ -1963,7 +1966,6 @@ class CxxParser:\n                 method.ref_qualifier = tok_value\n             elif tok_value == \"->\":\n                 self._parse_trailing_return_type(method)\n-                break\n             elif tok_value == \"throw\":\n                 tok = self._next_token_must_be(\"(\")\n                 method.throw = self._create_value(self._consume_balanced_tokens(tok))\n@@ -2032,6 +2034,8 @@ class CxxParser:\n             else:\n                 template[-1].params.extend(at_params)\n \n+\n+\n         # A method outside of a class has multiple name segments\n         multiple_name_segments = len(pqname.segments) > 1\n \n",
+    "agent_patch_sha256": "d230fceafc125c88253226353f3ba3b0a0afa8eabe97ea78d5aeb602f3a5b170",
+    "filtered_sha256": "d230fceafc125c88253226353f3ba3b0a0afa8eabe97ea78d5aeb602f3a5b170",
+    "number": 1,
+    "patch": "diff --git a/cxxheaderparser/lexer.py b/cxxheaderparser/lexer.py\nindex 15dec34..d38d1a5 100644\n--- a/cxxheaderparser/lexer.py\n+++ b/cxxheaderparser/lexer.py\n@@ -191,6 +191,7 @@ class PlyLexer:\n         \"DBL_PIPE\",\n         \"ARROW\",\n         \"SHIFT_LEFT\",\n+        \"MINUS\",\n     ] + list(keywords)\n \n     literals = [\n@@ -211,7 +212,6 @@ class PlyLexer:\n         \"^\",\n         \"!\",\n         \"*\",\n-        \"-\",\n         \"+\",\n         \"&\",\n         \"=\",\n@@ -220,6 +220,8 @@ class PlyLexer:\n         \"?\",\n     ]\n \n+    t_MINUS = r\"-(?!\\>)\"\n+\n     #\n     # Regexes for use in tokens (taken from pycparser)\n     #\ndiff --git a/cxxheaderparser/parser.py b/cxxheaderparser/parser.py\nindex a4217a2..d74b184 100644\n--- a/cxxheaderparser/parser.py\n+++ b/cxxheaderparser/parser.py\n@@ -1917,8 +1917,11 @@ class CxxParser:\n         if self.lex.token_if(\"{\"):\n             self._discard_contents(\"{\", \"}\")\n             fn.has_body = True\n-        elif self.lex.token_if(\"ARROW\"):\n+        if self.lex.token_if(\"ARROW\"):\n             self._parse_trailing_return_type(fn)\n+            if self.lex.token_if(\"{\"):\n+                self._discard_contents(\"{\", \"}\")\n+                fn.has_body = True\n \n     def _parse_method_end(self, method: Method) -> None:\n         \"\"\"\n@@ -1963,7 +1966,6 @@ class CxxParser:\n                 method.ref_qualifier = tok_value\n             elif tok_value == \"->\":\n                 self._parse_trailing_return_type(method)\n-                break\n             elif tok_value == \"throw\":\n                 tok = self._next_token_must_be(\"(\")\n                 method.throw = self._create_value(self._consume_balanced_tokens(tok))\n@@ -2032,6 +2034,8 @@ class CxxParser:\n             else:\n                 template[-1].params.extend(at_params)\n \n+\n+\n         # A method outside of a class has multiple name segments\n         multiple_name_segments = len(pqname.segments) > 1\n \n",
+    "sha256": "d230fceafc125c88253226353f3ba3b0a0afa8eabe97ea78d5aeb602f3a5b170"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "c9521d576c83bd5485fee9de7462e1fdd73a7aa2",
+    "fail_to_pass": [
+      "gammapy/estimators/points/tests/test_sed.py::test_run_no_edip",
+      "gammapy/estimators/points/tests/test_sed.py::test_flux_points_recompute_ul",
+      "gammapy/estimators/points/tests/test_sed.py::test_flux_points_parallel_multiprocessing"
+    ],
+    "image_name": "docker.io/swerebenchv2/gammapy-gammapy:5342-c9521d5",
+    "instance_id": "gammapy__gammapy-5342",
+    "pass_to_pass": [
+      "gammapy/estimators/points/tests/test_sed.py::test_str",
+      "gammapy/estimators/points/tests/test_sed.py::test_run_pwl",
+      "gammapy/estimators/points/tests/test_sed.py::test_run_ecpl",
+      "gammapy/estimators/points/tests/test_sed.py::test_no_likelihood_contribution",
+      "gammapy/estimators/points/tests/test_sed.py::test_mask_shape",
+      "gammapy/estimators/points/tests/test_sed.py::test_run_pwl_parameter_range",
+      "gammapy/estimators/points/tests/test_sed.py::test_flux_points_estimator_small_edges",
+      "gammapy/estimators/points/tests/test_sed.py::test_global_n_jobs_default_handling",
+      "gammapy/estimators/points/tests/test_sed.py::test_fpe_non_aligned_energy_axes",
+      "gammapy/estimators/points/tests/test_sed.py::test_fpe_non_uniform_datasets"
+    ],
+    "problem_statement": "FluxPointsEstimator fails if no edisp is set\n**Gammapy version**\r\npresent dev\r\n\r\n\r\n**Bug description**\r\n\r\nRunning `FluxPointsEstimator` on a dataset without an `edisp` gives a very confusing error message `ValueError: Can only stack equivalent maps or cutout of the same map.`\r\n\r\n\r\n**To Reproduce**\r\n\r\nSet `edisp=None` for any dataset (with e_true=e_reco) and proceed with flux points estimation in multiple energy bands (normal use case).\r\n\r\n**Expected behaviour**\r\nThe analysis fails (as expected) during the fitting stage if `energy_true` has a different binning from the `energy` axis with a more understandable error \r\n```\r\nFile ~/Gammapy-dev/gammapy/gammapy/datasets/evaluator.py:245, in MapEvaluator._edisp_diagonal(self)\r\n    242 @lazyproperty\r\n    243 def _edisp_diagonal(self):\r\n    244     return EDispKernel.from_diagonal_response(\r\n--> 245         energy_axis_true=self.edisp.axes[\"energy_true\"],\r\n    246         energy_axis=self.edisp.axes[\"energy\"],\r\n    247     )\r\n\r\nAttributeError: 'NoneType' object has no attribute 'axes'\r\n```\r\nHowever, if the `energy_axis` and the `energy_axis_true` have same binning, the fit proceeds fine and then the very confusing error is raised during flux points estimation.\r\n\r\n1. Either the flux estimator (and also the fit) should fail with a decent error message consistently for no edisp OR\r\n2. the diagonal edisp can be adapted with the `energy_axis` here \r\nhttps://github.com/gammapy/gammapy/blob/e9b22cdff573768ac2ab1e2a4a18250071ba3b60/gammapy/datasets/evaluator.py#L243\r\nto use the dataset energy axis.\r\n",
+    "repo": "gammapy/gammapy",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning gammapy/estimators/points/tests/test_sed.py",
+    "test_patch": "diff --git a/gammapy/estimators/points/tests/test_sed.py b/gammapy/estimators/points/tests/test_sed.py\nindex 056669323..9f4f3280f 100644\n--- a/gammapy/estimators/points/tests/test_sed.py\n+++ b/gammapy/estimators/points/tests/test_sed.py\n@@ -430,6 +430,31 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):\n     assert_allclose(actual, [9.788123, 0.486066, 17.603708], rtol=1e-2)\n \n \n+def test_run_no_edip(fpe_pwl, tmpdir):\n+    datasets, fpe = fpe_pwl\n+\n+    datasets = datasets.copy()\n+\n+    datasets[0].models[\"source\"].apply_irf[\"edisp\"] = False\n+    fp = fpe.run(datasets)\n+    table = fp.to_table()\n+    actual = table[\"norm\"].data\n+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)\n+\n+    datasets[0].edisp = None\n+\n+    fp = fpe.run(datasets)\n+    table = fp.to_table()\n+    actual = table[\"norm\"].data\n+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)\n+\n+    datasets[0].models[\"source\"].apply_irf[\"edisp\"] = True\n+    fp = fpe.run(datasets)\n+    table = fp.to_table()\n+    actual = table[\"norm\"].data\n+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)\n+\n+\n @requires_dependency(\"iminuit\")\n @requires_data()\n def test_run_template_npred(fpe_map_pwl, tmpdir):\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-gammapy__gammapy-5342-56a1561ee1"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/gammapy/datasets/evaluator.py b/gammapy/datasets/evaluator.py\nindex 160ad4c43..eb4cef4ec 100644\n--- a/gammapy/datasets/evaluator.py\n+++ b/gammapy/datasets/evaluator.py\n@@ -387,8 +387,22 @@ class MapEvaluator:\n         if self.model.apply_irf[\"edisp\"]:\n             return apply_edisp(npred, self.edisp)\n         else:\n+            # No edisp application: map from true to reco using identity if needed\n             if \"energy_true\" in npred.geom.axes.names:\n-                return apply_edisp(npred, self._edisp_diagonal)\n+                if self.edisp is None:\n+                    # Create identity EDispKernel from geom energy axes\n+                    energy_axis_true = self.geom.axes[\"energy_true\"].copy()\n+                    energy_axis = self.geom.axes[\"energy\"].copy()\n+                    # If axes differ, we cannot map; assume same binning and rename\n+                    if energy_axis_true.nbin != energy_axis.nbin:\n+                        # Fallback: reuse one axis for both\n+                        energy_axis = energy_axis_true.copy(name=\"energy\")\n+                    return apply_edisp(npred,\n+                                     EDispKernel.from_diagonal_response(\n+                                         energy_axis_true=energy_axis_true,\n+                                         energy_axis=energy_axis))\n+                else:\n+                    return apply_edisp(npred, self._edisp_diagonal)\n             else:\n                 return npred\n \n",
+    "agent_patch_sha256": "f4311494a9068da62a7237b066a4f2385b62b0188fe765a4f747fcf8a6653e90",
+    "filtered_sha256": "f4311494a9068da62a7237b066a4f2385b62b0188fe765a4f747fcf8a6653e90",
+    "number": 2,
+    "patch": "diff --git a/gammapy/datasets/evaluator.py b/gammapy/datasets/evaluator.py\nindex 160ad4c43..eb4cef4ec 100644\n--- a/gammapy/datasets/evaluator.py\n+++ b/gammapy/datasets/evaluator.py\n@@ -387,8 +387,22 @@ class MapEvaluator:\n         if self.model.apply_irf[\"edisp\"]:\n             return apply_edisp(npred, self.edisp)\n         else:\n+            # No edisp application: map from true to reco using identity if needed\n             if \"energy_true\" in npred.geom.axes.names:\n-                return apply_edisp(npred, self._edisp_diagonal)\n+                if self.edisp is None:\n+                    # Create identity EDispKernel from geom energy axes\n+                    energy_axis_true = self.geom.axes[\"energy_true\"].copy()\n+                    energy_axis = self.geom.axes[\"energy\"].copy()\n+                    # If axes differ, we cannot map; assume same binning and rename\n+                    if energy_axis_true.nbin != energy_axis.nbin:\n+                        # Fallback: reuse one axis for both\n+                        energy_axis = energy_axis_true.copy(name=\"energy\")\n+                    return apply_edisp(npred,\n+                                     EDispKernel.from_diagonal_response(\n+                                         energy_axis_true=energy_axis_true,\n+                                         energy_axis=energy_axis))\n+                else:\n+                    return apply_edisp(npred, self._edisp_diagonal)\n             else:\n                 return npred\n \n",
+    "sha256": "f4311494a9068da62a7237b066a4f2385b62b0188fe765a4f747fcf8a6653e90"
+  }
+}

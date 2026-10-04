@@ -1,0 +1,93 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "a4da57d8408a35c00f0146a2e1ef08989301fb56",
+    "fail_to_pass": [
+      "tests/test_backend/test_directx/test_codegen.py::test_while_codegen",
+      "tests/test_backend/test_directx/test_parser.py::test_while_parsing"
+    ],
+    "image_name": "docker.io/swerebenchv2/crossgl-crosstl:202-a4da57d",
+    "instance_id": "crossgl__crosstl-202",
+    "pass_to_pass": [
+      "tests/test_backend/test_directx/test_codegen.py::test_struct_codegen",
+      "tests/test_backend/test_directx/test_codegen.py::test_if_codegen",
+      "tests/test_backend/test_directx/test_codegen.py::test_for_codegen",
+      "tests/test_backend/test_directx/test_codegen.py::test_else_codegen",
+      "tests/test_backend/test_directx/test_codegen.py::test_function_call_codegen",
+      "tests/test_backend/test_directx/test_codegen.py::test_else_if_codegen",
+      "tests/test_backend/test_directx/test_codegen.py::test_assignment_ops_parsing",
+      "tests/test_backend/test_directx/test_parser.py::test_struct_parsing",
+      "tests/test_backend/test_directx/test_parser.py::test_if_parsing",
+      "tests/test_backend/test_directx/test_parser.py::test_for_parsing",
+      "tests/test_backend/test_directx/test_parser.py::test_else_parsing",
+      "tests/test_backend/test_directx/test_parser.py::test_function_call_parsing",
+      "tests/test_backend/test_directx/test_parser.py::test_else_if_parsing",
+      "tests/test_backend/test_directx/test_parser.py::test_assignment_ops_parsing",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_struct",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_if_statement",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_for_statement",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_else_if_statement",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_function_call",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_assignment_or_operator",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_assignment_modulus_operator",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_assignment_xor_operator",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_assignment_shift_operators",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_bitwise_operators",
+      "tests/test_translator/test_codegen/test_directx_codegen.py::test_bitwise_and_operator",
+      "tests/test_translator/test_parser.py::test_struct_tokenization",
+      "tests/test_translator/test_parser.py::test_if_statement",
+      "tests/test_translator/test_parser.py::test_for_statement",
+      "tests/test_translator/test_parser.py::test_else_if_statement",
+      "tests/test_translator/test_parser.py::test_function_call",
+      "tests/test_translator/test_parser.py::test_assign_shift_right",
+      "tests/test_translator/test_parser.py::test_logical_operators",
+      "tests/test_translator/test_parser.py::test_var_assignment",
+      "tests/test_translator/test_parser.py::test_assign_ops",
+      "tests/test_translator/test_parser.py::test_bitwise_operators",
+      "tests/test_translator/test_parser.py::test_xor_operator",
+      "tests/test_translator/test_parser.py::test_and_operator"
+    ],
+    "problem_statement": "Add translator support for `Bitwise AND` token",
+    "repo": "CrossGL/crosstl",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_backend/test_directx/test_codegen.py tests/test_backend/test_directx/test_parser.py tests/test_translator/test_codegen/test_directx_codegen.py tests/test_translator/test_parser.py",
+    "test_patch": "diff --git a/tests/test_backend/test_directx/test_codegen.py b/tests/test_backend/test_directx/test_codegen.py\nindex a7ca79d..ed7112b 100644\n--- a/tests/test_backend/test_directx/test_codegen.py\n+++ b/tests/test_backend/test_directx/test_codegen.py\n@@ -160,6 +160,56 @@ def test_for_codegen():\n         pytest.fail(\"For loop parsing or code generation not implemented.\")\n \n \n+def test_while_codegen():\n+    code = \"\"\"\n+    struct VSInput {\n+    float4 position : POSITION;\n+    float4 color : TEXCOORD0;\n+    };\n+\n+    struct VSOutput {\n+        float4 out_position : TEXCOORD0;\n+    };\n+\n+    VSOutput VSMain(VSInput input) {\n+        VSOutput output;\n+        output.out_position = input.position;\n+        int i = 0;\n+        while (i < 10) {\n+            output.out_position = input.color;\n+            i = i + 1;  // Increment the loop variable\n+        }\n+        return output;\n+    }\n+\n+    struct PSInput {\n+        float4 in_position : TEXCOORD0;\n+    };\n+\n+    struct PSOutput {\n+        float4 out_color : SV_TARGET0;\n+    };\n+\n+    PSOutput PSMain(PSInput input) {\n+        PSOutput output;\n+        output.out_color = input.in_position;\n+        int i = 0;\n+        while (i < 10) {\n+            output.out_color = float4(1.0, 1.0, 1.0, 1.0);\n+            i = i + 1;  // Increment the loop variable\n+        }\n+        return output;\n+    }\n+    \"\"\"\n+    try:\n+        tokens = tokenize_code(code)\n+        ast = parse_code(tokens)\n+        generated_code = generate_code(ast)\n+        print(generated_code)\n+    except SyntaxError:\n+        pytest.fail(\"While loop parsing or code generation not implemented.\")\n+\n+\n def test_else_codegen():\n     code = \"\"\"\n     struct VSInput {\ndiff --git a/tests/test_backend/test_directx/test_parser.py b/tests/test_backend/test_directx/test_parser.py\nindex eed91e9..7d3cc2d 100644\n--- a/tests/test_backend/test_directx/test_parser.py\n+++ b/tests/test_backend/test_directx/test_parser.py\n@@ -75,6 +75,25 @@ def test_for_parsing():\n         pytest.fail(\"for parsing not implemented.\")\n \n \n+def test_while_parsing():\n+    code = \"\"\"\n+    VSOutput VSMain(VSInput input) {\n+        VSOutput output;\n+        int i = 0;\n+        while (i < 10) {\n+            output.out_position = input.position;\n+            i = i + 1;\n+        }\n+        return output;\n+    }\n+    \"\"\"\n+    try:\n+        tokens = tokenize_code(code)\n+        parse_code(tokens)\n+    except SyntaxError:\n+        pytest.fail(\"while parsing not implemented\")\n+\n+\n def test_else_parsing():\n     code = \"\"\"\n     PSOutput PSMain(PSInput input) {\ndiff --git a/tests/test_translator/test_codegen/test_directx_codegen.py b/tests/test_translator/test_codegen/test_directx_codegen.py\nindex 686dbf4..ca816a2 100644\n--- a/tests/test_translator/test_codegen/test_directx_codegen.py\n+++ b/tests/test_translator/test_codegen/test_directx_codegen.py\n@@ -559,5 +559,42 @@ def test_bitwise_operators():\n         pytest.fail(\"Bitwise Shift codegen not implemented\")\n \n \n+def test_bitwise_and_operator():\n+    code = \"\"\"\n+    shader main {\n+    struct VSInput {\n+        vec2 texCoord @ TEXCOORD0;\n+    };\n+    struct VSOutput {\n+        vec4 color @ COLOR;\n+    };\n+    sampler2D iChannel0;\n+    vertex {\n+        VSOutput main(VSInput input) {\n+            VSOutput output;\n+            // Use bitwise AND on texture coordinates (for testing purposes)\n+            output.color = vec4(float(int(input.texCoord.x * 100.0) & 15), \n+                                float(int(input.texCoord.y * 100.0) & 15), \n+                                0.0, 1.0);\n+            return output;\n+        }\n+    }\n+    fragment {\n+        vec4 main(VSOutput input) @ gl_FragColor {\n+            // Simple fragment shader to display the result of the AND operation\n+            return vec4(input.color.rgb, 1.0);\n+        }\n+    }\n+}\n+    \"\"\"\n+    try:\n+        tokens = tokenize_code(code)\n+        ast = parse_code(tokens)\n+        generated_code = generate_code(ast)\n+        print(generated_code)\n+    except SyntaxError:\n+        pytest.fail(\"Bitwise AND codegen not implemented\")\n+\n+\n if __name__ == \"__main__\":\n     pytest.main()\ndiff --git a/tests/test_translator/test_parser.py b/tests/test_translator/test_parser.py\nindex 2bcd5c7..737e1d6 100644\n--- a/tests/test_translator/test_parser.py\n+++ b/tests/test_translator/test_parser.py\n@@ -551,5 +551,40 @@ def test_xor_operator():\n         pytest.fail(\"Bitwise XOR not working\")\n \n \n+def test_and_operator():\n+    code = \"\"\"\n+    shader main {\n+    struct VSInput {\n+        vec2 texCoord @ TEXCOORD0;\n+    };\n+    struct VSOutput {\n+        vec4 color @ COLOR;\n+    };\n+    sampler2D iChannel0;\n+    vertex {\n+        VSOutput main(VSInput input) {\n+            VSOutput output;\n+            // Use bitwise AND on texture coordinates (for testing purposes)\n+            output.color = vec4(float(int(input.texCoord.x * 100.0) & 15), \n+                                float(int(input.texCoord.y * 100.0) & 15), \n+                                0.0, 1.0);\n+            return output;\n+        }\n+    }\n+    fragment {\n+        vec4 main(VSOutput input) @ gl_FragColor {\n+            // Simple fragment shader to display the result of the AND operation\n+            return vec4(input.color.rgb, 1.0);\n+        }\n+    }\n+}\n+    \"\"\"\n+    try:\n+        tokens = tokenize_code(code)\n+        parse_code(tokens)\n+    except SyntaxError:\n+        pytest.fail(\"Bitwise AND not working\")\n+\n+\n if __name__ == \"__main__\":\n     pytest.main()\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-crossgl__crosstl-202-cecd7c5aee"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/crosstl/src/backend/DirectX/DirectxAst.py b/crosstl/src/backend/DirectX/DirectxAst.py\nindex b314f05..ba1796a 100644\n--- a/crosstl/src/backend/DirectX/DirectxAst.py\n+++ b/crosstl/src/backend/DirectX/DirectxAst.py\n@@ -141,3 +141,12 @@ class UnaryOpNode(ASTNode):\n \n     def __str__(self):\n         return f\"({self.op}{self.operand})\"\n+\n+\n+class WhileNode(ASTNode):\n+    def __init__(self, condition, body):\n+        self.condition = condition\n+        self.body = body\n+\n+    def __repr__(self):\n+        return f\"WhileNode(condition={self.condition}, body={self.body})\"\ndiff --git a/crosstl/src/backend/DirectX/DirectxLexer.py b/crosstl/src/backend/DirectX/DirectxLexer.py\nindex c42565b..b08ffa9 100644\n--- a/crosstl/src/backend/DirectX/DirectxLexer.py\n+++ b/crosstl/src/backend/DirectX/DirectxLexer.py\n@@ -19,6 +19,7 @@ TOKENS = [\n     (\"ELSE_IF\", r\"\\belse\\sif\\b\"),\n     (\"ELSE\", r\"\\belse\\b\"),\n     (\"FOR\", r\"\\bfor\\b\"),\n+    (\"WHILE\", r\"\\bwhile\\b\"),\n     (\"REGISTER\", r\"\\bregister\\b\"),\n     (\"IDENTIFIER\", r\"[a-zA-Z_][a-zA-Z0-9_]*\"),\n     (\"NUMBER\", r\"\\d+(\\.\\d+)?\"),\n@@ -72,6 +73,7 @@ KEYWORDS = {\n     \"if\": \"IF\",\n     \"else\": \"ELSE\",\n     \"for\": \"FOR\",\n+    \"while\": \"WHILE\",\n     \"register\": \"REGISTER\",\n }\n \ndiff --git a/crosstl/src/backend/DirectX/DirectxParser.py b/crosstl/src/backend/DirectX/DirectxParser.py\nindex 61fd544..eaa3cde 100644\n--- a/crosstl/src/backend/DirectX/DirectxParser.py\n+++ b/crosstl/src/backend/DirectX/DirectxParser.py\n@@ -12,6 +12,7 @@ from .DirectxAst import (\n     UnaryOpNode,\n     VariableNode,\n     VectorConstructorNode,\n+    WhileNode,\n )\n from .DirectxLexer import HLSLLexer\n \n@@ -193,6 +194,8 @@ class HLSLParser:\n             return self.parse_if_statement()\n         elif self.current_token[0] == \"FOR\":\n             return self.parse_for_statement()\n+        elif self.current_token[0] == \"WHILE\":\n+            return self.parse_while_statement()\n         elif self.current_token[0] == \"RETURN\":\n             return self.parse_return_statement()\n         else:\n@@ -340,6 +343,14 @@ class HLSLParser:\n \n         return ForNode(init, condition, update, body)\n \n+    def parse_while_statement(self):\n+        self.eat(\"WHILE\")\n+        self.eat(\"LPAREN\")\n+        condition = self.parse_expression()\n+        self.eat(\"RPAREN\")\n+        body = self.parse_block()\n+        return WhileNode(condition, body)\n+\n     def parse_return_statement(self):\n         self.eat(\"RETURN\")\n         value = self.parse_expression()\n",
+    "agent_patch_sha256": "bb8b99f4cc8645a51b62f82c98b789e849a7bc31022642f17c82ea1131f0fdbc",
+    "filtered_sha256": "bb8b99f4cc8645a51b62f82c98b789e849a7bc31022642f17c82ea1131f0fdbc",
+    "number": 1,
+    "patch": "diff --git a/crosstl/src/backend/DirectX/DirectxAst.py b/crosstl/src/backend/DirectX/DirectxAst.py\nindex b314f05..ba1796a 100644\n--- a/crosstl/src/backend/DirectX/DirectxAst.py\n+++ b/crosstl/src/backend/DirectX/DirectxAst.py\n@@ -141,3 +141,12 @@ class UnaryOpNode(ASTNode):\n \n     def __str__(self):\n         return f\"({self.op}{self.operand})\"\n+\n+\n+class WhileNode(ASTNode):\n+    def __init__(self, condition, body):\n+        self.condition = condition\n+        self.body = body\n+\n+    def __repr__(self):\n+        return f\"WhileNode(condition={self.condition}, body={self.body})\"\ndiff --git a/crosstl/src/backend/DirectX/DirectxLexer.py b/crosstl/src/backend/DirectX/DirectxLexer.py\nindex c42565b..b08ffa9 100644\n--- a/crosstl/src/backend/DirectX/DirectxLexer.py\n+++ b/crosstl/src/backend/DirectX/DirectxLexer.py\n@@ -19,6 +19,7 @@ TOKENS = [\n     (\"ELSE_IF\", r\"\\belse\\sif\\b\"),\n     (\"ELSE\", r\"\\belse\\b\"),\n     (\"FOR\", r\"\\bfor\\b\"),\n+    (\"WHILE\", r\"\\bwhile\\b\"),\n     (\"REGISTER\", r\"\\bregister\\b\"),\n     (\"IDENTIFIER\", r\"[a-zA-Z_][a-zA-Z0-9_]*\"),\n     (\"NUMBER\", r\"\\d+(\\.\\d+)?\"),\n@@ -72,6 +73,7 @@ KEYWORDS = {\n     \"if\": \"IF\",\n     \"else\": \"ELSE\",\n     \"for\": \"FOR\",\n+    \"while\": \"WHILE\",\n     \"register\": \"REGISTER\",\n }\n \ndiff --git a/crosstl/src/backend/DirectX/DirectxParser.py b/crosstl/src/backend/DirectX/DirectxParser.py\nindex 61fd544..eaa3cde 100644\n--- a/crosstl/src/backend/DirectX/DirectxParser.py\n+++ b/crosstl/src/backend/DirectX/DirectxParser.py\n@@ -12,6 +12,7 @@ from .DirectxAst import (\n     UnaryOpNode,\n     VariableNode,\n     VectorConstructorNode,\n+    WhileNode,\n )\n from .DirectxLexer import HLSLLexer\n \n@@ -193,6 +194,8 @@ class HLSLParser:\n             return self.parse_if_statement()\n         elif self.current_token[0] == \"FOR\":\n             return self.parse_for_statement()\n+        elif self.current_token[0] == \"WHILE\":\n+            return self.parse_while_statement()\n         elif self.current_token[0] == \"RETURN\":\n             return self.parse_return_statement()\n         else:\n@@ -340,6 +343,14 @@ class HLSLParser:\n \n         return ForNode(init, condition, update, body)\n \n+    def parse_while_statement(self):\n+        self.eat(\"WHILE\")\n+        self.eat(\"LPAREN\")\n+        condition = self.parse_expression()\n+        self.eat(\"RPAREN\")\n+        body = self.parse_block()\n+        return WhileNode(condition, body)\n+\n     def parse_return_statement(self):\n         self.eat(\"RETURN\")\n         value = self.parse_expression()\n",
+    "sha256": "bb8b99f4cc8645a51b62f82c98b789e849a7bc31022642f17c82ea1131f0fdbc"
+  }
+}

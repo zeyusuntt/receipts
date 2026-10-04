@@ -1,0 +1,57 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "746ae80822b857357f52350310219be32c0032a3",
+    "fail_to_pass": [
+      "tests/test_json.py::test_config"
+    ],
+    "image_name": "docker.io/swerebenchv2/systemd-mkosi:3346-746ae80",
+    "instance_id": "systemd__mkosi-3346",
+    "pass_to_pass": [
+      "tests/test_json.py::test_args[None]",
+      "tests/test_json.py::test_args[/baz/qux]"
+    ],
+    "problem_statement": "Allow specifying a devicetree binary that is passed to ukify\nTo easily use the dtbs provided with kernel packages allow specifying a devicetree name in mkosi.\r\n\r\nIt can be passed as parameter to ukify. The dtb is typically installed by the kernel package.",
+    "repo": "systemd/mkosi",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_json.py",
+    "test_patch": "diff --git a/tests/test_json.py b/tests/test_json.py\nindex 9178429c..b107467a 100644\n--- a/tests/test_json.py\n+++ b/tests/test_json.py\n@@ -139,6 +139,7 @@ def test_config() -> None:\n             \"Dependencies\": [\n                 \"dep1\"\n             ],\n+            \"Devicetree\": \"freescale/imx8mm-verdin-nonwifi-dev.dtb\",\n             \"Distribution\": \"fedora\",\n             \"Drives\": [\n                 {\n@@ -480,6 +481,7 @@ def test_config() -> None:\n         make_initrd=False,\n         manifest_format=[ManifestFormat.json, ManifestFormat.changelog],\n         microcode_host=True,\n+        devicetree=Path(\"freescale/imx8mm-verdin-nonwifi-dev.dtb\"),\n         minimum_version=GenericVersion(\"123\"),\n         mirror=None,\n         nspawn_settings=None,\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-systemd__mkosi-3346-61a8f478d9"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/mkosi/config.py b/mkosi/config.py\nindex a2a0fb1e..d33e20e8 100644\n--- a/mkosi/config.py\n+++ b/mkosi/config.py\n@@ -1920,6 +1920,7 @@ class Config:\n     qemu_args: list[str]\n \n     image: Optional[str]\n+    devicetree: Optional[Path] = None\n \n     def name(self) -> str:\n         return self.image or self.image_id or \"default\"\n",
+    "agent_patch_sha256": "a0b2952a5c1d6a26693acf39cfb168e8e608d35916bcff325d0d52e8103d32f2",
+    "filtered_sha256": "a0b2952a5c1d6a26693acf39cfb168e8e608d35916bcff325d0d52e8103d32f2",
+    "number": 1,
+    "patch": "diff --git a/mkosi/config.py b/mkosi/config.py\nindex a2a0fb1e..d33e20e8 100644\n--- a/mkosi/config.py\n+++ b/mkosi/config.py\n@@ -1920,6 +1920,7 @@ class Config:\n     qemu_args: list[str]\n \n     image: Optional[str]\n+    devicetree: Optional[Path] = None\n \n     def name(self) -> str:\n         return self.image or self.image_id or \"default\"\n",
+    "sha256": "a0b2952a5c1d6a26693acf39cfb168e8e608d35916bcff325d0d52e8103d32f2"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "974914523542045104806e52be8135027603f771",
+    "fail_to_pass": [
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_branch_reappers_in_definition"
+    ],
+    "image_name": "docker.io/swerebenchv2/virtuslab-git-machete:179-9749145",
+    "instance_id": "virtuslab__git-machete-179",
+    "pass_to_pass": [
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_advance_with_few_possible_downstream_branches_and_yes_option",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_advance_with_no_downstream_branches",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_advance_with_one_downstream_branch",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_discover_traverse_squash",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_down",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_first_root_with_downstream",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_first_root_without_downstream",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_last",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_next_successor_exists",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_next_successor_on_another_root_tree",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_prev_successor_exists",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_prev_successor_on_another_root_tree",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_root",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_go_up",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_help",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_show",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_show_down",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_show_first",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_show_last",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_show_next",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_show_prev",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_show_root",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_show_up",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_slide_out",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_squash_merge",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_traverse_no_push",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_traverse_no_push_override",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_traverse_no_push_untracked",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_update_with_fork_point_not_specified",
+      "git_machete/tests/functional/test_machete.py::MacheteTester::test_update_with_fork_point_specified"
+    ],
+    "problem_statement": "Line numbers displayed in errors refer to non-empty lines, not all lines\n.git/machete file:\r\n\r\n```\r\nmaster\r\n  develop\r\n\r\n\r\n  develop\r\n```\r\n\r\nThe empty lines lead to an error in `git machete status`:\r\n\r\n`.git/machete, line 3: branch develop re-appears in the tree definition. Edit the definition file manually with git machete edit`\r\n\r\nwhile it should say:\r\n\r\n`.git/machete, line 5: branch develop re-appears in the tree definition. Edit the definition file manually with git machete edit`\r\n\r\nThis is due to how `read_definition_file` is implemented, should be pretty easy to fix.",
+    "repo": "VirtusLab/git-machete",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning git_machete/tests/functional/test_machete.py",
+    "test_patch": "diff --git a/git_machete/tests/functional/test_machete.py b/git_machete/tests/functional/test_machete.py\nindex f549acf..fb587a0 100644\n--- a/git_machete/tests/functional/test_machete.py\n+++ b/git_machete/tests/functional/test_machete.py\n@@ -10,8 +10,10 @@ from contextlib import redirect_stdout\n from typing import Iterable\n \n from git_machete import cmd\n+from git_machete.exceptions import MacheteException\n from git_machete.git_operations import GitContext\n from git_machete.options import CommandLineOptions\n+from git_machete.utils import fmt\n \n cli_opts: CommandLineOptions = CommandLineOptions()\n git: GitContext = GitContext(cli_opts)\n@@ -92,6 +94,12 @@ class MacheteTester(unittest.TestCase):\n                 git.flush_caches()\n             return out.getvalue()\n \n+    @staticmethod\n+    def rewrite_definition_file(new_body: str) -> None:\n+        definition_file_path = git.get_git_subpath(\"machete\")\n+        with open(os.path.join(os.getcwd(), definition_file_path), 'w') as def_file:\n+            def_file.writelines(new_body)\n+\n     def assert_command(self, cmds: Iterable[str], expected_result: str) -> None:\n         self.assertEqual(self.launch_command(*cmds), self.adapt(expected_result))\n \n@@ -175,6 +183,25 @@ class MacheteTester(unittest.TestCase):\n             \"\"\",\n         )\n \n+    def test_branch_reappers_in_definition(self) -> None:\n+        body: str = \\\n+            \"\"\"master\n+            \\tdevelop\n+            \\t\\n\n+            develop\n+            \"\"\"\n+        expected_error_msg: str = fmt('.git/machete, line 5: branch `develop` re-appears in the tree definition. Edit the definition file manually with `git machete edit`')\n+\n+        self.repo_sandbox.new_branch(\"root\")\n+        self.rewrite_definition_file(body)\n+\n+        machete_client = cmd.MacheteClient(cli_opts, git)  # Only to workaround sys.exit while calling launch(['status'])\n+        try:\n+            machete_client.read_definition_file()\n+        except MacheteException as e:\n+            if e.parameter != expected_error_msg:\n+                self.fail(f'Actual Exception message: {e} \\nis not equal to expected message: {expected_error_msg}')\n+\n     def test_show(self) -> None:\n         self.setup_discover_standard_tree()\n \n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-virtuslab__git-machete-179-6df3ff22b8"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/git_machete/cmd.py b/git_machete/cmd.py\nindex 03f722b..d5e182f 100644\n--- a/git_machete/cmd.py\n+++ b/git_machete/cmd.py\n@@ -89,7 +89,7 @@ class MacheteClient:\n \n     def read_definition_file(self, verify_branches: bool = True) -> None:\n         with open(self._definition_file_path) as f:\n-            lines: List[str] = [line.rstrip() for line in f.readlines() if not line.isspace()]\n+            lines: List[str] = [line.rstrip() for line in f.readlines()]\n \n         at_depth = {}\n         last_depth = -1\n@@ -98,6 +98,10 @@ class MacheteClient:\n \n         invalid_branches: List[str] = []\n         for index, line in enumerate(lines):\n+            # Skip whitespace-only lines for processing but preserve original line numbering\n+            stripped_line = line.strip()\n+            if not stripped_line:\n+                continue\n             prefix = \"\".join(itertools.takewhile(str.isspace, line))\n             if prefix and not self.__indent:\n                 self.__indent = prefix\n",
+    "agent_patch_sha256": "fcc9a1eeb2fdd076b1d5f03ad901907e258224a256b87102ef46d8edd3cb5628",
+    "filtered_sha256": "fcc9a1eeb2fdd076b1d5f03ad901907e258224a256b87102ef46d8edd3cb5628",
+    "number": 1,
+    "patch": "diff --git a/git_machete/cmd.py b/git_machete/cmd.py\nindex 03f722b..d5e182f 100644\n--- a/git_machete/cmd.py\n+++ b/git_machete/cmd.py\n@@ -89,7 +89,7 @@ class MacheteClient:\n \n     def read_definition_file(self, verify_branches: bool = True) -> None:\n         with open(self._definition_file_path) as f:\n-            lines: List[str] = [line.rstrip() for line in f.readlines() if not line.isspace()]\n+            lines: List[str] = [line.rstrip() for line in f.readlines()]\n \n         at_depth = {}\n         last_depth = -1\n@@ -98,6 +98,10 @@ class MacheteClient:\n \n         invalid_branches: List[str] = []\n         for index, line in enumerate(lines):\n+            # Skip whitespace-only lines for processing but preserve original line numbering\n+            stripped_line = line.strip()\n+            if not stripped_line:\n+                continue\n             prefix = \"\".join(itertools.takewhile(str.isspace, line))\n             if prefix and not self.__indent:\n                 self.__indent = prefix\n",
+    "sha256": "fcc9a1eeb2fdd076b1d5f03ad901907e258224a256b87102ef46d8edd3cb5628"
+  }
+}

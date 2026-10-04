@@ -1,0 +1,66 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "6319ebde0e6bce51c5f6c21f253204c3a13f4d92",
+    "fail_to_pass": [
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_build_event_body"
+    ],
+    "image_name": "docker.io/swerebenchv2/datadog-datadogpy:555-6319ebd",
+    "instance_id": "datadog__datadogpy-555",
+    "pass_to_pass": [
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_cmd_timeout",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_exit_code",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_oserror",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_popen_fail",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_sigkill_timeout",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_sigterm_timeout",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_output_reader",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_parse_options",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_poll_proc",
+      "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_poll_timeout"
+    ],
+    "problem_statement": "String decode in dogwrap\n**Describe the bug**\r\nThe parameters `notify_success`, `notify_warning` and `notify_error` cause the `AttributeError` shown below to be thrown when used.\r\n\r\n```\r\nTraceback (most recent call last):\r\n  File \"/usr/local/bin/dogwrap\", line 8, in <module>\r\n    sys.exit(main())\r\n  File \"/usr/local/lib/python3.7/site-packages/datadog/dogshell/wrap.py\", line 377, in main\r\n    event_body = build_event_body(cmd, returncode, stdout, stderr, notifications)\r\n  File \"/usr/local/lib/python3.7/site-packages/datadog/dogshell/wrap.py\", line 209, in build_event_body\r\n    notifications=notifications.decode(\"utf-8\", \"replace\")\r\nAttributeError: 'str' object has no attribute 'decode'\r\n```\r\n\r\nLine 209 attempts to call a decode method on a string. To my knowledge, this method has been removed in python3.\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Install datadog for python3\r\n2. Execute the `dogwrap` command with the `--notify_error` flag set to any string and a command that causes an error\r\n3. Get an exception\r\n\r\n**Expected behavior**\r\nThe datadog event to be logged with the string specified by `--notify_error` in after `**>>>> NOTIFICATIONS <<<<**`\r\n\r\n**Screenshots**\r\n```\r\n$ dogwrap -n \"Example Error\" -k ${API_KEY} --submit_mode errors --notify_error \"test notification\" \"pwd -h\"\r\n\r\nTraceback (most recent call last):\r\n  File \"/usr/local/bin/dogwrap\", line 8, in <module>\r\n    sys.exit(main())\r\n  File \"/usr/local/lib/python3.7/site-packages/datadog/dogshell/wrap.py\", line 377, in main\r\n    event_body = build_event_body(cmd, returncode, stdout, stderr, notifications)\r\n  File \"/usr/local/lib/python3.7/site-packages/datadog/dogshell/wrap.py\", line 209, in build_event_body\r\n    notifications=notifications.decode(\"utf-8\", \"replace\")\r\nAttributeError: 'str' object has no attribute 'decode'\r\n```\r\n\r\n**Environment and Versions (please complete the following information):**\r\n```\r\n$ python3 --version\r\nPython 3.7.6\r\n$ dogwrap --version\r\ndogwrap 0.34.1\r\n```\r\n",
+    "repo": "DataDog/datadogpy",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/unit/dogwrap/test_dogwrap.py",
+    "test_patch": "diff --git a/tests/unit/dogwrap/test_dogwrap.py b/tests/unit/dogwrap/test_dogwrap.py\nindex e4cd2a3..02341ca 100644\n--- a/tests/unit/dogwrap/test_dogwrap.py\n+++ b/tests/unit/dogwrap/test_dogwrap.py\n@@ -47,6 +47,11 @@ class TestDogwrap(unittest.TestCase):\n         event_body = build_event_body(cmd, returncode, stdout, stderr, notifications)\n         self.assertEqual(expected_body, event_body)\n \n+        # notifications can be unicode already in py3, make sure we don't try decoding\n+        notifications = notifications.decode(\"utf-8\", \"replace\")\n+        event_body = build_event_body(cmd, returncode, stdout, stderr, notifications)\n+        self.assertEqual(expected_body, event_body)\n+\n     def test_parse_options(self):\n         options, cmd = parse_options([])\n         self.assertEqual(cmd, '')\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-datadog__datadogpy-555-8e5399c81a"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/datadog/dogshell/wrap.py b/datadog/dogshell/wrap.py\nindex 022b333..1ff0ed3 100644\n--- a/datadog/dogshell/wrap.py\n+++ b/datadog/dogshell/wrap.py\n@@ -201,18 +201,30 @@ def build_event_body(cmd, returncode, stdout, stderr, notifications):\n     max_length = MAX_EVENT_BODY_LENGTH // 2 if stdout and stderr else MAX_EVENT_BODY_LENGTH\n \n     if stdout:\n+        if isinstance(stdout, bytes):\n+            stdout_decoded = stdout.decode(\"utf-8\", \"replace\")\n+        else:\n+            stdout_decoded = stdout\n         fmt_stdout = u\"**>>>> STDOUT <<<<**\\n```\\n{stdout} \\n```\\n\".format(\n-            stdout=trim_text(stdout.decode(\"utf-8\", \"replace\"), max_length)\n+            stdout=trim_text(stdout_decoded, max_length)\n         )\n \n     if stderr:\n+        if isinstance(stderr, bytes):\n+            stderr_decoded = stderr.decode(\"utf-8\", \"replace\")\n+        else:\n+            stderr_decoded = stderr\n         fmt_stderr = u\"**>>>> STDERR <<<<**\\n```\\n{stderr} \\n```\\n\".format(\n-            stderr=trim_text(stderr.decode(\"utf-8\", \"replace\"), max_length)\n+            stderr=trim_text(stderr_decoded, max_length)\n         )\n \n     if notifications:\n+        if isinstance(notifications, bytes):\n+            notifications_decoded = notifications.decode(\"utf-8\", \"replace\")\n+        else:\n+            notifications_decoded = notifications\n         fmt_notifications = u\"**>>>> NOTIFICATIONS <<<<**\\n\\n {notifications}\\n\".format(\n-            notifications=notifications.decode(\"utf-8\", \"replace\")\n+            notifications=notifications_decoded\n         )\n \n     return \\\n",
+    "agent_patch_sha256": "44db727ca9612ef445cde1e952462da2df5da8258f33ae85957164a053b30f54",
+    "filtered_sha256": "44db727ca9612ef445cde1e952462da2df5da8258f33ae85957164a053b30f54",
+    "number": 1,
+    "patch": "diff --git a/datadog/dogshell/wrap.py b/datadog/dogshell/wrap.py\nindex 022b333..1ff0ed3 100644\n--- a/datadog/dogshell/wrap.py\n+++ b/datadog/dogshell/wrap.py\n@@ -201,18 +201,30 @@ def build_event_body(cmd, returncode, stdout, stderr, notifications):\n     max_length = MAX_EVENT_BODY_LENGTH // 2 if stdout and stderr else MAX_EVENT_BODY_LENGTH\n \n     if stdout:\n+        if isinstance(stdout, bytes):\n+            stdout_decoded = stdout.decode(\"utf-8\", \"replace\")\n+        else:\n+            stdout_decoded = stdout\n         fmt_stdout = u\"**>>>> STDOUT <<<<**\\n```\\n{stdout} \\n```\\n\".format(\n-            stdout=trim_text(stdout.decode(\"utf-8\", \"replace\"), max_length)\n+            stdout=trim_text(stdout_decoded, max_length)\n         )\n \n     if stderr:\n+        if isinstance(stderr, bytes):\n+            stderr_decoded = stderr.decode(\"utf-8\", \"replace\")\n+        else:\n+            stderr_decoded = stderr\n         fmt_stderr = u\"**>>>> STDERR <<<<**\\n```\\n{stderr} \\n```\\n\".format(\n-            stderr=trim_text(stderr.decode(\"utf-8\", \"replace\"), max_length)\n+            stderr=trim_text(stderr_decoded, max_length)\n         )\n \n     if notifications:\n+        if isinstance(notifications, bytes):\n+            notifications_decoded = notifications.decode(\"utf-8\", \"replace\")\n+        else:\n+            notifications_decoded = notifications\n         fmt_notifications = u\"**>>>> NOTIFICATIONS <<<<**\\n\\n {notifications}\\n\".format(\n-            notifications=notifications.decode(\"utf-8\", \"replace\")\n+            notifications=notifications_decoded\n         )\n \n     return \\\n",
+    "sha256": "44db727ca9612ef445cde1e952462da2df5da8258f33ae85957164a053b30f54"
+  }
+}

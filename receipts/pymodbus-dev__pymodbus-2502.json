@@ -1,0 +1,80 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "f5ede3eb08dab4e2079e19bf96e4778d4dfa91dd",
+    "fail_to_pass": [
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[4-5098]"
+    ],
+    "image_name": "docker.io/swerebenchv2/pymodbus-dev-pymodbus:2502-f5ede3e",
+    "instance_id": "pymodbus-dev__pymodbus-2502",
+    "pass_to_pass": [
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_instance[5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_instance[5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_manager_tid[5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[0-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_calls[5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[1-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_disconnect[5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[2-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_data[True-5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[3-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_data[False-5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[4-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[0-5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_execute[5-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[1-5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_transaction_receiver[5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[2-5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_client_protocol_execute_outside[False-5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_client_protocol_execute_outside[True-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[3-5098]",
+      "test/transaction/test_transaction.py::TestSyncTransaction::test_sync_client_protocol_execute_no_pdu[5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[5-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_transaction_receiver[5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[False-5098]",
+      "test/transaction/test_transaction.py::TestTransaction::test_client_protocol_execute_outside[True-5098]"
+    ],
+    "problem_statement": "Async client functions return `None` on no response.\n### Versions\r\n- Pymodbus: 3.8.0\r\n\r\n### Description\r\n\r\nPreviously, a timeout during a call to e.g. `client.read_coils` would log an error and return an exception response. As of 3.8.0, this instead returns `None` in the async client, which breaks the normal usage of PyModbus as given in the documentation:\r\n```python\r\ntry:\r\n    rr = await client.read_coils(1, 1, slave=1)\r\nexcept ModbusException as exc:\r\n    _logger.error(f\"ERROR: exception in pymodbus {exc}\")\r\n    raise exc\r\nif rr.isError():  # Error: NoneType has attribute 'isError'.\r\n    _logger.error(\"ERROR: pymodbus returned an error!\")\r\n    raise ModbusException(txt)\r\n```\r\n\r\nThis can be seen by comparing `TransactionManager`'s [`sync_execute`](https://github.com/pymodbus-dev/pymodbus/blob/efb02eb3a01dc623a205da1367e8934b7788e3ff/pymodbus/transaction/transaction.py#L120C1-L122C41):\r\n```python\r\ntxt = f\"No response received after {self.retries} retries, continue with next request\"\r\nLog.error(txt)\r\nraise ModbusIOException(txt)\r\n```\r\nwith [`execute`](https://github.com/pymodbus-dev/pymodbus/blob/efb02eb3a01dc623a205da1367e8934b7788e3ff/pymodbus/transaction/transaction.py#L156C1-L159C1):\r\n```python\r\nLog.error(f\"No response received after {self.retries} retries, continue with next request\")\r\nself.response_future = asyncio.Future()\r\nreturn None\r\n```",
+    "repo": "pymodbus-dev/pymodbus",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/transaction/test_transaction.py",
+    "test_patch": "diff --git a/test/transaction/test_transaction.py b/test/transaction/test_transaction.py\nindex deca9001..87a6bccb 100755\n--- a/test/transaction/test_transaction.py\n+++ b/test/transaction/test_transaction.py\n@@ -161,7 +161,8 @@ class TestTransaction:\n         elif scenario == 4: # wait receive,timeout, no_responses pass\n             transact.comm_params.timeout_connect = 0.1\n             transact.connection_lost = mock.Mock()\n-            assert not await transact.execute(False, request)\n+            with pytest.raises(ModbusIOException):\n+                await transact.execute(False, request)\n         else: # if scenario == 5: # response\n             transact.comm_params.timeout_connect = 0.2\n             transact.response_future.set_result(response)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-pymodbus-dev__pymodbus-2502-a2e46abb38"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/pymodbus/transaction/transaction.py b/pymodbus/transaction/transaction.py\nindex 6bea652b..c09eb935 100644\n--- a/pymodbus/transaction/transaction.py\n+++ b/pymodbus/transaction/transaction.py\n@@ -151,9 +151,9 @@ class TransactionManager(ModbusProtocol):\n                     f\"ERROR: No response received of the last {self.accept_no_response_limit} request, CLOSING CONNECTION.\"\n                 )\n             self.count_no_responses += 1\n-            Log.error(f\"No response received after {self.retries} retries, continue with next request\")\n-            self.response_future = asyncio.Future()\n-            return None\n+            txt = f\"No response received after {self.retries} retries, continue with next request\"\n+            Log.error(txt)\n+            raise ModbusIOException(txt)\n \n     async def server_execute(self) -> tuple[ModbusPDU, int, Exception]:\n         \"\"\"Wait for request.\n",
+    "agent_patch_sha256": "4e07b32fe7068c8a94bbeacd358b9d3f287da6dee8133da6e9e6ac860bbae743",
+    "filtered_sha256": "4e07b32fe7068c8a94bbeacd358b9d3f287da6dee8133da6e9e6ac860bbae743",
+    "number": 1,
+    "patch": "diff --git a/pymodbus/transaction/transaction.py b/pymodbus/transaction/transaction.py\nindex 6bea652b..c09eb935 100644\n--- a/pymodbus/transaction/transaction.py\n+++ b/pymodbus/transaction/transaction.py\n@@ -151,9 +151,9 @@ class TransactionManager(ModbusProtocol):\n                     f\"ERROR: No response received of the last {self.accept_no_response_limit} request, CLOSING CONNECTION.\"\n                 )\n             self.count_no_responses += 1\n-            Log.error(f\"No response received after {self.retries} retries, continue with next request\")\n-            self.response_future = asyncio.Future()\n-            return None\n+            txt = f\"No response received after {self.retries} retries, continue with next request\"\n+            Log.error(txt)\n+            raise ModbusIOException(txt)\n \n     async def server_execute(self) -> tuple[ModbusPDU, int, Exception]:\n         \"\"\"Wait for request.\n",
+    "sha256": "4e07b32fe7068c8a94bbeacd358b9d3f287da6dee8133da6e9e6ac860bbae743"
+  }
+}

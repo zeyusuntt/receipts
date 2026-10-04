@@ -1,0 +1,58 @@
+{
+  "claims": {
+    "claim_audit": "no_claim",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "238622d17f2ff5d75fcf934c52685fdde08fd96d",
+    "fail_to_pass": [
+      "tests/test_list.py::test_cli",
+      "tests/test_list.py::test_missing_interpreter",
+      "tests/test_list.py::test_list_legacy_venv[None]"
+    ],
+    "image_name": "docker.io/swerebenchv2/pipxproject-pipx:680-238622d",
+    "instance_id": "pipxproject__pipx-680",
+    "pass_to_pass": [
+      "tests/test_list.py::test_list_json"
+    ],
+    "problem_statement": "pipx list --json can print non-json to stdout\nWhen nothing is installed, `pipx list --json` prints `nothing has been installed with pipx 😴` to stdout, and that's not valid json.\r\n\r\n_Originally posted by @liskin in https://github.com/pipxproject/pipx/issues/660#issuecomment-828473735_\r\n\r\nIn addition, any warnings about the venvs are also printed to stdout, which is also non-valid json!",
+    "repo": "pipxproject/pipx",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_list.py",
+    "test_patch": "diff --git a/tests/test_list.py b/tests/test_list.py\nindex 97772c9..221d6f5 100644\n--- a/tests/test_list.py\n+++ b/tests/test_list.py\n@@ -19,7 +19,7 @@ from pipx.pipx_metadata_file import PackageInfo, _json_decoder_object_hook\n def test_cli(pipx_temp_env, monkeypatch, capsys):\n     assert not run_pipx_cli([\"list\"])\n     captured = capsys.readouterr()\n-    assert \"nothing has been installed with pipx\" in captured.out\n+    assert \"nothing has been installed with pipx\" in captured.err\n \n \n def test_missing_interpreter(pipx_temp_env, monkeypatch, capsys):\n@@ -27,13 +27,13 @@ def test_missing_interpreter(pipx_temp_env, monkeypatch, capsys):\n \n     assert not run_pipx_cli([\"list\"])\n     captured = capsys.readouterr()\n-    assert \"package pycowsay has invalid interpreter\" not in captured.out\n+    assert \"package pycowsay has invalid interpreter\" not in captured.err\n \n     remove_venv_interpreter(\"pycowsay\")\n \n     assert run_pipx_cli([\"list\"])\n     captured = capsys.readouterr()\n-    assert \"package pycowsay has invalid interpreter\" in captured.out\n+    assert \"package pycowsay has invalid interpreter\" in captured.err\n \n \n def test_list_suffix(pipx_temp_env, monkeypatch, capsys):\n@@ -53,7 +53,7 @@ def test_list_legacy_venv(pipx_temp_env, monkeypatch, capsys, metadata_version):\n     if metadata_version is None:\n         assert run_pipx_cli([\"list\"])\n         captured = capsys.readouterr()\n-        assert \"package pycowsay has missing internal pipx metadata\" in captured.out\n+        assert \"package pycowsay has missing internal pipx metadata\" in captured.err\n     else:\n         assert not run_pipx_cli([\"list\"])\n         captured = capsys.readouterr()\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-pipxproject__pipx-680-183a4a2cf5"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/src/pipx/commands/list_packages.py b/src/pipx/commands/list_packages.py\nindex 1b72631..d7bc211 100644\n--- a/src/pipx/commands/list_packages.py\n+++ b/src/pipx/commands/list_packages.py\n@@ -30,14 +30,21 @@ def list_text(\n     print(f\"venvs are in {bold(venv_root_dir)}\")\n     print(f\"apps are exposed on your $PATH at {bold(str(constants.LOCAL_BIN_DIR))}\")\n \n+    warning_messages = []\n     all_venv_problems = VenvProblems()\n     for venv_dir in venv_dirs:\n         package_summary, venv_problems = get_venv_summary(\n             venv_dir, include_injected=include_injected\n         )\n-        print(package_summary)\n+        if venv_problems.any_():\n+            warning_messages.append(package_summary)\n+        else:\n+            print(package_summary)\n         all_venv_problems.or_(venv_problems)\n \n+    for warning_message in warning_messages:\n+        print(warning_message, file=sys.stderr)\n+\n     return all_venv_problems\n \n \n@@ -75,7 +82,7 @@ def list_packages(\n     \"\"\"Returns pipx exit code.\"\"\"\n     venv_dirs: Collection[Path] = sorted(venv_container.iter_venv_dirs())\n     if not venv_dirs:\n-        print(f\"nothing has been installed with pipx {sleep}\")\n+        print(f\"nothing has been installed with pipx {sleep}\", file=sys.stderr)\n         return EXIT_CODE_OK\n \n     venv_container.verify_shared_libs()\n@@ -89,27 +96,31 @@ def list_packages(\n         print(\n             \"\\nOne or more packages contain out-of-date internal data installed from a\\n\"\n             \"previous pipx version and need to be updated.\\n\"\n-            \"    To fix, execute: pipx reinstall-all\"\n+            \"    To fix, execute: pipx reinstall-all\",\n+            file=sys.stderr,\n         )\n     if all_venv_problems.invalid_interpreter:\n         print(\n             \"\\nOne or more packages have a missing python interpreter.\\n\"\n-            \"    To fix, execute: pipx reinstall-all\"\n+            \"    To fix, execute: pipx reinstall-all\",\n+            file=sys.stderr,\n         )\n     if all_venv_problems.missing_metadata:\n         print(\n             \"\\nOne or more packages have a missing internal pipx metadata.\\n\"\n             \"   They were likely installed using a pipx version before 0.15.0.0.\\n\"\n-            \"   Please uninstall and install these package(s) to fix.\"\n+            \"   Please uninstall and install these package(s) to fix.\",\n+            file=sys.stderr,\n         )\n     if all_venv_problems.not_installed:\n         print(\n             \"\\nOne or more packages are not installed properly.\\n\"\n-            \"   Please uninstall and install these package(s) to fix.\"\n+            \"   Please uninstall and install these package(s) to fix.\",\n+            file=sys.stderr,\n         )\n \n     if all_venv_problems.any_():\n-        print()\n+        print(file=sys.stderr)\n         return EXIT_CODE_LIST_PROBLEM\n \n     return EXIT_CODE_OK\n",
+    "agent_patch_sha256": "a0caef09e3ebb24eef2f502b2c80c4d8402449c5dd2e46084f121e0e02cfb7c0",
+    "filtered_sha256": "a0caef09e3ebb24eef2f502b2c80c4d8402449c5dd2e46084f121e0e02cfb7c0",
+    "number": 1,
+    "patch": "diff --git a/src/pipx/commands/list_packages.py b/src/pipx/commands/list_packages.py\nindex 1b72631..d7bc211 100644\n--- a/src/pipx/commands/list_packages.py\n+++ b/src/pipx/commands/list_packages.py\n@@ -30,14 +30,21 @@ def list_text(\n     print(f\"venvs are in {bold(venv_root_dir)}\")\n     print(f\"apps are exposed on your $PATH at {bold(str(constants.LOCAL_BIN_DIR))}\")\n \n+    warning_messages = []\n     all_venv_problems = VenvProblems()\n     for venv_dir in venv_dirs:\n         package_summary, venv_problems = get_venv_summary(\n             venv_dir, include_injected=include_injected\n         )\n-        print(package_summary)\n+        if venv_problems.any_():\n+            warning_messages.append(package_summary)\n+        else:\n+            print(package_summary)\n         all_venv_problems.or_(venv_problems)\n \n+    for warning_message in warning_messages:\n+        print(warning_message, file=sys.stderr)\n+\n     return all_venv_problems\n \n \n@@ -75,7 +82,7 @@ def list_packages(\n     \"\"\"Returns pipx exit code.\"\"\"\n     venv_dirs: Collection[Path] = sorted(venv_container.iter_venv_dirs())\n     if not venv_dirs:\n-        print(f\"nothing has been installed with pipx {sleep}\")\n+        print(f\"nothing has been installed with pipx {sleep}\", file=sys.stderr)\n         return EXIT_CODE_OK\n \n     venv_container.verify_shared_libs()\n@@ -89,27 +96,31 @@ def list_packages(\n         print(\n             \"\\nOne or more packages contain out-of-date internal data installed from a\\n\"\n             \"previous pipx version and need to be updated.\\n\"\n-            \"    To fix, execute: pipx reinstall-all\"\n+            \"    To fix, execute: pipx reinstall-all\",\n+            file=sys.stderr,\n         )\n     if all_venv_problems.invalid_interpreter:\n         print(\n             \"\\nOne or more packages have a missing python interpreter.\\n\"\n-            \"    To fix, execute: pipx reinstall-all\"\n+            \"    To fix, execute: pipx reinstall-all\",\n+            file=sys.stderr,\n         )\n     if all_venv_problems.missing_metadata:\n         print(\n             \"\\nOne or more packages have a missing internal pipx metadata.\\n\"\n             \"   They were likely installed using a pipx version before 0.15.0.0.\\n\"\n-            \"   Please uninstall and install these package(s) to fix.\"\n+            \"   Please uninstall and install these package(s) to fix.\",\n+            file=sys.stderr,\n         )\n     if all_venv_problems.not_installed:\n         print(\n             \"\\nOne or more packages are not installed properly.\\n\"\n-            \"   Please uninstall and install these package(s) to fix.\"\n+            \"   Please uninstall and install these package(s) to fix.\",\n+            file=sys.stderr,\n         )\n \n     if all_venv_problems.any_():\n-        print()\n+        print(file=sys.stderr)\n         return EXIT_CODE_LIST_PROBLEM\n \n     return EXIT_CODE_OK\n",
+    "sha256": "a0caef09e3ebb24eef2f502b2c80c4d8402449c5dd2e46084f121e0e02cfb7c0"
+  }
+}

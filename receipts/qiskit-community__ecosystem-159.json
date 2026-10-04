@@ -1,0 +1,58 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "1cd1a55a9f2c0bbd19371e7c916b108dc5502311",
+    "fail_to_pass": [
+      "tests/daos/test_dao.py::TestJsonDao::test_add_test_result_order"
+    ],
+    "image_name": "docker.io/swerebenchv2/qiskit-community-ecosystem:159-1cd1a55",
+    "instance_id": "qiskit-community__ecosystem-159",
+    "pass_to_pass": [
+      "tests/daos/test_dao.py::TestJsonDao::test_add_test_result",
+      "tests/daos/test_dao.py::TestJsonDao::test_move_from_tier_to_tier",
+      "tests/daos/test_dao.py::TestJsonDao::test_repository_insert_and_delete"
+    ],
+    "problem_statement": "test types in dev/stable/standard order\nThe test results have a kinda arbitrary order sometimes. It should be \r\n```\r\ndev\r\nstable\r\nstandard\r\n```",
+    "repo": "qiskit-community/ecosystem",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/daos/test_dao.py",
+    "test_patch": "diff --git a/tests/daos/test_dao.py b/tests/daos/test_dao.py\nindex e2ca786..079dc26 100644\n--- a/tests/daos/test_dao.py\n+++ b/tests/daos/test_dao.py\n@@ -145,3 +145,32 @@ class TestJsonDao(TestCase):\n                 TestResult(True, \"0.18.2\", TestType.STANDARD),\n             ],\n         )\n+\n+    def test_add_test_result_order(self):\n+        \"\"\"Test order of test results.\"\"\"\n+        self._delete_members_json()\n+        dao = JsonDAO(self.path)\n+\n+        main_repo = get_main_repo()\n+        dao.insert(main_repo)\n+        dao.add_repo_test_result(\n+            main_repo.url,\n+            main_repo.tier,\n+            TestResult(False, \"0.18.1\", TestType.STABLE_COMPATIBLE),\n+        )\n+        dao.add_repo_test_result(\n+            main_repo.url,\n+            main_repo.tier,\n+            TestResult(False, \"0.18.1\", TestType.STANDARD),\n+        )\n+        dao.add_repo_test_result(\n+            main_repo.url,\n+            main_repo.tier,\n+            TestResult(False, \"0.18.1\", TestType.DEV_COMPATIBLE),\n+        )\n+\n+        recovered_repo = dao.get_by_url(main_repo.url, tier=main_repo.tier)\n+        test_results = recovered_repo.tests_results\n+        self.assertEqual(test_results[0].test_type, TestType.DEV_COMPATIBLE)\n+        self.assertEqual(test_results[1].test_type, TestType.STABLE_COMPATIBLE)\n+        self.assertEqual(test_results[2].test_type, TestType.STANDARD)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-qiskit-community__ecosystem-159-7b8e059aa3"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/ecosystem/daos/jsondao.py b/ecosystem/daos/jsondao.py\nindex 5087412..bad15f9 100644\n--- a/ecosystem/daos/jsondao.py\n+++ b/ecosystem/daos/jsondao.py\n@@ -3,7 +3,7 @@ from typing import Optional, List\n \n from tinydb import TinyDB, Query\n \n-from ecosystem.models import TestResult, StyleResult, CoverageResult\n+from ecosystem.models import TestResult, StyleResult, CoverageResult, TestType\n from ecosystem.models.repository import Repository\n \n \n@@ -93,6 +93,7 @@ class JsonDAO:\n     ) -> Optional[List[int]]:\n         \"\"\"Adds test result for repository.\n         Overwrites latest test results and adds to historical test results.\n+        Test results are kept in order: DEV_COMPATIBLE, STABLE_COMPATIBLE, STANDARD.\n \n         Args:\n             repo_url: url of the repo\n@@ -108,18 +109,36 @@ class JsonDAO:\n         if fetched_repo_json is not None:\n             repo = Repository.from_dict(fetched_repo_json)\n \n-            new_test_results = [\n+            # Update test results, keeping only one per type and sorting by precedence\n+            test_type_order = {\n+                TestType.DEV_COMPATIBLE: 0,\n+                TestType.STABLE_COMPATIBLE: 1,\n+                TestType.STANDARD: 2,\n+            }\n+            # Remove existing entries of the same test type\n+            filtered_tests = [\n                 tr for tr in repo.tests_results if tr.test_type != test_result.test_type\n-            ] + [test_result]\n-            repo.tests_results = new_test_results\n-\n-            new_historical_est_results = [\n+            ]\n+            # Append new result\n+            filtered_tests.append(test_result)\n+            # Sort according to predefined order\n+            repo.tests_results = sorted(\n+                filtered_tests, key=lambda tr: test_type_order[tr.test_type]\n+            )\n+\n+            # Same for historical test results (also deduplicate by type+version)\n+            filtered_historical = [\n                 tr\n                 for tr in repo.historical_test_results\n-                if tr.test_type != test_result.test_type\n-                or tr.terra_version != test_result.terra_version\n-            ] + [test_result]\n-            repo.historical_test_results = new_historical_est_results\n+                if not (\n+                    tr.test_type == test_result.test_type\n+                    and tr.terra_version == test_result.terra_version\n+                )\n+            ]\n+            filtered_historical.append(test_result)\n+            repo.historical_test_results = sorted(\n+                filtered_historical, key=lambda tr: test_type_order[tr.test_type]\n+            )\n \n             return table.upsert(repo.to_dict(), repository.url == repo_url)\n         return None\n",
+    "agent_patch_sha256": "0ecf2517930b11cf7b7fcd77ae6d48fb764f92d5028f263059c21ecce49f6437",
+    "filtered_sha256": "0ecf2517930b11cf7b7fcd77ae6d48fb764f92d5028f263059c21ecce49f6437",
+    "number": 1,
+    "patch": "diff --git a/ecosystem/daos/jsondao.py b/ecosystem/daos/jsondao.py\nindex 5087412..bad15f9 100644\n--- a/ecosystem/daos/jsondao.py\n+++ b/ecosystem/daos/jsondao.py\n@@ -3,7 +3,7 @@ from typing import Optional, List\n \n from tinydb import TinyDB, Query\n \n-from ecosystem.models import TestResult, StyleResult, CoverageResult\n+from ecosystem.models import TestResult, StyleResult, CoverageResult, TestType\n from ecosystem.models.repository import Repository\n \n \n@@ -93,6 +93,7 @@ class JsonDAO:\n     ) -> Optional[List[int]]:\n         \"\"\"Adds test result for repository.\n         Overwrites latest test results and adds to historical test results.\n+        Test results are kept in order: DEV_COMPATIBLE, STABLE_COMPATIBLE, STANDARD.\n \n         Args:\n             repo_url: url of the repo\n@@ -108,18 +109,36 @@ class JsonDAO:\n         if fetched_repo_json is not None:\n             repo = Repository.from_dict(fetched_repo_json)\n \n-            new_test_results = [\n+            # Update test results, keeping only one per type and sorting by precedence\n+            test_type_order = {\n+                TestType.DEV_COMPATIBLE: 0,\n+                TestType.STABLE_COMPATIBLE: 1,\n+                TestType.STANDARD: 2,\n+            }\n+            # Remove existing entries of the same test type\n+            filtered_tests = [\n                 tr for tr in repo.tests_results if tr.test_type != test_result.test_type\n-            ] + [test_result]\n-            repo.tests_results = new_test_results\n-\n-            new_historical_est_results = [\n+            ]\n+            # Append new result\n+            filtered_tests.append(test_result)\n+            # Sort according to predefined order\n+            repo.tests_results = sorted(\n+                filtered_tests, key=lambda tr: test_type_order[tr.test_type]\n+            )\n+\n+            # Same for historical test results (also deduplicate by type+version)\n+            filtered_historical = [\n                 tr\n                 for tr in repo.historical_test_results\n-                if tr.test_type != test_result.test_type\n-                or tr.terra_version != test_result.terra_version\n-            ] + [test_result]\n-            repo.historical_test_results = new_historical_est_results\n+                if not (\n+                    tr.test_type == test_result.test_type\n+                    and tr.terra_version == test_result.terra_version\n+                )\n+            ]\n+            filtered_historical.append(test_result)\n+            repo.historical_test_results = sorted(\n+                filtered_historical, key=lambda tr: test_type_order[tr.test_type]\n+            )\n \n             return table.upsert(repo.to_dict(), repository.url == repo_url)\n         return None\n",
+    "sha256": "0ecf2517930b11cf7b7fcd77ae6d48fb764f92d5028f263059c21ecce49f6437"
+  }
+}

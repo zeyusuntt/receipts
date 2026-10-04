@@ -1,0 +1,59 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "2ec1c4bbd9247f054855abd77acd6d63ed97bab3",
+    "fail_to_pass": [
+      "test/utils/test_augmentation.py::test_add_random_edge"
+    ],
+    "image_name": "docker.io/swerebenchv2/pyg-team-pytorch-geometric:7654-2ec1c4b",
+    "instance_id": "pyg-team__pytorch_geometric-7654",
+    "pass_to_pass": [
+      "test/utils/test_augmentation.py::test_shuffle_node",
+      "test/utils/test_augmentation.py::test_mask_feature"
+    ],
+    "problem_statement": "add_random_edge does not check existing edges\n### 🐛 Describe the bug\r\n\r\nCalling add_random_edge may introduce duplicate edges that already existing in the graph. This may have unintended downstream consequences.\r\n\r\nMinimal code to reproduce.\r\n\r\n```python\r\nedge_index = torch.IntTensor(([0, 1, 2, 0, 1, 2, 0, 1, 2], [0, 0, 0, 1, 1, 1, 2, 2, 2]))\r\ntorch_geometric.utils.add_random_edge(edge_index, 0.4, num_nodes=3)\r\n```",
+    "repo": "pyg-team/pytorch_geometric",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/utils/test_augmentation.py",
+    "test_patch": "diff --git a/test/utils/test_augmentation.py b/test/utils/test_augmentation.py\nindex 2c6ad8f2f..68c4e343c 100644\n--- a/test/utils/test_augmentation.py\n+++ b/test/utils/test_augmentation.py\n@@ -1,6 +1,7 @@\n import pytest\n import torch\n \n+from torch_geometric import seed_everything\n from torch_geometric.utils import (\n     add_random_edge,\n     is_undirected,\n@@ -77,28 +78,26 @@ def test_add_random_edge():\n     assert out[0].tolist() == edge_index.tolist()\n     assert out[1].tolist() == [[], []]\n \n-    torch.manual_seed(5)\n+    seed_everything(5)\n     out = add_random_edge(edge_index, p=0.5)\n-    assert out[0].tolist() == [[0, 1, 1, 2, 2, 3, 3, 2, 3],\n-                               [1, 0, 2, 1, 3, 2, 1, 2, 2]]\n-\n-    assert out[1].tolist() == [[3, 2, 3], [1, 2, 2]]\n+    assert out[0].tolist() == [[0, 1, 1, 2, 2, 3, 3, 1, 2],\n+                               [1, 0, 2, 1, 3, 2, 0, 3, 0]]\n+    assert out[1].tolist() == [[3, 1, 2], [0, 3, 0]]\n \n-    torch.manual_seed(6)\n+    seed_everything(6)\n     out = add_random_edge(edge_index, p=0.5, force_undirected=True)\n-    assert out[0].tolist() == [[0, 1, 1, 2, 2, 3, 1, 2],\n-                               [1, 0, 2, 1, 3, 2, 2, 1]]\n-    assert out[1].tolist() == [[1, 2], [2, 1]]\n+    assert out[0].tolist() == [[0, 1, 1, 2, 2, 3, 1, 3],\n+                               [1, 0, 2, 1, 3, 2, 3, 1]]\n+    assert out[1].tolist() == [[1, 3], [3, 1]]\n     assert is_undirected(out[0])\n     assert is_undirected(out[1])\n \n-    # test with bipartite graph\n-    torch.manual_seed(7)\n+    # Test for bipartite graph:\n+    seed_everything(7)\n     edge_index = torch.tensor([[0, 1, 2, 3, 4, 5], [2, 3, 1, 4, 2, 1]])\n-    with pytest.raises(RuntimeError,\n-                       match=\"not supported for heterogeneous graphs\"):\n-        out = add_random_edge(edge_index, p=0.5, force_undirected=True,\n-                              num_nodes=(6, 5))\n+    with pytest.raises(RuntimeError, match=\"not supported for bipartite\"):\n+        add_random_edge(edge_index, force_undirected=True, num_nodes=(6, 5))\n     out = add_random_edge(edge_index, p=0.5, num_nodes=(6, 5))\n-    out[0].tolist() == [[0, 1, 2, 3, 4, 5, 3, 4, 1],\n-                        [2, 3, 1, 4, 2, 1, 1, 3, 2]]\n+    assert out[0].tolist() == [[0, 1, 2, 3, 4, 5, 2, 0, 2],\n+                               [2, 3, 1, 4, 2, 1, 0, 4, 2]]\n+    assert out[1].tolist() == [[2, 0, 2], [0, 4, 2]]\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-pyg-team__pytorch_geometric-7654-310f2aed7b"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/torch_geometric/utils/augmentation.py b/torch_geometric/utils/augmentation.py\nindex 82b07a67..357ac1ed 100644\n--- a/torch_geometric/utils/augmentation.py\n+++ b/torch_geometric/utils/augmentation.py\n@@ -204,7 +204,7 @@ def add_random_edge(edge_index, p: float, force_undirected: bool = False,\n         tensor([[0, 1, 2, 3, 4, 5, 3, 4, 1],\n                 [2, 3, 1, 4, 2, 1, 1, 3, 2]])\n         >>> added_edges\n-        tensor([[3, 4, 1],\n+        tensor([[3, 4, 1]\n                 [1, 3, 2]])\n     \"\"\"\n     if p < 0. or p > 1.:\n@@ -232,6 +232,40 @@ def add_random_edge(edge_index, p: float, force_undirected: bool = False,\n         mask = row < col\n         row, col = row[mask], col[mask]\n         row, col = torch.cat([row, col]), torch.cat([col, row])\n-    edge_index_to_add = torch.stack([row, col], dim=0).to(device)\n+    \n+    # Filter out edges that already exist in the original graph\n+    # Convert to lists for efficient lookup\n+    src_list = edge_index[0].tolist()\n+    dst_list = edge_index[1].tolist()\n+    \n+    # Create mask for new edges that don't already exist\n+    new_edge_mask = []\n+    for i in range(len(row)):\n+        s, d = row[i].item(), col[i].item()\n+        # Check if edge (s,d) already exists\n+        exists = False\n+        for j in range(len(src_list)):\n+            if src_list[j] == s and dst_list[j] == d:\n+                exists = True\n+                break\n+        new_edge_mask.append(not exists)\n+    \n+    # Apply mask to keep only non-existing edges\n+    if len(row) > 0:\n+        mask_tensor = torch.tensor(new_edge_mask, dtype=torch.bool, device=device)\n+        row = row[mask_tensor]\n+        col = col[mask_tensor]\n+        edge_index_to_add = torch.stack([row, col], dim=0)\n+        \n+        if force_undirected:\n+            # For undirected case, we need to rebuild the symmetric pairs\n+            # since filtering might have removed one direction but not the other\n+            edge_index_to_add = torch.cat([\n+                edge_index_to_add, \n+                torch.stack([col, row], dim=0)\n+            ], dim=1)\n+    else:\n+        edge_index_to_add = torch.empty((2, 0), dtype=torch.long, device=device)\n+    \n     edge_index = torch.cat([edge_index, edge_index_to_add], dim=1)\n-    return edge_index, edge_index_to_add\n+    return edge_index, edge_index_to_add\n\\ No newline at end of file\n",
+    "agent_patch_sha256": "9fb9a8f19ad2b6c3db3572223e52bfcd7dc5ec5f8ba613d9cce00c28a0ae77ea",
+    "filtered_sha256": "9fb9a8f19ad2b6c3db3572223e52bfcd7dc5ec5f8ba613d9cce00c28a0ae77ea",
+    "number": 2,
+    "patch": "diff --git a/torch_geometric/utils/augmentation.py b/torch_geometric/utils/augmentation.py\nindex 82b07a67..357ac1ed 100644\n--- a/torch_geometric/utils/augmentation.py\n+++ b/torch_geometric/utils/augmentation.py\n@@ -204,7 +204,7 @@ def add_random_edge(edge_index, p: float, force_undirected: bool = False,\n         tensor([[0, 1, 2, 3, 4, 5, 3, 4, 1],\n                 [2, 3, 1, 4, 2, 1, 1, 3, 2]])\n         >>> added_edges\n-        tensor([[3, 4, 1],\n+        tensor([[3, 4, 1]\n                 [1, 3, 2]])\n     \"\"\"\n     if p < 0. or p > 1.:\n@@ -232,6 +232,40 @@ def add_random_edge(edge_index, p: float, force_undirected: bool = False,\n         mask = row < col\n         row, col = row[mask], col[mask]\n         row, col = torch.cat([row, col]), torch.cat([col, row])\n-    edge_index_to_add = torch.stack([row, col], dim=0).to(device)\n+    \n+    # Filter out edges that already exist in the original graph\n+    # Convert to lists for efficient lookup\n+    src_list = edge_index[0].tolist()\n+    dst_list = edge_index[1].tolist()\n+    \n+    # Create mask for new edges that don't already exist\n+    new_edge_mask = []\n+    for i in range(len(row)):\n+        s, d = row[i].item(), col[i].item()\n+        # Check if edge (s,d) already exists\n+        exists = False\n+        for j in range(len(src_list)):\n+            if src_list[j] == s and dst_list[j] == d:\n+                exists = True\n+                break\n+        new_edge_mask.append(not exists)\n+    \n+    # Apply mask to keep only non-existing edges\n+    if len(row) > 0:\n+        mask_tensor = torch.tensor(new_edge_mask, dtype=torch.bool, device=device)\n+        row = row[mask_tensor]\n+        col = col[mask_tensor]\n+        edge_index_to_add = torch.stack([row, col], dim=0)\n+        \n+        if force_undirected:\n+            # For undirected case, we need to rebuild the symmetric pairs\n+            # since filtering might have removed one direction but not the other\n+            edge_index_to_add = torch.cat([\n+                edge_index_to_add, \n+                torch.stack([col, row], dim=0)\n+            ], dim=1)\n+    else:\n+        edge_index_to_add = torch.empty((2, 0), dtype=torch.long, device=device)\n+    \n     edge_index = torch.cat([edge_index, edge_index_to_add], dim=1)\n-    return edge_index, edge_index_to_add\n+    return edge_index, edge_index_to_add\n\\ No newline at end of file\n",
+    "sha256": "9fb9a8f19ad2b6c3db3572223e52bfcd7dc5ec5f8ba613d9cce00c28a0ae77ea"
+  }
+}

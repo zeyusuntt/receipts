@@ -1,0 +1,112 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "d252d22343b9c9688db77b59aa72dabd540bd252",
+    "fail_to_pass": [
+      "tests/test_serializer.py::TestMultipleObjectsValidation::test_exception_raised_when_data_and_instance_length_different",
+      "tests/test_serializer.py::TestMultipleObjectsValidation::test_multiple_objects_are_validated_separately"
+    ],
+    "image_name": "docker.io/swerebenchv2/encode-django-rest-framework:8979-d252d22",
+    "instance_id": "encode__django-rest-framework-8979",
+    "pass_to_pass": [
+      "tests/test_serializer.py::TestFieldImports::test_fields",
+      "tests/test_serializer.py::TestFieldImports::test_relations",
+      "tests/test_serializer.py::TestSerializer::test_valid_serializer",
+      "tests/test_serializer.py::TestSerializer::test_invalid_serializer",
+      "tests/test_serializer.py::TestSerializer::test_invalid_datatype",
+      "tests/test_serializer.py::TestSerializer::test_partial_validation",
+      "tests/test_serializer.py::TestSerializer::test_empty_serializer",
+      "tests/test_serializer.py::TestSerializer::test_missing_attribute_during_serialization",
+      "tests/test_serializer.py::TestSerializer::test_data_access_before_save_raises_error",
+      "tests/test_serializer.py::TestSerializer::test_validate_none_data",
+      "tests/test_serializer.py::TestSerializer::test_serialize_chainmap",
+      "tests/test_serializer.py::TestSerializer::test_serialize_custom_mapping",
+      "tests/test_serializer.py::TestSerializer::test_custom_to_internal_value",
+      "tests/test_serializer.py::TestSerializer::test_iterable_validators",
+      "tests/test_serializer.py::TestSerializer::test_serializer_is_subscriptable",
+      "tests/test_serializer.py::TestValidateMethod::test_non_field_error_validate_method",
+      "tests/test_serializer.py::TestValidateMethod::test_field_error_validate_method",
+      "tests/test_serializer.py::TestBaseSerializer::test_abstract_methods_raise_proper_errors",
+      "tests/test_serializer.py::TestBaseSerializer::test_access_to_data_attribute_before_validation_raises_error",
+      "tests/test_serializer.py::TestBaseSerializer::test_access_to_errors_attribute_before_validation_raises_error",
+      "tests/test_serializer.py::TestBaseSerializer::test_access_to_validated_data_attribute_before_validation_raises_error",
+      "tests/test_serializer.py::TestBaseSerializer::test_serialize_instance",
+      "tests/test_serializer.py::TestBaseSerializer::test_serialize_list",
+      "tests/test_serializer.py::TestBaseSerializer::test_validate_data",
+      "tests/test_serializer.py::TestBaseSerializer::test_validate_list",
+      "tests/test_serializer.py::TestStarredSource::test_nested_validate",
+      "tests/test_serializer.py::TestStarredSource::test_nested_null_validate",
+      "tests/test_serializer.py::TestStarredSource::test_nested_serialize",
+      "tests/test_serializer.py::TestStarredSource::test_field_validate",
+      "tests/test_serializer.py::TestStarredSource::test_field_null_validate",
+      "tests/test_serializer.py::TestIncorrectlyConfigured::test_incorrect_field_name",
+      "tests/test_serializer.py::TestNotRequiredOutput::test_not_required_output_for_dict",
+      "tests/test_serializer.py::TestNotRequiredOutput::test_not_required_output_for_object",
+      "tests/test_serializer.py::TestDefaultOutput::test_default_used_for_dict",
+      "tests/test_serializer.py::TestDefaultOutput::test_default_used_for_object",
+      "tests/test_serializer.py::TestDefaultOutput::test_default_not_used_when_in_dict",
+      "tests/test_serializer.py::TestDefaultOutput::test_default_not_used_when_in_object",
+      "tests/test_serializer.py::TestDefaultOutput::test_default_for_dotted_source",
+      "tests/test_serializer.py::TestDefaultOutput::test_default_for_multiple_dotted_source",
+      "tests/test_serializer.py::TestDefaultOutput::test_default_for_nested_serializer",
+      "tests/test_serializer.py::TestDefaultOutput::test_default_for_allow_null",
+      "tests/test_serializer.py::TestCacheSerializerData::test_cache_serializer_data",
+      "tests/test_serializer.py::TestDefaultInclusions::test_default_should_included_on_create",
+      "tests/test_serializer.py::TestDefaultInclusions::test_default_should_be_included_on_update",
+      "tests/test_serializer.py::TestDefaultInclusions::test_default_should_not_be_included_on_partial_update",
+      "tests/test_serializer.py::TestSerializerValidationWithCompiledRegexField::test_validation_success",
+      "tests/test_serializer.py::Test2555Regression::test_serializer_context",
+      "tests/test_serializer.py::Test4606Regression::test_4606_regression",
+      "tests/test_serializer.py::TestDeclaredFieldInheritance::test_declared_field_disabling",
+      "tests/test_serializer.py::TestDeclaredFieldInheritance::test_meta_field_disabling",
+      "tests/test_serializer.py::TestDeclaredFieldInheritance::test_multiple_inheritance",
+      "tests/test_serializer.py::TestDeclaredFieldInheritance::test_field_ordering",
+      "tests/test_serializer.py::Test8301Regression::test_ReturnDict_merging",
+      "tests/test_serializer.py::TestSetValueMethod::test_no_keys",
+      "tests/test_serializer.py::TestSetValueMethod::test_one_key",
+      "tests/test_serializer.py::TestSetValueMethod::test_nested_key"
+    ],
+    "problem_statement": "Invalid `self.instance` when validating the serializer using `many=True`\nCurrently it is almost impossible to use the same serializer with and without `many=True` and the problem that sometimes serializer depending on the instance state or value during serialization and validation (usually it is PATCH method and `partial=True`\r\n\r\nThis is the simplest example to understand:\r\n```python\r\nfrom django.db import models\r\nfrom rest_framework import serializers\r\n\r\n\r\nclass MyClass(models.Model):\r\n    name = models.CharField(max_length=100)\r\n    status = models.CharField(max_length=100, blank=True)\r\n\r\n    @property\r\n    def is_valid(self):\r\n        return self.name == 'valid'\r\n\r\n\r\nclass MyClassSerializer(serializers.ModelSerializer):\r\n    class Meta:\r\n        model = MyClass\r\n        fields = ('id', 'name', 'status')\r\n\r\n    def validate_status(self, value):\r\n        if value and not self.instance.is_valid:\r\n            raise serializers.ValidationError('Status cannot be set for invalid instance')\r\n        return value\r\n\r\n\r\nobjs = MyClass.objects.bulk_create(\r\n    objs=[\r\n        MyClass(name='valid'),\r\n        MyClass(name='invalid'),\r\n        MyClass(name='other'),\r\n    ]\r\n)\r\n\r\nserializer = MyClassSerializer(\r\n    data=[{'status': 'set', 'id': instance.id} for instance in objs],\r\n    instance=objs,\r\n    many=True,\r\n    partial=True,\r\n)\r\nserializer.is_valid()\r\nprint(serializer.errors)\r\n```\r\n\r\nPlease note that it is just an example and real serializers and models can be much more complex. The case is working when we pass the single instance to the serializer but not working when we are trying to validate `bulk` operation, like update in bulk (let's say)\r\n\r\nThe following exception raised:\r\n```\r\nAttributeError: 'list' object has no attribute 'is_valid'\r\n```\r\n\r\nWhen expected behavior would be to get this one (pretty-printed):\r\n```\r\n[\r\n    {},\r\n    {'status': [ErrorDetail(string='Status cannot be set for invalid instance', code='invalid')]},\r\n    {'status': [ErrorDetail(string='Status cannot be set for invalid instance', code='invalid')]},\r\n]\r\n```\r\n\r\nP.S. I was able to manually patch the serializer to obtain the instance from the data provided, but I do not think that it should be done manually for every serializer. I assume that when we are validating the instance using PARTIAL, then the appropriate instance which is currently on validation, should be available inside the serializer. In this case we will be able to use the same serializer as single and multi entity-validation.\r\n\r\nP.P.S. Also I think that if user require some logic for the list of objects, it should be placed inside the overridden `list_serializer_class`, no?",
+    "repo": "encode/django-rest-framework",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_serializer.py",
+    "test_patch": "diff --git a/tests/test_serializer.py b/tests/test_serializer.py\nindex 10fa8afb..39d9238e 100644\n--- a/tests/test_serializer.py\n+++ b/tests/test_serializer.py\n@@ -2,6 +2,7 @@ import inspect\n import pickle\n import re\n import sys\n+import unittest\n from collections import ChainMap\n from collections.abc import Mapping\n \n@@ -783,3 +784,63 @@ class TestSetValueMethod:\n         ret = {'a': 1}\n         self.s.set_value(ret, ['x', 'y'], 2)\n         assert ret == {'a': 1, 'x': {'y': 2}}\n+\n+\n+class MyClass(models.Model):\n+    name = models.CharField(max_length=100)\n+    value = models.CharField(max_length=100, blank=True)\n+\n+    app_label = \"test\"\n+\n+    @property\n+    def is_valid(self):\n+        return self.name == 'valid'\n+\n+\n+class MyClassSerializer(serializers.ModelSerializer):\n+    class Meta:\n+        model = MyClass\n+        fields = ('id', 'name', 'value')\n+\n+    def validate_value(self, value):\n+        if value and not self.instance.is_valid:\n+            raise serializers.ValidationError(\n+                'Status cannot be set for invalid instance')\n+        return value\n+\n+\n+class TestMultipleObjectsValidation(unittest.TestCase):\n+    def setUp(self):\n+        self.objs = [\n+            MyClass(name='valid'),\n+            MyClass(name='invalid'),\n+            MyClass(name='other'),\n+        ]\n+\n+    def test_multiple_objects_are_validated_separately(self):\n+\n+        serializer = MyClassSerializer(\n+            data=[{'value': 'set', 'id': instance.id} for instance in\n+                  self.objs],\n+            instance=self.objs,\n+            many=True,\n+            partial=True,\n+        )\n+\n+        assert not serializer.is_valid()\n+        assert serializer.errors == [\n+            {},\n+            {'value': ['Status cannot be set for invalid instance']},\n+            {'value': ['Status cannot be set for invalid instance']}\n+        ]\n+\n+    def test_exception_raised_when_data_and_instance_length_different(self):\n+\n+        with self.assertRaises(AssertionError):\n+            MyClassSerializer(\n+                data=[{'value': 'set', 'id': instance.id} for instance in\n+                      self.objs],\n+                instance=self.objs[:-1],\n+                many=True,\n+                partial=True,\n+            )\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-encode__django-rest-framework-8979-fcdf40c1c2"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/rest_framework/serializers.py b/rest_framework/serializers.py\nindex a3d68b03..a734f5fe 100644\n--- a/rest_framework/serializers.py\n+++ b/rest_framework/serializers.py\n@@ -162,6 +162,18 @@ class BaseSerializer(Field):\n             key: value for key, value in kwargs.items()\n             if key in LIST_SERIALIZER_KWARGS\n         })\n+        \n+        # Validate instance/data length mismatch early for many=True\n+        if 'instance' in kwargs and kwargs['instance'] is not None:\n+            instance = kwargs['instance']\n+            data = kwargs.get('data', [])\n+            if not isinstance(instance, models.manager.BaseManager) and hasattr(instance, '__len__') and hasattr(data, '__len__'):\n+                if len(instance) != len(data):\n+                    raise AssertionError(\n+                        'Mismatched instances and data items (%s instances for %s data items)' % \n+                        (len(instance), len(data))\n+                    )\n+\n         meta = getattr(cls, 'Meta', None)\n         list_serializer_class = getattr(meta, 'list_serializer_class', ListSerializer)\n         return list_serializer_class(*args, **list_kwargs)\n@@ -683,7 +695,18 @@ class ListSerializer(BaseSerializer):\n         ret = []\n         errors = []\n \n-        for item in data:\n+        for idx, item in enumerate(data):\n+            # Set the instance on the child serializer to the corresponding item\n+            # when validating in the context of many=True\n+            if self.instance is not None and isinstance(self.instance, (list, tuple)):\n+                child_instance = self.instance[idx]\n+            else:\n+                child_instance = getattr(self, 'instance', None)\n+            \n+            # Temporarily bind the child instance\n+            old_child_instance = self.child.instance\n+            self.child.instance = child_instance\n+            \n             try:\n                 validated = self.child.run_validation(item)\n             except ValidationError as exc:\n@@ -691,6 +714,9 @@ class ListSerializer(BaseSerializer):\n             else:\n                 ret.append(validated)\n                 errors.append({})\n+            finally:\n+                # Restore the original instance\n+                self.child.instance = old_child_instance\n \n         if any(errors):\n             raise ValidationError(errors)\n",
+    "agent_patch_sha256": "1ad6e824260f1b825fa2778f410f8803a5ffda76de76f7e3c4a8f5e655027db8",
+    "filtered_sha256": "1ad6e824260f1b825fa2778f410f8803a5ffda76de76f7e3c4a8f5e655027db8",
+    "number": 2,
+    "patch": "diff --git a/rest_framework/serializers.py b/rest_framework/serializers.py\nindex a3d68b03..a734f5fe 100644\n--- a/rest_framework/serializers.py\n+++ b/rest_framework/serializers.py\n@@ -162,6 +162,18 @@ class BaseSerializer(Field):\n             key: value for key, value in kwargs.items()\n             if key in LIST_SERIALIZER_KWARGS\n         })\n+        \n+        # Validate instance/data length mismatch early for many=True\n+        if 'instance' in kwargs and kwargs['instance'] is not None:\n+            instance = kwargs['instance']\n+            data = kwargs.get('data', [])\n+            if not isinstance(instance, models.manager.BaseManager) and hasattr(instance, '__len__') and hasattr(data, '__len__'):\n+                if len(instance) != len(data):\n+                    raise AssertionError(\n+                        'Mismatched instances and data items (%s instances for %s data items)' % \n+                        (len(instance), len(data))\n+                    )\n+\n         meta = getattr(cls, 'Meta', None)\n         list_serializer_class = getattr(meta, 'list_serializer_class', ListSerializer)\n         return list_serializer_class(*args, **list_kwargs)\n@@ -683,7 +695,18 @@ class ListSerializer(BaseSerializer):\n         ret = []\n         errors = []\n \n-        for item in data:\n+        for idx, item in enumerate(data):\n+            # Set the instance on the child serializer to the corresponding item\n+            # when validating in the context of many=True\n+            if self.instance is not None and isinstance(self.instance, (list, tuple)):\n+                child_instance = self.instance[idx]\n+            else:\n+                child_instance = getattr(self, 'instance', None)\n+            \n+            # Temporarily bind the child instance\n+            old_child_instance = self.child.instance\n+            self.child.instance = child_instance\n+            \n             try:\n                 validated = self.child.run_validation(item)\n             except ValidationError as exc:\n@@ -691,6 +714,9 @@ class ListSerializer(BaseSerializer):\n             else:\n                 ret.append(validated)\n                 errors.append({})\n+            finally:\n+                # Restore the original instance\n+                self.child.instance = old_child_instance\n \n         if any(errors):\n             raise ValidationError(errors)\n",
+    "sha256": "1ad6e824260f1b825fa2778f410f8803a5ffda76de76f7e3c4a8f5e655027db8"
+  }
+}

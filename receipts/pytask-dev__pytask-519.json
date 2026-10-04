@@ -1,0 +1,94 @@
+{
+  "claims": {
+    "claim_audit": "unsupported",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "62077ed5f2a1662ba5085083d5b6ea335132012d",
+    "fail_to_pass": [
+      "tests/test_task.py::test_raise_error_with_builtin_function_as_task"
+    ],
+    "image_name": "docker.io/swerebenchv2/pytask-dev-pytask:519-62077ed",
+    "instance_id": "pytask-dev__pytask-519",
+    "pass_to_pass": [
+      "tests/test_task.py::test_task_with_task_decorator[the_only_task-task_example]",
+      "tests/test_task.py::test_task_with_task_decorator[the_only_task-func]",
+      "tests/test_task.py::test_task_with_task_decorator[None-task_example]",
+      "tests/test_task.py::test_task_with_task_decorator[None-func]",
+      "tests/test_task.py::test_parametrization_in_for_loop",
+      "tests/test_task.py::test_parametrization_in_for_loop_from_markers",
+      "tests/test_task.py::test_parametrization_in_for_loop_from_signature",
+      "tests/test_task.py::test_parametrization_in_for_loop_from_markers_and_args",
+      "tests/test_task.py::test_parametrization_in_for_loop_from_decorator",
+      "tests/test_task.py::test_parametrization_in_for_loop_with_ids",
+      "tests/test_task.py::test_parametrization_in_for_loop_with_error",
+      "tests/test_task.py::test_parametrization_in_for_loop_from_decorator_w_irregular_dicts",
+      "tests/test_task.py::test_parametrization_in_for_loop_with_one_iteration",
+      "tests/test_task.py::test_parametrization_in_for_loop_and_normal",
+      "tests/test_task.py::test_parametrized_names_without_parametrization",
+      "tests/test_task.py::test_order_of_decorator_does_not_matter",
+      "tests/test_task.py::test_task_function_with_partialed_args",
+      "tests/test_task.py::test_task_function_with_partialed_args_and_task_decorator",
+      "tests/test_task.py::test_parametrized_tasks_without_arguments_in_signature",
+      "tests/test_task.py::test_that_dynamically_creates_tasks_are_captured",
+      "tests/test_task.py::test_raise_errors_for_irregular_ids[1]",
+      "tests/test_task.py::test_raise_errors_for_irregular_ids[irregular_id1]",
+      "tests/test_task.py::test_raise_errors_for_irregular_ids[irregular_id2]",
+      "tests/test_task.py::test_raise_errors_for_irregular_ids[irregular_id3]",
+      "tests/test_task.py::test_raise_errors_for_irregular_ids[irregular_id4]",
+      "tests/test_task.py::test_raise_errors_for_irregular_ids[irregular_id5]",
+      "tests/test_task.py::test_raise_errors_for_irregular_ids[irregular_id6]",
+      "tests/test_task.py::test_raise_errors_for_irregular_ids[irregular_id7]",
+      "tests/test_task.py::test_task_receives_unknown_kwarg",
+      "tests/test_task.py::test_task_receives_namedtuple",
+      "tests/test_task.py::test_task_kwargs_overwrite_default_arguments",
+      "tests/test_task.py::test_return_with_task_decorator[PathNode(path=Path('file.txt'))]",
+      "tests/test_task.py::test_return_with_task_decorator[Path('file.txt')]",
+      "tests/test_task.py::test_return_with_tuple_and_task_decorator[(PathNode(path=Path('file1.txt')),",
+      "tests/test_task.py::test_return_with_tuple_and_task_decorator[(Path('file1.txt'),",
+      "tests/test_task.py::test_error_when_function_is_defined_outside_loop_body",
+      "tests/test_task.py::test_error_when_function_is_defined_outside_loop_body_with_id",
+      "tests/test_task.py::test_task_will_be_executed_after_another_one_with_string",
+      "tests/test_task.py::test_task_will_be_executed_after_another_one_with_function"
+    ],
+    "problem_statement": "BUG: can't use builtin functions due to inspect.py\n- [x] I have checked that this issue has not already been reported.\r\n\r\n- [x] I have confirmed this bug exists on the latest version of pytask.\r\n\r\n- [ ] (optional) I have confirmed this bug exists on the `main` branch of pytask.\r\n\r\n---\r\n\r\n#### Code Sample, a copy-pastable example\r\n\r\n```python\r\nfrom pathlib import Path\r\nimport time\r\n\r\nimport pytask\r\n\r\ntask_build_time = pytask.task(produces=Path(\"build_time.txt\"))(time.asctime)\r\n```\r\n\r\n```\r\n╭─────────────────────────────── Traceback (most recent call last) ────────────────────────────────╮\r\n│ in exec_module:940                                                                               │\r\n│ in _call_with_frames_removed:241                                                                 │\r\n│                                                                                                  │\r\n│ /Users/nc/code/scg/kobuk/kobuk/tasks2/task_bug.py:6 in <module>                                  │\r\n│                                                                                                  │\r\n│   3                                                                                              │\r\n│   4 import pytask                                                                                │\r\n│   5                                                                                              │\r\n│ ❱ 6 task_build_time = pytask.task(produces=Path(\"build_time.txt\"))(time.asctime)                    │\r\n│   7                                                                                              │\r\n│                                                                                                  │\r\n│ /Users/nc/code/scg/kobuk/.venv/lib/python3.11/site-packages/_pytask/task_utils.py:97 in wrapper  │\r\n│                                                                                                  │\r\n│    94 │   │                                                                                      │\r\n│    95 │   │   unwrapped = inspect.unwrap(func)                                                   │\r\n│    96 │   │                                                                                      │\r\n│ ❱  97 │   │   raw_path = inspect.getfile(unwrapped)                                              │\r\n│    98 │   │   if \"<string>\" in raw_path:                                                         │\r\n│    99 │   │   │   path = Path(unwrapped.__globals__[\"__file__\"]).absolute().resolve()            │\r\n│   100 │   │   else:                                                                              │\r\n│                                                                                                  │\r\n│ /Users/nc/.pyenv/versions/3.11.6/lib/python3.11/inspect.py:920 in getfile                        │\r\n│                                                                                                  │\r\n│    917 │   │   object = object.f_code                                                            │\r\n│    918 │   if iscode(object):                                                                    │\r\n│    919 │   │   return object.co_filename                                                         │\r\n│ ❱  920 │   raise TypeError('module, class, method, function, traceback, frame, or '              │\r\n│    921 │   │   │   │   │   'code object was expected, got {}'.format(                            │\r\n│    922 │   │   │   │   │   type(object).__name__))                                               │\r\n│    923                                                                                           │\r\n╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\r\nTypeError: module, class, method, function, traceback, frame, or code object was expected, got builtin_function_or_method\r\n```\r\n\r\n#### Problem description\r\n\r\n#### Expected Output\r\n\r\nAny callable should work?\r\n\r\n",
+    "repo": "pytask-dev/pytask",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_task.py",
+    "test_patch": "diff --git a/tests/test_task.py b/tests/test_task.py\nindex 25f5717..b95194e 100644\n--- a/tests/test_task.py\n+++ b/tests/test_task.py\n@@ -662,3 +662,20 @@ def test_task_will_be_executed_after_another_one_with_function(tmp_path):\n \n     session = build(paths=tmp_path)\n     assert session.exit_code == ExitCode.OK\n+\n+\n+def test_raise_error_with_builtin_function_as_task(runner, tmp_path):\n+    source = \"\"\"\n+    from pytask import task\n+    from pathlib import Path\n+    from datetime import datetime\n+\n+    task(\n+        kwargs={\"format\": \"%y/%m/%d\"}, produces=Path(\"time.txt\")\n+    )(datetime.utcnow().strftime)\n+    \"\"\"\n+    tmp_path.joinpath(\"task_example.py\").write_text(textwrap.dedent(source))\n+\n+    result = runner.invoke(cli, [tmp_path.as_posix()])\n+    assert result.exit_code == ExitCode.COLLECTION_FAILED\n+    assert \"Builtin functions cannot be wrapped\" in result.output\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-pytask-dev__pytask-519-a04b416eed"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/src/_pytask/task_utils.py b/src/_pytask/task_utils.py\nindex 59af53e..74e8e09 100644\n--- a/src/_pytask/task_utils.py\n+++ b/src/_pytask/task_utils.py\n@@ -92,9 +92,13 @@ def task(\n                 )\n                 raise ValueError(msg)\n \n-        unwrapped = inspect.unwrap(func)\n-\n-        raw_path = inspect.getfile(unwrapped)\n+        try:\n+            unwrapped = inspect.unwrap(func)\n+            raw_path = inspect.getfile(unwrapped)\n+        except Exception:\n+            msg = \"Builtin functions cannot be wrapped\"\n+            raise ValueError(msg)\n+        \n         if \"<string>\" in raw_path:\n             path = Path(unwrapped.__globals__[\"__file__\"]).absolute().resolve()\n         else:\n",
+    "agent_patch_sha256": "324d0b83085b4d4db04bd7067ea0b0a611349e9426e919bc9e01ce2b5f7895a4",
+    "filtered_sha256": "324d0b83085b4d4db04bd7067ea0b0a611349e9426e919bc9e01ce2b5f7895a4",
+    "number": 1,
+    "patch": "diff --git a/src/_pytask/task_utils.py b/src/_pytask/task_utils.py\nindex 59af53e..74e8e09 100644\n--- a/src/_pytask/task_utils.py\n+++ b/src/_pytask/task_utils.py\n@@ -92,9 +92,13 @@ def task(\n                 )\n                 raise ValueError(msg)\n \n-        unwrapped = inspect.unwrap(func)\n-\n-        raw_path = inspect.getfile(unwrapped)\n+        try:\n+            unwrapped = inspect.unwrap(func)\n+            raw_path = inspect.getfile(unwrapped)\n+        except Exception:\n+            msg = \"Builtin functions cannot be wrapped\"\n+            raise ValueError(msg)\n+        \n         if \"<string>\" in raw_path:\n             path = Path(unwrapped.__globals__[\"__file__\"]).absolute().resolve()\n         else:\n",
+    "sha256": "324d0b83085b4d4db04bd7067ea0b0a611349e9426e919bc9e01ce2b5f7895a4"
+  }
+}

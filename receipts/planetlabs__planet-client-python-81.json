@@ -1,0 +1,57 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "be254334fe3ab0265c5c2d6345dcb5524cbaabfd",
+    "fail_to_pass": [
+      "tests/test_mosaics.py::test_get_mosaic"
+    ],
+    "image_name": "docker.io/swerebenchv2/planetlabs-planet-client-python:81-be25433",
+    "instance_id": "planetlabs__planet-client-python-81",
+    "pass_to_pass": [
+      "tests/test_mosaics.py::test_list_mosaics",
+      "tests/test_mosaics.py::test_get_mosaic_quads"
+    ],
+    "problem_statement": "Unable to get single mosaic metadata\nThe `planet mosaic` command appears to be broken in 0.0.3:\r\n\r\n```\r\n$ planet mosaic color_balance_mosaic\r\nError: MissingResource: <!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n<title>404 Not Found</title>\r\n<h1>Not Found</h1>\r\n<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>\r\n```\r\n\r\n`color_balance_mosaic` does appear when `planet mosaics` is run.",
+    "repo": "planetlabs/planet-client-python",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_mosaics.py",
+    "test_patch": "diff --git a/tests/test_mosaics.py b/tests/test_mosaics.py\nindex 04882a4..84b4b30 100644\n--- a/tests/test_mosaics.py\n+++ b/tests/test_mosaics.py\n@@ -43,7 +43,7 @@ def test_get_mosaic():\n \n         text = read_fixture('get-mosaic.json')\n         uri = os.path.join(client.base_url,\n-                           'mosaics/%s/' % mosaic_name)\n+                           'mosaics/%s' % mosaic_name)\n         m.get(uri, text=text, status_code=200)\n \n         r = client.get_mosaic(mosaic_name)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-planetlabs__planet-client-python-81-356d85f603"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/planet/api/client.py b/planet/api/client.py\nindex 81d21ca..2b1cc0b 100644\n--- a/planet/api/client.py\n+++ b/planet/api/client.py\n@@ -184,7 +184,7 @@ class Client(object):\n         :param name:\n             Mosaic name as returned by `list_mosaics`.\n         \"\"\"\n-        return self._get('mosaics/%s/' % name).get_body()\n+        return self._get('mosaics/%s' % name).get_body()\n \n     def get_mosaic_quads(self, name, intersects=None, count=50):\n         \"\"\"\n",
+    "agent_patch_sha256": "c07733a0fb13995fa091321ebc0a6afc7a3f8827b1d9d759f83f4241fdbbb4e1",
+    "filtered_sha256": "c07733a0fb13995fa091321ebc0a6afc7a3f8827b1d9d759f83f4241fdbbb4e1",
+    "number": 2,
+    "patch": "diff --git a/planet/api/client.py b/planet/api/client.py\nindex 81d21ca..2b1cc0b 100644\n--- a/planet/api/client.py\n+++ b/planet/api/client.py\n@@ -184,7 +184,7 @@ class Client(object):\n         :param name:\n             Mosaic name as returned by `list_mosaics`.\n         \"\"\"\n-        return self._get('mosaics/%s/' % name).get_body()\n+        return self._get('mosaics/%s' % name).get_body()\n \n     def get_mosaic_quads(self, name, intersects=None, count=50):\n         \"\"\"\n",
+    "sha256": "c07733a0fb13995fa091321ebc0a6afc7a3f8827b1d9d759f83f4241fdbbb4e1"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "5cd2b9a492984969dd6c8d8a6ca6dbd4b31e45ad",
+    "fail_to_pass": [
+      "tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints",
+      "tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_error"
+    ],
+    "image_name": "docker.io/swerebenchv2/mie-lab-trackintel:344-5cd2b9a",
+    "instance_id": "mie-lab__trackintel-344",
+    "pass_to_pass": [
+      "tests/preprocessing/test_staypoints.py::TestGenerate_locations::test_empty_generation",
+      "tests/preprocessing/test_staypoints.py::TestGenerate_locations::test_parallel_computing",
+      "tests/preprocessing/test_staypoints.py::TestGenerate_locations::test_missing_link",
+      "tests/preprocessing/test_staypoints.py::TestGenerate_locations::test_index_stability",
+      "tests/preprocessing/test_staypoints.py::TestGenerate_locations::test_location_ids_and_noise",
+      "tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_time",
+      "tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_max_time_gap",
+      "tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_time_gap_error",
+      "tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_agg"
+    ],
+    "problem_statement": "Update docstrings in io.file\nAll functions in io.file use `*args` and `**kwargs`, but provide no documentation for them, the usage must be looked up in the code itself. They should be included in the docstrings :)\r\n\r\nExamples are missing for write functions (see #335).",
+    "repo": "mie-lab/trackintel",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/preprocessing/test_staypoints.py",
+    "test_patch": "diff --git a/tests/preprocessing/test_staypoints.py b/tests/preprocessing/test_staypoints.py\nindex 79a8745..10c4425 100644\n--- a/tests/preprocessing/test_staypoints.py\n+++ b/tests/preprocessing/test_staypoints.py\n@@ -399,7 +399,8 @@ class TestMergeStaypoints:\n         \"\"\"Test staypoint merging.\"\"\"\n         sp, tpls = example_staypoints_merge\n         # first test with empty tpls\n-        merged_sp = sp.as_staypoints.merge_staypoints(tpls, agg={\"geom\": \"first\", \"location_id\": \"first\"})\n+        merged_sp = sp.as_staypoints.merge_staypoints(tpls, agg={\"geom\": \"first\"})\n+        merged_sp = merged_sp.reindex(columns=sp.columns)\n         assert len(merged_sp) == len(sp) - 3\n         # some staypoints stay the same (not merged)\n         assert (merged_sp.loc[1] == sp.loc[1]).all()\n@@ -458,3 +459,11 @@ class TestMergeStaypoints:\n         # the geom should correspond to the first one\n         assert sp.loc[7, \"geom\"] == merged_sp.loc[7, \"geom\"]\n         assert sp.loc[2, \"geom\"] == merged_sp.loc[2, \"geom\"]\n+\n+    def test_merge_staypoints_error(self, example_staypoints_merge):\n+        sp, tpls = example_staypoints_merge\n+        sp.drop(columns=[\"location_id\"], inplace=True)\n+        with pytest.raises(AssertionError) as excinfo:\n+            _ = sp.as_staypoints.merge_staypoints(tpls)\n+\n+        assert \"Staypoints must contain column location_id\" in str(excinfo.value)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-mie-lab__trackintel-344-87a18c5630"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/trackintel/io/file.py b/trackintel/io/file.py\nindex f444527..44df4d5 100644\n--- a/trackintel/io/file.py\n+++ b/trackintel/io/file.py\n@@ -116,10 +116,21 @@ def write_positionfixes_csv(positionfixes, filename, *args, **kwargs):\n     filename : str\n         The file to write to.\n \n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n     Notes\n     -----\n     \"longitude\" and \"latitude\" is extracted from the geometry column and the orignal\n     geometry column is dropped.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_positionfixes_csv(positionfixes, 'data.csv')\n+    >>> trackintel.write_positionfixes_csv(positionfixes, 'data.csv', sep=';')\n     \"\"\"\n     gdf = positionfixes.copy()\n     gdf[\"longitude\"] = positionfixes.geometry.apply(lambda p: p.coords[0][0])\n@@ -219,6 +230,17 @@ def write_triplegs_csv(triplegs, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_triplegs_csv(triplegs, 'data.csv')\n+    >>> trackintel.write_triplegs_csv(triplegs, 'data.csv', sep='|')\n     \"\"\"\n     geo_col_name = triplegs.geometry.name\n     df = pd.DataFrame(triplegs, copy=True)\n@@ -317,6 +339,17 @@ def write_staypoints_csv(staypoints, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_staypoints_csv(staypoints, 'data.csv')\n+    >>> trackintel.write_staypoints_csv(staypoints, 'data.csv', sep='\\t')\n     \"\"\"\n     geo_col_name = staypoints.geometry.name\n     df = pd.DataFrame(staypoints, copy=True)\n@@ -404,6 +437,17 @@ def write_locations_csv(locations, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_locations_csv(locations, 'data.csv')\n+    >>> trackintel.write_locations_csv(locations, 'data.csv', sep=',', index=False)\n     \"\"\"\n     df = pd.DataFrame(locations, copy=True)\n     df[\"center\"] = locations[\"center\"].apply(wkt.dumps)\n@@ -502,6 +546,17 @@ def write_trips_csv(trips, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_trips_csv(trips, 'data.csv')\n+    >>> trackintel.write_trips_csv(trips, 'data.csv', header=False)\n     \"\"\"\n     df = trips.copy()\n     if isinstance(df, GeoDataFrame):\n@@ -571,6 +626,17 @@ def write_tours_csv(tours, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_tours_csv(tours, 'data.csv')\n+    >>> trackintel.write_tours_csv(tours, 'data.csv', columns=['user_id', 'started_at'])\n     \"\"\"\n     tours.to_csv(filename, index=True, *args, **kwargs)\n \n",
+    "agent_patch_sha256": "1ccf77084f5cc30ae5e8ac390c5d40f0272c8a925898855e0dd82f059c83ac7d",
+    "filtered_sha256": "1ccf77084f5cc30ae5e8ac390c5d40f0272c8a925898855e0dd82f059c83ac7d",
+    "number": 2,
+    "patch": "diff --git a/trackintel/io/file.py b/trackintel/io/file.py\nindex f444527..44df4d5 100644\n--- a/trackintel/io/file.py\n+++ b/trackintel/io/file.py\n@@ -116,10 +116,21 @@ def write_positionfixes_csv(positionfixes, filename, *args, **kwargs):\n     filename : str\n         The file to write to.\n \n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n     Notes\n     -----\n     \"longitude\" and \"latitude\" is extracted from the geometry column and the orignal\n     geometry column is dropped.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_positionfixes_csv(positionfixes, 'data.csv')\n+    >>> trackintel.write_positionfixes_csv(positionfixes, 'data.csv', sep=';')\n     \"\"\"\n     gdf = positionfixes.copy()\n     gdf[\"longitude\"] = positionfixes.geometry.apply(lambda p: p.coords[0][0])\n@@ -219,6 +230,17 @@ def write_triplegs_csv(triplegs, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_triplegs_csv(triplegs, 'data.csv')\n+    >>> trackintel.write_triplegs_csv(triplegs, 'data.csv', sep='|')\n     \"\"\"\n     geo_col_name = triplegs.geometry.name\n     df = pd.DataFrame(triplegs, copy=True)\n@@ -317,6 +339,17 @@ def write_staypoints_csv(staypoints, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_staypoints_csv(staypoints, 'data.csv')\n+    >>> trackintel.write_staypoints_csv(staypoints, 'data.csv', sep='\\t')\n     \"\"\"\n     geo_col_name = staypoints.geometry.name\n     df = pd.DataFrame(staypoints, copy=True)\n@@ -404,6 +437,17 @@ def write_locations_csv(locations, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_locations_csv(locations, 'data.csv')\n+    >>> trackintel.write_locations_csv(locations, 'data.csv', sep=',', index=False)\n     \"\"\"\n     df = pd.DataFrame(locations, copy=True)\n     df[\"center\"] = locations[\"center\"].apply(wkt.dumps)\n@@ -502,6 +546,17 @@ def write_trips_csv(trips, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_trips_csv(trips, 'data.csv')\n+    >>> trackintel.write_trips_csv(trips, 'data.csv', header=False)\n     \"\"\"\n     df = trips.copy()\n     if isinstance(df, GeoDataFrame):\n@@ -571,6 +626,17 @@ def write_tours_csv(tours, filename, *args, **kwargs):\n \n     filename : str\n         The file to write to.\n+\n+    *args : tuple\n+        Positional arguments to pass to pandas to_csv function.\n+\n+    **kwargs : dict\n+        Keyword arguments to pass to pandas to_csv function.\n+\n+    Examples\n+    --------\n+    >>> trackintel.write_tours_csv(tours, 'data.csv')\n+    >>> trackintel.write_tours_csv(tours, 'data.csv', columns=['user_id', 'started_at'])\n     \"\"\"\n     tours.to_csv(filename, index=True, *args, **kwargs)\n \n",
+    "sha256": "1ccf77084f5cc30ae5e8ac390c5d40f0272c8a925898855e0dd82f059c83ac7d"
+  }
+}

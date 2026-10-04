@@ -1,0 +1,56 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "ae50251eee8d9b6acbaf1ae174f84991db8c70ad",
+    "fail_to_pass": [
+      "pythonfmu/tests/test_default_experiment.py::test_default_experiment"
+    ],
+    "image_name": "docker.io/swerebenchv2/ntnu-ihb-pythonfmu:158-ae50251",
+    "instance_id": "ntnu-ihb__pythonfmu-158",
+    "pass_to_pass": [],
+    "problem_statement": "Trouble using the `default_experiment`\nI have ran into two issues trying to set the `default_experiment` using the `DefaultExperiment` class.\r\n\r\nFirst, the xml parser is throwing an error regarding serializing the floats specified in the start/stop time fields, as such:\r\n```\r\nTraceback (most recent call last):\r\n  File \"/usr/lib/python3.8/xml/etree/ElementTree.py\", line 1076, in _escape_attrib\r\n    if \"&\" in text:\r\nTypeError: argument of type 'float' is not iterable\r\n\r\nDuring handling of the above exception, another exception occurred:\r\n\r\nTraceback (most recent call last):\r\n  File \".../bin/pythonfmu\", line 8, in <module>\r\n    sys.exit(cli_main())\r\n  File \"...lib/python3.8/site-packages/pythonfmu/__main__.py\", line 55, in cli_main\r\n    execute(**options)\r\n  File \"...lib/python3.8/site-packages/pythonfmu/builder.py\", line 184, in build_FMU\r\n    xml_str = parseString(tostring(xml, \"UTF-8\"))\r\n  File \"/usr/lib/python3.8/xml/etree/ElementTree.py\", line 1133, in tostring\r\n    ElementTree(element).write(stream, encoding,\r\n  File \"/usr/lib/python3.8/xml/etree/ElementTree.py\", line 772, in write\r\n    serialize(write, self._root, qnames, namespaces,\r\n  File \"/usr/lib/python3.8/xml/etree/ElementTree.py\", line 937, in _serialize_xml\r\n    _serialize_xml(write, e, qnames, None,\r\n  File \"/usr/lib/python3.8/xml/etree/ElementTree.py\", line 930, in _serialize_xml\r\n    v = _escape_attrib(v)\r\n  File \"/usr/lib/python3.8/xml/etree/ElementTree.py\", line 1099, in _escape_attrib\r\n    _raise_serialization_error(text)\r\n  File \"/usr/lib/python3.8/xml/etree/ElementTree.py\", line 1053, in _raise_serialization_error\r\n    raise TypeError(\r\nTypeError: cannot serialize 0.0 (type float)\r\n\r\n```\r\n\r\nI was able to at least hackily work around this by simply casting the times as strings in the constructor like so:\r\n\r\n```\r\nclass MyFMU(Fmi2Slave):\r\n    ...\r\n    default_experiment = DefaultExperiment(start_time=str(0.), stop_time=str(1.))\r\n    ...\r\n```\r\n\r\nBut after this it seems the model description validator (when trying to run the fmu through `fmpy` at least) doesn't like the default experiment field being there:\r\n```\r\n---------------------------------------------------------------------------\r\nException                                 Traceback (most recent call last)\r\nCell In [29], line 1\r\n----> 1 simulate_custom_input()\r\n\r\nCell In [28], line 21, in simulate_custom_input(show_plot)\r\n     18 step_size = 1e-3\r\n     20 # read the model description\r\n---> 21 model_description = read_model_description(fmu_filename)\r\n     23 # collect the value references\r\n     24 vrs = {}\r\n\r\nFile .../lib/python3.8/site-packages/fmpy/model_description.py:415, in read_model_description(filename, validate, validate_variable_names, validate_model_structure)\r\n    413         for entry in schema.error_log:\r\n    414             message += \"\\n%s (line %d, column %d): %s\" % (entry.level_name, entry.line, entry.column, entry.message)\r\n--> 415         raise Exception(message)\r\n    417 modelDescription = ModelDescription()\r\n    418 _copy_attributes(root, modelDescription, ['fmiVersion', 'guid', 'modelName', 'description', 'generationTool',\r\n    419                                           'generationDateAndTime', 'variableNamingConvention'])\r\n\r\nException: Failed to validate modelDescription.xml:\r\nERROR (line 38, column 0): Element 'DefaultExperiment': This element is not expected.\r\n```\r\n\r\nWould this be an xml serialization issue on this end, or a validation issue on `fmpy`'s end?\r\n\r\nThanks!\r\n\r\nbtw this is a really nice package! :+1: ",
+    "repo": "NTNU-IHB/PythonFMU",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pythonfmu/tests/slaves/pythonslave_read_file.py pythonfmu/tests/test_default_experiment.py",
+    "test_patch": "diff --git a/pythonfmu/tests/slaves/pythonslave_read_file.py b/pythonfmu/tests/slaves/pythonslave_read_file.py\nindex 7db110b..b07b8b9 100644\n--- a/pythonfmu/tests/slaves/pythonslave_read_file.py\n+++ b/pythonfmu/tests/slaves/pythonslave_read_file.py\n@@ -1,8 +1,10 @@\n-from pythonfmu.fmi2slave import Fmi2Slave, Fmi2Causality, Fmi2Variability, String\n+from pythonfmu.fmi2slave import Fmi2Slave, Fmi2Causality, Fmi2Variability, String, DefaultExperiment\n \n \n class PythonSlaveReadFile(Fmi2Slave):\n \n+    default_experiment = DefaultExperiment(start_time=0)\n+\n     def __init__(self, **kwargs):\n         super().__init__(**kwargs)\n \ndiff --git a/pythonfmu/tests/test_default_experiment.py b/pythonfmu/tests/test_default_experiment.py\nnew file mode 100644\nindex 0000000..7c5a1df\n--- /dev/null\n+++ b/pythonfmu/tests/test_default_experiment.py\n@@ -0,0 +1,17 @@\n+import pytest\n+from pathlib import Path\n+\n+from pythonfmu.csvbuilder import FmuBuilder\n+\n+\n+def test_default_experiment(tmp_path):\n+    fmpy = pytest.importorskip(\n+        \"fmpy\", reason=\"fmpy is not available for testing the produced FMU\"\n+    )\n+\n+    script_file = Path(__file__).parent / \"slaves/pythonslave_read_file.py\"\n+    project_file = Path(__file__).parent / \"data/hello.txt\"\n+    fmu = FmuBuilder.build_FMU(script_file, project_files=[project_file], dest=tmp_path, needsExecutionTool=\"false\")\n+    assert fmu.exists()\n+\n+    model_description = fmpy.read_model_description(fmu)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-ntnu-ihb__pythonfmu-158-34942c73d2"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/pythonfmu/default_experiment.py b/pythonfmu/default_experiment.py\nindex 817cf08..1bb70d5 100644\n--- a/pythonfmu/default_experiment.py\n+++ b/pythonfmu/default_experiment.py\n@@ -1,6 +1,6 @@\n class DefaultExperiment:\n \n-    def __init__(self, start_time: float = None, stop_time: float = None, tolerance: float = None):\n-        self.start_time = start_time\n-        self.stop_time = stop_time\n-        self.tolerance = tolerance\n+    def __init__(self, start_time = None, stop_time = None, tolerance = None):\n+        self.start_time = str(start_time) if start_time is not None else None\n+        self.stop_time = str(stop_time) if stop_time is not None else None\n+        self.tolerance = str(tolerance) if tolerance is not None else None\ndiff --git a/pythonfmu/fmi2slave.py b/pythonfmu/fmi2slave.py\nindex 8780829..d2ea4b3 100644\n--- a/pythonfmu/fmi2slave.py\n+++ b/pythonfmu/fmi2slave.py\n@@ -129,13 +129,18 @@ class Fmi2Slave(ABC):\n \n         if self.default_experiment is not None:\n             attrib = dict()\n+            has_attrib = False\n             if self.default_experiment.start_time is not None:\n                 attrib[\"startTime\"] = self.default_experiment.start_time\n+                has_attrib = True\n             if self.default_experiment.stop_time is not None:\n                 attrib[\"stopTime\"] = self.default_experiment.stop_time\n+                has_attrib = True\n             if self.default_experiment.tolerance is not None:\n                 attrib[\"tolerance\"] = self.default_experiment.tolerance\n-            SubElement(root, \"DefaultExperiment\", attrib)\n+                has_attrib = True\n+            if has_attrib:\n+                SubElement(root, \"DefaultExperiment\", attrib)\n \n         return root\n \n",
+    "agent_patch_sha256": "e9ac60f56b6fb517feb21e11f46258b154a3b547441a87023f12ecd707edefd1",
+    "filtered_sha256": "e9ac60f56b6fb517feb21e11f46258b154a3b547441a87023f12ecd707edefd1",
+    "number": 2,
+    "patch": "diff --git a/pythonfmu/default_experiment.py b/pythonfmu/default_experiment.py\nindex 817cf08..1bb70d5 100644\n--- a/pythonfmu/default_experiment.py\n+++ b/pythonfmu/default_experiment.py\n@@ -1,6 +1,6 @@\n class DefaultExperiment:\n \n-    def __init__(self, start_time: float = None, stop_time: float = None, tolerance: float = None):\n-        self.start_time = start_time\n-        self.stop_time = stop_time\n-        self.tolerance = tolerance\n+    def __init__(self, start_time = None, stop_time = None, tolerance = None):\n+        self.start_time = str(start_time) if start_time is not None else None\n+        self.stop_time = str(stop_time) if stop_time is not None else None\n+        self.tolerance = str(tolerance) if tolerance is not None else None\ndiff --git a/pythonfmu/fmi2slave.py b/pythonfmu/fmi2slave.py\nindex 8780829..d2ea4b3 100644\n--- a/pythonfmu/fmi2slave.py\n+++ b/pythonfmu/fmi2slave.py\n@@ -129,13 +129,18 @@ class Fmi2Slave(ABC):\n \n         if self.default_experiment is not None:\n             attrib = dict()\n+            has_attrib = False\n             if self.default_experiment.start_time is not None:\n                 attrib[\"startTime\"] = self.default_experiment.start_time\n+                has_attrib = True\n             if self.default_experiment.stop_time is not None:\n                 attrib[\"stopTime\"] = self.default_experiment.stop_time\n+                has_attrib = True\n             if self.default_experiment.tolerance is not None:\n                 attrib[\"tolerance\"] = self.default_experiment.tolerance\n-            SubElement(root, \"DefaultExperiment\", attrib)\n+                has_attrib = True\n+            if has_attrib:\n+                SubElement(root, \"DefaultExperiment\", attrib)\n \n         return root\n \n",
+    "sha256": "e9ac60f56b6fb517feb21e11f46258b154a3b547441a87023f12ecd707edefd1"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "1269cdc95a02f2d024f204a556e61d1e7f74af46",
+    "fail_to_pass": [
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_ssl_assert_hostname"
+    ],
+    "image_name": "docker.io/swerebenchv2/opensearch-project-opensearch-py:843-1269cdc",
+    "instance_id": "opensearch-project__opensearch-py-843",
+    "pass_to_pass": [
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_ssl_context",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_opaque_id",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_no_http_compression",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_http_compression",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_url_prefix",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_default_user_agent",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_timeout_set",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_keep_alive_is_on_by_default",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_http_auth",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_http_auth_tuple",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_http_auth_list",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_uses_https_if_verify_certs_is_off",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_nowarn_when_test_uses_https_if_verify_certs_is_off",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_doesnt_use_https_if_not_specified",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_no_warning_when_using_ssl_context",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_warns_if_using_non_default_ssl_kwargs_with_ssl_context",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_uses_given_ca_certs",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_uses_default_ca_certs",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_uses_no_ca_certs",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_trust_env",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_trust_env_default_value_is_false",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_uncompressed_body_logged",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_body_not_logged",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_failure_body_logged",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_failure_body_not_logged",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_surrogatepass_into_bytes",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_recursion_error_reraised[RecursionError]",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_recursion_error_reraised[CancelledError]",
+      "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_json_errors_are_parsed",
+      "test_opensearchpy/test_async/test_connection.py::TestConnectionHttpServer::test_aiohttp_connection_error",
+      "test_opensearchpy/test_async/test_connection.py::test_default_connection_is_returned_by_default",
+      "test_opensearchpy/test_async/test_connection.py::test_get_connection_created_connection_if_needed",
+      "test_opensearchpy/test_async/test_connection.py::test_configure_preserves_unchanged_connections",
+      "test_opensearchpy/test_async/test_connection.py::test_remove_connection_removes_both_conn_and_conf",
+      "test_opensearchpy/test_async/test_connection.py::test_create_connection_constructs_client",
+      "test_opensearchpy/test_async/test_connection.py::test_create_connection_adds_our_serializer"
+    ],
+    "problem_statement": "[BUG] Async client is missing ssl_assert_hostname implementation\n### What is the bug?\r\nThe `ssl_assert_hostname` parameter has no effect on the `AsyncOpenSearch` client.\r\n\r\n### How can one reproduce the bug?\r\n```python\r\nclient = AsyncOpenSearch(hosts='my.opensearch.with.selfsigned.certs', ssl_assert_hostname=False)\r\nawait client.search(...)\r\n```\r\n```\r\nopensearchpy.exceptions.ConnectionError: ConnectionError(Cannot connect to host my.opensearch.instance:9200 ssl:True [SSLCertVerificationError: (1, \"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'my.opensearch.instance'. (_ssl.c:1000)\")]) caused by: ClientConnectorCertificateError(Cannot connect to host my.opensearch.instance:9200 ssl:True [SSLCertVerificationError: (1, \"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'my.opensearch.instance'. (_ssl.c:1000)\")])\r\n```\r\n\r\n### What is the expected behavior?\r\nThe connection should succeed even if the hostname does not match.\r\n\r\n### What is your host/environment?\r\nN/A\r\n\r\n### Do you have any screenshots?\r\nN/A\r\n\r\n### Do you have any additional context?\r\nThe parameter is documented in the function docs:\r\nhttps://github.com/opensearch-project/opensearch-py/blob/6fa54a719a399cdcd8d970605487b9e14d257383/opensearchpy/_async/http_aiohttp.py#L120\r\n\r\nI believe the parameter works with the `urllib3`-based client.\r\n\r\nI'm working on a PR to fix this.\r\n",
+    "repo": "opensearch-project/opensearch-py",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test_opensearchpy/test_async/test_connection.py",
+    "test_patch": "diff --git a/test_opensearchpy/test_async/test_connection.py b/test_opensearchpy/test_async/test_connection.py\nindex 5c8f6e26..c7d7b4a3 100644\n--- a/test_opensearchpy/test_async/test_connection.py\n+++ b/test_opensearchpy/test_async/test_connection.py\n@@ -29,6 +29,7 @@ import gzip\n import io\n import json\n import ssl\n+import sys\n import warnings\n from platform import python_version\n from typing import Any\n@@ -97,6 +98,17 @@ class TestAIOHttpConnection:\n         assert con.use_ssl\n         assert con.session.connector._ssl == context\n \n+    async def test_ssl_assert_hostname(self) -> None:\n+        con = AIOHttpConnection(use_ssl=True, ssl_assert_hostname=True)\n+        await con._create_aiohttp_session()\n+        assert con.use_ssl\n+        assert con.session.connector._ssl.check_hostname is True\n+\n+        con = AIOHttpConnection(use_ssl=True, ssl_assert_hostname=False)\n+        await con._create_aiohttp_session()\n+        assert con.use_ssl\n+        assert con.session.connector._ssl.check_hostname is False\n+\n     async def test_opaque_id(self) -> None:\n         con = AIOHttpConnection(opaque_id=\"app-1\")\n         assert con.headers[\"x-opaque-id\"] == \"app-1\"\n@@ -217,7 +229,15 @@ class TestAIOHttpConnection:\n                 use_ssl=True, verify_certs=False, ssl_show_warn=False\n             )\n             await con._create_aiohttp_session()\n-            assert w == []\n+            if sys.hexversion < 0x30C0700:\n+                assert w == []\n+            else:\n+                assert len(w) == 1\n+                assert (\n+                    str(w[0].message) == \"enable_cleanup_closed ignored because \"\n+                    \"https://github.com/python/cpython/pull/118960 is fixed in \"\n+                    \"Python version sys.version_info(major=3, minor=12, micro=7, releaselevel='final', serial=0)\"\n+                )\n \n         assert isinstance(con.session, aiohttp.ClientSession)\n \n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-opensearch-project__opensearch-py-843-8f22966050"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/opensearchpy/_async/http_aiohttp.py b/opensearchpy/_async/http_aiohttp.py\nindex ed1d26e..65ffb8b 100644\n--- a/opensearchpy/_async/http_aiohttp.py\n+++ b/opensearchpy/_async/http_aiohttp.py\n@@ -86,6 +86,7 @@ class AIOHttpConnection(AsyncConnection):\n         client_key: Any = None,\n         ssl_version: Any = None,\n         ssl_assert_fingerprint: Any = None,\n+        ssl_assert_hostname: Any = None,\n         maxsize: Optional[int] = 10,\n         headers: Any = None,\n         ssl_context: Any = None,\n@@ -163,6 +164,7 @@ class AIOHttpConnection(AsyncConnection):\n             )\n \n         self.ssl_assert_fingerprint = ssl_assert_fingerprint\n+        self.ssl_assert_hostname = ssl_assert_hostname\n         if self.use_ssl and ssl_context is None:\n             if ssl_version is None:\n                 ssl_context = ssl.create_default_context()\n@@ -182,6 +184,8 @@ class AIOHttpConnection(AsyncConnection):\n             else:\n                 ssl_context.check_hostname = False\n                 ssl_context.verify_mode = ssl.CERT_NONE\n+            if self.ssl_assert_hostname is not None:\n+                ssl_context.check_hostname = self.ssl_assert_hostname\n \n             if ca_certs is None:\n                 ca_certs = self.default_ca_certs()\n@@ -215,6 +219,8 @@ class AIOHttpConnection(AsyncConnection):\n                 ssl_context.load_cert_chain(client_cert, client_key)\n             elif client_cert:\n                 ssl_context.load_cert_chain(client_cert)\n+            if ssl_context is not None and self.ssl_assert_hostname is not None:\n+                ssl_context.check_hostname = self.ssl_assert_hostname\n \n         self.headers.setdefault(\"connection\", \"keep-alive\")\n         self.loop = loop\n",
+    "agent_patch_sha256": "b7e91631fbbb63895ed9bf1988e4fa6e8abbfadcac3a6db627d1f45c3736bf19",
+    "filtered_sha256": "b7e91631fbbb63895ed9bf1988e4fa6e8abbfadcac3a6db627d1f45c3736bf19",
+    "number": 1,
+    "patch": "diff --git a/opensearchpy/_async/http_aiohttp.py b/opensearchpy/_async/http_aiohttp.py\nindex ed1d26e..65ffb8b 100644\n--- a/opensearchpy/_async/http_aiohttp.py\n+++ b/opensearchpy/_async/http_aiohttp.py\n@@ -86,6 +86,7 @@ class AIOHttpConnection(AsyncConnection):\n         client_key: Any = None,\n         ssl_version: Any = None,\n         ssl_assert_fingerprint: Any = None,\n+        ssl_assert_hostname: Any = None,\n         maxsize: Optional[int] = 10,\n         headers: Any = None,\n         ssl_context: Any = None,\n@@ -163,6 +164,7 @@ class AIOHttpConnection(AsyncConnection):\n             )\n \n         self.ssl_assert_fingerprint = ssl_assert_fingerprint\n+        self.ssl_assert_hostname = ssl_assert_hostname\n         if self.use_ssl and ssl_context is None:\n             if ssl_version is None:\n                 ssl_context = ssl.create_default_context()\n@@ -182,6 +184,8 @@ class AIOHttpConnection(AsyncConnection):\n             else:\n                 ssl_context.check_hostname = False\n                 ssl_context.verify_mode = ssl.CERT_NONE\n+            if self.ssl_assert_hostname is not None:\n+                ssl_context.check_hostname = self.ssl_assert_hostname\n \n             if ca_certs is None:\n                 ca_certs = self.default_ca_certs()\n@@ -215,6 +219,8 @@ class AIOHttpConnection(AsyncConnection):\n                 ssl_context.load_cert_chain(client_cert, client_key)\n             elif client_cert:\n                 ssl_context.load_cert_chain(client_cert)\n+            if ssl_context is not None and self.ssl_assert_hostname is not None:\n+                ssl_context.check_hostname = self.ssl_assert_hostname\n \n         self.headers.setdefault(\"connection\", \"keep-alive\")\n         self.loop = loop\n",
+    "sha256": "b7e91631fbbb63895ed9bf1988e4fa6e8abbfadcac3a6db627d1f45c3736bf19"
+  }
+}

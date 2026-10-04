@@ -1,0 +1,86 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "c25497fc653fb2dbbd6bdd51b3e53fba35c5c3a4",
+    "fail_to_pass": [
+      "tests/test_importstmt.py::test_ImportStatement_pretty_print_black_no_config",
+      "tests/test_importstmt.py::test_read_black_config_no_config"
+    ],
+    "image_name": "docker.io/swerebenchv2/deshaw-pyflyby:289-c25497f",
+    "instance_id": "deshaw__pyflyby-289",
+    "pass_to_pass": [
+      "tests/test_importstmt.py::test_Import_from_parts_1",
+      "tests/test_importstmt.py::test_Import_from_split_1",
+      "tests/test_importstmt.py::test_Import_from_Statement_1",
+      "tests/test_importstmt.py::test_Import_basic_1",
+      "tests/test_importstmt.py::test_Import_relative_1",
+      "tests/test_importstmt.py::test_Import_relative_local_1",
+      "tests/test_importstmt.py::test_Import_module_1",
+      "tests/test_importstmt.py::test_Import_import_as_1",
+      "tests/test_importstmt.py::test_Import_import_as_same_1",
+      "tests/test_importstmt.py::test_Import_eqne_1",
+      "tests/test_importstmt.py::test_Import_eqne_2",
+      "tests/test_importstmt.py::test_Import_prefix_match_1",
+      "tests/test_importstmt.py::test_Import_replace_1",
+      "tests/test_importstmt.py::test_Import_replace_2",
+      "tests/test_importstmt.py::test_Import_black_line_length",
+      "tests/test_importstmt.py::test_ImportStatement_1",
+      "tests/test_importstmt.py::test_ImportStatement_member_1",
+      "tests/test_importstmt.py::test_ImportStatement_multi_1",
+      "tests/test_importstmt.py::test_ImportStatement_alias_1",
+      "tests/test_importstmt.py::test_ImportStatement_deep_member_1",
+      "tests/test_importstmt.py::test_ImportStatement_relative_1",
+      "tests/test_importstmt.py::test_ImportStatement_relative_local_1",
+      "tests/test_importstmt.py::test_ImportStatement_flags_1",
+      "tests/test_importstmt.py::test_ImportStatement_flags_2",
+      "tests/test_importstmt.py::test_ImportStatement_eqne_1",
+      "tests/test_importstmt.py::test_ImportStatement_eqne_2",
+      "tests/test_importstmt.py::test_read_black_config_extracts_config_subset",
+      "tests/test_importstmt.py::test_read_black_config_target_version_list",
+      "tests/test_importstmt.py::test_read_black_config_target_version_str",
+      "tests/test_importstmt.py::test_read_black_config_target_version_other"
+    ],
+    "problem_statement": "tidy-imports --black fails with no pyproject.toml (PyInf#11819)\nWhen using --black outside of a tree with a pyproject.toml, tidy-imports 1.8.9 crashes with the attached traceback. tidy-imports 1.8.6 doesn't exhibit this issue. Started happening after commit - https://github.com/deshaw/pyflyby/commit/8c10f4971d328fc985b0910f1397b4c36a67c318\r\n\r\n```\r\n> tidy-imports --black /var/tmp/a.py --no-remove-unused\r\nTraceback (most recent call last):\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_cmdline.py\", line 391, in process_actions\r\n    action(m)\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_cmdline.py\", line 433, in action_ifchanged\r\n    if m.output_content.joined == m.input_content.joined:\r\n       ^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_util.py\", line 58, in __get__\r\n    result = self.method(inst)\r\n             ^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_cmdline.py\", line 346, in output_content\r\n    return FileText(self.modifier(self.input_content), filename=self.filename)\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/bin/tidy-imports\", line 155, in modify\r\n    x = fix_unused_and_missing_imports(\r\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_imports2s.py\", line 342, in fix_unused_and_missing_imports\r\n    codeblock = reformat_import_statements(codeblock, params=params)\r\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_imports2s.py\", line 274, in reformat_import_statements\r\n    return transformer.output(params=params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_imports2s.py\", line 49, in output\r\n    result = self.pretty_print(params=params)\r\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_imports2s.py\", line 99, in pretty_print\r\n    result = [block.pretty_print(params=params) for block in self.blocks]\r\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_imports2s.py\", line 99, in <listcomp>\r\n    result = [block.pretty_print(params=params) for block in self.blocks]\r\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_imports2s.py\", line 68, in pretty_print\r\n    return self.importset.pretty_print(params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_importclns.py\", line 473, in pretty_print\r\n    return ''.join(pp(statement, import_column) for statement in statements)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_importclns.py\", line 473, in <genexpr>\r\n    return ''.join(pp(statement, import_column) for statement in statements)\r\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_importclns.py\", line 410, in pp\r\n    return statement.pretty_print(\r\n           ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_importstmt.py\", line 524, in pretty_print\r\n    return self.run_black(res, params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_importstmt.py\", line 534, in run_black\r\n    black_config = read_black_config()\r\n                   ^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/pyflyby/_importstmt.py\", line 30, in read_black_config\r\n    raw_config = parse_pyproject_toml(value)\r\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/usr/local/python/python-3.11/std/lib64/python3.11/site-packages/black/files.py\", line 120, in parse_pyproject_toml\r\n    with open(path_config, \"rb\") as f:\r\n         ^^^^^^^^^^^^^^^^^^^^^^^\r\nTypeError: While processing /var/tmp/a.py: expected str, bytes or os.PathLike object, not NoneType\r\n\r\n/usr/local/bin/tidy-imports: encountered the following problems:\r\n    /var/tmp/a.py: TypeError: expected str, bytes or os.PathLike object, not NoneType\r\n\r\n```",
+    "repo": "deshaw/pyflyby",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_importstmt.py",
+    "test_patch": "diff --git a/tests/test_importstmt.py b/tests/test_importstmt.py\nindex 4440010..11fbe5a 100644\n--- a/tests/test_importstmt.py\n+++ b/tests/test_importstmt.py\n@@ -4,10 +4,13 @@\n # http://creativecommons.org/publicdomain/zero/1.0/\n \n \n+from   pytest                   import raises\n+from   unittest.mock            import patch\n \n from   pyflyby._flags           import CompilerFlags\n-from   pyflyby._importstmt      import Import, ImportSplit, ImportStatement\n-\n+from   pyflyby._format          import FormatParams\n+from   pyflyby._importstmt      import (Import, ImportSplit, ImportStatement,\n+                                        read_black_config)\n \n def test_Import_from_parts_1():\n     imp = Import.from_parts(\".foo.bar\", \"bar\")\n@@ -118,6 +121,13 @@ def test_Import_replace_2():\n     assert result == Import('from xx import yy as bb')\n \n \n+@patch(\"pyflyby._importstmt.read_black_config\", lambda: {\"line_length\": 20})\n+def test_Import_black_line_length():\n+    stmt = Import(\"from a123456789 import b123456789\")\n+    result = stmt.pretty_print(params=FormatParams(use_black=True))\n+    assert result == \"from a123456789 import (\\n    b123456789,\\n)\\n\"\n+\n+\n def test_ImportStatement_1():\n     stmt = ImportStatement(\"import  foo . bar\")\n     assert stmt.fromname == None\n@@ -206,3 +216,58 @@ def test_ImportStatement_eqne_2():\n     assert not (stmt1a != stmt1b)\n     assert     (stmt1a != stmt2 )\n     assert not (stmt1a == stmt2 )\n+\n+\n+@patch(\"pyflyby._importstmt.find_pyproject_toml\", lambda root: None)\n+def test_ImportStatement_pretty_print_black_no_config():\n+    # running should not error out when no pyproject.toml file is found\n+    stmt = ImportStatement(\"from a import b\")\n+    result = stmt.pretty_print(params=FormatParams(use_black=True))\n+    assert isinstance(result, str)\n+\n+\n+@patch(\"pyflyby._importstmt.find_pyproject_toml\", lambda root: None)\n+def test_read_black_config_no_config():\n+    # reading black config should work when no pyproject.toml file is found\n+    config = read_black_config()\n+    assert config == {}\n+\n+\n+@patch(\"pyflyby._importstmt.find_pyproject_toml\", lambda root: \"pyproject.toml\")\n+@patch(\n+    \"pyflyby._importstmt.parse_pyproject_toml\",\n+    lambda path: {\n+        \"line_length\": 80,\n+        \"skip_magic_trailing_comma\": True,\n+        \"skip_string_normalization\": False,\n+        \"skip_source_first_line\": True\n+    }\n+)\n+def test_read_black_config_extracts_config_subset():\n+    config = read_black_config()\n+    # should copy the desired black options\n+    assert config[\"line_length\"] == 80\n+    assert config[\"skip_magic_trailing_comma\"] == True\n+    assert config[\"skip_string_normalization\"] == False\n+    # should not copy anything else\n+    assert \"skip_source_first_line\" not in config\n+\n+\n+@patch(\"pyflyby._importstmt.find_pyproject_toml\", lambda root: \"pyproject.toml\")\n+@patch(\"pyflyby._importstmt.parse_pyproject_toml\", lambda path: {\"target_version\": [\"py310\", \"py311\"]})\n+def test_read_black_config_target_version_list():\n+    config = read_black_config()\n+    assert config[\"target_version\"] == {\"py310\", \"py311\"}\n+\n+\n+@patch(\"pyflyby._importstmt.find_pyproject_toml\", lambda root: \"pyproject.toml\")\n+@patch(\"pyflyby._importstmt.parse_pyproject_toml\", lambda path: {\"target_version\": \"py311\"})\n+def test_read_black_config_target_version_str():\n+    config = read_black_config()\n+    assert config[\"target_version\"] == \"py311\"\n+\n+@patch(\"pyflyby._importstmt.find_pyproject_toml\", lambda root: \"pyproject.toml\")\n+@patch(\"pyflyby._importstmt.parse_pyproject_toml\", lambda path: {\"target_version\": object()})\n+def test_read_black_config_target_version_other():\n+    with raises(ValueError, match=\"Invalid config for black\"):\n+        read_black_config()\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-deshaw__pyflyby-289-69ddfeb637"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/lib/python/pyflyby/_importstmt.py b/lib/python/pyflyby/_importstmt.py\nindex 0f1d2c7..26d4434 100644\n--- a/lib/python/pyflyby/_importstmt.py\n+++ b/lib/python/pyflyby/_importstmt.py\n@@ -26,6 +26,8 @@ def read_black_config():\n \n     \"\"\"\n     value = find_pyproject_toml('.')\n+    if value is None:\n+        return {}\n \n     raw_config = parse_pyproject_toml(value)\n \n",
+    "agent_patch_sha256": "b43f7957eb26c07c6551b8554d90d19e3ab8e8e36c49233d5202640e46fae722",
+    "filtered_sha256": "b43f7957eb26c07c6551b8554d90d19e3ab8e8e36c49233d5202640e46fae722",
+    "number": 1,
+    "patch": "diff --git a/lib/python/pyflyby/_importstmt.py b/lib/python/pyflyby/_importstmt.py\nindex 0f1d2c7..26d4434 100644\n--- a/lib/python/pyflyby/_importstmt.py\n+++ b/lib/python/pyflyby/_importstmt.py\n@@ -26,6 +26,8 @@ def read_black_config():\n \n     \"\"\"\n     value = find_pyproject_toml('.')\n+    if value is None:\n+        return {}\n \n     raw_config = parse_pyproject_toml(value)\n \n",
+    "sha256": "b43f7957eb26c07c6551b8554d90d19e3ab8e8e36c49233d5202640e46fae722"
+  }
+}

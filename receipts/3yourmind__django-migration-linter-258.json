@@ -1,0 +1,91 @@
+{
+  "claims": {
+    "claim_audit": "unsupported",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "366d16b01a72d0baa54fef55761d846b0f05b8dd",
+    "fail_to_pass": [
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_create_index_concurrently_where"
+    ],
+    "image_name": "docker.io/swerebenchv2/3yourmind-django-migration-linter:258-366d16b",
+    "instance_id": "3yourmind__django-migration-linter-258",
+    "pass_to_pass": [
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_add_many_to_many_field",
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_add_not_null",
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_add_not_null_followed_by_default",
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_alter_column",
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_drop_not_null",
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_make_column_not_null_with_django_default",
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_make_column_not_null_with_lib_default",
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_unique_index",
+      "tests/unit/test_sql_analyser.py::MySqlAnalyserTestCase::test_unique_together",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_add_many_to_many_field",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_add_not_null",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_alter_column",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_alter_column_after_django22",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_create_table_with_not_null",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_drop_not_null",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_rename_table",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_unique_index",
+      "tests/unit/test_sql_analyser.py::SqliteAnalyserTestCase::test_unique_together",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_add_many_to_many_field",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_alter_column",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_create_index_concurrently",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_create_index_non_concurrently",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_create_index_non_concurrently_with_table_creation",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_drop_index_concurrently",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_drop_index_non_concurrently",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_drop_not_null",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_field_to_not_null_with_dropped_default",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_make_column_not_null_with_django_default",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_make_column_not_null_with_lib_default",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_not_null_followed_by_default",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_onetoonefield_to_not_null",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_reindex",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_unique_index",
+      "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_unique_together",
+      "tests/unit/test_sql_analyser.py::SqlUtilsTestCase::test_unknown_analyser_string",
+      "tests/unit/test_sql_analyser.py::SqlUtilsTestCase::test_unsupported_db_vendor"
+    ],
+    "problem_statement": "Adding an index with a NOT NULL condition incorrectly triggers NOT_NULL rule\nAdding an index with a `WHERE` clause including `NOT NULL` gets flagged as a `NOT NULL constraint on columns` error.\r\n\r\n## Steps to reproduce\r\n\r\nThe follow migration operation:\r\n\r\n```python\r\nAddIndexConcurrently(\r\n    model_name=\"prediction\",\r\n    index=models.Index(\r\n        condition=models.Q(\r\n            (\"data_deleted_at__isnull\", True),\r\n            (\"delete_data_after__isnull\", False),\r\n        ),\r\n        fields=[\"delete_data_after\"],\r\n        name=\"delete_data_after_idx\",\r\n    ),\r\n),\r\n```\r\n\r\nGenerates the following SQL:\r\n\r\n```sql\r\nCREATE INDEX CONCURRENTLY \"delete_data_after_idx\" ON \"models_prediction\" (\"delete_data_after\") WHERE (\"data_deleted_at\" IS NULL AND \"delete_data_after\" IS NOT NULL);\r\n```\r\n\r\nWhen linted this is flagged as an error because of the `NOT NULL`, when it ought to be a safe operation.\r\n\r\n## Investigation\r\n\r\nLooking at the condition used for this rule, I think it might just need to permit `CREATE INDEX` requests:\r\n\r\n```python\r\nre.search(\"(?<!DROP )NOT NULL\", sql) and not sql.startswith(\"CREATE TABLE\") and not sql.startswith(\"CREATE INDEX\") \r\n```\r\n\r\nhttps://github.com/3YOURMIND/django-migration-linter/blob/202a6d9d5dea83528cb52fd7481a5a0565cc6f83/django_migration_linter/sql_analyser/base.py#L43",
+    "repo": "3YOURMIND/django-migration-linter",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/unit/test_sql_analyser.py",
+    "test_patch": "diff --git a/tests/unit/test_sql_analyser.py b/tests/unit/test_sql_analyser.py\nindex d7349fc..012d53c 100644\n--- a/tests/unit/test_sql_analyser.py\n+++ b/tests/unit/test_sql_analyser.py\n@@ -297,6 +297,10 @@ class PostgresqlAnalyserTestCase(SqlAnalyserTestCase):\n         sql = \"CREATE UNIQUE INDEX CONCURRENTLY title_idx ON films (title);\"\n         self.assertValidSql(sql)\n \n+    def test_create_index_concurrently_where(self):\n+        sql = 'CREATE INDEX CONCURRENTLY \"index_name\" ON \"table_name\" (\"a_column\") WHERE (\"some_column\" IS NOT NULL);'\n+        self.assertValidSql(sql)\n+\n     def test_drop_index_non_concurrently(self):\n         sql = \"DROP INDEX ON films\"\n         self.assertWarningSql(sql)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-3yourmind__django-migration-linter-258-ad18c930bb"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/django_migration_linter/sql_analyser/base.py b/django_migration_linter/sql_analyser/base.py\nindex 2fa0646..50f5805 100644\n--- a/django_migration_linter/sql_analyser/base.py\n+++ b/django_migration_linter/sql_analyser/base.py\n@@ -40,7 +40,9 @@ def has_not_null_column(sql_statements: list[str], **kwargs) -> bool:\n             ends_with_default = False\n     return (\n         any(\n-            re.search(\"(?<!DROP )NOT NULL\", sql) and not sql.startswith(\"CREATE TABLE\")\n+            re.search(\"(?<!DROP )NOT NULL\", sql) \n+            and not sql.startswith(\"CREATE TABLE\") \n+            and not sql.startswith(\"CREATE INDEX\")\n             for sql in sql_statements\n         )\n         and ends_with_default is False\n",
+    "agent_patch_sha256": "82a77fab3536c0905b2da00dfd2d699ab4283380ef17e9afa88b7738336c5554",
+    "filtered_sha256": "82a77fab3536c0905b2da00dfd2d699ab4283380ef17e9afa88b7738336c5554",
+    "number": 1,
+    "patch": "diff --git a/django_migration_linter/sql_analyser/base.py b/django_migration_linter/sql_analyser/base.py\nindex 2fa0646..50f5805 100644\n--- a/django_migration_linter/sql_analyser/base.py\n+++ b/django_migration_linter/sql_analyser/base.py\n@@ -40,7 +40,9 @@ def has_not_null_column(sql_statements: list[str], **kwargs) -> bool:\n             ends_with_default = False\n     return (\n         any(\n-            re.search(\"(?<!DROP )NOT NULL\", sql) and not sql.startswith(\"CREATE TABLE\")\n+            re.search(\"(?<!DROP )NOT NULL\", sql) \n+            and not sql.startswith(\"CREATE TABLE\") \n+            and not sql.startswith(\"CREATE INDEX\")\n             for sql in sql_statements\n         )\n         and ends_with_default is False\n",
+    "sha256": "82a77fab3536c0905b2da00dfd2d699ab4283380ef17e9afa88b7738336c5554"
+  }
+}

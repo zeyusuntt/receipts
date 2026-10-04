@@ -1,0 +1,60 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "cb6bdf51678ca175a6e4a49244d6f2060f183c85",
+    "fail_to_pass": [
+      "tests/copulas/multivariate/test_vine.py::TestVine::test_sample"
+    ],
+    "image_name": "docker.io/swerebenchv2/dai-lab-copulas:87-cb6bdf5",
+    "instance_id": "dai-lab__copulas-87",
+    "pass_to_pass": [
+      "tests/copulas/multivariate/test_vine.py::TestVine::test_from_dict",
+      "tests/copulas/multivariate/test_vine.py::TestVine::test_get_likelihood",
+      "tests/copulas/multivariate/test_vine.py::TestVine::test_serialization_fit_model",
+      "tests/copulas/multivariate/test_vine.py::TestVine::test_serialization_unfitted_model",
+      "tests/copulas/multivariate/test_vine.py::TestVine::test_to_dict"
+    ],
+    "problem_statement": "Make vine copulas sample use num_rows arg.\nCurrently the sample method on `copulas.multivariate.vine.VineCopulas` doesn't take in consideration the argument num_rows, would be useful to either delete it, or make it work.",
+    "repo": "DAI-Lab/Copulas",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/copulas/multivariate/test_vine.py",
+    "test_patch": "diff --git a/tests/copulas/multivariate/test_vine.py b/tests/copulas/multivariate/test_vine.py\nindex 79f7c30..6c71eba 100644\n--- a/tests/copulas/multivariate/test_vine.py\n+++ b/tests/copulas/multivariate/test_vine.py\n@@ -1,4 +1,5 @@\n from unittest import TestCase\n+from unittest.mock import patch\n \n import numpy as np\n import pandas as pd\n@@ -206,7 +207,8 @@ class TestVine(TestCase):\n         # Check\n         compare_nested_dicts(result.to_dict(), instance.to_dict())\n \n-    def test_sample(self):\n+    @patch('copulas.multivariate.vine.VineCopula._sample_row', autospec=True)\n+    def test_sample(self, sample_mock):\n         \"\"\"After being fit, a vine can sample new data.\"\"\"\n         # Setup\n         vine = VineCopula(TreeTypes.REGULAR)\n@@ -215,11 +217,23 @@ class TestVine(TestCase):\n             [0, 1, 0, 0],\n             [0, 0, 1, 0],\n             [0, 0, 0, 1]\n-        ])\n+        ], columns=list('ABCD'))\n         vine.fit(X)\n \n+        expected_result = pd.DataFrame([\n+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},\n+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},\n+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},\n+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},\n+            {'A': 1, 'B': 2, 'C': 3, 'D': 4},\n+        ])\n+\n+        sample_mock.return_value = np.array([1, 2, 3, 4])\n+\n         # Run\n-        result = vine.sample()\n+        result = vine.sample(5)\n \n         # Check\n-        assert len(result) == vine.n_var\n+        assert result.equals(expected_result)\n+\n+        assert sample_mock.call_count == 5\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-dai-lab__copulas-87-1b3f3b0728"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/copulas/multivariate/vine.py b/copulas/multivariate/vine.py\nindex 720c56f..c11b769 100644\n--- a/copulas/multivariate/vine.py\n+++ b/copulas/multivariate/vine.py\n@@ -85,6 +85,12 @@ class VineCopula(Multivariate):\n             X: `np.ndarray`: data to be fitted.\n             truncated: `int` max level to build the vine.\n         \"\"\"\n+        # Store column names if X is a DataFrame\n+        if hasattr(X, 'columns'):\n+            self.columns = list(X.columns)\n+        else:\n+            self.columns = [f'X{i}' for i in range(X.shape[1])]\n+            \n         self.n_sample, self.n_var = X.shape\n         self.tau_mat = X.corr(method='kendall').values\n         self.u_matrix = np.empty([self.n_sample, self.n_var])\n@@ -134,8 +140,8 @@ class VineCopula(Multivariate):\n \n         return np.sum(values)\n \n-    def sample(self, num_rows=1):\n-        \"\"\"Generating samples from vine model.\"\"\"\n+    def _sample_row(self):\n+        \"\"\"Generate a single sample from the vine model.\"\"\"\n         unis = np.random.uniform(0, 1, self.n_var)\n         # randomly select a node to start with\n         first_ind = randint(0, self.n_var - 1)\n@@ -180,7 +186,7 @@ class VineCopula(Multivariate):\n                                 break\n \n                     if current_ind != -1:\n-                        # the node is not indepedent contional on visited node\n+                        # the node is not independent conditional on visited node\n                         copula_type = current_tree[current_ind].name\n                         copula = Bivariate(CopulaTypes(copula_type))\n                         copula.theta = current_tree[current_ind].theta\n@@ -211,3 +217,16 @@ class VineCopula(Multivariate):\n             visited.insert(0, current)\n \n         return sampled\n+\n+    def sample(self, num_rows=1):\n+        \"\"\"Generating samples from vine model.\n+        \n+        Args:\n+            num_rows: Number of rows to sample.\n+            \n+        Returns:\n+            pandas.DataFrame with sampled data.\n+        \"\"\"\n+        import pandas as pd\n+        samples = np.vstack([self._sample_row() for _ in range(num_rows)])\n+        return pd.DataFrame(samples, columns=self.columns)\n",
+    "agent_patch_sha256": "2368f528c770bc07877a06efbdbe4a80f9823040cc80eb42076416d350075eec",
+    "filtered_sha256": "2368f528c770bc07877a06efbdbe4a80f9823040cc80eb42076416d350075eec",
+    "number": 1,
+    "patch": "diff --git a/copulas/multivariate/vine.py b/copulas/multivariate/vine.py\nindex 720c56f..c11b769 100644\n--- a/copulas/multivariate/vine.py\n+++ b/copulas/multivariate/vine.py\n@@ -85,6 +85,12 @@ class VineCopula(Multivariate):\n             X: `np.ndarray`: data to be fitted.\n             truncated: `int` max level to build the vine.\n         \"\"\"\n+        # Store column names if X is a DataFrame\n+        if hasattr(X, 'columns'):\n+            self.columns = list(X.columns)\n+        else:\n+            self.columns = [f'X{i}' for i in range(X.shape[1])]\n+            \n         self.n_sample, self.n_var = X.shape\n         self.tau_mat = X.corr(method='kendall').values\n         self.u_matrix = np.empty([self.n_sample, self.n_var])\n@@ -134,8 +140,8 @@ class VineCopula(Multivariate):\n \n         return np.sum(values)\n \n-    def sample(self, num_rows=1):\n-        \"\"\"Generating samples from vine model.\"\"\"\n+    def _sample_row(self):\n+        \"\"\"Generate a single sample from the vine model.\"\"\"\n         unis = np.random.uniform(0, 1, self.n_var)\n         # randomly select a node to start with\n         first_ind = randint(0, self.n_var - 1)\n@@ -180,7 +186,7 @@ class VineCopula(Multivariate):\n                                 break\n \n                     if current_ind != -1:\n-                        # the node is not indepedent contional on visited node\n+                        # the node is not independent conditional on visited node\n                         copula_type = current_tree[current_ind].name\n                         copula = Bivariate(CopulaTypes(copula_type))\n                         copula.theta = current_tree[current_ind].theta\n@@ -211,3 +217,16 @@ class VineCopula(Multivariate):\n             visited.insert(0, current)\n \n         return sampled\n+\n+    def sample(self, num_rows=1):\n+        \"\"\"Generating samples from vine model.\n+        \n+        Args:\n+            num_rows: Number of rows to sample.\n+            \n+        Returns:\n+            pandas.DataFrame with sampled data.\n+        \"\"\"\n+        import pandas as pd\n+        samples = np.vstack([self._sample_row() for _ in range(num_rows)])\n+        return pd.DataFrame(samples, columns=self.columns)\n",
+    "sha256": "2368f528c770bc07877a06efbdbe4a80f9823040cc80eb42076416d350075eec"
+  }
+}

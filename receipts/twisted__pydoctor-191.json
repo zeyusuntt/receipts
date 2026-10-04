@@ -1,0 +1,88 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "f26e7be043bab85d47116289c280d49b371451ac",
+    "fail_to_pass": [
+      "pydoctor/test/test_astbuilder.py::test_docstring_assignment"
+    ],
+    "image_name": "docker.io/swerebenchv2/twisted-pydoctor:191-f26e7be",
+    "instance_id": "twisted__pydoctor-191",
+    "pass_to_pass": [
+      "pydoctor/test/test_astbuilder.py::test_no_docstring",
+      "pydoctor/test/test_astbuilder.py::test_simple",
+      "pydoctor/test/test_astbuilder.py::test_function_argspec",
+      "pydoctor/test/test_astbuilder.py::test_class",
+      "pydoctor/test/test_astbuilder.py::test_class_with_base",
+      "pydoctor/test/test_astbuilder.py::test_follow_renaming",
+      "pydoctor/test/test_astbuilder.py::test_class_with_base_from_module",
+      "pydoctor/test/test_astbuilder.py::test_aliasing",
+      "pydoctor/test/test_astbuilder.py::test_more_aliasing",
+      "pydoctor/test/test_astbuilder.py::test_aliasing_recursion",
+      "pydoctor/test/test_astbuilder.py::test_documented_no_alias",
+      "pydoctor/test/test_astbuilder.py::test_subclasses",
+      "pydoctor/test/test_astbuilder.py::test_inherit_names",
+      "pydoctor/test/test_astbuilder.py::test_nested_class_inheriting_from_same_module",
+      "pydoctor/test/test_astbuilder.py::test_all_recognition",
+      "pydoctor/test/test_astbuilder.py::test_all_in_class_non_recognition",
+      "pydoctor/test/test_astbuilder.py::test_classmethod",
+      "pydoctor/test/test_astbuilder.py::test_classdecorator",
+      "pydoctor/test/test_astbuilder.py::test_classdecorator_with_args",
+      "pydoctor/test/test_astbuilder.py::test_import_star",
+      "pydoctor/test/test_astbuilder.py::test_inline_docstring_modulevar",
+      "pydoctor/test/test_astbuilder.py::test_inline_docstring_classvar",
+      "pydoctor/test/test_astbuilder.py::test_inline_docstring_annotated_classvar",
+      "pydoctor/test/test_astbuilder.py::test_inline_docstring_instancevar",
+      "pydoctor/test/test_astbuilder.py::test_inline_docstring_annotated_instancevar",
+      "pydoctor/test/test_astbuilder.py::test_variable_scopes",
+      "pydoctor/test/test_astbuilder.py::test_variable_types",
+      "pydoctor/test/test_astbuilder.py::test_annotated_variables",
+      "pydoctor/test/test_astbuilder.py::test_inferred_variable_types",
+      "pydoctor/test/test_astbuilder.py::test_type_from_attrib",
+      "pydoctor/test/test_astbuilder.py::test_detupling_assignment"
+    ],
+    "problem_statement": "Detect and use docstrings set after-the-fact.\nTwisted has some code that does something like\n\n``` python\nif _PY3:\n   def func(args):\n       pass\nelse:\n    def func(args):\n        pass\n\nfunc.__doc__ = \"\"\"\nfunc does some stuff.\n```\n\nto avoid duplicating a docstring. Unfortunately, pydoctor doesn't pick this up, so it appears that `func` is undocumented.\n",
+    "repo": "twisted/pydoctor",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pydoctor/test/test_astbuilder.py",
+    "test_patch": "diff --git a/pydoctor/test/test_astbuilder.py b/pydoctor/test/test_astbuilder.py\nindex ce99e9f4..dca78a4f 100644\n--- a/pydoctor/test/test_astbuilder.py\n+++ b/pydoctor/test/test_astbuilder.py\n@@ -536,6 +536,57 @@ def test_inline_docstring_annotated_instancevar():\n     b = C.contents['b']\n     assert b.docstring == \"\"\"inline doc for b\"\"\"\n \n+def test_docstring_assignment(capsys):\n+    mod = fromText('''\n+    def fun():\n+        pass\n+\n+    class CLS:\n+\n+        def method1():\n+            \"\"\"Temp docstring.\"\"\"\n+            pass\n+\n+        def method2():\n+            pass\n+\n+        method1.__doc__ = \"Updated docstring #1\"\n+\n+    fun.__doc__ = \"Happy Happy Joy Joy\"\n+    CLS.__doc__ = \"Clears the screen\"\n+    CLS.method2.__doc__ = \"Updated docstring #2\"\n+\n+    None.__doc__ = \"Free lunch!\"\n+    real.__doc__ = \"Second breakfast\"\n+    fun.__doc__ = codecs.encode('Pnrfne fnynq', 'rot13')\n+    CLS.method1.__doc__ = 4\n+    ''')\n+    fun = mod.contents['fun']\n+    assert fun.kind == 'Function'\n+    assert fun.docstring == \"\"\"Happy Happy Joy Joy\"\"\"\n+    CLS = mod.contents['CLS']\n+    assert CLS.kind == 'Class'\n+    assert CLS.docstring == \"\"\"Clears the screen\"\"\"\n+    method1 = CLS.contents['method1']\n+    assert method1.kind == 'Method'\n+    assert method1.docstring == \"Updated docstring #1\"\n+    method2 = CLS.contents['method2']\n+    assert method2.kind == 'Method'\n+    assert method2.docstring == \"Updated docstring #2\"\n+    captured = capsys.readouterr()\n+    lines = captured.out.split('\\n')\n+    assert len(lines) > 0 and lines[0] == \\\n+        \"<unknown>:20: Unable to figure out target for __doc__ assignment\"\n+    assert len(lines) > 1 and lines[1] == \\\n+        \"<unknown>:21: Unable to figure out target for __doc__ assignment: \" \\\n+        \"computed full name not found: real\"\n+    assert len(lines) > 2 and lines[2] == \\\n+        \"<unknown>:22: Unable to figure out value for __doc__ assignment, \" \\\n+        \"maybe too complex\"\n+    assert len(lines) > 3 and lines[3] == \\\n+        \"<unknown>:23: Ignoring value assigned to __doc__: not a string\"\n+    assert len(lines) == 5 and lines[-1] == ''\n+\n def test_variable_scopes():\n     mod = fromText('''\n     l = 1\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-twisted__pydoctor-191-05d2ce9296"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/pydoctor/astbuilder.py b/pydoctor/astbuilder.py\nindex bb60cc6..eafdadc 100644\n--- a/pydoctor/astbuilder.py\n+++ b/pydoctor/astbuilder.py\n@@ -322,9 +322,51 @@ class ModuleVistor(ast.NodeVisitor):\n                 if not self._handleOldSchoolDecoration(target, expr):\n                     self._handleAssignmentInClass(target, annotation, expr, lineno)\n         elif isinstance(targetNode, ast.Attribute):\n-            value = targetNode.value\n-            if isinstance(value, ast.Name) and value.id == 'self':\n-                self._handleInstanceVar(targetNode.attr, annotation, lineno)\n+            # Handle __doc__ assignments to update docstrings after-the-fact\n+            if targetNode.attr == '__doc__':\n+                self._handleDocstringAssignment(targetNode.value, expr, lineno)\n+            else:\n+                value = targetNode.value\n+                if isinstance(value, ast.Name) and value.id == 'self':\n+                    self._handleInstanceVar(targetNode.attr, annotation, lineno)\n+\n+    def _handleDocstringAssignment(self, targetNode, valueNode, lineno):\n+        \"\"\"Handle assignments of the form object.__doc__ = \"docstring\".\"\"\"\n+        # Only handle string literals for docstring values\n+        if not isinstance(valueNode, ast.Str):\n+            self.builder.warning(\n+                \":{}:\".format(lineno),\n+                \"Ignoring value assigned to __doc__: not a string\"\n+            )\n+            return\n+\n+        # Resolve what the target refers to (e.g., 'fun' in 'fun.__doc__')\n+        target_fullname = node2fullname(targetNode, self.builder.current)\n+        if target_fullname is None:\n+            self.builder.warning(\n+                \":{}:\".format(lineno),\n+                \"Unable to figure out target for __doc__ assignment\"\n+            )\n+            return\n+\n+        # Find the object in our system\n+        target_obj = self.system.objForFullName(target_fullname)\n+        if target_obj is None:\n+            target_source = astor.to_source(targetNode).strip()\n+            self.builder.warning(\n+                \":{}:\".format(lineno),\n+                \"Unable to figure out target for __doc__ assignment: computed full name not found: {}\".format(target_source)\n+            )\n+            return\n+\n+        # Update the docstring if it's a function, class, or module\n+        if isinstance(target_obj, (model.Function, model.Class, model.Module)):\n+            target_obj.docstring = valueNode.s\n+        else:\n+            self.builder.warning(\n+                \":{}:\".format(lineno),\n+                \"Unable to figure out value for __doc__ assignment: maybe too complex\"\n+            )\n \n     def visit_Assign(self, node):\n         lineno = node.lineno\n",
+    "agent_patch_sha256": "111815b2974dd3ff1a31da2b6d6f4f608dc7a839b872fd73b5227904f7e5119b",
+    "filtered_sha256": "111815b2974dd3ff1a31da2b6d6f4f608dc7a839b872fd73b5227904f7e5119b",
+    "number": 2,
+    "patch": "diff --git a/pydoctor/astbuilder.py b/pydoctor/astbuilder.py\nindex bb60cc6..eafdadc 100644\n--- a/pydoctor/astbuilder.py\n+++ b/pydoctor/astbuilder.py\n@@ -322,9 +322,51 @@ class ModuleVistor(ast.NodeVisitor):\n                 if not self._handleOldSchoolDecoration(target, expr):\n                     self._handleAssignmentInClass(target, annotation, expr, lineno)\n         elif isinstance(targetNode, ast.Attribute):\n-            value = targetNode.value\n-            if isinstance(value, ast.Name) and value.id == 'self':\n-                self._handleInstanceVar(targetNode.attr, annotation, lineno)\n+            # Handle __doc__ assignments to update docstrings after-the-fact\n+            if targetNode.attr == '__doc__':\n+                self._handleDocstringAssignment(targetNode.value, expr, lineno)\n+            else:\n+                value = targetNode.value\n+                if isinstance(value, ast.Name) and value.id == 'self':\n+                    self._handleInstanceVar(targetNode.attr, annotation, lineno)\n+\n+    def _handleDocstringAssignment(self, targetNode, valueNode, lineno):\n+        \"\"\"Handle assignments of the form object.__doc__ = \"docstring\".\"\"\"\n+        # Only handle string literals for docstring values\n+        if not isinstance(valueNode, ast.Str):\n+            self.builder.warning(\n+                \":{}:\".format(lineno),\n+                \"Ignoring value assigned to __doc__: not a string\"\n+            )\n+            return\n+\n+        # Resolve what the target refers to (e.g., 'fun' in 'fun.__doc__')\n+        target_fullname = node2fullname(targetNode, self.builder.current)\n+        if target_fullname is None:\n+            self.builder.warning(\n+                \":{}:\".format(lineno),\n+                \"Unable to figure out target for __doc__ assignment\"\n+            )\n+            return\n+\n+        # Find the object in our system\n+        target_obj = self.system.objForFullName(target_fullname)\n+        if target_obj is None:\n+            target_source = astor.to_source(targetNode).strip()\n+            self.builder.warning(\n+                \":{}:\".format(lineno),\n+                \"Unable to figure out target for __doc__ assignment: computed full name not found: {}\".format(target_source)\n+            )\n+            return\n+\n+        # Update the docstring if it's a function, class, or module\n+        if isinstance(target_obj, (model.Function, model.Class, model.Module)):\n+            target_obj.docstring = valueNode.s\n+        else:\n+            self.builder.warning(\n+                \":{}:\".format(lineno),\n+                \"Unable to figure out value for __doc__ assignment: maybe too complex\"\n+            )\n \n     def visit_Assign(self, node):\n         lineno = node.lineno\n",
+    "sha256": "111815b2974dd3ff1a31da2b6d6f4f608dc7a839b872fd73b5227904f7e5119b"
+  }
+}

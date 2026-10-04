@@ -1,0 +1,99 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "e532b0a0b2e466d5f9cc0df5c04551fe04c2cca8",
+    "fail_to_pass": [
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_calc_sampled_segments_deduplication"
+    ],
+    "image_name": "docker.io/swerebenchv2/qutech-qupulse:797-e532b0a",
+    "instance_id": "qutech__qupulse-797",
+    "pass_to_pass": [
+      "tests/_program/tabor_tests.py::LoopTests::test_cleanup",
+      "tests/_program/tabor_tests.py::LoopTests::test_cleanup_single_rep",
+      "tests/_program/tabor_tests.py::LoopTests::test_cleanup_warnings",
+      "tests/_program/tabor_tests.py::LoopTests::test_compare_key",
+      "tests/_program/tabor_tests.py::LoopTests::test_depth",
+      "tests/_program/tabor_tests.py::LoopTests::test_flatten_and_balance",
+      "tests/_program/tabor_tests.py::LoopTests::test_flatten_and_balance_comparison_based",
+      "tests/_program/tabor_tests.py::LoopTests::test_get_measurement_windows",
+      "tests/_program/tabor_tests.py::LoopTests::test_is_balanced",
+      "tests/_program/tabor_tests.py::LoopTests::test_is_leaf",
+      "tests/_program/tabor_tests.py::LoopTests::test_repr",
+      "tests/_program/tabor_tests.py::LoopTests::test_str",
+      "tests/_program/tabor_tests.py::LoopTests::test_unroll",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_builtint_conversion",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_eq",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_from_read_data",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_get_advanced_sequence_table",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_get_as_single_waveform",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_get_repetitions",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_get_waveforms",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_init",
+      "tests/_program/tabor_tests.py::PlottableProgramTests::test_iter",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_advanced_sequence_exceptions",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_depth_0_single_waveform",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_depth_1_advanced_sequence",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_depth_1_advanced_sequence_unroll",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_depth_1_single_sequence",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_depth_1_single_sequence_2",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_depth_1_single_waveform",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_init",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_sampled_segments",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_update_volatile_parameters_with_depth1",
+      "tests/_program/tabor_tests.py::TaborProgramTests::test_update_volatile_parameters_with_depth2",
+      "tests/_program/tabor_tests.py::TaborSegmentTests::test_data_a",
+      "tests/_program/tabor_tests.py::TaborSegmentTests::test_data_b",
+      "tests/_program/tabor_tests.py::TaborSegmentTests::test_eq",
+      "tests/_program/tabor_tests.py::TaborSegmentTests::test_from_binary_data",
+      "tests/_program/tabor_tests.py::TaborSegmentTests::test_from_binary_segment",
+      "tests/_program/tabor_tests.py::TaborSegmentTests::test_from_sampled",
+      "tests/_program/tabor_tests.py::TaborSegmentTests::test_num_points",
+      "tests/_program/tabor_tests.py::TaborMakeCombinedTest::test_empty_segment_list",
+      "tests/_program/tabor_tests.py::TaborMakeCombinedTest::test_make_comb_both",
+      "tests/_program/tabor_tests.py::TaborMakeCombinedTest::test_make_single_chan",
+      "tests/_program/tabor_tests.py::TaborMemoryManagementTests::test_find_place_for_segments_in_memory"
+    ],
+    "problem_statement": "Tabor: redundant waveform upload\nWhen uplading a program which for some reason has multiple segments of equal waveforms in a `TaborProgram`, the `_find_place_for_segments_in_memory`-function does not check for unique values but uploads all segments from this batch of segments regardless. \r\nIt seems to me thast this may be preventable by checking for unique hashes. Is this assumption correct?",
+    "repo": "qutech/qupulse",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/_program/tabor_tests.py tests/pulses/sequencing_dummies.py",
+    "test_patch": "diff --git a/tests/_program/tabor_tests.py b/tests/_program/tabor_tests.py\nindex 919147ec..bb1b7386 100644\n--- a/tests/_program/tabor_tests.py\n+++ b/tests/_program/tabor_tests.py\n@@ -19,6 +19,7 @@ except ImportError:\n from qupulse._program.tabor import TaborException, TaborProgram, find_place_for_segments_in_memory,\\\n     TaborSegment, TaborSequencing, PlottableProgram, TableDescription, make_combined_wave, TableEntry\n from qupulse.program.loop import Loop\n+from qupulse.program.waveforms import ConstantWaveform, SubsetWaveform\n from qupulse._program.volatile import VolatileRepetitionCount\n from qupulse.hardware.util import voltage_to_uint16\n from qupulse.utils.types import TimeType\n@@ -232,8 +233,8 @@ class TaborProgramTests(unittest.TestCase):\n         self.assertEqual(t_program.get_advanced_sequencer_table(), [TableDescription(1, 1, 0)])\n \n     def test_depth_1_single_sequence(self):\n-        program = Loop(children=[Loop(waveform=DummyWaveform(defined_channels={'A'}, duration=1), repetition_count=3),\n-                                 Loop(waveform=DummyWaveform(defined_channels={'A'}, duration=1), repetition_count=4)],\n+        program = Loop(children=[Loop(waveform=DummyWaveform(sample_output={'A': 0.1}, duration=1), repetition_count=3),\n+                                 Loop(waveform=DummyWaveform(sample_output={'A': 0.2}, duration=1), repetition_count=4)],\n                        repetition_count=1)\n \n         t_program = TaborProgram(program, channels=(None, 'A'), markers=(None, None),\n@@ -247,8 +248,8 @@ class TaborProgramTests(unittest.TestCase):\n \n     def test_depth_1_single_sequence_2(self):\n         \"\"\"Use the same wf twice\"\"\"\n-        wf_1 = DummyWaveform(defined_channels={'A'}, duration=1)\n-        wf_2 = DummyWaveform(defined_channels={'A'}, duration=1)\n+        wf_1 = DummyWaveform(sample_output={'A': 0.1}, duration=1)\n+        wf_2 = DummyWaveform(sample_output={'A': 0.2}, duration=1)\n \n         program = Loop(children=[Loop(waveform=wf_1, repetition_count=3),\n                                  Loop(waveform=wf_2, repetition_count=4),\n@@ -266,8 +267,8 @@ class TaborProgramTests(unittest.TestCase):\n         self.assertEqual(t_program.get_advanced_sequencer_table(), [TableDescription(1, 1, 0)])\n \n     def test_depth_1_advanced_sequence_unroll(self):\n-        wf_1 = DummyWaveform(defined_channels={'A'}, duration=1)\n-        wf_2 = DummyWaveform(defined_channels={'A'}, duration=1)\n+        wf_1 = DummyWaveform(sample_output={'A': 0.1}, duration=1)\n+        wf_2 = DummyWaveform(sample_output={'A': 0.2}, duration=1)\n \n         program = Loop(children=[Loop(waveform=wf_1, repetition_count=3),\n                                  Loop(waveform=wf_2, repetition_count=4)],\n@@ -285,8 +286,8 @@ class TaborProgramTests(unittest.TestCase):\n         self.assertEqual(t_program.get_advanced_sequencer_table(), [TableEntry(5, 1, 0)])\n \n     def test_depth_1_advanced_sequence(self):\n-        wf_1 = DummyWaveform(defined_channels={'A'}, duration=1)\n-        wf_2 = DummyWaveform(defined_channels={'A'}, duration=1)\n+        wf_1 = DummyWaveform(sample_output={'A': 0.1}, duration=1)\n+        wf_2 = DummyWaveform(sample_output={'A': 0.2}, duration=1)\n \n         program = Loop(children=[Loop(waveform=wf_1, repetition_count=3),\n                                  Loop(waveform=wf_2, repetition_count=4),\n@@ -380,13 +381,31 @@ class TaborProgramTests(unittest.TestCase):\n             np.testing.assert_equal(sampled_seg.ch_a, data[0])\n             np.testing.assert_equal(sampled_seg.ch_b, data[1])\n \n+    def test_calc_sampled_segments_deduplication(self):\n+        wf1 = ConstantWaveform(duration=2, amplitude=0.1, channel='A')\n+        wf2 = SubsetWaveform(\n+            ConstantWaveform.from_mapping(duration=2, constant_values={'A': 0.1, 'B': 0.2}),\n+            {'A'}\n+        )\n+        wf3 = ConstantWaveform(duration=1, amplitude=0.2, channel='A')\n+\n+        loop = Loop(children=[\n+            Loop(waveform=wf1),\n+            Loop(waveform=wf2),\n+            Loop(waveform=wf3),\n+        ])\n+        prog = TaborProgram(loop, self.instr_props, ('A', None), (None, None), **self.program_entry_kwargs)\n+        sampled, sampled_length = prog.get_sampled_segments()\n+        self.assertEqual(len(sampled), 2)\n+        self.assertEqual([192 * 2, 192], list(sampled_length))\n+\n     def test_update_volatile_parameters_with_depth1(self):\n         parameters = {'s': 10, 'not': 13}\n         s = VolatileRepetitionCount(expression=ExpressionScalar('s'), scope=DictScope(values=FrozenDict(s=3),\n                                                                                       volatile=set('s')))\n \n-        wf_1 = DummyWaveform(defined_channels={'A'}, duration=1)\n-        wf_2 = DummyWaveform(defined_channels={'A'}, duration=1)\n+        wf_1 = DummyWaveform(sample_output={'A': 0.1}, duration=1)\n+        wf_2 = DummyWaveform(sample_output={'A': 0.2}, duration=1)\n \n         program = Loop(children=[Loop(waveform=wf_1, repetition_count=s),\n                                  Loop(waveform=wf_2, repetition_count=4),\n@@ -419,8 +438,8 @@ class TaborProgramTests(unittest.TestCase):\n         a = VolatileRepetitionCount(expression=ExpressionScalar('a'),\n                                     scope=DictScope(values=FrozenDict(a=5), volatile=set('a')))\n \n-        wf_1 = DummyWaveform(defined_channels={'A'}, duration=1)\n-        wf_2 = DummyWaveform(defined_channels={'A'}, duration=1)\n+        wf_1 = DummyWaveform(sample_output={'A': 0.1}, duration=1)\n+        wf_2 = DummyWaveform(sample_output={'A': 0.2}, duration=1)\n \n         program = Loop(children=[Loop(children=[Loop(waveform=wf_1, repetition_count=s),\n                                                 Loop(waveform=wf_2, repetition_count=4),\ndiff --git a/tests/pulses/sequencing_dummies.py b/tests/pulses/sequencing_dummies.py\nindex 18ca487c..b94fa1f7 100644\n--- a/tests/pulses/sequencing_dummies.py\n+++ b/tests/pulses/sequencing_dummies.py\n@@ -47,7 +47,8 @@ class DummyWaveform(Waveform):\n             except AttributeError:\r\n                 pass\r\n             return hash(\r\n-                tuple(sorted((channel, output.tobytes()) for channel, output in self.sample_output.items()))\r\n+                tuple(sorted((channel, getattr(output, 'tobytes', lambda: output)())\r\n+                             for channel, output in self.sample_output.items()))\r\n             )\r\n         else:\r\n             return id(self)\r\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-qutech__qupulse-797-b67d817a55"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/qupulse/_program/tabor.py b/qupulse/_program/tabor.py\nindex b92c76f..4d0fb63 100644\n--- a/qupulse/_program/tabor.py\n+++ b/qupulse/_program/tabor.py\n@@ -474,6 +474,9 @@ class TaborProgram(ProgramEntry):\n             raise TaborException('At least one waveform has a length that is smaller 192 or not a multiple of 16')\n \n         segments = []\n+        waveform_to_index = {}  # Maps waveform identity to segment index for deduplication\n+        segment_lengths_dedup = []  # Store corresponding lengths for deduplicated segments\n+        \n         for i, waveform in enumerate(self._parsed_program.waveforms):\n             t = time_array[:segment_lengths[i]]\n             marker_time = t[::2]\n@@ -487,8 +490,21 @@ class TaborProgram(ProgramEntry):\n                                    ch_b=segment_b,\n                                    marker_a=marker_a,\n                                    marker_b=marker_b)\n-            segments.append(segment)\n-        return segments, segment_lengths\n+            \n+            # Check if we've already seen an equivalent segment\n+            segment_hash = hash(segment)\n+            if segment_hash in waveform_to_index:\n+                # Reuse existing segment index\n+                idx = waveform_to_index[segment_hash]\n+            else:\n+                # New unique segment\n+                idx = len(segments)\n+                segments.append(segment)\n+                waveform_to_index[segment_hash] = idx\n+                segment_lengths_dedup.append(segment_lengths[i])\n+                \n+        # Return deduplicated segments and their corresponding lengths\n+        return segments, segment_lengths_dedup\n \n     def setup_single_sequence_mode(self) -> None:\n         assert self.program.depth() == 1\n",
+    "agent_patch_sha256": "cc051a997c4406549c36c56deef588362fb2a4ca916e58b1786d8acf5d8336bf",
+    "filtered_sha256": "cc051a997c4406549c36c56deef588362fb2a4ca916e58b1786d8acf5d8336bf",
+    "number": 1,
+    "patch": "diff --git a/qupulse/_program/tabor.py b/qupulse/_program/tabor.py\nindex b92c76f..4d0fb63 100644\n--- a/qupulse/_program/tabor.py\n+++ b/qupulse/_program/tabor.py\n@@ -474,6 +474,9 @@ class TaborProgram(ProgramEntry):\n             raise TaborException('At least one waveform has a length that is smaller 192 or not a multiple of 16')\n \n         segments = []\n+        waveform_to_index = {}  # Maps waveform identity to segment index for deduplication\n+        segment_lengths_dedup = []  # Store corresponding lengths for deduplicated segments\n+        \n         for i, waveform in enumerate(self._parsed_program.waveforms):\n             t = time_array[:segment_lengths[i]]\n             marker_time = t[::2]\n@@ -487,8 +490,21 @@ class TaborProgram(ProgramEntry):\n                                    ch_b=segment_b,\n                                    marker_a=marker_a,\n                                    marker_b=marker_b)\n-            segments.append(segment)\n-        return segments, segment_lengths\n+            \n+            # Check if we've already seen an equivalent segment\n+            segment_hash = hash(segment)\n+            if segment_hash in waveform_to_index:\n+                # Reuse existing segment index\n+                idx = waveform_to_index[segment_hash]\n+            else:\n+                # New unique segment\n+                idx = len(segments)\n+                segments.append(segment)\n+                waveform_to_index[segment_hash] = idx\n+                segment_lengths_dedup.append(segment_lengths[i])\n+                \n+        # Return deduplicated segments and their corresponding lengths\n+        return segments, segment_lengths_dedup\n \n     def setup_single_sequence_mode(self) -> None:\n         assert self.program.depth() == 1\n",
+    "sha256": "cc051a997c4406549c36c56deef588362fb2a4ca916e58b1786d8acf5d8336bf"
+  }
+}

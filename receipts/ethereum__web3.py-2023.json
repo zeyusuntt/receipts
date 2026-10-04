@@ -1,0 +1,77 @@
+{
+  "claims": {
+    "claim_audit": "contradicted",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "73d1c7ce02ac156ffbe53a02a6b053238c50481a",
+    "fail_to_pass": [
+      "tests/core/providers/test_auto_provider.py::test_get_dev_ipc_path"
+    ],
+    "image_name": "docker.io/swerebenchv2/ethereum-web3.py:2023-73d1c7c",
+    "instance_id": "ethereum__web3.py-2023",
+    "pass_to_pass": [
+      "tests/core/providers/test_auto_provider.py::test_load_provider_from_env[-NoneType-expected_attrs0]",
+      "tests/core/providers/test_auto_provider.py::test_load_provider_from_env[http://1.2.3.4:5678-HTTPProvider-expected_attrs1]",
+      "tests/core/providers/test_auto_provider.py::test_load_provider_from_env[https://node.ontheweb.com-HTTPProvider-expected_attrs2]",
+      "tests/core/providers/test_auto_provider.py::test_load_provider_from_env[file:///root/path/to/file.ipc-IPCProvider-expected_attrs3]",
+      "tests/core/providers/test_auto_provider.py::test_load_provider_from_env[ws://1.2.3.4:5679-WebsocketProvider-expected_attrs4]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_empty_key[WEB3_INFURA_API_KEY]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_empty_key[WEB3_INFURA_PROJECT_ID]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_deleted_key[WEB3_INFURA_API_KEY]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_deleted_key[WEB3_INFURA_PROJECT_ID]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_websocket_empty_key[WEB3_INFURA_API_KEY]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_websocket_empty_key[WEB3_INFURA_PROJECT_ID]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_websocket_deleted_key[WEB3_INFURA_API_KEY]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_websocket_deleted_key[WEB3_INFURA_PROJECT_ID]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura[WEB3_INFURA_API_KEY]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura[WEB3_INFURA_PROJECT_ID]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_websocket_default[WEB3_INFURA_API_KEY]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_websocket_default[WEB3_INFURA_PROJECT_ID]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_raises_error_with_nonexistent_scheme",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_websocket_with_secret[WEB3_INFURA_API_KEY]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_websocket_with_secret[WEB3_INFURA_PROJECT_ID]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_with_secret[WEB3_INFURA_API_KEY]",
+      "tests/core/providers/test_auto_provider.py::test_web3_auto_infura_with_secret[WEB3_INFURA_PROJECT_ID]"
+    ],
+    "problem_statement": "gethdev AutoProvider does not consider the WEB3_PROVIDER_URI environment variable\n* Version: 5.13.0\r\n* Python: 3.8.5\r\n* OS: Linux (Ubuntu 20.04.1 LTS)\r\n\r\n### What was wrong?\r\n\r\nWhen using `web3.auto.gethdev`, the `WEB3_PROVIDER_URI` environment variable does not appear to be honored.\r\n\r\n```\r\n$ export WEB3_PROVIDER_URI=file:///path/to/node/geth.ipc\r\n\r\n$ python3\r\nPython 3.8.5 (default, Jul 28 2020, 12:59:40)\r\n[GCC 9.3.0] on linux\r\nType \"help\", \"copyright\", \"credits\" or \"license\" for more information.\r\n>>> from web3.auto.gethdev import w3\r\n>>> w3.eth.filter({'fromBlock': 'latest'})\r\n\r\nTraceback (most recent call last):\r\n  File \"<stdin>\", line 1, in <module>\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/eth.py\", line 491, in filter\r\n    _filter_id = self.web3.manager.request_blocking(\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/manager.py\", line 154, in request_blocking\r\n    response = self._make_request(method, params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/manager.py\", line 133, in _make_request\r\n    return request_func(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 74, in apply_formatters\r\n    response = make_request(method, formatted_params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/gas_price_strategy.py\", line 34, in middleware\r\n    return make_request(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 74, in apply_formatters\r\n    response = make_request(method, formatted_params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/attrdict.py\", line 33, in middleware\r\n    response = make_request(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 74, in apply_formatters\r\n    response = make_request(method, formatted_params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/normalize_errors.py\", line 25, in middleware\r\n    result = make_request(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 76, in apply_formatters\r\n    response = make_request(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 74, in apply_formatters\r\n    response = make_request(method, formatted_params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 76, in apply_formatters\r\n    response = make_request(method, params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/providers/ipc.py\", line 234, in make_request\r\n    with self._lock, self._socket as sock:\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/providers/ipc.py\", line 55, in __enter__\r\n    raise FileNotFoundError(\"cannot connect to IPC socket at path: %r\" % self.ipc_path)\r\nFileNotFoundError: cannot connect to IPC socket at path: None\r\n```\r\n\r\n### How can it be fixed?\r\n\r\nApply this environment variable to the gethdev autoprovider.",
+    "repo": "ethereum/web3.py",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/core/providers/test_auto_provider.py",
+    "test_patch": "diff --git a/tests/core/providers/test_auto_provider.py b/tests/core/providers/test_auto_provider.py\nindex 6fd773a9..c0e30295 100644\n--- a/tests/core/providers/test_auto_provider.py\n+++ b/tests/core/providers/test_auto_provider.py\n@@ -17,6 +17,9 @@ from web3.providers import (\n from web3.providers.auto import (\n     load_provider_from_environment,\n )\n+from web3.providers.ipc import (\n+    get_dev_ipc_path,\n+)\n \n # Ugly hack to import infura now that API KEY is required\n os.environ['WEB3_INFURA_API_KEY'] = 'test'\n@@ -51,6 +54,13 @@ def test_load_provider_from_env(monkeypatch, uri, expected_type, expected_attrs)\n         assert getattr(provider, attr) == val\n \n \n+def test_get_dev_ipc_path(monkeypatch, tmp_path):\n+    uri = str(tmp_path)\n+    monkeypatch.setenv('WEB3_PROVIDER_URI', uri)\n+    path = get_dev_ipc_path()\n+    assert path == uri\n+\n+\n @pytest.mark.parametrize('environ_name', ['WEB3_INFURA_API_KEY', 'WEB3_INFURA_PROJECT_ID'])\n def test_web3_auto_infura_empty_key(monkeypatch, caplog, environ_name):\n     monkeypatch.setenv('WEB3_INFURA_SCHEME', 'https')\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-ethereum__web3.py-2023-09fbbfb992"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/web3/providers/ipc.py b/web3/providers/ipc.py\nindex 57a2998a..0b75a9fd 100644\n--- a/web3/providers/ipc.py\n+++ b/web3/providers/ipc.py\n@@ -157,6 +157,11 @@ def get_default_ipc_path() -> str:  # type: ignore\n \n # type ignored b/c missing return statement is by design here\n def get_dev_ipc_path() -> str:  # type: ignore\n+    # Check if WEB3_PROVIDER_URI is set and return it if so\n+    env_uri = os.environ.get('WEB3_PROVIDER_URI')\n+    if env_uri:\n+        return env_uri\n+        \n     if sys.platform == 'darwin':\n         tmpdir = os.environ.get('TMPDIR', '')\n         ipc_path = os.path.expanduser(os.path.join(\n@@ -269,4 +274,4 @@ def has_valid_json_rpc_ending(raw_response: bytes) -> bool:\n         if stripped_raw_response.endswith(valid_ending):\n             return True\n     else:\n-        return False\n+        return False\n\\ No newline at end of file\n",
+    "agent_patch_sha256": "01600641e90cf405b69740950b731650804d63c87af7108d2a3d86795ec4f3fa",
+    "filtered_sha256": "01600641e90cf405b69740950b731650804d63c87af7108d2a3d86795ec4f3fa",
+    "number": 1,
+    "patch": "diff --git a/web3/providers/ipc.py b/web3/providers/ipc.py\nindex 57a2998a..0b75a9fd 100644\n--- a/web3/providers/ipc.py\n+++ b/web3/providers/ipc.py\n@@ -157,6 +157,11 @@ def get_default_ipc_path() -> str:  # type: ignore\n \n # type ignored b/c missing return statement is by design here\n def get_dev_ipc_path() -> str:  # type: ignore\n+    # Check if WEB3_PROVIDER_URI is set and return it if so\n+    env_uri = os.environ.get('WEB3_PROVIDER_URI')\n+    if env_uri:\n+        return env_uri\n+        \n     if sys.platform == 'darwin':\n         tmpdir = os.environ.get('TMPDIR', '')\n         ipc_path = os.path.expanduser(os.path.join(\n@@ -269,4 +274,4 @@ def has_valid_json_rpc_ending(raw_response: bytes) -> bool:\n         if stripped_raw_response.endswith(valid_ending):\n             return True\n     else:\n-        return False\n+        return False\n\\ No newline at end of file\n",
+    "sha256": "01600641e90cf405b69740950b731650804d63c87af7108d2a3d86795ec4f3fa"
+  }
+}

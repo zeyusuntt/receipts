@@ -1,0 +1,69 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "9f934334668c6c0bf1e2866d6a81417275bbc255",
+    "fail_to_pass": [
+      "traits/tests/test_union.py::TestUnion::test_constant_default"
+    ],
+    "image_name": "docker.io/swerebenchv2/enthought-traits:1534-9f93433",
+    "instance_id": "enthought__traits-1534",
+    "pass_to_pass": [
+      "traits/tests/test_union.py::TestUnion::test_default_raise_error",
+      "traits/tests/test_union.py::TestUnion::test_default_value",
+      "traits/tests/test_union.py::TestUnion::test_extending_union_trait",
+      "traits/tests/test_union.py::TestUnion::test_inner_traits",
+      "traits/tests/test_union.py::TestUnion::test_list_inside_union_default",
+      "traits/tests/test_union.py::TestUnion::test_list_trait_instances",
+      "traits/tests/test_union.py::TestUnion::test_list_trait_types",
+      "traits/tests/test_union.py::TestUnion::test_malformed_declaration",
+      "traits/tests/test_union.py::TestUnion::test_notification",
+      "traits/tests/test_union.py::TestUnion::test_union_incompatible_trait",
+      "traits/tests/test_union.py::TestUnion::test_union_unspecified_arguments",
+      "traits/tests/test_union.py::TestUnion::test_union_user_defined_class",
+      "traits/tests/test_union.py::TestUnion::test_union_user_defined_type",
+      "traits/tests/test_union.py::TestUnion::test_union_with_none"
+    ],
+    "problem_statement": "Bad default value handling for Union\nIn #1522, I introduced the following bug, which broke the Pyface test suite:\r\n\r\n```python\r\nPython 3.9.7 (default, Sep  1 2021, 04:00:27) \r\n[Clang 11.0.3 (clang-1103.0.32.62)] on darwin\r\nType \"help\", \"copyright\", \"credits\" or \"license\" for more information.\r\n>>> from traits.api import *\r\n>>> class A(HasTraits):\r\n...     foo = Union(None, Int)\r\n... \r\n>>> class B(A):\r\n...     foo = 5\r\n... \r\n>>> b = B()\r\n>>> b.foo -= 1\r\nTraceback (most recent call last):\r\n  File \"<stdin>\", line 1, in <module>\r\nTypeError: unsupported operand type(s) for -=: '_Undefined' and 'int'\r\n```\r\n",
+    "repo": "enthought/traits",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning traits/tests/test_union.py",
+    "test_patch": "diff --git a/traits/tests/test_union.py b/traits/tests/test_union.py\nindex 8b0ecf49..436bc064 100644\n--- a/traits/tests/test_union.py\n+++ b/traits/tests/test_union.py\n@@ -11,8 +11,8 @@\n import unittest\n \n from traits.api import (\n-    Float, Instance, Int, List, Str, TraitError, TraitType, HasTraits, Union,\n-    Type)\n+    Bytes, DefaultValue, Float, HasTraits, Instance, Int, List, Str,\n+    TraitError, TraitType, Type, Union)\n \n \n class CustomClass(HasTraits):\n@@ -195,10 +195,21 @@ class TestUnion(unittest.TestCase):\n         class HasUnionWithList(HasTraits):\n             foo = Union(Int(23), Float)\n \n+            nested = Union(Union(Str(), Bytes()), Union(Int(), Float(), None))\n+\n         has_union = HasUnionWithList()\n         value = has_union.foo\n         self.assertEqual(value, 23)\n \n+        self.assertEqual(\n+            has_union.trait(\"foo\").default_value(),\n+            (DefaultValue.constant, 23),\n+        )\n+        self.assertEqual(\n+            has_union.trait(\"nested\").default_value(),\n+            (DefaultValue.constant, \"\"),\n+        )\n+\n \n if __name__ == '__main__':\n     unittest.main()\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-enthought__traits-1534-57d7df053e"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/traits/ctraits.c b/traits/ctraits.c\nindex 70331b23..8faa73d7 100644\n--- a/traits/ctraits.c\n+++ b/traits/ctraits.c\n@@ -148,7 +148,7 @@ call_notifiers(\n +----------------------------------------------------------------------------*/\n \n /* The default_value of the trait is the default value */\n-#define CONSTANT_DEFAULT_VALUE 0\n+#define CONSTANT_DEFAULT_VALUE 7\n \n /* The default_value of the trait is Missing */\n #define MISSING_DEFAULT_VALUE 1\n@@ -174,7 +174,7 @@ call_notifiers(\n    where *callable* is a callable, *args* is a tuple, and *kw* is either a\n    dictionary or None. The default value is the result obtained by invoking\n   ``callable(\\*args, \\*\\*kw)`` */\n-#define CALLABLE_AND_ARGS_DEFAULT_VALUE 7\n+#define CALLABLE_AND_ARGS_DEFAULT_VALUE 15\n \n /* The default_value is a callable. The default value is the result obtained\n    by invoking *default_value*(*object*), where *object* is the object\ndiff --git a/traits/trait_types.py b/traits/trait_types.py\nindex 777d0e2b..b7874ead 100644\n--- a/traits/trait_types.py\n+++ b/traits/trait_types.py\n@@ -4028,7 +4028,7 @@ class Union(TraitType):\n         if 'default_value' in metadata:\n             default_value = metadata.pop(\"default_value\")\n         else:\n-            first_default_value, first_default_value_type = (\n+            first_default_value_type, first_default_value = (\n                 self.list_ctrait_instances[0].default_value())\n \n             if first_default_value_type == DefaultValue.constant:\n",
+    "agent_patch_sha256": "75087f1c30c7a2f38b97d4591d2dffcef131b363f9864398802e3fa4d9af8c51",
+    "filtered_sha256": "75087f1c30c7a2f38b97d4591d2dffcef131b363f9864398802e3fa4d9af8c51",
+    "number": 2,
+    "patch": "diff --git a/traits/ctraits.c b/traits/ctraits.c\nindex 70331b23..8faa73d7 100644\n--- a/traits/ctraits.c\n+++ b/traits/ctraits.c\n@@ -148,7 +148,7 @@ call_notifiers(\n +----------------------------------------------------------------------------*/\n \n /* The default_value of the trait is the default value */\n-#define CONSTANT_DEFAULT_VALUE 0\n+#define CONSTANT_DEFAULT_VALUE 7\n \n /* The default_value of the trait is Missing */\n #define MISSING_DEFAULT_VALUE 1\n@@ -174,7 +174,7 @@ call_notifiers(\n    where *callable* is a callable, *args* is a tuple, and *kw* is either a\n    dictionary or None. The default value is the result obtained by invoking\n   ``callable(\\*args, \\*\\*kw)`` */\n-#define CALLABLE_AND_ARGS_DEFAULT_VALUE 7\n+#define CALLABLE_AND_ARGS_DEFAULT_VALUE 15\n \n /* The default_value is a callable. The default value is the result obtained\n    by invoking *default_value*(*object*), where *object* is the object\ndiff --git a/traits/trait_types.py b/traits/trait_types.py\nindex 777d0e2b..b7874ead 100644\n--- a/traits/trait_types.py\n+++ b/traits/trait_types.py\n@@ -4028,7 +4028,7 @@ class Union(TraitType):\n         if 'default_value' in metadata:\n             default_value = metadata.pop(\"default_value\")\n         else:\n-            first_default_value, first_default_value_type = (\n+            first_default_value_type, first_default_value = (\n                 self.list_ctrait_instances[0].default_value())\n \n             if first_default_value_type == DefaultValue.constant:\n",
+    "sha256": "75087f1c30c7a2f38b97d4591d2dffcef131b363f9864398802e3fa4d9af8c51"
+  }
+}

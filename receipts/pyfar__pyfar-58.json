@@ -1,0 +1,94 @@
+{
+  "claims": {
+    "claim_audit": "no_claim",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass",
+      "R2_pass_to_pass",
+      "R3_no_shrink"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "a5f4f376b68cc6fc2f69c3ad5ae5da1f6ea24b35",
+    "fail_to_pass": [
+      "tests/test_utils.py::test_copy"
+    ],
+    "image_name": "docker.io/swerebenchv2/pyfar-pyfar:58-a5f4f37",
+    "instance_id": "pyfar__pyfar-58",
+    "pass_to_pass": [
+      "tests/test_signal.py::test_signal_init",
+      "tests/test_signal.py::test_signal_init_list",
+      "tests/test_signal.py::test_signal_init_default_parameter",
+      "tests/test_signal.py::test_signal_comment",
+      "tests/test_signal.py::test_domain_getter_freq",
+      "tests/test_signal.py::test_domain_getter_time",
+      "tests/test_signal.py::test_domain_setter_error",
+      "tests/test_signal.py::test_domain_setter_freq_when_freq",
+      "tests/test_signal.py::test_domain_setter_freq_when_time",
+      "tests/test_signal.py::test_domain_setter_time_when_time",
+      "tests/test_signal.py::test_signal_init_val",
+      "tests/test_signal.py::test_signal_init_false_coord",
+      "tests/test_signal.py::test_n_samples",
+      "tests/test_signal.py::test_n_bins",
+      "tests/test_signal.py::test_times",
+      "tests/test_signal.py::test_getter_time",
+      "tests/test_signal.py::test_setter_time",
+      "tests/test_signal.py::test_getter_freq",
+      "tests/test_signal.py::test_setter_freq",
+      "tests/test_signal.py::test_getter_sampling_rate",
+      "tests/test_signal.py::test_setter_sampligrate",
+      "tests/test_signal.py::test_getter_signal_type",
+      "tests/test_signal.py::test_setter_signal_type",
+      "tests/test_signal.py::test_getter_fft_norm",
+      "tests/test_signal.py::test_dtype",
+      "tests/test_signal.py::test_signal_length",
+      "tests/test_signal.py::test_cshape",
+      "tests/test_signal.py::test_magic_getitem",
+      "tests/test_signal.py::test_magic_getitem_slice",
+      "tests/test_signal.py::test_magic_getitem_allslice",
+      "tests/test_signal.py::test_magic_setitem",
+      "tests/test_signal.py::test_magic_setitem_wrong_sr",
+      "tests/test_signal.py::test_magic_setitem_wrong_norm",
+      "tests/test_signal.py::test_magic_setitem_wrong_n_samples",
+      "tests/test_signal.py::test_magic_len"
+    ],
+    "problem_statement": "Signal copy\nSimple method to return copy of a signal object, similar to numpy.copy().",
+    "repo": "pyfar/pyfar",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_signal.py tests/test_utils.py",
+    "test_patch": "diff --git a/tests/test_signal.py b/tests/test_signal.py\nindex 7d101147..462f14e7 100644\n--- a/tests/test_signal.py\n+++ b/tests/test_signal.py\n@@ -320,30 +320,6 @@ def test_magic_len(impulse):\n     assert len(signal) == 1000\n \n \n-def test_find_nearest_time():\n-    sampling_rate = 100\n-    signal = Signal(np.zeros(100), sampling_rate)\n-    actual = signal.find_nearest_time(0.5)\n-    expected = 50\n-    assert actual == expected\n-\n-    actual = signal.find_nearest_time([0.5, 0.75])\n-    expected = [50, 75]\n-    npt.assert_allclose(actual, expected)\n-\n-\n-def test_find_nearest_frequency():\n-    sampling_rate = 100\n-    signal = Signal(np.zeros(100*2), sampling_rate*2)\n-    actual = signal.find_nearest_frequency(50)\n-    expected = 50\n-    assert actual == expected\n-\n-    actual = signal.find_nearest_frequency([50, 75])\n-    expected = [50, 75]\n-    npt.assert_allclose(actual, expected)\n-\n-\n @pytest.fixture\n def sine():\n     \"\"\"Generate a sine signal with f = 440 Hz and sampling_rate = 44100 Hz.\ndiff --git a/tests/test_utils.py b/tests/test_utils.py\nnew file mode 100644\nindex 00000000..b32808c7\n--- /dev/null\n+++ b/tests/test_utils.py\n@@ -0,0 +1,29 @@\n+import pyfar\n+import numpy as np\n+import numpy.testing as npt\n+\n+\n+def test_copy():\n+    \"\"\" Test copy method used by several classes.\"\"\"\n+    obj_list = [pyfar.Signal(1000, 44100),\n+                pyfar.Orientations(),\n+                pyfar.Coordinates(),\n+                pyfar.dsp.Filter()]\n+\n+    for obj in obj_list:\n+        # Create copy\n+        obj_copy = obj.copy()\n+        # Check class\n+        assert isinstance(obj_copy, obj.__class__)\n+        # Check ID\n+        assert id(obj) != id(obj_copy)\n+        # Check attributes\n+        assert len(obj.__dict__) == len(obj_copy.__dict__)\n+        for key, value in obj.__dict__.items():\n+            assert key in obj_copy.__dict__.keys()\n+            value_copy = obj_copy.__dict__[key]\n+            if isinstance(value, np.ndarray):\n+                npt.assert_allclose(value, value_copy)\n+            else:\n+                assert value == value_copy\n+\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-pyfar__pyfar-58-088545f170"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/pyfar/coordinates.py b/pyfar/coordinates.py\nindex bff6420..ef8c8ea 100644\n--- a/pyfar/coordinates.py\n+++ b/pyfar/coordinates.py\n@@ -1887,6 +1887,48 @@ def cyl2cart(azimuth, height, radius):\n \n     return x, y, z\n \n+\n+        \"\"\"\n+        return Coordinates(\n+            self._points[:, 0].copy(), \n+\n+    def copy(self):\n+        \"\"\"Return a copy of the coordinates.\n+        \n+        Returns\n+        -------\n+        Coordinates\n+            A copy of the coordinates.\n+        \"\"\"\n+            self._points[:, 1].copy(), \n+            self._points[:, 2].copy(),\n+            domain=self._system['domain'],\n+            convention=self._system['convention'],\n+            unit=self._system['unit'],\n+            weights=self._weights.copy() if self._weights is not None else None,\n+            sh_order=self._sh_order,\n+            comment=self._comment)\n+\n+\n+    def copy(self):\n+        \"\"\"Return a copy of the coordinates.\n+        \n+        Returns\n+        -------\n+        Coordinates\n+            A copy of the coordinates.\n+        \"\"\"\n+        return Coordinates(\n+            self._points[:, 0].copy(), \n+            self._points[:, 1].copy(), \n+            self._points[:, 2].copy(),\n+            domain=self._system['domain'],\n+            convention=self._system['convention'],\n+            unit=self._system['unit'],\n+            weights=self._weights.copy() if self._weights is not None else None,\n+            sh_order=self._sh_order,\n+            comment=self._comment)\n+\n     # def __setitem__(self, index, item):\n     #     \"\"\"Set Coordinates at index\n     #     \"\"\"\ndiff --git a/pyfar/orientations.py b/pyfar/orientations.py\nindex 0baa856..a68cc1b 100644\n--- a/pyfar/orientations.py\n+++ b/pyfar/orientations.py\n@@ -205,3 +205,13 @@ class Orientations(Rotation):\n             raise ValueError(f\"Expected assigned value to have shape\"\n                              f\" or (1, 4), got {quat.shape}\")\n         self._quat[idx] = quat\n+\n+    def copy(self):\n+        \"\"\"Return a copy of the orientations.\n+        \n+        Returns\n+        -------\n+        Orientations\n+            A copy of the orientations.\n+        \"\"\"\n+        return Orientations(self.as_quat())\ndiff --git a/pyfar/signal.py b/pyfar/signal.py\nindex daee267..95b915b 100644\n--- a/pyfar/signal.py\n+++ b/pyfar/signal.py\n@@ -394,6 +394,26 @@ class Signal(Audio):\n         \"\"\"\n         return SignalIterator(self._data.__iter__(), self)\n \n+    def copy(self):\n+        \"\"\"Return a copy of the signal.\n+        \n+        Returns a shallow copy of the Signal object with deep copies of \n+        the underlying data arrays.\n+        \n+        Returns\n+        -------\n+        Signal\n+            A copy of the signal.\n+        \"\"\"\n+        return Signal(\n+            self._data.copy(),\n+            sampling_rate=self._sampling_rate,\n+            n_samples=self._n_samples,\n+            domain=self._domain,\n+            fft_norm=self._fft_norm,\n+            dtype=self._dtype,\n+            comment=self._comment)\n+\n \n class SignalIterator(object):\n     \"\"\"Iterator for signals\n",
+    "agent_patch_sha256": "01c398af2b90e153afcd1f135d478021f4319b0af54cc4f8ed4cf0e24c6dc8f0",
+    "filtered_sha256": "01c398af2b90e153afcd1f135d478021f4319b0af54cc4f8ed4cf0e24c6dc8f0",
+    "number": 2,
+    "patch": "diff --git a/pyfar/coordinates.py b/pyfar/coordinates.py\nindex bff6420..ef8c8ea 100644\n--- a/pyfar/coordinates.py\n+++ b/pyfar/coordinates.py\n@@ -1887,6 +1887,48 @@ def cyl2cart(azimuth, height, radius):\n \n     return x, y, z\n \n+\n+        \"\"\"\n+        return Coordinates(\n+            self._points[:, 0].copy(), \n+\n+    def copy(self):\n+        \"\"\"Return a copy of the coordinates.\n+        \n+        Returns\n+        -------\n+        Coordinates\n+            A copy of the coordinates.\n+        \"\"\"\n+            self._points[:, 1].copy(), \n+            self._points[:, 2].copy(),\n+            domain=self._system['domain'],\n+            convention=self._system['convention'],\n+            unit=self._system['unit'],\n+            weights=self._weights.copy() if self._weights is not None else None,\n+            sh_order=self._sh_order,\n+            comment=self._comment)\n+\n+\n+    def copy(self):\n+        \"\"\"Return a copy of the coordinates.\n+        \n+        Returns\n+        -------\n+        Coordinates\n+            A copy of the coordinates.\n+        \"\"\"\n+        return Coordinates(\n+            self._points[:, 0].copy(), \n+            self._points[:, 1].copy(), \n+            self._points[:, 2].copy(),\n+            domain=self._system['domain'],\n+            convention=self._system['convention'],\n+            unit=self._system['unit'],\n+            weights=self._weights.copy() if self._weights is not None else None,\n+            sh_order=self._sh_order,\n+            comment=self._comment)\n+\n     # def __setitem__(self, index, item):\n     #     \"\"\"Set Coordinates at index\n     #     \"\"\"\ndiff --git a/pyfar/orientations.py b/pyfar/orientations.py\nindex 0baa856..a68cc1b 100644\n--- a/pyfar/orientations.py\n+++ b/pyfar/orientations.py\n@@ -205,3 +205,13 @@ class Orientations(Rotation):\n             raise ValueError(f\"Expected assigned value to have shape\"\n                              f\" or (1, 4), got {quat.shape}\")\n         self._quat[idx] = quat\n+\n+    def copy(self):\n+        \"\"\"Return a copy of the orientations.\n+        \n+        Returns\n+        -------\n+        Orientations\n+            A copy of the orientations.\n+        \"\"\"\n+        return Orientations(self.as_quat())\ndiff --git a/pyfar/signal.py b/pyfar/signal.py\nindex daee267..95b915b 100644\n--- a/pyfar/signal.py\n+++ b/pyfar/signal.py\n@@ -394,6 +394,26 @@ class Signal(Audio):\n         \"\"\"\n         return SignalIterator(self._data.__iter__(), self)\n \n+    def copy(self):\n+        \"\"\"Return a copy of the signal.\n+        \n+        Returns a shallow copy of the Signal object with deep copies of \n+        the underlying data arrays.\n+        \n+        Returns\n+        -------\n+        Signal\n+            A copy of the signal.\n+        \"\"\"\n+        return Signal(\n+            self._data.copy(),\n+            sampling_rate=self._sampling_rate,\n+            n_samples=self._n_samples,\n+            domain=self._domain,\n+            fft_norm=self._fft_norm,\n+            dtype=self._dtype,\n+            comment=self._comment)\n+\n \n class SignalIterator(object):\n     \"\"\"Iterator for signals\n",
+    "sha256": "01c398af2b90e153afcd1f135d478021f4319b0af54cc4f8ed4cf0e24c6dc8f0"
+  }
+}

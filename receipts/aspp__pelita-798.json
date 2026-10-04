@@ -1,0 +1,84 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "245a9ca445eccda07998cb58fbee340308d425a7",
+    "fail_to_pass": [
+      "test/test_team.py::test_team_time"
+    ],
+    "image_name": "docker.io/swerebenchv2/aspp-pelita:798-245a9ca",
+    "instance_id": "aspp__pelita-798",
+    "pass_to_pass": [
+      "test/test_network.py::test_bind_socket_success",
+      "test/test_network.py::test_bind_socket_fail",
+      "test/test_network.py::test_simpleclient",
+      "test/test_team.py::TestStoppingTeam::test_stopping",
+      "test/test_team.py::test_track_and_kill_count",
+      "test/test_team.py::test_eaten_flag_kill[0]",
+      "test/test_team.py::test_eaten_flag_kill[1]",
+      "test/test_team.py::test_eaten_flag_kill[2]",
+      "test/test_team.py::test_eaten_flag_kill[3]",
+      "test/test_team.py::test_eaten_flag_suicide[0]",
+      "test/test_team.py::test_eaten_flag_suicide[1]",
+      "test/test_team.py::test_eaten_flag_suicide[2]",
+      "test/test_team.py::test_eaten_flag_suicide[3]",
+      "test/test_team.py::test_initial_position[0]",
+      "test/test_team.py::test_initial_position[1]",
+      "test/test_team.py::test_initial_position[2]",
+      "test/test_team.py::test_initial_position[3]",
+      "test/test_team.py::test_initial_position[4]",
+      "test/test_team.py::test_initial_position[5]",
+      "test/test_team.py::test_initial_position[6]",
+      "test/test_team.py::test_initial_position[7]",
+      "test/test_team.py::test_initial_position[8]",
+      "test/test_team.py::test_initial_position[9]",
+      "test/test_team.py::test_bot_attributes",
+      "test/test_team.py::test_bot_graph",
+      "test/test_team.py::test_bot_graph_is_half_mutable",
+      "test/test_team.py::test_team_names",
+      "test/test_team.py::test_bot_str_repr",
+      "test/test_team.py::test_bot_html_repr"
+    ],
+    "problem_statement": "make the cumulative time counter available to clients\nThe `Bot` object should have an attribute `time` where the cumulative time for the team shown in the GUI is made available. This is useful for example when benchmarking different strategies. There's no way at the moment to programmatically access that value, as far as I could see.\r\nOf course the client could time itself, but this has its own pitfalls. So it's better to just make that value available, even if we all know it's not super precise...",
+    "repo": "ASPP/pelita",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/test_network.py test/test_team.py",
+    "test_patch": "diff --git a/test/test_network.py b/test/test_network.py\nindex 701d5307..9fcaca7f 100644\n--- a/test/test_network.py\n+++ b/test/test_network.py\n@@ -88,6 +88,7 @@ def test_simpleclient(zmq_context):\n                     'error_count': 0,\n                     'food': [(1, 1)],\n                     'name': 'dummy',\n+                    'team_time': 0,\n                 },\n                 'enemy': {\n                     'team_index': 1,\n@@ -98,6 +99,7 @@ def test_simpleclient(zmq_context):\n                     'bot_was_killed': [False]*2,\n                     'food': [(2, 2)],\n                     'name': 'other dummy',\n+                    'team_time': 0,\n                     'is_noisy': [False, False],\n                     'error_count': 0\n                 },\ndiff --git a/test/test_team.py b/test/test_team.py\nindex aa2a7d62..6544ed7c 100644\n--- a/test/test_team.py\n+++ b/test/test_team.py\n@@ -1,3 +1,5 @@\n+import time\n+\n import pytest\n import networkx\n \n@@ -523,6 +525,103 @@ def test_team_names():\n     assert state['fatal_errors'] == [[], []]\n \n \n+def test_team_time():\n+    test_layout = (\n+    \"\"\" ##################\n+        #a#.  .  # .     #\n+        #b#####    #####x#\n+        #     . #  .  .#y#\n+        ################## \"\"\")\n+\n+    def team_pattern(fn):\n+        # The pattern for a local team.\n+        return f'local-team ({fn})'\n+\n+    # NB: time.monotonic() makes huge leaps on windows,\n+    # we must therefore test with >= instead of just >\n+    # although this is a little stupid\n+\n+    check = [None, None]\n+\n+    def team_1(bot, state):\n+        if bot.round == 1 and bot.turn == 0:\n+            assert bot.team_time == 0\n+            assert bot.enemy[0].team_time == 0\n+        else:\n+            assert bot.team_time >= 0\n+\n+        # we fake the time in round 2!!\n+        if bot.round == 2 and bot.turn == 0:\n+            assert bot.team_time == 1.0\n+            assert bot.enemy[0].team_time == 2.0\n+\n+        if bot.round == 2 and bot.turn == 1:\n+            assert bot.team_time >= 1.0\n+            assert bot.enemy[0].team_time >= 2.0\n+\n+        check[0] = bot.team_time\n+\n+        return bot.position\n+\n+    def team_2(bot, state):\n+        if bot.round == 1 and bot.turn == 0:\n+            assert bot.team_time == 0\n+            assert bot.enemy[0].team_time >= 0\n+        else:\n+            assert bot.team_time >= 0\n+\n+        # we fake the time in round 2!!\n+        if bot.round == 2 and bot.turn == 0:\n+            assert bot.team_time == 2.0\n+            assert bot.enemy[0].team_time >= 1.0\n+\n+        if bot.round == 2 and bot.turn == 1:\n+            assert bot.team_time >= 2.0\n+            assert bot.enemy[0].team_time >= 1.0\n+\n+        check[1] = bot.team_time\n+\n+        return bot.position\n+\n+    state = setup_game([team_1, team_2], layout_dict=parse_layout(test_layout), max_rounds=3, allow_exceptions=True)\n+\n+    state = play_turn(state)\n+    assert state['team_time'][0] >= 0\n+    assert state['team_time'][1] == 0\n+\n+    state = play_turn(state)\n+    assert state['team_time'][0] >= 0\n+    assert state['team_time'][1] >= 0\n+\n+    # time before bots get updated\n+    old_time = list(state['team_time'])\n+\n+    state = play_turn(state)\n+    state = play_turn(state)\n+\n+    assert check == old_time\n+\n+    # Round 2. We fake the time so we do not have to sleep!\n+    state['team_time'] = [1.0, 2.0]\n+\n+    state = play_turn(state)\n+    state = play_turn(state)\n+\n+    # time before bots get updated\n+    old_time = list(state['team_time'])\n+\n+    state = play_turn(state)\n+    state = play_turn(state)\n+\n+    assert check == old_time\n+\n+    # check that player did not fail\n+    assert state['errors'] == [{}, {}]\n+    assert state['fatal_errors'] == [[], []]\n+    assert state['team_time'][0] >= 1.0\n+    assert state['team_time'][1] >= 2.0\n+\n+\n def test_bot_str_repr():\n     test_layout = \"\"\"\n         ##################\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-aspp__pelita-798-01d637e964"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/pelita/game.py b/pelita/game.py\nindex 6cbacc56..efc51f3a 100644\n--- a/pelita/game.py\n+++ b/pelita/game.py\n@@ -555,7 +555,8 @@ def prepare_bot_state(game_state, idx=None):\n         'bot_was_killed': game_state['bot_was_killed'][own_team::2],\n         'error_count': len(game_state['errors'][own_team]),\n         'food': list(game_state['food'][own_team]),\n-        'name': game_state['team_names'][own_team]\n+        'name': game_state['team_names'][own_team],\n+        'team_time': game_state['team_time'][own_team]\n     }\n \n     enemy_state = {\n@@ -568,7 +569,8 @@ def prepare_bot_state(game_state, idx=None):\n         'bot_was_killed': game_state['bot_was_killed'][enemy_team::2],\n         'error_count': 0, # TODO. Could be left out for the enemy\n         'food': list(game_state['food'][enemy_team]),\n-        'name': game_state['team_names'][enemy_team]\n+        'name': game_state['team_names'][enemy_team],\n+        'team_time': game_state['team_time'][enemy_team]\n     }\n \n     bot_state = {\ndiff --git a/pelita/team.py b/pelita/team.py\nindex dab0930c..042a67f2 100644\n--- a/pelita/team.py\n+++ b/pelita/team.py\n@@ -524,9 +524,11 @@ class Bot:\n                           team_name,\n                           error_count,\n                           is_noisy,\n-                          bot_turn=None):\n+                          bot_turn=None,\n+                          team_time=None):\n         self._bots = None\n         self._say = None\n+        self._team_time = team_time if team_time is not None else 0\n \n         #: The previous positions of this bot including the current one.\n         self.track = []\n@@ -602,6 +604,11 @@ class Bot:\n         \"\"\" Print some text in the graphical interface. \"\"\"\n         self._say = text\n \n+    @property\n+    def team_time(self):\n+        \"\"\" The cumulative time for the team shown in the GUI. \"\"\"\n+        return self._team_time\n+\n     # def get_direction(self, position):\n         # \"\"\" Return the direction needed to get to the given position.\n \n@@ -745,7 +752,8 @@ def make_bots(*, walls, shape, initial_positions, homezone, team, enemy, round,\n             initial_position=team_initial_positions[idx],\n             is_blue=team_index % 2 == 0,\n             homezone=homezone[team_index],\n-            team_name=team['name'])\n+            team_name=team['name'],\n+            team_time=team.get('team_time', 0))\n         b._bots = bots\n         team_bots.append(b)\n \n@@ -770,7 +778,8 @@ def make_bots(*, walls, shape, initial_positions, homezone, team, enemy, round,\n             initial_position=enemy_initial_positions[idx],\n             is_blue=enemy_index % 2 == 0,\n             homezone=homezone[enemy_index],\n-            team_name=enemy['name'])\n+            team_name=enemy['name'],\n+            team_time=enemy.get('team_time', 0))\n         b._bots = bots\n         enemy_bots.append(b)\n \n",
+    "agent_patch_sha256": "b3dc163924625718fdd5ac6d8307c6b76baddff280cf2c0189ee864e47f75991",
+    "filtered_sha256": "b3dc163924625718fdd5ac6d8307c6b76baddff280cf2c0189ee864e47f75991",
+    "number": 1,
+    "patch": "diff --git a/pelita/game.py b/pelita/game.py\nindex 6cbacc56..efc51f3a 100644\n--- a/pelita/game.py\n+++ b/pelita/game.py\n@@ -555,7 +555,8 @@ def prepare_bot_state(game_state, idx=None):\n         'bot_was_killed': game_state['bot_was_killed'][own_team::2],\n         'error_count': len(game_state['errors'][own_team]),\n         'food': list(game_state['food'][own_team]),\n-        'name': game_state['team_names'][own_team]\n+        'name': game_state['team_names'][own_team],\n+        'team_time': game_state['team_time'][own_team]\n     }\n \n     enemy_state = {\n@@ -568,7 +569,8 @@ def prepare_bot_state(game_state, idx=None):\n         'bot_was_killed': game_state['bot_was_killed'][enemy_team::2],\n         'error_count': 0, # TODO. Could be left out for the enemy\n         'food': list(game_state['food'][enemy_team]),\n-        'name': game_state['team_names'][enemy_team]\n+        'name': game_state['team_names'][enemy_team],\n+        'team_time': game_state['team_time'][enemy_team]\n     }\n \n     bot_state = {\ndiff --git a/pelita/team.py b/pelita/team.py\nindex dab0930c..042a67f2 100644\n--- a/pelita/team.py\n+++ b/pelita/team.py\n@@ -524,9 +524,11 @@ class Bot:\n                           team_name,\n                           error_count,\n                           is_noisy,\n-                          bot_turn=None):\n+                          bot_turn=None,\n+                          team_time=None):\n         self._bots = None\n         self._say = None\n+        self._team_time = team_time if team_time is not None else 0\n \n         #: The previous positions of this bot including the current one.\n         self.track = []\n@@ -602,6 +604,11 @@ class Bot:\n         \"\"\" Print some text in the graphical interface. \"\"\"\n         self._say = text\n \n+    @property\n+    def team_time(self):\n+        \"\"\" The cumulative time for the team shown in the GUI. \"\"\"\n+        return self._team_time\n+\n     # def get_direction(self, position):\n         # \"\"\" Return the direction needed to get to the given position.\n \n@@ -745,7 +752,8 @@ def make_bots(*, walls, shape, initial_positions, homezone, team, enemy, round,\n             initial_position=team_initial_positions[idx],\n             is_blue=team_index % 2 == 0,\n             homezone=homezone[team_index],\n-            team_name=team['name'])\n+            team_name=team['name'],\n+            team_time=team.get('team_time', 0))\n         b._bots = bots\n         team_bots.append(b)\n \n@@ -770,7 +778,8 @@ def make_bots(*, walls, shape, initial_positions, homezone, team, enemy, round,\n             initial_position=enemy_initial_positions[idx],\n             is_blue=enemy_index % 2 == 0,\n             homezone=homezone[enemy_index],\n-            team_name=enemy['name'])\n+            team_name=enemy['name'],\n+            team_time=enemy.get('team_time', 0))\n         b._bots = bots\n         enemy_bots.append(b)\n \n",
+    "sha256": "b3dc163924625718fdd5ac6d8307c6b76baddff280cf2c0189ee864e47f75991"
+  }
+}

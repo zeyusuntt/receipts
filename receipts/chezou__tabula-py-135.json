@@ -1,0 +1,70 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [],
+    "gate_status": "PASS",
+    "official_resolved": true
+  },
+  "instance": {
+    "base_commit": "3e6d403f280c2ee852df091ac6fcad3570c5041a",
+    "fail_to_pass": [
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_with_option"
+    ],
+    "image_name": "docker.io/swerebenchv2/chezou-tabula-py:135-3e6d403",
+    "instance_id": "chezou__tabula-py-135",
+    "pass_to_pass": [
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_convert_from",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_convert_into_by_batch",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_convert_into_exception",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_convert_remote_file",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_exception",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_file_like_obj",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_for_multiple_tables",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_into_json",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_pathlib",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_with_java_option",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_with_multiple_areas",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_with_pandas_option",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_pdf_with_template",
+      "tests/test_read_pdf_table.py::TestReadPdfTable::test_read_remote_pdf"
+    ],
+    "problem_statement": "`guess=False` when `stream` or `lattice` is True\nSince tabula app works independently between guess, stream, and lattice, it should be better to off when `stream` or `lattice` option is on.",
+    "repo": "chezou/tabula-py",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_read_pdf_table.py",
+    "test_patch": "diff --git a/tests/test_read_pdf_table.py b/tests/test_read_pdf_table.py\nindex d0102b6..cd09dbf 100644\n--- a/tests/test_read_pdf_table.py\n+++ b/tests/test_read_pdf_table.py\n@@ -43,10 +43,10 @@ class TestReadPdfTable(unittest.TestCase):\n         expected_csv2 = 'tests/resources/data_2-3.csv'\n         expected_df2 = pd.read_csv(expected_csv2)\n         self.assertTrue(tabula.read_pdf(pdf_path, pages=1).equals(pd.read_csv(expected_csv1)))\n-        self.assertTrue(tabula.read_pdf(pdf_path, pages='2-3', stream=True,\n-                                        guess=False).equals(expected_df2))\n+        self.assertTrue(tabula.read_pdf(pdf_path, pages='2-3', stream=True).equals(expected_df2))\n+        self.assertTrue(tabula.read_pdf(pdf_path, pages=(2, 3), stream=True).equals(expected_df2))\n         self.assertTrue(tabula.read_pdf(pdf_path, pages=(2, 3), stream=True,\n-                                        guess=False).equals(expected_df2))\n+                                        guess=True).equals(expected_df2))\n \n     def test_read_pdf_file_like_obj(self):\n         pdf_path = 'tests/resources/data.pdf'\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-chezou__tabula-py-135-7f3e33193b"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/tabula/wrapper.py b/tabula/wrapper.py\nindex 254693c..aa138e3 100644\n--- a/tabula/wrapper.py\n+++ b/tabula/wrapper.py\n@@ -439,6 +439,13 @@ def build_options(kwargs=None):\n                 __options += [\"--area\", __area]\n \n     guess = kwargs.get('guess', True)\n+    lattice = kwargs.get('lattice') or kwargs.get('spreadsheet')\n+    stream = kwargs.get('stream') or kwargs.get('nospreadsheet')\n+    \n+    # When stream or lattice is explicitly set, disable guess to avoid conflicts\n+    if lattice or stream:\n+        guess = False\n+    \n     if guess and not multiple_areas:\n         __options.append(\"--guess\")\n \n",
+    "agent_patch_sha256": "0bc02e968820b1274da71ba5803e9fa602ac59df6aaaa15572e4ccce00420a51",
+    "filtered_sha256": "0bc02e968820b1274da71ba5803e9fa602ac59df6aaaa15572e4ccce00420a51",
+    "number": 1,
+    "patch": "diff --git a/tabula/wrapper.py b/tabula/wrapper.py\nindex 254693c..aa138e3 100644\n--- a/tabula/wrapper.py\n+++ b/tabula/wrapper.py\n@@ -439,6 +439,13 @@ def build_options(kwargs=None):\n                 __options += [\"--area\", __area]\n \n     guess = kwargs.get('guess', True)\n+    lattice = kwargs.get('lattice') or kwargs.get('spreadsheet')\n+    stream = kwargs.get('stream') or kwargs.get('nospreadsheet')\n+    \n+    # When stream or lattice is explicitly set, disable guess to avoid conflicts\n+    if lattice or stream:\n+        guess = False\n+    \n     if guess and not multiple_areas:\n         __options.append(\"--guess\")\n \n",
+    "sha256": "0bc02e968820b1274da71ba5803e9fa602ac59df6aaaa15572e4ccce00420a51"
+  }
+}

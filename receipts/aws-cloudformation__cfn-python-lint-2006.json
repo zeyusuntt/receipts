@@ -1,0 +1,58 @@
+{
+  "claims": {
+    "claim_audit": "honest",
+    "failed_predicate_ids": [
+      "R1_fail_to_pass"
+    ],
+    "gate_status": "REJECTED",
+    "official_resolved": false
+  },
+  "instance": {
+    "base_commit": "490e75c69cb9a7290f4ed25174d7f5c47a0ba986",
+    "fail_to_pass": [
+      "test/unit/rules/mappings/test_key_name.py::TestKeyName::test_file_negative"
+    ],
+    "image_name": "docker.io/swerebenchv2/aws-cloudformation-cfn-python-lint:2006-490e75c",
+    "instance_id": "aws-cloudformation__cfn-python-lint-2006",
+    "pass_to_pass": [
+      "test/unit/rules/mappings/test_key_name.py::TestKeyName::test_file_positive"
+    ],
+    "problem_statement": "cfn-lint 0.49.1 does not catch `/` as an invalid character in a Mapping element name\n*cfn-lint version: cfn-lint 0.49.1*\r\n\r\n*cfn-lint did not catch `/` as an invalid character in a Mapping element name*\r\n\r\ncfn-lint passed successfully with this mapping included in the template:\r\n```yaml\r\nMappings:\r\n  NameServers:\r\n    10.90.0.0/16:\r\n      NameServer1: 10.90.0.10\r\n      NameServer2: 10.90.4.10\r\n    10.91.0.0/16:\r\n      NameServer1: 10.91.0.10\r\n      NameServer2: 10.91.4.10\r\n```\r\n\r\nHowever AWS rejected it:\r\n> Template format error: Mappings element name '10.93.0.0/16' must be non-empty and can contain only alphanumerics, '-' or '.'\r\n\r\n![Screen Shot 2021-05-12 at 11 34 41](https://user-images.githubusercontent.com/7205587/117905164-0e917c00-b316-11eb-8132-2da240ff892a.png)\r\n",
+    "repo": "aws-cloudformation/cfn-python-lint",
+    "test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/unit/rules/mappings/test_key_name.py",
+    "test_patch": "diff --git a/test/fixtures/templates/bad/mappings/key_name.yaml b/test/fixtures/templates/bad/mappings/key_name.yaml\nindex df6313732..73fc4ee76 100644\n--- a/test/fixtures/templates/bad/mappings/key_name.yaml\n+++ b/test/fixtures/templates/bad/mappings/key_name.yaml\n@@ -7,4 +7,8 @@ Mappings:\n     us-east-1a:\n       123456789012: \"ami-951945d0\"\n       us-east-1b: \"ami-951945d1\"\n+  NameServers:\n+    10.90.0.0/16:\n+      NameServer1: 10.90.0.10\n+      NameServer2: 10.90.4.10\n Resources: {}\ndiff --git a/test/unit/rules/mappings/test_key_name.py b/test/unit/rules/mappings/test_key_name.py\nindex 31ea89b16..8a5ac2e7b 100644\n--- a/test/unit/rules/mappings/test_key_name.py\n+++ b/test/unit/rules/mappings/test_key_name.py\n@@ -23,4 +23,4 @@ class TestKeyName(BaseRuleTestCase):\n \n     def test_file_negative(self):\n         \"\"\"Test failure\"\"\"\n-        self.helper_file_negative('test/fixtures/templates/bad/mappings/key_name.yaml', 3)\n+        self.helper_file_negative('test/fixtures/templates/bad/mappings/key_name.yaml', 4)\n"
+  },
+  "run": {
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 96000,
+        "max_turns": 60,
+        "max_wall_seconds": 1500.0,
+        "prompt_token_budget": 160000
+      }
+    },
+    "code_version": "0.0.1",
+    "executor_kind": "tokenfactory",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "run_id": "pilot-aws-cloudformation__cfn-python-lint-2006-9d79ca1c37"
+  },
+  "schema": "receipts-bundle/1",
+  "shipped": {
+    "agent_patch": "diff --git a/src/cfnlint/helpers.py b/src/cfnlint/helpers.py\nindex 54436ada..e1d29897 100644\n--- a/src/cfnlint/helpers.py\n+++ b/src/cfnlint/helpers.py\n@@ -67,7 +67,7 @@ FN_PREFIX = 'Fn::'\n CONDITION_FUNCTIONS = ['Fn::If']\n REGIONS = list(SPEC_REGIONS.keys())\n \n-REGEX_ALPHANUMERIC = re.compile('^[a-zA-Z0-9]*$')\n+REGEX_ALPHANUMERIC = re.compile('^[a-zA-Z0-9-.]*$')\n REGEX_CIDR = re.compile(\n     r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$')\n REGEX_IPV4 = re.compile(\n",
+    "agent_patch_sha256": "e5d82c04af15a1af670e46a5946a4545c470f6cbcba034fa0e3538193fb893fc",
+    "filtered_sha256": "e5d82c04af15a1af670e46a5946a4545c470f6cbcba034fa0e3538193fb893fc",
+    "number": 2,
+    "patch": "diff --git a/src/cfnlint/helpers.py b/src/cfnlint/helpers.py\nindex 54436ada..e1d29897 100644\n--- a/src/cfnlint/helpers.py\n+++ b/src/cfnlint/helpers.py\n@@ -67,7 +67,7 @@ FN_PREFIX = 'Fn::'\n CONDITION_FUNCTIONS = ['Fn::If']\n REGIONS = list(SPEC_REGIONS.keys())\n \n-REGEX_ALPHANUMERIC = re.compile('^[a-zA-Z0-9]*$')\n+REGEX_ALPHANUMERIC = re.compile('^[a-zA-Z0-9-.]*$')\n REGEX_CIDR = re.compile(\n     r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$')\n REGEX_IPV4 = re.compile(\n",
+    "sha256": "e5d82c04af15a1af670e46a5946a4545c470f6cbcba034fa0e3538193fb893fc"
+  }
+}
