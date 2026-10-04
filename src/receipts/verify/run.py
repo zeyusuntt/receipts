@@ -70,8 +70,14 @@ class TargetNotFailing(Exception):
 
 
 class BaselineTooSlow(Exception):
-    def __init__(self, seconds: float) -> None:
-        super().__init__(f"baseline suite took {seconds:.0f}s, over the limit")
+    def __init__(
+        self, seconds: float, *, limit_s: int = 600, timed_out: bool = False,
+    ) -> None:
+        message = (
+            f"baseline suite timed out after {limit_s}s" if timed_out
+            else f"baseline suite took {seconds:.0f}s, over the {limit_s}s limit"
+        )
+        super().__init__(message)
         self.seconds = seconds
 
 
@@ -120,7 +126,9 @@ async def establish_baseline(
 ) -> Baseline:
     first = await ex.run_pytest(base, suite_scope, timeout_s=max(limit_s, 1))
     if first.timed_out or first.duration_s > limit_s:
-        raise BaselineTooSlow(first.duration_s)
+        raise BaselineTooSlow(
+            first.duration_s, limit_s=limit_s, timed_out=first.timed_out,
+        )
     if first.exit_code not in (0, 1, 5) or first.junit is None:
         raise BaselineBroken(f"first baseline run is not a valid pytest run (exit {first.exit_code}, junit={'present' if first.junit else 'missing'})")
     receipts = [first]

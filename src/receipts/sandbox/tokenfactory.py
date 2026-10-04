@@ -302,6 +302,7 @@ class _Execution:
     result: RunResult
     started_at: datetime
     finished_at: datetime
+    duration_s: float
 
 
 class TokenFactoryExecutor:
@@ -535,6 +536,7 @@ class TokenFactoryExecutor:
             files.update(extra_files)
         command_timeout_s = min(timeout_s, self.run_timeout_cap_s)
         started_at = _now()
+        monotonic_started = time.monotonic()
         try:
             result = await self.api.run(
                 command=command,
@@ -551,6 +553,7 @@ class TokenFactoryExecutor:
             )
         except TimeoutError as exc:
             raise RuntimeError(f"Token Factory run timed out: {exc}") from exc
+        duration_s = time.monotonic() - monotonic_started
         finished_at = _now()
         self._record_usage(branch, result, started_at, finished_at)
         if (advance_head or require_image) and result.image_uuid is None:
@@ -571,6 +574,7 @@ class TokenFactoryExecutor:
             result=result,
             started_at=started_at,
             finished_at=finished_at,
+            duration_s=duration_s,
         )
 
     def _next_seq(self, branch: Branch) -> int:
@@ -644,7 +648,7 @@ class TokenFactoryExecutor:
             stdout_sha256=stdout_sha256 or hashlib.sha256(output).hexdigest(),
             log_path=log_path,
             started_at=execution.started_at,
-            duration_s=max(0.0, result.duration_s),
+            duration_s=max(0.0, execution.duration_s),
             timed_out=result.timed_out,
             snapshot_sha=snapshot_sha,
             junit=junit,
