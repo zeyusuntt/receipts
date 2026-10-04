@@ -341,7 +341,7 @@ def _comparison(attempt: dict[str, Any], verdict: dict[str, Any]) -> str:
 
 def _bundle(run: _Run, page: str) -> str:
     links = "".join(f'<li>{_link(page, f"raw/{run.key}/{name}", name)}</li>' for name in sorted(run.raw))
-    return '<section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches.</p><ul class="bundle">' + links + '</ul></section>'
+    return '<section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches. In these copies the local checkout path is removed from file paths.</p><ul class="bundle">' + links + '</ul></section>'
 
 
 def _patch(run: _Run) -> str:
@@ -531,6 +531,20 @@ def _ordered(runs: Sequence[_Run], pilot: Path) -> list[_Run]:
     return sorted(runs, key=lambda r: (positions.get(r.iid, float("inf")), r.iid))
 
 
+_TEXT_SUFFIXES = {".json", ".jsonl", ".diff", ".txt"}
+
+
+def _without_checkout_path(source: Path, prefixes: Sequence[str]) -> bytes:
+    """Copy a record, making paths under the local checkout repository-relative."""
+    data = source.read_bytes()
+    if source.suffix not in _TEXT_SUFFIXES:
+        return data
+    text = data.decode("utf-8")
+    for prefix in prefixes:
+        text = text.replace(prefix + "/", "").replace(prefix, ".")
+    return text.encode("utf-8")
+
+
 def build_site(
     pilot_dirs: Sequence[Path], out_dir: Path, *, repo_root: Path, title: str = "Receipts",
 ) -> SiteSummary:
@@ -593,10 +607,11 @@ def build_site(
         target = out / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(contents, encoding="utf-8", newline="\n")
+    prefixes = sorted({str(repo_root), str(root)}, key=len, reverse=True)
     for relative, source in sorted(raw_files.items()):
         target = out / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(source.read_bytes())
+        target.write_bytes(_without_checkout_path(source, prefixes))
     return SiteSummary(out, len(pilots), total, len(pages), raw_count)
 
 

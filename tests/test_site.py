@@ -92,7 +92,8 @@ def test_pages_raw_files_and_excluded_large_artifacts(bundle):
             target = out / "raw" / iid / relative
             assert target.is_file(), relative
             original = pilot / iid / relative if relative == "record.json" else source / relative
-            assert target.read_bytes() == original.read_bytes()
+            # Copies are byte-identical except that the local checkout path is dropped.
+            assert target.read_bytes() == original.read_bytes().replace((str(repo) + "/").encode(), b"")
     assert not list(out.rglob("worker.jsonl"))
     assert not list(out.rglob("*.log"))
     for p in out.rglob("*.html"):
@@ -355,3 +356,15 @@ def test_rejected_run_summary_counts_the_attempted_patch_without_claiming_shipme
     assert "Final attempted patch:" in summary
     assert "files," in summary and "added and" in summary and "removed lines" in summary
     assert "No patch shipped" in summary
+
+
+def test_raw_copies_drop_the_local_checkout_path(bundle):
+    repo, pilot, out = bundle
+    build(bundle)
+    copied = out / "raw" / VERIFIED / "record.json"
+    original = (pilot / VERIFIED / "record.json").read_text()
+    assert str(repo) in original
+    text = copied.read_text()
+    assert str(repo) not in text
+    assert json.loads(text)["run_dir"] == json.loads(original)["run_dir"].removeprefix(str(repo) + "/")
+    assert "local checkout path is removed" in Page(out / "receipt" / f"{VERIFIED}.html").plain
