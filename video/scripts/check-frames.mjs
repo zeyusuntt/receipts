@@ -21,7 +21,7 @@ import {Placeholder} from './src/scenes/Placeholder';
 import {Video, scenes as sceneMap} from './src/Video';
 import {Captions} from './src/components/Captions';
 import {NodeText} from './src/components/NodeText';
-import {sequenceWindows, totalFrames, cueFrame} from './src/timing';
+import {sequenceWindows, totalFrames, cueFrame, replayPlan} from './src/timing';
 import {timeline, story, copy} from './src/content';
 
 const scenes=timeline.beats.map(beat=>sceneMap[beat.id]);
@@ -175,6 +175,19 @@ test('secondary layouts stay balanced and keep their key labels readable',()=>{
   assert.ok(actions.includes('grid-template-columns:370px 1fr 150px'));
   assert.ok(actions.includes('data-action-label=\"true\"'));
   assert.ok(actions.includes('white-space:nowrap'));
+});
+test('appeal ties the witness receipt record to the Token Factory console operation',()=>{
+  const w=windows[6];
+  const forkAt=cueFrame(w.beat,copy.appeal.cues.fork,timeline.fps,w.from);
+  const html=videoShot(6,forkAt+Math.ceil(timeline.fps*0.3));
+  const text=plain(html);
+  const operation=story.featured.witness_operations.w2;
+  assert.ok(html.includes('captures/console/witness-operation.png'));
+  assert.ok(html.includes('aria-label="Operation UUID"'));
+  assert.ok(html.includes('aria-label="Success"'));
+  assert.ok(text.includes('This witness run in the Nebius Token Factory console'));
+  assert.ok(text.includes('receipt record · witness w2 · operation '+operation));
+  assert.ok(html.includes('data-witness-operation="'+operation+'"'));
 });
 test('spec names retain class identity and permit only separator breaks',()=>{
   const html=shot(3,windows[3].speechDuration-1);
@@ -420,6 +433,39 @@ test('results close on the reusable receipt and Receipts-written pull request de
   const lines=[...rendered.matchAll(/data-pr-body-line="true"[^>]*>([^<]*)/g)].map(match=>plain(match[1]));
   assert.ok(lines.length>0,'PR description has no body lines');
   assert.ok(lines.every(line=>[...line].length<=48),'PR body line exceeds the mono 34 character budget: '+lines.find(line=>[...line].length>48));
+});
+test('results part D replays the real fix recording and holds its final frame',()=>{
+  const w=windows[10];
+  const fixAt=cueFrame(w.beat,'On another repo',timeline.fps,w.from);
+  const before=videoShot(10,fixAt-1);
+  const replay=videoShot(10,fixAt);
+  assert.ok(!before.includes('captures/fix-tf.mp4'));
+  assert.ok(replay.includes('data-replay-media="captures/fix-tf.mp4"'));
+  assert.ok(replay.includes('data-replay-state="typing"'));
+  assert.ok(replay.includes('data-replay-rate="1"'));
+  assert.ok(replay.includes('data-replay-source-seconds="15.000"'));
+  assert.ok(plain(replay).includes('Another repo, one command: PyFlakes issue 335 on Nebius Token Factory Sandboxes'));
+  assert.ok(plain(replay).includes('real recording · the waits are sped up · final 2s of typing shown'));
+
+  const excerpt={...story.media.fix,command_start_s:story.media.fix.command_end_s-2};
+  const plan=replayPlan(excerpt,(w.durationInFrames-fixAt)/timeline.fps,timeline.fps);
+  assert.equal(plan.segments[0].rate,1,'fix typing must play at 1x');
+  assert.ok(plan.segments[1].rate>1,'fix wait must be accelerated');
+  assert.equal(plan.segments[2].rate,1,'fix result must play at 1x');
+  const oneSecond=videoShot(10,fixAt+timeline.fps);
+  assert.ok(oneSecond.includes('data-replay-state="typing"'));
+  assert.ok(oneSecond.includes('data-replay-source-seconds="16.000"'));
+  const result=videoShot(10,fixAt+plan.segments[2].from);
+  assert.ok(result.includes('data-replay-state="result"'));
+  assert.ok(result.includes('data-replay-rate="1"'));
+
+  const beforeClose=windows[11].from-w.from-1;
+  const held=videoShot(10,beforeClose);
+  assert.ok(held.includes('data-replay-media="captures/fix-tf.mp4"'));
+  assert.ok(held.includes('data-replay-state="hold"'));
+  // The recording itself is the result: it fills the frame instead of a typed summary under it.
+  assert.ok(!held.includes('data-fix-result-summary'));
+  assert.match(held,/top:200px;height:1010px/);
 });
 test('captions consume aligned beat words without an external prop',()=>{
   const beat={id:'x',start_s:10,end_s:14,text:'One two. Three.',words:[

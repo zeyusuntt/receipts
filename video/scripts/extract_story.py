@@ -133,6 +133,14 @@ def _featured(repo: Path) -> dict[str, Any]:
         "duration_s": row["duration_s"], "exit_code": row["exit_code"],
     } for row in agent_rows]
     witness_rows = [json.loads(line) for line in (run / "branches/w1/receipts.jsonl").read_text().splitlines() if line.strip()]
+    sandbox_usage = _json(run / "cost.json")["sandbox_usage"]
+    witness_operations = {
+        branch: max(
+            (operation for operation in sandbox_usage if operation["branch_id"] == branch),
+            key=lambda operation: operation["duration_s"],
+        )["operation_id"]
+        for branch in ("w1", "w2")
+    }
     r1 = _predicate(second, "R1_fail_to_pass")
     r2 = _predicate(second, "R2_pass_to_pass")
     r3 = _predicate(second, "R3_no_shrink")
@@ -177,7 +185,8 @@ def _featured(repo: Path) -> dict[str, Any]:
         "patch_excerpt": patch.splitlines()[:40],
         "agent_steps": agent_steps,
         "replay_windows": [{"start_s": agent_steps[i]["offset_s"], "duration_s": 5} for i in [1, 10, 14, 23]],
-        "witness_operations": [{"receipt_id": row["receipt_id"], "image_before": row["image_before"], "image_after": row["image_after"], "kind": row["kind"]} for row in witness_rows],
+        "witness_operations": witness_operations,
+        "witness_receipts": [{"receipt_id": row["receipt_id"], "image_before": row["image_before"], "image_after": row["image_after"], "kind": row["kind"]} for row in witness_rows],
         "receipt": receipt,
         "pr_description": _pr_description(site_run),
     }

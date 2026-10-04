@@ -19,7 +19,7 @@ export function Rejected({beat, sequenceFrom, speechDuration, wordTimestamps}: S
   const stampAt = cue(copy.cues.rejected);
   const failedAt = stampAt - fps * 0.45;
   const forked = frame >= forkAt;
-  const operation = story.featured.witness_operations[0];
+  const operation = story.featured.witness_receipts[0];
   const patchProgress = interpolate(frame, [patchAt, patchAt + fps * 0.8], [0, 1], clamp);
   const shortIds = (text: string) => text.replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, (uuid) => uuid.slice(0, 8));
   return <AbsoluteFill style={{background: palette.page}}>

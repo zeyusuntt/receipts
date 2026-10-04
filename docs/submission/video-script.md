@@ -37,7 +37,7 @@ Read it in one take, the way you'd explain it to a friend at a desk. Pause about
 >
 > I got this wrong first. In my first pilot, the gate let one bad fix through: the agent hid a copy of the package where my test runner would find it. I'd written the rules down in advance, so I published the mistake, fixed it, and started over. /
 >
-> On the hundred bugs: sixty-six verified fixes, zero false ones shipped, about forty cents of Nemotron tokens each. / It all ran on Nebius Token Factory: eighty-seven million Nemotron tokens, nearly five hundred sandboxes. / That's what I want before I merge anything an agent wrote: a receipt I can re-run. /
+> On the hundred bugs: sixty-six verified fixes, zero false ones shipped, about forty cents of Nemotron tokens each. / It all ran on Nebius Token Factory: eighty-seven million Nemotron tokens, nearly five hundred sandboxes. / That's what I want before I merge anything an agent wrote: a receipt I can re-run. / On another repo, it's one command and a failing test. /
 >
 > Agents can write the code. Receipts makes them show their work.
 

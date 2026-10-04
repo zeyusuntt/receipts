@@ -97,6 +97,22 @@ class StoryExtractionTests(unittest.TestCase):
                 description,
             )
 
+    def test_featured_witness_operations_select_the_longest_operation_per_branch(self):
+        CHECKS.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=CHECKS) as tmp:
+            out = Path(tmp) / "story.json"
+            result = self.extract(out)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            operations = json.loads(out.read_text())["featured"]["witness_operations"]
+            self.assertEqual(
+                operations,
+                {
+                    "w1": "01a0ff61-b8fb-77a8-a0a0-dc178108f719",
+                    "w2": "01a0ff63-2a85-72ca-b4a5-6acd9e56af33",
+                },
+            )
+
     def test_forbidden_paths_in_preserved_copy_fail_before_overwriting(self):
         CHECKS.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=CHECKS) as tmp:

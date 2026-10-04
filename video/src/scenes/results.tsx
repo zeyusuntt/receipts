@@ -1,10 +1,11 @@
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import consoleBoxes from '../../public/captures/console/boxes.json';
 import {copy, story} from '../content';
-import {cueFrame} from '../timing';
+import {cueFrame, replayPlan} from '../timing';
 import {fonts, palette} from '../theme';
 import {ConsoleCapture} from '../components/ConsoleCapture';
 import {PaperReceipt} from '../components/PaperReceipt';
+import {TerminalReplay} from '../components/TerminalReplay';
 import type {SceneProps} from './types';
 
 const fill = (template: string, values: Record<string, string | number>) => Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, String(value)), template);
@@ -29,7 +30,7 @@ function wrapPrLine(line: string) {
   return lines;
 }
 
-export function Results({beat, sequenceFrom, wordTimestamps}: SceneProps) {
+export function Results({beat, sequenceFrom, speechDuration, sceneDuration, wordTimestamps}: SceneProps) {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const n = story.numbers;
@@ -38,6 +39,9 @@ export function Results({beat, sequenceFrom, wordTimestamps}: SceneProps) {
   const tokensAt = cueFrame(beat, c.cues.tokens, fps, sequenceFrom, wordTimestamps);
   const sandboxesAt = cueFrame(beat, c.cues.sandboxes, fps, sequenceFrom, wordTimestamps);
   const receiptAt = cueFrame(beat, c.cues.reverify, fps, sequenceFrom, wordTimestamps);
+  const fixAt = cueFrame(beat, c.cues.fix, fps, sequenceFrom, wordTimestamps);
+  const fixMedia = {...story.media.fix, command_start_s: story.media.fix.command_end_s - story.media.fix.typing_excerpt_s};
+  const fixPlan = replayPlan(fixMedia, ((sceneDuration ?? speechDuration) - fixAt) / fps, fps);
   const description = story.featured.pr_description.split('\n');
   const prTitle = description[0];
   if (!prTitle || description[1] !== '') throw new Error('PR description must start with a title and blank line');
@@ -91,7 +95,7 @@ export function Results({beat, sequenceFrom, wordTimestamps}: SceneProps) {
       </div>
     </>}
 
-    {frame >= receiptAt && <>
+    {frame >= receiptAt && frame < fixAt && <>
       <div style={{position: 'absolute', left: 128, top: 110}}><PaperReceipt compact checkAt={[receiptAt, receiptAt, receiptAt, receiptAt, receiptAt]} metaAt={receiptAt} stampAt={receiptAt}/></div>
       <div style={{position: 'absolute', left: 1348, right: 128, top: 110}}>
         <div style={{fontSize: 36, color: palette.secondary}}>{c.pr_description_label}</div>
@@ -109,5 +113,7 @@ export function Results({beat, sequenceFrom, wordTimestamps}: SceneProps) {
         </div>
       </div>
     </>}
+
+    {frame >= fixAt && <TerminalReplay media={fixMedia} plan={fixPlan} startAt={fixAt} header={c.fix_header} recordingNote={fill(c.fix_recording_note, {seconds: story.media.fix.typing_excerpt_s})} waitLabel={copy.reverify.wait_label} speedSuffix={copy.reverify.speed_suffix} holdLabel={copy.reverify.hold_label} headerTop={60} controlsTop={130} panelTop={200} panelHeight={1010} videoStyle={{position: 'absolute', width: 2022, height: 1138, left: 141, top: -35}}/>}
   </AbsoluteFill>;
 }

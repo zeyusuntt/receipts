@@ -1,8 +1,10 @@
 import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
+import consoleBoxes from '../../public/captures/console/boxes.json';
 import {copy, story} from '../content';
 import {cueFrame} from '../timing';
 import {fonts, palette} from '../theme';
 import {ArchitectureMap, mapPositions} from '../components/ArchitectureMap';
+import {ConsoleCapture} from '../components/ConsoleCapture';
 import {GateChecks} from '../components/GateChecks';
 import {NodeText} from '../components/NodeText';
 import {Stamp} from '../components/Stamp';
@@ -22,18 +24,28 @@ export function AppealPasses({beat, sequenceFrom, wordTimestamps}: SceneProps) {
   const attempt = story.featured.attempts[1];
   const evidence = story.featured.appeal_text.split('\n');
   const lines = [...evidence.slice(0, 2), evidence.filter(Boolean).at(-1)!];
+  const witnessOperation = story.featured.witness_operations.w2;
+  const witnessRecord = a.witness_record.replace('{branch}', attempt.witness_branch).replace('{operation}', witnessOperation);
   const progress = interpolate(frame, [backAt, Math.max(backAt + 1, patchAt - fps)], [0, 1], clamp);
   const center = (node: 'agent' | 'gate') => 128 + (mapPositions[node][0] + mapPositions[node][2] / 2) * 2304 / 2256;
   const left = interpolate(progress, [0, 1], [Math.min(1312, center('gate') - 560), center('agent') - 560], clamp);
   const title = frame >= verifiedAt ? a.verified_title : frame >= checksAt ? a.checks_title : frame >= forkAt ? a.witness_title : frame >= patchAt ? a.files_title : a.title;
   return <AbsoluteFill style={{background: palette.page}}>
     <div style={{position: 'absolute', left: 128, right: 128, top: 120, fontSize: 88, textAlign: 'center', fontWeight: 600}}>{title}</div>
-    {frame < verifiedAt && <div style={{position: 'absolute', left: 128, top: 285}}><ArchitectureMap visibleNodes={frame >= forkAt ? ['test', 'agent', 'witness', 'gate', 'receipt'] : ['test', 'agent', 'gate', 'receipt']} litNodes={frame >= checksAt ? ['witness', 'gate'] : frame >= forkAt ? ['witness'] : frame >= patchAt ? ['agent'] : ['gate', 'agent']} showCheckpoint={frame >= forkAt} nodeFrames={{witness: forkAt}} witnessBranch={attempt.witness_branch}/></div>}
+    {frame < verifiedAt && !(frame >= forkAt && frame < checksAt) && <div style={{position: 'absolute', left: 128, top: 285}}><ArchitectureMap visibleNodes={frame >= forkAt ? ['test', 'agent', 'witness', 'gate', 'receipt'] : ['test', 'agent', 'gate', 'receipt']} litNodes={frame >= checksAt ? ['witness', 'gate'] : frame >= forkAt ? ['witness'] : frame >= patchAt ? ['agent'] : ['gate', 'agent']} showCheckpoint={frame >= forkAt} nodeFrames={{witness: forkAt}} witnessBranch={attempt.witness_branch}/></div>}
     {frame < patchAt && <div data-appeal-card style={{position: 'absolute', left, top: 445, width: 1120, boxSizing: 'border-box', background: palette.paper, border: `3px solid ${palette.accent}`, borderRadius: 24, padding: '28px 32px', boxShadow: '0 20px 55px rgba(18,22,28,0.14)'}}>
       {lines.map((line, i) => <div key={i} style={{fontFamily: fonts.mono, fontSize: 40, lineHeight: 1.45, marginTop: i ? 20 : 0, color: i === 0 ? palette.rejected : palette.ink}}><NodeText text={line}/></div>)}
     </div>}
     {frame >= patchAt && frame < forkAt && <div style={{position: 'absolute', left: 128, right: 128, top: 835, textAlign: 'center'}}>{story.featured.patch_files.map(file => <div key={file} style={{fontFamily: fonts.mono, fontSize: 64, lineHeight: 1.4, color: palette.accent}}>{file}</div>)}</div>}
-    {frame >= forkAt && frame < checksAt && <div style={{position: 'absolute', left: 128, right: 128, top: 875, textAlign: 'center', fontFamily: fonts.mono, fontSize: 52, color: palette.accent}}>{copy.featured.witness_label.replace('{branch}', attempt.witness_branch)}<div style={{fontSize: 36, marginTop: 28}}>{copy.architecture.checkpoint} · {story.featured.checkpoint_id.slice(0, 8)}</div></div>}
+    {frame >= forkAt && frame < checksAt && <>
+      <div data-witness-console style={{position: 'absolute', left: 195, top: 300}}>
+        <ConsoleCapture image="witness-operation" meta={consoleBoxes['witness-operation']} highlights={[consoleBoxes['witness-operation'].highlight, consoleBoxes['witness-operation'].status]} label={a.witness_console_label} width={2170} height={553}/>
+      </div>
+      <div style={{position: 'absolute', left: 128, right: 128, top: 1015, textAlign: 'center', fontFamily: fonts.mono, fontSize: 34, whiteSpace: 'nowrap'}}>
+        {witnessRecord.slice(0, -witnessOperation.length)}
+        <span data-witness-operation={witnessOperation} style={{display: 'inline-block', padding: '8px 12px', border: `5px solid ${palette.rejected}`, borderRadius: 12, transform: 'rotate(-0.5deg)'}}>{witnessOperation}</span>
+      </div>
+    </>}
     {frame >= checksAt && <div data-appeal-checks style={{position: 'absolute', left: 420, right: 420, top: frame >= verifiedAt ? 620 : 800}}><GateChecks attempt={attempt} minimumFontSize={44} at={copy.featured.checks.map((_, i) => checksAt + Math.min(fps * 0.12 * i, Math.max(0, verifiedAt - checksAt - 1)))}/></div>}
     {frame >= verifiedAt && <div style={{position: 'absolute', left: 128, right: 128, top: 355, textAlign: 'center'}}><Stamp verdict="VERIFIED" at={verifiedAt} size={1.6}/></div>}
   </AbsoluteFill>;
