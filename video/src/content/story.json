@@ -424,6 +424,7 @@
       "fs/base.py",
       "fs/ftpfs.py"
     ],
+    "pr_description": "Fixes pyfilesystem__pyfilesystem2-462: FTPFS should use MDTM.\n\nVerified by Receipts on a fresh sandbox the agent never touched:\n- spec tests: 3 failed before, pass now\n- 333 of 333 previously passing tests still pass\n- no tests removed or skipped; no test or config edits\n- re-verify: uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json\n\nWritten with NVIDIA Nemotron 3 Super on Nebius Token Factory; reviewed and submitted by [your name].",
     "receipt": {
       "agent_steps": 36,
       "attempts": [
@@ -565,7 +566,7 @@
         "checks": "same checks",
         "fork": "A fresh sandbox",
         "patch": "It finds the real problem",
-        "return": "goes back",
+        "return": "sends the gate's evidence",
         "verified": "This time it passes"
       },
       "files_title": "The second patch",
@@ -607,7 +608,7 @@
     },
     "cold_open": {
       "agent_label": "The agent said",
-      "cue": "They didn't",
+      "cue": "It didn't",
       "failed": "FAILED",
       "question": "Was it?",
       "run_short_chars": 8,
@@ -718,16 +719,16 @@
         "gate_stricter": "disagrees: the gate rejected it"
       },
       "check_cues": [
-        "the spec passes",
-        "nothing else breaks",
-        "no test is deleted",
-        "your tests stay untouched",
+        "the failing test passes",
+        "old tests still pass",
+        "no test is removed",
+        "leaves your tests alone",
         "every step is hashed"
       ],
       "digest_label": "applied digest matches",
       "no_model": "No model decides any of it.",
       "no_model_cues": [
-        "plain code"
+        "boring code"
       ],
       "not_resolved": "not resolved",
       "official_cues": [
@@ -780,6 +781,7 @@
       },
       "false": "false fixes shipped",
       "official": "by SWE-rebench's official grader, on these {tasks} bugs",
+      "pr_description_label": "Pull request description, written by Receipts",
       "receipt_command": "receipts reverify receipts/{instance}.json",
       "title": "On the {tasks} bugs.",
       "verified": "verified fixes",

@@ -23,7 +23,7 @@ from typing import Any
 from receipts.agent.worker import APPEAL_INSTRUCTION
 from receipts.models import Verdict
 from receipts.orchestrate import _appeal_evidence
-from receipts.site import _display_command
+from receipts.site import _display_command, _load_run, _pr_description
 
 COLD_OPEN = "azure__walinuxagent-638"
 FEATURED = "pyfilesystem__pyfilesystem2-462"
@@ -104,8 +104,10 @@ def _cold_open(repo: Path) -> dict[str, Any]:
 
 
 def _featured(repo: Path) -> dict[str, Any]:
-    record = _json(repo / f"pilot/v2-P/{FEATURED}/record.json")
+    record_path = repo / f"pilot/v2-P/{FEATURED}/record.json"
+    record = _json(record_path)
     run = _run_dir(repo, record)
+    site_run = _load_run(record_path, repo)
     result = _json(run / "result.json")
     inp = _json(run / "input.json")
     disclosure = _json(run / "disclosure.json")
@@ -177,6 +179,7 @@ def _featured(repo: Path) -> dict[str, Any]:
         "replay_windows": [{"start_s": agent_steps[i]["offset_s"], "duration_s": 5} for i in [1, 10, 14, 23]],
         "witness_operations": [{"receipt_id": row["receipt_id"], "image_before": row["image_before"], "image_after": row["image_after"], "kind": row["kind"]} for row in witness_rows],
         "receipt": receipt,
+        "pr_description": _pr_description(site_run),
     }
 
 

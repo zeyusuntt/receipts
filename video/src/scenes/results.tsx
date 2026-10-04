@@ -9,6 +9,25 @@ import type {SceneProps} from './types';
 
 const fill = (template: string, values: Record<string, string | number>) => Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, String(value)), template);
 const number = (value: number) => value.toLocaleString('en-US');
+const PR_CARD_TOP = 174;
+const PR_CARD_HEIGHT = 910;
+const PR_LINE_BUDGET = 48;
+
+function wrapPrLine(line: string) {
+  if (line.length <= PR_LINE_BUDGET) return [line];
+  const lines: string[] = [];
+  for (const word of line.split(' ')) {
+    if (word.length > PR_LINE_BUDGET) throw new Error(`PR description token exceeds ${PR_LINE_BUDGET} characters: ${word}`);
+    const candidate = lines.length === 0 || lines.at(-1) === '' ? word : `${lines.at(-1)} ${word}`;
+    if (candidate.length <= PR_LINE_BUDGET - 1) {
+      if (lines.length === 0) lines.push(candidate);
+      else lines[lines.length - 1] = candidate;
+    } else {
+      lines.push(word);
+    }
+  }
+  return lines;
+}
 
 export function Results({beat, sequenceFrom, wordTimestamps}: SceneProps) {
   const frame = useCurrentFrame();
@@ -19,10 +38,10 @@ export function Results({beat, sequenceFrom, wordTimestamps}: SceneProps) {
   const tokensAt = cueFrame(beat, c.cues.tokens, fps, sequenceFrom, wordTimestamps);
   const sandboxesAt = cueFrame(beat, c.cues.sandboxes, fps, sequenceFrom, wordTimestamps);
   const receiptAt = cueFrame(beat, c.cues.reverify, fps, sequenceFrom, wordTimestamps);
-  const command = fill(c.receipt_command, {instance: story.featured.instance});
-  const commandWords = command.split(' ');
-  const commandLead = commandWords.slice(0, 2).join(' ');
-  const commandPath = commandWords.slice(2).join(' ');
+  const description = story.featured.pr_description.split('\n');
+  const prTitle = description[0];
+  if (!prTitle || description[1] !== '') throw new Error('PR description must start with a title and blank line');
+  const prBody = description.slice(2);
 
   return <AbsoluteFill style={{background: palette.page}}>
     {frame < builtAt && <>
@@ -74,9 +93,20 @@ export function Results({beat, sequenceFrom, wordTimestamps}: SceneProps) {
 
     {frame >= receiptAt && <>
       <div style={{position: 'absolute', left: 128, top: 110}}><PaperReceipt compact checkAt={[receiptAt, receiptAt, receiptAt, receiptAt, receiptAt]} metaAt={receiptAt} stampAt={receiptAt}/></div>
-      <div data-command-break="after-reverify" style={{position: 'absolute', left: 1320, right: 128, top: 455, padding: '38px 40px', borderRadius: 20, background: palette.black, color: palette.paper, fontFamily: fonts.mono, fontSize: 36, lineHeight: 1.45}}>
-        <div style={{whiteSpace: 'nowrap'}}>{commandLead}</div>{' '}
-        <div style={{whiteSpace: 'nowrap'}}>{commandPath}</div>
+      <div style={{position: 'absolute', left: 1348, right: 128, top: 110}}>
+        <div style={{fontSize: 36, color: palette.secondary}}>{c.pr_description_label}</div>
+      </div>
+      <div data-pr-description-card data-card-top={PR_CARD_TOP} data-card-height={PR_CARD_HEIGHT} style={{position: 'absolute', left: 1348, right: 128, top: PR_CARD_TOP, height: PR_CARD_HEIGHT, boxSizing: 'border-box', padding: '38px 40px', border: `2px solid ${palette.border}`, borderRadius: 16, background: palette.paper, boxShadow: '0 22px 44px rgba(18,22,28,0.13)', overflow: 'hidden'}}>
+        <div style={{fontSize: 44, lineHeight: 1.15, fontWeight: 600}}>{prTitle}</div>
+        <div style={{fontFamily: fonts.mono, fontSize: 34, lineHeight: 1.28, marginTop: 28}}>
+          {prBody.map((sourceLine, sourceIndex) => {
+            if (!sourceLine) return <div key={`gap-${sourceIndex}`} style={{height: 18}}/>;
+            const lines = wrapPrLine(sourceLine);
+            const content = lines.map((line, lineIndex) => <div key={`${sourceIndex}-${lineIndex}`} data-pr-body-line>{line}{lineIndex < lines.length - 1 ? ' ' : ''}</div>);
+            if (sourceLine.includes('re-verify:')) return <div key={`source-${sourceIndex}`} data-pr-reverify style={{margin: '10px -14px', padding: '9px 12px', border: `6px solid ${palette.rejected}`, borderRadius: 18, transform: 'rotate(-0.5deg)'}}>{content}</div>;
+            return <div key={`source-${sourceIndex}`}>{content}</div>;
+          })}
+        </div>
       </div>
     </>}
   </AbsoluteFill>;

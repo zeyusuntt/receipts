@@ -74,6 +74,29 @@ class StoryExtractionTests(unittest.TestCase):
                 },
             )
 
+    def test_featured_pr_description_comes_from_the_verified_run(self):
+        CHECKS.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=CHECKS) as tmp:
+            out = Path(tmp) / "story.json"
+            result = self.extract(out)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            description = json.loads(out.read_text())["featured"]["pr_description"]
+            self.assertTrue(
+                description.startswith(
+                    "Fixes pyfilesystem__pyfilesystem2-462: FTPFS should use MDTM."
+                )
+            )
+            self.assertIn(
+                "Verified by Receipts on a fresh sandbox the agent never touched:",
+                description,
+            )
+            self.assertIn(
+                "re-verify: uv run receipts reverify "
+                "receipts/pyfilesystem__pyfilesystem2-462.json",
+                description,
+            )
+
     def test_forbidden_paths_in_preserved_copy_fail_before_overwriting(self):
         CHECKS.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=CHECKS) as tmp:

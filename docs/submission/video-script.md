@@ -8,7 +8,7 @@ Grounded in the owner's own playbook (`~/Documents/beta fund/playbook/winning-pl
 - Calm, exact, a little dry. Numbers are said flatly; precision replaces charisma (the playbook's "Greg Brockman GPT-4 demo register").
 - Slow. Slower than feels natural; it reads as command.
 - Owns the mistake. The pilot's false fix is told plainly, because publishing it is the most credible thing in the video.
-- One human beat: the dry "They didn't." at the start, and "I got it wrong first" later.
+- One human beat: the dry "It didn't." at the start, and "I got it wrong first" later.
 
 What winners do that this borrows: a first line that says who you are and why you care (Pulse: "I'm a cardiologist"; EcoLafaek: "I'm from Timor-Leste; my capital produces 300 tons of waste a day"); no hype words anywhere; one moment of humour or candour; a close said with conviction.
 
@@ -16,10 +16,10 @@ What winners do that this borrows: a first line that says who you are and why yo
 
 Read it in one take, the way you'd explain it to a friend at a desk. Pause about a second at each `/`. Every claim is true of our runs. About 360 words: at a calm 140 words a minute that is about 2:35 of speech, about 2:50 with the pauses and the end card. If the take runs long, I cut a sentence (first candidates: "A fresh sandbox runs the same checks again." and "The failing test is the spec."); you don't speed up.
 
-> This is a coding agent telling me it's done. All tests pass. /
-> They didn't. /
+> This is a coding agent telling me it fixed the failing tests. /
+> It didn't. /
 >
-> I'm Zeyu. I build evaluations for AI agents, and I hear "done" a lot. So I measured it. I gave NVIDIA's Nemotron 3 Super a hundred real bugs. It said "done" sixty-seven times. / Twelve weren't true. / If you're the one merging, you can't tell which twelve. /
+> I'm Zeyu. I build evaluations for AI agents, and I hear "done" a lot. So I gave NVIDIA's Nemotron 3 Super a hundred real bugs. It said "done" sixty-seven times. / Twelve weren't true. / If you're the one merging, you can't tell which twelve. /
 >
 > I built Receipts for that: a coding agent that isn't allowed to grade its own homework. Nemotron writes the fix, on Nebius Token Factory. Then a fresh Token Factory Sandbox it never touched runs your tests again, / and plain code decides. /
 >
@@ -29,9 +29,9 @@ Read it in one take, the way you'd explain it to a friend at a desk. Pause about
 >
 > Receipts doesn't take its word for it. It forks the original checkpoint into a new sandbox, applies only the source change, and runs the tests itself. / Rejected. The spec still fails. /
 >
-> The failure goes back to the agent exactly as it happened, once. It finds the real problem, in the base class. A fresh sandbox runs the same checks again. / This time it passes. /
+> Receipts sends the gate's evidence back to the agent, once. It finds the real problem, in the base class. A fresh sandbox runs the same checks again. / This time it passes. /
 >
-> Every check is plain code: the spec passes, nothing else breaks, no test is deleted or skipped, your tests stay untouched, and every step is hashed back to your code. / SWE-rebench's grader, run separately, agrees. /
+> Every check is plain, boring code: the failing test passes, old tests still pass, no test is removed or skipped, the patch leaves your tests alone, and every step is hashed back to your code. / SWE-rebench's grader, run separately, agrees. /
 >
 > You can check this yourself. A receipt re-runs in about two minutes on Token Factory, or with Docker and no account. /
 >
@@ -44,13 +44,13 @@ Read it in one take, the way you'd explain it to a friend at a desk. Pause about
 ### How to say it (borrowed from the winners, fitted to this narrator)
 
 - The first two sentences, "Rejected. The spec still fails.", and the last two sentences are the anchors: say them slowest.
-- "They didn't." is dry, almost a shrug. Don't dramatize it.
+- "It didn't." is dry, almost a shrug. Don't dramatize it.
 - Numbers flat and exact: "twelve", "sixty-six", "zero". Let the number do the work.
 - "I got this wrong first" is said plainly, not apologetically. It's the moment judges start trusting you.
 - The last line slower than everything else, with a full stop after "code".
 - Record in one take with a phone voice memo; if you stumble, pause, and restart the sentence. I'll cut the stumbles.
 
-What changed in revision 6, and why: a review against the four judging criteria (Codex as a three-judge panel, 2026-10-04) found the product name arrived at 0:30 and the audience only at 2:21. So the introduction is one sentence, "by SWE-rebench's own grader" moved to the screen, the reader who merges is named by about 0:25 ("you can't tell which twelve"), the agent's verbs are spelled out for the NVIDIA judge, and the results add the Token Factory scale (87,379,659 Nemotron tokens and 482 sandbox branches over the 100 tasks, from `pilot/v2-P/report.json` and the run directories) and end on the action a reader takes. A humanizer pass (blader/humanizer rules) then restored the one wry personal line ("I hear 'done' a lot"), replaced the staged "You don't have to trust me" with the fact itself, turned the fragment row "New sandbox, same checks." into a sentence, and named the real fix (the base class) instead of "the actual problem".
+What changed in revision 6, and why: a review against the four judging criteria (Codex as a three-judge panel, 2026-10-04) found the product name arrived at 0:30 and the audience only at 2:21. So the introduction is one sentence, "by SWE-rebench's own grader" moved to the screen, the reader who merges is named by about 0:25 ("you can't tell which twelve"), the agent's verbs are spelled out for the NVIDIA judge, and the results add the Token Factory scale (87,379,659 Nemotron tokens and 482 sandbox branches over the 100 tasks, from `pilot/v2-P/report.json` and the run directories) and end on the action a reader takes. A humanizer pass (blader/humanizer rules) then restored the one wry personal line ("I hear 'done' a lot"), replaced the staged "You don't have to trust me" with the fact itself, turned the fragment row "New sandbox, same checks." into a sentence, and named the real fix (the base class) instead of "the actual problem". A second judging pass (2026-10-04) caught two lines the records do not support: the cold-open agent claimed its target tests passed, not the whole suite (so "All tests pass" became "it fixed the failing tests"), and the appeal sends the gate's evidence and a claim audit, not the failure "exactly as it happened". It also suggested "plain, boring code", which is how this narrator talks.
 
 What changed in revision 4 (kept since), and why: first person and contractions, because it is one person explaining their own project; "tasks it had never seen" became "picked by a rule I wrote down before running anything", because we can show nobody looked at the tasks during development but cannot show the model never saw them in training; the slogans ("Do not take our word for it", "impossible to fool", "for every maintainer who...") became plain sentences; the numbers are the reported ones (`REPORT-v2.md`); "I" assumes a solo entry, so say "we" throughout if the team has more people.
 

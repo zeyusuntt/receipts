@@ -269,7 +269,7 @@ test('printed receipts stay inside the safe area and keep every line unbroken',(
 
   const w=windows[10];
   const compact=videoShot(10,cueFrame(w.beat,'a receipt I can re-run',timeline.fps,w.from)+timeline.fps);
-  assert.ok(compact.includes('data-command-break=\"after-reverify\"'),'command breaks only after reverify');
+  assert.ok(!compact.includes('data-command-break=\"after-reverify\"'),'separate reverify command box remains');
   const compactLines=[...compact.matchAll(/data-receipt-line=\"true\"[^>]*>([^<]*)/g)].map(match=>plain(match[1]));
   assert.ok(compactLines.length>0);
   assert.ok(compactLines.every(line=>[...line].length<=46),'compact receipt line exceeds 46 characters');
@@ -404,11 +404,22 @@ test('results open on a vertically centred impact comparison with 12 and 0 domin
   assert.deepEqual(sizes('impact-grader'),[40]);
   assert.deepEqual(sizes('impact-cost'),[56]);
 });
-test('results close on the reusable receipt and reverify command',()=>{
+test('results close on the reusable receipt and Receipts-written pull request description',()=>{
   const w=windows[10];
-  const html=plain(videoShot(10,cueFrame(w.beat,'a receipt I can re-run',timeline.fps,w.from)+timeline.fps));
+  const rendered=videoShot(10,cueFrame(w.beat,'a receipt I can re-run',timeline.fps,w.from)+timeline.fps);
+  const html=plain(rendered);
   assert.ok(html.includes('RECEIPTpyfilesystem__pyfilesystem2-462'));
-  assert.ok(html.includes('receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json'));
+  assert.ok(html.includes('Pull request description, written by Receipts'));
+  assert.ok(html.includes('Fixes pyfilesystem__pyfilesystem2-462: FTPFS should use MDTM.'));
+  assert.ok(html.includes('re-verify: uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json'));
+  assert.ok(!rendered.includes('data-command-break="after-reverify"'),'the separate reverify command box remains');
+
+  const card=rendered.match(/data-pr-description-card="true" data-card-top="([0-9.]+)" data-card-height="([0-9.]+)"/);
+  assert.ok(card,'PR card exposes its safe-area geometry');
+  assert.ok(Number(card[1])+Number(card[2])<=1220,'PR card enters the caption band');
+  const lines=[...rendered.matchAll(/data-pr-body-line="true"[^>]*>([^<]*)/g)].map(match=>plain(match[1]));
+  assert.ok(lines.length>0,'PR description has no body lines');
+  assert.ok(lines.every(line=>[...line].length<=48),'PR body line exceeds the mono 34 character budget: '+lines.find(line=>[...line].length>48));
 });
 test('captions consume aligned beat words without an external prop',()=>{
   const beat={id:'x',start_s:10,end_s:14,text:'One two. Three.',words:[
