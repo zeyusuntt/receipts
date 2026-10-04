@@ -1,0 +1,70 @@
+diff --git a/stac_fastapi/api/stac_fastapi/api/models.py b/stac_fastapi/api/stac_fastapi/api/models.py
+index 1c2146d..8454bba 100644
+--- a/stac_fastapi/api/stac_fastapi/api/models.py
++++ b/stac_fastapi/api/stac_fastapi/api/models.py
+@@ -1,6 +1,6 @@
+ """Api request/response models."""
+ 
+-from dataclasses import dataclass, make_dataclass
++from dataclasses import dataclass
+ from typing import List, Optional, Type, Union
+ 
+ from fastapi import Path, Query
+@@ -25,6 +25,39 @@ except ImportError:  # pragma: nocover
+     from starlette.responses import JSONResponse
+ 
+ 
++def _create_dataclass_with_post_init(model_name, bases):
++    """Create a dataclass that calls __post_init__ from all base classes.
++
++    The standard make_dataclass only calls __post_init__ from the first
++    class in the MRO that defines it. This function ensures all base
++    __post_init__ methods are called.
++    """
++    import types
++
++    # Create the class using types.new_class
++    model_cls = types.new_class(model_name, bases, {}, lambda ns: ns.update({}))
++
++    # Remove __post_init__ if present, so the dataclass decorator doesn't
++    # add its own call, and we can add our own that calls all bases
++    if "_POST_INIT_NAME" in model_cls.__dict__:
++        del model_cls.__dict__["_POST_INIT_NAME"]
++
++    # Apply the dataclass decorator
++    Model = dataclass(model_cls)
++
++    # Add our __post_init__ that calls all base __post_init methods
++    def __post_init__(self):
++        for base in Model.__mro__:
++            if base is Model:
++                continue
++            if "__post_init__" in base.__dict__:
++                base.__post_init__(self)
++
++    Model.__post_init__ = __post_init__
++
++    return Model
++
++
+ def create_request_model(
+     model_name="SearchGetRequest",
+     base_model: Union[Type[BaseModel], APIRequest] = BaseSearchGetRequest,
+@@ -47,7 +80,7 @@ def create_request_model(
+ 
+     # Handle GET requests
+     if all([issubclass(m, APIRequest) for m in models]):
+-        return make_dataclass(model_name, [], bases=tuple(models))
++        return _create_dataclass_with_post_init(model_name, tuple(models))
+ 
+     # Handle POST requests
+     elif all([issubclass(m, BaseModel) for m in models]):
+@@ -97,7 +130,7 @@ class CollectionUri(APIRequest):
+ class ItemUri(APIRequest):
+     """Get or delete item."""
+ 
+-    collection_id: Annotated[str, Path(description="Collection ID")]
++    collection_id: Annotated[str, Path(description="Item ID")]
+     item_id: Annotated[str, Path(description="Item ID")]
+ 
+ 

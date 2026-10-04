@@ -1,0 +1,21 @@
+HEADER_ARTIFACT_LOCATION = "x-ms-artifact-location"
+HEADER_ARTIFACT_MANIFEST_LOCATION = "x-ms-artifact-manifest-location"
+MAXIMUM_PAGEBLOB_PAGE_SIZE = 4 * 1024 * 1024  # Max page size: 4MB
+
+
+class HostPluginProtocol(object):
+    _is_default_channel = True
+
+    def __init__(self, endpoint, container_id, role_config_name):
+        if endpoint is None:
+            raise ProtocolError("HostGAPlugin: Endpoint not provided")
+        self.is_initialized = False
+        self.is_available = False
+        self.api_versions = None
+        self.endpoint = endpoint
+        self.container_id = container_id
+        self.deployment_id = None
+        self.role_config_name = role_config_name
+        self.manifest_uri = None
+
+    def ensure_initialized(self):

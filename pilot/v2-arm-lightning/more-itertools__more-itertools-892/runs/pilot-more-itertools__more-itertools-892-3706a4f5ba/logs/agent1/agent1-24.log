@@ -1,0 +1,52 @@
+diff --git a/more_itertools/more.py b/more_itertools/more.py
+index 7fa96ad..6183546 100755
+--- a/more_itertools/more.py
++++ b/more_itertools/more.py
+@@ -1792,7 +1792,7 @@ def zip_offset(*iterables, offsets, longest=False, fillvalue=None):
+     return zip(*staggered)
+ 
+ 
+-def sort_together(iterables, key_list=(0,), key=None, reverse=False):
++def sort_together(iterables, key_list=(0,), key=None, reverse=False, strict=False):
+     """Return the input iterables sorted together, with *key_list* as the
+     priority for sorting. All iterables are trimmed to the length of the
+     shortest one.
+@@ -1831,7 +1831,26 @@ def sort_together(iterables, key_list=(0,), key=None, reverse=False):
+         >>> sort_together([(1, 2, 3), ('c', 'b', 'a')], reverse=True)
+         [(3, 2, 1), ('a', 'b', 'c')]
+ 
++    If *strict* is ``True``, iterables that do not have the same length will
++    raise ``UnequalIterablesError``.
++
++        >>> iterables = [(4, 3, 2, 1), ('a', 'b', 'c')]
++        >>> sort_together(iterables, strict=True)
++        Traceback (most recent call last):
++        ...
++        UnequalIterablesError: ...
++
+     """
++    if strict:
++        # Materialize iterables to check lengths without consuming them twice
++        lists = [list(it) for it in iterables]
++        sizes = set(map(len, lists))
++        if len(sizes) != 1:
++            raise UnequalIterablesError(
++                "sort_together() argument has iterables with different lengths."
++            )
++        iterables = tuple(lists)
++
+     if key is None:
+         # if there is no key function, the key argument to sorted is an
+         # itemgetter
+diff --git a/more_itertools/more.pyi b/more_itertools/more.pyi
+index ef82f39..f1a155d 100644
+--- a/more_itertools/more.pyi
++++ b/more_itertools/more.pyi
+@@ -321,6 +321,7 @@ def sort_together(
+     key_list: Iterable[int] = ...,
+     key: Callable[..., Any] | None = ...,
+     reverse: bool = ...,
++    strict: bool = ...,
+ ) -> list[tuple[_T, ...]]: ...
+ def unzip(iterable: Iterable[Sequence[_T]]) -> tuple[Iterator[_T], ...]: ...
+ def divide(n: int, iterable: Iterable[_T]) -> list[Iterator[_T]]: ...

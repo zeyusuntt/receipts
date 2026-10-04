@@ -1,0 +1,101 @@
+diff --git a/mkdocs_include_markdown_plugin/event.py b/mkdocs_include_markdown_plugin/event.py
+index f5b08d8..4c0374f 100644
+--- a/mkdocs_include_markdown_plugin/event.py
++++ b/mkdocs_include_markdown_plugin/event.py
+@@ -16,6 +16,59 @@ TRUE_FALSE_BOOL_STR = {
+     False: 'false',
+ }
+ 
++
++def _process_start_end_pairs(text, start_tag, end_tag):
++    """Process start-end tag pairs in the text, extracting content according to rules.
++    
++    - If start_tag is None and end_tag is None: return all text unchanged
++    - If start_tag is None and end_tag is not None: include content before first end_tag, discard end_tag and after
++    - If start_tag is not None and end_tag is None: include content after first start_tag until end of text
++    - If both are specified: process all start-end pairs, extracting content between each pair
++    """
++    if start_tag is None and end_tag is None:
++        return text
++    
++    # Case: only end tag specified - include content before first end tag
++    if start_tag is None and end_tag is not None:
++        end_idx = text.find(end_tag)
++        if end_idx == -1:
++            # No end tag found; include all content
++            return text
++        return text[:end_idx]
++    
++    # Case: only start tag specified - include content after first start tag until end
++    if start_tag is not None and end_tag is None:
++        start_idx = text.find(start_tag)
++        if start_idx == -1:
++            # No start tag found; include nothing
++            return ''
++        return text[start_idx + len(start_tag):]
++    
++    # Case: both start_tag and end_tag specified - process all pairs
++    result_parts = []
++    remaining = text
++    
++    while True:
++        # Find next start tag
++        start_idx = remaining.find(start_tag)
++        if start_idx == -1:
++            # No more start tags; stop processing
++            break
++        remaining = remaining[start_idx + len(start_tag):]
++        
++        # Find end tag after the start tag
++        end_idx = remaining.find(end_tag)
++        if end_idx == -1:
++            # No end tag found after this start; include rest of content
++            result_parts.append(remaining)
++            break
++        # Include content from after start to end tag
++        result_parts.append(remaining[:end_idx])
++        remaining = remaining[end_idx + len(end_tag):]
++    
++    return ''.join(result_parts)
++
++
+ INCLUDE_TAG_REGEX = re.compile(
+     r'''
+         (?P<_includer_indent>[^\S\r\n]*){%
+@@ -99,15 +152,18 @@ def get_file_content(markdown, abs_src_path):
+                 )
+ 
+         #   string options
++        start = None
++        end = None
+         start_match = re.search(ARGUMENT_REGEXES['start'], arguments_string)
+         if start_match is not None:
+             start = process.interpret_escapes(start_match.group(1))
+-            _, _, text_to_include = text_to_include.partition(start)
+ 
+         end_match = re.search(ARGUMENT_REGEXES['end'], arguments_string)
+         if end_match is not None:
+             end = process.interpret_escapes(end_match.group(1))
+-            text_to_include, _, _ = text_to_include.partition(end)
++
++        # Process all start-end pairs
++        text_to_include = _process_start_end_pairs(text_to_include, start, end)
+ 
+         # nested includes
+         new_text_to_include = get_file_content(text_to_include, file_path_abs)
+@@ -188,13 +244,13 @@ def get_file_content(markdown, abs_src_path):
+         start = None
+         if start_match is not None:
+             start = process.interpret_escapes(start_match.group(1))
+-            _, _, text_to_include = text_to_include.partition(start)
+ 
+         end_match = re.search(ARGUMENT_REGEXES['end'], arguments_string)
+         end = None
+         if end_match is not None:
+             end = process.interpret_escapes(end_match.group(1))
+-            text_to_include, _, _ = text_to_include.partition(end)
++
++        text_to_include = _process_start_end_pairs(text_to_include, start, end)
+ 
+         # relative URLs rewriting
+         if bool_options['rewrite-relative-urls']['value']:

@@ -1,0 +1,30 @@
+21:    # the following allows us to do coverage on our command line tools.  It will do nothing
+70:    Set up the openmdao subparser for the 'openmdao view_connections' command.
+74:    parser : argparse subparser
+130:    Set up the openmdao subparser for the 'openmdao meta_model' command.
+134:    parser : argparse subparser
+162:            print("bokeh must be installed to view a MetaModel.  Use the command:\n",
+228:    Set up the openmdao subparser for the 'openmdao summary' command.
+232:    parser : argparse subparser
+255:    Set up the openmdao subparser for the 'openmdao tree' command.
+259:    parser : argparse subparser
+364:    Set up the openmdao subparser for the 'openmdao cite' command.
+368:    parser : argparse subparser
+380:    Run the `openmdao cite` command.
+407:    Set up the openmdao subparser for the 'openmdao list_pre_post' command.
+411:    parser : argparse subparser
+469:    Set up the openmdao subparser for the 'openmdao comm_info' command.
+473:    parser : argparse subparser
+491:    Run the `openmdao comm_info` command.
+528:_command_map = {
+580:    Run an 'openmdao' sub-command or list help info for 'openmdao' command or sub-commands.
+592:                                     epilog='Use -h after any sub-command for sub-command help, '
+594:                                     'command. If using a tool on a script that takes its own '
+595:                                     'command line arguments, place those arguments after a "--". '
+604:    # setting 'dest' here will populate the Namespace with the active subparser name
+605:    subs = parser.add_subparsers(title='Tools', metavar='', dest="subparser_name")
+606:    for p, (parser_setup_func, executor, help_str) in sorted(_command_map.items()):
+611:    # now add any plugin openmdao commands
+613:    for ep in _iter_entry_points('openmdao_command'):
+615:        # don't let plugins override the builtin commands
+616:        if cmd in _command_map:

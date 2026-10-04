@@ -1,0 +1,56 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /WALinuxAgent
+collecting ... collected 2 items
+
+tests/protocol/test_hostplugin.py::TestHostPlugin::test_fallback PASSED  [ 50%]
+tests/protocol/test_wire.py::TestWireProtocolGetters::test_upload_status_blob_host_ga_plugin FAILED [100%]
+
+=================================== FAILURES ===================================
+________ TestWireProtocolGetters.test_upload_status_blob_host_ga_plugin ________
+
+self = <tests.protocol.test_wire.TestWireProtocolGetters testMethod=test_upload_status_blob_host_ga_plugin>
+args = (<MagicMock name='restutil' id='140737319554384'>, <MagicMock name='CryptUtil' id='140737319554320'>, <MagicMock name='sleep' id='140737319605200'>)
+vmstatus = <azurelinuxagent.common.protocol.restapi.VMStatus object at 0x7ffff5f04a50>
+wire_protocol_client = <azurelinuxagent.common.protocol.wire.WireClient object at 0x7ffff5f14850>
+goal_state = <azurelinuxagent.common.protocol.wire.GoalState object at 0x7ffff5f149d0>
+
+    def test_upload_status_blob_host_ga_plugin(self, *args):
+        vmstatus = VMStatus(message="Ready", status="Ready")
+        wire_protocol_client = WireProtocol(wireserver_url).client
+        wire_protocol_client.ext_conf = ExtensionsConfig(None)
+        wire_protocol_client.ext_conf.status_upload_blob = testurl
+        wire_protocol_client.ext_conf.status_upload_blob_type = testtype
+        wire_protocol_client.status_blob.vm_status = vmstatus
+        goal_state = GoalState(WireProtocolData(DATA_FILE).goal_state)
+    
+        with patch.object(HostPluginProtocol, "put_vm_status") as patch_host_ga_plugin_upload:
+            with patch.object(StatusBlob, "upload", return_value=False) as patch_default_upload:
+                wire_protocol_client.get_goal_state = Mock(return_value=goal_state)
+                wire_protocol_client.upload_status_blob()
+    
+                patch_default_upload.assert_called_once_with(testurl)
+                wire_protocol_client.get_goal_state.assert_called_once()
+                patch_host_ga_plugin_upload.assert_called_once_with(wire_protocol_client.status_blob, testurl, testtype)
+>               self.assertTrue(HostPluginProtocol.is_default_channel())
+E               AssertionError: False is not true
+
+tests/protocol/test_wire.py:183: AssertionError
+=============================== warnings summary ===============================
+azurelinuxagent/common/utils/flexible_version.py:24
+  /WALinuxAgent/azurelinuxagent/common/utils/flexible_version.py:24: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    version.Version.__init__(self)
+
+azurelinuxagent/common/version.py:67
+  /WALinuxAgent/azurelinuxagent/common/version.py:67: DeprecationWarning: dist() and linux_distribution() functions are deprecated in Python 3.5
+    supported_dists=supported))
+
+azurelinuxagent/common/version.py:68
+  /WALinuxAgent/azurelinuxagent/common/version.py:68: DeprecationWarning: dist() and linux_distribution() functions are deprecated in Python 3.5
+    full_name = platform.linux_distribution()[0].strip()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/protocol/test_wire.py::TestWireProtocolGetters::test_upload_status_blob_host_ga_plugin
+=================== 1 failed, 1 passed, 3 warnings in 0.17s ====================

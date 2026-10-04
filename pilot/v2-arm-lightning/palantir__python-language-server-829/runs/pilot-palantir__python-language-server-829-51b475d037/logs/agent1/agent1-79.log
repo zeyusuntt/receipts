@@ -1,0 +1,21 @@
+                log.warning("Failed to load %s entry point '%s': %s", PYLS, entry_point.name, e)
+                self._pm.set_blocked(entry_point.name)
+
+        # Load the entry points into pluggy, having blocked any failing ones
+        self._pm.load_setuptools_entrypoints(PYLS)
+
+        for name, plugin in self._pm.list_name_plugin():
+            if plugin is not None:
+                log.info("Loaded pyls plugin %s from %s", name, plugin)
+
+        for plugin_conf in self._pm.hook.pyls_settings(config=self):
+            self._plugin_settings = _utils.merge_dicts(self._plugin_settings, plugin_conf)
+
+        self._update_disabled_plugins()
+
+    @property
+    def disabled_plugins(self):
+        return self._disabled_plugins
+
+    @property
+    def plugin_manager(self):

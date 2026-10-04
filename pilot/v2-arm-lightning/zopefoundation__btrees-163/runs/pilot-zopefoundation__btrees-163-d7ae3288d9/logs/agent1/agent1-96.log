@@ -1,0 +1,31 @@
+diff --git a/src/BTrees/_datatypes.py b/src/BTrees/_datatypes.py
+index 5035144..a55e12c 100644
+--- a/src/BTrees/_datatypes.py
++++ b/src/BTrees/_datatypes.py
+@@ -178,6 +178,13 @@ class O(KeyDataType):
+         if type(item) is object: # pylint:disable=unidiomatic-typecheck
+             raise TypeError("Can't use object() as keys")
+ 
++        # Check for type objects (classes); they have default comparison
++        # based on address which is not suitable for BTree keys
++        if type(item) is type:
++            raise TypeError(
++                "Type objects cannot be used as BTree keys"
++            )
++
+         # Now more complicated checks to be sure we didn't
+         # inherit default comparison on any version of Python.
+ 
+@@ -208,6 +215,12 @@ class O(KeyDataType):
+                 # TODO: Shouldn't we only check __cmp__ on Python 2?
+                 # Python 3 won't use it.
+                 and getattr(item, '__cmp__', None) is None):
++            # Try to get the class name for a better error message
++            cls_name = getattr(type(item), '__name__', None)
++            if cls_name is not None:
++                raise TypeError(
++                    "Object of class %s has default comparison" % cls_name
++                )
+             raise TypeError("Object has default comparison")
+ 
+ 

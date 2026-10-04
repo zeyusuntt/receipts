@@ -1,0 +1,34 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "FTPFS should use MDTM\nRegarding fs.ftpfs.FS.getinfo (https://github.com/PyFilesystem/pyfilesystem2/blob/64d7a52e1f3037f33937f91e9db812cafdbbafc0/fs/ftpfs.py#L648)\r\n\r\nThat function tries to use MLST to retrieve arbitrary information of a single file and defaults to LIST if MLST is not supported. \r\nThis makes `fs.copy_dir_if_newer` incredibly inefficient on systems that do not support MLST. \r\n\r\nImo, an easy solution would be to possibly support MDTM as a fallback if only the modified datetime is requested, e.g. if `namespace == (\"detail\", \"modified\")`.\r\nAnother, probably more complex improvement, would be to cache the LIST response rather than call it for every single file.\r\n\r\nI can submit a PR for the first suggestion, if I get the okay that this is something that should be included. Possibly also the second, although I'm not sure yet how to best implement that.",
+  "source": {
+    "image": "docker.io/swerebenchv2/pyfilesystem-pyfilesystem2:462-ac8a91a",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pyfilesystem__pyfilesystem2-462-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfZnRwZnMucHkgYi90ZXN0cy90ZXN0X2Z0cGZzLnB5CmluZGV4IDQzMDI4ZGEuLmQ0MTQzYWEgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3Rlc3RfZnRwZnMucHkKKysrIGIvdGVzdHMvdGVzdF9mdHBmcy5weQpAQCAtMjYxLDYgKzI2MSwyMyBAQCBjbGFzcyBUZXN0RlRQRlMoRlNUZXN0Q2FzZXMsIHVuaXR0ZXN0LlRlc3RDYXNlKToKICAgICAgICAgZGVsIHNlbGYuZnMuZmVhdHVyZXNbIlVURjgiXQogICAgICAgICBzZWxmLmFzc2VydEZhbHNlKHNlbGYuZnMuZ2V0bWV0YSgpLmdldCgidW5pY29kZV9wYXRocyIpKQogCisgICAgZGVmIHRlc3RfZ2V0aW5mb19tb2RpZmllZChzZWxmKToKKyAgICAgICAgc2VsZi5hc3NlcnRJbigiTURUTSIsIHNlbGYuZnMuZmVhdHVyZXMpCisgICAgICAgIHNlbGYuZnMuY3JlYXRlKCJiYXIiKQorICAgICAgICBtdGltZV9kZXRhaWwgPSBzZWxmLmZzLmdldGluZm8oImJhciIsICgiYmFzaWMiLCAiZGV0YWlscyIpKS5tb2RpZmllZAorICAgICAgICBtdGltZV9tb2RpZmllZCA9IHNlbGYuZnMuZ2V0bW9kaWZpZWQoImJhciIpCisgICAgICAgICMgTWljcm9zZWNvbmQgYW5kIHNlY29uZHMgbWlnaHQgbm90IGFjdHVhbGx5IGJlIHN1cHBvcnRlZCBieSBhbGwKKyAgICAgICAgIyBGVFAgY29tbWFuZHMsIHNvIHdlIHN0cmlwIHRoZW0gYmVmb3JlIGNvbXBhcmluZyBpZiBpdCBsb29rcworICAgICAgICAjIGxpa2UgYXQgbGVhc3Qgb25lIG9mIHRoZSB0d28gdmFsdWVzIGRvZXMgbm90IGNvbnRhaW4gdGhlbS4KKyAgICAgICAgcmVwbGFjZW1lbnQgPSB7fQorICAgICAgICBpZiBtdGltZV9kZXRhaWwubWljcm9zZWNvbmQgPT0gMCBvciBtdGltZV9tb2RpZmllZC5taWNyb3NlY29uZCA9PSAwOgorICAgICAgICAgICAgcmVwbGFjZW1lbnRbIm1pY3Jvc2Vjb25kIl0gPSAwCisgICAgICAgIGlmIG10aW1lX2RldGFpbC5zZWNvbmQgPT0gMCBvciBtdGltZV9tb2RpZmllZC5zZWNvbmQgPT0gMDoKKyAgICAgICAgICAgIHJlcGxhY2VtZW50WyJzZWNvbmQiXSA9IDAKKyAgICAgICAgc2VsZi5hc3NlcnRFcXVhbCgKKyAgICAgICAgICAgIG10aW1lX2RldGFpbC5yZXBsYWNlKCoqcmVwbGFjZW1lbnQpLCBtdGltZV9tb2RpZmllZC5yZXBsYWNlKCoqcmVwbGFjZW1lbnQpCisgICAgICAgICkKKwogICAgIGRlZiB0ZXN0X29wZW5lcl9wYXRoKHNlbGYpOgogICAgICAgICBzZWxmLmZzLm1ha2VkaXIoImZvbyIpCiAgICAgICAgIHNlbGYuZnMud3JpdGV0ZXh0KCJmb28vYmFyIiwgImJheiIpCmRpZmYgLS1naXQgYS90ZXN0cy90ZXN0X21lbW9yeWZzLnB5IGIvdGVzdHMvdGVzdF9tZW1vcnlmcy5weQppbmRleCBiYjUwOTZmLi42N2Q5MmFjIDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X21lbW9yeWZzLnB5CisrKyBiL3Rlc3RzL3Rlc3RfbWVtb3J5ZnMucHkKQEAgLTcyLDE0ICs3MiwxMyBAQCBjbGFzcyBUZXN0TWVtb3J5RlMoRlNUZXN0Q2FzZXMsIHVuaXR0ZXN0LlRlc3RDYXNlKToKICAgICAgICAgc2VsZi5mcy5tYWtlZGlyKCJiYXIiKQogICAgICAgICBzZWxmLmZzLnRvdWNoKCJmb28vZmlsZS50eHQiKQogCi0gICAgICAgIG5hbWVzcGFjZXMgPSAoImRldGFpbHMiLCAibW9kaWZpZWQiKQotICAgICAgICBzcmNfaW5mbyA9IHNlbGYuZnMuZ2V0aW5mbygiZm9vL2ZpbGUudHh0IiwgbmFtZXNwYWNlcykKKyAgICAgICAgc3JjX2RhdGV0aW1lID0gc2VsZi5mcy5nZXRtb2RpZmllZCgiZm9vL2ZpbGUudHh0IikKIAogICAgICAgICBzZWxmLmZzLmNvcHkoImZvby9maWxlLnR4dCIsICJiYXIvZmlsZS50eHQiLCBwcmVzZXJ2ZV90aW1lPVRydWUpCiAgICAgICAgIHNlbGYuYXNzZXJ0VHJ1ZShzZWxmLmZzLmV4aXN0cygiYmFyL2ZpbGUudHh0IikpCiAKLSAgICAgICAgZHN0X2luZm8gPSBzZWxmLmZzLmdldGluZm8oImJhci9maWxlLnR4dCIsIG5hbWVzcGFjZXMpCi0gICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoZHN0X2luZm8ubW9kaWZpZWQsIHNyY19pbmZvLm1vZGlmaWVkKQorICAgICAgICBkc3RfZGF0ZXRpbWUgPSBzZWxmLmZzLmdldG1vZGlmaWVkKCJiYXIvZmlsZS50eHQiKQorICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGRzdF9kYXRldGltZSwgc3JjX2RhdGV0aW1lKQogCiAKIGNsYXNzIFRlc3RNZW1vcnlGaWxlKHVuaXR0ZXN0LlRlc3RDYXNlKToK'\"'\"'))'",
+      "git apply /tmp/receipts-pyfilesystem__pyfilesystem2-462-test.patch"
+    ],
+    "workdir": "/pyfilesystem2"
+  },
+  "spec_paths": [
+    "tests/test_ftpfs.py",
+    "tests/test_memoryfs.py"
+  ],
+  "spec_tests": [
+    "tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified",
+    "tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified",
+    "tests/test_memoryfs.py::TestMemoryFS::test_copy_preserve_time"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_ftpfs.py tests/test_memoryfs.py"
+}

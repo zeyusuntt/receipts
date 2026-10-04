@@ -1,0 +1,43 @@
+    def upload_status_blob(self):
+        ext_conf = self.get_ext_conf()
+        if ext_conf.status_upload_blob is not None:
+            uploaded = False
+            try:
+                uploaded = self.status_blob.upload(ext_conf.status_upload_blob)
+                self.report_blob_type(self.status_blob.type,
+                                      ext_conf.status_upload_blob_type)
+            except (HttpError, ProtocolError) as e:
+                # errors have already been logged
+                pass
+            if not uploaded:
+                host = self.get_host_plugin()
+                host.put_vm_status(self.status_blob,
+                                   ext_conf.status_upload_blob,
+                                   ext_conf.status_upload_blob_type)
+
+    """
+    Emit an event to determine if the type in the extension config
+    matches the actual type from the HTTP HEAD request.
+    """
+    def report_blob_type(self, head_type, config_type):
+        if head_type and config_type:
+            is_match = head_type == config_type
+            if self.status_blob_type_reported is False:
+                message = \
+                    'Blob type match [{0}]'.format(head_type) if is_match else \
+                    'Blob type mismatch [HEAD {0}], [CONFIG {1}]'.format(
+                        head_type,
+                        config_type)
+
+                from azurelinuxagent.common.event import add_event, WALAEventOperation
+                from azurelinuxagent.common.version import AGENT_NAME, CURRENT_VERSION
+                add_event(AGENT_NAME,
+                          version=CURRENT_VERSION,
+                          is_success=is_match,
+                          message=message,
+                          op=WALAEventOperation.HealthCheck)
+                self.status_blob_type_reported = True
+
+    def report_role_prop(self, thumbprint):
+        goal_state = self.get_goal_state()
+        role_prop = _build_role_properties(goal_state.container_id,

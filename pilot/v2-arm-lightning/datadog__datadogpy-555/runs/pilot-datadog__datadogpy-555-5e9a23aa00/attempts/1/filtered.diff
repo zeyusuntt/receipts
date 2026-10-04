@@ -1,0 +1,16 @@
+diff --git a/datadog/dogshell/wrap.py b/datadog/dogshell/wrap.py
+index 022b333..f3bc1ad 100644
+--- a/datadog/dogshell/wrap.py
++++ b/datadog/dogshell/wrap.py
+@@ -211,8 +211,10 @@ def build_event_body(cmd, returncode, stdout, stderr, notifications):
+         )
+ 
+     if notifications:
++        if isinstance(notifications, bytes):
++            notifications = notifications.decode("utf-8", "replace")
+         fmt_notifications = u"**>>>> NOTIFICATIONS <<<<**\n\n {notifications}\n".format(
+-            notifications=notifications.decode("utf-8", "replace")
++            notifications=notifications
+         )
+ 
+     return \

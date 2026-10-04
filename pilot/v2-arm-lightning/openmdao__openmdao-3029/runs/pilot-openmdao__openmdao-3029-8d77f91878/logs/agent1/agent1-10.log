@@ -1,0 +1,61 @@
+
+        viewer_data = _get_viewer_data(prob)
+        np.testing.assert_equal(viewer_data['tree']['children'][1]['options']['arr'],
+                                np.ones(2))
+
+    def test_system_option_too_large(self):
+        class SystemWithLargeOption(om.ExplicitComponent):
+            def initialize(self):
+                self.options.declare('large_option', types=(np.ndarray,))
+
+            def setup(self):
+                self.add_input('x', val=0.0)
+                self.add_output('f_x', val=0.0)
+
+            def compute(self, inputs, outputs):
+                x = inputs['x']
+                outputs['f_x'] = (x - 3.0) ** 2
+
+        prob = om.Problem()
+        comp = prob.model.add_subsystem('comp', SystemWithLargeOption())
+        comp.options['large_option'] = np.zeros(int(1e4))
+        prob.setup()
+
+        viewer_data = _get_viewer_data(prob)
+        self.assertEqual(viewer_data['tree']['children'][1]['options']['large_option'],
+                         'Too Large to Display')
+
+    def test_viewer_data_with_submodel(self):
+
+        self.maxDiff = None
+
+        def check_viewer_data_with_submodel(sql_filename):
+            # create sub problem
+            submodel = om.Group()
+            submodel.add_subsystem('subcomp', om.ExecComp('y = x1**2 + x2**2 + x3**2'), promotes=['*'])
+
+            subprob = om.Problem(name='subproblem', model=submodel)
+
+            # create top-level problem
+            p = om.Problem(name='top')
+            p.model.add_subsystem('submodelcomp',
+                                  om.SubmodelComp(problem=subprob, inputs=['*'], outputs=['*']),
+                                  promotes=['*'])
+            p.model.add_subsystem('supercomp',
+                                  om.ExecComp('z = 3 * y'),
+                                  promotes=['*'])
+
+            p.model.add_recorder(om.SqliteRecorder(sql_filename))
+
+            p.setup()
+            p.final_setup()
+
+            # extract viewer data from N2 for problem and subproblem
+            om.n2(p, title='N2 for Problem', outfile='N2problem.html',
+                  show_browser=DEBUG_BROWSER)
+            problem_data = extract_compressed_model('N2problem.html')
+
+            om.n2(subprob, title='N2 for SubProblem', outfile='N2subprob.html',
+                  show_browser=DEBUG_BROWSER)
+            subprob_data = extract_compressed_model('N2subprob.html')
+

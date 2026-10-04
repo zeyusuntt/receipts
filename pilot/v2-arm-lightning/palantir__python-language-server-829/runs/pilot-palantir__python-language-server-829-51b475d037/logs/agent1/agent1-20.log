@@ -1,0 +1,14 @@
+def fix_code(source, options=None, encoding=None, apply_config=False):
+    """Return fixed source code.
+
+    "encoding" will be used to decode "source" if it is a byte string.
+
+    """
+    options = _get_options(options, apply_config)
+
+    if not isinstance(source, unicode):
+        source = source.decode(encoding or get_encoding())
+
+    sio = io.StringIO(source)
+    return fix_lines(sio.readlines(), options=options)
+

@@ -1,0 +1,47 @@
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: Optional[int] = None,
+        url_prefix: str = "",
+        timeout: int = 10,
+        http_auth: Any = None,
+        use_ssl: bool = False,
+        verify_certs: Any = VERIFY_CERTS_DEFAULT,
+        ssl_show_warn: Any = SSL_SHOW_WARN_DEFAULT,
+        ca_certs: Any = None,
+        client_cert: Any = None,
+        client_key: Any = None,
+        ssl_version: Any = None,
+        ssl_assert_hostname: Any = None,
+        ssl_assert_fingerprint: Any = None,
+        maxsize: Optional[int] = 10,
+        headers: Any = None,
+        ssl_context: Any = None,
+        http_compress: Optional[bool] = None,
+        opaque_id: Optional[str] = None,
+        loop: Any = None,
+        trust_env: Optional[bool] = False,
+        **kwargs: Any,
+    ) -> None:
+        """
+        Default connection class for ``AsyncOpenSearch`` using the `aiohttp` library and the http protocol.
+
+        :arg host: hostname of the node (default: localhost)
+        :arg port: port to use (integer, default: 9200)
+        :arg url_prefix: optional url prefix for opensearch
+        :arg timeout: default timeout in seconds (float, default: 10)
+        :arg http_auth: optional http auth information as either ':' separated
+            string or a tuple
+        :arg use_ssl: use ssl for the connection if `True`
+        :arg verify_certs: whether to verify SSL certificates
+        :arg ssl_show_warn: show warning when verify certs is disabled
+        :arg ca_certs: optional path to CA bundle.
+            See https://urllib3.readthedocs.io/en/latest/security.html#using-certifi-with-urllib3
+            for instructions how to get default set
+        :arg client_cert: path to the file containing the private key and the
+            certificate, or cert only if using client_key
+        :arg client_key: path to the file containing the private key if using
+            separate cert and key files (client_cert will contain only the cert)
+        :arg ssl_version: version of the SSL protocol to use. Choices are:
+            SSLv23 (default) SSLv2 SSLv3 TLSv1 (see ``PROTOCOL_*`` constants in the
+            ``ssl`` module for exact options for your environment).

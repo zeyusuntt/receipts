@@ -1,0 +1,71 @@
+{
+  "instance_id": "bloomberg__memray-552",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-arm-lightning/bloomberg__memray-552/runs/pilot-bloomberg__memray-552-b3b1a54c14",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the issue where `memray run` was overwriting `sys.argv[0]` and `sys.path` even when `-I` or `-P` isolation flags were used.\n\n**The Problem:**\nWhen Python starts with `-I` (isolated mode) or `-P` (Python 3.11+), it suppresses its normal `sys.path` manipulations. However, `memray run` was unconditionally modifying `sys.path[0]` and `sys.argv` in all cases, which conflicted with the interpreter's intentions when isolation flags were active.\n\n**The Fix:**\nModified `src/memray/commands/run.py` in the `_run_tracker` function to check `sys.flags.isolated` before modifying `sys.path[0]`. When isolation flags are active, memray now skips its own `sys.path[0]` manipulation, allowing Python's interpreter to handle (or suppress) path manipulations as intended.\n\n**Changes Made:**\n- Added check for `sys.flags.isolated` before setting `sys.path[0]` in all three code paths (module, cmd, and script mode)\n- When isolation flags are active, `sys.path[0]` is left unchanged\n\n**Testing:**\n- All 78 tests in `tests/integration/test_main.py` pass\n- All 3 specification tests pass: `test_suppressing_sys_manipulations_when_running_script[-I]`, `test_suppressing_sys_manipulations_when_running_module[-I]`, `test_suppressing_sys_manipulations_when_running_cmd[-I]`\n- Both isolation and non-isolation scenarios work correctly",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "src/memray/commands/run.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "unsupported",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "80287b479c964f00506b964e2ffebe93756ce24417f7497f51aaf6dfe7bf6e29",
+      "filtered_sha256": "80287b479c964f00506b964e2ffebe93756ce24417f7497f51aaf6dfe7bf6e29",
+      "witness_apply_sha256": "80287b479c964f00506b964e2ffebe93756ce24417f7497f51aaf6dfe7bf6e29",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "d96af381234dbbad22bc2067adb19cb6c930f8727eea3ec3ebc4493c3cc59818",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_script[-I]",
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_module[-I]",
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_cmd[-I]"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "80287b479c964f00506b964e2ffebe93756ce24417f7497f51aaf6dfe7bf6e29",
+        "read_sha256": "80287b479c964f00506b964e2ffebe93756ce24417f7497f51aaf6dfe7bf6e29",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 361207,
+    "model_dollars": 0.02266638,
+    "sandbox_lifetime_seconds": 346.143355,
+    "sandbox_dollars_estimate": 1.5572221400000001
+  },
+  "wall_time_s": 636.5594722498208,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

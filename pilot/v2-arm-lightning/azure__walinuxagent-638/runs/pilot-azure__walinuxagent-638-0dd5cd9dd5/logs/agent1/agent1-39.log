@@ -1,0 +1,19 @@
+class TestHostPlugin(AgentTestCase):
+
+    def _compare_data(self, actual, expected):
+        for k in iter(expected.keys()):
+            if k == 'content' or k == 'requestUri':
+                if actual[k] != expected[k]:
+                    print("Mismatch: Actual '{0}'='{1}', " \
+                        "Expected '{0}'='{3}'".format(
+                            k, actual[k], expected[k]))
+                    return False
+            elif k == 'headers':
+                for h in expected['headers']:
+                    if not (h in actual['headers']):
+                        print("Missing Header: '{0}'".format(h))
+                        return False
+            else:
+                print("Unexpected Key: '{0}'".format(k))
+                return False
+        return True

@@ -1,0 +1,15 @@
+diff --git a/django_migration_linter/sql_analyser/base.py b/django_migration_linter/sql_analyser/base.py
+index 2fa0646..f067860 100644
+--- a/django_migration_linter/sql_analyser/base.py
++++ b/django_migration_linter/sql_analyser/base.py
+@@ -40,7 +40,9 @@ def has_not_null_column(sql_statements: list[str], **kwargs) -> bool:
+             ends_with_default = False
+     return (
+         any(
+-            re.search("(?<!DROP )NOT NULL", sql) and not sql.startswith("CREATE TABLE")
++            re.search("(?<!DROP )NOT NULL", sql)
++            and not sql.startswith("CREATE TABLE")
++            and not sql.startswith("CREATE INDEX")
+             for sql in sql_statements
+         )
+         and ends_with_default is False

@@ -1,0 +1,61 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /qupulse
+configfile: setup.cfg
+plugins: benchmark-5.2.3
+collecting ... collected 1 item
+
+tests/_program/tabor_tests.py::TaborProgramTests::test_calc_sampled_segments_deduplication FAILED
+
+=================================== FAILURES ===================================
+__________ TaborProgramTests.test_calc_sampled_segments_deduplication __________
+
+self = <tests._program.tabor_tests.TaborProgramTests testMethod=test_calc_sampled_segments_deduplication>
+
+    def test_calc_sampled_segments_deduplication(self):
+        wf1 = ConstantWaveform(duration=2, amplitude=0.1, channel='A')
+        wf2 = SubsetWaveform(
+            ConstantWaveform.from_mapping(duration=2, constant_values={'A': 0.1, 'B': 0.2}),
+            {'A'}
+        )
+        wf3 = ConstantWaveform(duration=1, amplitude=0.2, channel='A')
+    
+        loop = Loop(children=[
+            Loop(waveform=wf1),
+            Loop(waveform=wf2),
+            Loop(waveform=wf3),
+        ])
+        prog = TaborProgram(loop, self.instr_props, ('A', None), (None, None), **self.program_entry_kwargs)
+        sampled, sampled_length = prog.get_sampled_segments()
+        self.assertEqual(len(sampled), 2)
+>       self.assertEqual([192 * 2, 192], list(sampled_length))
+E       AssertionError: Lists differ: [384, 192] != [np.int64(384), np.int64(384), np.int64(384)]
+E       
+E       First differing element 1:
+E       192
+E       np.int64(384)
+E       
+E       Second list contains 1 additional elements.
+E       First extra element 2:
+E       np.int64(384)
+E       
+E       - [384, 192]
+E       + [np.int64(384), np.int64(384), np.int64(384)]
+
+tests/_program/tabor_tests.py:400: AssertionError
+=============================== warnings summary ===============================
+qupulse/utils/types.py:36
+  /qupulse/qupulse/utils/types.py:36: UserWarning: gmpy2 not found. Using fractions.Fraction as fallback. Install gmpy2 for better performance.time_from_float might produce slightly different results
+    warnings.warn('gmpy2 not found. Using fractions.Fraction as fallback. Install gmpy2 for better performance.'
+
+qupulse/utils/sympy.py:26
+  /qupulse/qupulse/utils/sympy.py:26: UserWarning: scipy is not installed. This reduces the set of available functions to those present in numpy + manually vectorized functions in math.
+    warnings.warn('scipy is not installed. This reduces the set of available functions to those present in numpy + '
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/_program/tabor_tests.py::TaborProgramTests::test_calc_sampled_segments_deduplication
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+======================== 1 failed, 2 warnings in 0.94s =========================

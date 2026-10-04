@@ -1,0 +1,36 @@
+    def fix(self):
+        """Return a version of the source code with PEP 8 violations fixed."""
+        pep8_options = {
+            'ignore': self.options.ignore,
+            'select': self.options.select,
+            'max_line_length': self.options.max_line_length,
+            'hang_closing': self.options.hang_closing,
+        }
+        results = _execute_pep8(pep8_options, self.source)
+
+        if self.options.verbose:
+            progress = {}
+            for r in results:
+                if r['id'] not in progress:
+                    progress[r['id']] = set()
+                progress[r['id']].add(r['line'])
+            print('--->  {n} issue(s) to fix {progress}'.format(
+                n=len(results), progress=progress), file=sys.stderr)
+
+        if self.options.line_range:
+            start, end = self.options.line_range
+            results = [r for r in results
+                       if start <= r['line'] <= end]
+
+        self._fix_source(filter_results(source=''.join(self.source),
+                                        results=results,
+                                        aggressive=self.options.aggressive))
+
+        if self.options.line_range:
+            # If number of lines has changed then change line_range.
+            count = sum(sline.count('\n')
+                        for sline in self.source[start - 1:end])
+            self.options.line_range[1] = start + count - 1
+
+        return ''.join(self.source)
+

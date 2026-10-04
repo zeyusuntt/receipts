@@ -1,0 +1,31 @@
+        if isinstance(self.number_of_steps, tuple):
+            return self.number_of_steps
+
+        return tuple(self.number_of_steps for _ in range(self.perturb_model.prior_count))
+
+    @property
+    def step_size(self) -> Union[float, Tuple]:
+        """
+        Returns
+        -------
+        step_size
+            The size of a step in any given dimension in hyper space.
+        """
+        if isinstance(self.number_of_steps, tuple):
+            return tuple(1 / number_of_steps for number_of_steps in self.number_of_steps)
+        return 1 / self.number_of_steps
+
+    @property
+    def results_path(self) -> Path:
+        return self.paths.output_path / "results.csv"
+
+    @property
+    def _lists(self) -> List[List[float]]:
+        """
+        A list of hypercube vectors, used to instantiate
+        the perturb_model and create the individual
+        perturbations.
+        """
+        return make_lists(self.perturb_model.prior_count, step_size=self.step_size)
+
+    @property

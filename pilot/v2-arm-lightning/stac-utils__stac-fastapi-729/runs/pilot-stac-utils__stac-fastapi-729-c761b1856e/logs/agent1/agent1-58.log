@@ -1,0 +1,50 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /stac-fastapi
+configfile: pyproject.toml
+plugins: anyio-4.12.1, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 9 items
+
+stac_fastapi/api/tests/test_app.py::test_client_response_type FAILED     [ 11%]
+stac_fastapi/api/tests/test_app.py::test_client_invalid_response_type[True] FAILED [ 22%]
+stac_fastapi/api/tests/test_app.py::test_client_invalid_response_type[False] FAILED [ 33%]
+stac_fastapi/api/tests/test_app.py::test_client_openapi PASSED           [ 44%]
+stac_fastapi/api/tests/test_app.py::test_filter_extension[True] FAILED   [ 55%]
+stac_fastapi/api/tests/test_app.py::test_filter_extension[False] FAILED  [ 66%]
+stac_fastapi/api/tests/test_app.py::test_fields_extension[True] FAILED   [ 77%]
+stac_fastapi/api/tests/test_app.py::test_fields_extension[False] FAILED  [ 88%]
+stac_fastapi/api/tests/test_app.py::test_request_model FAILED            [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_client_response_type ___________________________
+stac_fastapi/api/tests/test_app.py:34: in test_client_response_type
+    with TestClient(test_app.app) as client:
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:688: in __enter__
+    portal.call(self.wait_startup)
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:334: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:717: in wait_startup
+    message = await receive()
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:714: in receive
+    self.task.result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:451: in result
+    return self.__get_result()
+/usr/local/lib/python3.10/concurrent/futures/_base.py:403: in __get_result
+    raise self._exception
+/usr/local/lib/python3.10/site-packages/anyio/from_thread.py:259: in _call_func
+    retval = await retval_or_awaitable
+/usr/local/lib/python3.10/site-packages/starlette/testclient.py:704: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1134: in __call__
+    await super().__call__(scope, receive, send)
+/usr/local/lib/python3.10/site-packages/starlette/applications.py:106: in __call__
+    self.middleware_stack = self.build_middleware_stack()
+/usr/local/lib/python3.10/site-packages/fastapi/applications.py:1042: in build_middleware_stack

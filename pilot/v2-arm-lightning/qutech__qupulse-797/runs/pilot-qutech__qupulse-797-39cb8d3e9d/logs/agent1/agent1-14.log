@@ -1,0 +1,20 @@
+wf1 duration: 2/1
+wf2 duration: 2/1
+wf3 duration: 1/1
+wf1.compare_key: (TimeType(2, 1), 0.1, 'A')
+wf2.compare_key: (frozenset({'A'}), MultiChannelWaveform((ConstantWaveform(duration=TimeType(2, 1), amplitude=0.1, channel='A'), ConstantWaveform(duration=TimeType(2, 1), amplitude=0.2, channel='B'))))
+wf3.compare_key: (TimeType(1, 1), 0.2, 'A')
+wf1 sampled A: [0.1 0.1 0.1 0.1 0.1 0.1]
+wf2 sampled A: [0.1 0.1 0.1 0.1 0.1 0.1]
+wf3 sampled A: [0.2 0.2 0.2 0.2 0.2 0.2]
+wf1 sampled A == wf2 sampled A: True
+wf1 sampled A == wf3 sampled A: False
+/qupulse/qupulse/utils/types.py:36: UserWarning: gmpy2 not found. Using fractions.Fraction as fallback. Install gmpy2 for better performance.time_from_float might produce slightly different results
+  warnings.warn('gmpy2 not found. Using fractions.Fraction as fallback. Install gmpy2 for better performance.'
+/qupulse/qupulse/utils/sympy.py:26: UserWarning: scipy is not installed. This reduces the set of available functions to those present in numpy + manually vectorized functions in math.
+  warnings.warn('scipy is not installed. This reduces the set of available functions to those present in numpy + '
+Traceback (most recent call last):
+  File "<stdin>", line 58, in <module>
+  File "/qupulse/qupulse/_program/tabor.py", line 114, in from_sampled
+    assert ch_a.dtype is np.dtype('uint16')
+AssertionError

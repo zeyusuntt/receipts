@@ -1,0 +1,40 @@
+                    pub = cryptutil.get_pubkey_from_crt(tmp_file)
+                    thumbprint = cryptutil.get_thumbprint_from_crt(tmp_file)
+                    thumbprints[pub] = thumbprint
+                    # Rename crt with thumbprint as the file name
+                    crt = "{0}.crt".format(thumbprint)
+                    v1_cert_list.append({
+                        "name": None,
+                        "thumbprint": thumbprint
+                    })
+                    os.rename(tmp_file, os.path.join(conf.get_lib_dir(), crt))
+                    buf = []
+                    index += 1
+                    begin_crt = False
+    
+        # Rename prv key with thumbprint as the file name
+        for pubkey in prvs:
+>           thumbprint = thumbprints[pubkey]
+E           KeyError: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxN+B0qdtMRUwxAEPnbwM\ndqGMLCqhoOm17eLgxXDBfJx/mYrFU+MWEXN8TxPZYObHT1aAP3XGsbtnD0IEn2Ef\nXYiIqr3x7uiwcQvQp7+aVFJKfXJGCYUZW/QwOd9NIATHAT5pcmevcKM10RNf9sK5\nYdZC08l6Hy3GqsTOhQoDJdwE6U5DGBDaFiMM6HVHwLQuAWYJpAW1FAmxhdve0t4F\ndc/bnyOmLQ+g/Aw/pjWsB7/kDGhx0CFSC5lK8wLBrPaY25NxvBkRnJOmBg2fpw/w\nUnZ5oTbHBIsx4nQsGgUT3ZADjtgvdUnai+hliqCEptKp5/Hw//RpSKSP2S+GLX4+\n4QIDAQAB\n-----END PUBLIC KEY-----\n'
+
+azurelinuxagent/common/protocol/wire.py:1228: KeyError
+=============================== warnings summary ===============================
+azurelinuxagent/common/utils/flexible_version.py:24
+  /WALinuxAgent/azurelinuxagent/common/utils/flexible_version.py:24: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    version.Version.__init__(self)
+
+azurelinuxagent/common/version.py:67
+  /WALinuxAgent/azurelinuxagent/common/version.py:67: DeprecationWarning: dist() and linux_distribution() functions are deprecated in Python 3.5
+    supported_dists=supported))
+
+azurelinuxagent/common/version.py:68
+  /WALinuxAgent/azurelinuxagent/common/version.py:68: DeprecationWarning: dist() and linux_distribution() functions are deprecated in Python 3.5
+    full_name = platform.linux_distribution()[0].strip()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/protocol/test_wire.py::TestWireProtocolGetters::test_getters - K...
+FAILED tests/protocol/test_wire.py::TestWireProtocolGetters::test_getters_ext_no_public
+FAILED tests/protocol/test_wire.py::TestWireProtocolGetters::test_getters_ext_no_settings
+FAILED tests/protocol/test_wire.py::TestWireProtocolGetters::test_getters_no_ext
+=================== 4 failed, 12 passed, 3 warnings in 0.51s ===================

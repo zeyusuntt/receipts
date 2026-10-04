@@ -1,0 +1,81 @@
+class MemoryFS(FS):
+    """A filesystem that stored in memory.
+
+    Memory filesystems are useful for caches, temporary data stores,
+    unit testing, etc. Since all the data is in memory, they are very
+    fast, but non-permanent. The `MemoryFS` constructor takes no
+    arguments.
+
+    Examples:
+        Create with the constructor::
+
+            >>> from fs.memoryfs import MemoryFS
+            >>> mem_fs = MemoryFS()
+
+        Or via an FS URL::
+
+            >>> import fs
+            >>> mem_fs = fs.open_fs('mem://')
+
+    """
+
+    _meta = {
+        "case_insensitive": False,
+        "invalid_path_chars": "\0",
+        "network": False,
+        "read_only": False,
+        "thread_safe": True,
+        "unicode_paths": True,
+        "virtual": False,
+    }  # type: Dict[Text, Union[Text, int, bool, None]]
+
+    def __init__(self):
+        # type: () -> None
+        """Create an in-memory filesystem."""
+        self._meta = self._meta.copy()
+        self.root = self._make_dir_entry(ResourceType.directory, "")
+        super(MemoryFS, self).__init__()
+
+    def __repr__(self):
+        # type: () -> str
+        return "MemoryFS()"
+
+    def __str__(self):
+        # type: () -> str
+        return "<memfs>"
+
+    def _make_dir_entry(self, resource_type, name):
+        # type: (ResourceType, Text) -> _DirEntry
+        return _DirEntry(resource_type, name)
+
+    def _get_dir_entry(self, dir_path):
+        # type: (Text) -> Optional[_DirEntry]
+        """Get a directory entry, or `None` if one doesn't exist."""
+        with self._lock:
+            dir_path = normpath(dir_path)
+            current_entry = self.root  # type: Optional[_DirEntry]
+            for path_component in iteratepath(dir_path):
+                if current_entry is None:
+                    return None
+                if not current_entry.is_dir:
+                    return None
+                current_entry = current_entry.get_entry(path_component)
+            return current_entry
+
+    def close(self):
+        # type: () -> None
+        if not self._closed:
+            del self.root
+        return super(MemoryFS, self).close()
+
+    def getinfo(self, path, namespaces=None):
+        # type: (Text, Optional[Collection[Text]]) -> Info
+        _path = self.validatepath(path)
+        dir_entry = self._get_dir_entry(_path)
+        if dir_entry is None:
+            raise errors.ResourceNotFound(path)
+        return dir_entry.to_info(namespaces=namespaces)
+
+    def listdir(self, path):
+        # type: (Text) -> List[Text]
+        self.check()

@@ -1,0 +1,51 @@
+def register_report_hook(name, fname, class_name, inst_id=None, pre=None, post=None, description='',
+                         **kwargs):
+    """
+    Register a hook with a specific report name in the reporting system.
+
+    By calling this multiple times, multiple hooks can be registered for the same report. This
+    is sometimes necessary to get the correct behavior when setup errors occur prior to report
+    creation.
+
+    Parameters
+    ----------
+    name : str
+        Name of report. Report names must be unique across all reports.
+    fname : str
+        The name of the function where the pre and/or post hook will be applied.
+    class_name : str
+        The name of the class owning the method where the hook will be applied.
+    inst_id : str or None
+        The name of the instance owning the method where the hook will be applied.
+    pre : function (None)
+        If not None, this hook will run before the function named by fname runs.
+    post : function (None)
+        If not None, this hook will run after the function named by fname runs.
+    description : str
+        A description of the report.
+    **kwargs : dict of keyword arguments
+        Keyword arguments that will be passed to the hook function.
+    """
+    global _reports_registry
+
+    if name not in _reports_registry:
+        _reports_registry[name] = report = Report(name, description)
+    else:
+        report = _reports_registry[name]
+        if description is not None:
+            report.description = description
+
+    report.register_hook_args(fname, class_name, inst_id=inst_id, pre=pre, post=post, ncalls=1,
+                              **kwargs)
+
+
+def activate_report(name, instance=None):
+    """
+    Activate a report that has been registered with the reporting system.
+
+    Parameters
+    ----------
+    name : str
+        Name of report. Report names must be unique across all reports.
+    instance : object or None
+        If not None, report will be activated only for this instance, assuming the instance

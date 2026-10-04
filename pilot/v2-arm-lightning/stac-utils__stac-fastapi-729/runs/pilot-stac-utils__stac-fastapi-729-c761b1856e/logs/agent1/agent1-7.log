@@ -1,0 +1,13 @@
+Model fields: {'collections': Field(name='collections',type=typing.Annotated[typing.Optional[str], Query(PydanticUndefined)],default=None,default_factory=<dataclasses._MISSING_TYPE object at 0x7ffff76c13c0>,init=True,repr=True,hash=None,compare=True,metadata=mappingproxy({}),kw_only=False,_field_type=_FIELD), 'ids': Field(name='ids',type=typing.Annotated[typing.Optional[str], Query(PydanticUndefined)],default=None,default_factory=<dataclasses._MISSING_TYPE object at 0x7ffff76c13c0>,init=True,repr=True,hash=None,compare=True,metadata=mappingproxy({}),kw_only=False,_field_type=_FIELD), 'bbox': Field(name='bbox',type=typing.Annotated[typing.Union[typing.Tuple[typing.Union[float, int], typing.Union[float, int], typing.Union[float, int], typing.Union[float, int]], typing.Tuple[typing.Union[float, int], typing.Union[float, int], typing.Union[float, int], typing.Union[float, int], typing.Union[float, int], typing.Union[float, int]], NoneType], Query(PydanticUndefined)],default=None,default_factory=<dataclasses._MISSING_TYPE object at 0x7ffff76c13c0>,init=True,repr=True,hash=None,compare=True,metadata=mappingproxy({}),kw_only=False,_field_type=_FIELD), 'intersects': Field(name='intersects',type=typing.Annotated[typing.Optional[str], Query(PydanticUndefined)],default=None,default_factory=<dataclasses._MISSING_TYPE object at 0x7ffff76c13c0>,init=True,repr=True,hash=None,compare=True,metadata=mappingproxy({}),kw_only=False,_field_type=_FIELD), 'datetime': Field(name='datetime',type=typing.Annotated[typing.Union[datetime.datetime, typing.Tuple[datetime.datetime, datetime.datetime], typing.Tuple[datetime.datetime, NoneType], typing.Tuple[NoneType, datetime.datetime], NoneType], Query(PydanticUndefined)],default=None,default_factory=<dataclasses._MISSING_TYPE object at 0x7ffff76c13c0>,init=True,repr=True,hash=None,compare=True,metadata=mappingproxy({}),kw_only=False,_field_type=_FIELD), 'limit': Field(name='limit',type=typing.Annotated[typing.Optional[int], Query(PydanticUndefined)],default=10,default_factory=<dataclasses._MISSING_TYPE object at 0x7ffff76c13c0>,init=True,repr=True,hash=None,compare=True,metadata=mappingproxy({}),kw_only=False,_field_type=_FIELD)}
+Has __post_init__: True
+__post_init__ source:     def __post_init__(self):
+        """convert attributes."""
+        if self.collections:
+            self.collections = str2list(self.collections)  # type: ignore
+        if self.ids:
+            self.ids = str2list(self.ids)  # type: ignore
+        if self.bbox:
+            self.bbox = str2bbox(self.bbox)  # type: ignore
+        if self.datetime:
+            self.datetime = str_to_interval(self.datetime)  # type: ignore
+

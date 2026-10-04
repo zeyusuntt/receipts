@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /python
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name FAILED [100%]
+
+=================================== FAILURES ===================================
+__________________ TestKubeConfigLoader.test_tls_server_name ___________________
+
+self = <config.kube_config_test.TestKubeConfigLoader testMethod=test_tls_server_name>
+
+    def test_tls_server_name(self):
+        expected = FakeConfig(
+            host=TEST_SSL_HOST,
+            token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+            cert_file=self._create_temp_file(TEST_CLIENT_CERT),
+            key_file=self._create_temp_file(TEST_CLIENT_KEY),
+            ssl_ca_cert=self._create_temp_file(TEST_CERTIFICATE_AUTH),
+            verify_ssl=True,
+            tls_server_name=TEST_TLS_SERVER_NAME
+        )
+        actual = FakeConfig()
+        KubeConfigLoader(
+            config_dict=self.TEST_KUBE_CONFIG,
+            active_context="tls-server-name").load_and_set(actual)
+>       self.assertEqual(expected, actual)
+E       AssertionError: <config.kube_config_test.FakeConfig object at 0x7ffff3d0ee00> != <config.kube_config_test.FakeConfig object at 0x7ffff3d0f430>
+
+kubernetes/base/config/kube_config_test.py:1285: AssertionError
+=========================== short test summary info ============================
+FAILED kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name
+============================== 1 failed in 0.62s ===============================

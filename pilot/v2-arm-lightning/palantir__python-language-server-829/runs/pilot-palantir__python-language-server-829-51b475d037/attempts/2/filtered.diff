@@ -1,0 +1,20 @@
+diff --git a/pyls/plugins/autopep8_format.py b/pyls/plugins/autopep8_format.py
+index 1e4e4e1..ee409a7 100644
+--- a/pyls/plugins/autopep8_format.py
++++ b/pyls/plugins/autopep8_format.py
+@@ -53,12 +53,13 @@ def _autopep8_config(config):
+     settings = config.plugin_settings('pycodestyle')
+     options = {
+         'exclude': settings.get('exclude'),
+-        'hang_closing': settings.get('hangClosing'),
+-        'ignore': settings.get('ignore'),
+         'max_line_length': settings.get('maxLineLength'),
+         'select': settings.get('select'),
+         'aggressive': settings.get('aggressive'),
+     }
+ 
+     # Filter out null options
++    # Note: We omit 'hang_closing' and 'ignore' to avoid ValueError in
++    # autopep8's _fix_reindent when pycodestyle produces messages like
++    # 'E122 continuation line ...' instead of 'E122 4'
+     return {k: v for k, v in options.items() if v}

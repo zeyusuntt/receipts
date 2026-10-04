@@ -1,0 +1,48 @@
+def _get_viewer_data(data_source, values=_UNDEFINED, case_id=None):
+    """
+    Get the data needed by the N2 viewer as a dictionary.
+
+    Parameters
+    ----------
+    data_source : <Problem> or <Group> or str
+        A Problem or Group or case recorder filename containing the model or model data.
+        If the case recorder file from a parallel run has separate metadata, the
+        filenames can be specified with a comma, e.g.: case.sql_0,case.sql_meta
+    values : bool or _UNDEFINED
+        If True, include variable values. If False, all values will be None.
+        If unspecified, this behaves as if set to True unless the data source is a Problem or
+        model for which setup is not complete, in which case it behaves as if set to False.
+    case_id : int or str or None
+        Case name or index of case in SQL file.
+
+    Returns
+    -------
+    dict
+        A dictionary containing information about the model for use by the viewer.
+    """
+    if isinstance(data_source, Problem):
+        root_group = data_source.model
+
+        if not isinstance(root_group, Group):
+            # this function only makes sense when the model is a Group
+            msg = f"The model is of type {root_group.__class__.__name__}, " \
+                  "viewer data is only available if the model is a Group."
+            raise TypeError(msg)
+
+        driver = data_source.driver
+        driver_name = driver.__class__.__name__
+        driver_type = 'doe' if isinstance(driver, DOEDriver) else 'optimization'
+
+        driver_options = {key: _serialize_single_option(driver.options._dict[key])
+                          for key in driver.options}
+
+        if driver_type == 'optimization' and hasattr(driver, 'opt_settings'):
+            driver_opt_settings = driver.opt_settings
+        else:
+            driver_opt_settings = None
+
+        # set default behavior for values flag
+        if values is _UNDEFINED:
+            values = (data_source._metadata is not None and
+                      data_source._metadata['setup_status'] >= _SetupStatus.POST_FINAL_SETUP)
+

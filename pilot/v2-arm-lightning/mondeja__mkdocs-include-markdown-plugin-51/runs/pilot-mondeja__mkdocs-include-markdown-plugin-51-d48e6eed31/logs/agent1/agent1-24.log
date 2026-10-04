@@ -1,0 +1,31 @@
+            id='end',
+        ),
+
+        # Start and end options
+        pytest.param(
+            '''# Header
+
+{%
+  include-markdown "{filepath}"
+  start="<!--start-here-->"
+  end="<!--end-here-->"
+%}
+''',
+            '''This must be ignored.
+<!--start-here-->
+This must be included.
+<!--end-here-->
+This must be ignored also.''',
+            '''# Header
+
+<!-- BEGIN INCLUDE {filepath} &lt;!--start-here--&gt; &lt;!--end-here--&gt; -->
+
+This must be included.
+
+<!-- END INCLUDE -->
+''',
+            id='start/end',
+        ),
+
+        # Start and end with escaped special characters
+        pytest.param(

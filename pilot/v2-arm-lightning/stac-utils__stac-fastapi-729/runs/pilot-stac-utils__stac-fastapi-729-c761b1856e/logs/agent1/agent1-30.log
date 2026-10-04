@@ -1,0 +1,23 @@
+def create_request_model(
+    model_name="SearchGetRequest",
+    base_model: Union[Type[BaseModel], APIRequest] = BaseSearchGetRequest,
+    extensions: Optional[List[ApiExtension]] = None,
+    mixins: Optional[Union[List[BaseModel], List[APIRequest]]] = None,
+    request_type: Optional[str] = "GET",
+) -> Union[Type[BaseModel], APIRequest]:
+    """Create a pydantic model for validating request bodies."""
+    fields = {}
+    extension_models = []
+
+    # Check extensions for additional parameters to search
+    for extension in extensions or []:
+        if extension_model := extension.get_request_model(request_type):
+            extension_models.append(extension_model)
+
+    mixins = mixins or []
+
+    models = extension_models + mixins + [base_model]
+
+    # Handle GET requests
+    if all([issubclass(m, APIRequest) for m in models]):
+        return make_dataclass(model_name, [], bases=tuple(models))

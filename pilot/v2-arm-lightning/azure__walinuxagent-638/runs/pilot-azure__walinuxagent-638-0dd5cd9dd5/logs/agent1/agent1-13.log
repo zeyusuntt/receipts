@@ -1,0 +1,60 @@
+# Microsoft Azure Linux Agent
+#
+# Copyright 2014 Microsoft Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Requires Python 2.4+ and Openssl 1.0+
+#
+
+import base64
+
+from azurelinuxagent.common.protocol.wire import *
+from azurelinuxagent.common.utils import textutil
+from azurelinuxagent.common.version import PY_VERSION_MAJOR
+
+HOST_PLUGIN_PORT = 32526
+URI_FORMAT_GET_API_VERSIONS = "http://{0}:{1}/versions"
+URI_FORMAT_GET_EXTENSION_ARTIFACT = "http://{0}:{1}/extensionArtifact"
+URI_FORMAT_PUT_VM_STATUS = "http://{0}:{1}/status"
+URI_FORMAT_PUT_LOG = "http://{0}:{1}/vmAgentLog"
+API_VERSION = "2015-09-01"
+HEADER_CONTAINER_ID = "x-ms-containerid"
+HEADER_VERSION = "x-ms-version"
+HEADER_HOST_CONFIG_NAME = "x-ms-host-config-name"
+HEADER_ARTIFACT_LOCATION = "x-ms-artifact-location"
+HEADER_ARTIFACT_MANIFEST_LOCATION = "x-ms-artifact-manifest-location"
+MAXIMUM_PAGEBLOB_PAGE_SIZE = 4 * 1024 * 1024  # Max page size: 4MB
+
+
+class HostPluginProtocol(object):
+    def __init__(self, endpoint, container_id, role_config_name):
+        if endpoint is None:
+            raise ProtocolError("HostGAPlugin: Endpoint not provided")
+        self.is_initialized = False
+        self.is_available = False
+        self.api_versions = None
+        self.endpoint = endpoint
+    _is_default_channel = True
+        self.container_id = container_id
+        self.deployment_id = None
+        self.role_config_name = role_config_name
+        self.manifest_uri = None
+
+    def ensure_initialized(self):
+        if not self.is_initialized:
+            self.api_versions = self.get_api_versions()
+            self.is_available = API_VERSION in self.api_versions
+            self.is_initialized = True
+
+            from azurelinuxagent.common.event import add_event, WALAEventOperation

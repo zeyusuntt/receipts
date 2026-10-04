@@ -1,0 +1,150 @@
+commit adc736962c81ef45d1fcc15d4b711d30f75bfd0b
+Author: Joel Nothman <joel.nothman@gmail.com>
+Date:   Fri Jul 2 08:30:03 2021 +1000
+
+    add min/max_degree, test and examples; fix a case in sorting by degree
+
+diff --git a/examples/plot_hide.py b/examples/plot_hide.py
+new file mode 100644
+index 0000000..d4110ee
+--- /dev/null
++++ b/examples/plot_hide.py
+@@ -0,0 +1,33 @@
++"""
++======================================
++Hiding subsets based on size or degree
++======================================
++
++This illustrates the use of ``min_subset_size``, ``max_subset_size``,
++``min_degree`` or ``max_degree``.
++"""
++
++from matplotlib import pyplot as plt
++from upsetplot import generate_counts, plot
++
++example = generate_counts()
++
++plot(example, show_counts=True)
++plt.suptitle('Nothing hidden')
++plt.show()
++
++plot(example, show_counts=True, min_subset_size=100)
++plt.suptitle('Small subsets hidden')
++plt.show()
++
++plot(example, show_counts=True, max_subset_size=500)
++plt.suptitle('Large subsets hidden')
++plt.show()
++
++plot(example, show_counts=True, min_degree=2)
++plt.suptitle('Degree <2 hidden')
++plt.show()
++
++plot(example, show_counts=True, max_degree=2)
++plt.suptitle('Degree >2 hidden')
++plt.show()
+diff --git a/upsetplot/plotting.py b/upsetplot/plotting.py
+index 361b95a..21cc259 100644
+--- a/upsetplot/plotting.py
++++ b/upsetplot/plotting.py
+@@ -87,16 +87,45 @@ def _check_index(df):
+     return df
+ 
+ 
++def _filter_subsets(df, agg,
++                    min_subset_size, max_subset_size,
++                    min_degree, max_degree):
++    subset_mask = True
++    if min_subset_size is not None:
++        subset_mask = np.logical_and(subset_mask, agg >= min_subset_size)
++    if max_subset_size is not None:
++        subset_mask = np.logical_and(subset_mask, agg <= max_subset_size)
++    if (min_degree is not None and min_degree >= 0) or max_degree is not None:
++        degree = agg.index.to_frame().sum(axis=1)
++        if min_degree is not None:
++            subset_mask = np.logical_and(subset_mask, degree >= min_degree)
++        if max_degree is not None:
++            subset_mask = np.logical_and(subset_mask, degree <= max_degree)
++
++    if subset_mask is True:
++        return df, agg
++
++    agg = agg[subset_mask]
++    df = df[df.index.isin(agg.index)]
++    return df, agg
++
++
+ def _process_data(df, sort_by, sort_categories_by, subset_size,
+-                  sum_over, min_subset_size=0, max_subset_size=np.inf):
++                  sum_over, min_subset_size=None, max_subset_size=None,
++                  min_degree=None, max_degree=None):
+     df, agg = _aggregate_data(df, subset_size, sum_over)
+     total = agg.sum()
+     df = _check_index(df)
+     totals = [agg[agg.index.get_level_values(name).values.astype(bool)].sum()
+               for name in agg.index.names]
+     totals = pd.Series(totals, index=agg.index.names)
+-    agg = agg[np.logical_and(agg >= min_subset_size, agg <= max_subset_size)]
+-    df = df[df.index.isin(agg.index)]
++
++    # filter subsets:
++    df, agg = _filter_subsets(df, agg,
++                              min_subset_size, max_subset_size,
++                              min_degree, max_degree)
++
++    # sort:
+     if sort_categories_by == 'cardinality':
+         totals.sort_values(ascending=False, inplace=True)
+     elif sort_categories_by is not None:
+@@ -107,8 +136,10 @@ def _process_data(df, sort_by, sort_categories_by, subset_size,
+     if sort_by == 'cardinality':
+         agg = agg.sort_values(ascending=False)
+     elif sort_by == 'degree':
+-        gb_degree = agg.groupby(sum, group_keys=False)
+-        agg = gb_degree.apply(lambda x: x.sort_index(ascending=False))
++        index_tuples = sorted(agg.index,
++                              key=lambda x: (sum(x),) + tuple(reversed(x)))
++        agg = agg.reindex(pd.MultiIndex.from_tuples(index_tuples,
++                                                    names=agg.index.names))
+     elif sort_by is None:
+         pass
+     else:
+@@ -240,40 +271,17 @@ class UpSet:
+         If `subset_size='sum'` or `'auto'`, then the intersection size is the
+         sum of the specified field in the `data` DataFrame. If a Series, only
+         None is supported and its value is summed.
+-    min_subset_size: int, default=1
+-        Minimum size of a subset to be included in the plot. All subsets with a size
+-        smaller than this threshold will be omitted from plotting.
+-    sort_sets_by
+-        .. deprecated: 0.3
+-            Replaced by sort_categories_by, this parameter will be removed in
+-            version 0.4.
+-    min_subset_size: int, default=1
+-        Minimum size of a subset to be included in the plot. All subsets with
+-        a size smaller than this threshold will be omitted from plotting.
+-    sort_sets_by
+-        .. deprecated: 0.3
+-            Replaced by sort_categories_by, this parameter will be removed in
+-            version 0.4.
+-    min_subset_size : int, default=0
+-        Minimum size of a subset to be included in the plot. All subsets with
+-        a size smaller than this threshold will be omitted from plotting.
+-    max_subset_size : int, default=0
+-        Maximum size of a subset to be included in the plot. All subsets with
+-        a size greater than this threshold will be omitted from plotting.
+-    sort_sets_by
+-        .. deprecated: 0.3
+-            Replaced by sort_categories_by, this parameter will be removed in
+-            version 0.4.
+-    min_subset_size : int, default=0
+-        Minimum size of a subset to be included in the plot. All subsets with
++    min_subset_size : int, optional
++        Minimum size of a subset to be shown in the plot. All subsets with
+         a size smaller than this threshold will be omitted from plotting.
+-    max_subset_size : int, default=inf
+-        Maximum size of a subset to be included in the plot. All subsets with
++        Size may be a sum of values, see `subset_size`.
++    max_subset_size : int, optional
++        Maximum size of a subset to be shown in the plot. All subsets with
+         a size greater than this threshold will be omitted from plotting.

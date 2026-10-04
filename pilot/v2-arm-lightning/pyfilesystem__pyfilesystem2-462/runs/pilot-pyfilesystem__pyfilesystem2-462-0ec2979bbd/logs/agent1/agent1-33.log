@@ -1,0 +1,60 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python3
+cachedir: .pytest_cache
+rootdir: /pyfilesystem2
+configfile: setup.cfg
+collecting ... collected 1 item
+
+tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified FAILED
+tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified ERROR
+
+==================================== ERRORS ====================================
+_____________ ERROR at teardown of TestFTPFS.test_getinfo_modified _____________
+
+cls = <class 'tests.test_ftpfs.TestFTPFS'>
+
+    @classmethod
+    def tearDownClass(cls):
+>       cls.server.stop()
+
+tests/test_ftpfs.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/site-packages/pyftpdlib/test/__init__.py:484: in stop
+    assert_free_resources(self.parent_pid)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+parent_pid = 10
+
+    def assert_free_resources(parent_pid=None):
+        # check orphaned threads
+        ts = threading.enumerate()
+        assert len(ts) == 1, ts
+        # check orphaned process children
+        this_proc = psutil.Process(parent_pid or os.getpid())
+        children = this_proc.children()
+        if children:
+            warnings.warn(
+                "some children didn't terminate %r" % str(children),
+                UserWarning,
+                stacklevel=2,
+            )
+            for child in children:
+                try:
+                    child.kill()
+                    child.wait(GLOBAL_TIMEOUT)
+                except psutil.NoSuchProcess:
+                    pass
+        # check unclosed connections
+        if POSIX:
+            cons = [
+                x
+>               for x in this_proc.net_connections('tcp')
+                if x.status != psutil.CONN_CLOSE_WAIT
+            ]
+E           AttributeError: 'Process' object has no attribute 'net_connections'. Did you mean: 'connections'?
+
+/usr/local/lib/python3.10/site-packages/pyftpdlib/test/__init__.py:382: AttributeError
+=================================== FAILURES ===================================
+_______________________ TestFTPFS.test_getinfo_modified ________________________
+
+self = <tests.test_ftpfs.TestFTPFS testMethod=test_getinfo_modified>

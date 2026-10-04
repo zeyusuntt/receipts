@@ -1,0 +1,131 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /opensearch-py
+configfile: setup.cfg
+plugins: asyncio-0.24.0, cov-7.0.0
+asyncio: mode=auto, default_loop_scope=None
+collecting ... collected 1 item
+
+test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_ssl_assert_hostname FAILED
+
+=================================== FAILURES ===================================
+________________ TestAIOHttpConnection.test_ssl_assert_hostname ________________
+
+self = <test_opensearchpy.test_async.test_connection.TestAIOHttpConnection object at 0x7ffff525ee00>
+
+    async def test_ssl_assert_hostname(self) -> None:
+>       con = AIOHttpConnection(use_ssl=True, ssl_assert_hostname=True)
+
+test_opensearchpy/test_async/test_connection.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <AIOHttpConnection: https://localhost:9200>, host = 'localhost'
+port = None, url_prefix = '', timeout = 10, http_auth = None, use_ssl = True
+verify_certs = <object object at 0x7ffff5e57230>
+ssl_show_warn = <object object at 0x7ffff5e57210>, ca_certs = None
+client_cert = None, client_key = None, ssl_version = None
+ssl_assert_fingerprint = None, maxsize = 10, headers = None, ssl_context = None
+http_compress = None, opaque_id = None, loop = None, trust_env = False
+kwargs = {'ssl_assert_hostname': True}
+
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: Optional[int] = None,
+        url_prefix: str = "",
+        timeout: int = 10,
+        http_auth: Any = None,
+        use_ssl: bool = False,
+        verify_certs: Any = VERIFY_CERTS_DEFAULT,
+        ssl_show_warn: Any = SSL_SHOW_WARN_DEFAULT,
+        ca_certs: Any = None,
+        client_cert: Any = None,
+        client_key: Any = None,
+        ssl_version: Any = None,
+        ssl_assert_fingerprint: Any = None,
+        maxsize: Optional[int] = 10,
+        headers: Any = None,
+        ssl_context: Any = None,
+        http_compress: Optional[bool] = None,
+        opaque_id: Optional[str] = None,
+        loop: Any = None,
+        trust_env: Optional[bool] = False,
+        **kwargs: Any,
+    ) -> None:
+        """
+        Default connection class for ``AsyncOpenSearch`` using the `aiohttp` library and the http protocol.
+    
+        :arg host: hostname of the node (default: localhost)
+        :arg port: port to use (integer, default: 9200)
+        :arg url_prefix: optional url prefix for opensearch
+        :arg timeout: default timeout in seconds (float, default: 10)
+        :arg http_auth: optional http auth information as either ':' separated
+            string or a tuple
+        :arg use_ssl: use ssl for the connection if `True`
+        :arg verify_certs: whether to verify SSL certificates
+        :arg ssl_show_warn: show warning when verify certs is disabled
+        :arg ca_certs: optional path to CA bundle.
+            See https://urllib3.readthedocs.io/en/latest/security.html#using-certifi-with-urllib3
+            for instructions how to get default set
+        :arg client_cert: path to the file containing the private key and the
+            certificate, or cert only if using client_key
+        :arg client_key: path to the file containing the private key if using
+            separate cert and key files (client_cert will contain only the cert)
+        :arg ssl_version: version of the SSL protocol to use. Choices are:
+            SSLv23 (default) SSLv2 SSLv3 TLSv1 (see ``PROTOCOL_*`` constants in the
+            ``ssl`` module for exact options for your environment).
+        :arg ssl_assert_hostname: use hostname verification if not `False`
+        :arg ssl_assert_fingerprint: verify the supplied certificate fingerprint if not `None`
+        :arg maxsize: the number of connections which will be kept open to this
+            host. See https://urllib3.readthedocs.io/en/1.4/pools.html#api for more
+            information.
+        :arg headers: any custom http headers to be add to requests
+        :arg http_compress: Use gzip compression
+        :arg opaque_id: Send this value in the 'X-Opaque-Id' HTTP header
+            For tracing all requests made by this transport.
+        :arg loop: asyncio Event Loop to use with aiohttp. This is set by default to the currently running loop.
+        """
+    
+        self.headers = {}
+    
+        super().__init__(
+            host=host,
+            port=port,
+            url_prefix=url_prefix,
+            timeout=timeout,
+            use_ssl=use_ssl,
+            maxsize=maxsize,
+            headers=headers,
+            http_compress=http_compress,
+            opaque_id=opaque_id,
+            **kwargs,
+        )
+    
+        if http_auth is not None:
+            if isinstance(http_auth, (tuple, list)):
+                http_auth = ":".join(http_auth)
+            self.headers.update(urllib3.make_headers(basic_auth=http_auth))
+    
+        # if providing an SSL context, raise error if any other SSL related flag is used
+        if ssl_context and (
+            (verify_certs is not VERIFY_CERTS_DEFAULT)
+            or (ssl_show_warn is not SSL_SHOW_WARN_DEFAULT)
+            or ca_certs
+            or client_cert
+            or client_key
+            or ssl_version
+        ):
+            warnings.warn(
+                "When using `ssl_context`, all other SSL related kwargs are ignored"
+            )
+    
+        self.ssl_assert_fingerprint = ssl_assert_fingerprint
+>       self.ssl_assert_hostname = ssl_assert_hostname
+E       NameError: name 'ssl_assert_hostname' is not defined
+
+opensearchpy/_async/http_aiohttp.py:166: NameError
+=========================== short test summary info ============================
+FAILED test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_ssl_assert_hostname
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.47s ===============================

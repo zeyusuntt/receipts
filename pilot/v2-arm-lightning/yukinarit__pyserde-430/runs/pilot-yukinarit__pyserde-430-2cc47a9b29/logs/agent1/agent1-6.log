@@ -1,0 +1,25 @@
+serde/compat.py:# Create alias for `dataclasses.Field` because `dataclasses.Field` is a generic
+serde/compat.py:        # the builtin genericalias class.
+serde/core.py:    alias: Optional[List[str]] = None,
+serde/core.py:    if alias is not None:
+serde/core.py:        metadata["serde_alias"] = alias
+serde/core.py:    alias: List[str] = field(default_factory=list)
+serde/core.py:            alias=f.metadata.get("serde_alias", []),
+serde/de.py:def _get_by_aliases(d: Dict[str, str], aliases: List[str]) -> str:
+serde/de.py:    if not aliases:
+serde/de.py:        raise KeyError("Tried all aliases, but key not found")
+serde/de.py:    if aliases[0] in d:
+serde/de.py:        return d[aliases[0]]
+serde/de.py:        return _get_by_aliases(d, aliases[1:])
+serde/de.py:def _exists_by_aliases(d: Dict[str, str], aliases: List[str]) -> bool:
+serde/de.py:    for alias in aliases:
+serde/de.py:        if alias in d:
+serde/de.py:        g["_exists_by_aliases"] = _exists_by_aliases
+serde/de.py:        g["_get_by_aliases"] = _get_by_aliases
+serde/de.py:            "alias": self.alias,
+serde/de.py:        if arg.alias:
+serde/de.py:            aliases = (f'"{s}"' for s in [arg.name, *arg.alias])
+serde/de.py:            dat = f"_get_by_aliases(data, [{','.join(aliases)}])"
+serde/de.py:        if arg.alias:
+serde/de.py:            aliases = (f'"{s}"' for s in [arg.name, *arg.alias])
+serde/de.py:            exists = f'_exists_by_aliases({arg.datavar}, [{",".join(aliases)}])'

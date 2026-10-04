@@ -1,0 +1,100 @@
+import csv
+import logging
+import os
+from copy import copy
+from pathlib import Path
+from typing import List, Generator, Callable, ClassVar, Optional, Union, Tuple
+
+from autoconf.dictable import to_dict
+from autofit.mapper.model import ModelInstance
+from autofit.mapper.prior_model.abstract import AbstractPriorModel
+from autofit.non_linear.grid.grid_search import make_lists, Sequential
+from autofit.non_linear.grid.sensitivity.job import Job
+from autofit.non_linear.grid.sensitivity.job import JobResult
+from autofit.non_linear.grid.sensitivity.result import SensitivityResult
+from autofit.non_linear.parallel import Process
+from autofit.text.text_util import padding
+
+class Sensitivity:
+    def __init__(
+        self,
+        base_model: AbstractPriorModel,
+        perturb_model: AbstractPriorModel,
+        simulation_instance,
+        paths,
+        simulate_cls: Callable,
+        base_fit_cls: Callable,
+        perturb_fit_cls: Callable,
+        job_cls: ClassVar = Job,
+        perturb_model_prior_func : Optional[Callable] = None,
+        number_of_steps: Union[Tuple[int, ...], int] = 4,
+        number_of_cores: int = 2,
+        limit_scale: int = 1,
+    ):
+        """
+        Perform sensitivity mapping to evaluate whether a perturbation
+        can be detected if it occurs in different parts of an image.
+
+        For a range from 0 to 1 with step_size, for each dimension of the
+        perturb_model, a perturbation is created and used in conjunction
+        with the instance to create an image.
+
+        For each of these images, a fit is run with just the model and with both
+        the model and perturb_model to compare how much better the image
+        can be fit if the perturbation is included.
+
+        Parameters
+        ----------
+        base_model
+            A model that fits the instance well
+        perturb_model
+            A model which provides a perturbations to be applied to the instance
+            before creating images
+        simulation_instance
+            An instance of a model to which perturbations are applied prior to
+            images being generated
+        simulate_cls
+            A class which simulates images from each perturb instance that sensitivity mapping is performed on.
+        base_fit_cls
+            The class which fits the base model to each simulated dataset of the sensitivity map.
+        perturb_fit_cls
+            The class which fits the perturb model to each simulated dataset of the sensitivity map.
+        number_of_steps
+            The number of steps for each dimension of the sensitivity grid. If input as a float the dimensions are
+            all that value. If input as a tuple of length the number of dimensions, each tuple value is the number of
+            steps in that dimension.
+        number_of_cores
+            How many cores does this computer have?
+        limit_scale
+            Scales the priors for each perturbation model.
+                A scale of 1 means priors have limits the same size as the grid square.
+                A scale of 2 means priors have limits larger than the grid square with
+                    width twice a grid square.
+                A scale of 0.5 means priors have limits smaller than the grid square
+                    with width half a grid square.
+        """
+        self.logger = logging.getLogger(f"Sensitivity ({paths.name})")
+
+        self.logger.info("Creating")
+
+        self.instance = simulation_instance
+        self.model = base_model
+        self.perturb_model = perturb_model
+
+        self.paths = paths
+
+        self.simulate_cls = simulate_cls
+        self.base_fit_cls = base_fit_cls
+        self.perturb_fit_cls = perturb_fit_cls
+
+        self.perturb_model_prior_func = perturb_model_prior_func
+
+        self.job_cls = job_cls
+
+        self.number_of_steps = number_of_steps
+        self.number_of_cores = number_of_cores
+
+        self.limit_scale = limit_scale
+
+    def run(self) -> SensitivityResult:
+        """

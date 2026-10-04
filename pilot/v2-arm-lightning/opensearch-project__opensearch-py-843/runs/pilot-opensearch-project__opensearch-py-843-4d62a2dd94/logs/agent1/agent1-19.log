@@ -1,0 +1,13 @@
+            if verify_certs:
+                ssl_context.verify_mode = ssl.CERT_REQUIRED
+                ssl_context.check_hostname = True
+            else:
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+
+            if ca_certs is None:
+                ca_certs = self.default_ca_certs()
+
+            if verify_certs:
+                if not ca_certs:
+                    raise ImproperlyConfigured(

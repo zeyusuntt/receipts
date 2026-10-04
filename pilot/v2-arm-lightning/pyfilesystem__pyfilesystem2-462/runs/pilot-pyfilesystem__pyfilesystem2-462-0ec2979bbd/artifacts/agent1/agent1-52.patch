@@ -1,0 +1,67 @@
+diff --git a/fs/ftpfs.py b/fs/ftpfs.py
+index 86f0495..d5351e4 100644
+--- a/fs/ftpfs.py
++++ b/fs/ftpfs.py
+@@ -654,6 +654,44 @@ class FTPFS(FS):
+             # type: (_F, Text, Optional[_OpendirFactory]) -> SubFS[_F]
+             pass
+ 
++    def getmodified(self, path):
++        # type: (Text) -> Optional[datetime.datetime]
++        """Get the modification time of a file.
++
++        Uses the MDTM command if supported, otherwise falls back to
++        parsing the modification time from the directory listing.
++
++        Returns:
++            `~datetime.datetime`: the modification time, or `None` if
++            it cannot be determined.
++        """
++        _path = self.validatepath(path)
++
++        # Try MDTM first if supported
++        if "MDTM" in self.features:
++            with ftp_errors(self, path=path):
++                try:
++                    response = self.ftp.sendcmd(
++                        str("MDTM ") + _encode(_path, self.ftp.encoding)
++                    )
++                    # MDTM response format: 213 YYYYMMDDHHMMSS
++                    # Example: 213 20210825140215
++                    text = _decode(response, self.ftp.encoding)
++                    # Extract the timestamp after the status code
++                    parts = text.split()
++                    if len(parts) >= 2:
++                        time_str = parts[1]
++                        if len(time_str) >= 14:
++                            return datetime.datetime.utcfromtimestamp(
++                                self._parse_ftp_time(time_str)
++                            )
++                except error_perm:
++                    pass  # Fall through to directory listing
++
++        # Fall back to getinfo
++        info = self.getinfo(_path, ("details",))
++        return info.modified if info else None
++
+     def getinfo(self, path, namespaces=None):
+         # type: (Text, Optional[Container[Text]]) -> Info
+         _path = self.validatepath(path)
+@@ -667,6 +705,17 @@ class FTPFS(FS):
+                 }
+             )
+ 
++        # If only "modified" detail is requested, try MDTM first
++        if "modified" in namespaces and not self.supports_mlst:
++            modified = self.getmodified(_path)
++            if modified is not None:
++                details = {"modified": modified}
++                if "basic" in namespaces:
++                    details["name"] = basename(_path)
++                if "type" in namespaces:
++                    details["type"] = int(ResourceType.file)
++                return Info(details)
++
+         if self.supports_mlst:
+             with self._lock:
+                 with ftp_errors(self, path=path):

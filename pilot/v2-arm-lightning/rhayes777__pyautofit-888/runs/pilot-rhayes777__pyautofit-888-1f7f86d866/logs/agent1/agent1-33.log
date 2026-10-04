@@ -1,0 +1,26 @@
+        A list of models representing a perturbation at each grid square.
+
+        By default models have priors with limits at the edges of a grid square.
+        if isinstance(self.step_size, tuple):
+            half_step = tuple(
+                self.limit_scale * step / 2 for step in self.step_size
+            )
+        else:
+            half_step = self.limit_scale * self.step_size / 2
+        for list_ in self._lists:
+            limits = [
+                (
+                    prior.value_for(max(0.0, centre - half_step[i])),
+                    prior.value_for(min(1.0, centre + half_step[i])),
+                )
+                for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
+            ]
+            yield self.perturb_model.with_limits(limits)
+                for centre, prior in zip(list_, self.perturb_model.priors_ordered_by_id)
+            ]
+            yield self.perturb_model.with_limits(limits)
+
+    def _make_jobs(self) -> Generator[Job, None, None]:
+        """
+        Create a list of jobs to be run on separate processes.
+

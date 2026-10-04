@@ -1,0 +1,123 @@
+_command_map = {
+    'call_tree': (_calltree_setup_parser, _calltree_exec,
+                  "Display the call tree for the specified class method and all 'self' class "
+                  "methods it calls."),
+    'check': (_check_config_setup_parser, _check_config_cmd,
+              'Perform a number of configuration checks on the problem.'),
+    'cite': (_cite_setup_parser, _cite_cmd, 'Print citations referenced by the problem.'),
+    'comm_info': (_comm_info_setup_parser, _comm_info_cmd,
+                  'Print MPI communicator info for systems.'),
+    'compute_entry_points': (_compute_entry_points_setup_parser, _compute_entry_points_exec,
+                             'Compute entry point declarations to add to the setup.py file.'),
+    'find_plugins': (_find_plugins_setup_parser, _find_plugins_exec,
+                     'Find openmdao plugins on github.'),
+    'iprof': (_iprof_setup_parser, _iprof_exec,
+              'Profile calls to particular object instances.'),
+    'iprof_totals': (_iprof_totals_setup_parser, _iprof_totals_exec,
+                     'Generate total timings of calls to particular object instances.'),
+    'list_installed': (_list_installed_setup_parser, _list_installed_cmd,
+                       'List installed types recognized by OpenMDAO.'),
+    'list_reports': (_list_reports_setup_parser, _list_reports_cmd,
+                     'List available reports.'),
+    'mem': (_mem_prof_setup_parser, _mem_prof_exec,
+            'Profile memory used by OpenMDAO related functions.'),
+    'mempost': (_mempost_setup_parser, _mempost_exec, 'Post-process memory profile output.'),
+    'n2': (_n2_setup_parser, _n2_cmd, 'Display an interactive N2 diagram of the problem.'),
+    'partial_coloring': (_partial_coloring_setup_parser, _partial_coloring_cmd,
+                         'Compute coloring(s) for specified partial jacobians.'),
+    'scaffold': (_scaffold_setup_parser, _scaffold_exec,
+                 'Generate a simple scaffold for a component.'),
+    'scaling': (_scaling_setup_parser, _scaling_cmd, 'View driver scaling report.'),
+    'list_pre_post': (_list_pre_post_setup_parser, _list_pre_post_cmd,
+                      'Show pre and post setup systems.'),
+    'summary': (_config_summary_setup_parser, _config_summary_cmd,
+                'Print a short top-level summary of the problem.'),
+    'timing': (_timing_setup_parser, _timing_cmd, 'Collect timing information for all systems.'),
+    'total_coloring': (_total_coloring_setup_parser, _total_coloring_cmd,
+                       'Compute a coloring for the total jacobian.'),
+    'trace': (_itrace_setup_parser, _itrace_exec, 'Dump trace output.'),
+    'tree': (_tree_setup_parser, _tree_cmd, 'Print the system tree.'),
+    'view_coloring': (_view_coloring_setup_parser, _view_coloring_exec, 'View a colored jacobian.'),
+    'view_connections': (_view_connections_setup_parser, _view_connections_cmd,
+                         'View connections showing values and source/target units.'),
+    'view_dyn_shapes': (_view_dyn_shapes_setup_parser, _view_dyn_shapes_cmd,
+                        'View the dynamic shape dependency graph.'),
+    'view_mm': (_meta_model_parser, _meta_model_cmd, "View a metamodel."),
+    'view_reports': (_view_reports_setup_parser, _view_reports_cmd,
+                     'View existing reports.'),
+}
+
+
+def openmdao_cmd():
+    """
+    Run an 'openmdao' sub-command or list help info for 'openmdao' command or sub-commands.
+    """
+    # pre-parse sys.argv to split between before and after '--'
+    if '--' in sys.argv:
+        idx = sys.argv.index('--')
+        sys_args = sys.argv[:idx]
+        user_args = sys.argv[idx + 1:]
+        sys.argv[:] = sys_args
+    else:
+        user_args = []
+
+    parser = argparse.ArgumentParser(description='OpenMDAO Command Line Tools',
+                                     epilog='Use -h after any sub-command for sub-command help, '
+                                     'for example, "openmdao tree -h" for help on the "tree" '
+                                     'command. If using a tool on a script that takes its own '
+                                     'command line arguments, place those arguments after a "--". '
+                                     'For example: '
+                                     '"openmdao n2 -o foo.html myscript.py -- -x --myarg=bar"')
+
+    ver_group = parser.add_mutually_exclusive_group()
+    ver_group.add_argument('--version', action='version', version=version)
+    ver_group.add_argument('--dependency_versions', action='store_true', default=False,
+                           help="show versions of OpenMDAO and all dependencies, then exit")
+
+    # setting 'dest' here will populate the Namespace with the active subparser name
+    subs = parser.add_subparsers(title='Tools', metavar='', dest="subparser_name")
+    for p, (parser_setup_func, executor, help_str) in sorted(_command_map.items()):
+        subp = subs.add_parser(p, help=help_str)
+        parser_setup_func(subp)
+        subp.set_defaults(executor=executor)
+
+    # now add any plugin openmdao commands
+    epdict = {}
+    for ep in _iter_entry_points('openmdao_command'):
+        cmd, module, target = split_ep(ep)
+        # don't let plugins override the builtin commands
+        if cmd in _command_map:
+            raise RuntimeError("openmdao plugin command '{}' defined in {} conflicts with "
+                               "builtin command '{}'.".format(cmd, module, cmd))
+        elif cmd in epdict:
+            raise RuntimeError("openmdao plugin command '{}' defined in {} conflicts with a "
+                               "another plugin command defined in {}."
+                               .format(cmd, module, epdict[cmd][1]))
+        epdict[cmd] = (ep, module)
+
+    # sort commands by module and then by command name so commands from plugins will
+    # be grouped together.
+    for cmd, (ep, module) in sorted(epdict.items(), key=lambda x: x[1][1] + x[0]):
+        func = ep.load()
+        parser_setup_func, executor, help_str = func()
+        pkg = module.split('.', 1)[0]
+        subp = subs.add_parser(cmd, help='(%s plugin) ' % pkg + help_str)
+        parser_setup_func(subp)
+        subp.set_defaults(executor=executor)
+
+    # handle case where someone just runs `openmdao <script> [dashed-args]`
+    args = [a for a in sys.argv[1:] if not a.startswith('-')]
+    cmdargs = [a for a in sys.argv[1:] if a not in ('-h', '--version', '--dependency_versions')]
+    if not set(args).intersection(subs.choices) and len(args) == 1 and os.path.isfile(cmdargs[0]):
+        _load_and_exec(args[0], user_args)
+    else:
+        hooks.use_hooks = True
+        # we do a parse_known_args here instead of parse_args so that we can associate errors with
+        # the correct subparser.  Otherwise we would just get a top level error message without any
+        # sub-command usage info.
+        options, unknown = parser.parse_known_args()
+        if unknown:
+            msg = 'unrecognized arguments: ' + ', '.join(unknown)
+            try:
+                sub = subs.choices[options.subparser_name]
+            except KeyError:

@@ -1,0 +1,51 @@
+=================================== FAILURES ===================================
+__________________ TestClusterBasedNormalizer.test__transform __________________
+
+self = <tests.unit.transformers.test_numerical.TestClusterBasedNormalizer testMethod=test__transform>
+
+    def test__transform(self):
+        """Test ``_transform``.
+    
+        Validate that the method produces the appropriate output when given a pandas Series.
+    
+        Setup:
+            - create an instance of the ``ClusterBasedNormalizer`` where:
+                - ``_bgm_transformer`` is mocked with the appropriate ``means_``, ``covariances_``
+                and ``predict_proba.return_value``.
+                - ``valid_component_indicator`` is set to ``np.array([True, True, False])``.
+    
+        Input:
+            - a pandas Series.
+    
+        Ouput:
+            - a numpy array with the transformed data.
+        """
+        # Setup
+        random_state = np.random.get_state()
+        np.random.set_state(np.random.RandomState(10).get_state())
+        transformer = ClusterBasedNormalizer(max_clusters=3)
+        transformer._bgm_transformer = Mock()
+    
+        means = np.array([
+            [0.90138867],
+            [0.09169366],
+            [0.499]
+        ])
+        transformer._bgm_transformer.means_ = means
+    
+        covariances = np.array([
+            [[0.09024532]],
+            [[0.08587948]],
+            [[0.27487667]]
+        ])
+        transformer._bgm_transformer.covariances_ = covariances
+    
+        probabilities = np.array([
+            [0.01519528, 0.98480472, 0.],
+            [0.01659093, 0.98340907, 0.],
+            [0.012744, 0.987256, 0.],
+            [0.012744, 0.987256, 0.],
+            [0.01391614, 0.98608386, 0.],
+            [0.99220664, 0.00779336, 0.],
+            [0.99059634, 0.00940366, 0.],
+            [0.9941256, 0.0058744, 0.],

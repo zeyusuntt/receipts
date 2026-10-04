@@ -1,0 +1,26 @@
+        """
+        Validate fallback to upload status using HostGAPlugin is happening when
+        status reporting via default method is unsuccessful
+        """
+        test_goal_state = wire.GoalState(WireProtocolData(DATA_FILE).goal_state)
+        status = restapi.VMStatus(status="Ready", message="Guest Agent is running")
+        with patch.object(wire.HostPluginProtocol, "put_vm_status") as patch_put:
+            with patch.object(wire.StatusBlob, "upload", return_value=False) as patch_upload:
+                wire_protocol_client = wire.WireProtocol(wireserver_url).client
+                wire_protocol_client.get_goal_state = Mock(return_value=test_goal_state)
+                wire_protocol_client.ext_conf = wire.ExtensionsConfig(None)
+                wire_protocol_client.ext_conf.status_upload_blob = sas_url
+                wire_protocol_client.status_blob.set_vm_status(status)
+                wire_protocol_client.upload_status_blob()
+                self.assertTrue(patch_put.call_count == 1,
+                                "Fallback was not engaged")
+                self.assertTrue(patch_put.call_args[0][1] == sas_url)
+                self.assertTrue(wire.HostPluginProtocol.is_default_channel())
+                wire.HostPluginProtocol.set_default_channel(False)
+
+    def test_validate_http_request(self):
+        """Validate correct set of data is sent to HostGAPlugin when reporting VM status"""
+
+        wire_protocol_client = wire.WireProtocol(wireserver_url).client
+        test_goal_state = wire.GoalState(WireProtocolData(DATA_FILE).goal_state)
+

@@ -1,0 +1,10 @@
+    def __init__(self, addr=None):
+        self.parent_pid = os.getpid()
+        super().__init__(name='test-ftpd')
+        self.server = setup_server(self.handler, self.server_class, addr=addr)
+        self.host, self.port = self.server.socket.getsockname()[:2]
+
+        self.lock = threading.Lock()
+        self._stop_flag = False
+        self._event_stop = threading.Event()
+

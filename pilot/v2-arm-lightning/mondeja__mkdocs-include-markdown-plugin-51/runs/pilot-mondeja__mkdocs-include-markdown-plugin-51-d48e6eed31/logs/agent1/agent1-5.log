@@ -1,0 +1,50 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-7.4.4, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /mkdocs-include-markdown-plugin
+collecting ... collected 11 items / 10 deselected / 1 selected
+
+tests/test_include.py::test_include[multiple-start-end-matchs] FAILED    [100%]
+
+=================================== FAILURES ===================================
+___________________ test_include[multiple-start-end-matchs] ____________________
+
+includer_schema = '{%\n  include-markdown "{filepath}"\n  start="<!--start-tag-->"\n  end="<!--end-tag-->"\n  comments=false\n%}'
+content_to_include = "Some text\n\n<!--start-tag-->\nThis should be included.\n<!--end-tag-->\n\nThis shouldn't be included.\n\n<!--start-t...\n\n<!--start-->\n<!--end-->\n\nEtc\n<!--start-tag-->\nThis should be included even if hasn't defined after end tag.\n"
+expected_result = "\nThis should be included.\n\nThis should be included also.\n\nThis should be included even if hasn't defined after end tag.\n"
+page = <function page.<locals>._page at 0x7ffff6a5f010>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-2/test_include_multiple_start_en0')
+
+    @pytest.mark.parametrize(
+        (
+            'includer_schema',
+            'content_to_include',
+            'expected_result',
+        ),
+        (
+            pytest.param(
+                '# Header\n\n{% include "{filepath}" %}\n',
+                'This must be included.',
+                '# Header\n\nThis must be included.\n',
+                id='simple case',
+            ),
+    
+            # Newline at the end of the included content
+            pytest.param(
+                '# Header\n\n{% include "{filepath}" %}\n',
+                'This must be included.\n',
+                '# Header\n\nThis must be included.\n',
+                id='newline at end of included',
+            ),
+    
+            # Start and end options
+            pytest.param(
+                '''# Header
+    
+    {%
+      include "{filepath}"
+      start="start here"
+      end="end here"
+    %}
+    ''',
+                '''This must be ignored.

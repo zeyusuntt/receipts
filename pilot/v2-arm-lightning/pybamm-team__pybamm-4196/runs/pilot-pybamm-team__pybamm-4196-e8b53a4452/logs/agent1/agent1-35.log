@@ -1,0 +1,58 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /PyBaMM
+configfile: pyproject.toml
+plugins: anyio-4.12.1, nbmake-1.5.5, cov-7.0.0, doctestplus-1.7.1, xdist-3.8.0
+created: 4/4 workers
+4 workers [1 item]
+
+scheduling tests via LoadScheduling
+
+tests/unit/test_expression_tree/test_functions.py::TestSpecificFunctions::test_arcsinh 
+[gw0] FAILED tests/unit/test_expression_tree/test_functions.py::TestSpecificFunctions::test_arcsinh 
+
+=================================== FAILURES ===================================
+______________________ TestSpecificFunctions.test_arcsinh ______________________
+[gw0] linux -- Python 3.10.19 /usr/local/bin/python
+
+self = <tests.unit.test_expression_tree.test_functions.TestSpecificFunctions testMethod=test_arcsinh>
+
+    def test_arcsinh(self):
+        a = pybamm.InputParameter("a")
+        fun = pybamm.arcsinh(a)
+        self.assertIsInstance(fun, pybamm.Arcsinh)
+        self.assertEqual(fun.evaluate(inputs={"a": 3}), np.arcsinh(3))
+        h = 0.0000001
+        self.assertAlmostEqual(
+>           fun.diff(a).evaluate(inputs={"a": 3}),
+            (
+                pybamm.arcsinh(pybamm.Scalar(3 + h)).evaluate()
+                - fun.evaluate(inputs={"a": 3})
+            )
+            / h,
+            places=5,
+        )
+
+tests/unit/test_expression_tree/test_functions.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Arcsinh(0x1e512f79a185e005, function (arcsinh), children=['a'], domains={})
+variable = InputParameter(-0x1cf1d91ff925b8ad, a, children=[], domains={})
+
+    def diff(self, variable: pybamm.Symbol):
+        """See :meth:`pybamm.Symbol.diff()`."""
+        if variable == self:
+            return pybamm.Scalar(1)
+        else:
+>           raise NotImplementedError(
+                "Derivative of base Function class is not implemented"
+            )
+E           NotImplementedError: Derivative of base Function class is not implemented
+
+pybamm/expression_tree/functions.py:78: NotImplementedError
+=========================== short test summary info ============================
+FAILED tests/unit/test_expression_tree/test_functions.py::TestSpecificFunctions::test_arcsinh - NotImplementedError: Derivative of base Function class is not implemented
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!! xdist.dsession.Interrupted: stopping after 1 failures !!!!!!!!!!!!!
+============================== 1 failed in 5.67s ===============================

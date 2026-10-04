@@ -1,0 +1,40 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /UpSetPlot
+configfile: setup.cfg
+plugins: cov-7.0.0
+collecting ... collected 12 items
+
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params0-expected0] PASSED [  8%]
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params1-expected1] FAILED [ 16%]
+
+=================================== FAILURES ===================================
+__________ test_filter_subsets[cardinality-filter_params1-expected1] ___________
+
+filter_params = {'max_degree': 3}
+expected = {(True, False, False): 884, (True, True, False): 1547, (True, True, True): 990}
+sort_by = 'cardinality'
+
+    @pytest.mark.parametrize(
+        ("filter_params", "expected"),
+        [
+            (
+                {"min_subset_size": 623},
+                {
+                    (True, False, False): 884,
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"max_degree": 3},
+                {
+                    (True, False, False): 884,
+                    (True, True, False): 1547,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_subset_size": 800, "max_subset_size": 990},

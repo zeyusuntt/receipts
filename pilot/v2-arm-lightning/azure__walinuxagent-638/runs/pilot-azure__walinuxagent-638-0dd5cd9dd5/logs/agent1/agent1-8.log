@@ -1,0 +1,80 @@
+class StatusBlob(object):
+    def __init__(self, client):
+        self.vm_status = None
+        self.ext_statuses = {}
+        self.client = client
+        self.type = None
+        self.data = None
+
+    def set_vm_status(self, vm_status):
+        validate_param("vmAgent", vm_status, VMStatus)
+        self.vm_status = vm_status
+
+    def set_ext_status(self, ext_handler_name, ext_status):
+        validate_param("extensionStatus", ext_status, ExtensionStatus)
+        self.ext_statuses[ext_handler_name] = ext_status
+
+    def to_json(self):
+        report = vm_status_to_v1(self.vm_status, self.ext_statuses)
+        return json.dumps(report)
+
+    __storage_version__ = "2014-02-14"
+
+    def upload(self, url):
+        # TODO upload extension only if content has changed
+        logger.verbose("Upload status blob")
+        upload_successful = False
+        self.data = self.to_json()
+        self.type = self.get_blob_type(url)
+        try:
+            if self.type == "BlockBlob":
+                self.put_block_blob(url, self.data)
+            elif self.type == "PageBlob":
+                self.put_page_blob(url, self.data)
+            else:
+                raise ProtocolError("Unknown blob type: {0}".format(self.type))
+        except HttpError as e:
+            logger.warn("Initial upload failed [{0}]".format(e))
+        else:
+            logger.verbose("Uploading status blob succeeded")
+            upload_successful = True
+        return upload_successful
+
+    def get_blob_type(self, url):
+        logger.verbose("Get blob type")
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        try:
+            resp = self.client.call_storage_service(
+                restutil.http_head,
+                url,
+                {
+                    "x-ms-date": timestamp,
+                    "x-ms-version": self.__class__.__storage_version__
+                })
+        except HttpError as e:
+            raise ProtocolError("Failed to get status blob type: {0}", e)
+
+        if resp is None or resp.status != httpclient.OK:
+            raise ProtocolError("Failed to get status blob type")
+
+        blob_type = resp.getheader("x-ms-blob-type")
+        logger.verbose("Blob type: [{0}]", blob_type)
+        return blob_type
+
+    def get_block_blob_headers(self, blob_size):
+        return {
+            "Content-Length": ustr(blob_size),
+            "x-ms-blob-type": "BlockBlob",
+            "x-ms-date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "x-ms-version": self.__class__.__storage_version__
+        }
+
+    def put_block_blob(self, url, data):
+        logger.verbose("Put block blob")
+        headers = self.get_block_blob_headers(len(data))
+        resp = self.client.call_storage_service(restutil.http_put, url, data, headers)
+        if resp.status != httpclient.CREATED:
+            raise UploadError(
+                "Failed to upload block blob: {0}".format(resp.status))
+
+    def get_page_blob_create_headers(self, blob_size):

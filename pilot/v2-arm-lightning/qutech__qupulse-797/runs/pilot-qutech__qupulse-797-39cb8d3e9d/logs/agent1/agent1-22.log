@@ -1,0 +1,65 @@
+    def _calc_sampled_segments(self) -> Tuple[Sequence[TaborSegment], Sequence[int]]:
+        """
+        Returns:
+            (segments, segment_lengths)
+        """
+        time_array, segment_lengths = get_sample_times(self._parsed_program.waveforms, self._sample_rate)
+
+        if np.any(segment_lengths % 16 > 0) or np.any(segment_lengths < 192):
+            raise TaborException('At least one waveform has a length that is smaller 192 or not a multiple of 16')
+
+        # Deduplicate segments by their hash to avoid uploading identical waveforms multiple times
+        segments = []
+        segment_hashes = []
+        seen_hash_to_index = {}
+        
+        for i, waveform in enumerate(self._parsed_program.waveforms):
+            t = time_array[:segment_lengths[i]]
+            marker_time = t[::2]
+            segment_a = self._channel_data(waveform, t, 0)
+            segment_b = self._channel_data(waveform, t, 1)
+            assert (len(segment_a) == len(t))
+            assert (len(segment_b) == len(t))
+            marker_a = self._marker_data(waveform, marker_time, 0)
+            marker_b = self._marker_data(waveform, marker_time, 1)
+            segment = TaborSegment.from_sampled(ch_a=segment_a,
+                                               ch_b=segment_b,
+                                               marker_a=marker_a,
+                                               marker_b=marker_b)
+            segment_hash = segment._hash
+            if segment_hash not in seen_hash_to_index:
+                seen_hash_to_index[segment_hash] = len(segments)
+                segments.append(segment)
+                segment_hashes.append(segment_hash)
+            # If hash already seen, we skip adding the segment to avoid redundancy
+
+        # Recalculate segment_lengths to only include unique segments in order of first appearance
+        unique_segment_indices = []
+        for i, waveform in enumerate(self._parsed_program.waveforms):
+            t = time_array[:segment_lengths[i]]
+            marker_time = t[::2]
+            segment_a = self._channel_data(waveform, t, 0)
+            segment_b = self._channel_data(waveform, t, 1)
+            marker_a = self._marker_data(waveform, marker_time, 0)
+            marker_b = self._marker_data(waveform, marker_time, 1)
+            segment = TaborSegment.from_sampled(ch_a=segment_a,
+                                               ch_b=segment_b,
+                                               marker_a=marker_a,
+                                               marker_b=marker_b)
+            segment_hash = segment._hash
+            if segment_hash in seen_hash_to_index:
+                unique_segment_indices.append(seen_hash_to_index[segment_hash])
+            else:
+                # This case should not happen as we add all hashes above, but handle it just in case
+                unique_segment_indices.append(len(segments))
+                seen_hash_to_index[segment_hash] = len(segments)
+                segments.append(segment)
+                segment_hashes.append(segment_hash)
+
+        # Build new segment_lengths based on unique segments
+        unique_lengths = np.array([segment_lengths[idx] for idx in unique_segment_indices], dtype=np.int64)
+
+        return segments, unique_lengths
+
+    def setup_single_sequence_mode(self) -> None:
+        assert self.program.depth() == 1

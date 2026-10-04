@@ -1,0 +1,60 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /GitPython
+configfile: pyproject.toml
+plugins: cov-7.0.0, instafail-0.5.0, mock-3.15.1, sugar-1.1.1
+collecting ... collected 1 item
+
+test/test_diff.py::TestDiff::test_diff_patch_with_external_engine FAILED
+
+=================================== FAILURES ===================================
+________________ TestDiff.test_diff_patch_with_external_engine _________________
+
+self = <test.test_diff.TestDiff testMethod=test_diff_patch_with_external_engine>
+rw_dir = '/tmp/test_diff_patch_with_external_engineqwk052ct'
+
+    @with_rw_directory
+    def test_diff_patch_with_external_engine(self, rw_dir):
+        repo = Repo.init(rw_dir)
+        gitignore = osp.join(rw_dir, ".gitignore")
+    
+        # First commit
+        with open(gitignore, "w") as f:
+            f.write("first_line\n")
+        repo.git.add(".gitignore")
+        repo.index.commit("first commit")
+    
+        # Adding second line and committing
+        with open(gitignore, "a") as f:
+            f.write("second_line\n")
+        repo.git.add(".gitignore")
+        repo.index.commit("second commit")
+    
+        # Adding third line and staging
+        with open(gitignore, "a") as f:
+            f.write("third_line\n")
+        repo.git.add(".gitignore")
+    
+        # Adding fourth line
+        with open(gitignore, "a") as f:
+            f.write("fourth_line\n")
+    
+        # Set the external diff engine
+        with repo.config_writer(config_level="repository") as writer:
+            writer.set_value("diff", "external", "bogus_diff_engine")
+    
+        head_against_head = repo.head.commit.diff("HEAD^", create_patch=True)
+        self.assertEqual(len(head_against_head), 1)
+>       head_against_index = repo.head.commit.diff(create_patch=True)
+
+test/test_diff.py:509: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+git/diff.py:196: in diff
+    index = diff_method(self.repo, proc)
+git/diff.py:506: in _index_from_patch_format
+    handle_process_output(proc, text_list.append, None, finalize_process, decode_streams=False)
+git/cmd.py:207: in handle_process_output
+    finalizer(process)
+git/util.py:483: in finalize_process
+    proc.wait(**kwargs)

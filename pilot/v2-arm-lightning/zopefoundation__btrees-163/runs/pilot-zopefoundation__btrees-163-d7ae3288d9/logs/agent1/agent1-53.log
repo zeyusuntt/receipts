@@ -1,0 +1,31 @@
+    prefix_code = 'O'
+    long_name = 'Object'
+
+    def __call__(self, item):
+        return item
+
+    def supports_value_union(self):
+        return False
+
+
+class O(KeyDataType):
+    """
+    Arbitrary (sortable) Python objects.
+    """
+    long_name = 'Object'
+    tree_size = 250
+    default_bucket_size = 60
+
+    def as_value_type(self):
+        return Any()
+
+    def supports_value_union(self):
+        return False
+
+    @staticmethod
+    def _check_default_comparison(
+            item,
+            # PyPy2 doesn't define __lt__ on object; PyPy3 and
+            # CPython 2 and 3 do.
+            _object_lt=getattr(object, '__lt__', object())
+    ):

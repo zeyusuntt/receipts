@@ -1,0 +1,69 @@
+{
+  "instance_id": "qutech__qupulse-797",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-arm-lightning/qutech__qupulse-797/runs/pilot-qutech__qupulse-797-39cb8d3e9d",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the redundant waveform upload issue in TaborProgram by adding hash-based deduplication in the `_calc_sampled_segments` function.\n\nThe fix modifies `qupulse/_program/tabor.py` to check for unique segment hashes when creating sampled segments. When multiple waveforms produce the same segment data (same hash), only one copy is included in the output, preventing redundant uploads.\n\nKey changes:\n1. Added `seen_hash_to_index` dictionary to track unique segment hashes\n2. Added `unique_lengths_dict` to store the length of each unique segment (first occurrence)  \n3. Deduplicate segments before returning, keeping only unique ones\n4. Unique lengths are collected in order of first appearance\n\nThe test `test_calc_sampled_segments_deduplication` now passes (was failing with `AssertionError: 3 != 2`), and all 45 tabor tests plus 23 hardware dummy-based tests pass.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "qupulse/_program/tabor.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "unsupported",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "f2f19d468da2a9c5f551ccd0c28cf396b6b82ace72ed61d1236e3e6bfb7a1435",
+      "filtered_sha256": "f2f19d468da2a9c5f551ccd0c28cf396b6b82ace72ed61d1236e3e6bfb7a1435",
+      "witness_apply_sha256": "f2f19d468da2a9c5f551ccd0c28cf396b6b82ace72ed61d1236e3e6bfb7a1435",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "85f09e8eb44cfef0950b236b872830f98c7430838c00b9a6a9d7caa5675b275f",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/_program/tabor_tests.py::TaborProgramTests::test_calc_sampled_segments_deduplication"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "f2f19d468da2a9c5f551ccd0c28cf396b6b82ace72ed61d1236e3e6bfb7a1435",
+        "read_sha256": "f2f19d468da2a9c5f551ccd0c28cf396b6b82ace72ed61d1236e3e6bfb7a1435",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 2295123,
+    "model_dollars": 0.14168232,
+    "sandbox_lifetime_seconds": 147.907565,
+    "sandbox_dollars_estimate": 0.31340013
+  },
+  "wall_time_s": 319.4559272909537,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

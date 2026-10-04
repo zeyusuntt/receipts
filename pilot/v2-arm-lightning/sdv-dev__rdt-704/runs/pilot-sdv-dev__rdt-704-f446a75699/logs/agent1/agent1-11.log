@@ -1,0 +1,50 @@
+            data (pandas.Series):
+                Data to transform.
+    
+        Returns:
+            numpy.ndarray.
+        """
+        data = super()._transform(data)
+        if data.ndim > 1:
+            data, model_missing_values = data[:, 0], data[:, 1]
+    
+        data = data.reshape((len(data), 1))
+        means = self._bgm_transformer.means_.reshape((1, self.max_clusters))
+    
+        stds = np.sqrt(self._bgm_transformer.covariances_).reshape((1, self.max_clusters))
+        component_probs = self._bgm_transformer.predict_proba(data)
+        component_probs = component_probs[:, self.valid_component_indicator]
+    
+        selected_component = np.zeros(len(data), dtype='int')
+        for i in range(len(data)):
+            component_prob_t = component_probs[i] + 1e-6
+            component_prob_t = component_prob_t / component_prob_t.sum()
+            selected_component[i] = np.random.choice(
+                np.arange(self.valid_component_indicator.sum()),
+                p=component_prob_t
+            )
+    
+        # Map valid component indices to original cluster indices
+        valid_indices = np.where(self.valid_component_indicator)[0]
+        selected_cluster = valid_indices[selected_component]
+    
+        aranged = np.arange(len(data))
+>       selected_means = means[aranged, selected_cluster]
+E       IndexError: index 1 is out of bounds for axis 0 with size 1
+
+rdt/transformers/numerical.py:518: IndexError
+=============================== warnings summary ===============================
+../usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:1428
+  /usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:1428: PytestConfigWarning: Unknown config option: collect_ignore
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../usr/local/lib/python3.10/site-packages/copulas/__init__.py:18
+  /usr/local/lib/python3.10/site-packages/copulas/__init__.py:18: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    from pkg_resources import iter_entry_points
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__transform
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+======================== 1 failed, 2 warnings in 1.45s =========================

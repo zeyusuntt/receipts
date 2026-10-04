@@ -1,0 +1,90 @@
+diff --git a/skypy/galaxies/velocity_dispersion.py b/skypy/galaxies/velocity_dispersion.py
+new file mode 100644
+index 0000000..527d026
+--- /dev/null
++++ b/skypy/galaxies/velocity_dispersion.py
+@@ -0,0 +1,84 @@
++"""Velocity dispersion function sampler."""
++
++import numpy as np
++from scipy.special import gamma
++from scipy.integrate import cumtrapz
++
++
++def schechter_vdf(alpha, beta, vd_star, vd_min, vd_max, size, resolution=3000):
++    r'''Sample velocity dispersions from a Schechter-type velocity dispersion function.
++
++    Sample velocity dispersions of lens galaxies following the Schechter-type
++    velocity dispersion function described in Choi et al. (2017).
++
++    The probability density function is:
++
++    .. math::
++
++        p(\sigma_v) \, d\sigma_v = \phi_*
++        \left(\frac{\sigma_v}{\sigma_*}
++        \right)^{\alpha}
++        \exp\left[-\left(\frac{\sigma_v}{\sigma_*}
++        \right)^{\beta}\right]
++        \frac{\beta}{\Gamma(\alpha/\beta)}
++        \frac{d\sigma_v}{\sigma_v}
++
++    where :math:`\sigma_v` is the velocity dispersion, :math:`\sigma_*` is the
++    characteristic velocity dispersion, :math:`\alpha` and :math:`\beta` are
++    power-law and exponential slope parameters, and :math:`\phi_*` is a
++    normalization constant.
++
++    Parameters
++    ----------
++    alpha : float
++        Power-law index of the velocity dispersion function.
++    beta : float
++        Exponential slope parameter of the velocity dispersion function.
++    vd_star : float
++        Characteristic velocity dispersion :math:`\sigma_*`.
++    vd_min : float
++        Minimum velocity dispersion cutoff.
++    vd_max : float
++        Maximum velocity dispersion cutoff.
++    size : int
++        Number of samples to draw.
++    resolution : int, optional
++        Resolution of the function grid (default: 3000).
++
++    Returns
++    -------
++    samples : np.ndarray
++        Array of velocity dispersion samples drawn from the VDF.
++
++    References
++    ----------
++    Choi, Y.-Y., Park, C., & Vogeley, M. S. (2017).
++    "The Velocity Dispersion Function of Early-Type Galaxies."
++    The Astrophysical Journal, 836(2), 205.
++
++    '''
++    # Create velocity dispersion grid
++    vd_grid = np.linspace(vd_min, vd_max, resolution)
++
++    # Calculate the unnormalized PDF
++    pdf = (vd_grid / vd_star)**alpha * np.exp(-(vd_grid / vd_star)**beta) * \
++          (beta / gamma(alpha / beta)) * (1 / vd_grid)
++
++    # Normalize the PDF using trapezoidal integration
++    integral = np.trapz(pdf, vd_grid)
++    pdf_normalized = pdf / integral
++
++    # Calculate CDF using cumulative integration
++    cdf = cumtrapz(pdf_normalized, vd_grid, initial=0)
++
++    # Normalize CDF to ensure it goes from 0 to 1
++    cdf = cdf / cdf[-1]
++
++    # Inverse transform sampling
++    # Generate uniform random numbers
++    u = np.random.uniform(0, 1, size)
++
++    # Interpolate to find the corresponding velocity dispersion values
++    samples = np.interp(u, cdf, vd_grid)
++
++    return samples

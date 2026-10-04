@@ -1,0 +1,12 @@
+    def _makeOne(self):
+        return self._getTargetClass()()
+
+    def setUp(self):
+        super(Base, self).setUp()
+        _skip_if_pure_py_and_py_test(self)
+
+    def testProvidesInterface(self):
+        from zope.interface import providedBy
+        from zope.interface.common.sequence import IMinimalSequence
+        from zope.interface.verify import verifyObject
+        t = self._makeOne()

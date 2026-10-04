@@ -1,0 +1,31 @@
+        :arg client_key: path to the file containing the private key if using
+            separate cert and key files (client_cert will contain only the cert)
+        :arg ssl_version: version of the SSL protocol to use. Choices are:
+            SSLv23 (default) SSLv2 SSLv3 TLSv1 (see ``PROTOCOL_*`` constants in the
+            ``ssl`` module for exact options for your environment).
+        :arg ssl_assert_hostname: use hostname verification if not `False`
+        :arg ssl_assert_fingerprint: verify the supplied certificate fingerprint if not `None`
+        :arg maxsize: the number of connections which will be kept open to this
+            host. See https://urllib3.readthedocs.io/en/1.4/pools.html#api for more
+            information.
+        :arg headers: any custom http headers to be add to requests
+        :arg http_compress: Use gzip compression
+        :arg opaque_id: Send this value in the 'X-Opaque-Id' HTTP header
+            For tracing all requests made by this transport.
+        :arg loop: asyncio Event Loop to use with aiohttp. This is set by default to the currently running loop.
+        """
+
+        self.headers = {}
+
+        super().__init__(
+            host=host,
+            port=port,
+            url_prefix=url_prefix,
+            timeout=timeout,
+            use_ssl=use_ssl,
+            maxsize=maxsize,
+            headers=headers,
+            http_compress=http_compress,
+            opaque_id=opaque_id,
+            **kwargs,
+        )

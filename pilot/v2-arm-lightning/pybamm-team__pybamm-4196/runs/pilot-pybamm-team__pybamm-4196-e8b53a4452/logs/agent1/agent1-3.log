@@ -1,0 +1,71 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /PyBaMM
+configfile: pyproject.toml
+plugins: anyio-4.12.1, nbmake-1.5.5, cov-7.0.0, doctestplus-1.7.1, xdist-3.8.0
+created: 4/4 workers
+4 workers [1 item]
+
+scheduling tests via LoadScheduling
+
+tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_to_from_json 
+[gw0] FAILED tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_to_from_json 
+
+=================================== FAILURES ===================================
+______________________ TestInterpolant.test_to_from_json _______________________
+[gw0] linux -- Python 3.10.19 /usr/local/bin/python
+
+self = <tests.unit.test_expression_tree.test_interpolant.TestInterpolant testMethod=test_to_from_json>
+
+    def test_to_from_json(self):
+        x = np.linspace(0, 1, 10)
+        y = pybamm.StateVector(slice(0, 2))
+        interp = pybamm.Interpolant(x, 2 * x, y)
+    
+        expected_json = {
+            "name": "interpolating_function",
+            "id": mock.ANY,
+            "x": [
+                [
+                    0.0,
+                    0.1111111111111111,
+                    0.2222222222222222,
+                    0.3333333333333333,
+                    0.4444444444444444,
+                    0.5555555555555556,
+                    0.6666666666666666,
+                    0.7777777777777777,
+                    0.8888888888888888,
+                    1.0,
+                ]
+            ],
+            "y": [
+                0.0,
+                0.2222222222222222,
+                0.4444444444444444,
+                0.6666666666666666,
+                0.8888888888888888,
+                1.1111111111111112,
+                1.3333333333333333,
+                1.5555555555555554,
+                1.7777777777777777,
+                2.0,
+            ],
+            "interpolator": "linear",
+            "extrapolate": True,
+            "_num_derivatives": 0,
+        }
+    
+        # check correct writing to json
+>       self.assertEqual(interp.to_json(), expected_json)
+E       AssertionError: {'nam[31 chars]id': -7005940035639867871, 'x': [[0.0, 0.11111[378 chars]True} != {'nam[31 chars]id': <ANY>, 'x': [[0.0, 0.1111111111111111, 0.[386 chars]': 0}
+E       Diff is 730 characters long. Set self.maxDiff to None to see it.
+
+tests/unit/test_expression_tree/test_interpolant.py:390: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_to_from_json - AssertionError: {'nam[31 chars]id': -7005940035639867871, 'x': [[0.0, 0.11111[378 chars]True} != {'nam[31 chars]id': <ANY>, 'x': [[0.0, 0.1111111111111111, 0.[386 chars]': 0}
+Diff is 730 characters long. Set self.maxDiff to None to see it.
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!! xdist.dsession.Interrupted: stopping after 1 failures !!!!!!!!!!!!!
+============================== 1 failed in 5.75s ===============================

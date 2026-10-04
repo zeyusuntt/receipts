@@ -1,0 +1,203 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /UpSetPlot
+configfile: setup.cfg
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params1-expected1] FAILED [100%]
+
+=================================== FAILURES ===================================
+__________ test_filter_subsets[cardinality-filter_params1-expected1] ___________
+
+filter_params = {'max_degree': 3}
+expected = {(True, False, False): 884, (True, True, False): 1547, (True, True, True): 990}
+sort_by = 'cardinality'
+
+    @pytest.mark.parametrize(
+        ("filter_params", "expected"),
+        [
+            (
+                {"min_subset_size": 623},
+                {
+                    (True, False, False): 884,
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"max_degree": 3},
+                {
+                    (True, False, False): 884,
+                    (True, True, False): 1547,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_subset_size": 800, "max_subset_size": 990},
+                {
+                    (True, False, False): 884,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_degree": 2},
+                {
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (False, True, True): 258,
+                    (True, True, True): 990,
+                },
+            ),
+            (
+                {"min_degree": 2, "max_degree": 2},
+                {
+                    (True, True, False): 1547,
+                    (True, False, True): 623,
+                    (False, True, True): 258,
+                },
+            ),
+            (
+                {"max_subset_size": 500, "max_degree": 2},
+                {
+                    (False, False, False): 220,
+                    (False, True, False): 335,
+                    (False, False, True): 143,
+                    (False, True, True): 258,
+                },
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("sort_by", ["cardinality", "degree"])
+    def test_filter_subsets(filter_params, expected, sort_by):
+        data = generate_samples(seed=0, n_samples=5000, n_categories=3)
+        # data =
+        #   cat1   cat0   cat2
+        #   False  False  False     220
+        #   True   False  False     884
+        #   False  True   False     335
+        #          False  True      143
+        #   True   True   False    1547
+        #          False  True      623
+        #   False  True   True      258
+        #   True   True   True      990
+        upset_full = UpSet(data, subset_size="auto", sort_by=sort_by)
+        upset_filtered = UpSet(data, subset_size="auto", sort_by=sort_by, **filter_params)
+        intersections = upset_full.intersections
+        df = upset_full._df
+        # check integrity of expected, just to be sure
+        for key, value in expected.items():
+            assert intersections.loc[key] == value
+        subset_intersections = intersections[
+            intersections.index.isin(list(expected.keys()))
+        ]
+        subset_df = df[df.index.isin(list(expected.keys()))]
+        assert len(subset_intersections) < len(intersections)
+>       assert_series_equal(upset_filtered.intersections, subset_intersections)
+E       AssertionError: Series are different
+E       
+E       Series length are different
+E       [left]:  8, MultiIndex([( True,  True, False),
+E                   ( True,  True,  True),
+E                   ( True, False, False),
+E                   ( True, False,  True),
+E                   (False,  True, False),
+E                   (False,  True,  True),
+E                   (False, False, False),
+E                   (False, False,  True)],
+E                  names=['cat1', 'cat0', 'cat2'])
+E       [right]: 3, MultiIndex([(True,  True, False),
+E                   (True,  True,  True),
+E                   (True, False, False)],
+E                  names=['cat1', 'cat0', 'cat2'])
+
+data       =                    index     value
+cat0  cat1  cat2                  
+True  True  False      0  1.235461
+      False False      1  0.821389
+      True  False      2  0.967079
+            True       3  1.773347
+            False      4  1.674779
+...                  ...       ...
+False True  False   4995  1.147737
+            False   4996  1.368000
+      False False   4997  0.327888
+True  True  False   4998  1.598400
+            True    4999  2.419338
+
+[5000 rows x 2 columns]
+df         =                    index     value  _bin
+cat1  cat0  cat2                        
+True  True  False      0  1.235461     0
+False True  False      1  0.821389     4
+True  True  False      2  0.967079     0
+            True       3  1.773347     1
+            False      4  1.674779     0
+...                  ...       ...   ...
+      False False   4995  1.147737     2
+            False   4996  1.368000     2
+False False False   4997  0.327888     6
+True  True  False   4998  1.598400     0
+            True    4999  2.419338     1
+
+[5000 rows x 3 columns]
+expected   = {(True, False, False): 884, (True, True, False): 1547, (True, True, True): 990}
+filter_params = {'max_degree': 3}
+intersections = cat1   cat0   cat2 
+True   True   False    1547
+              True      990
+       False  False     884
+              True      623
+False  True   False     335
+              True      258
+       False  False     220
+              True      143
+Name: size, dtype: int64
+key        = (True, True, True)
+sort_by    = 'cardinality'
+subset_df  =                   index     value  _bin
+cat1 cat0  cat2                        
+True True  False      0  1.235461     0
+           False      2  0.967079     0
+           True       3  1.773347     1
+           False      4  1.674779     0
+           True       7  1.977476     1
+...                 ...       ...   ...
+           False   4994  1.438863     0
+     False False   4995  1.147737     2
+           False   4996  1.368000     2
+     True  False   4998  1.598400     0
+           True    4999  2.419338     1
+
+[3421 rows x 3 columns]
+subset_intersections = cat1  cat0   cat2 
+True  True   False    1547
+             True      990
+      False  False     884
+Name: size, dtype: int64
+upset_filtered = <upsetplot.plotting.UpSet object at 0x7fffe55a2ec0>
+upset_full = <upsetplot.plotting.UpSet object at 0x7fffe56dbd00>
+value      = 990
+
+upsetplot/tests/test_upsetplot.py:824: AssertionError
+=========================== short test summary info ============================
+FAILED upsetplot/tests/test_upsetplot.py::test_filter_subsets[cardinality-filter_params1-expected1] - AssertionError: Series are different
+
+Series length are different
+[left]:  8, MultiIndex([( True,  True, False),
+            ( True,  True,  True),
+            ( True, False, False),
+            ( True, False,  True),
+            (False,  True, False),
+            (False,  True,  True),
+            (False, False, False),
+            (False, False,  True)],
+           names=['cat1', 'cat0', 'cat2'])
+[right]: 3, MultiIndex([(True,  True, False),
+            (True,  True,  True),
+            (True, False, False)],
+           names=['cat1', 'cat0', 'cat2'])
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 1.18s ===============================

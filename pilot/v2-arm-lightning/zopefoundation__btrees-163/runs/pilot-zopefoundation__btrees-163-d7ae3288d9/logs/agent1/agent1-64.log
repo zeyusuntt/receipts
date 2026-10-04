@@ -1,0 +1,21 @@
+        # XXX: Comparisons only use special methods defined on the
+        # type, not instance variables. So shouldn't this be getattr(type(key)...)?
+        # Note that changes some things below; for example, on CPython 2,
+        # every subclass of object inherits __lt__ (unless it overrides), and it
+        # has __objclass__ of ``type`` (of course it is also the same object
+        # as ``_object_lt`` at that point). Also, weirdly, CPython 2 classes inherit
+        # ``__lt__``, but *instances* do not.
+
+        lt = getattr(item, '__lt__', None)
+        if lt is not None:
+            # CPython 2 and 3 follow PEP 252, defining '__objclass__'
+            # for methods of builtin types like str; methods of
+            # classes defined in Python don't get it. ``__objclass__``
+            if getattr(lt, '__objclass__', None) is object:
+                lt = None  # pragma: no cover Py3k
+            # PyPy3 doesn't follow PEP 252, but defines '__func__'
+            elif getattr(lt, '__func__', None) is _object_lt:
+                lt = None  # pragma: no cover PyPy3
+
+        if (lt is None
+                # TODO: Shouldn't we only check __cmp__ on Python 2?

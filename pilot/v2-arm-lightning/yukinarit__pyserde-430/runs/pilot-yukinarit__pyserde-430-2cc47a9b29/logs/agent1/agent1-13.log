@@ -1,0 +1,18 @@
+126:def _get_by_aliases(d: Dict[str, str], aliases: List[str]) -> str:
+127:    if not aliases:
+128:        raise KeyError("Tried all aliases, but key not found")
+129:    if aliases[0] in d:
+130:        return d[aliases[0]]
+132:        return _get_by_aliases(d, aliases[1:])
+135:def _exists_by_aliases(d: Dict[str, str], aliases: List[str]) -> bool:
+136:    for alias in aliases:
+137:        if alias in d:
+241:        g["_exists_by_aliases"] = _exists_by_aliases
+242:        g["_get_by_aliases"] = _get_by_aliases
+555:            "alias": self.alias,
+942:        if arg.alias:
+943:            aliases = (f'"{s}"' for s in [arg.name, *arg.alias])
+944:            dat = f"_get_by_aliases(data, [{','.join(aliases)}])"
+977:        if arg.alias:
+978:            aliases = (f'"{s}"' for s in [arg.name, *arg.alias])
+979:            exists = f'_exists_by_aliases({arg.datavar}, [{",".join(aliases)}])'

@@ -1,0 +1,60 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /PyBaMM
+configfile: pyproject.toml
+plugins: anyio-4.12.1, nbmake-1.5.5, cov-7.0.0, doctestplus-1.7.1, xdist-3.8.0
+created: 4/4 workers
+4 workers [1 item]
+
+scheduling tests via LoadScheduling
+
+tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_diff 
+[gw0] FAILED tests/unit/test_expression_tree/test_interpolant.py::TestInterpolant::test_diff 
+
+=================================== FAILURES ===================================
+__________________________ TestInterpolant.test_diff ___________________________
+[gw0] linux -- Python 3.10.19 /usr/local/bin/python
+
+self = <tests.unit.test_expression_tree.test_interpolant.TestInterpolant testMethod=test_diff>
+
+    def test_diff(self):
+        x = np.linspace(0, 1, 200)
+        y = pybamm.StateVector(slice(0, 2))
+        # linear (derivative should be 2)
+        # linear interpolator cannot be differentiated
+        for interpolator in ["cubic", "pchip"]:
+            interp_diff = pybamm.Interpolant(
+                x, 2 * x, y, interpolator=interpolator
+            ).diff(y)
+            np.testing.assert_array_almost_equal(
+                interp_diff.evaluate(y=np.array([0.397, 1.5]))[:, 0], np.array([2, 2])
+            )
+        # square (derivative should be 2*x)
+        for interpolator in ["cubic", "pchip"]:
+            interp_diff = pybamm.Interpolant(
+                x, x**2, y, interpolator=interpolator
+            ).diff(y)
+            np.testing.assert_array_almost_equal(
+                interp_diff.evaluate(y=np.array([0.397, 0.806]))[:, 0],
+                np.array([0.794, 1.612]),
+                decimal=3,
+            )
+    
+        # test 2D interpolation diff fails
+        x = (np.arange(-5.01, 5.01, 0.05), np.arange(-5.01, 5.01, 0.01))
+        xx, yy = np.meshgrid(x[0], x[1], indexing="ij")
+        z = np.sin(xx**2 + yy**2)
+        var1 = pybamm.StateVector(slice(0, 1))
+        var2 = pybamm.StateVector(slice(1, 2))
+        # linear
+        interp = pybamm.Interpolant(x, z, (var1, var2), interpolator="linear")
+        with self.assertRaisesRegex(
+            NotImplementedError,
+            "differentiation not implemented for functions with more than one child",
+        ):
+>           interp.diff(var1)
+
+tests/unit/test_expression_tree/test_interpolant.py:341: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pybamm/expression_tree/functions.py:84: in diff

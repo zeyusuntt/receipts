@@ -1,0 +1,19 @@
+        for list_ in self._lists:
+            yield self.perturb_model.instance_from_unit_vector(list_)
+
+    @property
+    def _perturb_models(self) -> Generator[AbstractPriorModel, None, None]:
+        """
+        A list of models representing a perturbation at each grid square.
+
+        By default models have priors with limits at the edges of a grid square.
+        These limits can be scaled using the limit_scale variable. If the variable
+        is 2 then the priors will have width twice the step size.
+        """
+        half_step = self.limit_scale * self.step_size / 2
+        for list_ in self._lists:
+            limits = [
+                (
+                    prior.value_for(max(0.0, centre - half_step)),
+                    prior.value_for(min(1.0, centre + half_step)),
+                )

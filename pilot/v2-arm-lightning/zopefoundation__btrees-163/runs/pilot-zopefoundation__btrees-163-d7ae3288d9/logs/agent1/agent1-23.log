@@ -1,0 +1,40 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python3
+cachedir: .pytest_cache
+rootdir: /BTrees
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet FAILED
+
+=================================== FAILURES ===================================
+_________ TestAutoOOBTreeOOBTreeTest.testRejectDefaultComparisonOnSet __________
+
+self = <BTrees.tests.test_OOBTree.TestAutoOOBTreeOOBTreeTest testMethod=testRejectDefaultComparisonOnSet>
+
+    def testRejectDefaultComparisonOnSet(self):
+        # Check that passing in keys w default comparison fails. Only
+        # applies to new-style class instances if we're using the C
+        # extensions; old-style instances are too hard to introspect
+        # in C.
+    
+        # This is white box because we know that the check is being
+        # used in a function that's used in lots of places.
+        # Otherwise, there are many permutations that would have to be
+        # checked.
+        from .._compat import PY2
+        t = self._makeOne()
+    
+        class OldStyle:
+            pass
+    
+        if self._getTargetClass() is OOBTree.OOBTreePy or not PY2:
+            with self.assertRaises(TypeError):
+                t[OldStyle()] = 1
+    
+        class C(object):
+            pass
+    
+        with self.assertRaises(TypeError) as raising:
+            t[C()] = 1
+    

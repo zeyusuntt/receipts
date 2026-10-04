@@ -1,0 +1,41 @@
+
+    elif isinstance(data_source, Group):
+        if not data_source.pathname:  # root group
+            root_group = data_source
+            driver_name = None
+            driver_type = None
+            driver_options = None
+            driver_opt_settings = None
+        else:
+            # this function only makes sense when it is at the root
+            msg = f"Viewer data is not available for sub-Group '{data_source.pathname}'."
+            raise TypeError(msg)
+
+        # set default behavior for values flag
+        if values is _UNDEFINED:
+            values = (data_source._problem_meta is not None and
+                      data_source._problem_meta['setup_status'] >= _SetupStatus.POST_FINAL_SETUP)
+
+    elif isinstance(data_source, str):
+        if ',' in data_source:
+            filenames = data_source.split(',')
+            cr = CaseReader(filenames[0], metadata_filename=filenames[1])
+        else:
+            cr = CaseReader(data_source)
+
+        data_dict = cr.problem_metadata
+
+        # set default behavior for values flag
+        if values is _UNDEFINED:
+            values = True
+
+        def set_values(children, stack, case):
+            """
+            Set variable values in model tree from the specified Case.
+
+            If case is None, set all values to None.
+            """
+            for child in children:
+                # if 'val' in child
+                if child['type'] == 'subsystem':
+                    stack.append(child['name'])

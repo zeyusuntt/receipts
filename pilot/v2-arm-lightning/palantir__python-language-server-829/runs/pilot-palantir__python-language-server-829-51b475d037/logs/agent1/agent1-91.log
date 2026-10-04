@@ -1,0 +1,49 @@
+FAILED
+
+=================================== FAILURES ===================================
+___________________________ test_hanging_indentation ___________________________
+
+config = <pyls.config.config.Config object at 0x7ffff4d2d060>
+workspace = <pyls.workspace.Workspace object at 0x7ffff513c430>
+
+    def test_hanging_indentation(config, workspace):
+        doc = Document(DOC_URI, workspace, INDENTED_DOC)
+>       res = pyls_format_document(config, doc)
+
+test/plugins/test_autopep8_format.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pyls/plugins/autopep8_format.py:12: in pyls_format_document
+    return _format(config, document)
+pyls/plugins/autopep8_format.py:34: in _format
+    new_source = fix_code(document.source, options=options)
+/usr/local/lib/python3.10/site-packages/autopep8.py:3464: in fix_code
+    return fix_lines(sio.readlines(), options=options)
+/usr/local/lib/python3.10/site-packages/autopep8.py:3539: in fix_lines
+--
+E       ValueError: invalid literal for int() with base 10: 'continuation'
+
+/usr/local/lib/python3.10/site-packages/autopep8.py:620: ValueError
+------------------------------ Captured log setup ------------------------------
+WARNING  pyls.config.config:config.py:55 Failed to load pyls entry point 'pylint': No module named 'pylint.epylint'
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin autopep8 from <module 'pyls.plugins.autopep8_format' from '/python-language-server/pyls/plugins/autopep8_format.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin flake8 from <module 'pyls.plugins.flake8_lint' from '/python-language-server/pyls/plugins/flake8_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin folding from <module 'pyls.plugins.folding' from '/python-language-server/pyls/plugins/folding.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_completion from <module 'pyls.plugins.jedi_completion' from '/python-language-server/pyls/plugins/jedi_completion.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_definition from <module 'pyls.plugins.definition' from '/python-language-server/pyls/plugins/definition.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_highlight from <module 'pyls.plugins.highlight' from '/python-language-server/pyls/plugins/highlight.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_hover from <module 'pyls.plugins.hover' from '/python-language-server/pyls/plugins/hover.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_references from <module 'pyls.plugins.references' from '/python-language-server/pyls/plugins/references.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_rename from <module 'pyls.plugins.jedi_rename' from '/python-language-server/pyls/plugins/jedi_rename.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_signature_help from <module 'pyls.plugins.signature' from '/python-language-server/pyls/plugins/signature.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin jedi_symbols from <module 'pyls.plugins.symbols' from '/python-language-server/pyls/plugins/symbols.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin mccabe from <module 'pyls.plugins.mccabe_lint' from '/python-language-server/pyls/plugins/mccabe_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin preload from <module 'pyls.plugins.preload_imports' from '/python-language-server/pyls/plugins/preload_imports.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pycodestyle from <module 'pyls.plugins.pycodestyle_lint' from '/python-language-server/pyls/plugins/pycodestyle_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pydocstyle from <module 'pyls.plugins.pydocstyle_lint' from '/python-language-server/pyls/plugins/pydocstyle_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin pyflakes from <module 'pyls.plugins.pyflakes_lint' from '/python-language-server/pyls/plugins/pyflakes_lint.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin rope_completion from <module 'pyls.plugins.rope_completion' from '/python-language-server/pyls/plugins/rope_completion.py'>
+INFO     pyls.config.config:config.py:63 Loaded pyls plugin rope_rename from <module 'pyls.plugins.rope_rename' from '/python-language-server/pyls/plugins/rope_rename.py'>
+--
+FAILED test/plugins/test_autopep8_format.py::test_hanging_indentation - Value...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================= 1 failed, 1 warning in 0.59s =========================

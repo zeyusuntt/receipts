@@ -1,0 +1,50 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /RDT
+configfile: setup.cfg
+plugins: anyio-4.12.1, Faker-40.4.0, cov-7.0.0
+collecting ... collected 1 item
+
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__transform FAILED
+
+=================================== FAILURES ===================================
+__________________ TestClusterBasedNormalizer.test__transform __________________
+
+self = <tests.unit.transformers.test_numerical.TestClusterBasedNormalizer testMethod=test__transform>
+
+    def test__transform(self):
+        """Test ``_transform``.
+    
+        Validate that the method produces the appropriate output when given a pandas Series.
+    
+        Setup:
+            - create an instance of the ``ClusterBasedNormalizer`` where:
+                - ``_bgm_transformer`` is mocked with the appropriate ``means_``, ``covariances_``
+                and ``predict_proba.return_value``.
+                - ``valid_component_indicator`` is set to ``np.array([True, True, False])``.
+    
+        Input:
+            - a pandas Series.
+    
+        Ouput:
+            - a numpy array with the transformed data.
+        """
+        # Setup
+        random_state = np.random.get_state()
+        np.random.set_state(np.random.RandomState(10).get_state())
+        transformer = ClusterBasedNormalizer(max_clusters=3)
+        transformer._bgm_transformer = Mock()
+    
+        means = np.array([
+            [0.90138867],
+            [0.09169366],
+            [0.499]
+        ])
+        transformer._bgm_transformer.means_ = means
+    
+        covariances = np.array([
+            [[0.09024532]],
+            [[0.08587948]],
+            [[0.27487667]]
+        ])

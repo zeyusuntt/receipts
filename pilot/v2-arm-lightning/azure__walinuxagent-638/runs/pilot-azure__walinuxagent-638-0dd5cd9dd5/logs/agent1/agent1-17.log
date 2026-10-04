@@ -1,0 +1,50 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /WALinuxAgent
+collecting ... collected 1 item
+
+tests/protocol/test_hostplugin.py::TestHostPlugin::test_fallback PASSED  [100%]
+
+=============================== warnings summary ===============================
+azurelinuxagent/common/version.py:36
+  /WALinuxAgent/azurelinuxagent/common/version.py:36: DeprecationWarning: invalid escape sequence \d
+    f5_version = re.compile("^Version: (\d+\.\d+\.\d+)")
+
+azurelinuxagent/common/version.py:37
+  /WALinuxAgent/azurelinuxagent/common/version.py:37: DeprecationWarning: invalid escape sequence \w
+    f5_product = re.compile("^Product: ([\w-]+)")
+
+azurelinuxagent/common/version.py:62
+  /WALinuxAgent/azurelinuxagent/common/version.py:62: DeprecationWarning: invalid escape sequence \-
+    release = re.sub('\-.*\Z', '', ustr(platform.release()))
+
+azurelinuxagent/common/version.py:106
+  /WALinuxAgent/azurelinuxagent/common/version.py:106: DeprecationWarning: invalid escape sequence \w
+    EXT_HANDLER_PATTERN = b".*/WALinuxAgent-(\w.\w.\w[.\w]*)-.*-run-exthandlers"
+
+azurelinuxagent/common/utils/flexible_version.py:166
+  /WALinuxAgent/azurelinuxagent/common/utils/flexible_version.py:166: DeprecationWarning: invalid escape sequence \d
+    release_re = '(?:{prerel_sep}(?P<{tn}>{tags})(?P<{nn}>\d*))?'.format(
+
+azurelinuxagent/common/utils/flexible_version.py:24
+  /WALinuxAgent/azurelinuxagent/common/utils/flexible_version.py:24: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    version.Version.__init__(self)
+
+azurelinuxagent/common/version.py:67
+  /WALinuxAgent/azurelinuxagent/common/version.py:67: DeprecationWarning: dist() and linux_distribution() functions are deprecated in Python 3.5
+    supported_dists=supported))
+
+azurelinuxagent/common/version.py:68
+  /WALinuxAgent/azurelinuxagent/common/version.py:68: DeprecationWarning: dist() and linux_distribution() functions are deprecated in Python 3.5
+    full_name = platform.linux_distribution()[0].strip()
+
+azurelinuxagent/common/osutil/freebsd.py:232
+  /WALinuxAgent/azurelinuxagent/common/osutil/freebsd.py:232: DeprecationWarning: invalid escape sequence \(
+    cmd_search_dev="camcontrol devlist | grep {0} | awk -F \( '{{print $2}}'|awk -F , '{{print $1}}'".format(output)
+
+azurelinuxagent/common/osutil/freebsd.py:241
+  /WALinuxAgent/azurelinuxagent/common/osutil/freebsd.py:241: DeprecationWarning: invalid escape sequence \(
+    cmd_search_dev="camcontrol devlist | grep {0} | awk -F \( '{{print $2}}'|awk -F , '{{print $1}}'".format(output)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

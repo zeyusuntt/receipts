@@ -1,0 +1,30 @@
+                )
+            elif stdout_value:
+                _logger.info("%s -> %d; stdout: '%s'", cmdstr, status, as_text(stdout_value))
+            else:
+                _logger.info("%s -> %d", cmdstr, status)
+        # END handle debug printing
+    
+        if with_exceptions and status != 0:
+>           raise GitCommandError(redacted_command, status, stderr_value, stdout_value)
+E           git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+E             cmdline: git commit --message=init
+E             stderr: 'Author identity unknown
+E           
+E           *** Please tell me who you are.
+E           
+E           Run
+E           
+E             git config --global user.email "you@example.com"
+E             git config --global user.name "Your Name"
+E           
+E           to set your account's default identity.
+E           Omit --global to set the identity only in this repository.
+E           
+E           fatal: unable to auto-detect email address (got 'root@receipts.(none)')'
+
+git/cmd.py:1183: GitCommandError
+=========================== short test summary info ============================
+FAILED test/test_diff.py::TestDiff::test_diff_with_staged_file - git.exc.GitC...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.30s ===============================

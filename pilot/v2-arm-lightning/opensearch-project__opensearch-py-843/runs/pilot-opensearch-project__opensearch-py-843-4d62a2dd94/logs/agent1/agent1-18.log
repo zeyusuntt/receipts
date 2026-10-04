@@ -1,0 +1,11 @@
+                ssl_context.verify_mode = ssl.CERT_NONE
+
+            if ca_certs is None:
+                ca_certs = self.default_ca_certs()
+
+            if verify_certs:
+                if not ca_certs:
+                    raise ImproperlyConfigured(
+                        "Root certificates are missing for certificate "
+                        "validation. Either pass them in using the ca_certs parameter or "
+                        "install certifi to use it automatically."

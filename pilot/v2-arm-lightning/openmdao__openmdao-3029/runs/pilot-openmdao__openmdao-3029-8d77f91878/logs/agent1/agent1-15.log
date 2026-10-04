@@ -1,0 +1,51 @@
+    def register_hook_args(self, *args, **kwargs):
+        r"""
+        Store positional and named args to be passed to the `register_hook` function.
+
+        This will only happen if the report corresponding to this instance is activated.
+
+        Parameters
+        ----------
+        *args : list
+            The positional args to be passed to `register_hook`.
+        **kwargs : dict
+            The named args to be passed to `register_hook`.
+        """
+        self.hooks.append((args, kwargs))
+
+    def register_hooks(self, instance):
+        """
+        Register the hook(s) associated with the report corresponding with this instance.
+
+        Parameters
+        ----------
+        instance : object
+            The instance where hooks may be registered.
+        """
+        if hasattr(instance, '_has_active_report') and not instance._has_active_report(self.name):
+            return
+
+        for hook_args, hook_kwargs in self.hooks:
+            # always register hook with a specific instance id
+            kw = hook_kwargs.copy()
+            kw['inst_id'] = None if instance is None else instance._get_inst_id()
+            _register_hook(*hook_args, **kw)
+
+    def unregister_hooks(self, instance=None):
+        """
+        Unregister hooks associated with this report.
+
+        Parameters
+        ----------
+        instance : object or None
+            If not None, only unregister reports for this instance.
+        """
+        keep = {'fname', 'class_name', 'inst_id', 'pre', 'post'}
+        for args, kw in self.hooks:
+            kwargs = {k: v for k, v in kw.items() if k in keep}
+            if instance is not None:
+                kwargs['inst_id'] = instance
+            _unregister_hook(*args, **kwargs)
+
+    def __getattr__(self, name):
+        """

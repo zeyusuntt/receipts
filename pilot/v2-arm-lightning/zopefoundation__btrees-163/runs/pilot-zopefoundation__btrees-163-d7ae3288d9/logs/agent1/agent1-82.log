@@ -1,0 +1,37 @@
+class OOBTreeTest(BTreeTests):
+
+    def test_byValue(self):
+        ITEMS = [(y, x) for x, y in enumerate('abcdefghijklmnopqrstuvwxyz')]
+        tree = self._makeOne(ITEMS)
+        self.assertEqual(list(tree.byValue(22)),
+                         [(y, x) for x, y in reversed(ITEMS[22:])])
+
+    def testRejectDefaultComparisonOnSet(self):
+        # Check that passing in keys w default comparison fails. Only
+        # applies to new-style class instances if we're using the C
+        # extensions; old-style instances are too hard to introspect
+        # in C.
+
+        # This is white box because we know that the check is being
+        # used in a function that's used in lots of places.
+        # Otherwise, there are many permutations that would have to be
+        # checked.
+        from .._compat import PY2
+        t = self._makeOne()
+
+        class OldStyle:
+            pass
+
+        if self._getTargetClass() is OOBTree.OOBTreePy or not PY2:
+            with self.assertRaises(TypeError):
+                t[OldStyle()] = 1
+
+        class C(object):
+            pass
+
+        with self.assertRaises(TypeError) as raising:
+            t[C()] = 1
+
+        self.assertEqual(
+            raising.exception.args[0],
+            "Object of class C has default comparison")

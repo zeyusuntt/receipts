@@ -1,0 +1,40 @@
+16:from .team import make_team
+26:#: The points a team gets for killing another bot
+79:def run_game(team_specs, *, layout_dict, layout_name="", max_rounds=300, seed=None,
+81:             store_output=False, team_names=(None, None), team_infos=(None, None),
+87:    team_specs : list[team0, team1]
+88:              a list specifying the two teams to play the match with. The list
+89:              items team0 and team1 must be either
+97:              When a team_spec is a function, a "local" game will be run, when
+114:                   The limit of non fatal errors to reach for a team before the
+115:                   game is over and the team is disqualified. Non fatal errors are
+123:                  non-fatal error is recorded for the team.
+138:    team_names : tuple(team_name_0, team_name_1)
+139:              a tuple containing the team names. If not given, names will be taken
+140:              from the team module TEAM_NAME variable or from the function name.
+142:    team_info : tuple(team_info_0, team_info_1)
+143:              a tuple containing additional team info.
+146:                    when True, allow teams to raise Exceptions. This is especially
+160:        If teams_specs is a list of two Python modules, a "remote" game will be
+170:        If team_specs is a list of two functions, a "local" game will be played. This
+183:    state = setup_game(team_specs, layout_dict=layout_dict, layout_name=layout_name, max_rounds=max_rounds,
+186:                       store_output=store_output, team_names=team_names, team_infos=team_infos,
+256:def setup_game(team_specs, *, layout_dict, max_rounds=300, layout_name="", seed=None,
+258:               store_output=False, team_names=(None, None), team_infos=(None, None),
+260:    """ Generates a game state for the given teams and layout with otherwise default values. """
+262:    # check that two teams have been given
+263:    if not len(team_specs) == 2:
+264:        raise ValueError("Two teams must be given.")
+288:        team_food = [set(), set()]
+291:            team_food[idx].add(pos)
+292:        return team_food
+299:        warn(f"Layout has no food for team {side_no_food}.", NoFoodWarning)
+313:        #: Food per team. List of sets of (int, int)
+329:        ### Bot/team status
+333:        #: Score of the teams. List of int
+359:        #: Name of the teams. Tuple of str
+360:        team_names=team_names,
+362:        #: Additional team info. Tuple of str|None
+363:        team_infos=team_infos,
+365:        #: Time each team needed, list of float
+366:        team_time=[0, 0],

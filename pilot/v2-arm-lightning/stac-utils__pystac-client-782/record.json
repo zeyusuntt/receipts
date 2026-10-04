@@ -1,0 +1,70 @@
+{
+  "instance_id": "stac-utils__pystac-client-782",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-arm-lightning/stac-utils__pystac-client-782/runs/pilot-stac-utils__pystac-client-782-7d79796c79",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the `get_collection` method in `pystac_client/client.py` to properly return the correct collection matching the given ID instead of always returning the last collection in a local static catalog.\n\nThe fix involved:\n1. Adding a `break` statement after finding the matching collection ID to exit the iteration early\n2. Initializing the `collection` variable to `None` before the loop\n3. Adding a check after the loop to raise `KeyError` if no matching collection was found\n\nBoth previously failing tests now pass, and all 44 tests in `test_client.py` pass successfully.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "pystac_client/client.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "unsupported",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "4e415af40b354693e4d4cc582c95adafcfa0d5d70f64134332771a940de72541",
+      "filtered_sha256": "4e415af40b354693e4d4cc582c95adafcfa0d5d70f64134332771a940de72541",
+      "witness_apply_sha256": "4e415af40b354693e4d4cc582c95adafcfa0d5d70f64134332771a940de72541",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "3d50e5e74759d621c17cc6ebfa5967456608ef8215db58d5f38c8053f345b38f",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/test_client.py::test_get_collection_fallback_strategy_for_static_catalogs",
+            "tests/test_client.py::test_get_collection_for_static_catalogs_raise_if_not_found"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "4e415af40b354693e4d4cc582c95adafcfa0d5d70f64134332771a940de72541",
+        "read_sha256": "4e415af40b354693e4d4cc582c95adafcfa0d5d70f64134332771a940de72541",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 49602,
+    "model_dollars": 0.00329724,
+    "sandbox_lifetime_seconds": 71.557084,
+    "sandbox_dollars_estimate": 0.11549538
+  },
+  "wall_time_s": 252.2756346249953,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

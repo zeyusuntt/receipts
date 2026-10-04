@@ -1,0 +1,21 @@
+                # TODO: Shouldn't we only check __cmp__ on Python 2?
+                # Python 3 won't use it.
+                and getattr(item, '__cmp__', None) is None):
+            # Try to get the class name for a better error message
+            cls_name = getattr(type(item), '__name__', None)
+            if cls_name is not None:
+                raise TypeError(
+                    "Object of class %s has default comparison" % cls_name
+                )
+            raise TypeError("Object has default comparison")
+
+
+    def __call__(self, item):
+        self._check_default_comparison(item)
+        return item
+
+
+class _AbstractNativeDataType(KeyDataType):
+    """
+    Uses `struct.Struct` to verify that the data can fit into a native
+    type.

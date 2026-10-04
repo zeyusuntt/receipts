@@ -1,0 +1,69 @@
+class _DirEntry(object):
+    def __init__(self, resource_type, name):
+        # type: (ResourceType, Text) -> None
+        self.resource_type = resource_type
+        self.name = name
+        self._dir = OrderedDict()  # type: typing.MutableMapping[Text, _DirEntry]
+        self._open_files = []  # type: typing.MutableSequence[_MemoryFile]
+        self._bytes_file = None  # type: Optional[io.BytesIO]
+        self.lock = RLock()
+
+        current_time = time.time()
+        self.created_time = current_time
+        self.accessed_time = current_time
+        self.modified_time = current_time
+
+        if not self.is_dir:
+            self._bytes_file = io.BytesIO()
+
+    @property
+    def bytes_file(self):
+        # type: () -> Optional[io.BytesIO]
+        return self._bytes_file
+
+    @property
+    def is_dir(self):
+        # type: () -> bool
+        return self.resource_type == ResourceType.directory
+
+    @property
+    def size(self):
+        # type: () -> int
+        with self.lock:
+            if self.is_dir:
+                return 0
+            else:
+                _bytes_file = typing.cast(io.BytesIO, self._bytes_file)
+                _bytes_file.seek(0, os.SEEK_END)
+                return _bytes_file.tell()
+
+    @overload
+    def get_entry(self, name, default):  # noqa: F811
+        # type: (Text, _DirEntry) -> _DirEntry
+        pass
+
+    @overload
+    def get_entry(self, name):  # noqa: F811
+        # type: (Text) -> Optional[_DirEntry]
+        pass
+
+    @overload
+    def get_entry(self, name, default):  # noqa: F811
+        # type: (Text, None) -> Optional[_DirEntry]
+        pass
+
+    def get_entry(self, name, default=None):  # noqa: F811
+        # type: (Text, Optional[_DirEntry]) -> Optional[_DirEntry]
+        assert self.is_dir, "must be a directory"
+        return self._dir.get(name, default)
+
+    def set_entry(self, name, dir_entry):
+        # type: (Text, _DirEntry) -> None
+        self._dir[name] = dir_entry
+
+    def remove_entry(self, name):
+        # type: (Text) -> None
+        del self._dir[name]
+
+    def clear(self):
+        # type: () -> None

@@ -1,0 +1,146 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /RDT
+configfile: setup.cfg
+plugins: anyio-4.12.1, Faker-40.4.0, cov-7.0.0
+collecting ... collected 10 items
+
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__fit PASSED
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__fit_catch_warnings PASSED
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__fit_missing_value_replacement PASSED
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__get_current_random_seed_random_states_is_none PASSED
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__reverse_transform PASSED
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__reverse_transform_helper PASSED
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__reverse_transform_missing_value_replacement_missing_value_replacement_from_col PASSED
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__reverse_transform_missing_value_replacement_missing_value_replacement_random PASSED
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__transform FAILED
+
+=================================== FAILURES ===================================
+__________________ TestClusterBasedNormalizer.test__transform __________________
+
+self = <tests.unit.transformers.test_numerical.TestClusterBasedNormalizer testMethod=test__transform>
+
+    def test__transform(self):
+        """Test ``_transform``.
+    
+        Validate that the method produces the appropriate output when given a pandas Series.
+    
+        Setup:
+            - create an instance of the ``ClusterBasedNormalizer`` where:
+                - ``_bgm_transformer`` is mocked with the appropriate ``means_``, ``covariances_``
+                and ``predict_proba.return_value``.
+                - ``valid_component_indicator`` is set to ``np.array([True, True, False])``.
+    
+        Input:
+            - a pandas Series.
+    
+        Ouput:
+            - a numpy array with the transformed data.
+        """
+        # Setup
+        random_state = np.random.get_state()
+        np.random.set_state(np.random.RandomState(10).get_state())
+        transformer = ClusterBasedNormalizer(max_clusters=3)
+        transformer._bgm_transformer = Mock()
+    
+        means = np.array([
+            [0.90138867],
+            [0.09169366],
+            [0.499]
+        ])
+        transformer._bgm_transformer.means_ = means
+    
+        covariances = np.array([
+            [[0.09024532]],
+            [[0.08587948]],
+            [[0.27487667]]
+        ])
+        transformer._bgm_transformer.covariances_ = covariances
+    
+        probabilities = np.array([
+            [0.01519528, 0.98480472, 0.],
+            [0.01659093, 0.98340907, 0.],
+            [0.012744, 0.987256, 0.],
+            [0.012744, 0.987256, 0.],
+            [0.01391614, 0.98608386, 0.],
+            [0.99220664, 0.00779336, 0.],
+            [0.99059634, 0.00940366, 0.],
+            [0.9941256, 0.0058744, 0.],
+            [0.99465502, 0.00534498, 0.],
+            [0.99059634, 0.00940366, 0.]
+        ])
+        transformer._bgm_transformer.predict_proba.return_value = probabilities
+    
+        transformer.valid_component_indicator = np.array([True, True, False])
+        transformer.null_transformer = NullTransformer()
+        data = pd.Series([0.01, 0.02, -0.01, -0.01, 0.0, 0.99, 0.97, 1.02, 1.03, 0.97])
+    
+        # Run
+>       output = transformer._transform(data)
+
+tests/unit/transformers/test_numerical.py:1339: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ClusterBasedNormalizer(max_clusters=3)
+data = array([[ 0.01],
+       [ 0.02],
+       [-0.01],
+       [-0.01],
+       [ 0.  ],
+       [ 0.99],
+       [ 0.97],
+       [ 1.02],
+       [ 1.03],
+       [ 0.97]])
+
+    def _transform(self, data):
+        """Transform the numerical data.
+    
+        Args:
+            data (pandas.Series):
+                Data to transform.
+    
+        Returns:
+            numpy.ndarray.
+        """
+        data = super()._transform(data)
+        if data.ndim > 1:
+            data, model_missing_values = data[:, 0], data[:, 1]
+    
+        data = data.reshape((len(data), 1))
+        means = self._bgm_transformer.means_.reshape((1, self.max_clusters))
+    
+        stds = np.sqrt(self._bgm_transformer.covariances_).reshape((1, self.max_clusters))
+        component_probs = self._bgm_transformer.predict_proba(data)
+        component_probs = component_probs[:, self.valid_component_indicator]
+    
+        selected_component = np.zeros(len(data), dtype='int')
+        for i in range(len(data)):
+            component_prob_t = component_probs[i] + 1e-6
+            component_prob_t = component_prob_t / component_prob_t.sum()
+            selected_component[i] = np.random.choice(
+                np.arange(self.valid_component_indicator.sum()),
+                p=component_prob_t
+            )
+    
+        aranged = np.arange(len(data))
+>       selected_means = means[aranged, selected_component]
+E       IndexError: index 1 is out of bounds for axis 0 with size 1
+
+rdt/transformers/numerical.py:514: IndexError
+=============================== warnings summary ===============================
+../usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:1428
+  /usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:1428: PytestConfigWarning: Unknown config option: collect_ignore
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../usr/local/lib/python3.10/site-packages/copulas/__init__.py:18
+  /usr/local/lib/python3.10/site-packages/copulas/__init__.py:18: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    from pkg_resources import iter_entry_points
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__transform
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+=================== 1 failed, 8 passed, 2 warnings in 1.42s ====================

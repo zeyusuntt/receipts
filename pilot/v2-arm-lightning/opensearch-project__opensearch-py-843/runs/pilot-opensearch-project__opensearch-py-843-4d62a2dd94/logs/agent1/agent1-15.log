@@ -1,0 +1,11 @@
+        self.ssl_assert_fingerprint = ssl_assert_fingerprint
+        self.ssl_assert_hostname = ssl_assert_hostname
+        if self.use_ssl and ssl_context is None:
+            if ssl_version is None:
+                ssl_context = ssl.create_default_context()
+            else:
+                ssl_context = ssl.SSLContext(ssl_version)
+
+            # Convert all sentinel values to their actual default
+            # values if not using an SSLContext.
+            if verify_certs is VERIFY_CERTS_DEFAULT:

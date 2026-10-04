@@ -1,0 +1,385 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /PyAutoFit
+plugins: cov-7.0.0
+collecting ... collected 18 items
+
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::test_lists PASSED [  5%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::test_tuple_step_size PASSED [ 11%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::test_labels PASSED [ 16%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::test_perform_job PASSED [ 22%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_perturb_models[1.0-0.0-0.5-0.5-1.0] FAILED [ 27%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_perturb_models[2.0-0.0-0.75-0.25-1.0] FAILED [ 33%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_perturb_models[4.0-0.0-1.0-0.0-1.0] FAILED [ 38%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test__perturb_models__prior_overwrite_via_perturb_model_prior_func FAILED [ 44%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_physical FAILED [ 50%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_model_with_limits PASSED [ 55%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_prior_with_limits PASSED [ 61%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_existing_limits PASSED [ 66%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::test_models_with_tuple_steps PASSED [ 72%]
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::test_jobs_with_tuple_steps PASSED [ 77%]
+test_autofit/non_linear/grid/test_sensitivity/test_results.py::test_job_result PASSED [ 83%]
+test_autofit/non_linear/grid/test_sensitivity/test_results.py::test_result PASSED [ 88%]
+test_autofit/non_linear/grid/test_sensitivity/test_run.py::test_sensitivity FAILED [ 94%]
+test_autofit/non_linear/grid/test_sensitivity/test_run.py::test_serial FAILED [100%]
+
+=================================== FAILURES ===================================
+_______ TestPerturbationModels.test_perturb_models[1.0-0.0-0.5-0.5-1.0] ________
+
+self = <test_autofit.non_linear.grid.test_sensitivity.test_functionality.TestPerturbationModels object at 0x7fffcbc33af0>
+sensitivity = <autofit.non_linear.grid.sensitivity.Sensitivity object at 0x7fffcba8b2b0>
+limit_scale = 1.0, fl = 0.0, fu = 0.5, sl = 0.5, su = 1.0
+
+    @pytest.mark.parametrize(
+        "limit_scale, fl, fu, sl, su",
+        [
+            (
+                1.0,
+                0.0,
+                0.5,
+                0.5,
+                1.0,
+            ),
+            (
+                2.0,
+                0.0,
+                0.75,
+                0.25,
+                1.0,
+            ),
+            (
+                4.0,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            ),
+        ],
+    )
+    def test_perturb_models(self, sensitivity, limit_scale, fl, fu, sl, su):
+        sensitivity.limit_scale = limit_scale
+        jobs = sensitivity._make_jobs()
+>       models = [job.perturb_model for job in jobs]
+
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:68: in <listcomp>
+    models = [job.perturb_model for job in jobs]
+autofit/non_linear/grid/sensitivity/__init__.py:279: in _make_jobs
+    for number, (perturb_instance, perturb_model, label) in enumerate(
+autofit/non_linear/grid/sensitivity/__init__.py:263: in _perturb_models
+    limits = [
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <enumerate object at 0x7fffcbadee00>
+
+    limits = [
+        (
+>           prior.value_for(max(0.0, centre - half_step[i])),
+            prior.value_for(min(1.0, centre + half_step[i])),
+        )
+        for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
+    ]
+E   TypeError: 'float' object is not subscriptable
+
+autofit/non_linear/grid/sensitivity/__init__.py:265: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 21:45:20,337 - Sensitivity () - INFO - Creating
+------------------------------ Captured log setup ------------------------------
+INFO     Sensitivity ():__init__.py:78 Creating
+______ TestPerturbationModels.test_perturb_models[2.0-0.0-0.75-0.25-1.0] _______
+
+self = <test_autofit.non_linear.grid.test_sensitivity.test_functionality.TestPerturbationModels object at 0x7fffcbc33d60>
+sensitivity = <autofit.non_linear.grid.sensitivity.Sensitivity object at 0x7fffcbbcf760>
+limit_scale = 2.0, fl = 0.0, fu = 0.75, sl = 0.25, su = 1.0
+
+    @pytest.mark.parametrize(
+        "limit_scale, fl, fu, sl, su",
+        [
+            (
+                1.0,
+                0.0,
+                0.5,
+                0.5,
+                1.0,
+            ),
+            (
+                2.0,
+                0.0,
+                0.75,
+                0.25,
+                1.0,
+            ),
+            (
+                4.0,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            ),
+        ],
+    )
+    def test_perturb_models(self, sensitivity, limit_scale, fl, fu, sl, su):
+        sensitivity.limit_scale = limit_scale
+        jobs = sensitivity._make_jobs()
+>       models = [job.perturb_model for job in jobs]
+
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:68: in <listcomp>
+    models = [job.perturb_model for job in jobs]
+autofit/non_linear/grid/sensitivity/__init__.py:279: in _make_jobs
+    for number, (perturb_instance, perturb_model, label) in enumerate(
+autofit/non_linear/grid/sensitivity/__init__.py:263: in _perturb_models
+    limits = [
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <enumerate object at 0x7fffcbb1cbc0>
+
+    limits = [
+        (
+>           prior.value_for(max(0.0, centre - half_step[i])),
+            prior.value_for(min(1.0, centre + half_step[i])),
+        )
+        for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
+    ]
+E   TypeError: 'float' object is not subscriptable
+
+autofit/non_linear/grid/sensitivity/__init__.py:265: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 21:45:20,397 - Sensitivity () - INFO - Creating
+------------------------------ Captured log setup ------------------------------
+INFO     Sensitivity ():__init__.py:78 Creating
+_______ TestPerturbationModels.test_perturb_models[4.0-0.0-1.0-0.0-1.0] ________
+
+self = <test_autofit.non_linear.grid.test_sensitivity.test_functionality.TestPerturbationModels object at 0x7fffcbc33f40>
+sensitivity = <autofit.non_linear.grid.sensitivity.Sensitivity object at 0x7fffcb97f5e0>
+limit_scale = 4.0, fl = 0.0, fu = 1.0, sl = 0.0, su = 1.0
+
+    @pytest.mark.parametrize(
+        "limit_scale, fl, fu, sl, su",
+        [
+            (
+                1.0,
+                0.0,
+                0.5,
+                0.5,
+                1.0,
+            ),
+            (
+                2.0,
+                0.0,
+                0.75,
+                0.25,
+                1.0,
+            ),
+            (
+                4.0,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            ),
+        ],
+    )
+    def test_perturb_models(self, sensitivity, limit_scale, fl, fu, sl, su):
+        sensitivity.limit_scale = limit_scale
+        jobs = sensitivity._make_jobs()
+>       models = [job.perturb_model for job in jobs]
+
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:68: in <listcomp>
+    models = [job.perturb_model for job in jobs]
+autofit/non_linear/grid/sensitivity/__init__.py:279: in _make_jobs
+    for number, (perturb_instance, perturb_model, label) in enumerate(
+autofit/non_linear/grid/sensitivity/__init__.py:263: in _perturb_models
+    limits = [
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <enumerate object at 0x7fffcbc5e8c0>
+
+    limits = [
+        (
+>           prior.value_for(max(0.0, centre - half_step[i])),
+            prior.value_for(min(1.0, centre + half_step[i])),
+        )
+        for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
+    ]
+E   TypeError: 'float' object is not subscriptable
+
+autofit/non_linear/grid/sensitivity/__init__.py:265: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 21:45:20,407 - Sensitivity () - INFO - Creating
+------------------------------ Captured log setup ------------------------------
+INFO     Sensitivity ():__init__.py:78 Creating
+_ TestPerturbationModels.test__perturb_models__prior_overwrite_via_perturb_model_prior_func _
+
+self = <test_autofit.non_linear.grid.test_sensitivity.test_functionality.TestPerturbationModels object at 0x7fffcbc54370>
+sensitivity = <autofit.non_linear.grid.sensitivity.Sensitivity object at 0x7fffcba72410>
+
+    def test__perturb_models__prior_overwrite_via_perturb_model_prior_func(
+        self,
+        sensitivity,
+    ):
+        def perturb_model_prior_func(perturb_instance, perturb_model):
+            perturb_model.centre = af.UniformPrior(lower_limit=-7.0, upper_limit=4.0)
+    
+            return perturb_model
+    
+        sensitivity.perturb_model_prior_func = perturb_model_prior_func
+        jobs = sensitivity._make_jobs()
+>       models = [job.perturb_model for job in jobs]
+
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:90: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:90: in <listcomp>
+    models = [job.perturb_model for job in jobs]
+autofit/non_linear/grid/sensitivity/__init__.py:279: in _make_jobs
+    for number, (perturb_instance, perturb_model, label) in enumerate(
+autofit/non_linear/grid/sensitivity/__init__.py:263: in _perturb_models
+    limits = [
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <enumerate object at 0x7fffcb9b9300>
+
+    limits = [
+        (
+>           prior.value_for(max(0.0, centre - half_step[i])),
+            prior.value_for(min(1.0, centre + half_step[i])),
+        )
+        for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
+    ]
+E   TypeError: 'float' object is not subscriptable
+
+autofit/non_linear/grid/sensitivity/__init__.py:265: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 21:45:20,418 - Sensitivity () - INFO - Creating
+------------------------------ Captured log setup ------------------------------
+INFO     Sensitivity ():__init__.py:78 Creating
+_____________________ TestPerturbationModels.test_physical _____________________
+
+self = <test_autofit.non_linear.grid.test_sensitivity.test_functionality.TestPerturbationModels object at 0x7fffcbc54790>
+sensitivity = <autofit.non_linear.grid.sensitivity.Sensitivity object at 0x7fffcbc33d30>
+
+    def test_physical(self, sensitivity):
+        sensitivity.perturb_model.sigma = af.UniformPrior(upper_limit=10)
+>       model = list(sensitivity._make_jobs())[0].perturb_model
+
+test_autofit/non_linear/grid/test_sensitivity/test_functionality.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autofit/non_linear/grid/sensitivity/__init__.py:279: in _make_jobs
+    for number, (perturb_instance, perturb_model, label) in enumerate(
+autofit/non_linear/grid/sensitivity/__init__.py:263: in _perturb_models
+    limits = [
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <enumerate object at 0x7fffcbb1ea00>
+
+    limits = [
+        (
+>           prior.value_for(max(0.0, centre - half_step[i])),
+            prior.value_for(min(1.0, centre + half_step[i])),
+        )
+        for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
+    ]
+E   TypeError: 'float' object is not subscriptable
+
+autofit/non_linear/grid/sensitivity/__init__.py:265: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 21:45:20,428 - Sensitivity () - INFO - Creating
+------------------------------ Captured log setup ------------------------------
+INFO     Sensitivity ():__init__.py:78 Creating
+_______________________________ test_sensitivity _______________________________
+
+sensitivity = <autofit.non_linear.grid.sensitivity.Sensitivity object at 0x7fffcba9c400>
+
+    @with_config("general", "model", "ignore_prior_limits", value=True)
+    def test_sensitivity(sensitivity):
+>       results = sensitivity.run()
+
+test_autofit/non_linear/grid/test_sensitivity/test_run.py:6: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autofit/non_linear/grid/sensitivity/__init__.py:119: in run
+    for result in process_class.run_jobs(
+autofit/non_linear/parallel/process.py:162: in run_jobs
+    for job in jobs:
+autofit/non_linear/grid/sensitivity/__init__.py:279: in _make_jobs
+    for number, (perturb_instance, perturb_model, label) in enumerate(
+autofit/non_linear/grid/sensitivity/__init__.py:263: in _perturb_models
+    limits = [
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <enumerate object at 0x7fffcbaf8a40>
+
+    limits = [
+        (
+>           prior.value_for(max(0.0, centre - half_step[i])),
+            prior.value_for(min(1.0, centre + half_step[i])),
+        )
+        for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
+    ]
+E   TypeError: 'float' object is not subscriptable
+
+autofit/non_linear/grid/sensitivity/__init__.py:265: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 21:45:20,468 - Sensitivity () - INFO - Creating
+------------------------------ Captured log setup ------------------------------
+INFO     Sensitivity ():__init__.py:78 Creating
+----------------------------- Captured stdout call -----------------------------
+2026-10-03 21:45:20,468 - Sensitivity () - INFO - Running
+2026-10-03 21:45:20,483 - process 0 - INFO - created
+------------------------------ Captured log call -------------------------------
+INFO     Sensitivity ():__init__.py:104 Running
+INFO     process 0:process.py:70 created
+_________________________________ test_serial __________________________________
+
+sensitivity = <autofit.non_linear.grid.sensitivity.Sensitivity object at 0x7fffcba9d930>
+
+    def test_serial(sensitivity):
+        sensitivity.number_of_cores = 1
+    
+>       results = sensitivity.run()
+
+test_autofit/non_linear/grid/test_sensitivity/test_run.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autofit/non_linear/grid/sensitivity/__init__.py:119: in run
+    for result in process_class.run_jobs(
+autofit/non_linear/grid/grid_search/__init__.py:21: in run_jobs
+    for job_ in jobs:
+autofit/non_linear/grid/sensitivity/__init__.py:279: in _make_jobs
+    for number, (perturb_instance, perturb_model, label) in enumerate(
+autofit/non_linear/grid/sensitivity/__init__.py:263: in _perturb_models
+    limits = [
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <enumerate object at 0x7fffcb9ad840>
+
+    limits = [
+        (
+>           prior.value_for(max(0.0, centre - half_step[i])),
+            prior.value_for(min(1.0, centre + half_step[i])),
+        )
+        for i, (centre, prior) in enumerate(zip(list_, self.perturb_model.priors_ordered_by_id))
+    ]
+E   TypeError: 'float' object is not subscriptable
+
+autofit/non_linear/grid/sensitivity/__init__.py:265: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2026-10-03 21:45:20,495 - Sensitivity () - INFO - Creating
+------------------------------ Captured log setup ------------------------------
+INFO     Sensitivity ():__init__.py:78 Creating
+----------------------------- Captured stdout call -----------------------------
+2026-10-03 21:45:20,495 - Sensitivity () - INFO - Running
+------------------------------ Captured log call -------------------------------
+INFO     Sensitivity ():__init__.py:104 Running
+=========================== short test summary info ============================
+FAILED test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_perturb_models[1.0-0.0-0.5-0.5-1.0]
+FAILED test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_perturb_models[2.0-0.0-0.75-0.25-1.0]
+FAILED test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_perturb_models[4.0-0.0-1.0-0.0-1.0]
+FAILED test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test__perturb_models__prior_overwrite_via_perturb_model_prior_func
+FAILED test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::TestPerturbationModels::test_physical
+FAILED test_autofit/non_linear/grid/test_sensitivity/test_run.py::test_sensitivity
+FAILED test_autofit/non_linear/grid/test_sensitivity/test_run.py::test_serial
+========================= 7 failed, 11 passed in 0.40s =========================

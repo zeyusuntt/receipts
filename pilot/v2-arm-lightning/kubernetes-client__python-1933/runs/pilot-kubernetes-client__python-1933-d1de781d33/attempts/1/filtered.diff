@@ -1,0 +1,22 @@
+diff --git a/kubernetes/base/config/kube_config.py b/kubernetes/base/config/kube_config.py
+index a62df410..5e63ab70 100644
+--- a/kubernetes/base/config/kube_config.py
++++ b/kubernetes/base/config/kube_config.py
+@@ -565,6 +565,8 @@ class KubeConfigLoader(object):
+                         self._user, 'client-key',
+                         file_base_path=base_path,
+                         temp_file_path=self._temp_file_path).as_file()
++        if 'tls-server-name' in self._cluster:
++            self.tls_server_name = self._cluster['tls-server-name']
+         if 'insecure-skip-tls-verify' in self._cluster:
+             self.verify_ssl = not self._cluster['insecure-skip-tls-verify']
+ 
+@@ -582,6 +584,8 @@ class KubeConfigLoader(object):
+         for key in keys:
+             if key in self.__dict__:
+                 setattr(client_configuration, key, getattr(self, key))
++        if hasattr(self, 'tls_server_name'):
++            client_configuration.tls_server_name = self.tls_server_name
+ 
+     def load_and_set(self, client_configuration):
+         self._load_authentication()

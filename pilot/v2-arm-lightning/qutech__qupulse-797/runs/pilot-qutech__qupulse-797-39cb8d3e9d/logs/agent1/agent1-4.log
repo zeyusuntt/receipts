@@ -1,0 +1,21 @@
+    def ch_b(self):
+        return self.data_b
+
+    @property
+    def marker_a(self) -> np.ndarray:
+        marker_data = self._marker_data_view(self._data, writable=False)
+        return np.bitwise_and(marker_data, self.MARKER_A_MASK).astype(bool).reshape(-1)
+
+    @property
+    def marker_b(self) -> np.ndarray:
+        marker_data = self._marker_data_view(self._data, writable=False)
+        return np.bitwise_and(marker_data, self.MARKER_B_MASK).astype(bool).reshape(-1)
+
+    @classmethod
+    def from_binary_data(cls, data_a: np.ndarray, data_b: np.ndarray) -> 'TaborSegment':
+        assert data_a.size == data_b.size
+        assert data_a.ndim == 1 == data_b.ndim
+        assert data_a.size % 16 == 0
+
+        data = np.empty((data_a.size // 16, 2, 16), dtype=np.uint16)
+        cls._data_a_view(data, writable=True)[:] = data_a.reshape((-1, 16))

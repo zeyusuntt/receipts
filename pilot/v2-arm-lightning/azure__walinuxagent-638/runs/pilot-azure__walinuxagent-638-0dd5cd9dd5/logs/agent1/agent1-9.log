@@ -1,0 +1,21 @@
+
+HOST_PLUGIN_PORT = 32526
+URI_FORMAT_GET_API_VERSIONS = "http://{0}:{1}/versions"
+URI_FORMAT_GET_EXTENSION_ARTIFACT = "http://{0}:{1}/extensionArtifact"
+URI_FORMAT_PUT_VM_STATUS = "http://{0}:{1}/status"
+URI_FORMAT_PUT_LOG = "http://{0}:{1}/vmAgentLog"
+API_VERSION = "2015-09-01"
+HEADER_CONTAINER_ID = "x-ms-containerid"
+HEADER_VERSION = "x-ms-version"
+HEADER_HOST_CONFIG_NAME = "x-ms-host-config-name"
+HEADER_ARTIFACT_LOCATION = "x-ms-artifact-location"
+HEADER_ARTIFACT_MANIFEST_LOCATION = "x-ms-artifact-manifest-location"
+MAXIMUM_PAGEBLOB_PAGE_SIZE = 4 * 1024 * 1024  # Max page size: 4MB
+
+
+class HostPluginProtocol(object):
+    def __init__(self, endpoint, container_id, role_config_name):
+        if endpoint is None:
+            raise ProtocolError("HostGAPlugin: Endpoint not provided")
+        self.is_initialized = False
+        self.is_available = False

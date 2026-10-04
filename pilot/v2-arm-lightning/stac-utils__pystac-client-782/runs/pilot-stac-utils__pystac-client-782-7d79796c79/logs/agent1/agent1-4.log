@@ -1,0 +1,66 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /pystac-client
+configfile: pyproject.toml
+plugins: benchmark-5.2.3, console-scripts-1.4.1, cov-7.0.0, recording-0.13.4, requests-mock-1.12.1
+collecting ... collected 2 items
+
+tests/test_client.py::test_get_collection_fallback_strategy_for_static_catalogs PASSED [ 50%]
+tests/test_client.py::test_get_collection_for_static_catalogs_raise_if_not_found FAILED [100%]
+
+=================================== FAILURES ===================================
+__________ test_get_collection_for_static_catalogs_raise_if_not_found __________
+
+    def test_get_collection_for_static_catalogs_raise_if_not_found() -> None:
+        client = Client.from_file(str(TEST_DATA / "test-case-1" / "catalog.json"))
+        with pytest.raises(KeyError, match="not found on catalog"):
+            with pytest.warns(FallbackToPystac):
+>               client.get_collection("country-1")
+
+tests/test_client.py:815: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Client id=test>, collection_id = 'country-1'
+
+    @lru_cache()
+    def get_collection(self, collection_id: str) -> Union[Collection, CollectionClient]:
+        """Get a single collection from this Catalog/API
+    
+        Args:
+            collection_id: The Collection ID to get
+    
+        Returns:
+            Union[Collection, CollectionClient]: A STAC Collection
+    
+        Raises:
+            NotFoundError if collection_id does not exist.
+        """
+        collection: Union[Collection, CollectionClient]
+    
+        if self._supports_collections():
+            assert self._stac_io is not None
+    
+            url = self._collections_href(collection_id)
+            collection = CollectionClient.from_dict(
+                self._stac_io.read_json(url),
+                root=self,
+                modifier=self.modifier,
+            )
+            call_modifier(self.modifier, collection)
+        else:
+            self._warn_about_fallback("COLLECTIONS", "FEATURES")
+            for collection in super().get_collections():
+                if collection.id == collection_id:
+                    call_modifier(self.modifier, collection)
+                    break
+>       return collection
+E       UnboundLocalError: local variable 'collection' referenced before assignment
+
+pystac_client/client.py:415: UnboundLocalError
+==================================== PASSES ====================================
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_client.py::test_get_collection_fallback_strategy_for_static_catalogs
+FAILED tests/test_client.py::test_get_collection_for_static_catalogs_raise_if_not_found
+========================= 1 failed, 1 passed in 0.33s ==========================

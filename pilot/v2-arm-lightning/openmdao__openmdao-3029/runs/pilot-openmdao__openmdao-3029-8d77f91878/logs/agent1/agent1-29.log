@@ -1,0 +1,31 @@
+                raise ValueError(f"The problem name '{name}' already exists")
+        else:  # No name given: look for a name, of the form, 'problemN', that hasn't been used
+            problem_counter = len(_problem_names) + 1 if _problem_names else ''
+            base = _default_prob_name()
+            _name = f"{base}{problem_counter}"
+            if _name in _problem_names:  # need to make it unique so append string of form '.N'
+                i = 1
+                while True:
+                    _name = f"{base}{problem_counter}.{i}"
+                    if _name not in _problem_names:
+                        break
+                    i += 1
+            self._name = _name
+        _problem_names.append(self._name)
+
+        if comm is None:
+            use_mpi = check_mpi_env()
+            if use_mpi is False:
+                comm = FakeComm()
+            else:
+                try:
+                    from mpi4py import MPI
+                    comm = MPI.COMM_WORLD
+                except ImportError:
+                    comm = FakeComm()
+
+        if model is None:
+            self.model = Group()
+        elif isinstance(model, Group):
+            from openmdao.core.parallel_group import ParallelGroup
+            if isinstance(model, ParallelGroup):

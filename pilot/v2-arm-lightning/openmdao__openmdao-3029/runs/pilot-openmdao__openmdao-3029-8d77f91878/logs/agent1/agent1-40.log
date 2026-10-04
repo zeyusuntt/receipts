@@ -1,0 +1,30 @@
+    Set up the openmdao subparser for the 'openmdao n2' command.
+
+    Parameters
+    ----------
+    parser : argparse subparser
+        The parser we're adding options to.
+    """
+    parser.add_argument('file', nargs=1,
+                        help='Python script or recording containing the model. '
+                        'If metadata from a parallel run was recorded in a separate file, '
+                        'specify both database filenames delimited with a comma.')
+    parser.add_argument('-o', default=_default_n2_filename, action='store', dest='outfile',
+                        help='html output file.')
+    parser.add_argument('--no_values', action='store_true', dest='no_values',
+                        help="don't display variable values.")
+    parser.add_argument('--no_browser', action='store_true', dest='no_browser',
+                        help="don't display in a browser.")
+    parser.add_argument('--embed', action='store_true', dest='embeddable',
+                        help="create embeddable version.")
+    parser.add_argument('--title', default=None,
+                        action='store', dest='title', help='diagram title.')
+    parser.add_argument('--path', default=None,
+                        action='store', dest='path', help='initial path to zoom into.')
+
+
+def _n2_cmd(options, user_args):
+    """
+    Process command line args and call n2 on the specified file.
+
+    Parameters

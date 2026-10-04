@@ -1,0 +1,13 @@
+        self.api_versions = None
+        self.endpoint = endpoint
+        self.container_id = container_id
+        self.deployment_id = None
+        self.role_config_name = role_config_name
+        self.manifest_uri = None
+
+    def ensure_initialized(self):
+        if not self.is_initialized:
+            self.api_versions = self.get_api_versions()
+            self.is_available = API_VERSION in self.api_versions
+            self.is_initialized = True
+

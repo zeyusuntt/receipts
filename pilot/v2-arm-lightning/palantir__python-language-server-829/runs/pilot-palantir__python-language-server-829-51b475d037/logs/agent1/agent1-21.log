@@ -1,0 +1,53 @@
+def fix_lines(source_lines, options, filename=''):
+    """Return fixed source code."""
+    # Transform everything to line feed. Then change them back to original
+    # before returning fixed source code.
+    original_newline = find_newline(source_lines)
+    tmp_source = ''.join(normalize_line_endings(source_lines, '\n'))
+
+    # Keep a history to break out of cycles.
+    previous_hashes = set()
+
+    if options.line_range:
+        # Disable "apply_local_fixes()" for now due to issue #175.
+        fixed_source = tmp_source
+    else:
+        pep8_options = {
+            'ignore': options.ignore,
+            'select': options.select,
+            'max_line_length': options.max_line_length,
+            'hang_closing': options.hang_closing,
+        }
+        sio = io.StringIO(tmp_source)
+        contents = sio.readlines()
+        results = _execute_pep8(pep8_options, contents)
+        codes = {result['id'] for result in results
+                 if result['id'] in SELECTED_GLOBAL_FIXED_METHOD_CODES}
+        # Apply global fixes only once (for efficiency).
+        fixed_source = apply_global_fixes(tmp_source,
+                                          options,
+                                          filename=filename,
+                                          codes=codes)
+
+    passes = 0
+    long_line_ignore_cache = set()
+    while hash(fixed_source) not in previous_hashes:
+        if options.pep8_passes >= 0 and passes > options.pep8_passes:
+            break
+        passes += 1
+
+        previous_hashes.add(hash(fixed_source))
+
+        tmp_source = copy.copy(fixed_source)
+
+        fix = FixPEP8(
+            filename,
+            options,
+            contents=tmp_source,
+            long_line_ignore_cache=long_line_ignore_cache)
+
+        fixed_source = fix.fix()
+
+    sio = io.StringIO(fixed_source)
+    return ''.join(normalize_line_endings(sio.readlines(), original_newline))
+

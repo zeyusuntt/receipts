@@ -1,0 +1,60 @@
+class BTreeTests(MappingBase):
+    # Tests common to all BTrees
+
+    def _getTargetClass(self):
+        # Most of the subclasses override _makeOne and not
+        # _getTargetClass, so we can get the type that way.
+        # TODO: This could change for less repetition in the subclasses,
+        # using the name of the class to import the module and find
+        # the type.
+        if type(self)._makeOne is not BTreeTests._makeOne:
+            return type(self._makeOne())
+        raise NotImplementedError()
+
+    def _makeOne(self, *args): # pylint:disable=arguments-differ
+        return self._getTargetClass()(*args)
+
+    def _checkIt(self, t):
+        from BTrees.check import check
+        t._check()
+        check(t)
+
+    @_skip_wo_ZODB
+    def testAccessRaisesPOSKeyErrorOnNested(self):
+        # We don't hide a POSKeyError that happens when
+        # accessing sub objects in `get()`.
+        # See https://github.com/zopefoundation/BTrees/issues/161
+        from ZODB.POSException import POSKeyError
+        import transaction
+        transaction.begin()
+        m = self._makeOne()
+        root = self._getRoot()
+        root.m = m
+        self._populate(m, 1000)
+        transaction.commit()
+        conn = root._p_jar
+        # Ghost the objects...
+        conn.cacheMinimize()
+        # ...but activate the tree itself, leaving the
+        # buckets ghosted
+        m._p_activate()
+
+        # Remove the backing data
+        self.db._storage._data.clear()
+
+        transaction.begin()
+        try:
+            with self.assertRaises(POSKeyError):
+                m.get(1)
+
+            with self.assertRaises(POSKeyError):
+                m.setdefault(1, 1)
+
+            with self.assertRaises(POSKeyError):
+                _ = 1 in m
+
+            with self.assertRaises(POSKeyError):
+                m.pop(1)
+        finally:
+            self._closeRoot(root)
+

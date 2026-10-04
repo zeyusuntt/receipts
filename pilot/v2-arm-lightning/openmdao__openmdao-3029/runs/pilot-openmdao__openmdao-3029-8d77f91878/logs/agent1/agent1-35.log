@@ -1,0 +1,47 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /OpenMDAO
+collecting ... collected 1 item
+
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_system_option_too_large FAILED
+
+=================================== FAILURES ===================================
+_________________ TestViewerData.test_system_option_too_large __________________
+
+self = <openmdao.visualization.n2_viewer.tests.test_viewmodeldata.TestViewerData testMethod=test_system_option_too_large>
+
+    def test_system_option_too_large(self):
+        class SystemWithLargeOption(om.ExplicitComponent):
+            def initialize(self):
+                self.options.declare('large_option', types=(np.ndarray,))
+    
+            def setup(self):
+                self.add_input('x', val=0.0)
+                self.add_output('f_x', val=0.0)
+    
+            def compute(self, inputs, outputs):
+                x = inputs['x']
+                outputs['f_x'] = (x - 3.0) ** 2
+    
+        prob = om.Problem()
+        comp = prob.model.add_subsystem('comp', SystemWithLargeOption())
+        comp.options['large_option'] = np.zeros(int(1e4))
+        prob.setup()
+    
+        viewer_data = _get_viewer_data(prob)
+>       self.assertEqual(viewer_data['tree']['children'][1]['options']['large_option'],
+                         'Too Large to Display')
+E       AssertionError: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, [49954 chars] 0.0] != 'Too Large to Display'
+
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py:344: AssertionError
+=============================== warnings summary ===============================
+openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_system_option_too_large
+  /OpenMDAO/openmdao/core/group.py:4464: DeprecationWarning: `newshape` keyword argument is deprecated, use `shape=...` or pass shape positionally instead. (deprecated in NumPy 2.1)
+    val = np.reshape(value, newshape=val.shape)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED openmdao/visualization/n2_viewer/tests/test_viewmodeldata.py::TestViewerData::test_system_option_too_large
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================= 1 failed, 1 warning in 0.97s =========================

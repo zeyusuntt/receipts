@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Adding an index with a NOT NULL condition incorrectly triggers NOT_NULL rule\nAdding an index with a `WHERE` clause including `NOT NULL` gets flagged as a `NOT NULL constraint on columns` error.\r\n\r\n## Steps to reproduce\r\n\r\nThe follow migration operation:\r\n\r\n```python\r\nAddIndexConcurrently(\r\n    model_name=\"prediction\",\r\n    index=models.Index(\r\n        condition=models.Q(\r\n            (\"data_deleted_at__isnull\", True),\r\n            (\"delete_data_after__isnull\", False),\r\n        ),\r\n        fields=[\"delete_data_after\"],\r\n        name=\"delete_data_after_idx\",\r\n    ),\r\n),\r\n```\r\n\r\nGenerates the following SQL:\r\n\r\n```sql\r\nCREATE INDEX CONCURRENTLY \"delete_data_after_idx\" ON \"models_prediction\" (\"delete_data_after\") WHERE (\"data_deleted_at\" IS NULL AND \"delete_data_after\" IS NOT NULL);\r\n```\r\n\r\nWhen linted this is flagged as an error because of the `NOT NULL`, when it ought to be a safe operation.\r\n\r\n## Investigation\r\n\r\nLooking at the condition used for this rule, I think it might just need to permit `CREATE INDEX` requests:\r\n\r\n```python\r\nre.search(\"(?<!DROP )NOT NULL\", sql) and not sql.startswith(\"CREATE TABLE\") and not sql.startswith(\"CREATE INDEX\") \r\n```\r\n\r\nhttps://github.com/3YOURMIND/django-migration-linter/blob/202a6d9d5dea83528cb52fd7481a5a0565cc6f83/django_migration_linter/sql_analyser/base.py#L43",
+  "source": {
+    "image": "docker.io/swerebenchv2/3yourmind-django-migration-linter:258-366d16b",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-3yourmind__django-migration-linter-258-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3VuaXQvdGVzdF9zcWxfYW5hbHlzZXIucHkgYi90ZXN0cy91bml0L3Rlc3Rfc3FsX2FuYWx5c2VyLnB5CmluZGV4IGQ3MzQ5ZmMuLjAxMmQ1M2MgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3VuaXQvdGVzdF9zcWxfYW5hbHlzZXIucHkKKysrIGIvdGVzdHMvdW5pdC90ZXN0X3NxbF9hbmFseXNlci5weQpAQCAtMjk3LDYgKzI5NywxMCBAQCBjbGFzcyBQb3N0Z3Jlc3FsQW5hbHlzZXJUZXN0Q2FzZShTcWxBbmFseXNlclRlc3RDYXNlKToKICAgICAgICAgc3FsID0gIkNSRUFURSBVTklRVUUgSU5ERVggQ09OQ1VSUkVOVExZIHRpdGxlX2lkeCBPTiBmaWxtcyAodGl0bGUpOyIKICAgICAgICAgc2VsZi5hc3NlcnRWYWxpZFNxbChzcWwpCiAKKyAgICBkZWYgdGVzdF9jcmVhdGVfaW5kZXhfY29uY3VycmVudGx5X3doZXJlKHNlbGYpOgorICAgICAgICBzcWwgPSAnQ1JFQVRFIElOREVYIENPTkNVUlJFTlRMWSAiaW5kZXhfbmFtZSIgT04gInRhYmxlX25hbWUiICgiYV9jb2x1bW4iKSBXSEVSRSAoInNvbWVfY29sdW1uIiBJUyBOT1QgTlVMTCk7JworICAgICAgICBzZWxmLmFzc2VydFZhbGlkU3FsKHNxbCkKKwogICAgIGRlZiB0ZXN0X2Ryb3BfaW5kZXhfbm9uX2NvbmN1cnJlbnRseShzZWxmKToKICAgICAgICAgc3FsID0gIkRST1AgSU5ERVggT04gZmlsbXMiCiAgICAgICAgIHNlbGYuYXNzZXJ0V2FybmluZ1NxbChzcWwpCg=='\"'\"'))'",
+      "git apply /tmp/receipts-3yourmind__django-migration-linter-258-test.patch"
+    ],
+    "workdir": "/django-migration-linter"
+  },
+  "spec_paths": [
+    "tests/unit/test_sql_analyser.py"
+  ],
+  "spec_tests": [
+    "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_create_index_concurrently_where"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/unit/test_sql_analyser.py"
+}

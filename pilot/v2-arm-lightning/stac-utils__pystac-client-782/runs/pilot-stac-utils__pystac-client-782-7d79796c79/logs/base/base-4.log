@@ -1,0 +1,63 @@
+============================= test session starts ==============================
+collected 44 items
+
+tests/test_client.py .........................................FF.        [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: assert 'area-1-2' == 'area-1-1'
+      
+      - area-1-1
+      ?        ^
+      + area-1-2
+      ?        ^
+/pystac-client/tests/test_client.py:807: AssertionError: assert 'area-1-2' == 'area-1-1'
+E   UnboundLocalError: local variable 'collection' referenced before assignment
+/pystac-client/pystac_client/client.py:414: UnboundLocalError: local variable 'collection' referenced before assignment
+==================================== PASSES ====================================
+------------- generated xml file: /opt/receipts/reports/base-4.xml -------------
+=========================== short test summary info ============================
+PASSED tests/test_client.py::TestAPI::test_instance
+PASSED tests/test_client.py::TestAPI::test_links
+PASSED tests/test_client.py::TestAPI::test_from_file
+PASSED tests/test_client.py::TestAPI::test_invalid_url
+PASSED tests/test_client.py::TestAPI::test_get_collections_with_conformance
+PASSED tests/test_client.py::TestAPI::test_get_collections_single_slash
+PASSED tests/test_client.py::TestAPI::test_keep_trailing_slash_on_root
+PASSED tests/test_client.py::TestAPI::test_fall_back_to_data_link_for_collections
+PASSED tests/test_client.py::TestAPI::test_build_absolute_href_from_data_link
+PASSED tests/test_client.py::TestAPI::test_error_if_no_self_href_or_data_link
+PASSED tests/test_client.py::TestAPI::test_custom_request_parameters
+PASSED tests/test_client.py::TestAPI::test_custom_query_params_get_collections_propagation
+PASSED tests/test_client.py::TestAPI::test_custom_query_params_get_collection_propagation
+PASSED tests/test_client.py::TestAPI::test_get_collections_without_conformance_fallsback_to_pystac
+PASSED tests/test_client.py::TestAPI::test_opening_a_collection
+PASSED tests/test_client.py::TestAPI::test_headers_with_custom_stac_io
+PASSED tests/test_client.py::TestAPISearch::test_search_conformance_error
+PASSED tests/test_client.py::TestAPISearch::test_no_search_link
+PASSED tests/test_client.py::TestAPISearch::test_no_conforms_to
+PASSED tests/test_client.py::TestAPISearch::test_search
+PASSED tests/test_client.py::TestAPISearch::test_json_search_link
+PASSED tests/test_client.py::TestAPISearch::test_search_max_items_unlimited_default
+PASSED tests/test_client.py::TestAPICollectionSearch::test_search_conformance_error
+PASSED tests/test_client.py::TestAPICollectionSearch::test_search_conformance_warning
+PASSED tests/test_client.py::TestAPICollectionSearch::test_search
+PASSED tests/test_client.py::TestSigning::test_signing
+PASSED tests/test_client.py::TestSigning::test_sign_with_return_warns
+PASSED tests/test_client.py::TestQueryables::test_get_queryables
+PASSED tests/test_client.py::TestQueryables::test_get_queryables_collections
+PASSED tests/test_client.py::TestQueryables::test_get_queryables_errors
+PASSED tests/test_client.py::TestConformsTo::test_ignore_conformance_is_deprecated_and_noop
+PASSED tests/test_client.py::TestConformsTo::test_set_conforms_to_using_list_of_uris
+PASSED tests/test_client.py::TestConformsTo::test_add_and_remove_conforms_to_by_string
+PASSED tests/test_client.py::TestConformsTo::test_clear_all_conforms_to
+PASSED tests/test_client.py::TestConformsTo::test_empty_conforms_to
+PASSED tests/test_client.py::TestConformsTo::test_no_conforms_to_falls_back_to_pystac
+PASSED tests/test_client.py::TestConformsTo::test_changing_conforms_to_changes_behavior
+PASSED tests/test_client.py::test_collections_are_clients
+PASSED tests/test_client.py::test_get_items_without_ids
+PASSED tests/test_client.py::test_non_recursion_on_fallback
+PASSED tests/test_client.py::test_fallback_strategy
+PASSED tests/test_client.py::test_query_string_in_collections_url
+FAILED tests/test_client.py::test_get_collection_fallback_strategy_for_static_catalogs
+FAILED tests/test_client.py::test_get_collection_for_static_catalogs_raise_if_not_found
+========================= 2 failed, 42 passed in 1.23s =========================

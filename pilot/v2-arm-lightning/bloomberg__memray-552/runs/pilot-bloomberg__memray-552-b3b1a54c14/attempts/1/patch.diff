@@ -1,0 +1,34 @@
+diff --git a/src/memray/commands/run.py b/src/memray/commands/run.py
+index 2808ade..8b750c7 100644
+--- a/src/memray/commands/run.py
++++ b/src/memray/commands/run.py
+@@ -51,17 +51,26 @@ def _run_tracker(
+     with tracker:
+         pid = os.getpid()
+         try:
++            # Check if isolation flags are active (e.g., -I or -P).
++            # When these are used, Python suppresses its own sys.path
++            # manipulations, so we should avoid overwriting sys.path[0]
++            # to prevent conflicting with the interpreter's intentions.
++            isolation_flags_active = sys.flags.isolated
++
+             if args.run_as_module:
+-                sys.path[0] = os.getcwd()
++                if not isolation_flags_active:
++                    sys.path[0] = os.getcwd()
+                 # run_module will replace argv[0] with the script's path
+                 sys.argv = ["", *args.script_args]
+                 runpy.run_module(args.script, run_name="__main__", alter_sys=True)
+             elif args.run_as_cmd:
+-                sys.path[0] = ""
++                if not isolation_flags_active:
++                    sys.path[0] = ""
+                 sys.argv = ["-c", *args.script_args]
+                 exec(args.script, {"__name__": "__main__"})
+             else:
+-                sys.path[0] = str(pathlib.Path(args.script).resolve().parent.absolute())
++                if not isolation_flags_active:
++                    sys.path[0] = str(pathlib.Path(args.script).resolve().parent.absolute())
+                 sys.argv = [args.script, *args.script_args]
+                 runpy.run_path(args.script, run_name="__main__")
+         finally:

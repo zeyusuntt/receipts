@@ -1,0 +1,30 @@
+    def _calc_sampled_segments(self) -> Tuple[Sequence[TaborSegment], Sequence[int]]:
+        """
+        Returns:
+            (segments, segment_lengths)
+        """
+        time_array, segment_lengths = get_sample_times(self._parsed_program.waveforms, self._sample_rate)
+
+        if np.any(segment_lengths % 16 > 0) or np.any(segment_lengths < 192):
+            raise TaborException('At least one waveform has a length that is smaller 192 or not a multiple of 16')
+
+        segments = []
+        for i, waveform in enumerate(self._parsed_program.waveforms):
+            t = time_array[:segment_lengths[i]]
+            marker_time = t[::2]
+            segment_a = self._channel_data(waveform, t, 0)
+            segment_b = self._channel_data(waveform, t, 1)
+            assert (len(segment_a) == len(t))
+            assert (len(segment_b) == len(t))
+            marker_a = self._marker_data(waveform, marker_time, 0)
+            marker_b = self._marker_data(waveform, marker_time, 1)
+            segment = TaborSegment.from_sampled(ch_a=segment_a,
+                                   ch_b=segment_b,
+                                   marker_a=marker_a,
+                                   marker_b=marker_b)
+            segments.append(segment)
+        return segments, segment_lengths
+
+    def setup_single_sequence_mode(self) -> None:
+        assert self.program.depth() == 1
+        assert self.program.is_balanced()

@@ -1,0 +1,17 @@
+diff --git a/git/diff.py b/git/diff.py
+index aba1a108..95f17c97 100644
+--- a/git/diff.py
++++ b/git/diff.py
+@@ -163,6 +163,12 @@ class Diffable:
+         # Fixes: https://github.com/gitpython-developers/GitPython/issues/172
+         args.append("--no-color")
+ 
++        # When diff.external is configured, git may try to use the external
++        # diff tool instead of producing diff output. Add --no-ext-diff to
++        # ensure git produces diff output regardless of external diff settings.
++        # Fixes: https://github.com/gitpython-developers/GitPython/issues/852
++        args.append("--no-ext-diff")
++
+         if paths is not None and not isinstance(paths, (tuple, list)):
+             paths = [paths]
+ 

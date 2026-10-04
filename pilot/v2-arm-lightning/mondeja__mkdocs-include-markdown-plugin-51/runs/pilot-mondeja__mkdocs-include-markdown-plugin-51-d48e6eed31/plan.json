@@ -1,0 +1,14 @@
+{
+  "approach": "Modify the start/end processing logic in `found_include_tag` and `found_include_markdown_tag` to loop through all start-end pairs instead of stopping after the first one. The loop should: 1) Find the next start tag, 2) Find the next end tag after that start, 3) Extract content between them, 4) Continue from after the end tag. This needs to handle the case where an end tag might not exist after a start tag (extract until end of content).",
+  "files_to_edit": [
+    "mkdocs_include_markdown_plugin/event.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The issue is that when processing start and end delimiters, the code uses `str.partition()` which only keeps the content between the *first* matching start and end tags. For multiple start-end tag pairs, we need to repeatedly find and extract content between each pair.",
+  "retries": {},
+  "usage": {
+    "completion": 190,
+    "prompt": 7447,
+    "reasoning": 0
+  }
+}

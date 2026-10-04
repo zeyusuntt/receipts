@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "`alias` on `Optional` field breaks deserialization\nHi there,\r\n\r\nUsing the latest version (0.12.2), this example consistently deserializes `Foo.a` to `None`:\r\n```py\r\n@serde\r\n@dataclass\r\nclass Foo:\r\n    a: Optional[int] = field(alias=[\"b\"])\r\n\r\nx = from_json(Foo, '{\"b\": 1}')\r\nassert x.a == 1 \ud83d\udca5\r\n```",
+  "source": {
+    "image": "docker.io/swerebenchv2/yukinarit-pyserde:430-2855b6b",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-yukinarit__pyserde-430-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfYmFzaWNzLnB5IGIvdGVzdHMvdGVzdF9iYXNpY3MucHkKaW5kZXggNDFiNjc2OS4uZDNlZmQwMSAxMDA2NDQKLS0tIGEvdGVzdHMvdGVzdF9iYXNpY3MucHkKKysrIGIvdGVzdHMvdGVzdF9iYXNpY3MucHkKQEAgLTU3Myw2ICs1NzMsMTUgQEAgZGVmIHRlc3RfZGVmYXVsdF9hbmRfYWxpYXMoKToKICAgICBhc3NlcnQgZmYuYSA9PSAyCiAKIAorZGVmIHRlc3Rfb3B0aW9uYWxfYW5kX2FsaWFzKCk6CisgICAgQHNlcmRlLnNlcmRlCisgICAgY2xhc3MgRm9vOgorICAgICAgICBhOiBPcHRpb25hbFtpbnRdID0gc2VyZGUuZmllbGQoYWxpYXM9WyJiIl0pCisKKyAgICBhc3NlcnQgRm9vKDEpID09IHNlcmRlLmpzb24uZnJvbV9qc29uKEZvbywgJ3siYiI6MX0nKQorICAgIGFzc2VydCBGb28oTm9uZSkgPT0gc2VyZGUuanNvbi5mcm9tX2pzb24oRm9vLCAneyJjIjoxfScpCisKKwogZGVmIHRlc3RfZGVmYXVsdF9hbmRfcmVuYW1lKCk6CiAgICAgQHNlcmRlLnNlcmRlCiAgICAgY2xhc3MgRm9vOgo='\"'\"'))'",
+      "git apply /tmp/receipts-yukinarit__pyserde-430-test.patch"
+    ],
+    "workdir": "/pyserde"
+  },
+  "spec_paths": [
+    "tests/test_basics.py"
+  ],
+  "spec_tests": [
+    "tests/test_basics.py::test_optional_and_alias"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_basics.py"
+}

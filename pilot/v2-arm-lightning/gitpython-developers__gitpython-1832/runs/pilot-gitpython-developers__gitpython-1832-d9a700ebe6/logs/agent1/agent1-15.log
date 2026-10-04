@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "<string>", line 14, in <module>
+  File "/GitPython/git/repo/base.py", line 527, in create_head
+    return Head.create(self, path, commit, logmsg, force)
+  File "/GitPython/git/refs/symbolic.py", line 705, in create
+    return cls._create(repo, path, cls._resolve_ref_on_create, reference, force, logmsg)
+  File "/GitPython/git/refs/symbolic.py", line 645, in _create
+    target = repo.rev_parse(str(reference))
+  File "/GitPython/git/repo/fun.py", line 383, in rev_parse
+    obj = cast(Commit_ish, name_to_object(repo, rev))
+  File "/GitPython/git/repo/fun.py", line 189, in name_to_object
+    raise BadName(name)
+gitdb.exc.BadName: Ref 'HEAD' did not resolve to an object

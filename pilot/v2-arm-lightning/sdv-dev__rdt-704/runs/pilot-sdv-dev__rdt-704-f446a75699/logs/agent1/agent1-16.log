@@ -1,0 +1,35 @@
+tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__transform FAILED
+
+=================================== FAILURES ===================================
+__________________ TestClusterBasedNormalizer.test__transform __________________
+
+self = <tests.unit.transformers.test_numerical.TestClusterBasedNormalizer testMethod=test__transform>
+
+    def test__transform(self):
+        """Test ``_transform``.
+    
+        Validate that the method produces the appropriate output when given a pandas Series.
+    
+        Setup:
+            - create an instance of the ``ClusterBasedNormalizer`` where:
+                - ``_bgm_transformer`` is mocked with the appropriate ``means_``, ``covariances_``
+                and ``predict_proba.return_value``.
+                - ``valid_component_indicator`` is set to ``np.array([True, True, False])``.
+    
+        Input:
+            - a pandas Series.
+    
+        Ouput:
+            - a numpy array with the transformed data.
+        """
+        # Setup
+        random_state = np.random.get_state()
+        np.random.set_state(np.random.RandomState(10).get_state())
+        transformer = ClusterBasedNormalizer(max_clusters=3)
+        transformer._bgm_transformer = Mock()
+    
+        means = np.array([
+--
+FAILED tests/unit/transformers/test_numerical.py::TestClusterBasedNormalizer::test__transform
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+======================== 1 failed, 2 warnings in 1.49s =========================

@@ -1,0 +1,16 @@
+                                  promotes=['*'])
+
+            p.model.add_recorder(om.SqliteRecorder(sql_filename))
+
+            p.setup()
+            p.final_setup()
+
+            # extract viewer data from N2 for problem and subproblem
+            om.n2(p, title='N2 for Problem', outfile='N2problem.html',
+                  show_browser=DEBUG_BROWSER)
+            problem_data = extract_compressed_model('N2problem.html')
+
+            om.n2(subprob, title='N2 for SubProblem', outfile='N2subprob.html',
+                  show_browser=DEBUG_BROWSER)
+            subprob_data = extract_compressed_model('N2subprob.html')
+

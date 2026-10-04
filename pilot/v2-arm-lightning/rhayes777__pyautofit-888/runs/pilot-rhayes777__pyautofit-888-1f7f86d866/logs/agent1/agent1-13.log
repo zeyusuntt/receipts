@@ -1,0 +1,81 @@
+    @property
+    def _physical_values(self) -> List[List[float]]:
+        """
+        Lists of physical values for each grid square
+        """
+        return [
+            [
+                prior.value_for(unit_value)
+                for prior, unit_value in zip(
+                    self.perturb_model.priors_ordered_by_id, unit_values
+                )
+            ]
+            for unit_values in self._lists
+        ]
+
+    @property
+    def _headers(self) -> Generator[str, None, None]:
+        """
+        A name for each of the perturb priors
+        """
+        for path, _ in self.perturb_model.prior_tuples:
+            yield path
+
+    @property
+    def _labels(self) -> Generator[str, None, None]:
+        """
+        One label for each perturbation, used to distinguish
+        fits for each perturbation by placing them in separate
+        directories.
+        """
+        for list_ in self._lists:
+            strings = list()
+            for value, prior_tuple in zip(list_, self.perturb_model.prior_tuples):
+                path, prior = prior_tuple
+                value = prior.value_for(value)
+                strings.append(f"{path}_{value}")
+            yield "_".join(strings)
+
+    @property
+    def _perturb_instances(self) -> Generator[ModelInstance, None, None]:
+        """
+        A list of instances each of which defines a perturbation to
+        be applied to the image.
+        """
+        for list_ in self._lists:
+            yield self.perturb_model.instance_from_unit_vector(list_)
+
+    @property
+    def _perturb_models(self) -> Generator[AbstractPriorModel, None, None]:
+        """
+        A list of models representing a perturbation at each grid square.
+
+        By default models have priors with limits at the edges of a grid square.
+        These limits can be scaled using the limit_scale variable. If the variable
+        is 2 then the priors will have width twice the step size.
+        """
+        half_step = self.limit_scale * self.step_size / 2
+        for list_ in self._lists:
+            limits = [
+                (
+                    prior.value_for(max(0.0, centre - half_step)),
+                    prior.value_for(min(1.0, centre + half_step)),
+                )
+                for centre, prior in zip(list_, self.perturb_model.priors_ordered_by_id)
+            ]
+            yield self.perturb_model.with_limits(limits)
+
+    def _make_jobs(self) -> Generator[Job, None, None]:
+        """
+        Create a list of jobs to be run on separate processes.
+
+        Each job fits a perturb image with the original model
+        and a model which includes a perturbation.
+        """
+        for number, (perturb_instance, perturb_model, label) in enumerate(
+            zip(self._perturb_instances, self._perturb_models, self._labels)
+        ):
+
+            if self.perturb_model_prior_func is not None:
+                perturb_model = self.perturb_model_prior_func(
+                    perturb_instance=perturb_instance,

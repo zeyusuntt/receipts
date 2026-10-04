@@ -1,0 +1,106 @@
+class FS(object):
+    """Base class for FS objects."""
+
+    # This is the "standard" meta namespace.
+    _meta = {}  # type: Dict[Text, Union[Text, int, bool, None]]
+
+    # most FS will use default walking algorithms
+    walker_class = Walker
+
+    # default to SubFS, used by opendir and should be returned by makedir(s)
+    subfs_class = None
+
+    def __init__(self):
+        # type: (...) -> None
+        """Create a filesystem. See help(type(self)) for accurate signature."""
+        self._closed = False
+        self._lock = threading.RLock()
+        super(FS, self).__init__()
+
+    def __del__(self):
+        """Auto-close the filesystem on exit."""
+        self.close()
+
+    def __enter__(self):
+        # type: (...) -> FS
+        """Allow use of filesystem as a context manager."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type,  # type: Optional[Type[BaseException]]
+        exc_value,  # type: Optional[BaseException]
+        traceback,  # type: Optional[TracebackType]
+    ):
+        # type: (...) -> None
+        """Close filesystem on exit."""
+        self.close()
+
+    @property
+    def glob(self):
+        """`~fs.glob.BoundGlobber`: a globber object.."""
+        return BoundGlobber(self)
+
+    @property
+    def walk(self):
+        # type: (_F) -> BoundWalker[_F]
+        """`~fs.walk.BoundWalker`: a walker bound to this filesystem."""
+        return self.walker_class.bind(self)
+
+    # ---------------------------------------------------------------- #
+    # Required methods                                                 #
+    # Filesystems must implement these methods.                        #
+    # ---------------------------------------------------------------- #
+
+    @abc.abstractmethod
+    def getinfo(self, path, namespaces=None):
+        # type: (Text, Optional[Collection[Text]]) -> Info
+        """Get information about a resource on a filesystem.
+
+        Arguments:
+            path (str): A path to a resource on the filesystem.
+            namespaces (list, optional): Info namespaces to query. The
+                `"basic"` namespace is alway included in the returned
+                info, whatever the value of `namespaces` may be.
+
+        Returns:
+            ~fs.info.Info: resource information object.
+
+        Raises:
+            fs.errors.ResourceNotFound: If ``path`` does not exist.
+
+        For more information regarding resource information, see :ref:`info`.
+
+        """
+
+    @abc.abstractmethod
+    def listdir(self, path):
+        # type: (Text) -> List[Text]
+        """Get a list of the resource names in a directory.
+
+        This method will return a list of the resources in a directory.
+        A *resource* is a file, directory, or one of the other types
+        defined in `~fs.enums.ResourceType`.
+
+        Arguments:
+            path (str): A path to a directory on the filesystem
+
+        Returns:
+            list: list of names, relative to ``path``.
+
+        Raises:
+            fs.errors.DirectoryExpected: If ``path`` is not a directory.
+            fs.errors.ResourceNotFound: If ``path`` does not exist.
+
+        """
+
+    @abc.abstractmethod
+    def makedir(
+        self,
+        path,  # type: Text
+        permissions=None,  # type: Optional[Permissions]
+        recreate=False,  # type: bool
+    ):
+        # type: (...) -> SubFS[FS]
+        """Make a directory.
+

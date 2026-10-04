@@ -1,0 +1,91 @@
+        The driver for the problem. If not specified, a simple "Run Once" driver will be used.
+    comm : MPI.Comm or <FakeComm> or None
+        The global communicator.
+    name : str
+        Problem name. Can be used to specify a Problem instance when multiple Problems
+        exist.
+    reports : str, bool, None, _UNDEFINED
+        If _UNDEFINED, the OPENMDAO_REPORTS variable is used. Defaults to _UNDEFINED.
+        If given, reports overrides OPENMDAO_REPORTS. If boolean, enable/disable all reports.
+        Since none is acceptable in the environment variable, a value of reports=None
+        is equivalent to reports=False. Otherwise, reports may be a sequence of
+        strings giving the names of the reports to run.
+    **options : named args
+        All remaining named args are converted to options.
+
+    Attributes
+    ----------
+    model : <System>
+        Pointer to the top-level <System> object (root node in the tree).
+    comm : MPI.Comm or <FakeComm>
+        The global communicator.
+    _driver : <Driver>
+        Slot for the driver. The default driver is `Driver`, which just runs
+        the model once.
+    _mode : 'fwd' or 'rev'
+        Derivatives calculation mode, 'fwd' for forward, and 'rev' for
+        reverse (adjoint).
+    _orig_mode : 'fwd', 'rev', or 'auto'
+        Derivatives calculation mode assigned by the user.  If set to 'auto', _mode will be
+        automatically assigned to 'fwd' or 'rev' based on relative sizes of design variables vs.
+        responses.
+    cite : str
+        Listing of relevant citations that should be referenced when
+        publishing work that uses this class.
+    options : <OptionsDictionary>
+        Dictionary with general options for the problem.
+    model_options : dict
+        A  dictionary of options to be passed to subsystems in the problem's model during
+        the setup process.
+        This dictionary is keyed by a path pattern string, and the associated value for each path
+        pattern is a dictionary of {option_name: option_val}. Those subsystems within the
+        hierarchy which match the path pattern and that have an option of the given name, will
+        have the value of that option overridden by value given in the dictionary.
+    recording_options : <OptionsDictionary>
+        Dictionary with problem recording options.
+    _rec_mgr : <RecordingManager>
+        Object that manages all recorders added to this problem.
+    _reports : list of str
+        Names of reports to activate for this Problem.
+    _check : bool
+        If True, call check_config at the end of final_setup.
+    _filtered_vars_to_record : dict
+        Dictionary of lists of design vars, constraints, etc. to record.
+    _logger : object or None
+        Object for logging config checks if _check is True.
+    _name : str
+        Problem name. If no name given, a default name of the form 'problemN', where N is an
+        integer, will be given to the problem so it can be referenced in command line tools
+        that have an optional problem name argument
+    _metadata : dict
+        Problem level metadata.
+    _run_counter : int
+        The number of times run_driver or run_model has been called.
+    _warned : bool
+        Bool to check if `value` deprecation warning has occured yet
+    """
+
+    def __init__(self, model=None, driver=None, comm=None, name=None, reports=_UNDEFINED,
+                 **options):
+        """
+        Initialize attributes.
+        """
+        global _problem_names
+
+        # this function doesn't do anything after the first call
+        _load_report_plugins()
+
+        self._driver = None
+        self._reports = get_reports_to_activate(reports)
+
+        self.cite = CITATION
+        self._warned = False
+
+        # Set the Problem name so that it can be referenced from command line tools (e.g. check)
+        # that accept a Problem argument, and to name the corresponding reports subdirectory.
+
+        if name:  # if name hasn't been used yet, use it. Otherwise, error
+            if name not in _problem_names:
+                self._name = name
+            else:
+                raise ValueError(f"The problem name '{name}' already exists")

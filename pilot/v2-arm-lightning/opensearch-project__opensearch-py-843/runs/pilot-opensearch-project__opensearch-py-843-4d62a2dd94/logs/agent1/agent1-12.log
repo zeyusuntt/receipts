@@ -1,0 +1,31 @@
+            maxsize=maxsize,
+            headers=headers,
+            http_compress=http_compress,
+            opaque_id=opaque_id,
+            **kwargs,
+        )
+
+        if http_auth is not None:
+            if isinstance(http_auth, (tuple, list)):
+                http_auth = ":".join(http_auth)
+            self.headers.update(urllib3.make_headers(basic_auth=http_auth))
+
+        # if providing an SSL context, raise error if any other SSL related flag is used
+        if ssl_context and (
+            (verify_certs is not VERIFY_CERTS_DEFAULT)
+            or (ssl_show_warn is not SSL_SHOW_WARN_DEFAULT)
+            or ca_certs
+            or client_cert
+            or client_key
+            or ssl_version
+        ):
+            warnings.warn(
+                "When using `ssl_context`, all other SSL related kwargs are ignored"
+            )
+
+        self.ssl_assert_fingerprint = ssl_assert_fingerprint
+        if self.use_ssl and ssl_context is None:
+            if ssl_version is None:
+                ssl_context = ssl.create_default_context()
+            else:
+                ssl_context = ssl.SSLContext(ssl_version)

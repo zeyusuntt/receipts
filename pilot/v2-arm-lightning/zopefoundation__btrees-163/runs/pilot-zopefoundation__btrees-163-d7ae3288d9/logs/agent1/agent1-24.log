@@ -1,0 +1,30 @@
+        # checked.
+        from .._compat import PY2
+        t = self._makeOne()
+    
+        class OldStyle:
+            pass
+    
+        if self._getTargetClass() is OOBTree.OOBTreePy or not PY2:
+            with self.assertRaises(TypeError):
+                t[OldStyle()] = 1
+    
+        class C(object):
+            pass
+    
+        with self.assertRaises(TypeError) as raising:
+            t[C()] = 1
+    
+>       self.assertEqual(
+            raising.exception.args[0],
+            "Object of class C has default comparison")
+E       AssertionError: 'Object has default comparison' != 'Object of class C has default comparison'
+E       - Object has default comparison
+E       + Object of class C has default comparison
+E       ?        +++++++++++
+
+src/BTrees/tests/test_OOBTree.py:53: AssertionError
+=========================== short test summary info ============================
+FAILED src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.11s ===============================

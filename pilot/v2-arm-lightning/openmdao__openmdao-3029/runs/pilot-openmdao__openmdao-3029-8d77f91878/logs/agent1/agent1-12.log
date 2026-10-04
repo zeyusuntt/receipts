@@ -1,0 +1,21 @@
+def register_report_hook(name, fname, class_name, inst_id=None, pre=None, post=None, description='',
+                         **kwargs):
+    """
+    Register a hook with a specific report name in the reporting system.
+
+    By calling this multiple times, multiple hooks can be registered for the same report. This
+    is sometimes necessary to get the correct behavior when setup errors occur prior to report
+    creation.
+
+    Parameters
+    ----------
+    name : str
+        Name of report. Report names must be unique across all reports.
+    fname : str
+        The name of the function where the pre and/or post hook will be applied.
+    class_name : str
+        The name of the class owning the method where the hook will be applied.
+    inst_id : str or None
+        The name of the instance owning the method where the hook will be applied.
+    pre : function (None)
+        If not None, this hook will run before the function named by fname runs.

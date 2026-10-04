@@ -1,0 +1,114 @@
+============================= test session starts ==============================
+collected 20 items
+
+test/test_diff.py ......F..F......F..F                                   [100%]
+
+=================================== FAILURES ===================================
+E   git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+      cmdline: git rev-list --max-count=2 0.1.6 --
+      stderr: 'fatal: bad revision '0.1.6'
+    '
+/GitPython/git/cmd.py:657: git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+E   git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+      cmdline: git diff 3a7e0728c76901df5b45003c85ace108d4c15a57 --cached --abbrev=40 --full-index -M -p --no-color
+/GitPython/git/cmd.py:657: git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+E   git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+      cmdline: git commit --message=init
+      stderr: 'Author identity unknown
+    
+    *** Please tell me who you are.
+    
+    Run
+    
+      git config --global user.email "you@example.com"
+      git config --global user.name "Your Name"
+    
+    to set your account's default identity.
+    Omit --global to set the identity only in this repository.
+    
+    fatal: unable to auto-detect email address (got 'root@receipts.(none)')'
+/GitPython/git/cmd.py:1183: git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+E   git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+      cmdline: git commit --message=Added file_a.txt
+      stderr: 'Author identity unknown
+    
+    *** Please tell me who you are.
+    
+    Run
+    
+      git config --global user.email "you@example.com"
+      git config --global user.name "Your Name"
+    
+    to set your account's default identity.
+    Omit --global to set the identity only in this repository.
+    
+    fatal: unable to auto-detect email address (got 'root@receipts.(none)')'
+/GitPython/git/cmd.py:1183: git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+==================================== PASSES ====================================
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+git/__init__.py                        32      6    81%
+git/cmd.py                            540    194    64%
+git/compat.py                          37     15    59%
+git/config.py                         438    166    62%
+git/db.py                              25      5    80%
+git/diff.py                           266     18    93%
+git/exc.py                             63     17    73%
+git/index/__init__.py                   2      0   100%
+git/index/base.py                     495    292    41%
+git/index/fun.py                      183     80    56%
+git/index/typ.py                       74     20    73%
+git/index/util.py                      50     16    68%
+git/objects/__init__.py                13      0   100%
+git/objects/base.py                    84     14    83%
+git/objects/blob.py                    17      4    76%
+git/objects/commit.py                 305     94    69%
+git/objects/fun.py                     92     49    47%
+git/objects/submodule/__init__.py       0      0   100%
+git/objects/submodule/base.py         570    323    43%
+git/objects/submodule/root.py         133    107    20%
+git/objects/submodule/util.py          44      8    82%
+git/objects/tag.py                     40     28    30%
+git/objects/tree.py                   144     69    52%
+git/objects/util.py                   211    124    41%
+git/refs/__init__.py                    6      0   100%
+git/refs/head.py                       94     61    35%
+git/refs/log.py                       146     74    49%
+git/refs/reference.py                  53     10    81%
+git/refs/remote.py                     29     15    48%
+git/refs/symbolic.py                  363    152    58%
+git/refs/tag.py                        43     17    60%
+git/remote.py                         448    316    29%
+git/repo/__init__.py                    1      0   100%
+git/repo/base.py                      574    313    45%
+git/repo/fun.py                       195     96    51%
+git/types.py                           38      5    87%
+git/util.py                           552    248    55%
+-------------------------------------------------------
+TOTAL                                6400   2956    54%
+=========================== short test summary info ============================
+PASSED test/test_diff.py::TestDiff::test_binary_diff_1
+PASSED test/test_diff.py::TestDiff::test_binary_diff_2
+PASSED test/test_diff.py::TestDiff::test_diff_file_with_colon
+PASSED test/test_diff.py::TestDiff::test_diff_index
+PASSED test/test_diff.py::TestDiff::test_diff_index_raw_format
+PASSED test/test_diff.py::TestDiff::test_diff_initial_commit
+PASSED test/test_diff.py::TestDiff::test_diff_of_modified_files_not_added_to_the_index
+PASSED test/test_diff.py::TestDiff::test_diff_patch_format
+PASSED test/test_diff.py::TestDiff::test_diff_submodule
+PASSED test/test_diff.py::TestDiff::test_diff_unsafe_paths
+PASSED test/test_diff.py::TestDiff::test_diff_with_change_in_type
+PASSED test/test_diff.py::TestDiff::test_diff_with_copied_file
+PASSED test/test_diff.py::TestDiff::test_diff_with_rename
+PASSED test/test_diff.py::TestDiff::test_diff_with_spaces
+PASSED test/test_diff.py::TestDiff::test_empty_diff
+PASSED test/test_diff.py::TestDiff::test_list_from_string_new_mode
+FAILED test/test_diff.py::TestDiff::test_diff_interface - git.exc.GitCommandE...
+FAILED test/test_diff.py::TestDiff::test_diff_patch_with_external_engine - gi...
+FAILED test/test_diff.py::TestDiff::test_diff_with_staged_file - git.exc.GitC...
+FAILED test/test_diff.py::TestDiff::test_rename_override - git.exc.GitCommand...
+========================= 4 failed, 16 passed in 1.47s =========================

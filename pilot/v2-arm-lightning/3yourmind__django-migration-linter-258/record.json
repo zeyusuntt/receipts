@@ -1,0 +1,69 @@
+{
+  "instance_id": "3yourmind__django-migration-linter-258",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-arm-lightning/3yourmind__django-migration-linter-258/runs/pilot-3yourmind__django-migration-linter-258-d6cf0553fa",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the NOT_NULL rule false positive for CREATE INDEX with WHERE clause containing IS NOT NULL.\n\nThe fix added `and not sql.startswith(\"CREATE INDEX\")` to the condition in `has_not_null_column()` function in `django_migration_linter/sql_analyser/base.py` line 46. This excludes CREATE INDEX statements from the NOT_NULL detection, while still correctly detecting actual NOT NULL constraints on columns via ALTER TABLE statements.\n\nAll 37 tests in test_sql_analyser.py pass, including the specific test `test_create_index_concurrently_where` that was failing before the fix.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "django_migration_linter/sql_analyser/base.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "contradicted",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "08e0c7b8afce695f8eb836f863f01b55bd423b0eb37f03a13ef46a708ec47262",
+      "filtered_sha256": "08e0c7b8afce695f8eb836f863f01b55bd423b0eb37f03a13ef46a708ec47262",
+      "witness_apply_sha256": "08e0c7b8afce695f8eb836f863f01b55bd423b0eb37f03a13ef46a708ec47262",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "766cffcb4e6ff42848dfee80a3071436930f5ac90cc202dd6c29aae9c799e482",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/unit/test_sql_analyser.py::PostgresqlAnalyserTestCase::test_create_index_concurrently_where"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "08e0c7b8afce695f8eb836f863f01b55bd423b0eb37f03a13ef46a708ec47262",
+        "read_sha256": "08e0c7b8afce695f8eb836f863f01b55bd423b0eb37f03a13ef46a708ec47262",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 132514,
+    "model_dollars": 0.0085047,
+    "sandbox_lifetime_seconds": 72.953402,
+    "sandbox_dollars_estimate": 0.07577561000000001
+  },
+  "wall_time_s": 116.01946687488817,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

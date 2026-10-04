@@ -1,0 +1,33 @@
+    def test_strict_false(self):
+        """Test when ``n`` does not divide evenly into the length of the
+        iterable and strict is false.
+
+        """
+        self.assertEqual(
+            list(mi.chunked('ABCDE', 3, strict=False)),
+            [['A', 'B', 'C'], ['D', 'E']],
+        )
+
+    def test_strict_being_true(self):
+        """Test when ``n`` does not divide evenly into the length of the
+        iterable and strict is True (raising an exception).
+
+        """
+
+        def f():
+            return list(mi.chunked('ABCDE', 3, strict=True))
+
+        self.assertRaisesRegex(ValueError, "iterable is not divisible by n", f)
+        self.assertEqual(
+            list(mi.chunked('ABCDEF', 3, strict=True)),
+            [['A', 'B', 'C'], ['D', 'E', 'F']],
+        )
+
+    def test_strict_being_true_with_size_none(self):
+        """Test when ``n`` has value ``None`` and the keyword strict is True
+        (raising an exception).
+
+        """
+
+        def f():
+            return list(mi.chunked('ABCDE', None, strict=True))

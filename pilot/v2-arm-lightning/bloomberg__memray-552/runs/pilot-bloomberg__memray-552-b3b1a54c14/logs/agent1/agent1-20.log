@@ -1,0 +1,29 @@
+=== Test 1: Without -I flag ===
+sys.path: ['/tmp/test_isolation', '/usr/local/lib/python310.zip', '/usr/local/lib/python3.10', '/usr/local/lib/python3.10/lib-dynload', '/usr/local/lib/python3.10/site-packages', '/memray/src']
+os.getcwd() in path: False
+str(tmpdir) in path: True
+
+=== Test 2: With -I flag ===
+sys.path: ['/usr/local/lib/python310.zip', '/usr/local/lib/python3.10', '/usr/local/lib/python3.10/lib-dynload', '/usr/local/lib/python3.10/site-packages', '/memray/src']
+os.getcwd() in path: False
+str(tmpdir) in path: False
+
+=== Test 3: Module mode without -I ===
+sys.path: ('/memray', '/usr/local/lib/python310.zip', '/usr/local/lib/python3.10', '/usr/local/lib/python3.10/lib-dynload', '/usr/local/lib/python3.10/site-packages', '/memray/src')
+"" in path: False
+os.getcwd() in path: True
+
+=== Test 4: Module mode with -I ===
+sys.path: ('/usr/local/lib/python310.zip', '/usr/local/lib/python3.10', '/usr/local/lib/python3.10/lib-dynload', '/usr/local/lib/python3.10/site-packages', '/memray/src')
+"" in path: False
+os.getcwd() in path: False
+
+=== Test 5: Cmd mode without -I ===
+sys.path: ['', '/usr/local/lib/python310.zip', '/usr/local/lib/python3.10', '/usr/local/lib/python3.10/lib-dynload', '/usr/local/lib/python3.10/site-packages', '/memray/src']
+os.getcwd() in path: False
+"" in path: True
+
+=== Test 6: Cmd mode with -I ===
+sys.path: ['/usr/local/lib/python310.zip', '/usr/local/lib/python3.10', '/usr/local/lib/python3.10/lib-dynload', '/usr/local/lib/python3.10/site-packages', '/memray/src']
+os.getcwd() in path: False
+"" in path: False

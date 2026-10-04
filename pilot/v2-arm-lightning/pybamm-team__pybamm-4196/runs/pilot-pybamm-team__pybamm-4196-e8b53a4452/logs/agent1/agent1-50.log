@@ -1,0 +1,30 @@
+                                           rational=rational,
+                                           evaluate=evaluate)
+                        except SympifyError:
+                            pass
+            elif hasattr(a, '__float__'):
+                # float and int can coerce size-one numpy arrays to their lone
+                # element.  See issue https://github.com/numpy/numpy/issues/10404.
+                return sympify(float(a))
+            elif hasattr(a, '__int__'):
+                return sympify(int(a))
+    
+        if strict:
+            raise SympifyError(a)
+    
+        if iterable(a):
+            try:
+                return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+                    rational=rational, evaluate=evaluate) for x in a])
+            except TypeError:
+                # Not all iterables are rebuildable with their type.
+                pass
+    
+        if not isinstance(a, str):
+>           raise SympifyError('cannot sympify object of type %r' % type(a))
+E           sympy.core.sympify.SympifyError: SympifyError: "cannot sympify object of type <class 'pybamm.expression_tree.symbol.Symbol'>"
+
+/usr/local/lib/python3.10/site-packages/sympy/core/sympify.py:491: SympifyError
+=========================== short test summary info ============================
+FAILED tests/unit/test_expression_tree/test_functions.py::TestFunction::test_to_equation - sympy.core.sympify.SympifyError: SympifyError: "cannot sympify object of type <class 'pybamm.expression_tree.symbol.Symbol'>"
+========================= 1 failed, 34 passed in 6.15s =========================

@@ -1,0 +1,31 @@
+def _register_hook(fname, class_name, inst_id=None, pre=None, post=None, ncalls=None, exit=False,
+                   **kwargs):
+    """
+    Register a hook function.
+
+    Parameters
+    ----------
+    fname : str
+        The name of the function where the pre and/or post hook will be applied.
+    class_name : str
+        The name of the class owning the method where the hook will be applied.
+    inst_id : str or None
+        The name of the instance owning the method where the hook will be applied.
+    pre : function (None)
+        If not None, this hook will run before the named function runs.
+    post : function (None)
+        If not None, this hook will run after the named function runs.
+    ncalls : int or None
+        Auto-remove the hook function after this many calls.  If None, never auto-remove.
+        If both pre and post are registered, this will affect both.
+    exit : bool
+        If True, run sys.exit() after calling the hook function.  If post is registered, this
+        affects only post, else it will affect pre.
+    **kwargs : dict of keyword arguments
+        Keyword arguments that will be passed to the hook function.
+    """
+    if pre is None and post is None:
+        raise RuntimeError("In _register_hook you must specify pre or post.")
+
+    for pre_hooks, post_hooks in _get_hook_list_iters(class_name, inst_id, fname):
+        if pre is not None and (ncalls is None or ncalls > 0):

@@ -1,0 +1,19 @@
+diff --git a/src/BTrees/objectkeymacros.h b/src/BTrees/objectkeymacros.h
+index 8fa516e..7d0e278 100644
+--- a/src/BTrees/objectkeymacros.h
++++ b/src/BTrees/objectkeymacros.h
+@@ -19,6 +19,14 @@ check_argument_cmp(PyObject *arg)
+       return 1;
+     }
+ 
++    /* Special case: type objects (classes) have default comparison based
++       on address, which is not suitable for BTree keys. */
++    if (Py_TYPE(arg) == &PyType_Type) {
++        PyErr_SetString(PyExc_TypeError,
++                        "Type objects cannot be used as BTree keys");
++        return 0;
++    }
++
+ #ifdef PY3K
+     if (Py_TYPE(arg)->tp_richcompare == Py_TYPE(object_)->tp_richcompare)
+ #else

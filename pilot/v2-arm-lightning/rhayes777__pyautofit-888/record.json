@@ -1,0 +1,70 @@
+{
+  "instance_id": "rhayes777__pyautofit-888",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-arm-lightning/rhayes777__pyautofit-888/runs/pilot-rhayes777__pyautofit-888-1f7f86d866",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the bug where sensitivity mapping no longer supports tuple step_size. The issue was in the `_perturb_models` property of the `Sensitivity` class which failed with `TypeError: unsupported operand type(s) for /: 'tuple' and 'int'` when `number_of_steps` was specified as a tuple (e.g., `(4, 3, 2)`). \n\nThe fix modifies the `_perturb_models` property to handle both cases:\n1. When `step_size` is a tuple: computes `half_step` as a tuple with one value per dimension\n2. When `step_size` is a float: uses the original behavior with a single `half_step` value\n\nAll 18 sensitivity tests pass, including the two target tests `test_models_with_tuple_steps` and `test_jobs_with_tuple_steps`.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "autofit/non_linear/grid/sensitivity/__init__.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "unsupported",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "8cb6aa53dc452db2b185d041f98790c0570a38ff8a1cdff674a82e2209791a25",
+      "filtered_sha256": "8cb6aa53dc452db2b185d041f98790c0570a38ff8a1cdff674a82e2209791a25",
+      "witness_apply_sha256": "8cb6aa53dc452db2b185d041f98790c0570a38ff8a1cdff674a82e2209791a25",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "6870894744dadd2b7ac9847e2a5f76ce79ef2f90e030b3d46dc99d8911c9bf2e",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::test_models_with_tuple_steps",
+            "test_autofit/non_linear/grid/test_sensitivity/test_functionality.py::test_jobs_with_tuple_steps"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "8cb6aa53dc452db2b185d041f98790c0570a38ff8a1cdff674a82e2209791a25",
+        "read_sha256": "8cb6aa53dc452db2b185d041f98790c0570a38ff8a1cdff674a82e2209791a25",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 565974,
+    "model_dollars": 0.0351801,
+    "sandbox_lifetime_seconds": 155.661189,
+    "sandbox_dollars_estimate": 0.28045418
+  },
+  "wall_time_s": 240.31874041701667,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

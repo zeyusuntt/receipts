@@ -1,0 +1,60 @@
+1: #
+2: # Interpolating class
+3: #
+4: from __future__ import annotations
+5: import numpy as np
+6: from scipy import interpolate
+7: from collections.abc import Sequence
+8: import numbers
+9: 
+10: import pybamm
+11: 
+12: 
+13: class Interpolant(pybamm.Function):
+14:     """..."""
+15: 
+16:     def diff(self, variable):
+17:         """Compute the derivative of the interpolant with respect to a variable.
+18:         
+19:         For 1D interpolants with a single child, the derivative can be computed.
+20:         For multi-child interpolants, differentiation is not implemented.
+21:         """
+22:         # If the variable is not one of our children, return 0
+23:         if variable not in self.orphans:
+24:             return pybamm.Scalar(0)
+25:         
+26:         # Check if we have more than one child - differentiation not implemented
+27:         if len(self.children) > 1:
+28:             raise NotImplementedError(
+29:                 "differentiation not implemented for functions with more than one child"
+30:             )
+31:         
+32:         # For single child 1D interpolant, compute derivative
+33:         # The interpolant function is self.function (from scipy)
+34:         # We need to compute the derivative numerically or analytically
+35:         # For now, raise NotImplementedError for the base case
+36:         # and let specific interpolator types handle it if needed
+37:         raise NotImplementedError(
+38:             "Differentiation of interpolant not fully implemented"
+39:         )
+40: 
+41: 
+42: class Interpolant(pybamm.Function):
+43:     """
+44:     Interpolate data in 1D, 2D, or 3D. Interpolation in 3D requires the input data to be
+45:     on a regular grid (as per scipy.interpolate.RegularGridInterpolator).
+46: 
+47:     Parameters
+48:     ----------
+49:     x : iterable of :class:`numpy.ndarray`
+50:         The data point coordinates. If 1-D, then this is an array(s) of real values. If,
+51:         2D or 3D interpolation, then this is to ba a tuple of 1D arrays (one for each
+52:         dimension) which together define the coordinates of the points.
+53:     y : :class:`numpy.ndarray`
+54:         The values of the function to interpolate at the data points. In 2D and 3D, this
+55:         should be a matrix of two and three dimensions respectively.
+56:     children : iterable of :class:`pybamm.Symbol`
+57:         Node(s) to use when evaluating the interpolant. Each child corresponds to an
+58:         entry of x
+59:     name : str, optional
+60:         Name of the interpolant. Default is None, in which case the name "interpolating

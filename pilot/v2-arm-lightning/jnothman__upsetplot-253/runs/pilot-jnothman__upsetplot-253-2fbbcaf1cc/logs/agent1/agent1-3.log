@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /UpSetPlot
+configfile: setup.cfg
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+upsetplot/tests/test_upsetplot.py::test_filter_subsets_max_subset_rank_tie FAILED [100%]
+
+=================================== FAILURES ===================================
+___________________ test_filter_subsets_max_subset_rank_tie ____________________
+
+    def test_filter_subsets_max_subset_rank_tie():
+        data = generate_samples(seed=0, n_samples=5, n_categories=3)
+        tested_non_tie = False
+        tested_tie = True
+        full = UpSet(data, subset_size="count").intersections
+        prev = None
+        for max_rank in range(1, 5):
+>           cur = UpSet(data, subset_size="count", max_subset_rank=max_rank).intersections
+E           TypeError: UpSet.__init__() got an unexpected keyword argument 'max_subset_rank'
+
+data       =                    index     value
+cat0  cat1  cat2                  
+False False False      0  1.554445
+True  True  True       1  2.532559
+False True  False      2  1.637462
+      False False      3  1.015454
+      True  False      4  1.235598

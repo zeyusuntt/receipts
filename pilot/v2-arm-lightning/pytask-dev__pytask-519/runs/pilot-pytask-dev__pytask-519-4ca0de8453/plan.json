@@ -1,0 +1,14 @@
+{
+  "approach": "Add a try-except block around `inspect.getfile()` to catch TypeError when the function is a builtin, and raise a CollectionError with the message 'Builtin functions cannot be wrapped'. This matches the test's expectation that the error message contains 'Builtin functions cannot be wrapped'.",
+  "files_to_edit": [
+    "src/_pytask/task_utils.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The error occurs in `src/_pytask/task_utils.py` at line 97, where `inspect.unwrap()` and `inspect.getfile()` are called on the function. For builtin functions like `time.asctime`, `inspect.getfile()` raises a TypeError because builtin functions don't have a source file. The test expects this to be caught and a proper error message shown instead of crashing.",
+  "retries": {},
+  "usage": {
+    "completion": 182,
+    "prompt": 12448,
+    "reasoning": 0
+  }
+}

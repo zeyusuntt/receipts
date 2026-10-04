@@ -1,0 +1,50 @@
+#
+# Interpolating class
+#
+from __future__ import annotations
+import numpy as np
+from scipy import interpolate
+from collections.abc import Sequence
+import numbers
+
+import pybamm
+
+
+class Interpolant(pybamm.Function):
+    """
+    Interpolate data in 1D, 2D, or 3D. Interpolation in 3D requires the input data to be
+    on a regular grid (as per scipy.interpolate.RegularGridInterpolator).
+
+    Parameters
+    ----------
+    x : iterable of :class:`numpy.ndarray`
+        The data point coordinates. If 1-D, then this is an array(s) of real values. If,
+        2D or 3D interpolation, then this is to ba a tuple of 1D arrays (one for each
+        dimension) which together define the coordinates of the points.
+    y : :class:`numpy.ndarray`
+        The values of the function to interpolate at the data points. In 2D and 3D, this
+        should be a matrix of two and three dimensions respectively.
+    children : iterable of :class:`pybamm.Symbol`
+        Node(s) to use when evaluating the interpolant. Each child corresponds to an
+        entry of x
+    name : str, optional
+        Name of the interpolant. Default is None, in which case the name "interpolating
+        function" is given.
+    interpolator : str, optional
+        Which interpolator to use. Can be "linear", "cubic", or "pchip". Default is
+        "linear". For 3D interpolation, only "linear" an "cubic" are currently
+        supported.
+    extrapolate : bool, optional
+        Whether to extrapolate for points that are outside of the parametrisation
+        range, or return NaN (following default behaviour from scipy). Default is True.
+        Generally, it is best to set this to be False for 3D interpolation due to
+        the higher potential for errors in extrapolation.
+    """
+
+    def __init__(
+        self,
+        x: np.ndarray | Sequence[np.ndarray],
+        y: np.ndarray,
+        children: Sequence[pybamm.Symbol] | pybamm.Time,
+        name: str | None = None,
+        interpolator: str | None = "linear",

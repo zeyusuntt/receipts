@@ -1,0 +1,50 @@
+                assert bot.enemy[0].team_time >= 0
+            else:
+                assert bot.team_time >= 0
+    
+            # we fake the time in round 2!!
+            if bot.round == 2 and bot.turn == 0:
+                assert bot.team_time == 2.0
+                assert bot.enemy[0].team_time >= 1.0
+    
+            if bot.round == 2 and bot.turn == 1:
+                assert bot.team_time >= 2.0
+                assert bot.enemy[0].team_time >= 1.0
+    
+            check[1] = bot.team_time
+    
+            return bot.position
+    
+        state = setup_game([team_1, team_2], layout_dict=parse_layout(test_layout), max_rounds=3, allow_exceptions=True)
+    
+        state = play_turn(state)
+        assert state['team_time'][0] >= 0
+        assert state['team_time'][1] == 0
+    
+        state = play_turn(state)
+        assert state['team_time'][0] >= 0
+        assert state['team_time'][1] >= 0
+    
+        # time before bots get updated
+        old_time = list(state['team_time'])
+    
+        state = play_turn(state)
+        state = play_turn(state)
+    
+>       assert check == old_time
+E       AssertionError: assert [0.0, 0.0] == [4.4727000000...000020656e-05]
+E         
+E         At index 0 diff: 0.0 != 4.4727000000022166e-05
+E         
+E         Full diff:
+E           [
+E         -     4.4727000000022166e-05,
+E         -     3.0756000000020656e-05,...
+E         
+E         ...Full output truncated (3 lines hidden), use '-vv' to show
+
+test/test_team.py:602: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_team.py::test_team_time - AssertionError: assert [0.0, 0.0] ...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.33s ===============================

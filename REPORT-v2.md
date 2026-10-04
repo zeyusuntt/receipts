@@ -88,9 +88,25 @@ v1 (`REPORT.md`, Oct 1) ran 50 different tasks on Daytona with an earlier gate. 
 | B: shipped false dones | 1 (an environment limit; plus 1 in launch 2 from a gate defect, since fixed) | 0 |
 | Model dollars per verified fix | US$0.47 (corrected, see the erratum) | US$0.41 |
 
+## Exploratory arm: Nemotron 3.5 Lightning on P's first 30 tasks
+
+Pre-registered as exploratory: the first 30 tasks of P once more, with `nvidia/Nemotron-3_5-Lightning` and every other setting unchanged (`pilot/v2-arm-lightning/`, its own report in `pilot/v2-arm-lightning/REPORT.md`). It does not change the headline. On the same 30 tasks:
+
+| | Nemotron 3 Super (P) | Nemotron 3.5 Lightning (arm) |
+| --- | ---: | ---: |
+| A: claimed done | 20 | 22 |
+| A: false dones | 2 | 3 (13.6 percent, interval 4.7 to 33.3) |
+| B: verified fixes | 20 | 23 (20 on the first verdict, 3 on appeal) |
+| B: shipped false dones | 0 | 0 |
+| Gate PASS that the official grader resolved | 20 of 20 | 23 of 23 |
+| Model dollars, all 30 tasks | US$7.71 | US$2.14 |
+| Model dollars per verified fix | US$0.39 | US$0.09 |
+
+Thirty tasks cannot separate the two models; the point is narrower: with Receipts in front, the cheaper model shipped no false fix either, at about a quarter of the cost per verified fix. The arm had no infrastructure error, and 11 of its attempts ended on the turn budget.
+
 ## Not in this report yet
 
-The seen sample S (v1's 50 tasks on Daytona) and the exploratory arm (Nemotron 3.5 Lightning on P's first 30 tasks) are pre-registered as exploratory and are reported separately when they run. Neither changes the headline.
+The seen sample S (v1's 50 tasks on Daytona) is pre-registered as exploratory and "may be cut"; it has not run.
 
 ## Limits
 

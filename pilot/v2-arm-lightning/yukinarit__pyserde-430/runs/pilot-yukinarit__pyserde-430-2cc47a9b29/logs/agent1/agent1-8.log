@@ -1,0 +1,20 @@
+24:    find_generic_arg,
+25:    get_args,
+26:    get_generic_arg,
+55:    type_args,
+145:    *args: Any,
+150:    **kwargs: Any,
+155:    C = dataclasses.make_dataclass(cls_name, fields, *args, **kwargs)
+161:        **kwargs,
+181:    **kwargs: Any,
+236:        g["get_generic_arg"] = get_generic_arg
+270:            union_args = type_args(union)
+273:                union_func_name(UNION_DE_PREFIX, union_args),
+274:                render_union_func(cls, union_args, tagging),
+280:            literal_args = type_args(literal)
+282:                scope, literal_func_name(literal_args), render_literal_func(cls, literal_args), g
+364:    Deserialize from an object into an instance of the type specified as arg `c`.
+379:        # If a class in the argument is a non-dataclass class e.g. Union[Foo, Bar],
+404:                res = thisfunc(type_args(c)[0], o)
+409:                res = [thisfunc(type_args(c)[0], e) for e in o]
+414:                res = frozenset(thisfunc(type_args(c)[0], e) for e in o)

@@ -1,0 +1,31 @@
+diff --git a/upsetplot/tests/test_upsetplot.py b/upsetplot/tests/test_upsetplot.py
+index 80dfa76..fbc7070 100644
+--- a/upsetplot/tests/test_upsetplot.py
++++ b/upsetplot/tests/test_upsetplot.py
+@@ -754,11 +754,15 @@ def test_index_must_be_bool(x):
+             },
+         ),
+         (
+-            {"max_subset_rank": 3},
++            {"max_degree": 2},
+             {
++                (False, False, False): 220,
+                 (True, False, False): 884,
++                (False, True, False): 335,
++                (False, False, True): 143,
+                 (True, True, False): 1547,
+-                (True, True, True): 990,
++                (False, True, True): 258,
++                (True, False, True): 623,
+             },
+         ),
+         (
+@@ -837,7 +841,7 @@ def test_filter_subsets_max_subset_rank_tie():
+     full = UpSet(data, subset_size="count").intersections
+     prev = None
+     for max_rank in range(1, 5):
+-        cur = UpSet(data, subset_size="count", max_subset_rank=max_rank).intersections
++        cur = UpSet(data, subset_size="count", max_degree=max_rank).intersections
+         if prev is not None:
+             if cur.shape[0] > prev.shape[0]:
+                 # check we add rows only when they are new

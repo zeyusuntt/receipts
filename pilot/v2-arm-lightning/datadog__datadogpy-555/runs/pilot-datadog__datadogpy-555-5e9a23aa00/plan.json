@@ -1,0 +1,14 @@
+{
+  "approach": "Remove the unnecessary `.decode()` call on the `notifications` variable in `build_event_body`, or make it safe by only decoding when `notifications` is `bytes`. Looking at the test `test_build_event_body`, the test calls `notifications.decode(\"utf-8\", \"replace\")` on the bytes before passing it, but the function should handle both bytes and str gracefully. The smallest fix is to only call `.decode()` if `notifications` is of type `bytes`. This matches how `stdout` and `stderr` are already handled in the same function - they use `.decode(\"utf-8\", \"replace\")` which would also fail if they were already strings, but the test setup passes bytes. The fix should ensure `notifications` is treated the same way: decode if bytes, use as-is if str. The cleanest minimal change is to check the type before decoding.",
+  "files_to_edit": [
+    "datadog/dogshell/wrap.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The issue is that `build_event_body` in wrap.py calls `.decode(\"utf-8\", \"replace\")` on the `notifications` parameter, but when `notifications` is already a `str` (which happens in Python 3 when command-line arguments are parsed), this raises an `AttributeError`.",
+  "retries": {},
+  "usage": {
+    "completion": 292,
+    "prompt": 9947,
+    "reasoning": 0
+  }
+}

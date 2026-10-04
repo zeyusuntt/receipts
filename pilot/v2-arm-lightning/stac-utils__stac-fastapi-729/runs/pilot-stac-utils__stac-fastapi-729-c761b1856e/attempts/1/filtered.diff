@@ -1,0 +1,47 @@
+diff --git a/stac_fastapi/api/stac_fastapi/api/models.py b/stac_fastapi/api/stac_fastapi/api/models.py
+index 1c2146d..eea6c67 100644
+--- a/stac_fastapi/api/stac_fastapi/api/models.py
++++ b/stac_fastapi/api/stac_fastapi/api/models.py
+@@ -25,6 +25,13 @@ except ImportError:  # pragma: nocover
+     from starlette.responses import JSONResponse
+ 
+ 
++def _call_post_init(cls, self):
++    """Call __post_init__ from all classes in the MRO that define it."""
++    for base in cls.__mro__:
++        if "__post_init__" in base.__dict__:
++            base.__post_init__(self)
++
++
+ def create_request_model(
+     model_name="SearchGetRequest",
+     base_model: Union[Type[BaseModel], APIRequest] = BaseSearchGetRequest,
+@@ -47,7 +54,18 @@ def create_request_model(
+ 
+     # Handle GET requests
+     if all([issubclass(m, APIRequest) for m in models]):
+-        return make_dataclass(model_name, [], bases=tuple(models))
++        model = make_dataclass(model_name, [], bases=tuple(models))
++
++        # Replace __post_init__ to call all base __post_init methods
++        # since make_dataclass only calls the first one in the MRO
++        def __post_init__(self):
++            for base in model.__mro__:
++                if "__post_init__" in base.__dict__:
++                    base.__post_init__(self)
++
++        model.__post_init__ = __post_init__
++
++        return model
+ 
+     # Handle POST requests
+     elif all([issubclass(m, BaseModel) for m in models]):
+@@ -97,7 +115,7 @@ class CollectionUri(APIRequest):
+ class ItemUri(APIRequest):
+     """Get or delete item."""
+ 
+-    collection_id: Annotated[str, Path(description="Collection ID")]
++    collection_id: Annotated[str, Path(description="Item ID")]
+     item_id: Annotated[str, Path(description="Item ID")]
+ 
+ 

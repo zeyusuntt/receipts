@@ -1,0 +1,60 @@
+self = <test.test_diff.TestDiff testMethod=test_diff_interface>
+
+    def test_diff_interface(self):
+        # Test a few variations of the main diff routine.
+        assertion_map = {}
+>       for i, commit in enumerate(self.rorepo.iter_commits("0.1.6", max_count=2)):
+
+test/test_diff.py:356: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+git/objects/commit.py:498: in _iter_from_process_or_stream
+    finalize_process(proc_or_stream)
+git/util.py:483: in finalize_process
+    proc.wait(**kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <git.cmd.Git.AutoInterrupt object at 0x7ffff729c240>, stderr = b''
+
+    def wait(self, stderr: Union[None, str, bytes] = b"") -> int:
+        """Wait for the process and return its status code.
+    
+        :param stderr: Previously read value of stderr, in case stderr is already closed.
+        :warn: May deadlock if output or error pipes are used and not handled separately.
+        :raise GitCommandError: If the return status is not 0.
+        """
+        if stderr is None:
+            stderr_b = b""
+        stderr_b = force_bytes(data=stderr, encoding="utf-8")
+        status: Union[int, None]
+        if self.proc is not None:
+            status = self.proc.wait()
+            p_stderr = self.proc.stderr
+        else:  # Assume the underlying proc was killed earlier or never existed.
+            status = self.status
+            p_stderr = None
+    
+        def read_all_from_possibly_closed_stream(stream: Union[IO[bytes], None]) -> bytes:
+            if stream:
+                try:
+                    return stderr_b + force_bytes(stream.read())
+                except (OSError, ValueError):
+                    return stderr_b or b""
+            else:
+                return stderr_b or b""
+    
+        # END status handling
+    
+        if status != 0:
+            errstr = read_all_from_possibly_closed_stream(p_stderr)
+            _logger.debug("AutoInterrupt wait stderr: %r" % (errstr,))
+>           raise GitCommandError(remove_password_if_present(self.args), status, errstr)
+E           git.exc.GitCommandError: Cmd('git') failed due to: exit code(128)
+E             cmdline: git rev-list --max-count=2 0.1.6 --
+E             stderr: 'fatal: bad revision '0.1.6'
+E           '
+
+git/cmd.py:657: GitCommandError
+=========================== short test summary info ============================
+FAILED test/test_diff.py::TestDiff::test_diff_interface - git.exc.GitCommandE...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================= 1 failed, 6 passed in 0.42s ==========================

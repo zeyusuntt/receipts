@@ -1,0 +1,147 @@
+commit cfa71a497a4a2157e1898350302f70302d9cb9ce
+Author: swryan <swryan@users.noreply.github.com>
+Date:   Tue May 16 16:58:44 2023 -0400
+
+    add cmd line arg & test
+
+diff --git a/openmdao/visualization/n2_viewer/n2_viewer.py b/openmdao/visualization/n2_viewer/n2_viewer.py
+index f239a954a..cbc5d344c 100644
+--- a/openmdao/visualization/n2_viewer/n2_viewer.py
++++ b/openmdao/visualization/n2_viewer/n2_viewer.py
+@@ -703,6 +703,8 @@ def _n2_setup_parser(parser):
+                         help="create embeddable version.")
+     parser.add_argument('--title', default=None,
+                         action='store', dest='title', help='diagram title.')
++    parser.add_argument('--path', default=None,
++                        action='store', dest='path', help='initial path to zoom into.')
+ 
+ 
+ def _n2_cmd(options, user_args):
+@@ -725,12 +727,12 @@ def _n2_cmd(options, user_args):
+                 # only run the n2 here if we've had setup errors. Normally we'd wait until
+                 # after final_setup in order to have correct values for all of the I/O variables.
+                 n2(prob, outfile=options.outfile, show_browser=not options.no_browser,
+-                   title=options.title, embeddable=options.embeddable)
++                   title=options.title, path=options.path, embeddable=options.embeddable)
+                 # errors will result in exit at the end of the _check_collected_errors method
+ 
+         def _view_model_no_errors(prob):
+             n2(prob, outfile=options.outfile, show_browser=not options.no_browser,
+-               title=options.title, embeddable=options.embeddable)
++               title=options.title, path=options.path, embeddable=options.embeddable)
+ 
+         hooks._register_hook('_check_collected_errors', 'Problem', pre=_view_model_w_errors)
+         hooks._register_hook('final_setup', 'Problem', post=_view_model_no_errors, exit=True)
+@@ -742,5 +744,5 @@ def _n2_cmd(options, user_args):
+         _load_and_exec(options.file[0], user_args)
+     else:
+         # assume the file is a recording, run standalone
+-        n2(filename, outfile=options.outfile, title=options.title,
++        n2(filename, outfile=options.outfile, title=options.title, path=options.path,
+            show_browser=not options.no_browser, embeddable=options.embeddable)
+diff --git a/openmdao/visualization/n2_viewer/src/main.js b/openmdao/visualization/n2_viewer/src/main.js
+index 2570ccc28..e913ee866 100644
+--- a/openmdao/visualization/n2_viewer/src/main.js
++++ b/openmdao/visualization/n2_viewer/src/main.js
+@@ -14,19 +14,22 @@ delete compressedModel;
+ 
+ var n2MouseFuncs = null;
+ 
+-function n2main() {
+-    const n2Diag = new OmDiagram(modelData);
+-    n2MouseFuncs = n2Diag.getMouseFuncs();
+-
+-    n2Diag.update(false);
+-
++function zoomToInitial(n2Diag) {
++    // if an initial path is specified, zoom the diagram to that node
+     if (initialPath) {
+         node = n2Diag.layout.model.root.findNode(initialPath);
+         if (node != undefined) {
+-            n2Diag.ui._setupLeftClick(node)
++            n2Diag.ui._setupLeftClick(node);
+         }
+     };
+ }
+ 
++function n2main() {
++    const n2Diag = new OmDiagram(modelData);
++    n2MouseFuncs = n2Diag.getMouseFuncs();
++
++    n2Diag.update().then(zoomToInitial(n2Diag));
++}
++
+ // wintest();
+ n2main();
+diff --git a/openmdao/visualization/n2_viewer/tests/n2_gui_test.py b/openmdao/visualization/n2_viewer/tests/n2_gui_test.py
+index ca6d1d253..8bff41100 100644
+--- a/openmdao/visualization/n2_viewer/tests/n2_gui_test.py
++++ b/openmdao/visualization/n2_viewer/tests/n2_gui_test.py
+@@ -107,6 +107,13 @@ n2_gui_test_scripts = {
+             "selector": "g#n2elements rect#cellShape_node_33.vMid",
+             "arrowCount": 4
+         },
++        {
++            "desc": "Check number of cells indicating diagram is zoomed on R2",
++            "test": "count",
++            "selector": "g#n2elements > g.n2cell",
++            "count": 5
++        },
++        {"test": "root"},
+         {
+             "desc": "Hover on an N2 cell with cycle arrows and count",
+             "test": "hoverArrow",
+@@ -719,6 +726,9 @@ n2_gui_test_scripts = {
+ 
+ n2_gui_test_models = n2_gui_test_scripts.keys()
+ 
++n2_gui_test_cmd_args = {
++    "circuit": ["--path", "circuit.R2"],
++}
+ 
+ class n2_gui_test_case(_GuiTestCase):
+ 
+@@ -729,7 +739,7 @@ class n2_gui_test_case(_GuiTestCase):
+         print("  Test {:04}".format(current_test) + ": " + msg)
+         current_test += 1
+ 
+-    def generate_n2_file(self):
++    def generate_n2_file(self, args=None):
+         """ Generate N2 HTML files from all models in GUI_TEST_SUBDIR. """
+         self.parentDir = os.path.dirname(os.path.realpath(__file__))
+         self.modelDir = os.path.join(self.parentDir, GUI_TEST_SUBDIR)
+@@ -743,7 +753,9 @@ class n2_gui_test_case(_GuiTestCase):
+         self.n2files[self.current_model] = n2file
+         print("Creating " + n2file)
+ 
+-        cmd = ['openmdao', 'n2', '-o', n2file,  '--no_browser', pyfile]
++        cmd = ['openmdao', 'n2', '-o', n2file, '--no_browser', pyfile]
++        if args:
++            cmd.extend(args)
+         subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)  # nosec: trusted input
+ 
+     async def load_test_page(self):
+@@ -1040,7 +1052,7 @@ class n2_gui_test_case(_GuiTestCase):
+                 self.current_test_desc = ''
+                 self.current_model = model
+ 
+-                self.generate_n2_file()
++                self.generate_n2_file(n2_gui_test_cmd_args.get(model))
+ 
+                 async with async_playwright() as playwright:
+                     await self.run_gui_tests(playwright)
+diff --git a/openmdao/visualization/n2_viewer/tests/test_gui.py b/openmdao/visualization/n2_viewer/tests/test_gui.py
+index 9c15b8684..f9c5e88cc 100644
+--- a/openmdao/visualization/n2_viewer/tests/test_gui.py
++++ b/openmdao/visualization/n2_viewer/tests/test_gui.py
+@@ -3,8 +3,8 @@ import unittest
+ import os
+ 
+ os.system("playwright install")
+-from n2_gui_test import n2_gui_test_case
+-from gen_gui_test import gen_gui_test_case
++from .n2_gui_test import n2_gui_test_case
++from .gen_gui_test import gen_gui_test_case
+ 
+ if __name__ == "__main__":
+     unittest.main()

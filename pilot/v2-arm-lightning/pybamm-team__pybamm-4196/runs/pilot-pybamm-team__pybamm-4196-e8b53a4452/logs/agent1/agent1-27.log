@@ -1,0 +1,30 @@
+
+    def test_to_json(self):
+        # Test Addition
+        add_json = {
+            "name": "+",
+            "id": mock.ANY,
+            "domains": EMPTY_DOMAINS,
+        }
+        add = pybamm.Addition(2, 4)
+
+        self.assertEqual(add.to_json(), add_json)
+--
+        self.assertEqual(pybamm.Addition._from_json(add_json), add)
+
+        # Test Power
+        pow_json = {
+            "name": "**",
+            "id": mock.ANY,
+            "domains": EMPTY_DOMAINS,
+        }
+
+        pow = pybamm.Power(7, 2)
+        self.assertEqual(pow.to_json(), pow_json)
+--
+        self.assertEqual(pybamm.Power._from_json(pow_json), pow)
+
+        # Test Division
+        div_json = {
+            "name": "/",
+            "id": mock.ANY,

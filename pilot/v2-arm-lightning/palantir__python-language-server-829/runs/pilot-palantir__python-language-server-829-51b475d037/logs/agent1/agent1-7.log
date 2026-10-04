@@ -1,0 +1,20 @@
+def parse_udiff(diff, patterns=None, parent='.'):
+    """Return a dictionary of matching lines."""
+    # For each file of the diff, the entry key is the filename,
+    # and the value is a set of row numbers to consider.
+    rv = {}
+    path = nrows = None
+    for line in diff.splitlines():
+        if nrows:
+            if line[:1] != '-':
+                nrows -= 1
+            continue
+        if line[:3] == '@@ ':
+            hunk_match = HUNK_REGEX.match(line)
+            (row, nrows) = [int(g or '1') for g in hunk_match.groups()]
+            rv[path].update(range(row, row + nrows))
+        elif line[:3] == '+++':
+            path = line[4:].split('\t', 1)[0]
+            # Git diff will use (i)ndex, (w)ork tree, (c)ommit and
+            # (o)bject instead of a/b/c/d as prefixes for patches
+            if path[:2] in ('b/', 'w/', 'i/'):

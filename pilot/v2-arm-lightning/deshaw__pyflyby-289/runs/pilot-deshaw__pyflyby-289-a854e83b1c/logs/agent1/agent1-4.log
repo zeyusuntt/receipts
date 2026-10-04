@@ -1,0 +1,100 @@
+# pyflyby/_importstmt.py.
+# Copyright (C) 2011, 2012, 2013, 2014 Karl Chen.
+# License: MIT http://opensource.org/licenses/MIT
+
+
+
+import ast
+from   collections              import namedtuple
+from   functools                import total_ordering
+
+from   pyflyby._flags           import CompilerFlags
+from   pyflyby._format          import FormatParams, pyfill
+from   pyflyby._idents          import is_identifier
+from   pyflyby._parse           import PythonStatement
+from   pyflyby._util            import (Inf, cached_attribute, cmp,
+                                        longest_common_prefix)
+
+from   black                    import (find_pyproject_toml, format_str,
+                                        parse_pyproject_toml, TargetVersion,
+                                        FileMode as Mode)
+
+
+def read_black_config():
+    """Read the black configuration from ``pyproject.toml``
+
+
+    """
+    value = find_pyproject_toml('.')
+
+    raw_config = parse_pyproject_toml(value)
+
+    config = {}
+    for key in [
+        "line_length",
+        "skip_magic_trailing_comma",
+        "skip_string_normalization",
+    ]:
+        if key in raw_config:
+            config[key] = raw_config[key]
+    if "target_version" in raw_config:
+        target_version = raw_config["target_version"]
+        if isinstance(target_version, str):
+            config["target_version"] = target_version
+        elif isinstance(target_version, list):
+            # Convert TOML list to a Python set
+            config["target_version"] = set(target_version)
+        else:
+            raise ValueError(
+                f"Invalid config for black = {target_version!r} in {value}"
+            )
+    return config
+
+
+class ImportFormatParams(FormatParams):
+    align_imports = True
+    """
+    Whether and how to align 'from modulename import aliases...'.  If ``True``,
+    then the 'import' keywords will be aligned within a block.  If an integer,
+    then the 'import' keyword will always be at that column.  They will be
+    wrapped if necessary.
+    """
+
+    from_spaces = 1
+    """
+    The number of spaces after the 'from' keyword.  (Must be at least 1.)
+    """
+
+    separate_from_imports = True
+    """
+    Whether all 'from ... import ...' in an import block should come after
+    'import ...' statements.  ``separate_from_imports = False`` works well with
+    ``from_spaces = 3``.  ('from __future__ import ...' always comes first.)
+    """
+
+    align_future = False
+    """
+    Whether 'from __future__ import ...' statements should be aligned with
+    others.  If False, uses a single space after the 'from' and 'import'
+    keywords.
+    """
+
+
+class NonImportStatementError(TypeError):
+    """
+    Unexpectedly got a statement that wasn't an import.
+    """
+
+ImportSplit = namedtuple("ImportSplit",
+                         "module_name member_name import_as")
+"""
+Representation of a single import at the token level::
+
+  from [...]<module_name> import <member_name> as <import_as>
+
+If <module_name> is ``None``, then there is no "from" clause; instead just::
+  import <member_name> as <import_as>
+"""
+
+@total_ordering
+class Import(object):

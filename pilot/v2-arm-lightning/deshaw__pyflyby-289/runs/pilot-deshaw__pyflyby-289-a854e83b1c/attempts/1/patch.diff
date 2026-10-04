@@ -1,0 +1,14 @@
+diff --git a/lib/python/pyflyby/_importstmt.py b/lib/python/pyflyby/_importstmt.py
+index 0f1d2c7..f569779 100644
+--- a/lib/python/pyflyby/_importstmt.py
++++ b/lib/python/pyflyby/_importstmt.py
+@@ -27,6 +27,9 @@ def read_black_config():
+     """
+     value = find_pyproject_toml('.')
+ 
++    if value is None:
++        return {}
++
+     raw_config = parse_pyproject_toml(value)
+ 
+     config = {}

@@ -1,0 +1,60 @@
+upsetplot/tests/test_upsetplot.py: 74 warnings
+  /UpSetPlot/upsetplot/plotting.py:757: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+  The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+  
+  For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+  
+  
+    styles["linestyle"].fillna("solid", inplace=True)
+
+upsetplot/tests/test_upsetplot.py::test_two_sets[set20-set10]
+  /UpSetPlot/upsetplot/plotting.py:913: UserWarning: Attempting to set identical low and high xlims makes transformation singular; automatically expanding.
+    orig_ax.set_xlim(max_total, 0)
+
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_colors[Pastel1-expected2]
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[False-False-False]
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[False-False-True]
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[False-True-False]
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[False-True-True]
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[True-False-False]
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[True-False-True]
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[True-True-False]
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[True-True-True]
+  /UpSetPlot/upsetplot/plotting.py:480: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
+    colors = matplotlib.cm.get_cmap(colors)
+
+upsetplot/tests/test_upsetplot.py::test_add_stacked_bars_sum_over[False-True-True]
+  /UpSetPlot/upsetplot/plotting.py:965: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+    fig = plt.figure(figsize=self._default_figsize)
+
+upsetplot/tests/test_upsetplot.py::test_style_subsets_artists[horizontal]
+upsetplot/tests/test_upsetplot.py::test_style_subsets_artists[vertical]
+  /UpSetPlot/upsetplot/tests/test_upsetplot.py:1148: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+    .apply(lambda df: df.drop_duplicates())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.19-final-0 _______________
+
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+upsetplot/__init__.py                   7      0   100%
+upsetplot/data.py                     103     81    21%
+upsetplot/plotting.py                 366     52    86%
+upsetplot/reformat.py                 122      7    94%
+upsetplot/tests/__init__.py             0      0   100%
+upsetplot/tests/test_data.py           91     91     0%
+upsetplot/tests/test_examples.py       13     13     0%
+upsetplot/tests/test_reformat.py       17     17     0%
+upsetplot/tests/test_upsetplot.py     476     54    89%
+upsetplot/util.py                      29      9    69%
+-------------------------------------------------------
+TOTAL                                1224    324    74%
+=========================== short test summary info ============================
+FAILED upsetplot/tests/test_upsetplot.py::test_process_data_frame[None-cardinality-x0] - TypeError: exceptions must be derived from Warning, not <class 'NoneType'>
+FAILED upsetplot/tests/test_upsetplot.py::test_process_data_frame[None-degree-x0] - TypeError: exceptions must be derived from Warning, not <class 'NoneType'>
+FAILED upsetplot/tests/test_upsetplot.py::test_process_data_frame[None-None-x0] - TypeError: exceptions must be derived from Warning, not <class 'NoneType'>
+FAILED upsetplot/tests/test_upsetplot.py::test_process_data_frame[cardinality-cardinality-x0] - TypeError: exceptions must be derived from Warning, not <class 'NoneType'>
+FAILED upsetplot/tests/test_upsetplot.py::test_process_data_frame[cardinality-degree-x0] - TypeError: exceptions must be derived from Warning, not <class 'NoneType'>
+FAILED upsetplot/tests/test_upsetplot.py::test_process_data_frame[cardinality-None-x0] - TypeError: exceptions must be derived from Warning, not <class 'NoneType'>
+=========== 6 failed, 168 passed, 1 skipped, 309 warnings in 13.79s ============

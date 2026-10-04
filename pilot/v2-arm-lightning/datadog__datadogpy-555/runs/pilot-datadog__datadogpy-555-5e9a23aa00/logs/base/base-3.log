@@ -1,0 +1,190 @@
+============================= test session starts ==============================
+collected 12 items
+
+tests/unit/dogwrap/test_dogwrap.py F...........                          [100%]
+
+=================================== FAILURES ===================================
+E   AttributeError: 'str' object has no attribute 'decode'. Did you mean: 'encode'?
+/datadogpy/datadog/dogshell/wrap.py:215: AttributeError: 'str' object has no attribute 'decode'. Did you mean: 'encode'?
+=============================== warnings summary ===============================
+datadog/util/compat.py:110
+  /datadogpy/datadog/util/compat.py:110: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources as pkg
+
+tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_cmd_timeout
+  /usr/local/lib/python3.10/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-3
+  
+  Traceback (most recent call last):
+    File "/usr/local/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+      self.run()
+    File "/datadogpy/datadog/dogshell/wrap.py", line 78, in run
+      self._fwd_out.write(line)
+  TypeError: a bytes-like object is required, not 'str'
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_exit_code
+  /usr/local/lib/python3.10/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-5
+  
+  Traceback (most recent call last):
+    File "/usr/local/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+      self.run()
+    File "/datadogpy/datadog/dogshell/wrap.py", line 78, in run
+      self._fwd_out.write(line)
+  TypeError: a bytes-like object is required, not 'str'
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_oserror
+  /usr/local/lib/python3.10/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-7
+  
+  Traceback (most recent call last):
+    File "/usr/local/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+      self.run()
+    File "/datadogpy/datadog/dogshell/wrap.py", line 78, in run
+      self._fwd_out.write(line)
+  TypeError: a bytes-like object is required, not 'str'
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_sigkill_timeout
+  /usr/local/lib/python3.10/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-9
+  
+  Traceback (most recent call last):
+    File "/usr/local/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+      self.run()
+    File "/datadogpy/datadog/dogshell/wrap.py", line 78, in run
+      self._fwd_out.write(line)
+  TypeError: a bytes-like object is required, not 'str'
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_sigterm_timeout
+  /usr/local/lib/python3.10/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-11
+  
+  Traceback (most recent call last):
+    File "/usr/local/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+      self.run()
+    File "/datadogpy/datadog/dogshell/wrap.py", line 78, in run
+      self._fwd_out.write(line)
+  TypeError: a bytes-like object is required, not 'str'
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+___________________________ TestDogwrap.test_execute ___________________________
+----------------------------- Captured stdout call -----------------------------
+out1
+----------------------------- Captured stderr call -----------------------------
+err1
+_____________________ TestDogwrap.test_execute_cmd_timeout _____________________
+----------------------------- Captured stdout call -----------------------------
+out1
+out2
+----------------------------- Captured stderr call -----------------------------
+err1
+Command timed out after 0.00s, killing with SIGTERM
+______________________ TestDogwrap.test_execute_exit_code ______________________
+----------------------------- Captured stdout call -----------------------------
+out1
+out2
+----------------------------- Captured stderr call -----------------------------
+err1
+_______________________ TestDogwrap.test_execute_oserror _______________________
+----------------------------- Captured stdout call -----------------------------
+out1
+out2
+----------------------------- Captured stderr call -----------------------------
+err1
+Command timed out after 0.00s, killing with SIGTERM
+SIGTERM timeout failed after 0.00s, killing with SIGKILL
+_____________________ TestDogwrap.test_execute_popen_fail ______________________
+----------------------------- Captured stderr call -----------------------------
+Failed to execute 'sleep 1'
+___________________ TestDogwrap.test_execute_sigkill_timeout ___________________
+----------------------------- Captured stdout call -----------------------------
+out1
+out2
+----------------------------- Captured stderr call -----------------------------
+err1
+Command timed out after 0.00s, killing with SIGTERM
+SIGTERM timeout failed after 0.00s, killing with SIGKILL
+SIGKILL timeout failed after 0.00s, exiting
+___________________ TestDogwrap.test_execute_sigterm_timeout ___________________
+----------------------------- Captured stdout call -----------------------------
+out1
+out2
+----------------------------- Captured stderr call -----------------------------
+err1
+Command timed out after 0.00s, killing with SIGTERM
+SIGTERM timeout failed after 0.00s, killing with SIGKILL
+________________________ TestDogwrap.test_parse_options ________________________
+----------------------------- Captured stderr call -----------------------------
+Usage: receipts_pytest.py -n [event_name] -k [api_key] --submit_mode [ all | errors | warnings] [options] "command". 
+
+Note that you need to enclose your command in quotes to prevent python executing as soon as there is a space in your command. 
+ 
+NOTICE: In normal mode, the whole stderr is printed before stdout, in flush_live mode they will be mixed but there is not guarantee that messages sent by the command on both stderr and stdout are printed in the order they were sent.
+
+receipts_pytest.py: error: option -m: invalid choice: 'invalid' (choose from 'errors', 'warnings', 'all')
+Usage: receipts_pytest.py -n [event_name] -k [api_key] --submit_mode [ all | errors | warnings] [options] "command". 
+
+Note that you need to enclose your command in quotes to prevent python executing as soon as there is a space in your command. 
+ 
+NOTICE: In normal mode, the whole stderr is printed before stdout, in flush_live mode they will be mixed but there is not guarantee that messages sent by the command on both stderr and stdout are printed in the order they were sent.
+
+receipts_pytest.py: error: option -p: invalid choice: 'invalid' (choose from 'normal', 'low')
+Usage: receipts_pytest.py -n [event_name] -k [api_key] --submit_mode [ all | errors | warnings] [options] "command". 
+
+Note that you need to enclose your command in quotes to prevent python executing as soon as there is a space in your command. 
+ 
+NOTICE: In normal mode, the whole stderr is printed before stdout, in flush_live mode they will be mixed but there is not guarantee that messages sent by the command on both stderr and stdout are printed in the order they were sent.
+
+receipts_pytest.py: error: option -t: invalid integer value: 'invalid'
+Usage: receipts_pytest.py -n [event_name] -k [api_key] --submit_mode [ all | errors | warnings] [options] "command". 
+
+Note that you need to enclose your command in quotes to prevent python executing as soon as there is a space in your command. 
+ 
+NOTICE: In normal mode, the whole stderr is printed before stdout, in flush_live mode they will be mixed but there is not guarantee that messages sent by the command on both stderr and stdout are printed in the order they were sent.
+
+receipts_pytest.py: error: option --sigterm_timeout: invalid integer value: 'invalid'
+Usage: receipts_pytest.py -n [event_name] -k [api_key] --submit_mode [ all | errors | warnings] [options] "command". 
+
+Note that you need to enclose your command in quotes to prevent python executing as soon as there is a space in your command. 
+ 
+NOTICE: In normal mode, the whole stderr is printed before stdout, in flush_live mode they will be mixed but there is not guarantee that messages sent by the command on both stderr and stdout are printed in the order they were sent.
+
+receipts_pytest.py: error: option --sigkill_timeout: invalid integer value: 'invalid'
+Usage: receipts_pytest.py -n [event_name] -k [api_key] --submit_mode [ all | errors | warnings] [options] "command". 
+
+Note that you need to enclose your command in quotes to prevent python executing as soon as there is a space in your command. 
+ 
+NOTICE: In normal mode, the whole stderr is printed before stdout, in flush_live mode they will be mixed but there is not guarantee that messages sent by the command on both stderr and stdout are printed in the order they were sent.
+
+receipts_pytest.py: error: option --proc_poll_interval: invalid floating-point value: 'invalid'
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+=========================== short test summary info ============================
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_cmd_timeout
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_exit_code
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_oserror
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_popen_fail
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_sigkill_timeout
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_execute_sigterm_timeout
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_output_reader
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_parse_options
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_poll_proc
+PASSED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_poll_timeout
+FAILED tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_build_event_body
+=================== 1 failed, 11 passed, 6 warnings in 0.86s ===================

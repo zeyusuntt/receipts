@@ -1,0 +1,31 @@
+class Report(object):
+    r"""
+    A class to manage the resistration of hooks associated with a particular named report.
+
+    Parameters
+    ----------
+    name : str
+        The name of the corresponding report.
+    description : str
+        The description displayed when reports are listed using the `list_reports` command.
+
+    Attributes
+    ----------
+    name : str
+        The name of the corresponding report.
+    description : str
+        The description displayed when reports are listed using the `list_reports` command.
+    hooks : list
+        List of (args, kwargs) to be passed to the `register_hook` function when the report
+        corresponding to this instance is activated.
+    """
+
+    def __init__(self, name, description=''):
+        """
+        Initialize attributes.
+        """
+        self.name = name
+        self.description = description
+        self.hooks = []
+
+    def register_hook_args(self, *args, **kwargs):

@@ -1,0 +1,12 @@
+import pycodestyle
+    # is overriding pycodestyle's and if so, re-register
+    # the check using pycodestyle's implementation as expected
+    if autopep8_c_i in pycodestyle._checks['logical_line']:
+        del pycodestyle._checks['logical_line'][autopep8_c_i]
+        pycodestyle.register_check(pycodestyle.continued_indentation)
+    settings = config.plugin_settings('pycodestyle')
+    log.debug("Got pycodestyle settings: %s", settings)
+    styleguide = pycodestyle.StyleGuide(kwargs)
+    c = pycodestyle.Checker(
+class PyCodeStyleDiagnosticReport(pycodestyle.BaseReport):
+            'source': 'pycodestyle',
