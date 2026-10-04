@@ -6,7 +6,6 @@ import html
 import json
 import posixpath
 import re
-from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -341,7 +340,7 @@ def _comparison(attempt: dict[str, Any], verdict: dict[str, Any]) -> str:
 
 def _bundle(run: _Run, page: str) -> str:
     links = "".join(f'<li>{_link(page, f"raw/{run.key}/{name}", name)}</li>' for name in sorted(run.raw))
-    return '<section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches.</p><ul class="bundle">' + links + '</ul></section>'
+    return '<section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches. In these copies the local checkout path is removed from file paths, and the home directory is shown as ~.</p><ul class="bundle">' + links + '</ul></section>'
 
 
 def _patch(run: _Run) -> str:
@@ -531,8 +530,28 @@ def _ordered(runs: Sequence[_Run], pilot: Path) -> list[_Run]:
     return sorted(runs, key=lambda r: (positions.get(r.iid, float("inf")), r.iid))
 
 
+_TEXT_SUFFIXES = {".json", ".jsonl", ".diff", ".txt"}
+
+
+def _without_checkout_path(source: Path, prefixes: Sequence[str]) -> bytes:
+    """Copy a record, making paths under the local checkout repository-relative."""
+    data = source.read_bytes()
+    if source.suffix not in _TEXT_SUFFIXES:
+        return data
+    text = data.decode("utf-8")
+    for prefix in prefixes:
+        text = text.replace(prefix + "/", "").replace(prefix, ".")
+    # Anything else under the home directory (tool caches, other folders) keeps its
+    # shape but not the account name.
+    home = str(Path.home())
+    if len(home) > 1:
+        text = text.replace(home + "/", "~/").replace(home, "~")
+    return text.encode("utf-8")
+
+
 def build_site(
     pilot_dirs: Sequence[Path], out_dir: Path, *, repo_root: Path, title: str = "Receipts",
+    strip_prefixes: Sequence[Path] = (),
 ) -> SiteSummary:
     """Write static HTML and a small raw bundle; return generated file counts.
 
@@ -544,7 +563,8 @@ def build_site(
     root = repo_root.resolve()
     if not pilot_dirs:
         raise ValueError("at least one pilot directory is required")
-    pilots = sorted({_confined(Path(p), root) for p in pilot_dirs})
+    # The order given is the order of importance: the first pilot keeps short URLs.
+    pilots = list(dict.fromkeys(_confined(Path(p), root) for p in pilot_dirs))
     groups = []
     for pilot in pilots:
         if not pilot.is_dir():
@@ -558,7 +578,9 @@ def build_site(
             _load_run(p, root)
         _confined(pilot / "progress.jsonl", root)
         groups.append((pilot, _ordered(runs, pilot)))
-    counts = Counter(run.iid for _, runs in groups for run in runs)
+    names = [pilot.name for pilot, _ in groups]
+    if len(set(names)) != len(names):
+        raise ValueError("pilot directories must have distinct names")
     out = out_dir.resolve()
     if out == root or any(out == pilot or out.is_relative_to(pilot) or pilot.is_relative_to(out) for pilot in pilots):
         raise ValueError("output directory must be separate from pilot inputs")
@@ -572,10 +594,13 @@ def build_site(
     # Load and render before writing, so invalid input does not publish half a site.
     pages: dict[str, str] = {}
     raw_files: dict[str, Path] = {}
-    for n, (pilot, runs) in enumerate(groups, 1):
+    claimed: set[str] = set()
+    for pilot, runs in groups:
         report = build_report_from_directory(pilot)
+        namespace = _safe_component(pilot.name, "pilot directory")
         for run in runs:
-            run.key = f"pilot-{n}/{run.iid}" if counts[run.iid] > 1 else run.iid
+            run.key = run.iid if run.iid not in claimed else f"{namespace}/{run.iid}"
+            claimed.add(run.iid)
             pages[f"run/{run.key}.html"] = _run_page(run, title)
             pages[f"receipt/{run.key}.html"] = _receipt_page(run, title)
             for name, source in sorted(run.raw.items()):
@@ -593,10 +618,14 @@ def build_site(
         target = out / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(contents, encoding="utf-8", newline="\n")
+    checkouts = {str(repo_root), str(root)}
+    for extra in strip_prefixes:
+        checkouts.update({str(extra), str(Path(extra).resolve())})
+    prefixes = sorted(checkouts, key=len, reverse=True)
     for relative, source in sorted(raw_files.items()):
         target = out / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(source.read_bytes())
+        target.write_bytes(_without_checkout_path(source, prefixes))
     return SiteSummary(out, len(pilots), total, len(pages), raw_count)
 
 

@@ -92,7 +92,8 @@ def test_pages_raw_files_and_excluded_large_artifacts(bundle):
             target = out / "raw" / iid / relative
             assert target.is_file(), relative
             original = pilot / iid / relative if relative == "record.json" else source / relative
-            assert target.read_bytes() == original.read_bytes()
+            # Copies are byte-identical except that the local checkout path is dropped.
+            assert target.read_bytes() == original.read_bytes().replace((str(repo) + "/").encode(), b"")
     assert not list(out.rglob("worker.jsonl"))
     assert not list(out.rglob("*.log"))
     for p in out.rglob("*.html"):
@@ -220,10 +221,14 @@ def test_repeated_instance_across_pilots_has_distinct_pages(bundle, tmp_path):
     repo, pilot, out = bundle
     other = repo / "other-pilot"
     shutil.copytree(pilot, other)
-    summary = build_site([other, pilot], out, repo_root=repo)
+    summary = build_site([pilot, other], out, repo_root=repo)
     assert summary.instances == 6
     pages = list((out / "run").rglob("*.html"))
     assert len(pages) == 6
+    # The first pilot given keeps short URLs; a repeat is namespaced by its directory.
+    assert (out / "run" / f"{VERIFIED}.html").is_file()
+    assert (out / "run" / "other-pilot" / f"{VERIFIED}.html").is_file()
+    assert not list(out.rglob("pilot-*"))
     for p in out.rglob("*.html"):
         for link in Page(p).links:
             if urlsplit(link).netloc in ALLOWED_EXTERNAL:
@@ -355,3 +360,30 @@ def test_rejected_run_summary_counts_the_attempted_patch_without_claiming_shipme
     assert "Final attempted patch:" in summary
     assert "files," in summary and "added and" in summary and "removed lines" in summary
     assert "No patch shipped" in summary
+
+
+def test_raw_copies_drop_the_local_checkout_path(bundle):
+    repo, pilot, out = bundle
+    build(bundle)
+    copied = out / "raw" / VERIFIED / "record.json"
+    original = (pilot / VERIFIED / "record.json").read_text()
+    assert str(repo) in original
+    text = copied.read_text()
+    assert str(repo) not in text
+    assert json.loads(text)["run_dir"] == json.loads(original)["run_dir"].removeprefix(str(repo) + "/")
+    assert "local checkout path is removed" in Page(out / "receipt" / f"{VERIFIED}.html").plain
+
+
+def test_raw_copies_drop_other_checkouts_and_the_home_directory(bundle, monkeypatch):
+    repo, pilot, out = bundle
+    home = repo.parent / "home" / "someone"
+    monkeypatch.setenv("HOME", str(home))
+    other = home / "dev" / "other-checkout"
+    record_path = pilot / VERIFIED / "record.json"
+    record = json.loads(record_path.read_text())
+    record["note"] = f"{other}/pilot/x/log.txt and {home}/.local/share/uv/python"
+    record_path.write_text(json.dumps(record))
+    build(bundle, strip_prefixes=[other])
+    text = (out / "raw" / VERIFIED / "record.json").read_text()
+    assert str(home) not in text
+    assert "pilot/x/log.txt" in text and "~/.local/share/uv/python" in text
