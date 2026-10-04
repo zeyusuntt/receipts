@@ -86,6 +86,7 @@ Pilot finished Oct 1 (launch 3, 50 tasks): see `REPORT.md`. A: 4 of 23 claimed d
 - [x] Daytona: a key with `delete:snapshots` in the intended organization (switched Oct 2)
 - [x] Daytona old-organization snapshots and Tier 2: not pursued (Zeyu, Oct 2)
 - [x] Approve Plan 5 revision 3 (Oct 2)
+- [ ] PUBLISHING ONLY ON ZEYU'S EXPLICIT WORD (Oct 3: "公开再公开，现在不要"). Do not push to `zeyusuntt/receipts`, make it public, or run `scripts/publish-site.sh`'s push until Zeyu says so. When he does: final commit removes `HANDOVER.md`, `CLAUDE.md`, `docs/HANDOFF-*`, `docs/research/`, `docs/submission/` and strips local paths from the kept design docs; pilot records stay as recorded (recommendation, Zeyu to confirm).
 - [ ] GitHub name, then `gh repo create zeyusuntt/nebius-hackathon --private --source=. --remote=origin` (public before submission)
 
 ## Rules for any agent working here
