@@ -111,6 +111,14 @@ def _parser() -> argparse.ArgumentParser:
     site_parser.add_argument("pilot_dirs", nargs="+", type=Path)
     site_parser.add_argument("--out", required=True, type=Path)
     site_parser.add_argument("--title", default="Receipts")
+    site_parser.add_argument(
+        "--strip-prefix",
+        action="append",
+        default=[],
+        dest="strip_prefixes",
+        type=Path,
+        help="another checkout path to remove from raw record copies; may be repeated",
+    )
 
     export_parser = commands.add_parser("export", help="export portable final-attempt receipt bundles")
     export_parser.add_argument("pilot_dir", type=Path)
@@ -796,7 +804,10 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
     if args.command == "site":
         from receipts.site import build_site
 
-        summary = build_site(args.pilot_dirs, args.out, repo_root=Path.cwd(), title=args.title)
+        summary = build_site(
+            args.pilot_dirs, args.out, repo_root=Path.cwd(), title=args.title,
+            strip_prefixes=args.strip_prefixes,
+        )
         print(f"SITE {summary.out_dir / 'index.html'} pilots={summary.pilots} instances={summary.instances}")
         return 0
     if args.command == "pilot" and args.pilot_command == "run":

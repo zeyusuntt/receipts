@@ -368,3 +368,18 @@ def test_raw_copies_drop_the_local_checkout_path(bundle):
     assert str(repo) not in text
     assert json.loads(text)["run_dir"] == json.loads(original)["run_dir"].removeprefix(str(repo) + "/")
     assert "local checkout path is removed" in Page(out / "receipt" / f"{VERIFIED}.html").plain
+
+
+def test_raw_copies_drop_other_checkouts_and_the_home_directory(bundle, monkeypatch):
+    repo, pilot, out = bundle
+    home = repo.parent / "home" / "someone"
+    monkeypatch.setenv("HOME", str(home))
+    other = home / "dev" / "other-checkout"
+    record_path = pilot / VERIFIED / "record.json"
+    record = json.loads(record_path.read_text())
+    record["note"] = f"{other}/pilot/x/log.txt and {home}/.local/share/uv/python"
+    record_path.write_text(json.dumps(record))
+    build(bundle, strip_prefixes=[other])
+    text = (out / "raw" / VERIFIED / "record.json").read_text()
+    assert str(home) not in text
+    assert "pilot/x/log.txt" in text and "~/.local/share/uv/python" in text

@@ -341,7 +341,7 @@ def _comparison(attempt: dict[str, Any], verdict: dict[str, Any]) -> str:
 
 def _bundle(run: _Run, page: str) -> str:
     links = "".join(f'<li>{_link(page, f"raw/{run.key}/{name}", name)}</li>' for name in sorted(run.raw))
-    return '<section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches. In these copies the local checkout path is removed from file paths.</p><ul class="bundle">' + links + '</ul></section>'
+    return '<section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches. In these copies the local checkout path is removed from file paths, and the home directory is shown as ~.</p><ul class="bundle">' + links + '</ul></section>'
 
 
 def _patch(run: _Run) -> str:
@@ -542,11 +542,17 @@ def _without_checkout_path(source: Path, prefixes: Sequence[str]) -> bytes:
     text = data.decode("utf-8")
     for prefix in prefixes:
         text = text.replace(prefix + "/", "").replace(prefix, ".")
+    # Anything else under the home directory (tool caches, other folders) keeps its
+    # shape but not the account name.
+    home = str(Path.home())
+    if len(home) > 1:
+        text = text.replace(home + "/", "~/").replace(home, "~")
     return text.encode("utf-8")
 
 
 def build_site(
     pilot_dirs: Sequence[Path], out_dir: Path, *, repo_root: Path, title: str = "Receipts",
+    strip_prefixes: Sequence[Path] = (),
 ) -> SiteSummary:
     """Write static HTML and a small raw bundle; return generated file counts.
 
@@ -607,7 +613,10 @@ def build_site(
         target = out / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(contents, encoding="utf-8", newline="\n")
-    prefixes = sorted({str(repo_root), str(root)}, key=len, reverse=True)
+    checkouts = {str(repo_root), str(root)}
+    for extra in strip_prefixes:
+        checkouts.update({str(extra), str(Path(extra).resolve())})
+    prefixes = sorted(checkouts, key=len, reverse=True)
     for relative, source in sorted(raw_files.items()):
         target = out / relative
         target.parent.mkdir(parents=True, exist_ok=True)
