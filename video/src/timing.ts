@@ -107,12 +107,13 @@ export function captureIssueRegion(capture: Capture, contains: string) {
     if (!card) throw new Error(`Capture issue missing: ${contains}`);
     const heading = capture.boxes.find((box) => box.tag === 'h2' && box.text === 'The plan' && box.y >= card.y && box.y < card.y + card.height);
     if (!heading) throw new Error('Capture plan heading missing');
-    // Legacy captures only recorded cards. The site's definition list has two
-    // 22.5px rows with 8px gaps above Issue, after a 16px heading gap.
-    x = heading.x + 130 + 16 - 24;
-    y = heading.y + heading.height + 16 + 2 * (22.5 + 8) - 8;
+    // Legacy captures only recorded cards. Frame the plan's first rows with their labels
+    // (Repository, Base commit, Issue) so the viewer sees what the text is; long issue lines
+    // run past the right edge, where ScreenshotPushIn fades them out.
+    x = heading.x - 10;
+    y = heading.y + heading.height + 14;
     width = 460;
-    height = 200;
+    height = 220;
   }
   const k = capture.scale;
   return {x: x * k, y: y * k, width: width * k, height: height * k, pageWidth: capture.size.width * k, pageHeight: capture.size.height * k};
