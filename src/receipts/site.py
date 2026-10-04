@@ -6,6 +6,7 @@ import html
 import json
 import posixpath
 import re
+import shlex
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -18,6 +19,10 @@ from receipts.pilot.report import Report, build_report_from_directory
 
 
 _NOT_RECORDED = "not recorded"
+_PILOT_TITLES = {
+    "v2-P": "Primary sample: 100 held-out tasks, Nemotron 3 Super",
+    "v2-arm-lightning": "Exploratory: the first 30 tasks again with Nemotron 3.5 Lightning",
+}
 _FOOTER = (
     "Generated from the run records by receipts site. "
     "No model was asked whether a fix worked."
@@ -44,8 +49,9 @@ h1,h2,h3,p{margin:0}h1{font-size:34px;line-height:1.2;letter-spacing:-.01em}h2{f
 .metrics{display:flex;gap:28px;flex-wrap:wrap;padding:22px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.metric{flex:1 1 220px}.metric strong{display:block;font-size:25px;font-weight:600}.metric span{display:block;color:var(--secondary)}
 .table-box{max-width:100%;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:8px}table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}th,td{padding:10px 14px;vertical-align:top;border-bottom:1px solid var(--border)}th{font-weight:500;background:#F8F9FB;color:var(--secondary)}tbody tr:last-child td{border-bottom:0}.instances{min-width:850px}.commands{min-width:520px}.commands td:nth-child(2){min-width:220px;max-width:440px;overflow-wrap:anywhere}.predicates{min-width:580px}.predicates td:last-child{min-width:250px;white-space:pre-wrap;overflow-wrap:anywhere}
 code,pre,.mono,.commands,.paper{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,monospace}pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7}code{font-size:.9em;overflow-wrap:anywhere}.inset{padding:14px 16px;background:var(--page);border-radius:6px}.appeal{padding:14px 18px;border:1px dashed #C7CDD6;background:#fff;border-radius:8px}.diff{white-space:pre;overflow:auto;padding:18px;background:#fff;border:1px solid var(--border);border-radius:8px}.diff span{display:block}.diff .added{background:#E7F4EE;color:var(--verified)}.diff .removed{background:#FCEDE5;color:var(--rejected)}
-dl{margin:0;display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 16px}dt{color:var(--secondary)}dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}ul{padding-left:20px;margin:8px 0}.bundle li{margin:6px 0;overflow-wrap:anywhere}.paper{background:var(--paper);padding:26px 32px 30px;font-size:13px;line-height:1.75;border-top:1px dashed #B9B4A8;border-bottom:1px dashed #B9B4A8;min-width:0}.paper h2{font:500 16px/1.75 'IBM Plex Mono',monospace;letter-spacing:.12em}.paper dl{grid-template-columns:85px minmax(0,1fr);gap:4px 12px}.paper hr{border:0;border-top:1px dashed #B9B4A8;margin:18px 0}.stamp{text-align:center;padding-top:24px}.stamp .badge{font-size:20px;padding:8px 18px;border-width:2.5px;transform:rotate(-3deg)}
-@media(max-width:760px){.header,main,footer{padding-left:20px;padding-right:20px}.header .secondary{margin-left:0}.lanes,.comparison,.receipt-layout{grid-template-columns:minmax(0,1fr)}.comparison>div+div{border-left:0;border-top:1px solid var(--border)}h1{font-size:28px}.paper{padding:22px 20px}.pad{padding:18px}dl{grid-template-columns:100px minmax(0,1fr)}}
+dl{margin:0;display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 16px}dt{color:var(--secondary)}dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}ul{padding-left:20px;margin:8px 0}.bundle li{margin:6px 0;overflow-wrap:anywhere}.paper{background:var(--paper);padding:26px 32px 30px;font-size:13px;line-height:1.75;border-top:1px dashed #B9B4A8;border-bottom:1px dashed #B9B4A8;min-width:0}.paper h2{font:500 16px/1.75 'IBM Plex Mono',monospace;letter-spacing:.12em}.paper dl{grid-template-columns:100px minmax(0,1fr);gap:6px 12px}.paper hr{border:0;border-top:1px dashed #B9B4A8;margin:18px 0}.stamp{text-align:center;padding-top:24px}.stamp .badge{font-size:20px;padding:8px 18px;border-width:2.5px;transform:rotate(-3deg)}
+details{font-family:'IBM Plex Sans',system-ui,sans-serif;white-space:normal}summary{cursor:pointer;color:var(--accent);padding:6px 0}summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}details pre{padding:10px 0}.all-steps>summary{padding:12px 18px}.claims{font-size:14px}.comparison>div{display:flex;flex-direction:column;gap:12px}.files{margin:0}.index-lead{max-width:1000px}.index-lead h1{font-size:44px;line-height:1.18}.paper dt{font-size:12px}.paper dd{white-space:pre-line}
+@media(max-width:760px){.header,main,footer{padding-left:20px;padding-right:20px}.header .secondary{margin-left:0}.lanes,.comparison,.receipt-layout{grid-template-columns:minmax(0,1fr)}.comparison>div+div{border-left:0;border-top:1px solid var(--border)}h1,.index-lead h1{font-size:28px}.paper{padding:22px 20px}.pad{padding:18px}dl{grid-template-columns:100px minmax(0,1fr)}}
 """
 
 
@@ -229,8 +235,43 @@ def _official(value: Any) -> str:
     return "resolved" if value is True else "not resolved" if value is False else _NOT_RECORDED
 
 
-def _dollars(value: Any) -> str:
-    return f"${float(value):.3f}" if value is not None else _NOT_RECORDED
+def _dollars(value: Any, *, decimals: int | None = None) -> str:
+    if value is None:
+        return _NOT_RECORDED
+    amount = float(value)
+    precision = decimals if decimals is not None else 2 if amount >= .01 else 3
+    return f"${amount:.{precision}f}"
+
+
+def _duration(value: Any) -> str:
+    if value is None:
+        return _NOT_RECORDED
+    minutes, seconds = divmod(int(float(value) + .5), 60)
+    return f"{minutes} min {seconds} s" if minutes else f"{seconds} s"
+
+
+def _short_ids(value: Any) -> str:
+    return re.sub(r"\b[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\b",
+                  lambda m: m.group()[:8], _text(value))
+
+
+def _model_name(run: _Run) -> str:
+    model = run.artifact("disclosure.json", "disclosure").get("model") or {}
+    name = model.get("model") if isinstance(model, dict) else model
+    if str(name).startswith("nvidia/nemotron-3-super"):
+        return "NVIDIA Nemotron 3 Super"
+    if str(name).startswith("nvidia/nemotron-3.5-lightning"):
+        return "NVIDIA Nemotron 3.5 Lightning"
+    return _text(name)
+
+
+def _model_settings(run: _Run) -> str:
+    model = run.artifact("disclosure.json", "disclosure").get("model") or {}
+    if not isinstance(model, dict):
+        return _model_name(run)
+    thinking = {True: "on", False: "off"}.get(model.get("thinking"), _NOT_RECORDED)
+    return (f"{_model_name(run)}\nthinking {thinking} · temperature {_text(model.get('temperature'))}"
+            f" · top_p {_text(model.get('top_p'))}")
 
 
 def _number(value: Any, unit: str = "") -> str:
@@ -240,8 +281,10 @@ def _number(value: Any, unit: str = "") -> str:
 def _cost(run: _Run) -> list[tuple[str, Any]]:
     cost = run.record.get("cost") or {}
     disclosure = run.artifact("disclosure.json", "disclosure")
-    rows = [("Tokens", cost.get("tokens")), ("Model dollars", _dollars(cost.get("model_dollars", cost.get("dollars")))),
-            ("Sandbox time", _number(cost.get("sandbox_lifetime_seconds"), " seconds"))]
+    tokens = cost.get("tokens")
+    rows = [("Tokens", f"{int(tokens):,} tokens" if tokens is not None else _NOT_RECORDED),
+            ("Model cost", _dollars(cost.get("model_dollars", cost.get("dollars")))),
+            ("Sandbox time", _duration(cost.get("sandbox_lifetime_seconds")))]
     executor = run.record.get("executor_kind") or disclosure.get("executor_kind")
     sandbox = cost.get("sandbox_dollars_estimate")
     if executor == "tokenfactory":
@@ -284,21 +327,95 @@ def _predicates(verdict: dict[str, Any]) -> str:
     for predicate in verdict.get("predicates") or []:
         pid = predicate.get("id")
         passed = predicate.get("passed") is True
+        evidence = predicate.get("evidence")
+        display = _short_ids(evidence) if pid == "R5_provenance" else _text(evidence)
         rows.append([f'<code>{_e(pid)}</code>', _e(predicate.get("name") or _NAMES.get(pid, _NOT_RECORDED)),
-                     f'<span class="{"pass" if passed else "fail"}">{"PASS" if passed else "FAIL"}</span>', _e(predicate.get("evidence"))])
+                     f'<span class="{"pass" if passed else "fail"}">{"PASS" if passed else "FAIL"}</span>',
+                     _evidence_cell(display, _text(evidence))])
     if not rows:
         return f'<p class="secondary">Predicates {_NOT_RECORDED}. {_e(verdict.get("error"))}</p>'
     return _table(("Predicate", "Name", "Status", "Evidence"), rows, "predicates")
 
 
-def _commands(receipts: Sequence[dict[str, Any]]) -> str:
+def _evidence_cell(display: str, full: str) -> str:
+    if len(display) <= 600:
+        return _e(display)
+    return _e(display[:599] + "…") + '<details><summary>full evidence</summary><pre>' + _e(full) + '</pre></details>'
+
+
+def _pytest_args(command: str, *, witness: bool = False) -> list[str] | None:
+    """Simplify only the recorded trusted runner, retaining meaningful test options."""
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return None
+    runner = next((i for i, token in enumerate(tokens)
+                   if re.fullmatch(r"/opt/receipts(?:-[A-Za-z0-9]+)?/receipts_pytest\.py", token)
+                   and i >= 2 and tokens[i - 1] == "-I"), None)
+    if runner is None and witness:
+        if tokens[:1] == ["pytest"]:
+            runner = 0
+        elif tokens[:3] == ["python", "-m", "pytest"]:
+            runner = 2
+    if runner is None:
+        return None
+    args = []
+    tokens = tokens[runner + 1:]
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+        if token in {"--no-header", "-rA", "--tb=line", "--color=no", "--continue-on-collection-errors"} or token.startswith("--junitxml="):
+            i += 1
+        elif (token, tokens[i + 1] if i + 1 < len(tokens) else None) in {
+            ("-p", "no:cacheprovider"), ("-W", "ignore::DeprecationWarning"), ("-o", "junit_family=xunit1"),
+        }:
+            i += 2
+        elif token == "--junitxml" and i + 1 < len(tokens):
+            i += 2
+        else:
+            args.append(token)
+            i += 1
+    return args
+
+
+def _display_command(receipt: dict[str, Any]) -> str:
+    kind = receipt.get("kind")
+    command = _text(receipt.get("cmd") or receipt.get("path"))
+    if kind == "write":
+        return "write " + _text(receipt.get("path"))
+    if kind == "apply":
+        digest = receipt.get("patch_sha256") or (receipt.get("diff") or {}).get("patch_sha256")
+        return "apply patch" + (" " + str(digest)[:12] if digest else "")
+    if kind == "diff":
+        return "capture patch"
+    args = _pytest_args(command, witness=kind == "verification")
+    if args is not None:
+        prefix = "pytest (witness)" if kind == "verification" else "pytest"
+        return prefix + (" " + shlex.join(args) if args else "")
+    if kind == "verification":
+        return "pytest (witness)" + (" " + command if receipt.get("cmd") else "")
+    return _short_ids(command)
+
+
+def _commands(receipts: Sequence[dict[str, Any]], *, collapse: bool = False) -> str:
     rows = []
     for receipt in receipts:
         digest = receipt.get("tree_digest") or receipt.get("patch_sha256") or receipt.get("image_after")
-        rows.append([_e(receipt.get("kind")), _e(receipt.get("cmd") or receipt.get("path")),
-                     _e(receipt.get("exit_code")), _e(_number(receipt.get("duration_s"), "s")),
-                     _e(str(digest)[:12] if digest else None), _e(receipt.get("timed_out"))])
-    return _table(("Kind", "Command or path", "Exit", "Duration", "Digest", "Timed out"), rows, "commands") if rows else '<p class="pad secondary">Command receipts not recorded.</p>'
+        command = '<code class="display-command">' + _e(_display_command(receipt)) + '</code>'
+        if receipt.get("cmd"):
+            command += '<details><summary>exact command</summary><pre>' + _e(receipt["cmd"]) + '</pre></details>'
+        digest_text = _short_ids(digest)
+        exit_text = _text(receipt.get("exit_code")) + (" (timed out)" if receipt.get("timed_out") else "")
+        rows.append([_e(receipt.get("kind")), command,
+                     _e(exit_text), _e(_number(receipt.get("duration_s"), "s")),
+                     _e(digest_text[:12] if digest else None)])
+    headings = ("Kind", "Command", "Exit", "Duration", "Digest")
+    if collapse and len(rows) > 12:
+        return (_table(headings, rows[:8], "commands")
+                + f'<details class="all-steps"><summary>show all {len(rows)} steps</summary>'
+                + _table(headings, rows[8:-4], "commands") + '</details>'
+                + _table(headings, rows[-4:], "commands"))
+    return _table(headings, rows, "commands") if rows else '<p class="pad secondary">Command receipts not recorded.</p>'
 
 
 def _agent_receipts(run: _Run) -> dict[int, list[dict[str, Any]]]:
@@ -328,14 +445,36 @@ def _witness_receipts(run: _Run, attempt: dict[str, Any]) -> list[dict[str, Any]
 
 def _claims(attempt: dict[str, Any]) -> str:
     worker = attempt.get("worker") or {}
+    claims = worker.get("claims")
+    if isinstance(claims, dict):
+        rows = []
+        for key, label in (("target_tests_pass", "Target tests pass"), ("full_suite_pass", "Full suite passes"),
+                           ("files_changed", "Files changed"), ("tests_run", "Ran tests")):
+            value = claims.get(key)
+            if key == "files_changed" and isinstance(value, list):
+                value = ", ".join(_text(path) for path in value) or "none"
+            elif isinstance(value, bool):
+                value = "yes" if value else "no"
+            rows.append(f"<li>{_e(label + ': ' + _text(value))}</li>")
+        claim_text = '<ul class="claims">' + "".join(rows) + '</ul>'
+    else:
+        claim_text = '<p class="secondary">Claims ' + _e(claims) + '</p>'
     return _dl([( "Finish summary", worker.get("summary") or worker.get("end_summary")),
-                ("Worker outcome", worker.get("end")), ("Claims", worker.get("claims"))])
+                ("Worker outcome", worker.get("end"))]) + claim_text
+
+
+def _claim_audit(verdict: dict[str, Any]) -> str:
+    audit = verdict.get("claim_audit")
+    if audit == "no_claim":
+        audit = "no claim"
+    evidence = verdict.get("claim_evidence")
+    return f"{_text(audit)}: {_text(evidence)}" if evidence else f"{_text(audit)}: claim evidence {_NOT_RECORDED}"
 
 
 def _comparison(attempt: dict[str, Any], verdict: dict[str, Any]) -> str:
     return ('<div class="comparison card"><div><h3>What it said</h3>' + _claims(attempt)
             + '</div><div><h3>What the record shows</h3>'
-            + _dl([("Claim audit", verdict.get("claim_audit")), ("Claim evidence", verdict.get("claim_evidence"))]) + '</div></div>')
+            + '<p>' + _e(_claim_audit(verdict)) + '</p></div></div>')
 
 
 def _bundle(run: _Run, page: str) -> str:
@@ -397,7 +536,13 @@ def _run_page(run: _Run, title: str) -> str:
     plan = run.artifacts.get("plan.json", {})
     inp = run.artifact("input.json", "input")
     issue = "\n".join(str(inp.get("issue", _NOT_RECORDED)).splitlines()[:8])
-    body += '<section class="card pad stack"><h2>The plan</h2>' + _dl([("Repository", repo), ("Base commit", commit), ("Issue", issue), ("Files to edit", plan.get("files_to_edit")), ("Approach", plan.get("approach"))]) + '</section>'
+    files = plan.get("files_to_edit")
+    file_list = ('<ul class="files">' + "".join('<li><code>' + _e(path) + '</code></li>' for path in files) + '</ul>'
+                 if isinstance(files, list) and files else _e(_NOT_RECORDED if files is None else "none"))
+    body += ('<section class="card pad stack"><h2>The plan</h2>'
+             + _dl([("Repository", repo), ("Base commit", commit), ("Issue", issue)])
+             + '<dl><dt>Files to edit</dt><dd>' + file_list + '</dd></dl>'
+             + _dl([("Approach", plan.get("approach"))]) + '</section>')
     agent = _agent_receipts(run)
     records = run.record.get("attempts") or []
     for position, attempt in enumerate(run.attempts):
@@ -412,15 +557,23 @@ def _run_page(run: _Run, title: str) -> str:
         branch = attempt.get("witness_branch_id")
         witness = _witness_receipts(run, attempt)
         body += ('<div class="lanes"><div class="card"><h3>Agent branch</h3>'
-                 + _commands(agent.get(number, [])) + '<div class="pad">' + _claims(attempt) + '</div></div>'
-                 + '<div class="stack"><div class="card"><h3>Witness branch ' + _e(branch) + '</h3>'
+                 + _commands(agent.get(number, []), collapse=True) + '<div class="pad">' + _claims(attempt) + '</div></div>'
+                 + '<div class="stack"><div class="card"><h3>Witness branch ' + _e(_short_ids(branch)) + '</h3>'
                  + _commands(witness) + '</div><h3>Gate predicate checklist</h3>' + _predicates(verdict) + '</div></div>')
         body += _comparison(attempt, verdict)
         official = records[position] if position < len(records) else {}
-        body += '<div class="card pad"><h3>Official SWE-rebench grade</h3>' + _dl([("official_resolved", official.get("official_resolved")), ("agreement", official.get("agreement"))]) + '</div></section>'
+        agreement = {"agree_pass": "Agrees with the gate", "agree_fail": "Agrees with the gate",
+                     "gate_stricter": "Gate was stricter", "gate_looser": "Gate was looser"}.get(official.get("agreement"), _NOT_RECORDED)
+        body += ('<div class="card pad stack"><h3>'
+                 + _e("SWE-rebench's official grader: " + _official(official.get("official_resolved")))
+                 + '</h3><p>' + _e(agreement) + '</p></div></section>')
     body += '<section class="stack"><h2>Shipped patch</h2>'
     body += _diff(patch) if patch else '<p class="secondary">No patch shipped. Filtered patch not recorded.</p>' if _stamp(run) == "VERIFIED" else '<p class="secondary">No patch shipped.</p>'
-    body += '</section>' + '<section class="card pad">' + _dl(costs) + '</section>' + _bundle(run, page)
+    disclosure = run.artifact("disclosure.json", "disclosure")
+    body += ('</section><section class="card pad stack"><h2>Model and costs</h2>'
+             + _dl([("Model", _model_settings(run)), *costs])
+             + '<details><summary>Full environment disclosure</summary><pre>' + _e(disclosure) + '</pre></details></section>'
+             + _bundle(run, page))
     return _page(page, run.iid, title, body)
 
 
@@ -437,11 +590,12 @@ def _test_status(summary: dict[str, Any], test: str) -> str:
     for name, status in (("passed", "passed"), ("failed", "failed"), ("errors", "error"), ("skipped", "skipped")):
         if test in (summary.get(name) or []):
             return status
+    if test.split("::", 1)[0] in (summary.get("collection_errors") or []):
+        return "error"
     return _NOT_RECORDED
 
 
-def _paper_rows(run: _Run) -> list[tuple[str, Any]]:
-    repo, commit = _repository(run)
+def _spec_results(run: _Run) -> list[tuple[str, str, str]]:
     baseline = run.artifact("baseline.json", "baseline")
     before = (baseline.get("runs") or [{}])[0]
     last = run.attempts[-1] if run.attempts else {}
@@ -449,25 +603,74 @@ def _paper_rows(run: _Run) -> list[tuple[str, Any]]:
     after = next((r["junit"] for r in reversed(witness) if r.get("junit")), {})
     inp = run.artifact("input.json", "input")
     tests = baseline.get("target") or inp.get("spec_tests") or []
-    spec = "\n".join(f"{test}: {_test_status(before, test)} → {_test_status(after, test)}" for test in tests) or _NOT_RECORDED
-    predicates = {p["id"]: p.get("evidence") for p in _verdict(run, last).get("predicates", [])} if last else {}
-    history = "\n".join(f"attempt {a['number']}: {_verdict(run, a).get('status', _NOT_RECORDED)}" for a in run.attempts) or _NOT_RECORDED
+    return [(test, _test_status(before, test), _test_status(after, test)) for test in tests]
+
+
+def _kept(predicate: dict[str, Any]) -> str:
+    evidence = _text(predicate.get("evidence"))
+    count = re.match(r"(\d+) baseline-passing tests still pass", evidence)
+    if predicate.get("passed") is True and count:
+        n = int(count.group(1))
+        return f"{n:,} of {n:,} previously passing tests still pass"
+    return evidence
+
+
+def _test_short_name(test: str) -> str:
+    """`file::Class::method` keeps `Class::method`, so same-named tests stay distinct."""
+    parts = test.split("::")
+    return "::".join(parts[-2:]) if len(parts) >= 3 else parts[-1]
+
+
+def _paper_rows(run: _Run) -> list[tuple[str, Any]]:
+    repo, commit = _repository(run)
+    last = run.attempts[-1] if run.attempts else {}
+    verdict = _verdict(run, last) if last else {}
+    spec = "\n".join(f"{_test_short_name(test)}: {before} -> {after}"
+                     for test, before, after in _spec_results(run)) or _NOT_RECORDED
+    predicates = {p["id"]: p for p in verdict.get("predicates", [])}
+    r3 = predicates.get("R3_no_shrink", {})
+    r5 = predicates.get("R5_provenance", {})
+    checkpoint = run.result.get("checkpoint_id")
+    witness = (f"fresh sandbox from checkpoint {_short_ids(checkpoint)}, patch digest matches"
+               if r5.get("passed") is True else _short_ids(r5.get("evidence")))
+    history = " · ".join(f"attempt {a['number']} " + {"PASS": "verified", "REJECTED": "rejected"}.get(
+        _verdict(run, a).get("status"), "no verdict") for a in run.attempts) or _NOT_RECORDED
+    worker = last.get("worker") or {}
+    summary = worker.get("summary") or worker.get("end_summary")
+    said = '"' + re.split(r"(?<=[.!?])\s+|\n", _text(summary), maxsplit=1)[0] + '"' if summary else _NOT_RECORDED
+    dropped = last.get("dropped_paths")
+    dropped_text = "\n".join(_text(path) for path in dropped) if dropped else "none" if last else _NOT_RECORDED
     rows = [("instance", run.iid), ("repo", f"{repo} @ {commit}"), ("spec", spec),
-            ("kept", predicates.get("R2_pass_to_pass")), ("removed and new skips", predicates.get("R3_no_shrink")),
-            ("scope", predicates.get("R4_patch_scope")), ("dropped", last.get("dropped_paths")),
-            ("witness", predicates.get("R5_provenance")), ("checkpoint", run.result.get("checkpoint_id")), ("history", history)]
-    for attempt in run.attempts:
-        worker = attempt.get("worker") or {}
-        verdict = _verdict(run, attempt)
-        rows.extend([(f"said ({attempt['number']})", worker.get("summary") or worker.get("end_summary")),
-                     ("claims", worker.get("claims")), ("record", f"{_text(verdict.get('claim_audit'))}: {_text(verdict.get('claim_evidence'))}")])
-    disclosure = run.artifact("disclosure.json", "disclosure")
-    rows.extend([( "model and settings", disclosure.get("model")), ("executor", disclosure.get("executor_kind")),
-                 ("tests digests", disclosure.get("test_digests")), ("config digests", disclosure.get("pytest_config_digests")),
-                 ("lock digest", disclosure.get("lock_sha256")), ("lock.txt", "recorded" if "lock.txt" in run.raw else _NOT_RECORDED),
-                 ("tool", disclosure.get("receipts_version"))])
-    rows.extend(_cost(run))
+            ("kept", _kept(predicates.get("R2_pass_to_pass", {}))),
+            ("removed or new skips", "none" if r3.get("passed") is True else r3.get("evidence")),
+            ("scope", predicates.get("R4_patch_scope", {}).get("evidence")), ("dropped", dropped_text),
+            ("witness", witness), ("history", history), ("said", said), ("record", _claim_audit(verdict)),
+            ("model", _model_settings(run))]
+    rows.extend((label.lower(), value) for label, value in _cost(run)[:3])
     return rows
+
+
+def _pr_description(run: _Run) -> str:
+    verdict = _verdict(run, run.attempts[-1]) if run.attempts else {}
+    if _stamp(run) != "VERIFIED":
+        failed = next((p for p in verdict.get("predicates", []) if p.get("passed") is False
+                       and p.get("id") != "R6_claim_audit"), None)
+        failures = {"R1_fail_to_pass": "Specification tests still fail", "R2_pass_to_pass": "Previously passing tests regressed",
+                    "R3_no_shrink": "Tests removed or newly skipped", "R4_patch_scope": "Patch outside allowed scope",
+                    "R5_provenance": "Witness provenance or patch digest mismatch"}
+        reason = (f"{failures.get(failed.get('id'), _NOT_RECORDED)}: {_text(failed.get('evidence'))}"
+                  if failed else verdict.get("error") or run.record.get("reason") or "verification verdict not recorded")
+        return "Not ready to submit: " + _text(reason)
+    issue = _text(run.artifact("input.json", "input").get("issue")).split("\n", 1)[0].strip() or _NOT_RECORDED
+    count = sum(before in {"failed", "error"} and after == "passed" for _, before, after in _spec_results(run))
+    predicates = {p["id"]: p for p in verdict.get("predicates", [])}
+    return (f"Fixes {run.iid}: {issue.rstrip('.')}.\n\n"
+            "Verified by Receipts on a fresh sandbox the agent never touched:\n"
+            f"- spec tests: {count} failed before, pass now\n"
+            f"- {_kept(predicates.get('R2_pass_to_pass', {}))}\n"
+            "- no tests removed or skipped; no test or config edits\n"
+            f"- re-verify: uv run receipts reverify receipts/{run.iid}.json\n\n"
+            f"Written with {_model_name(run)} on Nebius Token Factory; reviewed and submitted by [your name].")
 
 
 def _receipt_page(run: _Run, title: str) -> str:
@@ -475,15 +678,14 @@ def _receipt_page(run: _Run, title: str) -> str:
     rows = _paper_rows(run)
     commands = ("git clone https://github.com/zeyusuntt/receipts && cd receipts\nuv sync\n"
                 f"uv run receipts reverify receipts/{run.iid}.json")
-    pr = f"Receipts verification: {_stamp(run)}\nInstance: {run.iid}\n\n"
-    pr += "\n".join(f"{name}: {_text(value)}" for name, value in rows)
+    pr = _pr_description(run)
     body = ('<div class="receipt-layout"><section class="paper"><h2>RECEIPTS</h2><hr>'
             + _dl(rows) + '<div class="stamp">' + _badge(_stamp(run)) + '</div></section>'
             + '<aside class="stack"><section class="card pad stack"><h2>Re-verify it yourself</h2>'
             + '<p class="secondary">Run these commands with the exported receipt bundle.</p><pre class="inset">'
             + _e(commands) + '</pre></section><section class="card pad stack"><h2>PR description</h2><pre>'
-            + _e(pr) + '</pre></section>' + _bundle(run, page) + '</aside></div>')
-    return _page(page, f"Receipt {run.iid}", title, body, _link(page, f"run/{run.key}.html", "Back to the run"))
+            + _e(pr) + '</pre></section><p>' + _link(page, f"run/{run.key}.html", "full record") + '</p></aside></div>')
+    return _page(page, f"Receipt {run.iid}", title, body, _link(page, f"run/{run.key}.html", "full record"))
 
 
 def _percent(value: float | None) -> str:
@@ -493,15 +695,15 @@ def _percent(value: float | None) -> str:
 def _pilot_section(label: str, report: Report, runs: Sequence[_Run]) -> str:
     a, b = report.configuration_a, report.configuration_b
     rate = a.false_done_rate
-    metrics = [("A: false dones of claimed dones", f"{a.false_dones} of {a.claimed_dones}",
-                f"{_percent(rate.value)}; 95% Wilson interval {_percent(rate.lower_95)} to {_percent(rate.upper_95)}"),
-               ("B: verified fixes", str(b.verified_fixes), f"{b.first_verdict} on first verdict; {b.appeal} on appeal"),
-               ("Shipped false dones", str(b.shipped_false_dones), "Official SWE-rebench grading"),
-               ("Model dollars per verified fix", _dollars(b.cost_per_verified_fix.model_dollars),
-                "Model spend: " + _dollars(report.spend.all_runs.model_dollars))]
+    metrics = [("Unguarded agent: 'done' that was false", f"{a.false_dones} of {a.claimed_dones}",
+                f"{_percent(rate.value)}, 95% interval {_percent(rate.lower_95)} to {_percent(rate.upper_95)}"),
+               ("Receipts: verified fixes", str(b.verified_fixes), f"{b.first_verdict} on the first verdict, {b.appeal} after one appeal"),
+               ("Receipts: false fixes shipped", str(b.shipped_false_dones), "checked by SWE-rebench's official grader"),
+               ("Model cost per verified fix", _dollars(b.cost_per_verified_fix.model_dollars, decimals=2),
+                "Nemotron tokens at Token Factory's listed prices")]
     body = '<section class="stack"><h2>' + _e(label) + '</h2><div class="metrics">'
     body += "".join(f'<div class="metric"><span>{_e(name)}</span><strong>{_e(value)}</strong><span>{_e(detail)}</span></div>' for name, value, detail in metrics) + '</div>'
-    body += '<p class="secondary">B verified fixes require a gate PASS and official resolution. Run verdicts show the gate result; official grades are listed separately.</p>'
+    body += '<p class="secondary">Verified fixes require a gate PASS and official resolution. Run verdicts show the gate result; official grades are listed separately.</p>'
     if any((run.record.get("executor_kind") or "") == "tokenfactory" for run in runs):
         body += ('<p class="secondary">Token Factory reported sandbox cost over all runs: '
                  + _e(f"{report.spend.all_runs.sandbox_dollars_estimate:.3f}") + ' (unit not published).</p>')
@@ -513,7 +715,10 @@ def _pilot_section(label: str, report: Report, runs: Sequence[_Run]) -> str:
         rows.append([_e(run.iid), _e(claimed), _e(_official(first.get("official_resolved"))),
                      _e(_outcome(run)), _e(_official(final.get("official_resolved"))),
                      _link("index.html", f"run/{run.key}.html", "Run"), _link("index.html", f"receipt/{run.key}.html", "Receipt")])
-    body += _table(("Instance", "A claimed done", "A official", "B outcome", "B official", "Run", "Receipt"), rows, "instances")
+    body += ("<p class=\"secondary\"><strong>How to read this</strong>: Unguarded agent = the agent's own 'done' on its first try. "
+             "Receipts = the same agent behind a witness sandbox and a model-free gate, with one appeal. "
+             "Official = SWE-rebench's grader, run separately.</p>")
+    body += _table(("Instance", "Unguarded: claimed done", "Unguarded: official", "Receipts outcome", "Receipts: official", "Run", "Receipt"), rows, "instances")
     return body + '</section>'
 
 
@@ -595,6 +800,7 @@ def build_site(
     pages: dict[str, str] = {}
     raw_files: dict[str, Path] = {}
     claimed: set[str] = set()
+    lead = ""
     for pilot, runs in groups:
         report = build_report_from_directory(pilot)
         namespace = _safe_component(pilot.name, "pilot directory")
@@ -606,10 +812,23 @@ def build_site(
             for name, source in sorted(run.raw.items()):
                 raw_files[f"raw/{run.key}/{name}"] = source
             raw_count += len(run.raw)
-        label = pilot.relative_to(root).as_posix()
+        if not lead:
+            models = list(dict.fromkeys(_model_name(run) for run in runs
+                                        if run.record.get("status") == "ran" and _model_name(run) != _NOT_RECORDED))
+            model = ", ".join(models) if models else _NOT_RECORDED
+            description = (f"{report.ran_tasks:,} SWE-rebench-V2 tasks held out from development and chosen by a rule fixed in advance. "
+                           f"{model} on Nebius Token Factory wrote every fix; a clean Token Factory Sandbox and plain code checked it; "
+                           "SWE-rebench's own grader graded it again.")
+            lead = ('<section class="stack index-lead"><h1>' + _e(report.headline) + '</h1><p>'
+                    + _e(description) + '</p><div class="actions">'
+                    + '<a href="https://github.com/zeyusuntt/receipts/blob/main/REPORT-v2.md" rel="noopener" class="button">Read the report</a>'
+                    + '<a href="https://github.com/zeyusuntt/receipts" rel="noopener" class="button">Repository</a>'
+                    + (_link("index.html", f"receipt/{runs[0].key}.html", "Re-verify a receipt", "button primary") if runs else "")
+                    + '</div></section>')
+        label = _PILOT_TITLES.get(pilot.name, pilot.name)
         sections.append(_pilot_section(label, report, runs))
         total += len(runs)
-    body = '<section class="stack"><h1>' + _e(title) + '</h1><p class="secondary">The agent said done. These are the recorded checks, verdicts and official grades.</p></section>' + "".join(sections)
+    body = lead + "".join(sections)
     pages["index.html"] = _page("index.html", "All runs", title, body)
     for relative in [*pages, "assets/site.css", *raw_files]:
         if not (out / relative).resolve().is_relative_to(out):
