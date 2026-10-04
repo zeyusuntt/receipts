@@ -49,6 +49,23 @@ def _predicates(verdict: dict[str, Any]) -> list[dict[str, Any]]:
     return [{"id": p["id"], "passed": p["passed"], "evidence": p["evidence"]} for p in verdict["predicates"]]
 
 
+def _predicate(attempt: dict[str, Any], predicate_id: str) -> dict[str, Any]:
+    return next(p for p in attempt["predicates"] if p["id"] == predicate_id)
+
+
+def _evidence_count(pattern: str, evidence: str, label: str) -> int:
+    match = re.search(pattern, evidence)
+    if not match:
+        raise ValueError(f"cannot extract {label} from evidence: {evidence}")
+    return int(match.group(1))
+
+
+def _evidence_list_count(prefix: str, evidence: str, label: str) -> int:
+    if not evidence.startswith(prefix):
+        raise ValueError(f"cannot extract {label} from evidence: {evidence}")
+    return len(evidence.removeprefix(prefix).split(", "))
+
+
 def _attempt(run: Path, result: dict[str, Any], number: int) -> dict[str, Any]:
     attempt = result["attempts"][number - 1]
     verdict = _json(run / f"attempts/{number}/verdict.json")
@@ -101,6 +118,7 @@ def _featured(repo: Path) -> dict[str, Any]:
         branch.parent.name: sum(1 for line in branch.read_text().splitlines() if line.strip())
         for branch in sorted((run / "branches").glob("*/receipts.jsonl"))
     }
+    patch_files = [line.split(" b/", 1)[1] for line in patch.splitlines() if line.startswith("diff --git ")]
     agent_rows = [json.loads(line) for line in (run / "branches/agent1/receipts.jsonl").read_text().splitlines() if line.strip()]
     # Attempt 1 ends at its first diff receipt. Later rows belong to the appeal.
     first_diff = next(i for i, row in enumerate(agent_rows) if row["kind"] == "diff")
@@ -113,6 +131,28 @@ def _featured(repo: Path) -> dict[str, Any]:
         "duration_s": row["duration_s"], "exit_code": row["exit_code"],
     } for row in agent_rows]
     witness_rows = [json.loads(line) for line in (run / "branches/w1/receipts.jsonl").read_text().splitlines() if line.strip()]
+    r1 = _predicate(second, "R1_fail_to_pass")
+    r2 = _predicate(second, "R2_pass_to_pass")
+    r3 = _predicate(second, "R3_no_shrink")
+    if not r3["passed"] or "skips unchanged" not in r3["evidence"]:
+        raise ValueError(f"featured no-shrink evidence is not a pass: {r3['evidence']}")
+    image_match = re.search(r":\d+-([0-9a-f]+)$", inp["source"]["image"])
+    if not image_match:
+        raise ValueError(f"cannot extract featured revision from image: {inp['source']['image']}")
+    receipt = {
+        "target_tests": _evidence_list_count("target tests passed: ", r1["evidence"], "target tests"),
+        "kept_tests": _evidence_count(r"^(\d+) baseline-passing tests still pass$", r2["evidence"], "kept tests"),
+        "collected_tests": _evidence_count(r"^all (\d+) baseline tests collected", r3["evidence"], "collected tests"),
+        "removed_or_skipped": 0,
+        "files_changed": len(patch_files),
+        "test_files_changed": sum(1 for path in patch_files if path.startswith("tests/") or Path(path).name.startswith("test_")),
+        "agent_steps": receipts["agent1"],
+        "witness_steps": receipts[second["witness_branch"]],
+        "attempts": [
+            {"number": first["number"], "verdict": first["verdict"].lower()},
+            {"number": second["number"], "verdict": "verified" if second["verdict"] == "PASS" else second["verdict"].lower()},
+        ],
+    }
     return {
         "instance": FEATURED,
         "run_id": run.name,
@@ -120,6 +160,7 @@ def _featured(repo: Path) -> dict[str, Any]:
         "issue_title": inp["issue"].strip().splitlines()[0],
         "spec_tests": inp["spec_tests"],
         "image": inp["source"].get("image"),
+        "revision": image_match.group(1),
         "checkpoint_id": result.get("checkpoint_id"),
         "model": disclosure["model"],
         "executor_kind": disclosure.get("executor_kind"),
@@ -130,11 +171,12 @@ def _featured(repo: Path) -> dict[str, Any]:
         "cost": record["cost"],
         "wall_time_s": record["wall_time_s"],
         "receipts_per_branch": receipts,
-        "patch_files": [line.split(" b/", 1)[1] for line in patch.splitlines() if line.startswith("diff --git ")],
+        "patch_files": patch_files,
         "patch_excerpt": patch.splitlines()[:40],
         "agent_steps": agent_steps,
         "replay_windows": [{"start_s": agent_steps[i]["offset_s"], "duration_s": 5} for i in [1, 10, 14, 23]],
         "witness_operations": [{"receipt_id": row["receipt_id"], "image_before": row["image_before"], "image_after": row["image_after"], "kind": row["kind"]} for row in witness_rows],
+        "receipt": receipt,
     }
 
 
@@ -160,9 +202,22 @@ def _numbers(repo: Path) -> dict[str, Any]:
     report = _json(repo / "pilot/v2-P/report.json")
     a, b = report["configuration_a"], report["configuration_b"]
     arm = _json(repo / "pilot/v2-arm-lightning/report.json")
+    ran = [instance for instance in report["instances"] if instance["b_outcome"] != "infrastructure error"]
+    receipt_files = []
+    for instance in ran:
+        run_dir = Path(instance["run_dir"])
+        if not run_dir.is_absolute():
+            run_dir = repo / run_dir
+        receipt_files.extend(sorted((run_dir / "branches").glob("*/receipts.jsonl")))
     return {
         "headline": report["headline"],
         "tasks": report["ran_tasks"],
+        "repos": len({re.sub(r"-\d+$", "", instance["instance_id"]) for instance in ran}),
+        "scale": {
+            "tokens": report["spend"]["final"]["tokens"],
+            "sandboxes": len(receipt_files),
+            "steps": sum(sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip()) for path in receipt_files),
+        },
         "claimed": a["claimed_dones"],
         "false_dones": a["false_dones"],
         "false_done_pct": round(a["false_done_rate"]["value"] * 100, 1),

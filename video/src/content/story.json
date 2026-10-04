@@ -424,6 +424,26 @@
       "fs/base.py",
       "fs/ftpfs.py"
     ],
+    "receipt": {
+      "agent_steps": 36,
+      "attempts": [
+        {
+          "number": 1,
+          "verdict": "rejected"
+        },
+        {
+          "number": 2,
+          "verdict": "verified"
+        }
+      ],
+      "collected_tests": 342,
+      "files_changed": 2,
+      "kept_tests": 333,
+      "removed_or_skipped": 0,
+      "target_tests": 3,
+      "test_files_changed": 0,
+      "witness_steps": 2
+    },
     "receipts_per_branch": {
       "agent1": 36,
       "base": 9,
@@ -451,6 +471,7 @@
       }
     ],
     "repo": "PyFilesystem/pyfilesystem2",
+    "revision": "ac8a91a",
     "run_id": "pilot-pyfilesystem__pyfilesystem2-462-a7a07ad9fa",
     "spec_tests": [
       "tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified",
@@ -511,6 +532,12 @@
     "model_dollars_per_fix": 0.41,
     "model_spend": 27.01,
     "naive_check_false_dones": 6,
+    "repos": 100,
+    "scale": {
+      "sandboxes": 482,
+      "steps": 4253,
+      "tokens": 87379659
+    },
     "shipped_false_dones": 0,
     "tasks": 100,
     "verified": 66
@@ -536,21 +563,22 @@
       "checks_title": "Same five checks.",
       "cues": {
         "checks": "same checks",
-        "fork": "New sandbox",
-        "patch": "It fixes",
+        "fork": "A fresh sandbox",
+        "patch": "It finds the real problem",
         "return": "goes back",
         "verified": "This time it passes"
       },
       "files_title": "The second patch",
-      "title": "The evidence goes back. Once.",
+      "title": "The failure goes back to the agent, once.",
       "verified_title": "This time it passes.",
-      "witness_title": "New sandbox. Same checkpoint."
+      "witness_title": "A fresh sandbox, same checkpoint"
     },
     "architecture": {
       "agent": "Nemotron 3 Super",
       "agent_detail": "on Nebius Token Factory",
       "agent_role": "agent branch",
       "checkpoint": "checkpoint",
+      "console_label": "Nebius Token Factory console",
       "gate": "Gate",
       "gate_detail": "plain code",
       "hash": "SHA-256",
@@ -564,7 +592,10 @@
       "witness_detail": "forked from the checkpoint",
       "witness_role": "witness"
     },
-    "byline": "Zeyu · builds evaluations for AI agents",
+    "byline": {
+      "detail": "builds evaluations for AI agents",
+      "name": "Zeyu Sun"
+    },
     "close": {
       "first": "Agents can write the code.",
       "repo_url": "github.com/zeyusuntt/receipts",
@@ -584,21 +615,28 @@
     },
     "corner": "Nebius Token Factory · NVIDIA Nemotron",
     "cues": {
-      "agent": "Nemotron still",
-      "claimed": "It said \"done\"",
+      "agent": "Nemotron writes",
+      "claimed": "sixty-seven",
       "false": "Twelve",
       "fork": "forks",
       "gate": "plain code",
+      "indistinguishable": "which twelve",
       "patch": "applies",
-      "rate": "by SWE-rebench's own grader",
       "rejected": "Rejected",
       "tasks": "a hundred",
       "tests": "runs the tests",
-      "title": "That's why",
+      "title": "I built Receipts",
       "who": "I'm Zeyu",
-      "witness": "A fresh"
+      "witness": "Then a fresh Token Factory Sandbox"
     },
     "featured": {
+      "action_count": "{steps} recorded steps",
+      "actions": {
+        "edit": "edits it",
+        "exit": "exit {code}",
+        "read": "reads the code",
+        "test": "runs the tests"
+      },
       "agent_title": "The agent works.",
       "checks": [
         {
@@ -637,8 +675,10 @@
     },
     "numbers": {
       "claimed": "said ‘done’ {claimed} times",
+      "claimed_short": "said ‘done’",
       "confidence": 95,
       "false": "{false_dones} of those weren't true",
+      "false_count": "{false_dones} of {claimed}",
       "grader": "SWE-rebench's own grader",
       "interval": "{confidence}% interval {low} to {high}%",
       "legend": [
@@ -648,8 +688,9 @@
       ],
       "percent": "%",
       "rate": "of the unguarded agent's ‘done’ was false",
-      "rule": "picked by a rule fixed in advance",
-      "tasks": "{tasks} real SWE-rebench bugs"
+      "rule": "picked by a rule fixed before the first run",
+      "tasks": "{tasks} real bugs, {repos} open-source projects",
+      "tasks_short": "real bugs"
     },
     "pilot": {
       "copy_label": "a copy the agent put at the repository root",
@@ -686,16 +727,26 @@
       "digest_label": "applied digest matches",
       "no_model": "No model decides any of it.",
       "no_model_cues": [
-        "No model decides any of it",
-        "No model",
         "plain code"
       ],
       "not_resolved": "not resolved",
       "official_cues": [
-        "SWE-rebench's official grader",
         "SWE-rebench's grader"
       ],
       "official_label": "SWE-rebench's official grader, run separately",
+      "receipt": {
+        "attempts": "attempt {first_number} {first_verdict}, attempt {second_number} {second_verdict}",
+        "cost": "{tokens} tokens · ${dollars}",
+        "header": "RECEIPT",
+        "kept": "kept: {kept} of {kept} passing tests",
+        "model": "{model} · Nebius Token Factory",
+        "removed": "removed or skipped: none",
+        "repo": "{repo} @ {revision}",
+        "scope": "scope: {files} files, no tests",
+        "spec": "spec: {passed} of {total} target tests pass",
+        "steps": "steps: {agent} agent + {witness} witness, chained",
+        "witness": "witness: fresh fork of {checkpoint}"
+      },
       "receipt_box": "RECEIPTS",
       "receipt_label": "The receipt",
       "resolved": "resolved",
@@ -703,15 +754,40 @@
     },
     "results": {
       "agreement": "the gate and SWE-rebench's grader agreed on {resolved} of {passes} passes",
-      "cost": "of Nemotron tokens per fix",
+      "before": {
+        "claimed": "said done",
+        "false": "were false",
+        "title": "Nemotron on its own"
+      },
+      "built": {
+        "operations": "Token Factory Sandboxes, real operations",
+        "over": "over the {tasks} tasks",
+        "sandboxes": "sandboxes",
+        "steps": "hash-chained steps",
+        "title": "Built on Nebius Token Factory",
+        "tokens": "Nemotron tokens",
+        "usage": "Token Factory usage, Sep 4 to Oct 4 (all of development)"
+      },
+      "cost": "of Nemotron tokens per verified fix",
       "cues": {
+        "built": "It all ran on Nebius Token Factory",
         "cost": "about forty cents",
         "false": "zero false",
+        "reverify": "a receipt I can re-run",
+        "sandboxes": "five hundred sandboxes",
+        "tokens": "eighty-seven million",
         "verified": "sixty-six verified fixes"
       },
       "false": "false fixes shipped",
+      "official": "by SWE-rebench's official grader, on these {tasks} bugs",
+      "receipt_command": "receipts reverify receipts/{instance}.json",
       "title": "On the {tasks} bugs.",
-      "verified": "verified fixes"
+      "verified": "verified fixes",
+      "with_receipts": {
+        "false": "false",
+        "shipped": "shipped",
+        "title": "With Receipts"
+      }
     },
     "reverify": {
       "docker_cue": "Docker",
@@ -734,9 +810,9 @@
     }
   },
   "sources": {
-    "agent_steps": "Featured branches/agent1/receipts.jsonl, first 24 receipts (attempt 1); replay_windows select four 5-second excerpts.",
+    "agent_steps": "Featured branches/agent1/receipts.jsonl; the first attempt has 24 steps and supplies the read, edit and test action rows.",
     "records": "pilot/v2-P/ (committed), pilot/v2-arm-lightning/, pilot/aborted-2026-10-01-launch2/",
     "rule": "docs/submission/2026-10-02-e0-script-and-readme.md, section 5",
-    "video_copy": "Approved Task V1, V2a and V2b display copy and docs/submission/video-script.md revision 5; run facts are unchanged."
+    "video_copy": "Approved Task V3 display copy and docs/submission/video-script.md narration revision 6; run facts are unchanged."
   }
 }

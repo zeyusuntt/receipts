@@ -8,7 +8,7 @@ Two sources, one output format (`video/src/content/timeline.json` plus a WAV in 
   timings, and finds where each paragraph starts and ends. (Implemented when the recording arrives.)
 
 The narration text is read from `docs/submission/video-script.md`, section "The narration to record
-(revision 5)": paragraphs are blocks of `>` lines separated by an empty `>` line, and `/` marks a pause.
+(revision 6)": paragraphs are blocks of `>` lines separated by an empty `>` line, and `/` marks a pause.
 
 Usage, from the repository root:
     python3 video/scripts/timeline.py scratch
@@ -40,7 +40,7 @@ SAMPLE_RATE = 48_000
 
 def paragraphs() -> list[str]:
     text = SCRIPT.read_text(encoding="utf-8")
-    start = text.index("## The narration to record (revision 5)")
+    start = text.index("## The narration to record (revision 6)")
     end = text.index("### How to say it", start)
     blocks: list[list[str]] = [[]]
     for line in text[start:end].splitlines():

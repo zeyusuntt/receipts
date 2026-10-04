@@ -18,14 +18,14 @@ export function ColdOpen({beat, sequenceFrom, speechStart, speechDuration, wordT
   const run = story.cold_open.run_id.slice(-copy.cold_open.run_short_chars);
   return <AbsoluteFill style={{background: palette.black, color: palette.paper}}>
     {!failed && <>
-      <div style={{position: 'absolute', left: 240, right: 240, top: 345, textAlign: 'center', color: '#9EA8B8', fontFamily: fonts.mono, fontSize: 32}}>{copy.cold_open.agent_label}</div>
+      <div style={{position: 'absolute', left: 240, right: 240, top: 345, textAlign: 'center', color: '#9EA8B8', fontFamily: fonts.mono, fontSize: 34}}>{copy.cold_open.agent_label}</div>
       <div style={{position: 'absolute', left: 240, right: 240, top: 455, minHeight: 260, textAlign: 'center', fontFamily: fonts.mono, fontSize: 76, lineHeight: 1.5}}>{said.slice(0, typed)}<span style={{opacity: typed === said.length ? 0 : 1, color: '#7388DE'}}>▌</span></div>
       {frame >= questionAt && <div style={{position: 'absolute', left: 240, right: 240, top: 825, textAlign: 'center', fontFamily: fonts.serif, fontStyle: 'italic', fontSize: 130}}>{copy.cold_open.question}</div>}
     </>}
     {failed && <>
       <div style={{position: 'absolute', left: 160, right: 160, top: 390, textAlign: 'center', fontFamily: fonts.mono, fontWeight: 500, fontSize: 180, color: palette.rejected}}>{copy.cold_open.failed}</div>
-      <div style={{position: 'absolute', left: 160, right: 160, top: 630, textAlign: 'center', fontFamily: fonts.mono, fontSize: 52, lineHeight: 1.55, color: '#FFC4AE'}}><NodeText text={story.cold_open.witness_failed[0].evidence}/></div>
-      <div style={{position: 'absolute', left: 160, right: 160, top: 975, textAlign: 'center', fontFamily: fonts.mono, fontSize: 32, color: '#9EA8B8'}}>{copy.cold_open.witness_label.replace('{run}', run)}</div>
+      <div style={{position: 'absolute', left: 160, right: 160, top: 630, textAlign: 'center', fontFamily: fonts.mono, fontSize: 52, lineHeight: 1.55, color: palette.paper}}><NodeText text={story.cold_open.witness_failed[0].evidence}/></div>
+      <div style={{position: 'absolute', left: 160, right: 160, top: 975, textAlign: 'center', fontFamily: fonts.mono, fontSize: 36, color: '#9EA8B8'}}>{copy.cold_open.witness_label.replace('{run}', run)}</div>
     </>}
   </AbsoluteFill>;
 }

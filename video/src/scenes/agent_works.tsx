@@ -1,59 +1,46 @@
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import {copy, story} from '../content';
+import {cueFrame} from '../timing';
 import {fonts, palette} from '../theme';
-import {ArchitectureMap} from '../components/ArchitectureMap';
-import {LowerThird} from '../components/LowerThird';
 import {NodeText} from '../components/NodeText';
 import type {SceneProps} from './types';
 
-export function AgentWorks({speechStart, speechDuration}: SceneProps) {
+export function AgentWorks({beat, sequenceFrom, speechDuration, wordTimestamps}: SceneProps) {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const speed = copy.featured.replay_speed;
-  const claimAt = Math.max(speechStart, speechStart + speechDuration - Math.round(fps * 1.5));
-  const showClaim = frame >= claimAt;
+  const cue = (phrase: string) => cueFrame(beat, phrase, fps, sequenceFrom, wordTimestamps);
   const steps = story.featured.agent_steps;
-  const progress = Math.max(0, Math.min(1, (frame - speechStart) / Math.max(1, claimAt - speechStart - 1)));
-  const position = progress * (steps.length - 1);
-  const active = Math.floor(position);
-  const display = steps.map(step => step.display.replace(/\s+/g, ' '));
-  // Plex Mono is 0.6em wide. Reserve 72 columns and enough room for every
-  // real line, with six single-line rows or five rows around a long command.
-  const heights = display.map(text => {
-    let lines = 1, used = 0;
-    for (const token of text.split(/(?<=::|\/)|(\s+)/).filter(Boolean)) {
-      if (used + token.length > 72) {lines++; used = 0;}
-      used += token.length;
-    }
-    return Math.max(110, lines * 60 + 16);
-  });
-  const tops = heights.map((_, i) => heights.slice(0, i).reduce((sum, h) => sum + h, 0));
-  const previous = Math.max(0, tops[active] + heights[active] - 660);
-  const following = Math.min(active + 1, steps.length - 1);
-  const next = Math.max(0, tops[following] + heights[following] - 660);
-  const scroll = previous + (next - previous) * (position - active);
-  const first = Math.max(0, tops.findIndex((top, i) => top + heights[i] > scroll));
-  const visible = steps.slice(first, first + 7);
+  const findStep = (predicate: (step: typeof steps[number]) => boolean, label: string) => {
+    const step = steps.find(predicate);
+    if (!step) throw new Error(`Missing featured ${label} step`);
+    return step;
+  };
+  const rows = [
+    {label: copy.featured.actions.read, at: cue('reads the code'), step: findStep(step => step.kind === 'command' && step.display.includes('grep -n "_parse_ftp_time"'), 'read')},
+    {label: copy.featured.actions.edit, at: cue('edits it'), step: findStep(step => step.kind === 'write' && step.display === 'write fs/ftpfs.py', 'edit')},
+    {label: copy.featured.actions.test, at: cue('runs the tests'), step: findStep(step => step.display === 'pytest tests/test_ftpfs.py -v --tb=no -q', 'test')},
+  ];
+  const claimAt = Math.min(cue("says it's done"), speechDuration - Math.round(fps * 1.5));
+  const showClaim = frame >= claimAt;
+
   return <AbsoluteFill style={{background: palette.page}}>
-    <div style={{position: 'absolute', left: 128, right: 128, top: 140, textAlign: 'center', fontSize: 96, fontWeight: 500}}>{showClaim ? copy.featured.claim_label : copy.featured.agent_title}</div>
-    {!showClaim && <div style={{position: 'absolute', left: 128, right: 128, top: 275, height: 820, boxSizing: 'border-box', borderRadius: 24, background: palette.black, color: palette.paper, padding: '24px 32px', overflow: 'hidden'}}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 32, color: '#ADB6C4'}}>
-        <span style={{fontFamily: fonts.mono}}>{story.featured.attempts[0].number} · {story.featured.run_id}</span>
-        <span>{copy.featured.replay_label} <span style={{fontFamily: fonts.mono, color: palette.paper, background: palette.accent, marginLeft: 20, padding: '6px 14px', borderRadius: 6}}>{speed}{copy.featured.speed_suffix}</span></span>
+    <div style={{position: 'absolute', left: 128, right: 128, top: 105, textAlign: 'center', fontSize: 88, fontWeight: 600}}>{showClaim ? copy.featured.claim_label : copy.featured.agent_title}</div>
+    {!showClaim && <>
+      <div style={{position: 'absolute', left: 255, right: 255, top: 270, display: 'flex', flexDirection: 'column', gap: 28}}>
+        {rows.map(({label, at, step}) => {
+          const active = frame >= at;
+          return <div key={label} data-agent-action={step.kind} data-active={active} style={{minHeight: 205, boxSizing: 'border-box', display: 'grid', gridTemplateColumns: '370px 1fr 150px', alignItems: 'center', gap: 34, padding: '28px 38px', border: `${active ? 4 : 2}px solid ${active ? palette.accent : palette.border}`, borderRadius: 22, background: active ? '#ECF0FF' : palette.paper}}>
+            <div data-action-label style={{fontSize: 48, fontWeight: 600, whiteSpace: 'nowrap', color: active ? palette.accent : palette.noVerdict}}>{label}</div>
+            <div style={{fontFamily: fonts.mono, fontSize: 44, lineHeight: 1.35, color: active ? palette.ink : palette.noVerdict}}><NodeText text={step.display}/></div>
+            <div style={{fontFamily: fonts.mono, fontSize: 40, textAlign: 'right', color: active ? step.exit_code === 0 ? palette.verified : palette.rejected : palette.noVerdict}}>{step.kind === 'command' ? copy.featured.actions.exit.replace('{code}', String(step.exit_code)) : ''}</div>
+          </div>;
+        })}
       </div>
-      <div style={{marginTop: 20, height: 660, overflow: 'hidden'}}><div style={{transform: `translateY(${tops[first] - scroll}px)`}}>{visible.map((step, i) => {
-        const newest = first + i === active;
-        const pending = first + i > active;
-        return <div key={step.seq} data-agent-step={step.seq} data-newest={newest} style={{height: heights[first + i], boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 20, padding: '8px 16px', borderLeft: `4px solid ${newest ? '#A9BAFF' : 'transparent'}`, background: newest ? '#2346C8' : 'transparent', color: pending ? '#6D7889' : newest ? palette.white : '#BFC8D5'}}>
-          <span style={{fontFamily: fonts.mono, fontSize: 32, minWidth: 52}}>{String(step.seq).padStart(2, '0')}</span>
-          <div style={{fontFamily: fonts.mono, fontSize: 48, lineHeight: 1.25}}><NodeText text={display[first + i]}/></div>
-        </div>;
-      })}</div></div>
-    </div>}
-    {showClaim && <>
-      <div style={{position: 'absolute', left: 128, top: 285}}><ArchitectureMap litNodes={['agent']} visibleNodes={['test', 'agent', 'witness', 'gate', 'receipt']}/></div>
-      <div style={{position: 'absolute', left: 180, right: 180, top: 835, textAlign: 'center', fontFamily: fonts.sans, fontSize: 64, lineHeight: 1.4}}>“{story.featured.attempts[0].said}”</div>
+      <div style={{position: 'absolute', left: 128, right: 128, top: 1088, textAlign: 'center', fontSize: 40, color: palette.secondary}}>{copy.featured.action_count.replace('{steps}', String(steps.length))}</div>
     </>}
-    <LowerThird title={story.featured.model.model} detail={copy.featured.model_suffix} top={1110} centered size={48}/>
+    {showClaim && <div style={{position: 'absolute', left: 250, right: 250, top: 350, textAlign: 'center'}}>
+      <div style={{fontSize: 52, lineHeight: 1.45}}>“{story.featured.attempts[0].said}”</div>
+      <div style={{fontFamily: fonts.mono, fontSize: 40, lineHeight: 1.4, color: palette.secondary, marginTop: 60}}>{story.featured.model.model}</div>
+    </div>}
   </AbsoluteFill>;
 }

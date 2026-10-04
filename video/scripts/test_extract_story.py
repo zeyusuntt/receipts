@@ -42,6 +42,38 @@ class StoryExtractionTests(unittest.TestCase):
             for prefix in FORBIDDEN:
                 self.assertNotIn(prefix, written)
 
+    def test_scale_and_printed_receipt_fields_come_from_run_records(self):
+        CHECKS.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=CHECKS) as tmp:
+            out = Path(tmp) / "story.json"
+            result = self.extract(out)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            story = json.loads(out.read_text())
+
+            self.assertEqual(story["numbers"]["repos"], 100)
+            self.assertEqual(
+                story["numbers"]["scale"],
+                {"tokens": 87_379_659, "sandboxes": 482, "steps": 4_253},
+            )
+            self.assertEqual(story["featured"]["revision"], "ac8a91a")
+            self.assertEqual(
+                story["featured"]["receipt"],
+                {
+                    "target_tests": 3,
+                    "kept_tests": 333,
+                    "collected_tests": 342,
+                    "removed_or_skipped": 0,
+                    "files_changed": 2,
+                    "test_files_changed": 0,
+                    "agent_steps": 36,
+                    "witness_steps": 2,
+                    "attempts": [
+                        {"number": 1, "verdict": "rejected"},
+                        {"number": 2, "verdict": "verified"},
+                    ],
+                },
+            )
+
     def test_forbidden_paths_in_preserved_copy_fail_before_overwriting(self):
         CHECKS.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=CHECKS) as tmp:

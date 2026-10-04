@@ -23,10 +23,10 @@ export function Rejected({beat, sequenceFrom, speechDuration, wordTimestamps}: S
   const patchProgress = interpolate(frame, [patchAt, patchAt + fps * 0.8], [0, 1], clamp);
   const shortIds = (text: string) => text.replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, (uuid) => uuid.slice(0, 8));
   return <AbsoluteFill style={{background: palette.page}}>
-    <div style={{position: 'absolute', left: 128, right: 128, top: 140, textAlign: 'center', fontSize: 96, fontWeight: 500, letterSpacing: -1}}>{frame >= failedAt ? copy.featured.rejected_title : copy.architecture.title}</div>
-    {frame < failedAt && <div style={{position: 'absolute', left: 128, top: 270}}><ArchitectureMap visibleNodes={forked ? ['test', 'agent', 'witness', 'gate', 'receipt'] : ['test', 'agent', 'gate', 'receipt']} nodeFrames={{witness: forkAt}} litNodes={['agent', ...(forked ? ['witness'] as const : [])]} showCheckpoint={forked} edge={frame >= patchAt && frame < patchAt + fps ? 'agent-witness' : undefined} edgeProgress={patchProgress}/></div>}
-    {frame >= patchAt && frame < patchAt + fps && <div style={{position: 'absolute', left: 1000 + patchProgress * 160, top: 670, padding: '12px 20px', fontFamily: fonts.mono, fontSize: 32, background: palette.accent, borderRadius: 7, color: palette.paper}}>{copy.architecture.patch}</div>}
-    {forked && <div style={{position: 'absolute', left: 128, right: 128, top: frame >= failedAt ? 1110 : 770, textAlign: 'center', fontFamily: fonts.mono, fontSize: 32, color: palette.secondary, display: 'flex', flexDirection: 'column', gap: 8}}>
+    {frame >= failedAt && <div style={{position: 'absolute', left: 128, right: 128, top: 140, textAlign: 'center', fontSize: 88, fontWeight: 600, letterSpacing: -1}}>{copy.featured.rejected_title}</div>}
+    {frame < failedAt && <div style={{position: 'absolute', left: 128, top: 155}}><ArchitectureMap visibleNodes={forked ? ['test', 'agent', 'witness', 'gate', 'receipt'] : ['test', 'agent', 'gate', 'receipt']} nodeFrames={{witness: forkAt}} litNodes={['agent', ...(forked ? ['witness'] as const : [])]} showCheckpoint={forked} edge={frame >= patchAt && frame < patchAt + fps ? 'agent-witness' : undefined} edgeProgress={patchProgress}/></div>}
+    {frame >= patchAt && frame < patchAt + fps && <div style={{position: 'absolute', left: 1000 + patchProgress * 160, top: 630, padding: '12px 20px', fontFamily: fonts.mono, fontSize: 34, background: palette.accent, borderRadius: 7, color: palette.paper}}>{copy.architecture.patch}</div>}
+    {forked && <div style={{position: 'absolute', left: 128, right: 128, top: frame >= failedAt ? 1110 : 765, textAlign: 'center', fontFamily: fonts.mono, fontSize: 34, color: palette.secondary, display: 'flex', flexDirection: 'column', gap: 8}}>
       <div>{shortIds(copy.featured.witness_label.replace('{branch}', attempt.witness_branch))} · {shortIds(operation.receipt_id)} · {shortIds(operation.image_after)}</div>
       <div>{shortIds(story.featured.image)}</div>
     </div>}
@@ -39,13 +39,13 @@ export function Rejected({beat, sequenceFrom, speechDuration, wordTimestamps}: S
         const pending = !predicate.passed && frame < failedAt;
         const color = pending ? palette.noVerdict : predicate.passed ? palette.verified : palette.rejected;
         return <Reveal key={check.id} at={at} style={{height: 68, borderBottom: `1px solid ${palette.border}`, display: 'flex', alignItems: 'center', gap: 24}}>
-          <span style={{fontFamily: fonts.mono, fontSize: 32, minWidth: 55, color: palette.secondary}}>{check.id.split('_')[0]}</span>
-          <span style={{fontSize: 40, flex: 1}}>{check.label}</span>
-          <span style={{fontFamily: fonts.mono, fontSize: 32, color, minWidth: 88, textAlign: 'right'}}>{pending ? '·' : predicate.passed ? copy.featured.pass : copy.featured.fail}</span>
+          <span style={{fontFamily: fonts.mono, fontSize: 34, minWidth: 55, color: palette.secondary}}>{check.id.split('_')[0]}</span>
+          <span style={{fontSize: 48, flex: 1}}>{check.label}</span>
+          <span style={{fontFamily: fonts.mono, fontSize: 40, color, minWidth: 110, textAlign: 'right'}}>{pending ? '·' : predicate.passed ? copy.featured.pass : copy.featured.fail}</span>
         </Reveal>;
       })}</div>
       {frame >= failedAt && <div style={{flex: 1, height: 340, boxSizing: 'border-box', position: 'relative', padding: '30px 36px', border: `3px solid ${palette.rejected}`, borderRadius: 24, background: '#FFF1E9'}}>
-        <div style={{fontFamily: fonts.mono, fontSize: 32, color: palette.rejected, marginBottom: 22}}>{attempt.predicates[0].id.split('_')[0]} · {copy.featured.checks.find((check) => check.id === attempt.predicates[0].id)?.label}</div>
+        <div style={{fontFamily: fonts.mono, fontSize: 34, color: palette.rejected, marginBottom: 22}}>{attempt.predicates[0].id.split('_')[0]} · {copy.featured.checks.find((check) => check.id === attempt.predicates[0].id)?.label}</div>
         <div style={{fontFamily: fonts.mono, fontSize: 44, lineHeight: 1.55}}><NodeText text={shortIds(attempt.predicates[0].evidence)}/></div>
       </div>}
     </div>
