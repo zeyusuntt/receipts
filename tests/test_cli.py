@@ -869,9 +869,9 @@ def test_fix_prints_live_progress_and_writes_full_receipt(
 
     output = capsys.readouterr().out
     assert status == 0
-    header = output.splitlines()[0]
-    assert header.startswith("Fixing Repair the formatter")
-    assert header.endswith("with fake-model on Nebius Token Factory Sandboxes")
+    header, subheader = output.splitlines()[:2]
+    assert header.startswith("Fixing: Repair the formatter")
+    assert subheader == "with fake-model on Nebius Token Factory Sandboxes"
     assert all(f"  · {verb} " in output for verb in ("reads", "edits", "writes", "runs"))
     assert "pytest tests/test_calc.py" in output
     assert all(f"✓ {label}" in output for label in ("spec passes", "nothing breaks", "none removed",
@@ -896,10 +896,10 @@ def test_fix_progress_header_clips_a_long_model_id(capsys):
 
     cli._FixProgressRenderer("Repair subtraction.", model, "tokenfactory")
 
-    header = capsys.readouterr().out.splitlines()[0]
-    assert len(header) <= 100
-    assert "…" in header
-    assert header.endswith("on Nebius Token Factory Sandboxes")
+    subheader = capsys.readouterr().out.splitlines()[1]
+    assert len(subheader) <= 100
+    assert "…" in subheader
+    assert subheader.endswith("on Nebius Token Factory Sandboxes")
 
 
 def test_fix_progress_keeps_applied_and_dropped_witness_paths(capsys):

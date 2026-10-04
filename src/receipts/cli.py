@@ -348,25 +348,28 @@ def _compact_path_list(value: str) -> str:
 
 
 def _compact_witness_message(message: str) -> str:
+    """"w1; fresh sandbox from checkpoint 632189ea; files applied a.py; dropped none"
+    becomes "fresh fork of 632189ea · applied a.py"."""
+
     parts: list[str] = []
-    for part in message.split(";"):
+    for index, part in enumerate(message.split(";")):
         part = part.strip()
+        if index == 0 and " " not in part:
+            continue  # the branch id
         if part.startswith("fresh sandbox from checkpoint "):
-            part = "fresh checkpoint " + part.removeprefix(
-                "fresh sandbox from checkpoint ",
-            )
+            part = "fresh fork of " + part.removeprefix("fresh sandbox from checkpoint ")
         elif part.startswith("witness not provisioned from checkpoint "):
-            part = "not provisioned checkpoint " + part.removeprefix(
+            part = "not provisioned from checkpoint " + part.removeprefix(
                 "witness not provisioned from checkpoint ",
             )
         elif part.startswith("files applied "):
-            part = "applied " + _compact_path_list(
-                part.removeprefix("files applied "),
-            )
+            part = "applied " + _compact_path_list(part.removeprefix("files applied "))
+        elif part == "dropped none":
+            continue
         elif part.startswith("dropped "):
             part = "dropped " + _compact_path_list(part.removeprefix("dropped "))
         parts.append(part)
-    return "; ".join(parts)
+    return " · ".join(parts)
 
 
 class _FixProgressRenderer:
@@ -375,19 +378,17 @@ class _FixProgressRenderer:
         first_line = _console_text(first_line)
         model_id = _console_text(_fix_model_id(model))
         executor_name = _fix_executor_name(executor)
-        fixed_width = len("Fixing ") + len(" with ") + len(" on ") + len(executor_name)
-        content_width = max(_FIX_LINE_LIMIT - fixed_width, 2)
-        model_limit = min(24, max(content_width // 2, 1))
-        model_id = _clip(model_id, model_limit)
-        issue_limit = max(content_width - len(model_id), 1)
-        suffix = f" with {model_id} on {executor_name}"
-        print(f"Fixing {_clip(first_line, issue_limit)}{suffix}")
+        print(_clip(f"Fixing: {first_line}", _FIX_LINE_LIMIT))
+        model_limit = max(_FIX_LINE_LIMIT - len(f"with  on {executor_name}"), 1)
+        print(f"with {_clip(model_id, model_limit)} on {executor_name}")
         print()
 
     @staticmethod
     def _mark(event: ProgressEvent) -> str:
         from receipts.reverify import _color
 
+        if event.kind == "check" and event.check_id == "R6 advisory":
+            return _color("!", "33")
         if event.kind == "check" or event.kind == "verdict":
             if event.passed:
                 return _color("✓", "32")
@@ -404,7 +405,7 @@ class _FixProgressRenderer:
             return "says done"
         if event.kind == "check":
             if event.check_id == "R6 advisory":
-                return "claim (advisory)"
+                return "agent's claim"
             return _CHECK_LABELS.get((event.check_id or "").split("_", 1)[0], "check")
         return event.kind
 

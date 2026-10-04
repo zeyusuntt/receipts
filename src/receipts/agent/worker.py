@@ -230,6 +230,28 @@ class WorkerToolProgress(BaseModel):
     duration_s: float
 
 
+def _read_range(arguments: dict[str, Any]) -> str:
+    """The line range of a read_file call, for progress output: ":120-180", ":120-", or ""."""
+
+    start, end = arguments.get("start_line"), arguments.get("end_line")
+    view = arguments.get("view_range")
+    if isinstance(view, str):
+        view = [part for part in re.split(r"[\s,:-]+", view.strip("[] ")) if part]
+    if isinstance(view, list) and view:
+        start = view[0]
+        end = view[1] if len(view) > 1 else None
+    try:
+        first = int(start) if start is not None else None
+        last = int(end) if end is not None else None
+    except (TypeError, ValueError):
+        return ""
+    if first is None and last is None:
+        return ""
+    if last is None or last < 0:
+        return f":{first or 1}-"
+    return f":{first or 1}-{last}"
+
+
 class _ReadFileArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     path: str
@@ -1197,7 +1219,9 @@ class Worker:
 
             if primary.name != "finish" and self.progress is not None:
                 argument = "command" if primary.name == "run_command" else "path"
-                value = primary.arguments.get(argument, "")
+                value = str(primary.arguments.get(argument, ""))
+                if primary.name == "read_file":
+                    value += _read_range(primary.arguments)
                 exit_code = None
                 if primary.name == "run_command":
                     match = re.search(r"(?:^|\n)exit (-?\d+)(?:\n|$)", result)
@@ -1211,7 +1235,7 @@ class Worker:
                             "write_file": "write",
                             "run_command": "run",
                         }[primary.name],
-                        value=str(value),
+                        value=value,
                         exit_code=exit_code,
                         duration_s=time.monotonic() - tool_started,
                     ),

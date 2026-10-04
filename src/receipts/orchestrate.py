@@ -194,7 +194,10 @@ def _predicate_progress_message(
     if predicate.id == "R3_no_shrink":
         return f"all {len(baseline.collected_ids)} baseline tests collected; skips unchanged"
     if predicate.id == "R4_patch_scope":
-        return f"{changed_files} changed file(s), all in scope"
+        return (
+            f"{changed_files} file{'s' if changed_files != 1 else ''} changed, "
+            "no tests or config"
+        )
     if predicate.id == "R5_provenance":
         return "agent and witness chains are intact; applied digest matches"
     return predicate.evidence
@@ -690,8 +693,8 @@ async def fix(
             ProgressEvent(
                 kind="baseline",
                 message=(
-                    f"{len(baseline.target)} specification test(s) fail; "
-                    f"{len(baseline.protected)} tests pass"
+                    f"{len(baseline.target)} failing spec test{'s' if len(baseline.target) != 1 else ''}, "
+                    f"{len(baseline.protected)} passing tests"
                 ),
                 duration_s=time.monotonic() - baseline_started,
             ),
@@ -726,7 +729,7 @@ async def fix(
             progress,
             ProgressEvent(
                 kind="checkpoint",
-                message=f"{source_name}; {checkpoint.id[:8]}",
+                message=f"built from {source_name} · checkpoint {checkpoint.id[:8]}",
                 duration_s=time.monotonic() - started,
             ),
         )
