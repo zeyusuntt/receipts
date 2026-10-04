@@ -258,7 +258,7 @@ def _check(label: str, expected: Any, observed: Any, started: float) -> bool:
     else:
         mark, verdict = _color("\u2717", "31"), _color("DISAGREES", "31")
         body = f"receipt says {_render(expected)}; re-run got {_render(observed)}"
-    print(f"  {mark} {label:<14} {body}  {verdict}  ({elapsed})")
+    print(f"  {mark} {label:<16} {body}  {verdict}  ({elapsed})")
     return agrees
 
 
@@ -304,7 +304,7 @@ async def _replay(bundle: Bundle, make_executor: Callable[[str], Executor], run_
         baseline = baseline.model_copy(update={"scope": scope})
         checkpoint = await executor.checkpoint(base)
         await executor.release(base)
-        print(f"  \u00b7 {'Checkpoint':<14} rebuilt from {task.source.image}  "
+        print(f"  \u00b7 {'Checkpoint':<16} rebuilt from {task.source.image}  "
               f"({time.monotonic() - started:.1f}s)")
 
         started = time.monotonic()
