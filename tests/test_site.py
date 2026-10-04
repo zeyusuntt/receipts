@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import html
 import json
+import re
 import shutil
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit, unquote
 
-# The only external resources a page may load: the IBM Plex stylesheet and its host.
-ALLOWED_EXTERNAL = {"fonts.googleapis.com"}
+# Fixed report and repository links, plus the IBM Plex stylesheet and its host.
+ALLOWED_EXTERNAL = {"fonts.googleapis.com", "github.com"}
 
 import pytest
 
 from receipts.cli import main
 from receipts.site import build_site
+from receipts.pilot.report import build_report_from_directory
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "site"
@@ -109,8 +111,8 @@ def test_index_outcomes_headlines_and_progress_order(bundle):
     assert "VERIFIED on appeal" in rows[APPEAL]
     assert page.plain.index(REJECTED) < page.plain.index(APPEAL) < page.plain.index(VERIFIED)
     assert "95%" in page.plain
-    assert "Shipped false dones" in page.plain
-    assert "Model dollars per verified fix" in page.plain
+    assert "Receipts: false fixes shipped" in page.plain
+    assert "Model cost per verified fix" in page.plain
 
 
 def test_each_attempt_predicates_official_grade_and_appeal(bundle):
@@ -122,10 +124,11 @@ def test_each_attempt_predicates_official_grade_and_appeal(bundle):
         for attempt in result["attempts"]:
             assert f"Attempt {attempt['number']}" in page.plain
             for predicate in attempt["verdict"]["predicates"]:
-                row = next(r for r in page.rows if predicate["id"] in r and predicate["evidence"] in r)
+                evidence = re.sub(r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b", lambda m: m.group()[:8], predicate["evidence"]) if predicate["id"] == "R5_provenance" else predicate["evidence"]
+                row = next(r for r in page.rows if predicate["id"] in r and evidence in r)
                 assert ("PASS" if predicate["passed"] else "FAIL") in row
-        assert "official_resolved" in page.plain
-        assert "agreement" in page.plain
+        assert "SWE-rebench's official grader:" in page.plain
+        assert "Agrees with the gate" in page.plain
     assert "Fix the source and keep tests unchanged." in Page(out / f"run/{APPEAL}.html").plain
     assert "No patch shipped" in Page(out / f"run/{REJECTED}.html").plain
 
@@ -136,6 +139,7 @@ def test_untrusted_strings_are_escaped_everywhere(bundle):
     p = repo / f"runs/{VERIFIED}/result.json"
     result = json.loads(p.read_text())
     result["attempts"][0]["worker"]["summary"] = payload
+    result["attempts"][0]["worker"]["claims"]["files_changed"] = [payload]
     p.write_text(json.dumps(result))
     for name, field in (("input.json", "issue"), ("plan.json", "approach")):
         p = repo / "runs" / VERIFIED / name
@@ -154,9 +158,10 @@ def test_tokenfactory_cost_has_no_dollar_unit_or_combined_total(bundle):
     record = json.loads(p.read_text()); record["cost"]["sandbox_dollars_estimate"] = 123.456789
     p.write_text(json.dumps(record))
     build(bundle)
+    page = Page(out / "run" / f"{VERIFIED}.html").plain
+    assert "Token Factory reported cost: 123.457 (unit not published)" in page
     for folder in ("run", "receipt"):
         page = Page(out / folder / f"{VERIFIED}.html").plain
-        assert "Token Factory reported cost: 123.457 (unit not published)" in page
         assert "$123.457" not in page and "$123.456789" not in page
     index = Page(out / "index.html").plain
     total = index.split("Token Factory reported sandbox cost over all runs:")[1].split("(unit not published)")[0]
@@ -255,7 +260,7 @@ def test_shipped_false_done_preserves_gate_verdict_patch_and_official_result(bun
     assert "VERIFIED on first verdict" in row
     assert "not resolved" in row
     page = Page(bundle[2] / f"run/{VERIFIED}.html")
-    assert "gate_looser" in page.plain
+    assert "Gate was looser" in page.plain
     assert "diff --git" in page.plain
 
 
@@ -312,7 +317,7 @@ def test_witness_artifact_supplies_spec_before_and_after_when_branch_file_missin
     branch.unlink()
     build(bundle)
     page = Page(bundle[2] / f"receipt/{VERIFIED}.html")
-    assert "test_metadata_dictionary_keys: failed → passed" in page.plain
+    assert "test_metadata_dictionary_keys: failed -> passed" in page.plain
 
 
 def test_untrusted_commands_predicates_digests_and_diff_are_escaped(bundle):
@@ -371,7 +376,7 @@ def test_raw_copies_drop_the_local_checkout_path(bundle):
     text = copied.read_text()
     assert str(repo) not in text
     assert json.loads(text)["run_dir"] == json.loads(original)["run_dir"].removeprefix(str(repo) + "/")
-    assert "local checkout path is removed" in Page(out / "receipt" / f"{VERIFIED}.html").plain
+    assert "local checkout path is removed" in Page(out / "run" / f"{VERIFIED}.html").plain
 
 
 def test_raw_copies_drop_other_checkouts_and_the_home_directory(bundle, monkeypatch):
@@ -387,3 +392,275 @@ def test_raw_copies_drop_other_checkouts_and_the_home_directory(bundle, monkeypa
     text = (out / "raw" / VERIFIED / "record.json").read_text()
     assert str(home) not in text
     assert "pilot/x/log.txt" in text and "~/.local/share/uv/python" in text
+
+
+def test_index_leads_with_report_and_plain_metrics(bundle):
+    build(bundle)
+    source = (bundle[2] / "index.html").read_text()
+    report = build_report_from_directory(bundle[1])
+    assert f'<h1>{html.escape(report.headline, quote=True)}</h1>' in source
+    page = Page(bundle[2] / "index.html").plain
+    assert "3 SWE-rebench-V2 tasks held out from development" in page
+    assert "NVIDIA Nemotron 3 Super on Nebius Token Factory wrote every fix" in page
+    assert "Unguarded agent: 'done' that was false" in page
+    assert "Receipts: verified fixes" in page
+    assert "on the first verdict," in page and "after one appeal" in page
+    assert "95% interval" in page and "Wilson" not in page
+    assert "Nemotron tokens at Token Factory's listed prices" in page
+    assert f'${report.configuration_b.cost_per_verified_fix.model_dollars:.2f}' in page
+    assert "How to read this" in page
+    assert "Official = SWE-rebench's grader, run separately." in page
+    assert 'href="https://github.com/zeyusuntt/receipts/blob/main/REPORT-v2.md" rel="noopener"' in source
+    assert 'href="https://github.com/zeyusuntt/receipts" rel="noopener"' in source
+    assert 'Re-verify a receipt' in page
+    assert f'href="receipt/{REJECTED}.html"' in source
+
+
+@pytest.mark.parametrize("name,title", [
+    ("v2-P", "Primary sample: 100 held-out tasks, Nemotron 3 Super"),
+    ("v2-arm-lightning", "Exploratory: the first 30 tasks again with Nemotron 3.5 Lightning"),
+    ("other-sample", "other-sample"),
+])
+def test_pilot_titles_with_directory_fallback(bundle, name, title):
+    repo, pilot, out = bundle
+    renamed = repo / name
+    pilot.rename(renamed)
+    build_site([renamed], out, repo_root=repo)
+    assert f'<h2>{title}</h2>' in (out / "index.html").read_text()
+
+
+def test_index_model_name_is_derived_from_disclosure(bundle):
+    for path in (bundle[0] / "runs").glob("*/disclosure.json"):
+        data = json.loads(path.read_text())
+        data["model"]["model"] = "nvidia/nemotron-3.5-lightning"
+        path.write_text(json.dumps(data))
+    build(bundle)
+    assert "NVIDIA Nemotron 3.5 Lightning on Nebius Token Factory wrote every fix" in Page(bundle[2] / "index.html").plain
+
+
+def test_index_task_count_and_model_ignore_infrastructure_records(bundle):
+    repo, pilot, out = bundle
+    record = json.loads((pilot / VERIFIED / "record.json").read_text())
+    record.update(instance_id="synthetic__infra-2", status="infra_error", run_dir="runs/infra-2",
+                  attempts=[], final=None, reason="Sandbox unavailable")
+    path = pilot / "synthetic__infra-2" / "record.json"
+    path.parent.mkdir()
+    path.write_text(json.dumps(record))
+    build(bundle)
+    page = Page(out / "index.html").plain
+    assert "3 SWE-rebench-V2 tasks held out from development" in page
+    assert "NVIDIA Nemotron 3 Super on Nebius Token Factory wrote every fix" in page
+
+
+def test_run_costs_and_plan_paths_are_readable(bundle):
+    path = bundle[1] / VERIFIED / "record.json"
+    record = json.loads(path.read_text())
+    record["cost"].update(tokens=904972, model_dollars=.2755434, sandbox_lifetime_seconds=208.952124)
+    path.write_text(json.dumps(record))
+    build(bundle)
+    source = (bundle[2] / f"run/{VERIFIED}.html").read_text()
+    page = Page(bundle[2] / f"run/{VERIFIED}.html").plain
+    assert "904,972 tokens" in page and "$0.28" in page and "3 min 29 s" in page
+    assert '<li><code>twine/package.py</code></li>' in source
+
+
+@pytest.mark.parametrize("kind,cmd,extra,display", [
+    ("command", "/opt/receipts-abcd/bin/busybox mkdir -p /opt/receipts/reports && python -I /opt/receipts-abcd/receipts_pytest.py --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_example.py -k 'copy time' -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/a.xml", {}, "pytest tests/test_example.py -k 'copy time'"),
+    ("write", "cp /incoming/blob /repo/fs/ftpfs.py", {"path": "fs/ftpfs.py"}, "write fs/ftpfs.py"),
+    ("apply", "git apply /incoming/patch.diff", {"patch_sha256": "abcdef012345" * 5}, "apply patch abcdef012345"),
+    ("apply", "git apply /incoming/patch.diff", {}, "apply patch"),
+    ("verification", "python -I /opt/receipts/receipts_pytest.py --no-header -rA tests/test_memoryfs.py -o junit_family=xunit1 --junitxml=/tmp/test.xml", {}, "pytest (witness) tests/test_memoryfs.py"),
+    ("verification", "pytest --no-header -rA tests/test_memoryfs.py --junitxml=/tmp/test.xml", {}, "pytest (witness) tests/test_memoryfs.py"),
+    ("verification", "python -m pytest --no-header tests/test_memoryfs.py", {}, "pytest (witness) tests/test_memoryfs.py"),
+    ("diff", "git diff --cached", {}, "capture patch"),
+    ("command", "git status --short", {}, "git status --short"),
+    ("command", "python -I /tmp/receipts_pytest.py --no-header tests/test_memoryfs.py", {}, "python -I /tmp/receipts_pytest.py --no-header tests/test_memoryfs.py"),
+    ("command", "echo 'unterminated", {}, "echo 'unterminated"),
+    ("command", "echo 7123a1d4-2cc8-452d-b976-de33ecdfe08e", {"image_after": "7123a1d4-2cc8-452d-b976-de33ecdfe08e"}, "echo 7123a1d4"),
+])
+def test_display_commands_keep_exact_command_in_details(bundle, kind, cmd, extra, display):
+    path = bundle[0] / f"runs/{VERIFIED}/branches/agent1/receipts.jsonl"
+    receipt = {"kind": kind, "cmd": cmd, "exit_code": 0, **extra}
+    path.write_text(json.dumps(receipt) + "\n")
+    build(bundle)
+    source = (bundle[2] / f"run/{VERIFIED}.html").read_text()
+    assert f'<code class="display-command">{html.escape(display, quote=True)}</code>' in source
+    assert f'<details><summary>exact command</summary><pre>{html.escape(cmd, quote=True)}</pre></details>' in source
+
+
+def test_long_agent_lane_hides_only_middle_steps(bundle):
+    path = bundle[0] / f"runs/{VERIFIED}/branches/agent1/receipts.jsonl"
+    path.write_text("".join(json.dumps({"kind": "command", "cmd": f"STEP_{n:02d}"}) + "\n" for n in range(20)))
+    build(bundle)
+    source = (bundle[2] / f"run/{VERIFIED}.html").read_text()
+    middle = re.search(r'<details class="all-steps"><summary>show all 20 steps</summary>(.*?)</table></div></details>', source).group(1)
+    assert "STEP_08" in middle and "STEP_15" in middle
+    assert "STEP_07" not in middle and "STEP_16" not in middle
+    outside = source.replace(middle, "")
+    for n in list(range(8)) + list(range(16, 20)):
+        assert f"STEP_{n:02d}" in outside
+    assert "STEP_08" not in outside
+
+
+def test_claims_are_a_short_list_and_audit_has_evidence(bundle):
+    build(bundle)
+    source = (bundle[2] / f"run/{VERIFIED}.html").read_text()
+    claims = re.search(r'<ul class="claims">(.*?)</ul>', source).group(1)
+    assert "Target tests pass: yes" in claims
+    assert "Full suite passes: no" in claims
+    assert "Files changed: twine/package.py" in claims
+    assert "Ran tests: yes" in claims
+    assert "{" not in claims and "}" not in claims
+    assert "contradicted: claimed green; own last run had 1 failed" in Page(bundle[2] / f"run/{VERIFIED}.html").plain
+
+
+@pytest.mark.parametrize("resolved,agreement,words", [
+    (True, "agree_pass", "Agrees with the gate"),
+    (False, "agree_fail", "Agrees with the gate"),
+    (True, "gate_stricter", "Gate was stricter"),
+    (False, "gate_looser", "Gate was looser"),
+])
+def test_official_grade_in_words(bundle, resolved, agreement, words):
+    path = bundle[1] / VERIFIED / "record.json"
+    record = json.loads(path.read_text())
+    record["attempts"][0].update(official_resolved=resolved, agreement=agreement)
+    path.write_text(json.dumps(record))
+    build(bundle)
+    page = Page(bundle[2] / f"run/{VERIFIED}.html").plain
+    assert f"SWE-rebench's official grader: {'resolved' if resolved else 'not resolved'}" in page
+    assert words in page
+
+
+def test_receipt_is_concise_and_pr_is_ready_to_use(bundle):
+    build(bundle)
+    source = (bundle[2] / f"receipt/{VERIFIED}.html").read_text()
+    paper = source.split('<section class="paper">')[1].split('</section>')[0]
+    assert "24 of 24 previously passing tests still pass" in paper
+    assert '<dt>removed or new skips</dt><dd>none</dd>' in paper
+    assert '<dt>dropped</dt><dd>none</dd>' in paper
+    assert "fresh sandbox from checkpoint 7123a1d4, patch digest matches" in paper
+    assert "attempt 1 verified" in paper
+    assert "test_metadata_dictionary_keys: failed -&gt; passed" in paper
+    assert "thinking off · temperature 1.0 · top_p 0.95" in paper
+    for internal in ("test_digests", "lock digest", "tests digests", "checkpoint</dt>", "claims</dt>", "base_url", "{", "}"):
+        assert internal not in paper
+    page = Page(bundle[2] / f"receipt/{VERIFIED}.html").plain
+    issue = json.loads((bundle[0] / f"runs/{VERIFIED}/input.json").read_text())["issue"].splitlines()[0]
+    assert f"Fixes {VERIFIED}: {issue}." in page
+    assert "Verified by Receipts on a fresh sandbox the agent never touched:" in page
+    assert "- spec tests: 3 failed before, pass now" in page
+    assert "- no tests removed or skipped; no test or config edits" in page
+    assert f"- re-verify: uv run receipts reverify receipts/{VERIFIED}.json" in page
+    assert "Written with NVIDIA Nemotron 3 Super on Nebius Token Factory; reviewed and submitted by [your name]." in page
+    assert 'full record' in source
+    assert 'attempt 1 rejected · attempt 2 verified' in Page(bundle[2] / f"receipt/{APPEAL}.html").plain
+
+
+def test_rejected_pr_explains_first_failed_check(bundle):
+    build(bundle)
+    page = Page(bundle[2] / f"receipt/{REJECTED}.html").plain
+    assert "Not ready to submit: Previously passing tests regressed:" in page
+    assert "test_orphans_in_non_showcontent_markdown (failed)" in page
+    assert "Verified by Receipts on a fresh sandbox" not in page
+    assert "no claim: branch ended without a finish call" in page
+    assert 'pyproject.toml' in page
+
+
+def test_no_verdict_pr_does_not_claim_verification(bundle):
+    repo, pilot, out = bundle
+    path = pilot / VERIFIED / "record.json"
+    record = json.loads(path.read_text())
+    record.update(attempts=[], final=None, status="infra_error", reason="Sandbox unavailable")
+    path.write_text(json.dumps(record))
+    shutil.rmtree(repo / "runs" / VERIFIED)
+    build(bundle)
+    page = Page(out / f"receipt/{VERIFIED}.html").plain
+    assert "Not ready to submit: Sandbox unavailable" in page
+    assert "Verified by Receipts on a fresh sandbox" not in page
+
+
+def test_uuid_shortening_and_long_evidence_details_preserve_full_text(bundle):
+    path = bundle[0] / f"runs/{VERIFIED}/attempts/1/verdict.json"
+    verdict = json.loads(path.read_text())
+    uuid = "7123a1d4-2cc8-452d-b976-de33ecdfe08e"
+    evidence = "long evidence <script> " + "x" * 700
+    verdict["predicates"][0]["evidence"] = evidence
+    path.write_text(json.dumps(verdict))
+    build(bundle)
+    source = (bundle[2] / f"run/{VERIFIED}.html").read_text()
+    row = next(r for r in Page(bundle[2] / f"run/{VERIFIED}.html").rows if "R5_provenance" in r)
+    assert "7123a1d4" in row and uuid not in row
+    assert f'<summary>full evidence</summary><pre>{html.escape(evidence, quote=True)}</pre>' in source
+    cell = re.search(r'<td>(long evidence.*?)</td>', source).group(1)
+    assert len(html.unescape(cell.split('<details>')[0])) <= 601
+
+
+@pytest.mark.parametrize("cost,display", [(.0046, "$0.005"), (.01, "$0.01"), (.4144, "$0.41")])
+def test_small_model_cost_precision(bundle, cost, display):
+    path = bundle[1] / VERIFIED / "record.json"
+    record = json.loads(path.read_text())
+    record["cost"]["model_dollars"] = cost
+    path.write_text(json.dumps(record))
+    build(bundle)
+    for folder in ("run", "receipt"):
+        assert display in Page(bundle[2] / folder / f"{VERIFIED}.html").plain
+
+
+def test_receipt_quotes_only_first_finish_sentence(bundle):
+    path = bundle[0] / f"runs/{VERIFIED}/result.json"
+    result = json.loads(path.read_text())
+    result["attempts"][0]["worker"]["summary"] = "Fixed fs/ftpfs.py. Kept MemoryFS working too."
+    path.write_text(json.dumps(result))
+    build(bundle)
+    source = (bundle[2] / f"receipt/{VERIFIED}.html").read_text()
+    assert '<dt>said</dt><dd>&quot;Fixed fs/ftpfs.py.&quot;</dd>' in source
+    assert "Kept MemoryFS working too" not in source
+    assert "Kept MemoryFS working too" in Page(bundle[2] / f"run/{VERIFIED}.html").plain
+
+
+def test_receipt_keeps_failed_preservation_evidence_and_dropped_paths(bundle):
+    path = bundle[0] / f"runs/{VERIFIED}/attempts/1/verdict.json"
+    verdict = json.loads(path.read_text())
+    for predicate in verdict["predicates"]:
+        if predicate["id"] in {"R2_pass_to_pass", "R3_no_shrink", "R5_provenance"}:
+            predicate.update(passed=False, evidence="EVIDENCE_" + predicate["id"])
+    path.write_text(json.dumps(verdict))
+    result_path = bundle[0] / f"runs/{VERIFIED}/result.json"
+    result = json.loads(result_path.read_text())
+    result["attempts"][0]["dropped_paths"] = ["tests/scratch.py"]
+    result_path.write_text(json.dumps(result))
+    build(bundle)
+    source = (bundle[2] / f"receipt/{VERIFIED}.html").read_text()
+    assert '<dt>kept</dt><dd>EVIDENCE_R2_pass_to_pass</dd>' in source
+    assert '<dt>removed or new skips</dt><dd>EVIDENCE_R3_no_shrink</dd>' in source
+    assert '<dt>witness</dt><dd>EVIDENCE_R5_provenance</dd>' in source
+    assert '<dt>dropped</dt><dd>tests/scratch.py</dd>' in source
+
+
+def test_spec_collection_errors_count_as_failures_before_fix(bundle):
+    path = bundle[0] / f"runs/{VERIFIED}/baseline.json"
+    baseline = json.loads(path.read_text())
+    for run in baseline["runs"]:
+        run["failed"] = []
+        run["collection_errors"] = ["tests/test_package.py"]
+    path.write_text(json.dumps(baseline))
+    build(bundle)
+    page = Page(bundle[2] / f"receipt/{VERIFIED}.html").plain
+    assert "test_metadata_dictionary_keys: error -> passed" in page
+    assert "- spec tests: 3 failed before, pass now" in page
+
+
+def test_verified_pr_handles_missing_issue_title(bundle):
+    path = bundle[0] / f"runs/{VERIFIED}/input.json"
+    inp = json.loads(path.read_text())
+    inp["issue"] = ""
+    path.write_text(json.dumps(inp))
+    build(bundle)
+    assert f"Fixes {VERIFIED}: not recorded." in Page(bundle[2] / f"receipt/{VERIFIED}.html").plain
+
+
+def test_spec_short_names_keep_the_class_so_same_named_tests_differ():
+    from receipts.site import _test_short_name
+    assert _test_short_name("tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified") == "TestFTPFS::test_getinfo_modified"
+    assert _test_short_name("tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified") == "TestFTPFSNoMLSD::test_getinfo_modified"
+    assert _test_short_name("tests/test_x.py::test_metadata_dictionary_keys") == "test_metadata_dictionary_keys"
