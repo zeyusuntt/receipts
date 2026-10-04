@@ -113,10 +113,125 @@ def scratch(rate_wpm: int = 125) -> None:
     print(f"scratch voice {clock:.1f}s over {len(beats)} beats -> {DATA.relative_to(ROOT)}")
 
 
+_ONES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split()
+_TENS = "_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()
+MODEL = ROOT / "video/.models/ggml-small.en.bin"
+# Proper nouns whisper would otherwise mishear.
+VOCABULARY = ("I'm Zeyu. NVIDIA Nemotron 3 Super, SWE-rebench, Nebius Token Factory, "
+              "Token Factory Sandbox, PyFilesystem2, Receipts, Docker.")
+
+
+def _number_words(n: int) -> list[str]:
+    if n < 20:
+        return [_ONES[n]]
+    if n < 100:
+        return [_TENS[n // 10]] + ([_ONES[n % 10]] if n % 10 else [])
+    if n == 100:
+        return ["hundred"]
+    return [str(n)]
+
+
+def _tokens(text: str) -> list[str]:
+    """Lower-case words for alignment: punctuation dropped, hyphens split, digits spelled out."""
+    out: list[str] = []
+    for raw in re.split(r"[\s/\-]+", text.lower()):
+        word = re.sub(r"[^a-z0-9']", "", raw).strip("'")
+        if not word:
+            continue
+        if word.isdigit():
+            out.extend(_number_words(int(word)))
+        else:
+            out.append(word)
+    return out
+
+
+def _transcribe(wav16k: Path, workdir: Path) -> list[tuple[str, float, float]]:
+    subprocess.run(["whisper-cli", "-m", str(MODEL), "-f", str(wav16k), "-ml", "1", "-sow",
+                    "--prompt", VOCABULARY, "-ojf", "-of", str(workdir / "words"), "-np"],
+                   check=True, capture_output=True)
+    data = json.loads((workdir / "words.json").read_text())
+    words = []
+    for segment in data["transcription"]:
+        text = segment["text"].strip()
+        if not text:
+            continue
+        words.append((text, segment["offsets"]["from"] / 1000, segment["offsets"]["to"] / 1000))
+    return words
+
+
+def narration(recording: Path) -> None:
+    """Time the beats to the narrator's own recording, cleaned and loudness-normalised."""
+    import difflib
+
+    texts = paragraphs()
+    AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmpdir = Path(tmp)
+        cleaned = tmpdir / "cleaned.wav"
+        # High-pass rumble, light FFT denoise, then broadcast loudness (-16 LUFS, -1.5 dBTP).
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(recording), "-ac", "1", "-ar", str(SAMPLE_RATE),
+                        "-af", "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.15,"
+                        "highpass=f=80,afftdn=nf=-25,loudnorm=I=-16:TP=-1.5:LRA=11", str(cleaned)], check=True)
+        wav16k = tmpdir / "16k.wav"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(cleaned), "-ac", "1", "-ar", "16000", str(wav16k)], check=True)
+        words = _transcribe(wav16k, tmpdir)
+        heard: list[tuple[str, float, float]] = []
+        for text, start, end in words:
+            for token in _tokens(text):
+                heard.append((token, start, end))
+        script_tokens: list[tuple[int, str]] = []
+        for index, text in enumerate(texts):
+            script_tokens.extend((index, token) for token in _tokens(text))
+        matcher = difflib.SequenceMatcher(a=[t for _, t in script_tokens], b=[t for t, _, _ in heard], autojunk=False)
+        mapped: dict[int, int] = {}
+        for block in matcher.get_matching_blocks():
+            for k in range(block.size):
+                mapped[block.a + k] = block.b + k
+        matched_heard = set(mapped.values())
+        # Lead-in: the cold open needs LEAD_IN_S before the first word.
+        first_word = heard[min(mapped.values())][1] if mapped else 0.0
+        shift = max(0.0, LEAD_IN_S - first_word)
+        beats = []
+        for index, beat in enumerate(BEATS):
+            positions = [i for i, (p, _) in enumerate(script_tokens) if p == index and i in mapped]
+            if not positions:
+                raise SystemExit(f"could not find beat {beat} in the recording; check the take")
+            start = heard[mapped[positions[0]]][1] + shift
+            end = heard[mapped[positions[-1]]][2] + shift
+            beats.append({"id": beat, "text": texts[index].replace(" /", "").replace("/", ""),
+                          "start_s": round(start, 3), "end_s": round(end, 3),
+                          "words": [{"w": tok, "start_s": round(heard[mapped[i]][1] + shift, 3),
+                                     "end_s": round(heard[mapped[i]][2] + shift, 3)}
+                                    for i, (p, tok) in enumerate(script_tokens) if p == index and i in mapped]})
+        extra = [(t, round(s + shift, 2), round(e + shift, 2)) for i, (t, s, e) in enumerate(heard) if i not in matched_heard]
+        voice_end = _duration(cleaned) + shift
+        total = max(voice_end, beats[-1]["end_s"]) + END_HOLD_S
+        out = AUDIO_DIR / "narration.wav"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(cleaned), "-af", f"adelay={int(shift * 1000)}",
+                        "-ar", str(SAMPLE_RATE), "-ac", "1", str(out)], check=True)
+    coverage = len(mapped) / max(1, len(script_tokens))
+    timeline = {
+        "source": f"narration: the narrator's recording {recording.name}, cleaned and aligned with whisper.cpp",
+        "voice": "audio/narration.wav",
+        "fps": 30,
+        "lead_in_s": round(beats[0]["start_s"], 3),
+        "end_hold_s": END_HOLD_S,
+        "total_s": round(total, 3),
+        "alignment": {"script_words_matched": round(coverage, 3), "unmatched_heard_words": extra},
+        "beats": beats,
+    }
+    DATA.write_text(json.dumps(timeline, indent=2) + "\n", encoding="utf-8")
+    print(f"narration {total:.1f}s, {coverage:.0%} of script words matched, {len(extra)} extra words heard -> {DATA.relative_to(ROOT)}")
+    if total > 179:
+        print("WARNING: longer than 2:59; trim a sentence before rendering")
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
     if mode == "scratch":
         rate = int(sys.argv[2]) if len(sys.argv) > 2 else 125
         scratch(rate)
+    elif mode == "narration" and len(sys.argv) > 2:
+        narration(Path(sys.argv[2]))
     else:
-        raise SystemExit("usage: timeline.py scratch [WPM]")
+        raise SystemExit("usage: timeline.py scratch [WPM] | timeline.py narration RECORDING")
