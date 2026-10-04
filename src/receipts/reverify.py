@@ -6,7 +6,9 @@ import asyncio
 import hashlib
 import inspect
 import json
+import os
 import re
+import sys
 import tempfile
 import time
 import uuid
@@ -217,11 +219,55 @@ class _ReplayExecutor:
             raise RuntimeError("sandbox cleanup failed: " + "; ".join(errors))
 
 
+_DIGEST_NAMES = {
+    "sha256": "shipped patch",
+    "filtered_sha256": "gate's record",
+    "agent_patch_sha256": "agent patch",
+}
+
+
+def _color(text: str, code: str) -> str:
+    """Colour only on a terminal; NO_COLOR wins, FORCE_COLOR forces."""
+    if os.environ.get("NO_COLOR"):
+        return text
+    if not (sys.stdout.isatty() or os.environ.get("FORCE_COLOR")):
+        return text
+    return f"\033[{code}m{text}\033[0m"
+
+
+def _render(value: Any) -> str:
+    if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value):
+        return value[:12] + "..."
+    if isinstance(value, dict):
+        return ", ".join(f"{_DIGEST_NAMES.get(k, k)} {_render(v)}" for k, v in value.items())
+    if isinstance(value, list):
+        return ", ".join(str(v) for v in value) if value else "none"
+    if isinstance(value, bool):
+        return "resolved" if value else "not resolved"
+    if value is None:
+        return "not recorded"
+    return str(value)
+
+
 def _check(label: str, expected: Any, observed: Any, started: float) -> bool:
     agrees = expected == observed
-    print(f"{label}: expected={json.dumps(expected)} observed={json.dumps(observed)} "
-          f"{'AGREES' if agrees else 'DISAGREES'} ({time.monotonic() - started:.2f}s)")
+    elapsed = f"{time.monotonic() - started:.1f}s"
+    if agrees:
+        mark, verdict = _color("\u2713", "32"), _color("AGREES", "32")
+        body = _render(observed)
+    else:
+        mark, verdict = _color("\u2717", "31"), _color("DISAGREES", "31")
+        body = f"receipt says {_render(expected)}; re-run got {_render(observed)}"
+    print(f"  {mark} {label:<14} {body}  {verdict}  ({elapsed})")
     return agrees
+
+
+def _summary(code: int, started: float) -> None:
+    if code == 0:
+        print("\n" + _color("Every check agrees with the receipt.", "32")
+              + f" ({time.monotonic() - started:.0f}s)")
+    elif code == 1:
+        print("\n" + _color("The receipt does not hold: a check disagrees.", "31"))
 
 
 def _infra(exc: BaseException) -> int:
@@ -258,7 +304,8 @@ async def _replay(bundle: Bundle, make_executor: Callable[[str], Executor], run_
         baseline = baseline.model_copy(update={"scope": scope})
         checkpoint = await executor.checkpoint(base)
         await executor.release(base)
-        print(f"C0 preparation: {time.monotonic() - started:.2f}s")
+        print(f"  \u00b7 {'Checkpoint':<14} rebuilt from {task.source.image}  "
+              f"({time.monotonic() - started:.1f}s)")
 
         started = time.monotonic()
         filtered, _ = filter_patch(bundle.shipped.agent_patch, default_protected_modules(),
@@ -300,9 +347,9 @@ async def _replay(bundle: Bundle, make_executor: Callable[[str], Executor], run_
                         and verified.verification.junit is None)))):
             raise RuntimeError(verdict.error or "witness verification failed")
         checks = [
-            _check("Witness patch digest", bundle.shipped.sha256, verified.apply.patch_sha256, started),
-            _check("Gate status", bundle.claims.gate_status, verdict.status, started),
-            _check("Failed predicates", sorted(bundle.claims.failed_predicate_ids),
+            _check("Witness patch", bundle.shipped.sha256, verified.apply.patch_sha256, started),
+            _check("Gate verdict", bundle.claims.gate_status, verdict.status, started),
+            _check("Failed checks", sorted(bundle.claims.failed_predicate_ids),
                    sorted(verdict.failed_predicate_ids()), started),
         ]
         await executor.release(verified.witness)
@@ -313,7 +360,7 @@ async def _replay(bundle: Bundle, make_executor: Callable[[str], Executor], run_
                                       run_dir, "official.log", budgets.verification_timeout_s)
         if official.infra_error or official.cleanup_error:
             raise RuntimeError(official.infra_error or official.cleanup_error)
-        checks.append(_check("Official resolved", bundle.claims.official_resolved,
+        checks.append(_check("Official grade", bundle.claims.official_resolved,
                               official.judgement.resolved, started))
         code = 0 if all(checks) else 1
     except _PatchDisagreement:
@@ -342,17 +389,24 @@ async def reverify(
     except (OSError, ValueError) as exc:
         print(f"Invalid bundle: {exc}")
         return 1
-    if not _check("Digest", {"sha256": bundle.shipped.sha256,
+    where = {"docker": "Docker", "tokenfactory": "Nebius Token Factory Sandboxes"}.get(executor, executor)
+    if make_executor is not None:
+        where = "the given sandbox"
+    print(f"Re-verifying {bundle.instance.instance_id} on {where}\n")
+    if not _check("Digests", {"sha256": bundle.shipped.sha256,
                               "filtered_sha256": bundle.shipped.filtered_sha256,
                               "agent_patch_sha256": bundle.shipped.agent_patch_sha256},
                   {"sha256": _sha(bundle.shipped.patch),
                    "filtered_sha256": _sha(bundle.shipped.patch),
                    "agent_patch_sha256": _sha(bundle.shipped.agent_patch)}, started):
+        _summary(1, started)
         return 1
     with tempfile.TemporaryDirectory(prefix="receipts-reverify-") as temporary:
         root = Path(temporary)
         if make_executor is not None:
-            return await _replay(bundle, make_executor, root / "grade")
+            code = await _replay(bundle, make_executor, root / "grade")
+            _summary(code, started)
+            return code
         api = None
         code = 2
         try:
@@ -383,4 +437,5 @@ async def reverify(
                     raise asyncio.CancelledError
                 if error is not None:
                     code = _infra(error)
+        _summary(code, started)
         return code

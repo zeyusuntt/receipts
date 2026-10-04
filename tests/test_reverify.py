@@ -191,7 +191,7 @@ async def test_reverify_agrees_with_real_gate_and_official_grade(tmp_path, local
     report = capsys.readouterr().out
     assert "DISAGREES" not in report
     assert report.count("AGREES") >= 4
-    assert "expected=" in report and "observed=" in report and "s)" in report
+    assert "Every check agrees with the receipt." in report and "s)" in report
     assert local.prepared_source.image == "docker.io/fixture/calc:test"
     assert local.prepared_source.platform == "linux/amd64"
     assert local.closed and not local.active
@@ -221,7 +221,7 @@ async def test_tampered_agent_patch_never_builds_executor(tmp_path, capsys):
 
     assert await module().reverify(write_bundle(tmp_path, values), make_executor=forbidden) == 1
     report = capsys.readouterr().out
-    assert "Digest" in report and "agent_patch_sha256" in report and "DISAGREES" in report
+    assert "Digests" in report and "agent patch" in report and "DISAGREES" in report
 
 
 @pytest.mark.parametrize("dropped_kind", ["test", "config"])
@@ -241,8 +241,10 @@ async def test_full_agent_patch_reproduces_r4_rejection(tmp_path, local, capsys,
     assert await module().reverify(write_bundle(tmp_path, values), make_executor=lambda _: local) == 0
     report = capsys.readouterr().out
     assert "DISAGREES" not in report
-    assert 'Gate status: expected="REJECTED" observed="REJECTED" AGREES' in report
-    assert 'Failed predicates: expected=["R4_patch_scope"] observed=["R4_patch_scope"] AGREES' in report
+    gate_line = next(line for line in report.splitlines() if "Gate verdict" in line)
+    assert "REJECTED" in gate_line and gate_line.rstrip().split("  ")[-2].strip() == "AGREES"
+    failed_line = next(line for line in report.splitlines() if "Failed checks" in line)
+    assert "R4_patch_scope" in failed_line and "DISAGREES" not in failed_line
     assert local.applied == [
         ("agent1", agent_patch), ("w1", values["shipped"]["patch"]),
         ("official1", values["shipped"]["patch"]),
@@ -412,7 +414,8 @@ async def test_filter_mismatch_stops_before_witness_and_official(tmp_path, local
     values["shipped"].update(patch=patch, sha256=digest, filtered_sha256=digest)
     assert await module().reverify(write_bundle(tmp_path, values), make_executor=lambda _: local) == 1
     report = capsys.readouterr().out
-    assert "Filter:" in report and "DISAGREES" in report
+    filter_line = next(line for line in report.splitlines() if " Filter " in line)
+    assert "DISAGREES" in filter_line and "receipt says" in filter_line
     assert not local.applied
     assert local.closed and not local.active
 
