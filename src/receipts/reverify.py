@@ -239,6 +239,9 @@ def _render(value: Any) -> str:
     if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value):
         return value[:12] + "..."
     if isinstance(value, dict):
+        values = list(value.values())
+        if len(values) > 1 and all(v == values[0] for v in values):
+            return f"{len(values)} digests, all {_render(values[0])}"
         return ", ".join(f"{_DIGEST_NAMES.get(k, k)} {_render(v)}" for k, v in value.items())
     if isinstance(value, list):
         return ", ".join(str(v) for v in value) if value else "none"
