@@ -14,12 +14,12 @@ What winners do that this borrows: a first line that says who you are and why yo
 
 ## The narration to record (revision 5)
 
-Read it in one take, the way you'd explain it to a friend at a desk. Pause about a second at each `/`. Every claim is true of our runs. The line in [brackets] must be confirmed by the narrator before recording. About 340 words: at a slow 120 words a minute that is about 2:50 of speech, close to the 3:00 limit once the silent cold open and the end card are added. Slow down rather than rush; if the take runs long, I cut a sentence, you don't speed up.
+Read it in one take, the way you'd explain it to a friend at a desk. Pause about a second at each `/`. Every claim is true of our runs. About 340 words: at a slow 120 words a minute that is about 2:50 of speech, close to the 3:00 limit once the silent cold open and the end card are added. Slow down rather than rush; if the take runs long, I cut a sentence, you don't speed up.
 
 > This is a coding agent telling me it's done. All tests pass. /
 > They didn't. /
 >
-> I'm Zeyu. [I build evaluations for AI agents], and I hear "done" a lot. So I measured it. I gave NVIDIA's Nemotron 3 Super a hundred real bugs from SWE-rebench, picked by a rule I wrote down first. It said "done" sixty-seven times. Twelve of those weren't true, by SWE-rebench's own grader. /
+> I'm Zeyu. I build evaluations for AI agents, and I hear "done" a lot. So I measured it. I gave NVIDIA's Nemotron 3 Super a hundred real bugs from SWE-rebench, picked by a rule I wrote down first. It said "done" sixty-seven times. Twelve of those weren't true, by SWE-rebench's own grader. /
 >
 > That's why I built Receipts: a coding agent that isn't allowed to grade its own homework. Nemotron still writes the fix, on Nebius Token Factory. It just doesn't get a say in whether it works. A fresh Token Factory Sandbox it never touched runs the tests again, and plain code decides. /
 >
