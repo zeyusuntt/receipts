@@ -106,7 +106,7 @@ Thirty tasks cannot separate the two models; the point is narrower: with Receipt
 
 ## Not in this report yet
 
-The seen sample S (v1's 50 tasks on Daytona) is pre-registered as exploratory and "may be cut"; it has not run.
+The seen sample S (v1's 50 tasks on Daytona), pre-registered as exploratory, was cut on 2026-10-03 as the pre-registration allows (Amendment 3); v2's runs are P and the arm above.
 
 ## Limits
 

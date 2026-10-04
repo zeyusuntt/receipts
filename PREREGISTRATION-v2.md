@@ -122,3 +122,7 @@ At 10:46 PT, after 33 completed tasks of P, the watchdog stopped the run on a fi
 ## Amendment 2 (2026-10-03)
 
 At about 14:00 PT the monitor stopped P on a second final infrastructure error, for `cuthbertlab__music21-1775`: three runs, each failing before the planner, with no model tokens spent. The task's checkpoint tree, which the Token Factory executor archives once per task with `.git`, is just over the executor's 512 MiB download cap (536,871,549 to 536,874,348 bytes across the three runs). The cap is part of the frozen code (Plan 5, section 11: it bounds what an agent-written worktree can make the host hold in memory), so this task cannot run on it. Under "Infrastructure and retries" the task is reported as an infrastructure error and the next task in order is taken. The code is not changed; P resumes under `scripts/v2-monitor.py`, which now treats both reported final infrastructure errors as acknowledged.
+
+## Amendment 3 (2026-10-03)
+
+The seen sample S is cut, as "Order and stopping" allows ("S runs last and may be cut"): P and the exploratory arm are complete and reported in `REPORT-v2.md`, and S would add an exploratory paired comparison on Daytona at the cost of several more hours of frozen code. v2's runs are over. From the next commit the code is no longer frozen: later changes (the receipt site, re-verification, and fixes for the defects in Amendments 1 and 2) are not part of v2 and do not change any v2 record.
