@@ -21,5 +21,5 @@ Sleep 1s
 Type "uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json --executor tokenfactory"
 Sleep 600ms
 Enter
-Wait+Screen@240s /Official resolved/
+Wait+Screen@300s /Every check agrees|does not hold|Infrastructure failure/
 Sleep 4s
