@@ -4,6 +4,7 @@ import importlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import tarfile
@@ -11,6 +12,7 @@ from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -514,6 +516,86 @@ async def test_run_preserves_platform_timeout_state(tmp_path):
     assert receipt.exit_code is None
     assert receipt.timed_out is True
     assert receipt.stdout_tail == "partial output\n"
+
+
+async def test_run_receipt_uses_client_wall_time_and_preserves_platform_cost(
+    tmp_path, monkeypatch,
+):
+    from receipts.cost import estimate_tokenfactory_sandbox_dollars
+
+    module = _module()
+    elapsed = 1000.0
+    monkeypatch.setattr(module, "time", SimpleNamespace(monotonic=lambda: elapsed))
+
+    def unchanged(tree):
+        return 0, "done\n", "", tree
+
+    api = _fake(handlers={"slow": unchanged})
+    original_run = api.run
+
+    async def slow_run(**kwargs):
+        nonlocal elapsed
+        result = await original_run(**kwargs)
+        elapsed += 315.0
+        return replace(result, duration_s=0.01, cost=0.01 * 0.0101)
+
+    monkeypatch.setattr(api, "run", slow_run)
+    executor, _, sink = _executor(tmp_path, module, api)
+    base = await executor.prepare(ImageSource(image="swerebenchv2/example:1", workdir="/repo"))
+
+    receipt = await executor.run(base, "slow", timeout_s=600)
+
+    assert receipt.duration_s == pytest.approx(315.0)
+    assert sink.receipts[-1].duration_s == pytest.approx(315.0)
+    usage = executor.sandbox_usage()
+    assert usage[0]["duration_s"] == pytest.approx(0.01)
+    assert usage[0]["cost"] == pytest.approx(0.01 * 0.0101)
+    assert estimate_tokenfactory_sandbox_dollars(usage) == pytest.approx(0.01 * 0.0101)
+
+
+async def test_client_wall_time_pytest_receipt_triggers_baseline_guard(
+    tmp_path, monkeypatch,
+):
+    from receipts.pilot.runner import _BaselineGuard
+    from receipts.verify.run import BaselineTooSlow
+
+    module = _module()
+    elapsed = 1000.0
+    monkeypatch.setattr(module, "time", SimpleNamespace(monotonic=lambda: elapsed))
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    (repository / "original.txt").write_text("original\n")
+
+    def handler_for_run(call):
+        def pytest_run(tree):
+            report_arg = next(
+                word for word in shlex.split(call["command"])
+                if word.startswith("--junitxml=")
+            )
+            tree[report_arg.split("=", 1)[1]] = _junit_xml()
+            return 0, "passed\n", "", tree
+        return pytest_run
+
+    api = _archive_fake(repository, handler_for_run=handler_for_run)
+    original_run = api.run
+
+    async def slow_run(**kwargs):
+        nonlocal elapsed
+        result = await original_run(**kwargs)
+        elapsed += 315.0 if "--junitxml=" in kwargs["command"] else 0.25
+        return replace(result, duration_s=0.01, cost=0.01 * 0.0101)
+
+    monkeypatch.setattr(api, "run", slow_run)
+    executor, _, sink = _executor(tmp_path, module, api)
+    base = await executor.prepare(ImageSource(image="swerebenchv2/example:1", workdir="/repo"))
+    guard = _BaselineGuard(executor.run_pytest, limit_s=300)
+
+    with pytest.raises(BaselineTooSlow, match="over the 300s limit"):
+        await guard(base, "tests", timeout_s=600)
+
+    assert sink.receipts[-1].duration_s == pytest.approx(315.0)
+    assert sink.receipts[-1].junit.passed == ["tests/test_sample.py::test_ok"]
+    assert all(item["duration_s"] == pytest.approx(0.01) for item in executor.sandbox_usage())
 
 
 async def test_run_writes_full_combined_log_digest_and_caps_separate_tails(tmp_path):

@@ -413,6 +413,62 @@ async def test_baseline_too_slow(tmp_path):
         await establish_baseline(ex, base, "tests", [T], limit_s=0)
 
 
+@pytest.mark.parametrize(
+    ("timed_out", "duration_s", "message"),
+    [
+        (True, 0.0, "baseline suite timed out after 600s"),
+        (False, 650.0, "baseline suite took 650s, over the 600s limit"),
+    ],
+)
+async def test_baseline_too_slow_message_distinguishes_timeout(
+    timed_out, duration_s, message,
+):
+    async def run_pytest(branch, args, *, timeout_s):
+        assert timeout_s == 600
+        return SimpleNamespace(timed_out=timed_out, duration_s=duration_s)
+
+    with pytest.raises(BaselineTooSlow) as info:
+        await establish_baseline(
+            SimpleNamespace(run_pytest=run_pytest),
+            Branch(id="base", run_id="run-1", head="c0", origin="c0"),
+            "tests", [T], limit_s=600,
+        )
+
+    assert str(info.value) == message
+    assert info.value.seconds == duration_s
+
+
+@pytest.mark.parametrize(
+    ("timed_out", "message"),
+    [
+        (True, "baseline suite timed out after 300s"),
+        (False, "baseline suite took 315s, over the 300s limit"),
+    ],
+)
+async def test_baseline_guard_message_uses_its_own_limit(timed_out, message):
+    from receipts.pilot.runner import _BaselineGuard
+
+    async def run_pytest(*args, **kwargs):
+        return SimpleNamespace(timed_out=timed_out, duration_s=315.0)
+
+    with pytest.raises(BaselineTooSlow) as info:
+        await _BaselineGuard(run_pytest, limit_s=300)()
+
+    assert str(info.value) == message
+
+
+async def test_baseline_guard_timeout_message_uses_command_deadline():
+    from receipts.pilot.runner import _BaselineGuard
+
+    async def run_pytest(*args, **kwargs):
+        return SimpleNamespace(timed_out=True, duration_s=600.0)
+
+    with pytest.raises(BaselineTooSlow) as info:
+        await _BaselineGuard(run_pytest, limit_s=300)(timeout_s=600)
+
+    assert str(info.value) == "baseline suite timed out after 600s"
+
+
 async def test_honest_source_fix_verifies_green_on_witness(tmp_path):
     ex, base, sink = await _setup(tmp_path)
     snapshot = await ex.snapshot(base)

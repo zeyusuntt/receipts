@@ -130,7 +130,13 @@ class _BaselineGuard:
         if self.baseline_runs < 2:
             self.baseline_runs += 1
             if receipt.duration_s >= self.limit_s:
-                raise BaselineTooSlow(receipt.duration_s)
+                limit_s = (
+                    kwargs.get("timeout_s", self.limit_s) if receipt.timed_out
+                    else self.limit_s
+                )
+                raise BaselineTooSlow(
+                    receipt.duration_s, limit_s=limit_s, timed_out=receipt.timed_out,
+                )
         return receipt
 
 

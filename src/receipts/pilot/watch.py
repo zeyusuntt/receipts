@@ -249,13 +249,34 @@ def watch_pilot(
         raise ValueError("--interval must be positive")
 
     snapshot = snapshot_directory(pilot_dir)
+    acknowledged = frozenset(
+        _instance_id(item)
+        for item in snapshot.files
+        if Path(item.relative_path).name == "final_infra_error.json"
+    )
+    if acknowledged:
+        print(
+            f"acknowledged final infrastructure errors: {sorted(acknowledged)}",
+            flush=True,
+        )
     _, seen = newly_finished_lines(snapshot, frozenset())
     while True:
         if not _pid_exists(pid, kill):
             print("pilot process exited", flush=True)
             return 0
 
-        reason = decide(snapshot, model_budget_usd=model_budget_usd)
+        # Only final markers are acknowledged. Retain every record so spend,
+        # gate disagreements, and retry loops still include these instances.
+        pending = DirectorySnapshot(
+            files=tuple(
+                item for item in snapshot.files
+                if not (
+                    Path(item.relative_path).name == "final_infra_error.json"
+                    and _instance_id(item) in acknowledged
+                )
+            ),
+        )
+        reason = decide(pending, model_budget_usd=model_budget_usd)
         if reason is not None:
             try:
                 kill(pid, signal.SIGTERM)

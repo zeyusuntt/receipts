@@ -1,11 +1,12 @@
 """Watch a resumed v2 run past final infrastructure errors that were already reported.
 
-`receipts pilot watch` stops on any `final_infra_error.json` in the pilot directory, and
-the runner rewrites that marker on every resume, so the watchdog cannot resume past a
-final infrastructure error it has already reported (PREREGISTRATION-v2.md, Amendment 1).
-This monitor applies the same stop rules, `receipts.pilot.watch.decide` from the frozen
-code, unchanged, to a snapshot without the final-infrastructure markers that existed when
-it started. Every other stop condition, the model-spend budget included, is unchanged.
+Superseded by `receipts pilot watch`, which now acknowledges final infrastructure
+errors present at startup and stops only on final markers for new instances. This
+script remains because PREREGISTRATION-v2.md, Amendment 1 references it as the
+frozen-code workaround for markers rewritten on every resume. It applies the same
+pure `receipts.pilot.watch.decide` stop rules to a snapshot without the marker paths
+that existed when it started. Every other stop condition, including model spend,
+is unchanged.
 
 Usage, from the repository root:
     PYTHONPATH=src .venv/bin/python scripts/v2-monitor.py PILOT_DIR PID --model-budget-usd 45

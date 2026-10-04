@@ -53,6 +53,7 @@ _PYTEST_CONFIG_NAMES = {
     "tox.ini",
 }
 _DISCLOSURE_TIMEOUT_S = 120
+_DIGEST_JSON_MARKER = "RECEIPTS_TEST_DIGESTS_JSON:"
 _RECEIPTS_VERSION_FALLBACK = "0.0.1"
 _FREEZE_SCRIPT = """\
 # Runs inside the task sandbox, so it must work on Python 3.7.
@@ -423,7 +424,8 @@ for directory, names, filenames in os.walk('.', followlinks=False):
         rendered = rendered[2:] if rendered.startswith('./') else rendered
         configs[rendered] = digest(path)
 
-print(json.dumps({{'test_digests': tests, 'pytest_config_digests': configs}}, sort_keys=True))
+# Start a fresh line even if merged startup diagnostics have no final newline.
+print('\\n' + {_DIGEST_JSON_MARKER!r} + json.dumps({{'test_digests': tests, 'pytest_config_digests': configs}}, sort_keys=True))
 """
     return f"python -c {shlex.quote(script)}"
 
@@ -447,8 +449,17 @@ async def _collect_disclosure(
             f"(exit {digest_receipt.exit_code}, timed_out={digest_receipt.timed_out})",
         )
     try:
-        digests = json.loads(_full_stdout(digest_receipt).strip())
-    except json.JSONDecodeError as exc:
+        # Executors may merge stderr into the log in either order. Only the
+        # producer's single marked line is machine-readable evidence.
+        marked = [
+            line[len(_DIGEST_JSON_MARKER):]
+            for line in _full_stdout(digest_receipt).splitlines()
+            if line.startswith(_DIGEST_JSON_MARKER)
+        ]
+        if len(marked) != 1:
+            raise ValueError("expected exactly one marked test digest JSON line")
+        digests = json.loads(marked[0])
+    except ValueError as exc:
         raise RuntimeError("test digest command returned invalid JSON") from exc
 
     lock_receipt = await ex.run(

@@ -256,3 +256,115 @@ def test_no_model_budget_flag_does_not_stop_on_spend(tmp_path: Path):
     reason = watch.decide(watch.snapshot_directory(tmp_path))
 
     assert reason is None
+
+
+@pytest.mark.parametrize("malformed", [False, True])
+def test_watch_acknowledges_existing_final_error_and_its_rewrites(
+    tmp_path, capsys, malformed,
+):
+    watch = _watch_module()
+    marker = tmp_path / "candidate-1" / "final_infra_error.json"
+    _write_json(marker, {"instance_id": "candidate-1", "runs": 3, "reason": "old"})
+    if malformed:
+        marker.write_text("{partial", encoding="utf-8")
+    signals = []
+    polls = 0
+
+    def kill(pid, sig):
+        signals.append((pid, sig))
+        if polls == 2:
+            raise ProcessLookupError
+
+    def sleep(_):
+        nonlocal polls
+        polls += 1
+        _write_json(marker, {"instance_id": "candidate-1", "runs": 3, "reason": f"rewrite {polls}"})
+
+    assert watch.watch_pilot(tmp_path, 4321, kill=kill, sleep=sleep) == 0
+    assert polls == 2
+    assert all(sig == 0 for _, sig in signals)
+    output = capsys.readouterr().out
+    assert output.count("acknowledged final infrastructure errors: ['candidate-1']") == 1
+    assert "WATCHDOG:" not in output
+    assert "pilot process exited" in output
+
+
+def test_watch_stops_on_new_final_error_for_another_instance(tmp_path, capsys):
+    watch = _watch_module()
+    _write_json(
+        tmp_path / "candidate-1/final_infra_error.json",
+        {"instance_id": "candidate-1", "runs": 3, "reason": "old"},
+    )
+    signals = []
+    polls = 0
+
+    def sleep(_):
+        nonlocal polls
+        polls += 1
+        assert polls == 1
+        _write_json(
+            tmp_path / "candidate-2/final_infra_error.json",
+            {"instance_id": "candidate-2", "runs": 3, "reason": "new outage"},
+        )
+
+    assert watch.watch_pilot(
+        tmp_path, 4321, kill=lambda pid, sig: signals.append((pid, sig)), sleep=sleep,
+    ) == 0
+    assert polls == 1
+    assert signals == [(4321, 0), (4321, 0), (4321, signal.SIGTERM)]
+    assert "WATCHDOG: final infrastructure error for candidate-2 after 3 runs: new outage" in capsys.readouterr().out
+
+
+def test_watch_budget_counts_all_records_for_acknowledged_instances(tmp_path, capsys):
+    watch = _watch_module()
+    _write_json(
+        tmp_path / "candidate-1/final_infra_error.json",
+        {"instance_id": "candidate-1", "runs": 3, "reason": "old"},
+    )
+    for instance_id, filename, dollars in [
+        ("candidate-1", "record.json", 0.30),
+        ("candidate-1", "record.infra-1.json", 0.20),
+        ("candidate-1", "record.interrupted-1.json", 0.25),
+        ("candidate-2", "record.json", 0.50),
+    ]:
+        _write_json(
+            tmp_path / instance_id / filename,
+            _record(instance_id, "infra_error", model_dollars=dollars),
+        )
+    signals = []
+    assert watch.watch_pilot(
+        tmp_path, 4321, model_budget_usd=1.0,
+        kill=lambda pid, sig: signals.append((pid, sig)),
+        sleep=lambda _: pytest.fail("over-budget watch must not sleep"),
+    ) == 0
+    assert signals == [(4321, 0), (4321, signal.SIGTERM)]
+    assert "WATCHDOG: model spend $1.25 exceeds budget $1.00" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("stop_rule", ["gate_looser", "retry loop"])
+def test_watch_keeps_other_stop_rules_for_acknowledged_instances(
+    tmp_path, capsys, stop_rule,
+):
+    watch = _watch_module()
+    _write_json(
+        tmp_path / "candidate-1/final_infra_error.json",
+        {"instance_id": "candidate-1", "runs": 3, "reason": "old"},
+    )
+    if stop_rule == "gate_looser":
+        _write_json(
+            tmp_path / "candidate-1/record.json",
+            _record("candidate-1", "ran", agreement="gate_looser"),
+        )
+    else:
+        for number in range(1, 5):
+            _write_json(
+                tmp_path / "candidate-1" / f"record.infra-{number}.json",
+                _record("candidate-1", "infra_error"),
+            )
+    signals = []
+    assert watch.watch_pilot(
+        tmp_path, 4321, kill=lambda pid, sig: signals.append((pid, sig)),
+        sleep=lambda _: pytest.fail("watch must stop before sleeping"),
+    ) == 0
+    assert signals == [(4321, 0), (4321, signal.SIGTERM)]
+    assert f"WATCHDOG: {stop_rule}" in capsys.readouterr().out
