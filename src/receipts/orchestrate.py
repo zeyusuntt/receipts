@@ -307,6 +307,13 @@ async def _build_patch_scope(
     )
 
 
+async def build_patch_scope(
+    ex: Executor, base: Branch, snapshot_sha: str,
+) -> PatchScope:
+    """Expose the pilot's checkpoint-derived patch scope for receipt replay."""
+    return await _build_patch_scope(ex, base, snapshot_sha)
+
+
 def _stdout_bytes(receipt: Receipt) -> bytes:
     if receipt.log_path is not None:
         try:

@@ -107,6 +107,25 @@ def _parser() -> argparse.ArgumentParser:
     show_parser = commands.add_parser("show", help="print a run's Markdown receipt")
     show_parser.add_argument("run_dir", type=Path)
 
+    site_parser = commands.add_parser("site", help="build a static receipt website")
+    site_parser.add_argument("pilot_dirs", nargs="+", type=Path)
+    site_parser.add_argument("--out", required=True, type=Path)
+    site_parser.add_argument("--title", default="Receipts")
+
+    export_parser = commands.add_parser("export", help="export portable final-attempt receipt bundles")
+    export_parser.add_argument("pilot_dir", type=Path)
+    export_parser.add_argument("--rows", required=True, type=Path, help="SWE-rebench row JSONL")
+    export_parser.add_argument("--out", required=True, type=Path)
+
+    reverify_parser = commands.add_parser(
+        "reverify", help="re-check a published receipt on fresh sandboxes",
+        description=("Re-check patch digest, gate and official grade. SWE-rebench images are "
+                     "linux/amd64 and run under emulation on Apple Silicon (slower)."),
+    )
+    reverify_parser.add_argument("bundle", type=Path)
+    reverify_parser.add_argument("--executor", choices=("docker", "tokenfactory"), default="docker",
+                                 help="sandbox executor; tokenfactory requires .env credentials")
+
     pilot_parser = commands.add_parser("pilot", help="run or report on the pilot")
     pilot_commands = pilot_parser.add_subparsers(
         dest="pilot_command",
@@ -191,7 +210,7 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-async def _docker_ready() -> tuple[bool, str]:
+async def _docker_ready(timeout_s: float = 10) -> tuple[bool, str]:
     executable = shutil.which("docker")
     if executable is None:
         return False, "docker executable not found"
@@ -202,15 +221,27 @@ async def _docker_ready() -> tuple[bool, str]:
         stderr=asyncio.subprocess.PIPE,
     )
     try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=10)
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout_s)
     except TimeoutError:
         process.kill()
         await process.communicate()
-        return False, "docker info timed out"
+        return False, (
+            f"docker info did not answer within {timeout_s:.0f} seconds; "
+            "is Docker Desktop running and finished starting?"
+        )
     if process.returncode != 0:
         detail = (stderr or stdout).decode(errors="replace").strip().splitlines()
         return False, detail[0] if detail else f"docker info exited {process.returncode}"
     return True, ""
+
+
+async def docker_ready(timeout_s: float = 60) -> tuple[bool, str]:
+    """Expose the CLI's Docker readiness check for standalone re-verification.
+
+    Re-verification waits longer than `receipts fix`: a judge may have just started
+    Docker Desktop, whose first `docker info` can take tens of seconds.
+    """
+    return await _docker_ready(timeout_s)
 
 
 async def _doctor(live: bool, model: ModelClient | None) -> int:
@@ -398,6 +429,11 @@ def _load_pilot_candidates(candidates_path: Path, rows_path: Path) -> list[Insta
     return [by_id[instance_id] for instance_id in candidate_ids]
 
 
+def load_pilot_candidates(candidates_path: Path, rows_path: Path) -> list[Instance]:
+    """Expose the pilot row loader for portable receipt export."""
+    return _load_pilot_candidates(candidates_path, rows_path)
+
+
 def _load_id_file(path: Path) -> list[str]:
     return [
         line.strip().split(maxsplit=1)[0]
@@ -535,6 +571,11 @@ def _tokenfactory_executor_factory(
         return executor
 
     return make_executor
+
+
+def tokenfactory_executor_factory(executor_root: Path, api: Any, busybox: bytes):
+    """Expose the pilot's Token Factory executor construction for re-verification."""
+    return _tokenfactory_executor_factory(executor_root, api, busybox)
 
 
 def _default_run_budgets() -> RunBudgets:
@@ -734,6 +775,16 @@ async def _run_with_signal_cancellation(awaitable: Awaitable[int]) -> int:
 
 
 async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
+    if args.command == "export":
+        from receipts.reverify import export_bundles
+
+        paths = export_bundles(args.pilot_dir, args.rows, args.out)
+        print(f"Exported {len(paths)} bundle(s) to {args.out}")
+        return 0
+    if args.command == "reverify":
+        from receipts.reverify import reverify
+
+        return await _run_with_signal_cancellation(reverify(args.bundle, executor=args.executor))
     if args.command == "doctor":
         return await _doctor(args.live, model)
     if args.command == "preflight":
@@ -742,6 +793,12 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
         return await _run_fix(args, model)
     if args.command == "show":
         return _show(args.run_dir)
+    if args.command == "site":
+        from receipts.site import build_site
+
+        summary = build_site(args.pilot_dirs, args.out, repo_root=Path.cwd(), title=args.title)
+        print(f"SITE {summary.out_dir / 'index.html'} pilots={summary.pilots} instances={summary.instances}")
+        return 0
     if args.command == "pilot" and args.pilot_command == "run":
         return await _run_with_signal_cancellation(_run_pilot(args, model))
     if args.command == "pilot" and args.pilot_command == "screen":
