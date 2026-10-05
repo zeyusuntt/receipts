@@ -20,14 +20,14 @@ import {Results} from './scenes/results';
 import {Close} from './scenes/close';
 import {Placeholder} from './scenes/Placeholder';
 
-export type VideoProps = {musicTrack?: string | null; musicVolume?: number; wordTimestamps?: CaptionTiming};
+export type VideoProps = {musicTrack?: string | null; musicVolume?: number; wordTimestamps?: CaptionTiming; showCaptions?: boolean};
 export const scenes = {cold_open: ColdOpen, who_and_numbers: WhoAndNumbers, receipts: Receipts, featured_setup: FeaturedSetup, agent_works: AgentWorks, rejected: Rejected, appeal_passes: AppealPasses, checks_and_official: ChecksAndOfficial, reverify: Reverify, pilot_story: PilotStory, results: Results, close: Close};
 function Transition({children, first}: {children: ReactNode; first: boolean}) {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   return <AbsoluteFill style={{opacity: first ? 1 : interpolate(frame, [0, Math.round(fps * 0.2)], [0, 1], clamp)}}>{children}</AbsoluteFill>;
 }
-export function Video({musicTrack = null, musicVolume = 0.08, wordTimestamps}: VideoProps) {
+export function Video({musicTrack = null, musicVolume = 0.08, wordTimestamps, showCaptions = true}: VideoProps) {
   return <AbsoluteFill style={{background: palette.page, color: palette.ink, fontFamily: fonts.sans}}>
     <Audio src={staticFile(timeline.voice)}/>
     {musicTrack && <Audio src={staticFile(musicTrack)} loop volume={(frame) => {
@@ -43,7 +43,7 @@ export function Video({musicTrack = null, musicVolume = 0.08, wordTimestamps}: V
       </Sequence>;
     })}
     {timeline.voice === 'audio/narration.wav' && <Sequence from={frames(face.start_s, timeline.fps)} durationInFrames={frames(face.duration_s, timeline.fps)} name="face"><FaceIntro path={face.path}/></Sequence>}
-    <Captions wordTimestamps={wordTimestamps}/>
+    {showCaptions && <Captions wordTimestamps={wordTimestamps}/>}
     {/* A scratch timeline is a placeholder voice: mark every frame so a draft cannot pass for the final cut. */}
     {timeline.source.startsWith('scratch') && <div data-draft style={{position: 'absolute', right: 64, top: 48, padding: '8px 18px', borderRadius: 8, background: palette.rejected, color: palette.paper, fontFamily: fonts.mono, fontSize: 34}}>Draft · placeholder voice</div>}
   </AbsoluteFill>;
