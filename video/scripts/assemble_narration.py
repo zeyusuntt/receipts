@@ -30,6 +30,7 @@ TEMPO = 1.03
 
 MAIN = ROOT / "script recording 2.m4a"
 PICKUPS = ROOT / "script recording 3.m4a"
+PICKUP_REPO = ROOT / "script recording 4.m4a"
 CAMERA = ROOT / "IMG_9861.MOV"
 
 # (source, start_s, end_s, gap_after_s, label). Cut points sit in silences found by an energy scan;
@@ -41,10 +42,12 @@ PIECES = [
     (CAMERA, 1.9, 6.15, 0.25, "camera: Hi, I'm Zeyu. I build evaluations for AI agents."),
     # "agents," in the main take ends at 14.0 s (its final "s" is the loud sibilant at 13.84 to 13.98 s);
     # whisper's word times put it 0.6 s early. The cut sits in the silence before "and" (14.28 s).
-    (MAIN, 14.15, 153.2, 0.0, "main: And I have heard done a lot ... about forty cents of Nemotron tokens each."),
+    (MAIN, 14.15, 76.50, 0.4, "main: And I have heard done a lot ... runs the tests itself. Rejected."),
+    # The take says "Rejected. Oh, the spec still fails."; "Oh," (76.64 to 76.92 s) is cut.
+    (MAIN, 77.06, 153.2, 0.0, "main: The spec still fails. ... about forty cents of Nemotron tokens each."),
     (PICKUPS, 6.35, 15.7, 0.5, "pickup: It all ran on Nebius Token Factory ... nearly five hundred sandboxes."),
     (MAIN, 161.5, 168.6, 0.0, "main: That's what I want ... a receipt I can re-run."),
-    (PICKUPS, 17.25, 22.75, 0.6, "pickup: On another repo, it's one command and a failing test."),
+    (PICKUP_REPO, 0.85, 5.35, 0.6, "pickup: Here it is on another repo: one command and a failing test."),
     (MAIN, 172.45, 177.9, 0.0, "main: Agents can write the code. Receipts make them show their work."),
 ]
 

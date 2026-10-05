@@ -445,7 +445,7 @@ test('results close on the reusable receipt and Receipts-written pull request de
 });
 test('results part D replays the real fix recording and holds its final frame',()=>{
   const w=windows[10];
-  const fixAt=cueFrame(w.beat,'On another repo',timeline.fps,w.from);
+  const fixAt=cueFrame(w.beat,'Here it is',timeline.fps,w.from);
   const before=videoShot(10,fixAt-1);
   const replay=videoShot(10,fixAt);
   assert.ok(!before.includes('captures/fix-tf.mp4'));

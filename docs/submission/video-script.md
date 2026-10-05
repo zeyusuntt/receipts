@@ -29,7 +29,7 @@ Read it in one take, the way you'd explain it to a friend at a desk. Pause about
 >
 > Nemotron reads the code, edits it, runs the tests, and says it's done. /
 >
-> Receipts doesn't take its word for it. It forks the original checkpoint into a new sandbox, applies only the source change, and runs the tests itself. / Rejected. Oh, the spec still fails. /
+> Receipts doesn't take its word for it. It forks the original checkpoint into a new sandbox, applies only the source change, and runs the tests itself. / Rejected. The spec still fails. /
 >
 > Receipts sends the gate's evidence back to the agent, once. It finds the real bug, in the base class. A fresh sandbox runs the same checks again. / This time it passes. /
 >
@@ -39,7 +39,7 @@ Read it in one take, the way you'd explain it to a friend at a desk. Pause about
 >
 > I got this wrong first. In my first pilot, the gate let one bad fix through: the agent hid a copy of the package where my test runner would find it. I'd written the rules down in advance, so I published the mistake, fixed it, and started over. /
 >
-> On the hundred bugs: sixty-six verified fixes, zero false ones shipped, about forty cents of Nemotron tokens each. / It all ran on Nebius Token Factory: eighty-seven million Nemotron tokens, nearly five hundred sandboxes. / That's what I want before I merge anything an agent wrote: a receipt I can re-run. / On another repo, it's one command and a failing test. /
+> On the hundred bugs: sixty-six verified fixes, zero false ones shipped, about forty cents of Nemotron tokens each. / It all ran on Nebius Token Factory: eighty-seven million Nemotron tokens, nearly five hundred sandboxes. / That's what I want before I merge anything an agent wrote: a receipt I can re-run. / Here it is on another repo: one command and a failing test. /
 >
 > Agents can write the code. Receipts makes them show their work.
 
