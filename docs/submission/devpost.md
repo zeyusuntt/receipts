@@ -49,7 +49,7 @@ A GitHub Action that runs the gate on a pull request and posts the receipt as a 
 - **Technological Implementation:** Nemotron 3 Super on Token Factory for every model call; Token Factory Sandboxes for every agent, witness and grading branch; a model-free gate with attack tests; a pre-registered evaluation graded by an independent official grader.
 - **Design:** the product is a receipt: a run page that shows what the agent said beside what the record shows, a receipt page with a verdict stamp, and three commands to re-verify. ([receipts from real runs](https://zeyusuntt.github.io/receipts/))
 - **Potential Impact:** anyone who merges agent-written code (maintainers, and teams adopting coding agents) can accept a fix on evidence instead of trust. `receipts fix` runs on any Python repository with a pytest test that fails, and each receipt page includes a ready pull request description that carries the receipt.
-- **Quality of the Idea:** instead of a better agent, a referee the agent cannot influence, plus a public, pre-registered measurement of how often agents' "done" is false.
+- **Quality of the Idea:** instead of a better agent, a referee the agent cannot influence, plus a public, pre-registered measurement of how often agents' "done" is false. Other claim checkers read the diff, read CI evidence, or re-run commands in the agent's own working tree; Receipts re-runs the tests in a fresh fork of the checkpoint taken before the agent started, closes the loop with one appeal, makes every receipt re-executable, and shows on 100 pre-registered tasks, against the official grader, that it works.
 
 ## Built with
 

@@ -70,6 +70,15 @@ R1 to R5 decide VERIFIED or REJECTED. R6 is reported on every receipt but does n
 - Tests that need the network or host features cannot pass in a sandbox, before or after any patch. In the experiments those tasks are excluded before any agent runs, and listed.
 - The gate rejects a fix that also modifies an existing test file, even when the source change is right; the appeal tells the agent why.
 
+## How it differs from other claim checkers
+
+Several open-source tools now check a coding agent's "done". The ones we read (October 2026) look at the diff for deleted or weakened tests, read the CI evidence on a pull request, or re-run the claimed commands in the agent's own working tree, and then report on the claim. Receipts differs in four ways:
+
+1. **It re-runs your tests where the agent never was:** a fresh Token Factory Sandbox forked from the checkpoint taken before the agent started, with only the source part of the patch applied. Whatever the agent changed in its own environment (installed packages, configuration, caches) and did not put in the patch does not carry over.
+2. **It closes the loop:** Nemotron writes the fix, gets the gate's evidence back once, and tries again. A reviewer receives a fix with its receipt, not only a verdict on someone else's claim.
+3. **A receipt is re-executed, not just signed:** `receipts reverify` rebuilds the checkpoint in a fresh sandbox, replays the patch and the gate, and must agree check by check.
+4. **It is measured:** pre-registered, on 100 real tasks, with SWE-rebench's official grader as ground truth: 12 of 67 unguarded "done" were false, and 0 of the 66 fixes Receipts shipped.
+
 ## The experiment
 
 We ran Receipts as a pre-registered experiment twice: the rules, the sample and the reporting were committed before each run, and every outcome is published.
