@@ -42,7 +42,7 @@ An agent's claim and its record diverge often, and the gap is invisible unless s
 
 ## What's next
 
-A GitHub Action that runs the gate on a pull request and posts the receipt as a check, so "the agent says it works" becomes "here is the receipt".
+A GitHub Action that runs the gate on a pull request and posts the receipt as a check, so "the agent says it works" becomes "here is the receipt". Then other languages: the five checks do not depend on Python; what does is how the tests are run and read. The gate reads pytest's JUnit XML report; Java, JavaScript (jest) and Go runners can write the same format, so each new language needs a runner adapter that maps its test ids, not a new gate.
 
 ## How Receipts meets the judging criteria
 

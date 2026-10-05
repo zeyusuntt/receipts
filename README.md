@@ -81,13 +81,16 @@ What we found along the way about the tools we built on: [FEEDBACK.md](FEEDBACK.
 
 ## Use it on your own repository
 
+Receipts works on Python repositories tested with pytest. Commit your failing test, then point Receipts at that commit; Docker clones it into a fresh container:
+
 ```
-uv run receipts fix --repo . --test tests/test_parse.py::test_empty_string \
-  --issue-file issue.md --executor docker --image python:3.12 --out runs/my-fix
+uv run receipts fix --repo https://github.com/you/your-repo --commit <commit with your failing test> \
+  --install "pip install -e ." --test tests/test_parse.py::test_empty_string \
+  --issue-file issue.md --executor docker --out runs/my-fix
 uv run receipts show runs/my-fix
 ```
 
-`--executor tokenfactory` runs the sandboxes on Nebius Token Factory (set `OPENAI_API_KEY` and `NEBIUS_AI_PROJECT` in `.env`). Receipts never opens a pull request: you review the patch and the receipt, and you submit.
+On Token Factory Sandboxes, give an image of your repository instead (see "Run it on another repo" above); set `OPENAI_API_KEY` and `NEBIUS_AI_PROJECT` in `.env`. Receipts never opens a pull request: you review the patch and the receipt, and you submit.
 
 ## Repository
 
