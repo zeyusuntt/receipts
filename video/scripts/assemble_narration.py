@@ -22,9 +22,11 @@ RATE = 48_000
 TARGET_LUFS = -16.6  # the main take's own loudness
 FADE_S = 0.03
 # The pieces run about 6 s over the 3-minute limit once the cold open's lead-in and the end card are added.
-# A 4% tempo change (pitch kept; about 134 words a minute) brings it back without cutting a sentence
-# or the pauses that carry the stamps' holds.
-TEMPO = 1.04
+# Pauses longer than LONG_PAUSE_S are shortened to KEEP_PAUSE_S (the stamps' holds need about 1 s of
+# pause, so they stay), then a small tempo change (pitch kept) brings the cut under 3 minutes.
+LONG_PAUSE_S = 1.2
+KEEP_PAUSE_S = 0.9
+TEMPO = 1.03
 
 MAIN = ROOT / "script recording 2.m4a"
 PICKUPS = ROOT / "script recording 3.m4a"
@@ -37,7 +39,9 @@ PIECES = [
     # hook a few seconds later, so the take starts at the hook itself.
     (MAIN, 3.3, 10.0, 0.0, "main: This is a coding agent ... Well, it didn't."),
     (CAMERA, 1.9, 6.15, 0.25, "camera: Hi, I'm Zeyu. I build evaluations for AI agents."),
-    (MAIN, 13.36, 153.2, 0.0, "main: and I have heard done a lot ... about forty cents of Nemotron tokens each."),
+    # "agents," in the main take ends at 14.0 s (its final "s" is the loud sibilant at 13.84 to 13.98 s);
+    # whisper's word times put it 0.6 s early. The cut sits in the silence before "and" (14.28 s).
+    (MAIN, 14.15, 153.2, 0.0, "main: And I have heard done a lot ... about forty cents of Nemotron tokens each."),
     (PICKUPS, 6.35, 15.7, 0.5, "pickup: It all ran on Nebius Token Factory ... nearly five hundred sandboxes."),
     (MAIN, 161.5, 168.6, 0.0, "main: That's what I want ... a receipt I can re-run."),
     (PICKUPS, 17.25, 22.75, 0.6, "pickup: On another repo, it's one command and a failing test."),
@@ -52,6 +56,40 @@ def _loudness(path: Path) -> float:
     ).stderr
     blob = out[out.rindex("{"): out.rindex("}") + 1]
     return float(json.loads(blob)["input_i"])
+
+
+def _shorten_pauses(source: Path, target: Path) -> tuple[Path, float]:
+    """Shorten every pause longer than LONG_PAUSE_S to KEEP_PAUSE_S, cutting from its middle."""
+
+    import numpy as np
+
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(source), "-f", "f32le", "-ac", "1", "-ar", str(RATE), "-"],
+                         capture_output=True, check=True).stdout
+    audio = np.frombuffer(raw, dtype=np.float32)
+    hop = RATE // 100  # 10 ms
+    frames = len(audio) // hop
+    level = 20 * np.log10(np.sqrt((audio[:frames * hop].reshape(frames, hop) ** 2).mean(1)) + 1e-9)
+    quiet = level < np.percentile(level, 95) - 38
+    keep = np.ones(len(audio), dtype=bool)
+    removed = 0.0
+    start = None
+    for index in range(frames + 1):
+        silent = index < frames and quiet[index]
+        if silent and start is None:
+            start = index
+        elif not silent and start is not None:
+            length = (index - start) / 100
+            if length > LONG_PAUSE_S:
+                cut = length - KEEP_PAUSE_S
+                middle = start * hop + int((length / 2) * RATE)
+                half = int(cut / 2 * RATE)
+                keep[middle - half: middle + half] = False
+                removed += cut
+            start = None
+    audio = audio[keep]
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ac", "1", "-ar", str(RATE), "-i", "-", str(target)],
+                   input=audio.tobytes(), check=True)
+    return target, removed
 
 
 def main() -> None:
@@ -89,8 +127,10 @@ def main() -> None:
         joined = tmpdir / "joined.wav"
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(listing),
                         "-c", "copy", str(joined)], check=True)
+        tightened, removed = _shorten_pauses(joined, tmpdir / "tightened.wav")
+        print(f"pauses: {removed:.1f}s removed from pauses longer than {LONG_PAUSE_S}s")
         subprocess.run(
-            ["ffmpeg", "-v", "error", "-y", "-i", str(joined), "-af",
+            ["ffmpeg", "-v", "error", "-y", "-i", str(tightened), "-af",
              f"atempo={TEMPO}",
              "-ar", str(RATE), str(OUT)],
             check=True,

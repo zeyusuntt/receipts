@@ -74,13 +74,18 @@ for(const [index,w] of windows.entries()) {
 }
 const rejected=windows[5];
 const stampAt=cueFrame(rejected.beat,copy.cues.rejected,timeline.fps,rejected.from);
-assert.ok(shot(5,stampAt-1).replace(/<[^>]+>/g,'').replaceAll('\u200B','').includes(story.featured.attempts[0].predicates[0].evidence));
+// The verdict comes first; the failing test arrives with "the spec still fails".
+const whyAt=Math.max(stampAt+Math.round(timeline.fps*0.5),cueFrame(rejected.beat,copy.cues.why,timeline.fps,rejected.from));
+assert.ok(!shot(5,stampAt-1).replace(/<[^>]+>/g,'').replaceAll('\u200B','').includes(story.featured.attempts[0].predicates[0].evidence));
+assert.ok(shot(5,whyAt+1).replace(/<[^>]+>/g,'').replaceAll('\u200B','').includes(story.featured.attempts[0].predicates[0].evidence));
 assert.ok(!shot(5,stampAt-1).includes('rotate(-3deg)'));
 assert.ok(shot(5,stampAt+20).includes('REJECTED'));
 // Remotion's spring reaches its exact resting value one frame after its duration.
-const firstHeld=stampAt+Math.round(timeline.fps*0.65)+1;
-assert.ok(shot(5,firstHeld)===shot(5,firstHeld+timeline.fps*2),'The rejection must hold without new scene motion for two seconds');
-assert.ok(firstHeld+timeline.fps*2<=windows[6].from-rejected.from,'The next scene must leave two seconds after stamp settling');
+// Once the stamp has settled and the reason is on screen, the frame holds still for 1.5 s before the next scene.
+const firstHeld=Math.max(stampAt+Math.round(timeline.fps*0.65)+1,whyAt+1);
+const holdFrames=Math.round(timeline.fps*1.5);
+assert.ok(shot(5,firstHeld)===shot(5,firstHeld+holdFrames),'The rejection must hold without new scene motion for 1.5 seconds');
+assert.ok(firstHeld+holdFrames<=windows[6].from-rejected.from,'The next scene must leave 1.5 seconds after the reason appears');
 const last=windows[11];
 assert.equal(shot(11,last.durationInFrames-1),shot(11,last.speechStart+last.speechDuration-1),'End hold preserves the close card');
 for(const w of windows) {

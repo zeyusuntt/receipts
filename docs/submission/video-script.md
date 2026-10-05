@@ -21,7 +21,7 @@ Read it in one take, the way you'd explain it to a friend at a desk. Pause about
 > This is a coding agent telling me it fixed the failing tests. /
 > Well, it didn't. /
 >
-> Hi, I'm Zeyu. I build evaluations for AI agents, and I have heard "done" a lot from agents. So I gave NVIDIA's Nemotron 3 Super a hundred real bugs. It said "done" sixty-seven times. / Well, twelve weren't true. / If you are the one merging, you can't tell which twelve. /
+> Hi, I'm Zeyu. I build evaluations for AI agents. And I have heard "done" a lot from agents. So I gave NVIDIA's Nemotron 3 Super a hundred real bugs. It said "done" sixty-seven times. / Well, twelve weren't true. / If you are the one merging, you can't tell which twelve. /
 >
 > So I built Receipts for that: a coding agent that isn't allowed to grade its own homework. Nemotron writes the fix, on Nebius Token Factory. Then a fresh Token Factory Sandbox it never touched runs your tests again, / and plain code decides. /
 >
