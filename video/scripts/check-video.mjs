@@ -21,7 +21,10 @@ test('caption chunks preserve sentences and every word, with contiguous proporti
 test('word timestamp cues replace the proportional fallback', () => {
   assert.equal(typeof timing.captionChunks, 'function');
   const chunks = timing.captionChunks('One two. Three.', 0, 100, 12, [{word: 'One', start: 10, end: 20}, {word: 'two.', start: 21, end: 45}, {word: 'Three.', start: 60, end: 80}]);
-  assert.deepEqual(chunks.map(({start, end}) => [start, end]), [[10, 45], [60, 80]]);
+  // A 15-frame pause is within the default 30-frame hold, so the first caption stays until the next.
+  assert.deepEqual(chunks.map(({start, end}) => [start, end]), [[10, 60], [60, 80]]);
+  const strict = timing.captionChunks('One two. Three.', 0, 100, 12, [{word: 'One', start: 10, end: 20}, {word: 'two.', start: 21, end: 45}, {word: 'Three.', start: 60, end: 80}], 10);
+  assert.deepEqual(strict.map(({start, end}) => [start, end]), [[10, 45], [60, 80]]);
 });
 
 test('narration cues follow relocated and lengthened beats', () => {

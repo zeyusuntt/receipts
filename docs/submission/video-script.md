@@ -14,22 +14,24 @@ What winners do that this borrows: a first line that says who you are and why yo
 
 ## The narration to record (revision 6)
 
+As recorded on 2026-10-05 (take 2, the on-camera introduction and two pickups, assembled by `video/scripts/assemble_narration.py`). The text below is what was said, in clean verbatim, so the captions match the voice.
+
 Read it in one take, the way you'd explain it to a friend at a desk. Pause about a second at each `/`. Every claim is true of our runs. About 360 words: at a calm 140 words a minute that is about 2:35 of speech, about 2:50 with the pauses and the end card. If the take runs long, I cut a sentence (first candidates: "A fresh sandbox runs the same checks again." and "The failing test is the spec."); you don't speed up.
 
 > This is a coding agent telling me it fixed the failing tests. /
-> It didn't. /
+> Well, it didn't. /
 >
-> I'm Zeyu. I build evaluations for AI agents, and I hear "done" a lot. So I gave NVIDIA's Nemotron 3 Super a hundred real bugs. It said "done" sixty-seven times. / Twelve weren't true. / If you're the one merging, you can't tell which twelve. /
+> Hi, I'm Zeyu. I build evaluations for AI agents, and I have heard "done" a lot from agents. So I gave NVIDIA's Nemotron 3 Super a hundred real bugs. It said "done" sixty-seven times. / Well, twelve weren't true. / If you are the one merging, you can't tell which twelve. /
 >
-> I built Receipts for that: a coding agent that isn't allowed to grade its own homework. Nemotron writes the fix, on Nebius Token Factory. Then a fresh Token Factory Sandbox it never touched runs your tests again, / and plain code decides. /
+> So I built Receipts for that: a coding agent that isn't allowed to grade its own homework. Nemotron writes the fix, on Nebius Token Factory. Then a fresh Token Factory Sandbox it never touched runs your tests again, / and plain code decides. /
 >
 > Here's one, from PyFilesystem2. The failing test is the spec. /
 >
 > Nemotron reads the code, edits it, runs the tests, and says it's done. /
 >
-> Receipts doesn't take its word for it. It forks the original checkpoint into a new sandbox, applies only the source change, and runs the tests itself. / Rejected. The spec still fails. /
+> Receipts doesn't take its word for it. It forks the original checkpoint into a new sandbox, applies only the source change, and runs the tests itself. / Rejected. Oh, the spec still fails. /
 >
-> Receipts sends the gate's evidence back to the agent, once. It finds the real problem, in the base class. A fresh sandbox runs the same checks again. / This time it passes. /
+> Receipts sends the gate's evidence back to the agent, once. It finds the real bug, in the base class. A fresh sandbox runs the same checks again. / This time it passes. /
 >
 > Every check is plain, boring code: the failing test passes, old tests still pass, no test is removed or skipped, the patch leaves your tests alone, and every step is hashed back to your code. / SWE-rebench's grader, run separately, agrees. /
 >

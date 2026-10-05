@@ -57,9 +57,10 @@ test('font floor scanner finds declarations and rejects a sub-floor fixture',()=
   assert.deepEqual(fontSizes(fixture),[34,20]);
   assert.throws(()=>assertFontFloor('fixture.tsx',fixture),/fixture\\.tsx has fontSize 20/);
 });
-test('scratch draft mark occupies the cleared top-right corner',()=>{
+test('scratch draft mark occupies the cleared top-right corner, and only on a scratch timeline',()=>{
   const html=render(React.createElement(Video,{}),0);
   const marker=html.indexOf('data-draft');
+  if(!timeline.source.startsWith('scratch')) { assert.equal(marker,-1,'a recorded narration renders no draft mark'); return; }
   assert.ok(marker>=0,'scratch timeline renders a draft mark');
   const tag=html.slice(marker,marker+320);
   assert.ok(tag.includes('right:64px'));
@@ -85,7 +86,9 @@ assert.equal(shot(11,last.durationInFrames-1),shot(11,last.speechStart+last.spee
 for(const w of windows) {
   const from=Math.round(w.beat.start_s*timeline.fps);
   const end=Math.round(w.beat.end_s*timeline.fps);
-  for(let frame=from;frame<end;frame++) assert.ok(render(React.createElement(Captions),frame).length>0,'Caption gap at '+frame);
+  // Every spoken word has its caption on screen; only a pause longer than the caption hold may clear it.
+  const spoken=w.beat.words?.length ? w.beat.words.map(word=>[Math.round(word.start_s*timeline.fps),Math.round(word.end_s*timeline.fps)]) : [[from,end]];
+  for(const [a,b] of spoken) for(let frame=a;frame<b;frame++) assert.ok(render(React.createElement(Captions),frame).length>0,'Caption gap at '+frame);
 }
 console.log('Rejection hold, end hold, and caption coverage passed.');
 
@@ -157,7 +160,8 @@ test('secondary layouts stay balanced and keep their key labels readable',()=>{
   assert.ok(!plain(consoleFrame).includes(copy.tagline));
 
   const appeal=windows[6];
-  const checksAt=cueFrame(appeal.beat,copy.appeal.cues.checks,timeline.fps,appeal.from);
+  // The checks list follows the console proof; it is on screen by the VERIFIED cue.
+  const checksAt=cueFrame(appeal.beat,copy.appeal.cues.verified,timeline.fps,appeal.from);
   const appealChecks=videoShot(6,checksAt);
   assert.ok(appealChecks.includes('data-appeal-checks=\"true\"'));
   assert.ok(appealChecks.includes('data-check-min-size=\"44\"'));
@@ -220,8 +224,8 @@ test('the attempt holds its real claim for 1.5 seconds',()=>{
 });
 test('all six later beats show real evidence and the close holds through the end',()=>{
   const at=(index, phrase)=>cueFrame(windows[index].beat,phrase,timeline.fps,windows[index].from);
-  assert.ok(plain(videoShot(6,at(6,'It finds the real problem')-1)).includes(story.featured.appeal_text.split('\\n')[0]));
-  for(const path of story.featured.patch_files) assert.ok(plain(videoShot(6,at(6,'It finds the real problem')+timeline.fps)).includes(path));
+  assert.ok(plain(videoShot(6,at(6,'It finds the real bug')-1)).includes(story.featured.appeal_text.split('\\n')[0]));
+  for(const path of story.featured.patch_files) assert.ok(plain(videoShot(6,at(6,'It finds the real bug')+timeline.fps)).includes(path));
   assert.ok(plain(videoShot(6,windows[6].speechDuration-1)).includes('VERIFIED'));
   assert.ok(plain(videoShot(7,at(7,"SWE-rebench's grader")+timeline.fps)).includes('resolved'));
   for(const path of story.pilot_v1.shipped_files) assert.ok(plain(videoShot(9,at(9,'a copy of the package')+timeline.fps)).includes(path));

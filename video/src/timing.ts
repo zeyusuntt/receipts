@@ -17,7 +17,9 @@ export function sequenceWindows<T extends Omit<Beat, 'text'>>(timeline: {fps: nu
   });
 }
 
-export function captionChunks(text: string, start: number, end: number, maxWords = 12, timestamps?: WordTimestamp[]): CaptionChunk[] {
+// A recorded narration pauses between sentences; a caption stays up through a pause of up to `holdFrames`
+// so it does not flicker off and on, and clears for a longer silence.
+export function captionChunks(text: string, start: number, end: number, maxWords = 12, timestamps?: WordTimestamp[], holdFrames = 30): CaptionChunk[] {
   const words = text.trim().split(/\s+/).filter(Boolean);
   const chunks: CaptionChunk[] = [];
   let first = 0;
@@ -26,6 +28,11 @@ export function captionChunks(text: string, start: number, end: number, maxWords
     if (sentenceEnd || i - first + 1 >= maxWords || i === words.length - 1) {
       chunks.push({text: words.slice(first, i + 1).join(' '), start: timestamps?.[first]?.start ?? Math.round(start + (end - start) * first / words.length), end: timestamps?.[i]?.end ?? Math.round(start + (end - start) * (i + 1) / words.length)});
       first = i + 1;
+    }
+  }
+  if (timestamps) {
+    for (let i = 0; i < chunks.length - 1; i++) {
+      if (chunks[i + 1].start - chunks[i].end <= holdFrames) chunks[i].end = chunks[i + 1].start;
     }
   }
   return chunks;

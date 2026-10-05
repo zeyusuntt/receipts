@@ -1,9 +1,10 @@
 import {AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import type {ReactNode} from 'react';
-import {timeline} from './content';
+import {face, timeline} from './content';
 import {frames, sequenceWindows} from './timing';
 import {fonts, palette} from './theme';
 import {Captions, type CaptionTiming} from './components/Captions';
+import {FaceIntro} from './components/FaceIntro';
 import {clamp} from './components/Motion';
 import {ColdOpen} from './scenes/cold_open';
 import {WhoAndNumbers} from './scenes/who_and_numbers';
@@ -41,6 +42,7 @@ export function Video({musicTrack = null, musicVolume = 0.08, wordTimestamps}: V
         <Transition first={index === 0}><Scene beat={beat} sequenceFrom={from} speechStart={speechStart} speechDuration={speechDuration} sceneDuration={durationInFrames} wordTimestamps={wordTimestamps?.[beat.id]}/></Transition>
       </Sequence>;
     })}
+    {timeline.voice === 'audio/narration.wav' && <Sequence from={frames(face.start_s, timeline.fps)} durationInFrames={frames(face.duration_s, timeline.fps)} name="face"><FaceIntro path={face.path}/></Sequence>}
     <Captions wordTimestamps={wordTimestamps}/>
     {/* A scratch timeline is a placeholder voice: mark every frame so a draft cannot pass for the final cut. */}
     {timeline.source.startsWith('scratch') && <div data-draft style={{position: 'absolute', right: 64, top: 48, padding: '8px 18px', borderRadius: 8, background: palette.rejected, color: palette.paper, fontFamily: fonts.mono, fontSize: 34}}>Draft · placeholder voice</div>}

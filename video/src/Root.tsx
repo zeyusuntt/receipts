@@ -17,7 +17,7 @@ export const Root: React.FC = () => <>
     fps={FPS}
     width={WIDTH}
     height={HEIGHT}
-    defaultProps={{musicTrack: null, musicVolume: 0.08}}
+    defaultProps={{musicTrack: 'audio/music-wallpaper-norm.mp3', musicVolume: 0.08}}
   />
   <Composition id="ArchitectureMap" component={ArchitectureStill} durationInFrames={1} fps={FPS} width={WIDTH} height={HEIGHT}/>
 </>;

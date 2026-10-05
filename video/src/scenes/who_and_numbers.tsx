@@ -1,7 +1,7 @@
 import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {copy, story} from '../content';
 import {cueFrame} from '../timing';
-import {palette} from '../theme';
+import {fonts, palette} from '../theme';
 import {clamp} from '../components/Motion';
 import type {SceneProps} from './types';
 
@@ -15,6 +15,12 @@ export function WhoAndNumbers({beat, sequenceFrom, wordTimestamps}: SceneProps) 
   const falseAt = cue(copy.cues.false);
   const indistinguishableAt = cue(copy.cues.indistinguishable);
   const crossfadeFrames = Math.round(fps * 0.25);
+  // "I have heard 'done' a lot from agents": three real finish messages from the records, then the model
+  // the narration names, before the counters take over at "a hundred".
+  const heardAt = cue(copy.cues.heard);
+  const modelAt = cue(copy.cues.model);
+  const clip = (said: string) => said.length > 64 ? `${said.slice(0, said.lastIndexOf(' ', 62))}…` : said;
+  const quotes = [story.cold_open.said, story.featured.attempts[0].said, story.featured.attempts[1].said].map(clip);
   const lowerThirdOpacity = interpolate(frame, [fps * 3.1, fps * 3.5], [1, 0], clamp);
   const counterOpacity = (start: number, end?: number) => interpolate(frame, [start, start + crossfadeFrames], [0, 1], clamp) * (end === undefined ? 1 : interpolate(frame, [end, end + crossfadeFrames], [1, 0], clamp));
   const interval = copy.numbers.interval
@@ -45,6 +51,14 @@ export function WhoAndNumbers({beat, sequenceFrom, wordTimestamps}: SceneProps) 
     </section>
     }
 
+    {frame >= heardAt && frame < modelAt + crossfadeFrames && <section data-number-counter-state="heard" style={{position: 'absolute', left: 1430, right: 128, top: 110, bottom: 220, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 28, opacity: counterOpacity(heardAt, modelAt)}}>
+      {quotes.map((quote, i) => <div key={i} style={{opacity: interpolate(frame, [heardAt + i * fps * 0.45, heardAt + i * fps * 0.45 + fps * 0.2], [0, 1], clamp), fontFamily: fonts.mono, fontSize: 36, lineHeight: 1.4, padding: '20px 26px', background: palette.paper, border: `2px solid ${palette.border}`, borderRadius: 14}}>“{quote}”</div>)}
+    </section>}
+    {frame >= modelAt && frame < tasksAt + crossfadeFrames && <section data-number-counter-state="model" style={{position: 'absolute', left: 1430, right: 128, top: 110, bottom: 220, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center', opacity: counterOpacity(modelAt, tasksAt)}}>
+      <div style={{fontSize: 72, lineHeight: 1.1, fontWeight: 600, whiteSpace: 'nowrap'}}>{copy.numbers.model_name}</div>
+      <div style={{fontFamily: fonts.mono, fontSize: 40, lineHeight: 1.3, marginTop: 26, color: palette.accent}}>{story.featured.model.model}</div>
+      <div style={{fontSize: 48, lineHeight: 1.3, marginTop: 18}}>{copy.numbers.model_host}</div>
+    </section>}
     {frame >= tasksAt && frame < claimedAt + crossfadeFrames && <section data-number-counter-state="tasks" style={{position: 'absolute', left: 1430, right: 128, top: 110, bottom: 220, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center', opacity: counterOpacity(tasksAt, claimedAt)}}>
       <div style={{fontSize: 220, letterSpacing: -9, lineHeight: 1, fontWeight: 600, fontVariantNumeric: 'tabular-nums'}}>{n.tasks}</div>
       <div style={{fontSize: 48, lineHeight: 1.3, marginTop: 28}}>{copy.numbers.tasks_short}</div>
