@@ -380,7 +380,7 @@ test('results proof moves from overview to readable usage and operations push-in
   assert.ok(operations.includes('captures/console/operations.png'));
   assert.ok(operations.includes('data-highlight-width=\"2200\"'));
   assert.ok(operations.includes('data-console-height=\"680\"'),'rotated operations annotation needs vertical clearance');
-  assert.ok(plain(operations).includes('482sandboxes'));
+  assert.ok(plain(operations).includes('482sandbox branches'));
   assert.ok(plain(operations).includes('4,253hash-chained steps'));
   assert.ok(plain(operations).includes('over the 100 tasks'));
   assert.ok(plain(operations).includes('Token Factory Sandboxes, real operations'));
@@ -448,7 +448,7 @@ test('results part D replays the real fix recording and holds its final frame',(
   assert.ok(replay.includes('data-replay-state="typing"'));
   assert.ok(replay.includes('data-replay-rate="1"'));
   assert.ok(replay.includes('data-replay-source-seconds="15.000"'));
-  assert.ok(plain(replay).includes('Another repo, one command: PyFlakes issue 335 on Nebius Token Factory Sandboxes'));
+  assert.ok(plain(replay).includes('Another repo, one receipts fix run: PyFlakes issue 335 on Nebius Token Factory Sandboxes'));
   assert.ok(plain(replay).includes('real recording · the waits are sped up · final 2s of typing shown'));
 
   const excerpt={...story.media.fix,command_start_s:story.media.fix.command_end_s-2};

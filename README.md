@@ -75,7 +75,7 @@ R1 to R5 decide VERIFIED or REJECTED. R6 is reported on every receipt but does n
 We ran Receipts as a pre-registered experiment twice: the rules, the sample and the reporting were committed before each run, and every outcome is published.
 
 - **v1 pilot (Oct 1):** 50 SWE-rebench tasks. Receipts shipped one false done because of a defect in Receipts: the agent hid a copy of the package at the repository root, where our test runner found it and the official grader did not. The pre-registration made us publish it, fix it, and start again. [REPORT.md](REPORT.md), [PREREGISTRATION.md](PREREGISTRATION.md), and a [cost erratum](docs/results/2026-10-02-v1-cost-erratum.md).
-- **v2 (Oct 2 to 3):** 100 tasks nobody had looked at, chosen by a rule committed in advance, on Token Factory Sandboxes, with the gate hardened against what v1 found. [REPORT-v2.md](REPORT-v2.md), [PREREGISTRATION-v2.md](PREREGISTRATION-v2.md).
+- **v2 (Oct 2 to 3):** 100 tasks held out from development, chosen by a rule committed in advance, on Token Factory Sandboxes, with the gate hardened against what v1 found. [REPORT-v2.md](REPORT-v2.md), [PREREGISTRATION-v2.md](PREREGISTRATION-v2.md).
 
 What we found along the way about the tools we built on: [FEEDBACK.md](FEEDBACK.md).
 

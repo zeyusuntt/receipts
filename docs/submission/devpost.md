@@ -8,7 +8,7 @@ The coding agent that is not allowed to grade its own homework.
 
 ## Inspiration
 
-Coding agents say "done, all tests pass", and whoever merges the fix has to take that on faith or re-run everything. We measured how often that faith is misplaced: on 100 SWE-rebench tasks held out from development, chosen by a rule committed in advance, 17.9% of an unguarded Nemotron agent's "done" was false, by SWE-rebench's own grader (12 of 67). Nothing in the agent's own report tells you which twelve. So we built a checker the agent cannot influence, and a receipt that lets anyone repeat the check.
+Coding agents say "done, all tests pass", and whoever merges the fix has to take that on faith or re-run everything. We measured how often that faith is misplaced: on 100 SWE-rebench tasks held out from development, chosen by a rule committed in advance, 17.9% of an unguarded Nemotron agent's "done" was false, by SWE-rebench's own grader (12 of 67). The agent's own report did not reliably tell you which twelve. So we built a checker the agent cannot influence, and a receipt that lets anyone repeat the check.
 
 ## What it does
 

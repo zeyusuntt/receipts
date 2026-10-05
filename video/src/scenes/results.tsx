@@ -114,6 +114,6 @@ export function Results({beat, sequenceFrom, speechDuration, sceneDuration, word
       </div>
     </>}
 
-    {frame >= fixAt && <TerminalReplay media={fixMedia} plan={fixPlan} startAt={fixAt} header={c.fix_header} recordingNote={fill(c.fix_recording_note, {seconds: story.media.fix.typing_excerpt_s})} waitLabel={copy.reverify.wait_label} speedSuffix={copy.reverify.speed_suffix} holdLabel={copy.reverify.hold_label} headerTop={60} controlsTop={130} panelTop={200} panelHeight={1010} videoStyle={{position: 'absolute', width: 2022, height: 1138, left: 141, top: -35}}/>}
+    {frame >= fixAt && <TerminalReplay media={fixMedia} plan={fixPlan} startAt={fixAt} header={c.fix_header} recordingNote={fill(c.fix_recording_note, {seconds: story.media.fix.typing_excerpt_s})} waitLabel={copy.reverify.wait_label} speedSuffix={copy.reverify.speed_suffix} holdLabel={copy.reverify.hold_label} headerTop={60} controlsTop={130} panelTop={200} panelHeight={1010} videoStyle={{position: 'absolute', width: 2022, height: 1138, left: 141, top: -35}} focus={{x: -268, y: -930, scale: 1.675, at: fixPlan.segments[2].from + Math.round(fps * 0.5)}}/>}
   </AbsoluteFill>;
 }
