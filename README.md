@@ -103,3 +103,7 @@ tests/                    offline tests, including attack tests against the gate
 ```
 
 **Built with** Nebius Token Factory (NVIDIA Nemotron 3 Super 120B-A12B, Token Factory Sandboxes) · SWE-rebench-V2. MIT license.
+
+## Credits
+
+The demo video's music is "Wallpaper" by Kevin MacLeod ([incompetech.com](https://incompetech.com)), licensed under [Creative Commons: By Attribution 4.0](https://creativecommons.org/licenses/by/4.0/). The SWE-rebench-V2 tasks are used under CC-BY-4.0; see [receipts/README.md](receipts/README.md).

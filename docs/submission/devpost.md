@@ -54,3 +54,7 @@ A GitHub Action that runs the gate on a pull request and posts the receipt as a 
 ## Built with
 
 nebius-token-factory, nvidia-nemotron, token-factory-sandboxes, python, pytest, swe-rebench, docker
+
+## Credits
+
+Video music: "Wallpaper" by Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/).
