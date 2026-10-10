@@ -1,6 +1,6 @@
 <h1 align="center">Receipts</h1>
 <p align="center"><b>The coding agent that is not allowed to grade its own homework.</b><br>
-You write the failing test. Receipts writes the fix with NVIDIA Nemotron 3 Super on Nebius Token Factory, re-runs your tests itself in a clean Token Factory Sandbox the agent never touched, and hands you a receipt anyone can re-verify.</p>
+You write the failing test. Receipts writes the fix with NVIDIA Nemotron 3 Super on Nebius Token Factory, re-runs your tests itself in a clean Token Factory Sandbox the agent never touched, and hands you a receipt of every command it ran. Anyone can re-verify the 100 receipts from the experiment.</p>
 <p align="center"><a href="https://zeyusuntt.github.io/receipts/"><b>Receipts from real runs</b></a> · <a href="https://youtu.be/tSJwtfb1-T8"><b>Video (2:57)</b></a> · <a href="REPORT-v2.md"><b>False-Done Report</b></a> · <a href="#re-verify-it-yourself"><b>Re-verify it yourself</b></a></p>
 
 | | On 100 SWE-rebench tasks held out from development, chosen by a rule fixed in advance | Proof |
@@ -47,6 +47,13 @@ In our experiments a sixth step runs separately from Receipts: SWE-rebench's own
 | R6 | The claim matches the record | advisory: whether what the agent said about its tests is what the record shows |
 
 R1 to R5 decide VERIFIED or REJECTED. R6 is reported on every receipt but does not change the verdict.
+
+## Built on Nebius Token Factory and NVIDIA Nemotron
+
+- **NVIDIA Nemotron 3 Super 120B-A12B** (`nvidia/nemotron-3-super-120b-a12b`) plans and writes every fix, through Token Factory's OpenAI-compatible API with tool calling (five tools, thinking off). It was the most reliable tool caller in a scripted test: it completed 10 of 10 six-turn tool loops, against 6 for Nemotron 3.5 Lightning and 3 for Nemotron 3 Ultra. Lightning also ran as a pre-registered exploratory arm on 30 of the tasks ([REPORT-v2.md](REPORT-v2.md)).
+- **Token Factory Sandboxes** ran every agent, witness and grading branch in the 100-task experiment. Each branch is a chain of immutable images, so forking the checkpoint taken before the agent started is exact, and that fork is the witness.
+- **Where Token Factory sped up the work:** the catalogue already holds the SWE-rebench-V2 images (598 of the 600 candidates), so no task image had to be built or pulled; a trivial sandbox run takes about 1.1 s; screening ran at concurrency 6 and the agents at concurrency 4 without hitting a rate limit; the 100-task experiment cost $27.01 in Nemotron tokens; and re-verifying a receipt on Token Factory takes about two minutes.
+- No other Nebius service is used: inference and sandboxes both come from Token Factory.
 
 ## What it cannot catch
 
