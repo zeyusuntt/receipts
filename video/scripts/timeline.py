@@ -7,8 +7,7 @@ Two sources, one output format (`video/src/content/timeline.json` plus a WAV in 
 - `narration`: takes the narrator's own recording, transcribes it with whisper.cpp for word
   timings, and finds where each paragraph starts and ends. (Implemented when the recording arrives.)
 
-The narration text is read from `docs/submission/video-script.md`, section "The narration to record
-(revision 6)": paragraphs are blocks of `>` lines separated by an empty `>` line, and `/` marks a pause.
+The narration text is read from `video/narration.md`: paragraphs are blocks of `>` lines separated by an empty `>` line, and `/` marks a pause.
 
 Usage, from the repository root:
     python3 video/scripts/timeline.py scratch
@@ -24,7 +23,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "docs/submission/video-script.md"
+SCRIPT = ROOT / "video/narration.md"
 DATA = ROOT / "video/src/content/timeline.json"
 AUDIO_DIR = ROOT / "video/public/audio"
 BEATS = [
@@ -40,8 +39,8 @@ SAMPLE_RATE = 48_000
 
 def paragraphs() -> list[str]:
     text = SCRIPT.read_text(encoding="utf-8")
-    start = text.index("## The narration to record (revision 6)")
-    end = text.index("### How to say it", start)
+    start = text.index("## The narration (revision 6, as recorded)")
+    end = len(text)
     blocks: list[list[str]] = [[]]
     for line in text[start:end].splitlines():
         if not line.startswith(">"):

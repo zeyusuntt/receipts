@@ -111,7 +111,7 @@ src/receipts/pilot/       screening, the pre-registered runner, official grading
 tests/                    offline tests, including attack tests against the gate
 ```
 
-**Built with** Nebius Token Factory (NVIDIA Nemotron 3 Super 120B-A12B, Token Factory Sandboxes) · SWE-rebench-V2. MIT license.
+**Built with** Nebius Token Factory (NVIDIA Nemotron 3 Super 120B-A12B, Token Factory Sandboxes) · SWE-rebench-V2. Apache-2.0 license.
 
 ## Credits
 

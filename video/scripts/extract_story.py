@@ -5,8 +5,7 @@ Usage, from the repository root:
         --repo . --out video/src/content/story.json
 
 `--repo` is the checkout that holds the records (v2 P is committed; v1's launch-2 archive is
-not). Runs are the ones chosen by the rule in docs/submission/2026-10-02-e0-script-and-readme.md,
-section 5: the cold open is the first false done of A in P's order that a naive check would
+not). Runs are chosen by a rule fixed before the video was cut: the cold open is the first false done of A in P's order that a naive check would
 accept; the featured run is the first task in P's order rejected on attempt 1, verified on appeal
 and officially resolved.
 """
@@ -263,7 +262,7 @@ def main() -> int:
     story = {
         "sources": {
             "records": "pilot/v2-P/ (committed), pilot/v2-arm-lightning/, pilot/aborted-2026-10-01-launch2/",
-            "rule": "docs/submission/2026-10-02-e0-script-and-readme.md, section 5",
+            "rule": "cold open: the first false done of A in P's order that a naive check would accept; featured run: the first task in P's order rejected on attempt 1, verified on appeal and officially resolved",
         },
         "cold_open": _cold_open(repo),
         "featured": _featured(repo),

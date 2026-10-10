@@ -19,7 +19,7 @@ TOKEN_FACTORY_PRICING_SOURCE = (
     "GET https://api.tokenfactory.nebius.com/v1/models?verbose=true"
 )
 
-# Published Daytona rates recorded in docs/research/2026-10-01-daytona-spike.md.
+# Daytona's published per-second rates as of 2026-10-01 (daytona.io pricing).
 DAYTONA_PRICING_READ_DATE = "2026-10-01"
 DAYTONA_VCPU_DOLLARS_PER_HOUR = 0.0504
 DAYTONA_MEMORY_GIB_DOLLARS_PER_HOUR = 0.0162
