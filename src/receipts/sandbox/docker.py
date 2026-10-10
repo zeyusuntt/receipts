@@ -23,6 +23,7 @@ import shlex
 import shutil
 import signal
 import stat
+import sys
 import tarfile
 import uuid
 from dataclasses import dataclass
@@ -45,6 +46,9 @@ from receipts.sandbox.staging import git_environment, mirror_worktree, patch_com
 
 TAIL = 6000
 _IMAGE_ID = re.compile(r"^sha256:[0-9a-f]{64}$")
+# The base image for --repo/--commit runs: Python, git and pytest. Built locally on first use from this
+# Dockerfile, which is the one the tests build (tests/docker/Dockerfile; a test keeps the two identical).
+_BASE_DOCKERFILE = '# Base image for DockerExecutor tests: Python plus git, nothing else.\nFROM python:3.12-slim\nRUN apt-get update && apt-get install -y --no-install-recommends git procps && rm -rf /var/lib/apt/lists/* \\\n    && pip install --no-cache-dir "pytest>=8.2" \\\n    && git config --system user.email fixture@example.com && git config --system user.name Fixture\nCMD ["tail", "-f", "/dev/null"]\n'
 _WORKDIR_ANCHOR = """\
 import json
 import os
@@ -492,6 +496,28 @@ class DockerExecutor:
             raise ValueError(f"container workdir must not overlap scratch: {workdir}")
         return workdir
 
+    async def _ensure_image(self, image: str, platform: str | None) -> None:
+        """Make `image` available: build the Receipts base image, or pull any other image, if missing."""
+
+        _, _, code, timed_out, _, _ = await self._docker("image", "inspect", "--format", "{{.Id}}", image)
+        if code == 0 and not timed_out:
+            return
+        if image == self.base_image:
+            print(f"Building the Receipts base image {image} (first run only)...", file=sys.stderr, flush=True)
+            await self._checked_docker(
+                "build", "-t", image, "-",
+                input_data=_BASE_DOCKERFILE.encode(),
+                timeout_s=1800,
+                operation="docker build",
+            )
+            return
+        print(f"Pulling {image} (first run only; task images can take a few minutes)...", file=sys.stderr, flush=True)
+        await self._checked_docker(
+            "pull", *(["--platform", platform] if platform else []), image,
+            timeout_s=3600,
+            operation="docker pull",
+        )
+
     async def _image_id(self, image: str) -> str:
         stdout = await self._checked_docker(
             "image",
@@ -840,6 +866,7 @@ class DockerExecutor:
         else:
             raise TypeError(f"unsupported source: {type(source).__name__}")
 
+        await self._ensure_image(image, spec.platform)
         source_image = await self._image_id(image)
         await self._reject_image_volumes(image)
         container = f"{self.run_id}-base"

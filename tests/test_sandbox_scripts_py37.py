@@ -9,7 +9,7 @@ import subprocess
 
 import pytest
 
-from receipts.orchestrate import _FREEZE_SCRIPT, _digest_command
+from receipts.orchestrate import _DIGEST_JSON_MARKER, _FREEZE_SCRIPT, _digest_command
 from receipts.sandbox.protocol import PYTEST_BOOTSTRAP
 from receipts.swerebench import Instance, to_task
 
@@ -51,7 +51,10 @@ def test_digest_script_runs_on_python_37(tmp_path):
     result = _run(repo, _digest_command(["tests/test_a.py::test_x"]))
 
     assert result.returncode == 0, result.stderr
-    digests = json.loads(result.stdout)
+    # The digest script marks its JSON line, as orchestrate reads it, so pytest noise cannot be mistaken for it.
+    marked = [line[len(_DIGEST_JSON_MARKER):] for line in result.stdout.splitlines() if line.startswith(_DIGEST_JSON_MARKER)]
+    assert len(marked) == 1, result.stdout
+    digests = json.loads(marked[0])
     assert "tests/test_a.py" in digests["test_digests"]
     assert "setup.cfg" in digests["pytest_config_digests"]
 

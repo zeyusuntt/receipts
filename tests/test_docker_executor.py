@@ -1192,3 +1192,61 @@ async def test_host_timeout_restarts_container_before_returning(tmp_path):
 
     assert result[3] is True
     assert executor.restarted is True
+
+
+def _fake_docker(calls, present):
+    """A stand-in for DockerExecutor._docker: images in `present` exist; pull and build add them."""
+
+    from datetime import datetime, timezone
+
+    async def fake(self, *args, input_data=None, timeout_s=120):
+        calls.append(args)
+        now = datetime.now(timezone.utc)
+        if args[:2] == ("image", "inspect"):
+            if args[-1] in present:
+                return b"sha256:" + b"a" * 64 + b"\n", b"", 0, False, now, 0.0
+            return b"", b"Error response from daemon: No such image: " + args[-1].encode(), 1, False, now, 0.0
+        if args[0] == "pull":
+            present.add(args[-1])
+            return b"", b"", 0, False, now, 0.0
+        if args[0] == "build":
+            present.add(args[args.index("-t") + 1])
+            return b"", b"", 0, False, now, 0.0
+        raise AssertionError(f"unexpected docker call: {args}")
+
+    return fake
+
+
+async def test_missing_task_image_is_pulled_for_its_platform(tmp_path, monkeypatch, capsys):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    calls: list[tuple[str, ...]] = []
+    monkeypatch.setattr(docker_module.DockerExecutor, "_docker", _fake_docker(calls, set()))
+    executor = docker_module.DockerExecutor(tmp_path, MemorySink(), "run-pull")
+    await executor._ensure_image("swerebenchv2/example:1-abc", "linux/amd64")
+    assert ("pull", "--platform", "linux/amd64", "swerebenchv2/example:1-abc") in calls
+    assert "Pulling swerebenchv2/example:1-abc" in capsys.readouterr().err
+
+
+async def test_present_image_is_neither_pulled_nor_built(tmp_path, monkeypatch):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    calls: list[tuple[str, ...]] = []
+    monkeypatch.setattr(docker_module.DockerExecutor, "_docker", _fake_docker(calls, {"swerebenchv2/example:1-abc"}))
+    executor = docker_module.DockerExecutor(tmp_path, MemorySink(), "run-present")
+    await executor._ensure_image("swerebenchv2/example:1-abc", "linux/amd64")
+    assert [call[0] for call in calls] == ["image"]
+
+
+async def test_missing_base_image_is_built_from_the_tested_dockerfile(tmp_path, monkeypatch):
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    calls: list[tuple[str, ...]] = []
+    monkeypatch.setattr(docker_module.DockerExecutor, "_docker", _fake_docker(calls, set()))
+    executor = docker_module.DockerExecutor(tmp_path, MemorySink(), "run-build")
+    await executor._ensure_image(executor.base_image, None)
+    assert any(call[0] == "build" and executor.base_image in call for call in calls)
+    assert not any(call[0] == "pull" for call in calls)
+
+
+def test_embedded_base_dockerfile_matches_the_test_image():
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    dockerfile = Path(__file__).parent / "docker" / "Dockerfile"
+    assert docker_module._BASE_DOCKERFILE == dockerfile.read_text(encoding="utf-8")
