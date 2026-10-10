@@ -372,6 +372,15 @@ def _compact_witness_message(message: str) -> str:
     return " · ".join(parts)
 
 
+def _token_cost(dollars: float | None) -> str:
+    """The run's model cost; under a cent it keeps three decimals, so a cheap run never reads $0.00."""
+
+    if dollars is None:
+        return "token cost unavailable"
+    value = float(dollars)
+    return f"${value:.3f} of Nemotron tokens" if value < 0.01 else f"${value:.2f} of Nemotron tokens"
+
+
 class _FixProgressRenderer:
     def __init__(self, issue: str, model: ModelClient, executor: str) -> None:
         first_line = issue.splitlines()[0].strip() if issue.splitlines() else "issue"
@@ -446,12 +455,7 @@ class _FixProgressRenderer:
 
     def finish(self, result: RunResult, receipt_path: Path) -> None:
         elapsed = _fix_duration(result.wall_time_s)
-        estimated_dollars = result.cost.get("estimated_dollars")
-        cost = (
-            f"${float(estimated_dollars):.2f} of Nemotron tokens"
-            if estimated_dollars is not None
-            else "token cost unavailable"
-        )
+        cost = _token_cost(result.cost.get("estimated_dollars"))
         if result.final_verdict.status == "PASS":
             summary = f"VERIFIED in {elapsed} · {cost}"
         elif result.final_verdict.status == "REJECTED":

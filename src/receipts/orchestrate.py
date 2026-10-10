@@ -61,6 +61,12 @@ _PYTEST_CONFIG_NAMES = {
 }
 _DISCLOSURE_TIMEOUT_S = 120
 _DIGEST_JSON_MARKER = "RECEIPTS_TEST_DIGESTS_JSON:"
+
+
+def _short_id(identifier: str) -> str:
+    """Eight characters that identify a checkpoint: a Docker "sha256:..." id loses its prefix first."""
+
+    return identifier.split(":", 1)[-1][:8]
 _RECEIPTS_VERSION_FALLBACK = "0.0.1"
 _FREEZE_SCRIPT = """\
 # Runs inside the task sandbox, so it must work on Python 3.7.
@@ -729,7 +735,7 @@ async def fix(
             progress,
             ProgressEvent(
                 kind="checkpoint",
-                message=f"built from {source_name} · checkpoint {checkpoint.id[:8]}",
+                message=f"built from {source_name} · checkpoint {_short_id(checkpoint.id)}",
                 duration_s=time.monotonic() - started,
             ),
         )
@@ -820,9 +826,9 @@ async def fix(
                     else []
                 )
                 witness_origin = (
-                    f"fresh sandbox from checkpoint {checkpoint.id[:8]}"
+                    f"fresh sandbox from checkpoint {_short_id(checkpoint.id)}"
                     if verified.witness_provisioned
-                    else f"witness not provisioned from checkpoint {checkpoint.id[:8]}"
+                    else f"witness not provisioned from checkpoint {_short_id(checkpoint.id)}"
                 )
                 apply_status = (
                     ""

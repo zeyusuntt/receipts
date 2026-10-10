@@ -1554,3 +1554,18 @@ async def test_tokenfactory_factory_borrows_shared_api_until_invocation_exit(
     assert api.close_calls == 0
     await api.aclose()
     assert api.close_calls == 1
+
+
+def test_short_checkpoint_ids_drop_the_digest_prefix():
+    from receipts.orchestrate import _short_id
+
+    assert _short_id("sha256:6f3a9c0e1b2d" + "0" * 52) == "6f3a9c0e"
+    assert _short_id("bc230a98-942d-4bba-aa48-77d6b5ef8faa") == "bc230a98"
+
+
+def test_fix_summary_shows_a_sub_cent_cost_instead_of_zero():
+    import receipts.cli as cli
+
+    assert cli._token_cost(0.0031) == "$0.003 of Nemotron tokens"
+    assert cli._token_cost(0.0275) == "$0.03 of Nemotron tokens"
+    assert cli._token_cost(None) == "token cost unavailable"
