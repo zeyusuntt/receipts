@@ -1,0 +1,33 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Add msgpack specific exception types\n### Unpacker\r\n\r\nInvalidSequence -- it's not msgpack.\r\nNestLimitExceeded -- too nested.\r\n\r\nany more ?\r\n\r\n### Packer\r\n\r\nany?",
+  "source": {
+    "image": "docker.io/swerebenchv2/msgpack-msgpack-python:331-8b6ce53",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-msgpack__msgpack-python-331-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvdGVzdF9leGNlcHQucHkgYi90ZXN0L3Rlc3RfZXhjZXB0LnB5CmluZGV4IDM2MWQ0ZWEuLjYyNmM4YmUgMTAwNjQ0Ci0tLSBhL3Rlc3QvdGVzdF9leGNlcHQucHkKKysrIGIvdGVzdC90ZXN0X2V4Y2VwdC5weQpAQCAtMiw3ICsyLDcgQEAKICMgY29kaW5nOiB1dGYtOAogCiBmcm9tIHB5dGVzdCBpbXBvcnQgcmFpc2VzCi1mcm9tIG1zZ3BhY2sgaW1wb3J0IHBhY2tiLCB1bnBhY2tiCitmcm9tIG1zZ3BhY2sgaW1wb3J0IHBhY2tiLCB1bnBhY2tiLCBVbnBhY2tlciwgRm9ybWF0RXJyb3IsIFN0YWNrRXJyb3IsIE91dE9mRGF0YQogCiBpbXBvcnQgZGF0ZXRpbWUKIApAQCAtMTksMTMgKzE5LDM0IEBAIGRlZiB0ZXN0X3JhaXNlX29uX2ZpbmRfdW5zdXBwb3J0ZWRfdmFsdWUoKToKIGRlZiB0ZXN0X3JhaXNlX2Zyb21fb2JqZWN0X2hvb2soKToKICAgICBkZWYgaG9vayhvYmopOgogICAgICAgICByYWlzZSBEdW1teUV4Y2VwdGlvbgorCiAgICAgcmFpc2VzKER1bW15RXhjZXB0aW9uLCB1bnBhY2tiLCBwYWNrYih7fSksIG9iamVjdF9ob29rPWhvb2spCi0gICAgcmFpc2VzKER1bW15RXhjZXB0aW9uLCB1bnBhY2tiLCBwYWNrYih7J2ZpenonOiAnYnV6eid9KSwgb2JqZWN0X2hvb2s9aG9vaykKLSAgICByYWlzZXMoRHVtbXlFeGNlcHRpb24sIHVucGFja2IsIHBhY2tiKHsnZml6eic6ICdidXp6J30pLCBvYmplY3RfcGFpcnNfaG9vaz1ob29rKQotICAgIHJhaXNlcyhEdW1teUV4Y2VwdGlvbiwgdW5wYWNrYiwgcGFja2IoeydmaXp6JzogeydidXp6JzogJ3NwYW0nfX0pLCBvYmplY3RfaG9vaz1ob29rKQotICAgIHJhaXNlcyhEdW1teUV4Y2VwdGlvbiwgdW5wYWNrYiwgcGFja2IoeydmaXp6JzogeydidXp6JzogJ3NwYW0nfX0pLCBvYmplY3RfcGFpcnNfaG9vaz1ob29rKQorICAgIHJhaXNlcyhEdW1teUV4Y2VwdGlvbiwgdW5wYWNrYiwgcGFja2IoeyJmaXp6IjogImJ1enoifSksIG9iamVjdF9ob29rPWhvb2spCisgICAgcmFpc2VzKER1bW15RXhjZXB0aW9uLCB1bnBhY2tiLCBwYWNrYih7ImZpenoiOiAiYnV6eiJ9KSwgb2JqZWN0X3BhaXJzX2hvb2s9aG9vaykKKyAgICByYWlzZXMoRHVtbXlFeGNlcHRpb24sIHVucGFja2IsIHBhY2tiKHsiZml6eiI6IHsiYnV6eiI6ICJzcGFtIn19KSwgb2JqZWN0X2hvb2s9aG9vaykKKyAgICByYWlzZXMoCisgICAgICAgIER1bW15RXhjZXB0aW9uLAorICAgICAgICB1bnBhY2tiLAorICAgICAgICBwYWNrYih7ImZpenoiOiB7ImJ1enoiOiAic3BhbSJ9fSksCisgICAgICAgIG9iamVjdF9wYWlyc19ob29rPWhvb2ssCisgICAgKQogCiAKIGRlZiB0ZXN0X2ludmFsaWR2YWx1ZSgpOgorICAgIGluY29tcGxldGUgPSBiIlx4ZDlceDk3I0RMXyIgICMgcmF3OCAtIGxlbmd0aD0weDk3CiAgICAgd2l0aCByYWlzZXMoVmFsdWVFcnJvcik6Ci0gICAgICAgIHVucGFja2IoYidceGQ5XHg5NyNETF8nKQorICAgICAgICB1bnBhY2tiKGluY29tcGxldGUpCisKKyAgICB3aXRoIHJhaXNlcyhPdXRPZkRhdGEpOgorICAgICAgICB1bnBhY2tlciA9IFVucGFja2VyKCkKKyAgICAgICAgdW5wYWNrZXIuZmVlZChpbmNvbXBsZXRlKQorICAgICAgICB1bnBhY2tlci51bnBhY2soKQorCisgICAgd2l0aCByYWlzZXMoRm9ybWF0RXJyb3IpOgorICAgICAgICB1bnBhY2tiKGIiXHhjMSIpICAjICh1bmRlZmluZWQgdGFnKQorCisgICAgd2l0aCByYWlzZXMoRm9ybWF0RXJyb3IpOgorICAgICAgICB1bnBhY2tiKGIiXHg5MVx4YzEiKSAgIyBmaXhhcnJheShsZW49MSkgWyAodW5kZWZpbmVkIHRhZykgXQorCisgICAgd2l0aCByYWlzZXMoU3RhY2tFcnJvcik6CisgICAgICAgIHVucGFja2IoYiJceDkxIiAqIDMwMDApICAjIG5lc3RlZCBmaXhhcnJheShsZW49MSkK'\"'\"'))'",
+      "git apply /tmp/receipts-msgpack__msgpack-python-331-test.patch"
+    ],
+    "workdir": "/msgpack-python"
+  },
+  "spec_paths": [
+    "test/test_except.py"
+  ],
+  "spec_tests": [
+    "test/test_except.py::test_raise_on_find_unsupported_value",
+    "test/test_except.py::test_raise_from_object_hook",
+    "test/test_except.py::test_invalidvalue"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/test_except.py"
+}

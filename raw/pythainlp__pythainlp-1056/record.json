@@ -1,0 +1,70 @@
+{
+  "instance_id": "pythainlp__pythainlp-1056",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/pythainlp__pythainlp-1056/runs/pilot-pythainlp__pythainlp-1056-98ebf86118",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed sound_syllable to correctly handle initial consonant clusters (e.g., ประ) by ignoring sonorants ร/ล when preceded by a consonant and followed by a vowel. Also fixed tone_detector to handle vowel-only syllables (e.g., เอ) by returning mid tone when no consonants present.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "pythainlp/util/syllable.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "unsupported",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "c8553b5f13a2eb10a31c5784e41c63b5c1d0dc35e77fad46163507a2df04ff46",
+      "filtered_sha256": "c8553b5f13a2eb10a31c5784e41c63b5c1d0dc35e77fad46163507a2df04ff46",
+      "witness_apply_sha256": "c8553b5f13a2eb10a31c5784e41c63b5c1d0dc35e77fad46163507a2df04ff46",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "457f854a04f5804a405df3a09e34ce8ee1c7323b18dce28c8053105195fcdb49",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/core/test_util.py::UtilTestCase::test_sound_syllable",
+            "tests/core/test_util.py::UtilTestCase::test_tone_detector"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "c8553b5f13a2eb10a31c5784e41c63b5c1d0dc35e77fad46163507a2df04ff46",
+        "read_sha256": "c8553b5f13a2eb10a31c5784e41c63b5c1d0dc35e77fad46163507a2df04ff46",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 138886,
+    "model_dollars": 0.0486756,
+    "sandbox_lifetime_seconds": 92.177588,
+    "sandbox_dollars_estimate": 0.28815751
+  },
+  "wall_time_s": 247.72422870900482,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

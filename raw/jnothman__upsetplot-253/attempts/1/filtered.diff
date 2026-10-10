@@ -1,0 +1,66 @@
+diff --git a/upsetplot/plotting.py b/upsetplot/plotting.py
+index 0451215..3249e25 100644
+--- a/upsetplot/plotting.py
++++ b/upsetplot/plotting.py
+@@ -32,6 +32,7 @@ def _process_data(
+     max_degree=None,
+     reverse=False,
+     include_empty_subsets=False,
++    subset_rank_limit=None,
+ ):
+     results = query(
+         df,
+@@ -71,6 +72,23 @@ def _process_data(
+     if reverse:
+         agg = agg[::-1]
+ 
++    if subset_rank_limit is not None:
++        # Determine whether to take head or tail based on sort_by
++        if sort_by == 'degree':
++            # Assume query returns ascending degree; we want highest degree -> take tail
++            agg_slice = agg.iloc[-subset_rank_limit:]
++            # Compute offset of first kept row
++            start_idx = len(agg) - subset_rank_limit
++        else:
++            agg_slice = agg.iloc[:subset_rank_limit]
++            start_idx = 0
++        agg = agg_slice
++        # Keep rows where _bin falls within kept slice
++        keep_mask = (df["_bin"] >= start_idx) & (df["_bin"] < start_idx + subset_rank_limit)
++        df = df[keep_mask].copy()
++        # Remap _bin to new sequential order
++        df["_bin"] = df["_bin"].map({old: new - start_idx for new, old in enumerate(range(start_idx, start_idx + subset_rank_limit))})
++
+     return results.total, df, agg, results.category_totals
+ 
+ 
+@@ -208,6 +226,13 @@ class UpSet:
+         Maximum degree of a subset to be shown in the plot.
+ 
+         .. versionadded:: 0.5
++
++    max_subset_rank : int, optional
++        Maximum number of subsets to be shown in the plot, ordered by
++        ``sort_by``. Only the top ``max_subset_rank`` intersections will
++        be displayed.
++
++        .. versionadded:: 0.12
+     facecolor : 'auto' or matplotlib color or float
+         Color for bar charts and active dots. Defaults to black if
+         axes.facecolor is a light color, otherwise white.
+@@ -282,6 +307,7 @@ class UpSet:
+         show_counts="",
+         show_percentages=False,
+         include_empty_subsets=False,
++        max_subset_rank=None,
+     ):
+         self._horizontal = orientation == "horizontal"
+         self._reorient = _identity if self._horizontal else _transpose
+@@ -328,6 +354,7 @@ class UpSet:
+             max_degree=max_degree,
+             reverse=not self._horizontal,
+             include_empty_subsets=include_empty_subsets,
++            subset_rank_limit=max_subset_rank,
+         )
+         self.subset_styles = [
+             {"facecolor": facecolor} for i in range(len(self.intersections))

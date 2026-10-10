@@ -1,0 +1,34 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Catch calling Any()\nI found some code that did `Any(...)` instead of `cast(Any, ...)`. Pyanalyze didn't catch it because `Any.__call__` does exist, it just always throws an error. Let's add a special case to show a type checker error for this.",
+  "source": {
+    "image": "docker.io/swerebenchv2/quora-pyanalyze:688-d5545a3",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-quora__pyanalyze-688-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3B5YW5hbHl6ZS90ZXN0X2ltcGxlbWVudGF0aW9uLnB5IGIvcHlhbmFseXplL3Rlc3RfaW1wbGVtZW50YXRpb24ucHkKaW5kZXggOGRlOTBhNy4uMjRlNGUxMyAxMDA2NDQKLS0tIGEvcHlhbmFseXplL3Rlc3RfaW1wbGVtZW50YXRpb24ucHkKKysrIGIvcHlhbmFseXplL3Rlc3RfaW1wbGVtZW50YXRpb24ucHkKQEAgLTEzNDUsMyArMTM0NSwxMiBAQCBjbGFzcyBUZXN0QXNzZXJ0VHlwZShUZXN0TmFtZUNoZWNrVmlzaXRvckJhc2UpOgogICAgICAgICAgICAgYXNzZXJ0X3R5cGUoZXhwbGljaXRfYW55LCBBbnkpCiAKICAgICAgICAgICAgIGFzc2VydF90eXBlKHgsIGludCkgICMgRTogaW5mZXJlbmNlX2ZhaWx1cmUKKworCitjbGFzcyBUZXN0QW55KFRlc3ROYW1lQ2hlY2tWaXNpdG9yQmFzZSk6CisgICAgQGFzc2VydF9wYXNzZXMoKQorICAgIGRlZiB0ZXN0X2NhbGwoc2VsZik6CisgICAgICAgIGZyb20gdHlwaW5nIGltcG9ydCBBbnkKKworICAgICAgICBkZWYgY2FweWJhcmEoKToKKyAgICAgICAgICAgIEFueSg0MikgICMgRTogaW5jb21wYXRpYmxlX2NhbGwKZGlmZiAtLWdpdCBhL3B5YW5hbHl6ZS90ZXN0X3J1bnRpbWUucHkgYi9weWFuYWx5emUvdGVzdF9ydW50aW1lLnB5CmluZGV4IGM5Y2E5MzkuLjkyYzY2MWUgMTAwNjQ0Ci0tLSBhL3B5YW5hbHl6ZS90ZXN0X3J1bnRpbWUucHkKKysrIGIvcHlhbmFseXplL3Rlc3RfcnVudGltZS5weQpAQCAtNywyMiArNywyMiBAQCBmcm9tIC50ZXN0X25vZGVfdmlzaXRvciBpbXBvcnQgYXNzZXJ0X3Bhc3NlcwogCiAKIGRlZiB0ZXN0X2lzX2NvbXBhdGlibGUoKSAtPiBOb25lOgotICAgIGFzc2VydCBub3QgaXNfY29tcGF0aWJsZShMaXN0W2ludF0sIDQyKQotICAgIGFzc2VydCBpc19jb21wYXRpYmxlKExpc3RbaW50XSwgW10pCi0gICAgYXNzZXJ0IG5vdCBpc19jb21wYXRpYmxlKExpc3RbaW50XSwgWyJ4Il0pCi0gICAgYXNzZXJ0IGlzX2NvbXBhdGlibGUoTGlzdFtpbnRdLCBbMSwgMiwgM10pCisgICAgYXNzZXJ0IG5vdCBpc19jb21wYXRpYmxlKDQyLCBMaXN0W2ludF0pCisgICAgYXNzZXJ0IGlzX2NvbXBhdGlibGUoW10sIExpc3RbaW50XSkKKyAgICBhc3NlcnQgbm90IGlzX2NvbXBhdGlibGUoWyJ4Il0sIExpc3RbaW50XSkKKyAgICBhc3NlcnQgaXNfY29tcGF0aWJsZShbMSwgMiwgM10sIExpc3RbaW50XSkKIAogCiBkZWYgdGVzdF9nZXRfY29tcGF0aWJpbGl0eV9lcnJvcigpIC0+IE5vbmU6CiAgICAgYXNzZXJ0ICgKLSAgICAgICAgZ2V0X2NvbXBhdGliaWxpdHlfZXJyb3IoTGlzdFtpbnRdLCA0MikgPT0gIkNhbm5vdCBhc3NpZ24gTGl0ZXJhbFs0Ml0gdG8gbGlzdFxuIgorICAgICAgICBnZXRfY29tcGF0aWJpbGl0eV9lcnJvcig0MiwgTGlzdFtpbnRdKSA9PSAiQ2Fubm90IGFzc2lnbiBMaXRlcmFsWzQyXSB0byBsaXN0XG4iCiAgICAgKQotICAgIGFzc2VydCBnZXRfY29tcGF0aWJpbGl0eV9lcnJvcihMaXN0W2ludF0sIFtdKSBpcyBOb25lCisgICAgYXNzZXJ0IGdldF9jb21wYXRpYmlsaXR5X2Vycm9yKFtdLCBMaXN0W2ludF0pIGlzIE5vbmUKICAgICBhc3NlcnQgKAotICAgICAgICBnZXRfY29tcGF0aWJpbGl0eV9lcnJvcihMaXN0W2ludF0sIFsieCJdKQorICAgICAgICBnZXRfY29tcGF0aWJpbGl0eV9lcnJvcihbIngiXSwgTGlzdFtpbnRdKQogICAgICAgICA9PSAiSW4gZWxlbWVudCAwXG4gIENhbm5vdCBhc3NpZ24gTGl0ZXJhbFsneCddIHRvIGludFxuIgogICAgICkKLSAgICBhc3NlcnQgZ2V0X2NvbXBhdGliaWxpdHlfZXJyb3IoTGlzdFtpbnRdLCBbMSwgMiwgM10pIGlzIE5vbmUKKyAgICBhc3NlcnQgZ2V0X2NvbXBhdGliaWxpdHlfZXJyb3IoWzEsIDIsIDNdLCBMaXN0W2ludF0pIGlzIE5vbmUKIAogCiBjbGFzcyBUZXN0UnVudGltZVR5cGVHdWFyZChUZXN0TmFtZUNoZWNrVmlzaXRvckJhc2UpOgpAQCAtMzksOSArMzksOSBAQCBjbGFzcyBUZXN0UnVudGltZVR5cGVHdWFyZChUZXN0TmFtZUNoZWNrVmlzaXRvckJhc2UpOgogCiAgICAgICAgIGRlZiBjYXB5YmFyYShzOiBzdHIpIC0+IE5vbmU6CiAgICAgICAgICAgICB3YW50X2xvd2VyY2FzZShzKSAgIyBFOiBpbmNvbXBhdGlibGVfYXJndW1lbnQKLSAgICAgICAgICAgIGlmIGlzX2NvbXBhdGlibGUoSXNMb3dlciwgcyk6CisgICAgICAgICAgICBpZiBpc19jb21wYXRpYmxlKHMsIElzTG93ZXIpOgogICAgICAgICAgICAgICAgIHdhbnRfbG93ZXJjYXNlKHMpCiAKICAgICAgICAgZGVmIGFzc2VydGluZ19jYXB5YmFyYShzOiBzdHIpIC0+IE5vbmU6Ci0gICAgICAgICAgICBhc3NlcnQgaXNfY29tcGF0aWJsZShJc0xvd2VyLCBzKQorICAgICAgICAgICAgYXNzZXJ0IGlzX2NvbXBhdGlibGUocywgSXNMb3dlcikKICAgICAgICAgICAgIHdhbnRfbG93ZXJjYXNlKHMpCg=='\"'\"'))'",
+      "git apply /tmp/receipts-quora__pyanalyze-688-test.patch"
+    ],
+    "workdir": "/pyanalyze"
+  },
+  "spec_paths": [
+    "pyanalyze/test_implementation.py",
+    "pyanalyze/test_runtime.py"
+  ],
+  "spec_tests": [
+    "pyanalyze/test_implementation.py::TestAny::test_call",
+    "pyanalyze/test_runtime.py::test_is_compatible",
+    "pyanalyze/test_runtime.py::test_get_compatibility_error"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pyanalyze/test_implementation.py pyanalyze/test_runtime.py"
+}

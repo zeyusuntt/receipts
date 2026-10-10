@@ -1,0 +1,56 @@
+diff --git a/src/typing_extensions.py b/src/typing_extensions.py
+index cce31f8..8fee27f 100644
+--- a/src/typing_extensions.py
++++ b/src/typing_extensions.py
+@@ -440,7 +440,50 @@ else:
+ Counter = typing.Counter
+ ChainMap = typing.ChainMap
+ AsyncGenerator = typing.AsyncGenerator
+-NewType = typing.NewType
++if sys.version_info >= (3, 10):
++    NewType = typing.NewType
++else:
++    class _NewType:
++        def __init__(self, name, tp):
++            if not isinstance(name, str):
++                raise TypeError("NewType name must be a string")
++            if not isinstance(tp, type):
++                raise TypeError("NewType must be called with a type")
++            self.name = name
++            self.tp = tp
++            # Create the actual type that will be used
++            def __new__(cls, value):
++                return tp(value)
++            # Determine module for pickling
++            module = sys._getframe(1).f_globals.get('__name__', '__main__')
++            # Build the type
++            self._super = tp
++            self._type = type.__new__(
++                type, name, (tp,), {
++                    '__module__': module,
++                    '__name__': name,
++                    '__new__': staticmethod(__new__),
++                    '__reduce__': lambda self: (_NewType, (name, tp)),
++                }
++            )
++        def __call__(self, value):
++            return self._type(value)
++        def __reduce__(self):
++            return (_NewType, (self.name, self.tp))
++        # For attributes access
++        def __getattr__(self, item):
++            return getattr(self._type, item)
++        def __repr__(self):
++            return f"{self._type.__module__}.{self.name}"
++        # Prevent subclassing instances
++        def __init_subclass__(cls, **kwargs):
++            raise TypeError(
++                "Cannot subclass an instance of NewType. Perhaps you were looking for: "
++                "`ProUserId = NewType('ProUserId', UserId)"
++            )
++
++    def NewType(name, tp):
++        return _NewType(name, tp)
+ Text = typing.Text
+ TYPE_CHECKING = typing.TYPE_CHECKING
+ 

@@ -1,0 +1,32 @@
+diff --git a/opensearchpy/_async/http_aiohttp.py b/opensearchpy/_async/http_aiohttp.py
+index ed1d26e..b5d212f 100644
+--- a/opensearchpy/_async/http_aiohttp.py
++++ b/opensearchpy/_async/http_aiohttp.py
+@@ -85,6 +85,7 @@ class AIOHttpConnection(AsyncConnection):
+         client_cert: Any = None,
+         client_key: Any = None,
+         ssl_version: Any = None,
++        ssl_assert_hostname: Any = None,
+         ssl_assert_fingerprint: Any = None,
+         maxsize: Optional[int] = 10,
+         headers: Any = None,
+@@ -163,6 +164,7 @@ class AIOHttpConnection(AsyncConnection):
+             )
+ 
+         self.ssl_assert_fingerprint = ssl_assert_fingerprint
++        self.ssl_assert_hostname = ssl_assert_hostname
+         if self.use_ssl and ssl_context is None:
+             if ssl_version is None:
+                 ssl_context = ssl.create_default_context()
+@@ -178,7 +180,10 @@ class AIOHttpConnection(AsyncConnection):
+ 
+             if verify_certs:
+                 ssl_context.verify_mode = ssl.CERT_REQUIRED
+-                ssl_context.check_hostname = True
++                if self.ssl_assert_hostname is not None:
++                    ssl_context.check_hostname = self.ssl_assert_hostname
++                else:
++                    ssl_context.check_hostname = True
+             else:
+                 ssl_context.check_hostname = False
+                 ssl_context.verify_mode = ssl.CERT_NONE

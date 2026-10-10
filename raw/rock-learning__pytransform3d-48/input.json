@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Angle between similar Quaternions sometimes nan\n\r\nRan into a weird issue of dot product of checked/normalized quaternions becoming >1. Didn't have time to look deeper into it, maybe after the weekend. \r\n```python\r\nimport pytransform3d.rotations as pr\r\n\r\na = ((0.9689124217106448 , 0.24740395925452294 , 0.0 , 0.0))\r\nb = ((0.9689124217106448 , 0.247403959254523 , 0.0 , 0.0))\r\na = pr.check_quaternion(a)\r\nb = pr.check_quaternion(b)\r\n\r\nprint(\"dot:\" , np.dot(a,b))\r\nprint(\"divisor:\", np.linalg.norm(a)*np.linalg.norm(a))\r\nprint(\"angle between quaternions:\", pr.angle_between_vectors(a,b))\r\n```\r\n\r\n>dot: 1.0000000000000002\r\n>divisor: 1.0\r\n>angle between quaternions: nan\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/rock-learning-pytransform3d:48-8a2558d",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-rock-learning__pytransform3d-48-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3B5dHJhbnNmb3JtM2QvdGVzdC90ZXN0X3JvdGF0aW9ucy5weSBiL3B5dHJhbnNmb3JtM2QvdGVzdC90ZXN0X3JvdGF0aW9ucy5weQppbmRleCAyM2I3NzM5ZC4uZWM3MTk2M2QgMTAwNjQ0Ci0tLSBhL3B5dHJhbnNmb3JtM2QvdGVzdC90ZXN0X3JvdGF0aW9ucy5weQorKysgYi9weXRyYW5zZm9ybTNkL3Rlc3QvdGVzdF9yb3RhdGlvbnMucHkKQEAgLTEsMyArMSw0IEBACitpbXBvcnQgd2FybmluZ3MKIGltcG9ydCBudW1weSBhcyBucAogZnJvbSBudW1weS50ZXN0aW5nIGltcG9ydCBhc3NlcnRfYXJyYXlfYWxtb3N0X2VxdWFsLCBhc3NlcnRfYXJyYXlfZXF1YWwKIGZyb20gbm9zZS50b29scyBpbXBvcnQgKGFzc2VydF9hbG1vc3RfZXF1YWwsIGFzc2VydF9lcXVhbCwgYXNzZXJ0X3RydWUsCkBAIC05MSw2ICs5MiwyNyBAQCBkZWYgdGVzdF9hbmdsZV9iZXR3ZWVuX3ZlY3RvcnMoKToKICAgICBhc3NlcnRfYWxtb3N0X2VxdWFsKGFuZ2xlX2JldHdlZW5fdmVjdG9ycyh2UiwgdiksIGFbLTFdKQogCiAKK2RlZiB0ZXN0X2FuZ2xlX2JldHdlZW5fY2xvc2VfdmVjdG9ycygpOgorICAgICIiIlRlc3QgYW5nbGUgYmV0d2VlbiBjbG9zZSB2ZWN0b3JzLgorCisgICAgU2VlIGlzc3VlICM0Ny4KKyAgICAiIiIKKyAgICBhID0gbnAuYXJyYXkoWzAuOTY4OTEyNDIxNzEwNjQ0OCAsIDAuMjQ3NDAzOTU5MjU0NTIyOTQgLCAwLjAgLCAwLjBdKQorICAgIGIgPSBucC5hcnJheShbMC45Njg5MTI0MjE3MTA2NDQ4ICwgMC4yNDc0MDM5NTkyNTQ1MjMgLCAwLjAgLCAwLjBdKQorICAgIGFuZ2xlID0gYW5nbGVfYmV0d2Vlbl92ZWN0b3JzKGEsIGIpCisgICAgYXNzZXJ0X2FsbW9zdF9lcXVhbChhbmdsZSwgMC4wKQorCisKK2RlZiB0ZXN0X2FuZ2xlX3RvX3plcm9fdmVjdG9yX2lzX25hbigpOgorICAgICIiIlRlc3QgYW5nbGUgdG8gemVybyB2ZWN0b3IuIiIiCisgICAgYSA9IG5wLmFycmF5KFsxLjAsIDAuMF0pCisgICAgYiA9IG5wLmFycmF5KFswLjAsIDAuMF0pCisgICAgd2l0aCB3YXJuaW5ncy5jYXRjaF93YXJuaW5ncyhyZWNvcmQ9VHJ1ZSkgYXMgdzoKKyAgICAgICAgYW5nbGUgPSBhbmdsZV9iZXR3ZWVuX3ZlY3RvcnMoYSwgYikKKyAgICAgICAgYXNzZXJ0X2VxdWFsKGxlbih3KSwgMSkKKyAgICBhc3NlcnRfdHJ1ZShucC5pc25hbihhbmdsZSkpCisKKwogZGVmIHRlc3RfY3Jvc3NfcHJvZHVjdF9tYXRyaXgoKToKICAgICAiIiJUZXN0IGNyb3NzLXByb2R1Y3QgbWF0cml4LiIiIgogICAgIHJhbmRvbV9zdGF0ZSA9IG5wLnJhbmRvbS5SYW5kb21TdGF0ZSgwKQo='\"'\"'))'",
+      "git apply /tmp/receipts-rock-learning__pytransform3d-48-test.patch"
+    ],
+    "workdir": "/pytransform3d"
+  },
+  "spec_paths": [
+    "pytransform3d/test/test_rotations.py"
+  ],
+  "spec_tests": [
+    "pytransform3d/test/test_rotations.py::test_angle_between_close_vectors"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pytransform3d/test/test_rotations.py"
+}

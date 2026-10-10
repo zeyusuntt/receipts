@@ -1,0 +1,14 @@
+{
+  "approach": "Replace direct call to `get_cpds(node)` inside `check_model` with a manual search through `self.cpds` returning None when absent.",
+  "files_to_edit": [
+    "pgmpy/models/BayesianModel.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The `check_model` method should use a safe lookup such as checking membership via iteration instead of calling `get_cpds`, because the latter throws a `ValueError` for missing CPDs.",
+  "retries": {},
+  "usage": {
+    "completion": 102,
+    "prompt": 12431,
+    "reasoning": 0
+  }
+}

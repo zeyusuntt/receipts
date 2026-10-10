@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Async client functions return `None` on no response.\n### Versions\r\n- Pymodbus: 3.8.0\r\n\r\n### Description\r\n\r\nPreviously, a timeout during a call to e.g. `client.read_coils` would log an error and return an exception response. As of 3.8.0, this instead returns `None` in the async client, which breaks the normal usage of PyModbus as given in the documentation:\r\n```python\r\ntry:\r\n    rr = await client.read_coils(1, 1, slave=1)\r\nexcept ModbusException as exc:\r\n    _logger.error(f\"ERROR: exception in pymodbus {exc}\")\r\n    raise exc\r\nif rr.isError():  # Error: NoneType has attribute 'isError'.\r\n    _logger.error(\"ERROR: pymodbus returned an error!\")\r\n    raise ModbusException(txt)\r\n```\r\n\r\nThis can be seen by comparing `TransactionManager`'s [`sync_execute`](https://github.com/pymodbus-dev/pymodbus/blob/efb02eb3a01dc623a205da1367e8934b7788e3ff/pymodbus/transaction/transaction.py#L120C1-L122C41):\r\n```python\r\ntxt = f\"No response received after {self.retries} retries, continue with next request\"\r\nLog.error(txt)\r\nraise ModbusIOException(txt)\r\n```\r\nwith [`execute`](https://github.com/pymodbus-dev/pymodbus/blob/efb02eb3a01dc623a205da1367e8934b7788e3ff/pymodbus/transaction/transaction.py#L156C1-L159C1):\r\n```python\r\nLog.error(f\"No response received after {self.retries} retries, continue with next request\")\r\nself.response_future = asyncio.Future()\r\nreturn None\r\n```",
+  "source": {
+    "image": "docker.io/swerebenchv2/pymodbus-dev-pymodbus:2502-f5ede3e",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pymodbus-dev__pymodbus-2502-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvdHJhbnNhY3Rpb24vdGVzdF90cmFuc2FjdGlvbi5weSBiL3Rlc3QvdHJhbnNhY3Rpb24vdGVzdF90cmFuc2FjdGlvbi5weQppbmRleCBkZWNhOTAwMS4uODdhNmJjY2IgMTAwNzU1Ci0tLSBhL3Rlc3QvdHJhbnNhY3Rpb24vdGVzdF90cmFuc2FjdGlvbi5weQorKysgYi90ZXN0L3RyYW5zYWN0aW9uL3Rlc3RfdHJhbnNhY3Rpb24ucHkKQEAgLTE2MSw3ICsxNjEsOCBAQCBjbGFzcyBUZXN0VHJhbnNhY3Rpb246CiAgICAgICAgIGVsaWYgc2NlbmFyaW8gPT0gNDogIyB3YWl0IHJlY2VpdmUsdGltZW91dCwgbm9fcmVzcG9uc2VzIHBhc3MKICAgICAgICAgICAgIHRyYW5zYWN0LmNvbW1fcGFyYW1zLnRpbWVvdXRfY29ubmVjdCA9IDAuMQogICAgICAgICAgICAgdHJhbnNhY3QuY29ubmVjdGlvbl9sb3N0ID0gbW9jay5Nb2NrKCkKLSAgICAgICAgICAgIGFzc2VydCBub3QgYXdhaXQgdHJhbnNhY3QuZXhlY3V0ZShGYWxzZSwgcmVxdWVzdCkKKyAgICAgICAgICAgIHdpdGggcHl0ZXN0LnJhaXNlcyhNb2RidXNJT0V4Y2VwdGlvbik6CisgICAgICAgICAgICAgICAgYXdhaXQgdHJhbnNhY3QuZXhlY3V0ZShGYWxzZSwgcmVxdWVzdCkKICAgICAgICAgZWxzZTogIyBpZiBzY2VuYXJpbyA9PSA1OiAjIHJlc3BvbnNlCiAgICAgICAgICAgICB0cmFuc2FjdC5jb21tX3BhcmFtcy50aW1lb3V0X2Nvbm5lY3QgPSAwLjIKICAgICAgICAgICAgIHRyYW5zYWN0LnJlc3BvbnNlX2Z1dHVyZS5zZXRfcmVzdWx0KHJlc3BvbnNlKQo='\"'\"'))'",
+      "git apply /tmp/receipts-pymodbus-dev__pymodbus-2502-test.patch"
+    ],
+    "workdir": "/pymodbus"
+  },
+  "spec_paths": [
+    "test/transaction/test_transaction.py"
+  ],
+  "spec_tests": [
+    "test/transaction/test_transaction.py::TestTransaction::test_transaction_execute[4-5098]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/transaction/test_transaction.py"
+}

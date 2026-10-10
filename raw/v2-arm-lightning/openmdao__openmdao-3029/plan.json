@@ -1,0 +1,15 @@
+{
+  "approach": "1. Add a `--problem` argument to the `openmdao n2` command to allow specifying a sub-problem pathname.\n2. Modify the hook mechanism in `openmdao/utils/hooks.py` to capture the top-level Problem's viewer data when no `--problem` is specified.\n3. Update `openmdao/visualization/n2_viewer/n2_viewer.py` to use the specified problem or default to the top-level problem.",
+  "files_to_edit": [
+    "openmdao/visualization/n2_viewer/n2_viewer.py",
+    "openmdao/utils/hooks.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The test `test_system_option_too_large` is failing because the N2 viewer data contains variable values that don't fit in a single message when passed via hooks. The issue is related to how the viewer data is captured or passed. Looking at the baseline failure, the test compares viewer data against expected JSON files. The fix likely involves modifying how the N2 command selects which problem to display, or how viewer data is captured for the top-level problem.",
+  "retries": {},
+  "usage": {
+    "completion": 231,
+    "prompt": 22414,
+    "reasoning": 0
+  }
+}

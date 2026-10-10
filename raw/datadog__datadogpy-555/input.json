@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "String decode in dogwrap\n**Describe the bug**\r\nThe parameters `notify_success`, `notify_warning` and `notify_error` cause the `AttributeError` shown below to be thrown when used.\r\n\r\n```\r\nTraceback (most recent call last):\r\n  File \"/usr/local/bin/dogwrap\", line 8, in <module>\r\n    sys.exit(main())\r\n  File \"/usr/local/lib/python3.7/site-packages/datadog/dogshell/wrap.py\", line 377, in main\r\n    event_body = build_event_body(cmd, returncode, stdout, stderr, notifications)\r\n  File \"/usr/local/lib/python3.7/site-packages/datadog/dogshell/wrap.py\", line 209, in build_event_body\r\n    notifications=notifications.decode(\"utf-8\", \"replace\")\r\nAttributeError: 'str' object has no attribute 'decode'\r\n```\r\n\r\nLine 209 attempts to call a decode method on a string. To my knowledge, this method has been removed in python3.\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Install datadog for python3\r\n2. Execute the `dogwrap` command with the `--notify_error` flag set to any string and a command that causes an error\r\n3. Get an exception\r\n\r\n**Expected behavior**\r\nThe datadog event to be logged with the string specified by `--notify_error` in after `**>>>> NOTIFICATIONS <<<<**`\r\n\r\n**Screenshots**\r\n```\r\n$ dogwrap -n \"Example Error\" -k ${API_KEY} --submit_mode errors --notify_error \"test notification\" \"pwd -h\"\r\n\r\nTraceback (most recent call last):\r\n  File \"/usr/local/bin/dogwrap\", line 8, in <module>\r\n    sys.exit(main())\r\n  File \"/usr/local/lib/python3.7/site-packages/datadog/dogshell/wrap.py\", line 377, in main\r\n    event_body = build_event_body(cmd, returncode, stdout, stderr, notifications)\r\n  File \"/usr/local/lib/python3.7/site-packages/datadog/dogshell/wrap.py\", line 209, in build_event_body\r\n    notifications=notifications.decode(\"utf-8\", \"replace\")\r\nAttributeError: 'str' object has no attribute 'decode'\r\n```\r\n\r\n**Environment and Versions (please complete the following information):**\r\n```\r\n$ python3 --version\r\nPython 3.7.6\r\n$ dogwrap --version\r\ndogwrap 0.34.1\r\n```\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/datadog-datadogpy:555-6319ebd",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-datadog__datadogpy-555-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3VuaXQvZG9nd3JhcC90ZXN0X2RvZ3dyYXAucHkgYi90ZXN0cy91bml0L2RvZ3dyYXAvdGVzdF9kb2d3cmFwLnB5CmluZGV4IGU0Y2QyYTMuLjAyMzQxY2EgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3VuaXQvZG9nd3JhcC90ZXN0X2RvZ3dyYXAucHkKKysrIGIvdGVzdHMvdW5pdC9kb2d3cmFwL3Rlc3RfZG9nd3JhcC5weQpAQCAtNDcsNiArNDcsMTEgQEAgY2xhc3MgVGVzdERvZ3dyYXAodW5pdHRlc3QuVGVzdENhc2UpOgogICAgICAgICBldmVudF9ib2R5ID0gYnVpbGRfZXZlbnRfYm9keShjbWQsIHJldHVybmNvZGUsIHN0ZG91dCwgc3RkZXJyLCBub3RpZmljYXRpb25zKQogICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGV4cGVjdGVkX2JvZHksIGV2ZW50X2JvZHkpCiAKKyAgICAgICAgIyBub3RpZmljYXRpb25zIGNhbiBiZSB1bmljb2RlIGFscmVhZHkgaW4gcHkzLCBtYWtlIHN1cmUgd2UgZG9uJ3QgdHJ5IGRlY29kaW5nCisgICAgICAgIG5vdGlmaWNhdGlvbnMgPSBub3RpZmljYXRpb25zLmRlY29kZSgidXRmLTgiLCAicmVwbGFjZSIpCisgICAgICAgIGV2ZW50X2JvZHkgPSBidWlsZF9ldmVudF9ib2R5KGNtZCwgcmV0dXJuY29kZSwgc3Rkb3V0LCBzdGRlcnIsIG5vdGlmaWNhdGlvbnMpCisgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoZXhwZWN0ZWRfYm9keSwgZXZlbnRfYm9keSkKKwogICAgIGRlZiB0ZXN0X3BhcnNlX29wdGlvbnMoc2VsZik6CiAgICAgICAgIG9wdGlvbnMsIGNtZCA9IHBhcnNlX29wdGlvbnMoW10pCiAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoY21kLCAnJykK'\"'\"'))'",
+      "git apply /tmp/receipts-datadog__datadogpy-555-test.patch"
+    ],
+    "workdir": "/datadogpy"
+  },
+  "spec_paths": [
+    "tests/unit/dogwrap/test_dogwrap.py"
+  ],
+  "spec_tests": [
+    "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_build_event_body"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/unit/dogwrap/test_dogwrap.py"
+}

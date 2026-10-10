@@ -1,0 +1,75 @@
+diff --git a/weasyprint/layout/preferred.py b/weasyprint/layout/preferred.py
+index 8c965fe7..651a13c5 100644
+--- a/weasyprint/layout/preferred.py
++++ b/weasyprint/layout/preferred.py
+@@ -635,12 +635,49 @@ def table_and_columns_preferred_widths(context, box, outer=True):
+         table_min_width = table_min_content_width
+         table_max_width = table_max_content_width
+ 
+-    table_min_content_width = max(
+-        table_min_content_width, adjust(
+-            table, outer=False, width=table_min_width))
+-    table_max_content_width = max(
+-        table_max_content_width, adjust(
+-            table, outer=False, width=table_max_width))
++    if table.style['width'] == 'auto':
++        table_min_content_width = max(
++            table_min_content_width, adjust(
++                table, outer=False, width=table_min_width))
++        table_max_content_width = max(
++            table_max_content_width, adjust(
++                table, outer=False, width=table_max_width))
++    else:
++        # Check if table has explicit column/colgroup width specifications
++        has_explicit_column_widths = False
++        for column_group in table.column_groups:
++            for column in column_group.children:
++                if column.style['width'] != 'auto':
++                    has_explicit_column_widths = True
++                    break
++            if has_explicit_column_widths:
++                break
++        if not has_explicit_column_widths:
++            for column in table.columns:
++                if column.style['width'] != 'auto':
++                    has_explicit_column_widths = True
++                    break
++
++        if has_explicit_column_widths:
++            # When table has explicit column/colgroup widths, allow intrinsic widths
++            # to reflect natural content demands (may exceed explicit table width)
++            # to honor column structure constraints
++            table_min_content_width = max(
++                table_min_content_width, adjust(
++                    table, outer=False, width=table_min_width))
++            table_max_content_width = max(
++                table_max_content_width, adjust(
++                    table, outer=False, width=table_max_width))
++        else:
++            # When table lacks explicit column widths, constrain intrinsic width
++            # by explicit table width to prevent content overflow from expanding table
++            explicit_width_constrained = adjust(table, outer=False, width=table_min_width)
++            table_max_content_width = min(table_max_content_width, explicit_width_constrained)
++            # Don't constrain min width to allow legitimate shrinking
++    print(f"DEBUG: table_min_content_width (after) = {table_min_content_width}")
++    print(f"DEBUG: table_max_content_width (after) = {table_max_content_width}")
++    print(f"DEBUG: table_min_content_width (after) = {table_min_content_width}")
++    print(f"DEBUG: table_max_content_width (after) = {table_max_content_width}")
+     table_outer_min_content_width = margin_width(
+         table, margin_width(box, table_min_content_width))
+     table_outer_max_content_width = margin_width(
+diff --git a/weasyprint/layout/table.py b/weasyprint/layout/table.py
+index dec83d18..d7df8e79 100644
+--- a/weasyprint/layout/table.py
++++ b/weasyprint/layout/table.py
+@@ -738,8 +738,8 @@ def auto_table_layout(context, box, containing_block):
+         else:
+             table.width = table_max_content_width
+     else:
+-        if table.width < table_min_content_width:
+-            table.width = table_min_content_width
++        # Always respect explicit table width - contents overflow if needed
++        pass  # Keep table.width as specified
+ 
+     if not grid:
+         table.column_widths = []

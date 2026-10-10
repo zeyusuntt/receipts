@@ -1,0 +1,46 @@
+diff --git a/pelita/game.py b/pelita/game.py
+index 6cbacc56..efc51f3a 100644
+--- a/pelita/game.py
++++ b/pelita/game.py
+@@ -555,7 +555,8 @@ def prepare_bot_state(game_state, idx=None):
+         'bot_was_killed': game_state['bot_was_killed'][own_team::2],
+         'error_count': len(game_state['errors'][own_team]),
+         'food': list(game_state['food'][own_team]),
+-        'name': game_state['team_names'][own_team]
++        'name': game_state['team_names'][own_team],
++        'team_time': game_state['team_time'][own_team]
+     }
+ 
+     enemy_state = {
+@@ -568,7 +569,8 @@ def prepare_bot_state(game_state, idx=None):
+         'bot_was_killed': game_state['bot_was_killed'][enemy_team::2],
+         'error_count': 0, # TODO. Could be left out for the enemy
+         'food': list(game_state['food'][enemy_team]),
+-        'name': game_state['team_names'][enemy_team]
++        'name': game_state['team_names'][enemy_team],
++        'team_time': game_state['team_time'][enemy_team]
+     }
+ 
+     bot_state = {
+diff --git a/pelita/team.py b/pelita/team.py
+index dab0930c..1b528af9 100644
+--- a/pelita/team.py
++++ b/pelita/team.py
+@@ -524,7 +524,8 @@ class Bot:
+                           team_name,
+                           error_count,
+                           is_noisy,
+-                          bot_turn=None):
++                          bot_turn=None,
++                          team_time=0.0):
+         self._bots = None
+         self._say = None
+ 
+@@ -554,6 +555,7 @@ class Bot:
+         self.error_count = error_count
+         self.is_noisy = is_noisy
+         self.graph = graph
++        self.team_time = team_time
+ 
+         # The legal positions that the bot can reach from its current position,
+         # including the current position.

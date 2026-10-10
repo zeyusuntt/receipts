@@ -1,0 +1,33 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "pipx list --json can print non-json to stdout\nWhen nothing is installed, `pipx list --json` prints `nothing has been installed with pipx \ud83d\ude34` to stdout, and that's not valid json.\r\n\r\n_Originally posted by @liskin in https://github.com/pipxproject/pipx/issues/660#issuecomment-828473735_\r\n\r\nIn addition, any warnings about the venvs are also printed to stdout, which is also non-valid json!",
+  "source": {
+    "image": "docker.io/swerebenchv2/pipxproject-pipx:680-238622d",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pipxproject__pipx-680-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfbGlzdC5weSBiL3Rlc3RzL3Rlc3RfbGlzdC5weQppbmRleCA5Nzc3MmM5Li4yMjFkNmY1IDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X2xpc3QucHkKKysrIGIvdGVzdHMvdGVzdF9saXN0LnB5CkBAIC0xOSw3ICsxOSw3IEBAIGZyb20gcGlweC5waXB4X21ldGFkYXRhX2ZpbGUgaW1wb3J0IFBhY2thZ2VJbmZvLCBfanNvbl9kZWNvZGVyX29iamVjdF9ob29rCiBkZWYgdGVzdF9jbGkocGlweF90ZW1wX2VudiwgbW9ua2V5cGF0Y2gsIGNhcHN5cyk6CiAgICAgYXNzZXJ0IG5vdCBydW5fcGlweF9jbGkoWyJsaXN0Il0pCiAgICAgY2FwdHVyZWQgPSBjYXBzeXMucmVhZG91dGVycigpCi0gICAgYXNzZXJ0ICJub3RoaW5nIGhhcyBiZWVuIGluc3RhbGxlZCB3aXRoIHBpcHgiIGluIGNhcHR1cmVkLm91dAorICAgIGFzc2VydCAibm90aGluZyBoYXMgYmVlbiBpbnN0YWxsZWQgd2l0aCBwaXB4IiBpbiBjYXB0dXJlZC5lcnIKIAogCiBkZWYgdGVzdF9taXNzaW5nX2ludGVycHJldGVyKHBpcHhfdGVtcF9lbnYsIG1vbmtleXBhdGNoLCBjYXBzeXMpOgpAQCAtMjcsMTMgKzI3LDEzIEBAIGRlZiB0ZXN0X21pc3NpbmdfaW50ZXJwcmV0ZXIocGlweF90ZW1wX2VudiwgbW9ua2V5cGF0Y2gsIGNhcHN5cyk6CiAKICAgICBhc3NlcnQgbm90IHJ1bl9waXB4X2NsaShbImxpc3QiXSkKICAgICBjYXB0dXJlZCA9IGNhcHN5cy5yZWFkb3V0ZXJyKCkKLSAgICBhc3NlcnQgInBhY2thZ2UgcHljb3dzYXkgaGFzIGludmFsaWQgaW50ZXJwcmV0ZXIiIG5vdCBpbiBjYXB0dXJlZC5vdXQKKyAgICBhc3NlcnQgInBhY2thZ2UgcHljb3dzYXkgaGFzIGludmFsaWQgaW50ZXJwcmV0ZXIiIG5vdCBpbiBjYXB0dXJlZC5lcnIKIAogICAgIHJlbW92ZV92ZW52X2ludGVycHJldGVyKCJweWNvd3NheSIpCiAKICAgICBhc3NlcnQgcnVuX3BpcHhfY2xpKFsibGlzdCJdKQogICAgIGNhcHR1cmVkID0gY2Fwc3lzLnJlYWRvdXRlcnIoKQotICAgIGFzc2VydCAicGFja2FnZSBweWNvd3NheSBoYXMgaW52YWxpZCBpbnRlcnByZXRlciIgaW4gY2FwdHVyZWQub3V0CisgICAgYXNzZXJ0ICJwYWNrYWdlIHB5Y293c2F5IGhhcyBpbnZhbGlkIGludGVycHJldGVyIiBpbiBjYXB0dXJlZC5lcnIKIAogCiBkZWYgdGVzdF9saXN0X3N1ZmZpeChwaXB4X3RlbXBfZW52LCBtb25rZXlwYXRjaCwgY2Fwc3lzKToKQEAgLTUzLDcgKzUzLDcgQEAgZGVmIHRlc3RfbGlzdF9sZWdhY3lfdmVudihwaXB4X3RlbXBfZW52LCBtb25rZXlwYXRjaCwgY2Fwc3lzLCBtZXRhZGF0YV92ZXJzaW9uKToKICAgICBpZiBtZXRhZGF0YV92ZXJzaW9uIGlzIE5vbmU6CiAgICAgICAgIGFzc2VydCBydW5fcGlweF9jbGkoWyJsaXN0Il0pCiAgICAgICAgIGNhcHR1cmVkID0gY2Fwc3lzLnJlYWRvdXRlcnIoKQotICAgICAgICBhc3NlcnQgInBhY2thZ2UgcHljb3dzYXkgaGFzIG1pc3NpbmcgaW50ZXJuYWwgcGlweCBtZXRhZGF0YSIgaW4gY2FwdHVyZWQub3V0CisgICAgICAgIGFzc2VydCAicGFja2FnZSBweWNvd3NheSBoYXMgbWlzc2luZyBpbnRlcm5hbCBwaXB4IG1ldGFkYXRhIiBpbiBjYXB0dXJlZC5lcnIKICAgICBlbHNlOgogICAgICAgICBhc3NlcnQgbm90IHJ1bl9waXB4X2NsaShbImxpc3QiXSkKICAgICAgICAgY2FwdHVyZWQgPSBjYXBzeXMucmVhZG91dGVycigpCg=='\"'\"'))'",
+      "git apply /tmp/receipts-pipxproject__pipx-680-test.patch"
+    ],
+    "workdir": "/pipx"
+  },
+  "spec_paths": [
+    "tests/test_list.py"
+  ],
+  "spec_tests": [
+    "tests/test_list.py::test_cli",
+    "tests/test_list.py::test_missing_interpreter",
+    "tests/test_list.py::test_list_legacy_venv[None]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_list.py"
+}

@@ -1,0 +1,14 @@
+{
+  "approach": "Replace direct `.decode(\"utf-8\", \"replace\")` calls with conditional handling based on input type\u2014use the value as-is if it\u2019s already a string, otherwise decode from bytes.",
+  "files_to_edit": [
+    "datadog/dogshell/wrap.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "In `build_event_body`, the `notifications` parameter may sometimes be a Unicode string instead of bytes due to argparse passing strings directly. The fix is to check whether `notifications` is bytes-like; if not, use it directly in formatting. Apply the same logic to stdout and stderr for consistency, though the failure occurred specifically on notifications.",
+  "retries": {},
+  "usage": {
+    "completion": 140,
+    "prompt": 9947,
+    "reasoning": 0
+  }
+}

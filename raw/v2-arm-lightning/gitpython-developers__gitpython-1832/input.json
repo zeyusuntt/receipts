@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "If `diff.external` is set, diffing via API fails silently as external tool isn't understood\nGitPython version: 3.1.42.\r\n\r\n```python\r\nfrom git import Repo\r\n\r\nrepo = Repo(\".\")\r\nprint(repo.index.diff(\"HEAD\"))\r\nprint(repo.index.diff(\"HEAD\", create_patch=True))\r\n\r\nprint(repo.index.diff(None))\r\nprint(repo.index.diff(None, create_patch=True))\r\n```\r\n\r\nprints\r\n\r\n```python\r\n[<git.diff.Diff object at 0x10cbb08b0>]\r\n[]\r\n[<git.diff.Diff object at 0x103d49d30>]\r\n[]\r\n```\r\n\r\n`R=True` workaround mentioned in #852 does not help either:\r\n\r\n```python\r\nprint(repo.index.diff(\"HEAD\", create_patch=True, R=True))\r\n# []\r\n```\r\n\r\nThis also happens when I try to diff tree against index or working tree\r\n\r\n```python\r\nprint(repo.head.commit.diff(None, create_patch=True))\r\nprint(repo.head.commit.diff(None))\r\n\r\nprint(repo.head.commit.diff())\r\nprint(repo.head.commit.diff(create_patch=True))\r\n\r\n```\r\n\r\nreturns\r\n\r\n```python\r\n[]\r\n[<git.diff.Diff object at 0x103d69670>, <git.diff.Diff object at 0x103d699d0>]\r\n[]\r\n[<git.diff.Diff object at 0x103d69700>]\r\n```\r\n\r\nIt looks like using `create_patch=True` when comparison includes index or working tree always returns empty list. So right now only way to reliably use `create_patch=True` is to diff tree against tree.\r\n\r\n_Originally posted by @can-taslicukur in https://github.com/gitpython-developers/GitPython/issues/852#issuecomment-1951424734_\r\n            ",
+  "source": {
+    "image": "docker.io/swerebenchv2/gitpython-developers-gitpython:1832-afa5754",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-gitpython-developers__gitpython-1832-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvdGVzdF9kaWZmLnB5IGIvdGVzdC90ZXN0X2RpZmYucHkKaW5kZXggODdmOTJmNWQuLmUzZDBiOGU1IDEwMDY0NAotLS0gYS90ZXN0L3Rlc3RfZGlmZi5weQorKysgYi90ZXN0L3Rlc3RfZGlmZi5weQpAQCAtNDczLDMgKzQ3Myw0NSBAQCBjbGFzcyBUZXN0RGlmZihUZXN0QmFzZSk6CiAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoVHJ1ZSwgZGlmZi5yZW5hbWVkX2ZpbGUpCiAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoImZpbGVfYS50eHQiLCBkaWZmLnJlbmFtZV9mcm9tKQogICAgICAgICBzZWxmLmFzc2VydEVxdWFsKCJmaWxlX2IudHh0IiwgZGlmZi5yZW5hbWVfdG8pCisKKyAgICBAd2l0aF9yd19kaXJlY3RvcnkKKyAgICBkZWYgdGVzdF9kaWZmX3BhdGNoX3dpdGhfZXh0ZXJuYWxfZW5naW5lKHNlbGYsIHJ3X2Rpcik6CisgICAgICAgIHJlcG8gPSBSZXBvLmluaXQocndfZGlyKQorICAgICAgICBnaXRpZ25vcmUgPSBvc3Auam9pbihyd19kaXIsICIuZ2l0aWdub3JlIikKKworICAgICAgICAjIEZpcnN0IGNvbW1pdAorICAgICAgICB3aXRoIG9wZW4oZ2l0aWdub3JlLCAidyIpIGFzIGY6CisgICAgICAgICAgICBmLndyaXRlKCJmaXJzdF9saW5lXG4iKQorICAgICAgICByZXBvLmdpdC5hZGQoIi5naXRpZ25vcmUiKQorICAgICAgICByZXBvLmluZGV4LmNvbW1pdCgiZmlyc3QgY29tbWl0IikKKworICAgICAgICAjIEFkZGluZyBzZWNvbmQgbGluZSBhbmQgY29tbWl0dGluZworICAgICAgICB3aXRoIG9wZW4oZ2l0aWdub3JlLCAiYSIpIGFzIGY6CisgICAgICAgICAgICBmLndyaXRlKCJzZWNvbmRfbGluZVxuIikKKyAgICAgICAgcmVwby5naXQuYWRkKCIuZ2l0aWdub3JlIikKKyAgICAgICAgcmVwby5pbmRleC5jb21taXQoInNlY29uZCBjb21taXQiKQorCisgICAgICAgICMgQWRkaW5nIHRoaXJkIGxpbmUgYW5kIHN0YWdpbmcKKyAgICAgICAgd2l0aCBvcGVuKGdpdGlnbm9yZSwgImEiKSBhcyBmOgorICAgICAgICAgICAgZi53cml0ZSgidGhpcmRfbGluZVxuIikKKyAgICAgICAgcmVwby5naXQuYWRkKCIuZ2l0aWdub3JlIikKKworICAgICAgICAjIEFkZGluZyBmb3VydGggbGluZQorICAgICAgICB3aXRoIG9wZW4oZ2l0aWdub3JlLCAiYSIpIGFzIGY6CisgICAgICAgICAgICBmLndyaXRlKCJmb3VydGhfbGluZVxuIikKKworICAgICAgICAjIFNldCB0aGUgZXh0ZXJuYWwgZGlmZiBlbmdpbmUKKyAgICAgICAgd2l0aCByZXBvLmNvbmZpZ193cml0ZXIoY29uZmlnX2xldmVsPSJyZXBvc2l0b3J5IikgYXMgd3JpdGVyOgorICAgICAgICAgICAgd3JpdGVyLnNldF92YWx1ZSgiZGlmZiIsICJleHRlcm5hbCIsICJib2d1c19kaWZmX2VuZ2luZSIpCisKKyAgICAgICAgaGVhZF9hZ2FpbnN0X2hlYWQgPSByZXBvLmhlYWQuY29tbWl0LmRpZmYoIkhFQUReIiwgY3JlYXRlX3BhdGNoPVRydWUpCisgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwobGVuKGhlYWRfYWdhaW5zdF9oZWFkKSwgMSkKKyAgICAgICAgaGVhZF9hZ2FpbnN0X2luZGV4ID0gcmVwby5oZWFkLmNvbW1pdC5kaWZmKGNyZWF0ZV9wYXRjaD1UcnVlKQorICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGxlbihoZWFkX2FnYWluc3RfaW5kZXgpLCAxKQorICAgICAgICBoZWFkX2FnYWluc3Rfd29ya2luZ190cmVlID0gcmVwby5oZWFkLmNvbW1pdC5kaWZmKE5vbmUsIGNyZWF0ZV9wYXRjaD1UcnVlKQorICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGxlbihoZWFkX2FnYWluc3Rfd29ya2luZ190cmVlKSwgMSkKKworICAgICAgICBpbmRleF9hZ2FpbnN0X2hlYWQgPSByZXBvLmluZGV4LmRpZmYoIkhFQUQiLCBjcmVhdGVfcGF0Y2g9VHJ1ZSkKKyAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChsZW4oaW5kZXhfYWdhaW5zdF9oZWFkKSwgMSkKKyAgICAgICAgaW5kZXhfYWdhaW5zdF93b3JraW5nX3RyZWUgPSByZXBvLmluZGV4LmRpZmYoTm9uZSwgY3JlYXRlX3BhdGNoPVRydWUpCisgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwobGVuKGluZGV4X2FnYWluc3Rfd29ya2luZ190cmVlKSwgMSkK'\"'\"'))'",
+      "git apply /tmp/receipts-gitpython-developers__gitpython-1832-test.patch"
+    ],
+    "workdir": "/GitPython"
+  },
+  "spec_paths": [
+    "test/test_diff.py"
+  ],
+  "spec_tests": [
+    "test/test_diff.py::TestDiff::test_diff_patch_with_external_engine"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/test_diff.py"
+}

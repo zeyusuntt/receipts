@@ -1,0 +1,98 @@
+diff --git a/janitor/timeseries.py b/janitor/timeseries.py
+index 5e1a99d..83836b3 100644
+--- a/janitor/timeseries.py
++++ b/janitor/timeseries.py
+@@ -60,6 +60,93 @@ def fill_missing_timestamps(
+     return df.reindex(expected_timestamps)
+ 
+ 
++@pf.register_dataframe_method
++def sort_timestamps_monotonically(
++    df: pd.DataFrame,
++    column_name: str = None,
++    direction: str = "increasing",
++    strict: bool = False,
++) -> pd.DataFrame:
++    """
++    Sorts data frame monotonically.
++    It assumes the data frame has an index of type pd.DateTimeIndex when index is datetime.
++    If datetime is in a column, then the column is expected to be of type pd.Timestamp
++
++    :param df: data frame to sort monotonically
++    :param column_name: needs to be specified if and only if the date time is not in index.
++        Defaults to None
++    :param direction: specifies the direction in which monotonicity is being tested for.
++        Defaults to 'increasing'
++    :param strict: whether to drop duplicates after sorting
++    :return: data frame with its index sorted
++    """
++    # Handle case where column_name is actually a direction value
++    # This supports calling df.sort_timestamps_monotonically("decreasing") 
++    # as shorthand for df.sort_timestamps_monotonically(direction="decreasing")
++    if column_name is not None and column_name not in df.columns:
++        if column_name in ("increasing", "decreasing"):
++            # Treat as direction instead
++            direction = column_name
++            column_name = None
++        else:
++            raise KeyError(f"Column '{column_name}' not found in DataFrame")
++    
++    if column_name is not None:
++        # Sort by the specified column
++        ascending = direction == "increasing"
++        result_df = df.sort_values(by=column_name, ascending=ascending)
++    else:
++        # Sort by index
++        ascending = direction == "increasing"
++        result_df = df.sort_index(ascending=ascending)
++    
++    if strict:
++        if column_name is not None:
++            result_df = result_df.drop_duplicates(subset=[column_name], keep='first')
++        else:
++            result_df = result_df[~result_df.index.duplicated(keep='first')]
++            
++    return result_df
++
++
++@pf.register_dataframe_method
++def test_for_monotonicity(
++    df: pd.DataFrame,
++    column_name: str = None,
++    direction: str = "increasing",
++) -> bool:
++    """
++    Tests input data frame for monotonicity.
++
++    Check if the data is monotonically increasing or decreasing.
++    Direction is dependent on user input.
++    Defaults to increasing
++
++    :param df: data frame to be tested for monotonicity
++    :param column_name: needs to be specified if and only if the date time is not in index.
++        Defaults to None.
++    :param direction: specifies the direction in which monotonicity is being tested for.
++        Defaults to 'increasing'
++    :return: single boolean flag indicating whether the test has passed or not
++    """
++    if column_name is not None:
++        if column_name not in df.columns:
++            raise KeyError(f"Column '{column_name}' not found in DataFrame")
++        series = df[column_name]
++    else:
++        series = df.index
++
++    if not isinstance(series, (pd.DatetimeIndex, pd.Series)):
++        raise TypeError("Series must be DatetimeIndex or Series containing timestamps")
++
++    if direction == "increasing":
++        return series.is_monotonic_increasing
++    elif direction == "decreasing":
++        return series.is_monotonic_decreasing
++    else:
++        raise ValueError("Direction must be either 'increasing' or 'decreasing'")
++
++
+ def _get_missing_timestamps(
+     df: pd.DataFrame,
+     frequency: str,

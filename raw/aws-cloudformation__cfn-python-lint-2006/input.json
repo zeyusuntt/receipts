@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "cfn-lint 0.49.1 does not catch `/` as an invalid character in a Mapping element name\n*cfn-lint version: cfn-lint 0.49.1*\r\n\r\n*cfn-lint did not catch `/` as an invalid character in a Mapping element name*\r\n\r\ncfn-lint passed successfully with this mapping included in the template:\r\n```yaml\r\nMappings:\r\n  NameServers:\r\n    10.90.0.0/16:\r\n      NameServer1: 10.90.0.10\r\n      NameServer2: 10.90.4.10\r\n    10.91.0.0/16:\r\n      NameServer1: 10.91.0.10\r\n      NameServer2: 10.91.4.10\r\n```\r\n\r\nHowever AWS rejected it:\r\n> Template format error: Mappings element name '10.93.0.0/16' must be non-empty and can contain only alphanumerics, '-' or '.'\r\n\r\n![Screen Shot 2021-05-12 at 11 34 41](https://user-images.githubusercontent.com/7205587/117905164-0e917c00-b316-11eb-8132-2da240ff892a.png)\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/aws-cloudformation-cfn-python-lint:2006-490e75c",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-aws-cloudformation__cfn-python-lint-2006-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvZml4dHVyZXMvdGVtcGxhdGVzL2JhZC9tYXBwaW5ncy9rZXlfbmFtZS55YW1sIGIvdGVzdC9maXh0dXJlcy90ZW1wbGF0ZXMvYmFkL21hcHBpbmdzL2tleV9uYW1lLnlhbWwKaW5kZXggZGY2MzEzNzMyLi43M2ZjNGVlNzYgMTAwNjQ0Ci0tLSBhL3Rlc3QvZml4dHVyZXMvdGVtcGxhdGVzL2JhZC9tYXBwaW5ncy9rZXlfbmFtZS55YW1sCisrKyBiL3Rlc3QvZml4dHVyZXMvdGVtcGxhdGVzL2JhZC9tYXBwaW5ncy9rZXlfbmFtZS55YW1sCkBAIC03LDQgKzcsOCBAQCBNYXBwaW5nczoKICAgICB1cy1lYXN0LTFhOgogICAgICAgMTIzNDU2Nzg5MDEyOiAiYW1pLTk1MTk0NWQwIgogICAgICAgdXMtZWFzdC0xYjogImFtaS05NTE5NDVkMSIKKyAgTmFtZVNlcnZlcnM6CisgICAgMTAuOTAuMC4wLzE2OgorICAgICAgTmFtZVNlcnZlcjE6IDEwLjkwLjAuMTAKKyAgICAgIE5hbWVTZXJ2ZXIyOiAxMC45MC40LjEwCiBSZXNvdXJjZXM6IHt9CmRpZmYgLS1naXQgYS90ZXN0L3VuaXQvcnVsZXMvbWFwcGluZ3MvdGVzdF9rZXlfbmFtZS5weSBiL3Rlc3QvdW5pdC9ydWxlcy9tYXBwaW5ncy90ZXN0X2tleV9uYW1lLnB5CmluZGV4IDMxZWE4OWIxNi4uOGE1YWMyZTdiIDEwMDY0NAotLS0gYS90ZXN0L3VuaXQvcnVsZXMvbWFwcGluZ3MvdGVzdF9rZXlfbmFtZS5weQorKysgYi90ZXN0L3VuaXQvcnVsZXMvbWFwcGluZ3MvdGVzdF9rZXlfbmFtZS5weQpAQCAtMjMsNCArMjMsNCBAQCBjbGFzcyBUZXN0S2V5TmFtZShCYXNlUnVsZVRlc3RDYXNlKToKIAogICAgIGRlZiB0ZXN0X2ZpbGVfbmVnYXRpdmUoc2VsZik6CiAgICAgICAgICIiIlRlc3QgZmFpbHVyZSIiIgotICAgICAgICBzZWxmLmhlbHBlcl9maWxlX25lZ2F0aXZlKCd0ZXN0L2ZpeHR1cmVzL3RlbXBsYXRlcy9iYWQvbWFwcGluZ3Mva2V5X25hbWUueWFtbCcsIDMpCisgICAgICAgIHNlbGYuaGVscGVyX2ZpbGVfbmVnYXRpdmUoJ3Rlc3QvZml4dHVyZXMvdGVtcGxhdGVzL2JhZC9tYXBwaW5ncy9rZXlfbmFtZS55YW1sJywgNCkK'\"'\"'))'",
+      "git apply /tmp/receipts-aws-cloudformation__cfn-python-lint-2006-test.patch"
+    ],
+    "workdir": "/cfn-python-lint"
+  },
+  "spec_paths": [
+    "test/fixtures/templates/bad/mappings/key_name.yaml",
+    "test/unit/rules/mappings/test_key_name.py"
+  ],
+  "spec_tests": [
+    "test/unit/rules/mappings/test_key_name.py::TestKeyName::test_file_negative"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/unit/rules/mappings/test_key_name.py"
+}

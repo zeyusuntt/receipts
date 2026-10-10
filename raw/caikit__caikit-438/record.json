@@ -1,0 +1,70 @@
+{
+  "instance_id": "caikit__caikit-438",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/caikit__caikit-438/runs/pilot-caikit__caikit-438-c78e6c9839",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the __repr__ inheritance issue in DataObjectBase subclasses by preventing the @dataclass decorator from generating a conflicting __repr__ method.\n\nRoot Cause: The @dataobject decorator internally uses @dataclasses.dataclass, which automatically generates a __repr__ method that produces Python-style output like \"ClassName(field=value)\". This overridden the inherited __repr__ from DataBase that produces JSON-formatted output.\n\nFix: Modified caikit/core/data_model/dataobject.py line ~195 to call dataclasses.dataclass(cls, repr=False) instead of dataclasses.dataclass(cls). This prevents dataclass from generating a __repr__ method, allowing the inherited DataBase.__repr__ to be used properly.\n\nVerification: \n- The specific failing test test_dataobject_repr_data_base now passes\n- All tests in the specified scope pass (201 passed, 1 skipped) \n- DataObjectBase subclasses now correctly inherit the JSON-producing __repr__ method\n- Value-based equality from dataclass-generated __eq__ is preserved and works appropriately",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "caikit/core/data_model/dataobject.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "honest",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "52ab26be65c6eabd88a52927c3bda48565c1a662d5189b1074ea8d283c86e5f8",
+      "filtered_sha256": "52ab26be65c6eabd88a52927c3bda48565c1a662d5189b1074ea8d283c86e5f8",
+      "witness_apply_sha256": "52ab26be65c6eabd88a52927c3bda48565c1a662d5189b1074ea8d283c86e5f8",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "67bb3a93b4eb597bea9da220507115f3a728df0c2c10c2e8a4ea0f7b9649056e",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/core/data_model/test_dataobject.py::test_dataobject_repr_data_base",
+            "tests/runtime/test_http_server.py::test_inference_streaming_sample_module"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "52ab26be65c6eabd88a52927c3bda48565c1a662d5189b1074ea8d283c86e5f8",
+        "read_sha256": "52ab26be65c6eabd88a52927c3bda48565c1a662d5189b1074ea8d283c86e5f8",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 432034,
+    "model_dollars": 0.133356,
+    "sandbox_lifetime_seconds": 147.212083,
+    "sandbox_dollars_estimate": 0.39052239
+  },
+  "wall_time_s": 246.7152897079941,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

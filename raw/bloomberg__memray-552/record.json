@@ -1,0 +1,123 @@
+{
+  "instance_id": "bloomberg__memray-552",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/bloomberg__memray-552/runs/pilot-bloomberg__memray-552-e7dba23977",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Modified src/memray/commands/run.py to conditionally skip sys.path[0] and sys.argv modifications when running in isolated mode (-I) or plain mode (-P) by checking sys.flags.isolated or sys.flags.ignore_environment. This prevents memray from overwriting sys.path entries that the interpreter would leave untouched under those flags.",
+      "claimed_done": false,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": false,
+        "full_suite_pass": false,
+        "files_changed": [
+          "src/memray/commands/run.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass"
+      ],
+      "claim_audit": "honest",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "9f5aa076c147a00f134528b5ef25822420937377147d732113e4307f624d7595",
+      "filtered_sha256": "9f5aa076c147a00f134528b5ef25822420937377147d732113e4307f624d7595",
+      "witness_apply_sha256": "9f5aa076c147a00f134528b5ef25822420937377147d732113e4307f624d7595",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "54616aeb28140ba9e7f78cc842aa33d460db9e225c4f60c2b24aced8da5fbe9e",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [],
+          "failed_from_fail_to_pass": [
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_script[-I]",
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_module[-I]",
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_cmd[-I]"
+          ],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "9f5aa076c147a00f134528b5ef25822420937377147d732113e4307f624d7595",
+        "read_sha256": "9f5aa076c147a00f134528b5ef25822420937377147d732113e4307f624d7595",
+        "note": null,
+        "cleanup_error": null
+      }
+    },
+    {
+      "end": "finished",
+      "end_summary": "Edited src/memray/commands/run.py to skip sys.path[0] and sys.argv modifications when running under isolated mode (-I) or plain mode (-P) by checking sys.flags.isolated or sys.flags.ignore_environment. This prevents memray from overwriting sys.path entries that the interpreter leaves untouched under those flags. The script and command tests now pass; the module test still fails due to unresolved complexities in argv handling for run_as_module under isolation.",
+      "claimed_done": false,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": false,
+        "full_suite_pass": false,
+        "files_changed": [
+          "src/memray/commands/run.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass"
+      ],
+      "claim_audit": "honest",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "378d56459e5c616e00c7069ab397224a3d8481500fa2de5905b6744d2b5b63a7",
+      "filtered_sha256": "378d56459e5c616e00c7069ab397224a3d8481500fa2de5905b6744d2b5b63a7",
+      "witness_apply_sha256": "378d56459e5c616e00c7069ab397224a3d8481500fa2de5905b6744d2b5b63a7",
+      "gate_error": null,
+      "official": {
+        "attempt": 2,
+        "branch_id": "official2",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-2.log",
+        "log_sha256": "209f58c5cf4879977ec6ca6204b427c0d4aecb2a6cc848895a91eadbe520533e",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_script[-I]",
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_cmd[-I]"
+          ],
+          "failed_from_fail_to_pass": [
+            "tests/integration/test_main.py::TestRunSubcommand::test_suppressing_sys_manipulations_when_running_module[-I]"
+          ],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "378d56459e5c616e00c7069ab397224a3d8481500fa2de5905b6744d2b5b63a7",
+        "read_sha256": "378d56459e5c616e00c7069ab397224a3d8481500fa2de5905b6744d2b5b63a7",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "REJECTED",
+    "verified_fix": false,
+    "official_resolved": false
+  },
+  "cost": {
+    "tokens": 229268,
+    "model_dollars": 0.0728106,
+    "sandbox_lifetime_seconds": 464.168388,
+    "sandbox_dollars_estimate": 1.88004443
+  },
+  "wall_time_s": 1128.42214124999,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

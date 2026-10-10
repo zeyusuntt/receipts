@@ -1,0 +1,22 @@
+diff --git a/pyflakes/checker.py b/pyflakes/checker.py
+index bd5eba5..a41980e 100644
+--- a/pyflakes/checker.py
++++ b/pyflakes/checker.py
+@@ -1235,6 +1235,8 @@ class Checker(object):
+                 Check to see if any assignments have not been used.
+                 """
+                 for name, binding in self.scope.unusedAssignments():
++                    if name == "_":
++                        continue
+                     self.report(messages.UnusedVariable, binding.source, name)
+             self.deferAssignment(checkUnusedAssignments)
+ 
+@@ -1414,7 +1416,7 @@ class Checker(object):
+         except KeyError:
+             pass
+         else:
+-            if not binding.used:
++            if not binding.used and node.name != "_":
+                 self.report(messages.UnusedVariable, node, node.name)
+ 
+         # Restore.

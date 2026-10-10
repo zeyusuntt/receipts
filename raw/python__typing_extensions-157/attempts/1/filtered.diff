@@ -1,0 +1,45 @@
+diff --git a/src/typing_extensions.py b/src/typing_extensions.py
+index cce31f8..b032530 100644
+--- a/src/typing_extensions.py
++++ b/src/typing_extensions.py
+@@ -440,7 +440,39 @@ else:
+ Counter = typing.Counter
+ ChainMap = typing.ChainMap
+ AsyncGenerator = typing.AsyncGenerator
+-NewType = typing.NewType
++if sys.version_info >= (3, 10):
++    NewType = typing.NewType
++else:
++    def NewType(name, tp):
++        """Create a new type with a distinct runtime representation.
++        The returned type is a simple subclass of the given type,
++        which allows for separate type checking while being
++        indistinguishable at runtime from the original type.
++        """
++        def __new__(cls, value):
++            return tp(value)
++        
++        def __init_subclass__(subclass, **kwargs):
++            # Prevent subclassing of NewType instances
++            raise TypeError(
++                "Cannot subclass an instance of NewType. Perhaps you were looking for: "
++                "`ProUserId = NewType('ProUserId', UserId)"
++            )
++        
++        # To keep the class lightweight we avoid creating a metaclass.
++        # The class is just a simple subclass of `tp`.
++        cls = type.__new__(type, name, (tp,), {
++            '__module__': None,
++            '__doc__': '',
++            '__annotations__': {},
++            '__new__': staticmethod(__new__),
++            '__init_subclass__': __init_subclass__,
++        })
++        # Make the class pickleable by providing a __reduce__ method.
++        def __reduce__(self):
++            return (NewType, (name, tp))
++        cls.__reduce__ = __reduce__
++        return cls
+ Text = typing.Text
+ TYPE_CHECKING = typing.TYPE_CHECKING
+ 

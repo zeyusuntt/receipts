@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "small improvement to DAGCircuit.replace_block_with_op()\n### What should we add?\n\nShort version: \r\n- Add the line `return new_node` to the end of `DAGCircuit.replace(block_with_op)`.\r\n\r\nDetails:\r\n`DAGCircuit.replace_block_with_op(block, op, ...)` internally creates a `new_node` containing `op`, and replaces the `block` of DAG nodes by this `new_node`.\r\n\r\nI think `replace_block_with_op()` should return `new_node`. (Currently there is no `return` statement). This change would be in line with the behavior of `DAGCircuit.substitute_node()`, which does return its internal `new_node`. Otherwise, the user does not know the node_id or even the name of the new node, so finding the new node for further manipulations is difficult. (All I can think of is to look along one of the wires for the one node in the new DAG that wasn't in the old DAG... obviously this is cumbersome.) Since the function already has `new_node` available internally, seems like we may as well `return` it.",
+  "source": {
+    "image": "docker.io/swerebenchv2/qiskit-qiskit-terra:8799-35c4b00",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-qiskit__qiskit-terra-8799-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvcHl0aG9uL2RhZ2NpcmN1aXQvdGVzdF9kYWdjaXJjdWl0LnB5IGIvdGVzdC9weXRob24vZGFnY2lyY3VpdC90ZXN0X2RhZ2NpcmN1aXQucHkKaW5kZXggYmZkZjBmNzdmLi44MDI0ZTEzYWQgMTAwNjQ0Ci0tLSBhL3Rlc3QvcHl0aG9uL2RhZ2NpcmN1aXQvdGVzdF9kYWdjaXJjdWl0LnB5CisrKyBiL3Rlc3QvcHl0aG9uL2RhZ2NpcmN1aXQvdGVzdF9kYWdjaXJjdWl0LnB5CkBAIC0xODY4LDcgKzE4NjgsNyBAQCBjbGFzcyBUZXN0UmVwbGFjZUJsb2NrKFFpc2tpdFRlc3RDYXNlKToKICAgICAgICAgZGFnID0gREFHQ2lyY3VpdCgpCiAgICAgICAgIGRhZy5hZGRfcXJlZyhxcikKICAgICAgICAgbm9kZSA9IGRhZy5hcHBseV9vcGVyYXRpb25fYmFjayhIR2F0ZSgpLCBbcXJbMF1dKQotICAgICAgICBkYWcucmVwbGFjZV9ibG9ja193aXRoX29wKAorICAgICAgICBuZXdfbm9kZSA9IGRhZy5yZXBsYWNlX2Jsb2NrX3dpdGhfb3AoCiAgICAgICAgICAgICBbbm9kZV0sIFhHYXRlKCksIHtiaXQ6IGlkeCBmb3IgKGlkeCwgYml0KSBpbiBlbnVtZXJhdGUoZGFnLnF1Yml0cyl9CiAgICAgICAgICkKIApAQCAtMTg3OCw2ICsxODc4LDcgQEAgY2xhc3MgVGVzdFJlcGxhY2VCbG9jayhRaXNraXRUZXN0Q2FzZSk6CiAKICAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChleHBlY3RlZF9kYWcsIGRhZykKICAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChleHBlY3RlZF9kYWcuY291bnRfb3BzKCksIGRhZy5jb3VudF9vcHMoKSkKKyAgICAgICAgc2VsZi5hc3NlcnRJc0luc3RhbmNlKG5ld19ub2RlLm9wLCBYR2F0ZSkKIAogCiBjbGFzcyBUZXN0RGFnUHJvcGVydGllcyhRaXNraXRUZXN0Q2FzZSk6Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-qiskit__qiskit-terra-8799-test.patch"
+    ],
+    "workdir": "/qiskit-terra"
+  },
+  "spec_paths": [
+    "test/python/dagcircuit/test_dagcircuit.py"
+  ],
+  "spec_tests": [
+    "test/python/dagcircuit/test_dagcircuit.py::TestReplaceBlock::test_single_node_block"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/python/dagcircuit/test_dagcircuit.py"
+}

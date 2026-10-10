@@ -1,0 +1,69 @@
+{
+  "instance_id": "sfdo-tooling__cumulusci-3624",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/sfdo-tooling__cumulusci-3624/runs/pilot-sfdo-tooling__cumulusci-3624-ed46a8ec8d",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the bug in cumulusci/tasks/github/merge.py where the skip_future_releases option was incorrectly processed due to faulty boolean logic. Changed `self.options.get(\"skip_future_releases\") or True` to `self.options.get(\"skip_future_releases\", True)` to properly handle explicit False values. Applied same fix to update_future_releases option. All tests now pass.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "cumulusci/tasks/github/merge.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "contradicted",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "ee256eca0d573614e93b00ee23bff37f6ec9a8fcc077f5d3b96e7ca85f31bd5b",
+      "filtered_sha256": "ee256eca0d573614e93b00ee23bff37f6ec9a8fcc077f5d3b96e7ca85f31bd5b",
+      "witness_apply_sha256": "ee256eca0d573614e93b00ee23bff37f6ec9a8fcc077f5d3b96e7ca85f31bd5b",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "1988ba1181c7fdccc2177798254ae1aa7903a75612ecff830b841bc3ffe66034",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "cumulusci/tasks/github/tests/test_merge.py::TestMergeBranch::test_merge_to_future_release_branches_noskip_future"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "ee256eca0d573614e93b00ee23bff37f6ec9a8fcc077f5d3b96e7ca85f31bd5b",
+        "read_sha256": "ee256eca0d573614e93b00ee23bff37f6ec9a8fcc077f5d3b96e7ca85f31bd5b",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 280229,
+    "model_dollars": 0.0863085,
+    "sandbox_lifetime_seconds": 695.306423,
+    "sandbox_dollars_estimate": 0.30122272
+  },
+  "wall_time_s": 850.6080702920444,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

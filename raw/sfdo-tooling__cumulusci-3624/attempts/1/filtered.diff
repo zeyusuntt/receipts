@@ -1,0 +1,17 @@
+diff --git a/cumulusci/tasks/github/merge.py b/cumulusci/tasks/github/merge.py
+index 1134de004..19893b08a 100644
+--- a/cumulusci/tasks/github/merge.py
++++ b/cumulusci/tasks/github/merge.py
+@@ -50,10 +50,10 @@ class MergeBranch(BaseGithubTask):
+                 "source_branch"
+             ] = self.project_config.project__git__default_branch
+         self.options["skip_future_releases"] = process_bool_arg(
+-            self.options.get("skip_future_releases") or True
++            self.options.get("skip_future_releases", True)
+         )
+         self.options["update_future_releases"] = process_bool_arg(
+-            self.options.get("update_future_releases") or False
++            self.options.get("update_future_releases", False)
+         )
+ 
+     def _init_task(self):

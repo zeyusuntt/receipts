@@ -1,0 +1,69 @@
+{
+  "instance_id": "pytask-dev__pytask-519",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-arm-lightning/pytask-dev__pytask-519/runs/pilot-pytask-dev__pytask-519-4ca0de8453",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the bug where builtin functions (like `time.asctime`) could not be used as pytask tasks due to `inspect.getfile()` raising a `TypeError`.\n\n**Changes made to `src/_pytask/task_utils.py`:**\n1. Added import for `CollectionError` from `_pytask.exceptions`\n2. Wrapped `inspect.getfile(unwrapped)` in a try-except block to catch `TypeError`\n3. When a `TypeError` is caught, raise `CollectionError(\"Builtin functions cannot be wrapped\")`\n\n**Result:** \n- Builtin functions now produce a proper `CollectionError` with message \"Builtin functions cannot be wrapped\" instead of crashing with `TypeError: module, class, method, function, traceback, frame, or code object was expected, got builtin_function_or_method`\n- The existing test `tests/test_task.py::test_raise_error_with_builtin_function_as_task` passes\n- All 40 other tests in `tests/test_task.py` continue to pass",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "src/_pytask/task_utils.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "unsupported",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "57420155d517e10c575672070be5cdcc0e9a53af7ad0f10ee99304022667046c",
+      "filtered_sha256": "57420155d517e10c575672070be5cdcc0e9a53af7ad0f10ee99304022667046c",
+      "witness_apply_sha256": "57420155d517e10c575672070be5cdcc0e9a53af7ad0f10ee99304022667046c",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "2587b98c5cb1b896448d4e8905f0f1094c8afb0500f2e1acb7e7df0c4e259d62",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/test_task.py::test_raise_error_with_builtin_function_as_task"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "57420155d517e10c575672070be5cdcc0e9a53af7ad0f10ee99304022667046c",
+        "read_sha256": "57420155d517e10c575672070be5cdcc0e9a53af7ad0f10ee99304022667046c",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 236720,
+    "model_dollars": 0.01482726,
+    "sandbox_lifetime_seconds": 110.455283,
+    "sandbox_dollars_estimate": 0.17054388
+  },
+  "wall_time_s": 173.4394672079943,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

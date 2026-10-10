@@ -1,0 +1,35 @@
+diff --git a/traits/ctraits.c b/traits/ctraits.c
+index 70331b23..8faa73d7 100644
+--- a/traits/ctraits.c
++++ b/traits/ctraits.c
+@@ -148,7 +148,7 @@ call_notifiers(
+ +----------------------------------------------------------------------------*/
+ 
+ /* The default_value of the trait is the default value */
+-#define CONSTANT_DEFAULT_VALUE 0
++#define CONSTANT_DEFAULT_VALUE 7
+ 
+ /* The default_value of the trait is Missing */
+ #define MISSING_DEFAULT_VALUE 1
+@@ -174,7 +174,7 @@ call_notifiers(
+    where *callable* is a callable, *args* is a tuple, and *kw* is either a
+    dictionary or None. The default value is the result obtained by invoking
+   ``callable(\*args, \*\*kw)`` */
+-#define CALLABLE_AND_ARGS_DEFAULT_VALUE 7
++#define CALLABLE_AND_ARGS_DEFAULT_VALUE 15
+ 
+ /* The default_value is a callable. The default value is the result obtained
+    by invoking *default_value*(*object*), where *object* is the object
+diff --git a/traits/trait_types.py b/traits/trait_types.py
+index 777d0e2b..b7874ead 100644
+--- a/traits/trait_types.py
++++ b/traits/trait_types.py
+@@ -4028,7 +4028,7 @@ class Union(TraitType):
+         if 'default_value' in metadata:
+             default_value = metadata.pop("default_value")
+         else:
+-            first_default_value, first_default_value_type = (
++            first_default_value_type, first_default_value = (
+                 self.list_ctrait_instances[0].default_value())
+ 
+             if first_default_value_type == DefaultValue.constant:

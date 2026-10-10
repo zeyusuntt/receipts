@@ -1,0 +1,31 @@
+diff --git a/curator/validators/filter_elements.py b/curator/validators/filter_elements.py
+index 484f1a4..8333cf2 100644
+--- a/curator/validators/filter_elements.py
++++ b/curator/validators/filter_elements.py
+@@ -13,7 +13,7 @@ def allocation_type(**kwargs):
+ 
+ def count(**kwargs):
+     # This setting is only used with the count filtertype and is required
+-    return { Required('count'): All(int, Range(min=1)) }
++    return { Required('count'): All(Coerce(int), int, Range(min=1)) }
+ 
+ def direction(**kwargs):
+     # This setting is only used with the age filtertype.
+@@ -21,7 +21,7 @@ def direction(**kwargs):
+ 
+ def disk_space(**kwargs):
+     # This setting is only used with the space filtertype and is required
+-    return { Required('disk_space'): Any(float, int) }
++    return { Required('disk_space'): All(Coerce(float), Any(float, int)) }
+ 
+ def epoch(**kwargs):
+     # This setting is only used with the age filtertype.
+@@ -106,7 +106,7 @@ def unit(**kwargs):
+ def unit_count(**kwargs):
+     # This setting is only used with the age filtertype, or with the space
+     # filtertype if use_age is set to True.
+-    return { Required('unit_count'): int }
++    return { Required('unit_count'): All(Coerce(int), int) }
+ 
+ def use_age(**kwargs):
+     # Use of this setting requires the additional setting, source.

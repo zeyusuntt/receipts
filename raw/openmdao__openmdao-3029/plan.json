@@ -1,0 +1,14 @@
+{
+  "approach": "Instead of attaching exactly one generic listener per final_setup_done, attach listeners uniquely identified by a qualified object id and ensure removal happens atomically\u2014installing once per target scope and cleaning up afterwards guarantees only the intended target\u2019s callback fires, preventing both premature invocation and missing registration.",
+  "files_to_edit": [
+    "openmdao/visualization/n2_viewer/n2_viewer.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "When setting up systems recursively via final_setup, the top\u2011level Problem\u2019s last child subsystem triggers its own final_setup early due to depth\u2011first traversal, installing the \u2018final_setup_done\u2019 event handler on the sub\u2011problem; later, when the parent finishes, its already installed handlers fire again and control returns via sys.exit inside the handler attached to the sub\u2011problem.",
+  "retries": {},
+  "usage": {
+    "completion": 170,
+    "prompt": 22414,
+    "reasoning": 0
+  }
+}

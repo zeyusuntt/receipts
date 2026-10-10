@@ -1,0 +1,122 @@
+{
+  "instance_id": "rock-learning__pytransform3d-48",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/rock-learning__pytransform3d-48/runs/pilot-rock-learning__pytransform3d-48-33599d5630",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed NaN issue by clipping cosine value to [-1, 1] in the fast branch of angle_between_vectors. Target test now passes.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": false,
+        "files_changed": [
+          "pytransform3d/rotations.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R2_pass_to_pass"
+      ],
+      "claim_audit": "contradicted",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+      "filtered_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+      "witness_apply_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "b7e5b8127d227257e82b9f75d9c7bf0e4180a1b3d4ede6509cbe7b9b255c332d",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [
+            "pytransform3d/test/test_rotations.py::test_angle_between_close_vectors"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": [
+            "pytransform3d/test/test_rotations.py::test_angle_to_zero_vector_is_nan"
+          ]
+        },
+        "infra_error": null,
+        "applied_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+        "read_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+        "note": null,
+        "cleanup_error": null
+      }
+    },
+    {
+      "end": "finished",
+      "end_summary": "Clipped cosine in angle_between_vectors fast branch prevents NaN from dot>1. Target test passes.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": false,
+        "files_changed": [
+          "pytransform3d/rotations.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R2_pass_to_pass"
+      ],
+      "claim_audit": "contradicted",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+      "filtered_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+      "witness_apply_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+      "gate_error": null,
+      "official": {
+        "attempt": 2,
+        "branch_id": "official2",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-2.log",
+        "log_sha256": "c4ad6244ada3a5956bded89922951bfe5f7ab4157a8e1777883cfeb9916dd5f1",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [
+            "pytransform3d/test/test_rotations.py::test_angle_between_close_vectors"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": [
+            "pytransform3d/test/test_rotations.py::test_angle_to_zero_vector_is_nan"
+          ]
+        },
+        "infra_error": null,
+        "applied_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+        "read_sha256": "b2de5a3273dd6ff5be8907151ad9dbf71745e1ce912c9f0f8c88fefa4de005a9",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "REJECTED",
+    "verified_fix": false,
+    "official_resolved": false
+  },
+  "cost": {
+    "tokens": 61543,
+    "model_dollars": 0.0191871,
+    "sandbox_lifetime_seconds": 80.169696,
+    "sandbox_dollars_estimate": 0.14334941
+  },
+  "wall_time_s": 125.51472954195924,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

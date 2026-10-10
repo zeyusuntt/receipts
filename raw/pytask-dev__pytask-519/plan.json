@@ -1,0 +1,14 @@
+{
+  "approach": "Wrap lines 94\u201399 in try/except block; catch any exception raised during inspection/unwrapping/getting file information and re-raise a ValueError explaining that built-in functions are not supported. Raise specifically with message \"Builtin functions cannot be wrapped\" so test assertion passes.\n",
+  "files_to_edit": [
+    "src/_pytask/task_utils.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "If we modify src/_pytask/task_utils.py such that it catches exceptions from inspect.unwrap or inspect.getfile and raises an informative error about unsupported built-in functions instead of letting Python throw an internal TypeError, then calling pytask.task()(built-in function) will produce a clear failure message rather than crashing.",
+  "retries": {},
+  "usage": {
+    "completion": 157,
+    "prompt": 12448,
+    "reasoning": 0
+  }
+}

@@ -1,0 +1,68 @@
+diff --git a/pyinaturalist/rest_api.py b/pyinaturalist/rest_api.py
+index e9edc76..d1297a3 100644
+--- a/pyinaturalist/rest_api.py
++++ b/pyinaturalist/rest_api.py
+@@ -10,6 +10,7 @@ Functions
+     :nosignatures:
+ 
+ """
++import os
+ from time import sleep
+ from typing import Dict, Any, List, Union
+ 
+@@ -39,7 +40,11 @@ from pyinaturalist.response_format import convert_lat_long_to_float
+ 
+ 
+ def get_access_token(
+-    username: str, password: str, app_id: str, app_secret: str, user_agent: str = None
++    username: str = None,
++    password: str = None,
++    app_id: str = None,
++    app_secret: str = None,
++    user_agent: str = None,
+ ) -> str:
+     """Get an access token using the user's iNaturalist username and password.
+     You still need an iNaturalist app to do this.
+@@ -51,12 +56,38 @@ def get_access_token(
+         >>> headers = {"Authorization": f"Bearer {access_token}"}
+ 
+     Args:
+-        username: iNaturalist username
+-        password: iNaturalist password
+-        app_id: iNaturalist application ID
+-        app_secret: iNaturalist application secret
++        username: iNaturalist username. Can also be provided via the
++            ``INAT_USERNAME`` environment variable.
++        password: iNaturalist password. Can also be provided via the
++            ``INAT_PASSWORD`` environment variable.
++        app_id: iNaturalist application ID. Can also be provided via the
++            ``INAT_APP_ID`` environment variable.
++        app_secret: iNaturalist application secret. Can also be provided via the
++            ``INAT_APP_SECRET`` environment variable.
+         user_agent: a user-agent string that will be passed to iNaturalist.
+     """
++    # Use provided arguments, falling back to environment variables
++    username = username or os.environ.get("INAT_USERNAME")
++    password = password or os.environ.get("INAT_PASSWORD")
++    app_id = app_id or os.environ.get("INAT_APP_ID")
++    app_secret = app_secret or os.environ.get("INAT_APP_SECRET")
++
++    if not all([username, password, app_id, app_secret]):
++        missing = []
++        if not username:
++            missing.append("username")
++        if not password:
++            missing.append("password")
++        if not app_id:
++            missing.append("app_id")
++        if not app_secret:
++            missing.append("app_secret")
++        raise AuthenticationError(
++            f"Missing required credentials: {', '.join(missing)}. "
++            "Provide them as arguments or via environment variables "
++            "(INAT_USERNAME, INAT_PASSWORD, INAT_APP_ID, INAT_APP_SECRET)."
++        )
++
+     payload = {
+         "client_id": app_id,
+         "client_secret": app_secret,

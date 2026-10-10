@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "\"\"\" getting placed at end of comment line instead of its own line\ndocformatter is resulting in this diff:\n\n```\n-    \"\"\"\n-    return a map mapping appliance_ids for a house back to themselves\n-    except for multiphase appliances\n-    \"\"\"\n+    \"\"\"return a map mapping appliance_ids for a house back to themselves except\n+    for multiphase appliances.\"\"\"\n```\n\nI'm ok with putting the word return immediately after the triple quotes, but shouldn't the final set of triple quotes be on their own line?\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/pycqa-docformatter:104-b108a20",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pycqa__docformatter-104-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfZm9ybWF0X2RvY3N0cmluZy5weSBiL3Rlc3RzL3Rlc3RfZm9ybWF0X2RvY3N0cmluZy5weQppbmRleCBmYzUxZjc2Li5iNjNlNTFhIDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X2Zvcm1hdF9kb2NzdHJpbmcucHkKKysrIGIvdGVzdHMvdGVzdF9mb3JtYXRfZG9jc3RyaW5nLnB5CkBAIC0yODUsNyArMjg1LDYgQEAgY2xhc3MgVGVzdEZvcm1hdFdyYXA6CiAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICBzdW1tYXJ5X3dyYXBfbGVuZ3RoPW1heF9sZW5ndGgsCiAgICAgICAgICAgICApCi0KICAgICAgICAgICAgIGZvciBsaW5lIGluIGZvcm1hdHRlZF90ZXh0LnNwbGl0KCJcbiIpOgogICAgICAgICAgICAgICAgICMgSXQgaXMgbm90IHRoZSBmb3JtYXR0ZXIncyBmYXVsdCBpZiBhIHdvcmQgaXMgdG9vIGxvbmcgdG8KICAgICAgICAgICAgICAgICAjIHdyYXAuCkBAIC00NDIsNiArNDQxLDQ3IEBAIG51bV9pdGVyYXRpb25zIGlzIHRoZSBudW1iZXIgb2YgdXBkYXRlcyAtIGluc3RlYWQgb2YgYSBiZXR0ZXIgZGVmaW5pdGlvbiBvZiBjb252CiAgICAgICAgICAgICB0YWJfd2lkdGg9NCwKICAgICAgICAgKQogCisgICAgQHB5dGVzdC5tYXJrLnVuaXQKKyAgICBkZWYgdGVzdF9mb3JtYXRfZG9jc3RyaW5nX2Zvcl9tdWx0aV9saW5lX3N1bW1hcnlfYWxvbmUoc2VsZik6CisgICAgICAgICIiIlBsYWNlIGNsb3NpbmcgcXVvdGVzIG9uIG5ld2xpbmUgd2hlbiB3cmFwcGluZyBvbmUtbGluZXIuIiIiCisgICAgICAgIGFzc2VydCAoCisgICAgICAgICAgICAoCisgICAgICAgICAgICAgICAgJycnXAorIiIiVGhpcyBvbmUtbGluZSBkb2NzdHJpbmcgd2lsbCBiZSBtdWx0aS1saW5lIGJlY2F1c2UgaXQncyBxdWl0ZQorICAgIGxvbmcuCisgICAgIiIiXAorJycnCisgICAgICAgICAgICApCisgICAgICAgICAgICA9PSBkb2Nmb3JtYXR0ZXIuZm9ybWF0X2RvY3N0cmluZygKKyAgICAgICAgICAgICAgICAiICAgICIsCisgICAgICAgICAgICAgICAgJycnXAorIiIiVGhpcyBvbmUtbGluZSBkb2NzdHJpbmcgd2lsbCBiZSBtdWx0aS1saW5lIGJlY2F1c2UgaXQncyBxdWl0ZSBsb25nLiIiIlwKKycnJywKKyAgICAgICAgICAgICAgICBzdW1tYXJ5X3dyYXBfbGVuZ3RoPTY5LAorICAgICAgICAgICAgICAgIGNsb3NlX3F1b3Rlc19vbl9uZXdsaW5lPVRydWUsCisgICAgICAgICAgICApCisgICAgICAgICkKKworICAgIEBweXRlc3QubWFyay51bml0CisgICAgZGVmIHRlc3RfZm9ybWF0X2RvY3N0cmluZ19mb3Jfb25lX2xpbmVfc3VtbWFyeV9hbG9uZV9idXRfdG9vX2xvbmcoc2VsZik6CisgICAgICAgICIiIiIiIgorICAgICAgICBhc3NlcnQgKAorICAgICAgICAgICAgKAorICAgICAgICAgICAgICAgICcnJ1wKKyIiIlRoaXMgb25lLWxpbmUgZG9jc3RyaW5nIHdpbGwgbm90IGJlIHdyYXBwZWQgYW5kIHF1b3RlcyB3aWxsIGJlIGluLWxpbmUuIiIiXAorJycnCisgICAgICAgICAgICApCisgICAgICAgICAgICA9PSBkb2Nmb3JtYXR0ZXIuZm9ybWF0X2RvY3N0cmluZygKKyAgICAgICAgICAgICAgICAiICAgICIsCisgICAgICAgICAgICAgICAgJycnXAorIiIiVGhpcyBvbmUtbGluZSBkb2NzdHJpbmcgd2lsbCBub3QgYmUgd3JhcHBlZCBhbmQgcXVvdGVzIHdpbGwgYmUgCitpbi1saW5lLiIiIlwKKycnJywKKyAgICAgICAgICAgICAgICBzdW1tYXJ5X3dyYXBfbGVuZ3RoPTg4LAorICAgICAgICAgICAgICAgIGNsb3NlX3F1b3Rlc19vbl9uZXdsaW5lPVRydWUsCisgICAgICAgICAgICApCisgICAgICAgICkKKwogCiBjbGFzcyBUZXN0Rm9ybWF0U3R5bGVPcHRpb25zOgogICAgICIiIkNsYXNzIGZvciB0ZXN0aW5nIGZvcm1hdF9kb2NzdHJpbmcoKSB3aGVuIHJlcXVlc3Rpbmcgc3R5bGUgb3B0aW9ucy4iIiIK'\"'\"'))'",
+      "git apply /tmp/receipts-pycqa__docformatter-104-test.patch"
+    ],
+    "workdir": "/docformatter"
+  },
+  "spec_paths": [
+    "tests/test_format_docstring.py"
+  ],
+  "spec_tests": [
+    "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_for_multi_line_summary_alone",
+    "tests/test_format_docstring.py::TestFormatWrap::test_format_docstring_for_one_line_summary_alone_but_too_long"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_format_docstring.py"
+}

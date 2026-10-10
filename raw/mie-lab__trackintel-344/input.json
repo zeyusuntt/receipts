@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Update docstrings in io.file\nAll functions in io.file use `*args` and `**kwargs`, but provide no documentation for them, the usage must be looked up in the code itself. They should be included in the docstrings :)\r\n\r\nExamples are missing for write functions (see #335).",
+  "source": {
+    "image": "docker.io/swerebenchv2/mie-lab-trackintel:344-5cd2b9a",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-mie-lab__trackintel-344-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3ByZXByb2Nlc3NpbmcvdGVzdF9zdGF5cG9pbnRzLnB5IGIvdGVzdHMvcHJlcHJvY2Vzc2luZy90ZXN0X3N0YXlwb2ludHMucHkKaW5kZXggNzlhODc0NS4uMTBjNDQyNSAxMDA2NDQKLS0tIGEvdGVzdHMvcHJlcHJvY2Vzc2luZy90ZXN0X3N0YXlwb2ludHMucHkKKysrIGIvdGVzdHMvcHJlcHJvY2Vzc2luZy90ZXN0X3N0YXlwb2ludHMucHkKQEAgLTM5OSw3ICszOTksOCBAQCBjbGFzcyBUZXN0TWVyZ2VTdGF5cG9pbnRzOgogICAgICAgICAiIiJUZXN0IHN0YXlwb2ludCBtZXJnaW5nLiIiIgogICAgICAgICBzcCwgdHBscyA9IGV4YW1wbGVfc3RheXBvaW50c19tZXJnZQogICAgICAgICAjIGZpcnN0IHRlc3Qgd2l0aCBlbXB0eSB0cGxzCi0gICAgICAgIG1lcmdlZF9zcCA9IHNwLmFzX3N0YXlwb2ludHMubWVyZ2Vfc3RheXBvaW50cyh0cGxzLCBhZ2c9eyJnZW9tIjogImZpcnN0IiwgImxvY2F0aW9uX2lkIjogImZpcnN0In0pCisgICAgICAgIG1lcmdlZF9zcCA9IHNwLmFzX3N0YXlwb2ludHMubWVyZ2Vfc3RheXBvaW50cyh0cGxzLCBhZ2c9eyJnZW9tIjogImZpcnN0In0pCisgICAgICAgIG1lcmdlZF9zcCA9IG1lcmdlZF9zcC5yZWluZGV4KGNvbHVtbnM9c3AuY29sdW1ucykKICAgICAgICAgYXNzZXJ0IGxlbihtZXJnZWRfc3ApID09IGxlbihzcCkgLSAzCiAgICAgICAgICMgc29tZSBzdGF5cG9pbnRzIHN0YXkgdGhlIHNhbWUgKG5vdCBtZXJnZWQpCiAgICAgICAgIGFzc2VydCAobWVyZ2VkX3NwLmxvY1sxXSA9PSBzcC5sb2NbMV0pLmFsbCgpCkBAIC00NTgsMyArNDU5LDExIEBAIGNsYXNzIFRlc3RNZXJnZVN0YXlwb2ludHM6CiAgICAgICAgICMgdGhlIGdlb20gc2hvdWxkIGNvcnJlc3BvbmQgdG8gdGhlIGZpcnN0IG9uZQogICAgICAgICBhc3NlcnQgc3AubG9jWzcsICJnZW9tIl0gPT0gbWVyZ2VkX3NwLmxvY1s3LCAiZ2VvbSJdCiAgICAgICAgIGFzc2VydCBzcC5sb2NbMiwgImdlb20iXSA9PSBtZXJnZWRfc3AubG9jWzIsICJnZW9tIl0KKworICAgIGRlZiB0ZXN0X21lcmdlX3N0YXlwb2ludHNfZXJyb3Ioc2VsZiwgZXhhbXBsZV9zdGF5cG9pbnRzX21lcmdlKToKKyAgICAgICAgc3AsIHRwbHMgPSBleGFtcGxlX3N0YXlwb2ludHNfbWVyZ2UKKyAgICAgICAgc3AuZHJvcChjb2x1bW5zPVsibG9jYXRpb25faWQiXSwgaW5wbGFjZT1UcnVlKQorICAgICAgICB3aXRoIHB5dGVzdC5yYWlzZXMoQXNzZXJ0aW9uRXJyb3IpIGFzIGV4Y2luZm86CisgICAgICAgICAgICBfID0gc3AuYXNfc3RheXBvaW50cy5tZXJnZV9zdGF5cG9pbnRzKHRwbHMpCisKKyAgICAgICAgYXNzZXJ0ICJTdGF5cG9pbnRzIG11c3QgY29udGFpbiBjb2x1bW4gbG9jYXRpb25faWQiIGluIHN0cihleGNpbmZvLnZhbHVlKQo='\"'\"'))'",
+      "git apply /tmp/receipts-mie-lab__trackintel-344-test.patch"
+    ],
+    "workdir": "/trackintel"
+  },
+  "spec_paths": [
+    "tests/preprocessing/test_staypoints.py"
+  ],
+  "spec_tests": [
+    "tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints",
+    "tests/preprocessing/test_staypoints.py::TestMergeStaypoints::test_merge_staypoints_error"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/preprocessing/test_staypoints.py"
+}

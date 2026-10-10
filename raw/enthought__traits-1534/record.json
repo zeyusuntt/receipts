@@ -1,0 +1,110 @@
+{
+  "instance_id": "enthought__traits-1534",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/enthought__traits-1534/runs/pilot-enthought__traits-1534-57d7df053e",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "budget_exhausted",
+      "end_summary": "turn budget exhausted after 60 turn(s)",
+      "claimed_done": false,
+      "claims": null,
+      "naive_green": false,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass"
+      ],
+      "claim_audit": "no_claim",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "e098e7aa91aa18f565580c2ca59542bf722089ceb2282500fbbbe3e8a40a5659",
+      "filtered_sha256": "e098e7aa91aa18f565580c2ca59542bf722089ceb2282500fbbbe3e8a40a5659",
+      "witness_apply_sha256": "e098e7aa91aa18f565580c2ca59542bf722089ceb2282500fbbbe3e8a40a5659",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "0e356bc6ed417e5d0f92d20c1304c3a1e3c57c088d36d382477f90a572b0ae47",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [],
+          "failed_from_fail_to_pass": [
+            "traits/tests/test_union.py::TestUnion::test_constant_default"
+          ],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "e098e7aa91aa18f565580c2ca59542bf722089ceb2282500fbbbe3e8a40a5659",
+        "read_sha256": "e098e7aa91aa18f565580c2ca59542bf722089ceb2282500fbbbe3e8a40a5659",
+        "note": null,
+        "cleanup_error": null
+      }
+    },
+    {
+      "end": "finished",
+      "end_summary": "Fixed the bug in Union trait default value handling. The issue had two root causes:\n\n1. In `traits/ctraits.c`: The `CONSTANT_DEFAULT_VALUE` was incorrectly defined as 0 instead of 7, causing the DefaultValue.constant enum to have the wrong value (0 instead of 7).\n\n2. In `traits/trait_types.py`: In the Union.__init__ method, the variables were swapped when unpacking the result from `default_value()` - it was assigning `first_default_value, first_default_value_type = ...` when the method returns `(default_value_type, default_value)`.\n\nFixed both issues:\n- Changed `#define CONSTANT_DEFAULT_VALUE 0` to `#define CONSTANT_DEFAULT_VALUE 7` in `traits/ctraits.c` \n- Swapped the variable names to `first_default_value_type, first_default_value = ...` in `traits/trait_types.py`\n- Had to also adjust `CALLABLE_AND_ARGS_DEFAULT_VALUE` from 7 to 15 to avoid duplicate case values in the C switch statement\n\nThe fix ensures that when Union inherits from a class and gets overridden with a literal value (like `foo = 5`), the trait initialization works correctly and the trait behaves as expected.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "traits/ctraits.c",
+          "traits/trait_types.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "honest",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "75087f1c30c7a2f38b97d4591d2dffcef131b363f9864398802e3fa4d9af8c51",
+      "filtered_sha256": "75087f1c30c7a2f38b97d4591d2dffcef131b363f9864398802e3fa4d9af8c51",
+      "witness_apply_sha256": "75087f1c30c7a2f38b97d4591d2dffcef131b363f9864398802e3fa4d9af8c51",
+      "gate_error": null,
+      "official": {
+        "attempt": 2,
+        "branch_id": "official2",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-2.log",
+        "log_sha256": "3c0f6b2caa6464be7b7af88817a5633df78bf63094199993f341cf45b86e45ef",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "traits/tests/test_union.py::TestUnion::test_constant_default"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "75087f1c30c7a2f38b97d4591d2dffcef131b363f9864398802e3fa4d9af8c51",
+        "read_sha256": "75087f1c30c7a2f38b97d4591d2dffcef131b363f9864398802e3fa4d9af8c51",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 2252182,
+    "model_dollars": 0.6868338,
+    "sandbox_lifetime_seconds": 173.882564,
+    "sandbox_dollars_estimate": 0.19732941
+  },
+  "wall_time_s": 459.89441920793615,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

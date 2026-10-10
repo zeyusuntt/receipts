@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "[BUG] Async client is missing ssl_assert_hostname implementation\n### What is the bug?\r\nThe `ssl_assert_hostname` parameter has no effect on the `AsyncOpenSearch` client.\r\n\r\n### How can one reproduce the bug?\r\n```python\r\nclient = AsyncOpenSearch(hosts='my.opensearch.with.selfsigned.certs', ssl_assert_hostname=False)\r\nawait client.search(...)\r\n```\r\n```\r\nopensearchpy.exceptions.ConnectionError: ConnectionError(Cannot connect to host my.opensearch.instance:9200 ssl:True [SSLCertVerificationError: (1, \"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'my.opensearch.instance'. (_ssl.c:1000)\")]) caused by: ClientConnectorCertificateError(Cannot connect to host my.opensearch.instance:9200 ssl:True [SSLCertVerificationError: (1, \"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'my.opensearch.instance'. (_ssl.c:1000)\")])\r\n```\r\n\r\n### What is the expected behavior?\r\nThe connection should succeed even if the hostname does not match.\r\n\r\n### What is your host/environment?\r\nN/A\r\n\r\n### Do you have any screenshots?\r\nN/A\r\n\r\n### Do you have any additional context?\r\nThe parameter is documented in the function docs:\r\nhttps://github.com/opensearch-project/opensearch-py/blob/6fa54a719a399cdcd8d970605487b9e14d257383/opensearchpy/_async/http_aiohttp.py#L120\r\n\r\nI believe the parameter works with the `urllib3`-based client.\r\n\r\nI'm working on a PR to fix this.\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/opensearch-project-opensearch-py:843-1269cdc",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-opensearch-project__opensearch-py-843-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3Rfb3BlbnNlYXJjaHB5L3Rlc3RfYXN5bmMvdGVzdF9jb25uZWN0aW9uLnB5IGIvdGVzdF9vcGVuc2VhcmNocHkvdGVzdF9hc3luYy90ZXN0X2Nvbm5lY3Rpb24ucHkKaW5kZXggNWM4ZjZlMjYuLmM3ZDdiNGEzIDEwMDY0NAotLS0gYS90ZXN0X29wZW5zZWFyY2hweS90ZXN0X2FzeW5jL3Rlc3RfY29ubmVjdGlvbi5weQorKysgYi90ZXN0X29wZW5zZWFyY2hweS90ZXN0X2FzeW5jL3Rlc3RfY29ubmVjdGlvbi5weQpAQCAtMjksNiArMjksNyBAQCBpbXBvcnQgZ3ppcAogaW1wb3J0IGlvCiBpbXBvcnQganNvbgogaW1wb3J0IHNzbAoraW1wb3J0IHN5cwogaW1wb3J0IHdhcm5pbmdzCiBmcm9tIHBsYXRmb3JtIGltcG9ydCBweXRob25fdmVyc2lvbgogZnJvbSB0eXBpbmcgaW1wb3J0IEFueQpAQCAtOTcsNiArOTgsMTcgQEAgY2xhc3MgVGVzdEFJT0h0dHBDb25uZWN0aW9uOgogICAgICAgICBhc3NlcnQgY29uLnVzZV9zc2wKICAgICAgICAgYXNzZXJ0IGNvbi5zZXNzaW9uLmNvbm5lY3Rvci5fc3NsID09IGNvbnRleHQKIAorICAgIGFzeW5jIGRlZiB0ZXN0X3NzbF9hc3NlcnRfaG9zdG5hbWUoc2VsZikgLT4gTm9uZToKKyAgICAgICAgY29uID0gQUlPSHR0cENvbm5lY3Rpb24odXNlX3NzbD1UcnVlLCBzc2xfYXNzZXJ0X2hvc3RuYW1lPVRydWUpCisgICAgICAgIGF3YWl0IGNvbi5fY3JlYXRlX2Fpb2h0dHBfc2Vzc2lvbigpCisgICAgICAgIGFzc2VydCBjb24udXNlX3NzbAorICAgICAgICBhc3NlcnQgY29uLnNlc3Npb24uY29ubmVjdG9yLl9zc2wuY2hlY2tfaG9zdG5hbWUgaXMgVHJ1ZQorCisgICAgICAgIGNvbiA9IEFJT0h0dHBDb25uZWN0aW9uKHVzZV9zc2w9VHJ1ZSwgc3NsX2Fzc2VydF9ob3N0bmFtZT1GYWxzZSkKKyAgICAgICAgYXdhaXQgY29uLl9jcmVhdGVfYWlvaHR0cF9zZXNzaW9uKCkKKyAgICAgICAgYXNzZXJ0IGNvbi51c2Vfc3NsCisgICAgICAgIGFzc2VydCBjb24uc2Vzc2lvbi5jb25uZWN0b3IuX3NzbC5jaGVja19ob3N0bmFtZSBpcyBGYWxzZQorCiAgICAgYXN5bmMgZGVmIHRlc3Rfb3BhcXVlX2lkKHNlbGYpIC0+IE5vbmU6CiAgICAgICAgIGNvbiA9IEFJT0h0dHBDb25uZWN0aW9uKG9wYXF1ZV9pZD0iYXBwLTEiKQogICAgICAgICBhc3NlcnQgY29uLmhlYWRlcnNbIngtb3BhcXVlLWlkIl0gPT0gImFwcC0xIgpAQCAtMjE3LDcgKzIyOSwxNSBAQCBjbGFzcyBUZXN0QUlPSHR0cENvbm5lY3Rpb246CiAgICAgICAgICAgICAgICAgdXNlX3NzbD1UcnVlLCB2ZXJpZnlfY2VydHM9RmFsc2UsIHNzbF9zaG93X3dhcm49RmFsc2UKICAgICAgICAgICAgICkKICAgICAgICAgICAgIGF3YWl0IGNvbi5fY3JlYXRlX2Fpb2h0dHBfc2Vzc2lvbigpCi0gICAgICAgICAgICBhc3NlcnQgdyA9PSBbXQorICAgICAgICAgICAgaWYgc3lzLmhleHZlcnNpb24gPCAweDMwQzA3MDA6CisgICAgICAgICAgICAgICAgYXNzZXJ0IHcgPT0gW10KKyAgICAgICAgICAgIGVsc2U6CisgICAgICAgICAgICAgICAgYXNzZXJ0IGxlbih3KSA9PSAxCisgICAgICAgICAgICAgICAgYXNzZXJ0ICgKKyAgICAgICAgICAgICAgICAgICAgc3RyKHdbMF0ubWVzc2FnZSkgPT0gImVuYWJsZV9jbGVhbnVwX2Nsb3NlZCBpZ25vcmVkIGJlY2F1c2UgIgorICAgICAgICAgICAgICAgICAgICAiaHR0cHM6Ly9naXRodWIuY29tL3B5dGhvbi9jcHl0aG9uL3B1bGwvMTE4OTYwIGlzIGZpeGVkIGluICIKKyAgICAgICAgICAgICAgICAgICAgIlB5dGhvbiB2ZXJzaW9uIHN5cy52ZXJzaW9uX2luZm8obWFqb3I9MywgbWlub3I9MTIsIG1pY3JvPTcsIHJlbGVhc2VsZXZlbD0nZmluYWwnLCBzZXJpYWw9MCkiCisgICAgICAgICAgICAgICAgKQogCiAgICAgICAgIGFzc2VydCBpc2luc3RhbmNlKGNvbi5zZXNzaW9uLCBhaW9odHRwLkNsaWVudFNlc3Npb24pCiAK'\"'\"'))'",
+      "git apply /tmp/receipts-opensearch-project__opensearch-py-843-test.patch"
+    ],
+    "workdir": "/opensearch-py"
+  },
+  "spec_paths": [
+    "test_opensearchpy/test_async/test_connection.py"
+  ],
+  "spec_tests": [
+    "test_opensearchpy/test_async/test_connection.py::TestAIOHttpConnection::test_ssl_assert_hostname"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test_opensearchpy/test_async/test_connection.py"
+}

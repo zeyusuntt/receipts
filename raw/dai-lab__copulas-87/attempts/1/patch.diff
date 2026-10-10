@@ -1,0 +1,54 @@
+diff --git a/copulas/multivariate/vine.py b/copulas/multivariate/vine.py
+index 720c56f..c11b769 100644
+--- a/copulas/multivariate/vine.py
++++ b/copulas/multivariate/vine.py
+@@ -85,6 +85,12 @@ class VineCopula(Multivariate):
+             X: `np.ndarray`: data to be fitted.
+             truncated: `int` max level to build the vine.
+         """
++        # Store column names if X is a DataFrame
++        if hasattr(X, 'columns'):
++            self.columns = list(X.columns)
++        else:
++            self.columns = [f'X{i}' for i in range(X.shape[1])]
++            
+         self.n_sample, self.n_var = X.shape
+         self.tau_mat = X.corr(method='kendall').values
+         self.u_matrix = np.empty([self.n_sample, self.n_var])
+@@ -134,8 +140,8 @@ class VineCopula(Multivariate):
+ 
+         return np.sum(values)
+ 
+-    def sample(self, num_rows=1):
+-        """Generating samples from vine model."""
++    def _sample_row(self):
++        """Generate a single sample from the vine model."""
+         unis = np.random.uniform(0, 1, self.n_var)
+         # randomly select a node to start with
+         first_ind = randint(0, self.n_var - 1)
+@@ -180,7 +186,7 @@ class VineCopula(Multivariate):
+                                 break
+ 
+                     if current_ind != -1:
+-                        # the node is not indepedent contional on visited node
++                        # the node is not independent conditional on visited node
+                         copula_type = current_tree[current_ind].name
+                         copula = Bivariate(CopulaTypes(copula_type))
+                         copula.theta = current_tree[current_ind].theta
+@@ -211,3 +217,16 @@ class VineCopula(Multivariate):
+             visited.insert(0, current)
+ 
+         return sampled
++
++    def sample(self, num_rows=1):
++        """Generating samples from vine model.
++        
++        Args:
++            num_rows: Number of rows to sample.
++            
++        Returns:
++            pandas.DataFrame with sampled data.
++        """
++        import pandas as pd
++        samples = np.vstack([self._sample_row() for _ in range(num_rows)])
++        return pd.DataFrame(samples, columns=self.columns)

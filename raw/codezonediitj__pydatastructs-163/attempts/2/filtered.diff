@@ -1,0 +1,27 @@
+diff --git a/pydatastructs/miscellaneous_data_structures/stack.py b/pydatastructs/miscellaneous_data_structures/stack.py
+index 2aa2feb..c25f914 100644
+--- a/pydatastructs/miscellaneous_data_structures/stack.py
++++ b/pydatastructs/miscellaneous_data_structures/stack.py
+@@ -150,7 +150,7 @@ class LinkedListStack(Stack):
+ 
+     @property
+     def peek(self):
+-        return self.top.data
++        return self.top
+ 
+     @property
+     def top(self):
+@@ -164,4 +164,12 @@ class LinkedListStack(Stack):
+         return self.stack.size
+ 
+     def __str__(self):
+-        return str(self.stack)
++        # Return items in bottom-to-top order like ArrayStack
++        items = []
++        current = self.stack.head
++        while current:
++            items.append(current.data)
++            current = current.next
++        # Reverse to get bottom-to-top order
++        items.reverse()
++        return str(items)

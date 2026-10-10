@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>kubernetes-client__python-1933 | Receipts</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"><link rel="stylesheet" href="../../assets/site.css"></head><body><header><div class="header"><a href="../../index.html" class="brand">Receipts</a><nav aria-label="Main"><a href="../../index.html" class="">All runs</a></nav><span class="secondary">Recorded runs, model-free verdicts</span></div></header><main><section class="hero"><div><span class="badge verified">VERIFIED</span><h1>kubernetes-client__python-1933</h1><p>VERIFIED on first verdict</p><p class="secondary">1 attempt, 0 appeals. 1 file, 4 added and 0 removed lines. Tokens: 1,236,188 tokens. Model cost: $0.08. Sandbox time: 2 min 21 s.</p></div><div class="actions"><a href="../../receipt/v2-arm-lightning/kubernetes-client__python-1933.html" class="button primary">Open receipt</a></div></section><section class="card pad stack"><h2>The plan</h2><dl><dt>Repository</dt><dd>kubernetes-client/python</dd><dt>Base commit</dt><dd>045b189 (image tag)</dd><dt>Issue</dt><dd>Client doesn&#x27;t honor tls-server-name setting in kubeconfig
+**What happened (please include outputs or screenshots)**:
+
+Tried to connect to my cluster with a utility that uses your library. As far as I can tell, the utility&#x27;s code is correct and the k8s-client python code does not honor the tls-server-name and propagate it down the stack to urllib3.
+
+
+
+Received this exception:</dd></dl><dl><dt>Files to edit</dt><dd><ul class="files"><li><code>kubernetes/base/config/kube_config.py</code></li></ul></dd></dl><dl><dt>Approach</dt><dd>1. Find where Configuration object is instantiated from kubeconfig
+2. Add tls-server-name extraction from config/context
+3. Pass it to Configuration.assert_hostname or equivalent parameter</dd></dl></section><section class="stack"><h2>Attempt 1</h2><span class="badge verified">VERIFIED</span><div class="lanes"><div class="card"><h3>Agent branch</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">git ls-files -z</code><details><summary>exact command</summary><pre>git ls-files -z</pre></details></td><td>0</td><td>0.004s</td><td>1f789e07</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;tls-server-name\|tls_server_name\|TEST_TLS&quot; kubernetes/base/config/kube_config_test.py</code><details><summary>exact command</summary><pre>grep -n &quot;tls-server-name\|tls_server_name\|TEST_TLS&quot; kubernetes/base/config/kube_config_test.py</pre></details></td><td>0</td><td>0.004s</td><td>e08d6b4c</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;class FakeConfig&quot; kubernetes/base/config/kube_config_test.py</code><details><summary>exact command</summary><pre>grep -n &quot;class FakeConfig&quot; kubernetes/base/config/kube_config_test.py</pre></details></td><td>0</td><td>0.003s</td><td>1991d45f</td></tr><tr><td>command</td><td><code class="display-command">grep -rn &quot;tls_server_name\|tls-server-name&quot; kubernetes/client/configuration.py 2&gt;/dev/null || grep -rn &quot;tls_server_name\|tls-server-name&quot; kubernetes/client/ 2&gt;/dev/null | head -30</code><details><summary>exact command</summary><pre>grep -rn &quot;tls_server_name\|tls-server-name&quot; kubernetes/client/configuration.py 2&gt;/dev/null || grep -rn &quot;tls_server_name\|tls-server-name&quot; kubernetes/client/ 2&gt;/dev/null | head -30</pre></details></td><td>0</td><td>0.034s</td><td>ffcbb4ad</td></tr><tr><td>command</td><td><code class="display-command">find /python -name &quot;configuration.py&quot; 2&gt;/dev/null</code><details><summary>exact command</summary><pre>find /python -name &quot;configuration.py&quot; 2&gt;/dev/null</pre></details></td><td>0</td><td>0.007s</td><td>e80201df</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;tls_server_name\|tls-server-name\|assert_hostname&quot; /python/kubernetes/client/configuration.py</code><details><summary>exact command</summary><pre>grep -n &quot;tls_server_name\|tls-server-name\|assert_hostname&quot; /python/kubernetes/client/configuration.py</pre></details></td><td>0</td><td>0.003s</td><td>b0a173ef</td></tr><tr><td>command</td><td><code class="display-command">ls -la /python/kubernetes/client/configuration.py</code><details><summary>exact command</summary><pre>ls -la /python/kubernetes/client/configuration.py</pre></details></td><td>0</td><td>0.004s</td><td>39ba60cb</td></tr><tr><td>command</td><td><code class="display-command">cat /python/kubernetes/client/configuration.py | head -200</code><details><summary>exact command</summary><pre>cat /python/kubernetes/client/configuration.py | head -200</pre></details></td><td>0</td><td>0.004s</td><td>01efc39f</td></tr></tbody></table></div><details class="all-steps"><summary>show all 38 steps</summary><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">grep -n &quot;assert_hostname&quot; /python/kubernetes/client/rest.py</code><details><summary>exact command</summary><pre>grep -n &quot;assert_hostname&quot; /python/kubernetes/client/rest.py</pre></details></td><td>0</td><td>0.004s</td><td>d6ef585d</td></tr><tr><td>command</td><td><code class="display-command">cat /python/kubernetes/client/rest.py | head -100</code><details><summary>exact command</summary><pre>cat /python/kubernetes/client/rest.py | head -100</pre></details></td><td>0</td><td>0.004s</td><td>60c2694b</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</pre></details></td><td>1</td><td>1.231s</td><td>daf8244f</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;TEST_KUBE_CONFIG&quot; /python/kubernetes/base/config/kube_config_test.py | head -5</code><details><summary>exact command</summary><pre>grep -n &quot;TEST_KUBE_CONFIG&quot; /python/kubernetes/base/config/kube_config_test.py | head -5</pre></details></td><td>0</td><td>0.004s</td><td>50d0d35f</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;tls-server-name&quot; /python/kubernetes/base/config/kube_config_test.py</code><details><summary>exact command</summary><pre>grep -n &quot;tls-server-name&quot; /python/kubernetes/base/config/kube_config_test.py</pre></details></td><td>0</td><td>0.003s</td><td>1671d6d4</td></tr><tr><td>write</td><td><code class="display-command">write kubernetes/base/config/kube_config.py</code><details><summary>exact command</summary><pre>/opt/receipts-06b2003eccf04237a96f5798a3395a24/bin/busybox sh -c &#x27;mkdir -p /python/kubernetes/base/config &amp;&amp; cp /opt/receipts-06b2003eccf04237a96f5798a3395a24/incoming/0745aa48550b46a053a26ba42149bc40736b72984fc2760eaa26a6342dc4d9bb /python/kubernetes/base/config/kube_config.py&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>1d71d378</td></tr><tr><td>write</td><td><code class="display-command">write kubernetes/base/config/kube_config.py</code><details><summary>exact command</summary><pre>/opt/receipts-3a123167546e42c3bde552ada09b6012/bin/busybox sh -c &#x27;mkdir -p /python/kubernetes/base/config &amp;&amp; cp /opt/receipts-3a123167546e42c3bde552ada09b6012/incoming/9b99adca00d93a2bf0c6afa25a31524e8fff56ab9f8b7d75e8deb94582254c43 /python/kubernetes/base/config/kube_config.py&#x27;</pre></details></td><td>0</td><td>0.004s</td><td>69c6bd98</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</pre></details></td><td>1</td><td>0.567s</td><td>e219d3f1</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.client import Configuration
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+actual = Configuration()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+print(&#x27;actual.__dict__:&#x27;, actual.__dict__)
+print(&#x27;assert_hostname:&#x27;, actual.assert_hostname)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.client import Configuration
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+actual = Configuration()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+print(&#x27;actual.__dict__:&#x27;, actual.__dict__)
+print(&#x27;assert_hostname:&#x27;, actual.assert_hostname)
+&quot;</pre></details></td><td>0</td><td>0.340s</td><td>aff64feb</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+print(&#x27;expected.__dict__:&#x27;, {k: v for k, v in expected.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print(&#x27;actual.__dict__:&#x27;, {k: v for k, v in actual.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print()
+print(&#x27;expected keys:&#x27;, list(expected.__dict__.keys()))
+print(&#x27;actual keys:&#x27;, list(actual.__dict__.keys()))
+print()
+# Compare
+for k in expected.__dict__:
+    if k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            try:
+                with open(ev) as f1, open(av) as f2:
+                    match = f1.read() == f2.read()
+                print(f&#x27;{k}: file comparison={match}&#x27;)
+            except IOError:
+                print(f&#x27;{k}: filenames equal={ev == av}&#x27;)
+        else:
+            print(f&#x27;{k}: expected={ev!r}, actual={av!r}, match={ev == av}&#x27;)
+    else:
+        print(f&#x27;{k}: missing from actual&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+print(&#x27;expected.__dict__:&#x27;, {k: v for k, v in expected.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print(&#x27;actual.__dict__:&#x27;, {k: v for k, v in actual.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print()
+print(&#x27;expected keys:&#x27;, list(expected.__dict__.keys()))
+print(&#x27;actual keys:&#x27;, list(actual.__dict__.keys()))
+print()
+# Compare
+for k in expected.__dict__:
+    if k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            try:
+                with open(ev) as f1, open(av) as f2:
+                    match = f1.read() == f2.read()
+                print(f&#x27;{k}: file comparison={match}&#x27;)
+            except IOError:
+                print(f&#x27;{k}: filenames equal={ev == av}&#x27;)
+        else:
+            print(f&#x27;{k}: expected={ev!r}, actual={av!r}, match={ev == av}&#x27;)
+    else:
+        print(f&#x27;{k}: missing from actual&#x27;)
+&quot;</pre></details></td><td>1</td><td>0.380s</td><td>84000625</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig
+
+# Check if setting both works
+fc = FakeConfig(tls_server_name=&#x27;test-host&#x27;)
+print(&#x27;fc.__dict__:&#x27;, fc.__dict__)
+print(&#x27;tls_server_name in fc.__dict__:&#x27;, &#x27;tls_server_name&#x27; in fc.__dict__)
+print(&#x27;assert_hostname in fc.__dict__:&#x27;, &#x27;assert_hostname&#x27; in fc.__dict__)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig
+
+# Check if setting both works
+fc = FakeConfig(tls_server_name=&#x27;test-host&#x27;)
+print(&#x27;fc.__dict__:&#x27;, fc.__dict__)
+print(&#x27;tls_server_name in fc.__dict__:&#x27;, &#x27;tls_server_name&#x27; in fc.__dict__)
+print(&#x27;assert_hostname in fc.__dict__:&#x27;, &#x27;assert_hostname&#x27; in fc.__dict__)
+&quot;</pre></details></td><td>0</td><td>0.360s</td><td>a0efe7c6</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.client import Configuration
+
+# Check Configuration
+config = Configuration()
+print(&#x27;Configuration __dict__ keys with hostname:&#x27;, [k for k in config.__dict__ if &#x27;host&#x27; in k.lower() or &#x27;name&#x27; in k.lower()])
+print(&#x27;assert_hostname:&#x27;, config.assert_hostname)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.client import Configuration
+
+# Check Configuration
+config = Configuration()
+print(&#x27;Configuration __dict__ keys with hostname:&#x27;, [k for k in config.__dict__ if &#x27;host&#x27; in k.lower() or &#x27;name&#x27; in k.lower()])
+print(&#x27;assert_hostname:&#x27;, config.assert_hostname)
+&quot;</pre></details></td><td>0</td><td>0.328s</td><td>e45e917d</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.client import Configuration
+
+# Try to set tls_server_name
+config = Configuration(tls_server_name=&#x27;test-host&#x27;)
+print(&#x27;assert_hostname:&#x27;, config.assert_hostname)
+print(&#x27;tls_server_name in __dict__:&#x27;, &#x27;tls_server_name&#x27; in config.__dict__)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.client import Configuration
+
+# Try to set tls_server_name
+config = Configuration(tls_server_name=&#x27;test-host&#x27;)
+print(&#x27;assert_hostname:&#x27;, config.assert_hostname)
+print(&#x27;tls_server_name in __dict__:&#x27;, &#x27;tls_server_name&#x27; in config.__dict__)
+&quot;</pre></details></td><td>1</td><td>0.338s</td><td>e3ba15c5</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+actual = FakeConfig()
+print(&#x27;Before - actual.__dict__:&#x27;, {k: v for k, v in actual.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+print(&#x27;After - actual.__dict__:&#x27;, {k: v for k, v in actual.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print(&#x27;tls_server_name in actual.__dict__:&#x27;, &#x27;tls_server_name&#x27; in actual.__dict__)
+print(&#x27;assert_hostname in actual.__dict__:&#x27;, &#x27;assert_hostname&#x27; in actual.__dict__)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+actual = FakeConfig()
+print(&#x27;Before - actual.__dict__:&#x27;, {k: v for k, v in actual.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+print(&#x27;After - actual.__dict__:&#x27;, {k: v for k, v in actual.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print(&#x27;tls_server_name in actual.__dict__:&#x27;, &#x27;tls_server_name&#x27; in actual.__dict__)
+print(&#x27;assert_hostname in actual.__dict__:&#x27;, &#x27;assert_hostname&#x27; in actual.__dict__)
+&quot;</pre></details></td><td>0</td><td>0.341s</td><td>ba2122fa</td></tr><tr><td>write</td><td><code class="display-command">write kubernetes/base/config/kube_config.py</code><details><summary>exact command</summary><pre>/opt/receipts-8d188dc6f98042ef8b097ba42146c428/bin/busybox sh -c &#x27;mkdir -p /python/kubernetes/base/config &amp;&amp; cp /opt/receipts-8d188dc6f98042ef8b097ba42146c428/incoming/79cf2f5a6f4285af603f37c7b6b61e8c555a252003cf6ba00a8207d85fa1d163 /python/kubernetes/base/config/kube_config.py&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>e43a919c</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</pre></details></td><td>1</td><td>0.562s</td><td>2222b570</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+print(&#x27;expected.__dict__:&#x27;, {k: v for k, v in expected.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print(&#x27;actual.__dict__:&#x27;, {k: v for k, v in actual.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print()
+# Compare key by key
+for k in expected.__dict__:
+    if k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            try:
+                with open(ev) as f1, open(av) as f2:
+                    match = f1.read() == f2.read()
+                print(f&#x27;{k}: file comparison={match}&#x27;)
+            except IOError:
+                print(f&#x27;{k}: filenames equal={ev == av}&#x27;)
+        else:
+            print(f&#x27;{k}: expected={ev!r}, actual={av!r}, match={ev == av}&#x27;)
+    else:
+        print(f&#x27;{k}: missing from actual&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+print(&#x27;expected.__dict__:&#x27;, {k: v for k, v in expected.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print(&#x27;actual.__dict__:&#x27;, {k: v for k, v in actual.__dict__.items() if not k.startswith(&#x27;_&#x27;)})
+print()
+# Compare key by key
+for k in expected.__dict__:
+    if k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            try:
+                with open(ev) as f1, open(av) as f2:
+                    match = f1.read() == f2.read()
+                print(f&#x27;{k}: file comparison={match}&#x27;)
+            except IOError:
+                print(f&#x27;{k}: filenames equal={ev == av}&#x27;)
+        else:
+            print(f&#x27;{k}: expected={ev!r}, actual={av!r}, match={ev == av}&#x27;)
+    else:
+        print(f&#x27;{k}: missing from actual&#x27;)
+&quot;</pre></details></td><td>1</td><td>0.358s</td><td>db7024f9</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+import os
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+# Compare
+match = True
+for k in expected.__dict__:
+    if k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            if ev is None or av is None:
+                if ev != av:
+                    print(f&#x27;{k}: mismatch (one is None, other is {av!r})&#x27;)
+                    match = False
+            else:
+                try:
+                    with open(ev) as f1, open(av) as f2:
+                        if f1.read() != f2.read():
+                            print(f&#x27;{k}: file content mismatch&#x27;)
+                            match = False
+                except IOError:
+                    if ev != av:
+                        print(f&#x27;{k}: filenames differ ({ev!r} vs {av!r})&#x27;)
+                        match = False
+        else:
+            if ev != av:
+                print(f&#x27;{k}: expected={ev!r}, actual={av!r}&#x27;)
+                match = False
+    else:
+        print(f&#x27;{k}: missing from actual&#x27;)
+        match = False
+
+if match:
+    print(&#x27;All attributes match!&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+import os
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+# Compare
+match = True
+for k in expected.__dict__:
+    if k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            if ev is None or av is None:
+                if ev != av:
+                    print(f&#x27;{k}: mismatch (one is None, other is {av!r})&#x27;)
+                    match = False
+            else:
+                try:
+                    with open(ev) as f1, open(av) as f2:
+                        if f1.read() != f2.read():
+                            print(f&#x27;{k}: file content mismatch&#x27;)
+                            match = False
+                except IOError:
+                    if ev != av:
+                        print(f&#x27;{k}: filenames differ ({ev!r} vs {av!r})&#x27;)
+                        match = False
+        else:
+            if ev != av:
+                print(f&#x27;{k}: expected={ev!r}, actual={av!r}&#x27;)
+                match = False
+    else:
+        print(f&#x27;{k}: missing from actual&#x27;)
+        match = False
+
+if match:
+    print(&#x27;All attributes match!&#x27;)
+&quot;</pre></details></td><td>1</td><td>0.342s</td><td>3840f0c8</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+# Compare
+match = True
+for k in expected.__dict__:
+    if k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            if ev is None or av is None:
+                if ev != av:
+                    print(f&#x27;{k}: mismatch (one is None, other is {av!r})&#x27;)
+                    match = False
+            else:
+                try:
+                    with open(ev) as f1, open(av) as f2:
+                        if f1.read() != f2.read():
+                            print(f&#x27;{k}: file content mismatch&#x27;)
+                            match = False
+                except IOError:
+                    if ev != av:
+                        print(f&#x27;{k}: filenames differ ({ev!r} vs {av!r})&#x27;)
+                        match = False
+        else:
+            if ev != av:
+                print(f&#x27;{k}: expected={ev!r}, actual={av!r}&#x27;)
+                match = False
+    else:
+        print(f&#x27;{k}: missing from actual&#x27;)
+        match = False
+
+if match:
+    print(&#x27;All attributes match!&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+# Compare
+match = True
+for k in expected.__dict__:
+    if k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            if ev is None or av is None:
+                if ev != av:
+                    print(f&#x27;{k}: mismatch (one is None, other is {av!r})&#x27;)
+                    match = False
+            else:
+                try:
+                    with open(ev) as f1, open(av) as f2:
+                        if f1.read() != f2.read():
+                            print(f&#x27;{k}: file content mismatch&#x27;)
+                            match = False
+                except IOError:
+                    if ev != av:
+                        print(f&#x27;{k}: filenames differ ({ev!r} vs {av!r})&#x27;)
+                        match = False
+        else:
+            if ev != av:
+                print(f&#x27;{k}: expected={ev!r}, actual={av!r}&#x27;)
+                match = False
+    else:
+        print(f&#x27;{k}: missing from actual&#x27;)
+        match = False
+
+if match:
+    print(&#x27;All attributes match!&#x27;)
+&quot;</pre></details></td><td>0</td><td>0.363s</td><td>6834fb55</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+# Compare all keys
+for k in set(list(expected.__dict__.keys()) + list(actual.__dict__.keys())):
+    if k in expected.__dict__ and k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            if ev is None or av is None:
+                status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+                print(f&#x27;{k}: {status} (expected={ev!r}, actual={av!r})&#x27;)
+            else:
+                try:
+                    with open(ev) as f1, open(av) as f2:
+                        status = &#x27;ok&#x27; if f1.read() == f2.read() else &#x27;mismatch&#x27;
+                        print(f&#x27;{k}: {status}&#x27;)
+                except IOError:
+                    status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+                    print(f&#x27;{k}: {status} (filenames: {ev!r} vs {av!r})&#x27;)
+        else:
+            status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+            print(f&#x27;{k}: {status} (expected={ev!r}, actual={av!r})&#x27;)
+    elif k in expected.__dict__:
+        print(f&#x27;{k}: missing from actual (expected={expected.__dict__[k]!r})&#x27;)
+    else:
+        print(f&#x27;{k}: extra in actual (actual={actual.__dict__[k]!r})&quot;)
+&quot;</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -c &quot;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+# Compare all keys
+for k in set(list(expected.__dict__.keys()) + list(actual.__dict__.keys())):
+    if k in expected.__dict__ and k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            if ev is None or av is None:
+                status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+                print(f&#x27;{k}: {status} (expected={ev!r}, actual={av!r})&#x27;)
+            else:
+                try:
+                    with open(ev) as f1, open(av) as f2:
+                        status = &#x27;ok&#x27; if f1.read() == f2.read() else &#x27;mismatch&#x27;
+                        print(f&#x27;{k}: {status}&#x27;)
+                except IOError:
+                    status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+                    print(f&#x27;{k}: {status} (filenames: {ev!r} vs {av!r})&#x27;)
+        else:
+            status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+            print(f&#x27;{k}: {status} (expected={ev!r}, actual={av!r})&#x27;)
+    elif k in expected.__dict__:
+        print(f&#x27;{k}: missing from actual (expected={expected.__dict__[k]!r})&#x27;)
+    else:
+        print(f&#x27;{k}: extra in actual (actual={actual.__dict__[k]!r})&quot;)
+&quot;</pre></details></td><td>2</td><td>0.001s</td><td>c5eaf570</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+# Compare all keys
+for k in set(list(expected.__dict__.keys()) + list(actual.__dict__.keys())):
+    if k in expected.__dict__ and k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            if ev is None or av is None:
+                status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+                print(f&#x27;{k}: {status} (expected={ev!r}, actual={av!r})&#x27;)
+            else:
+                try:
+                    with open(ev) as f1, open(av) as f2:
+                        status = &#x27;ok&#x27; if f1.read() == f2.read() else &#x27;mismatch&#x27;
+                        print(f&#x27;{k}: {status}&#x27;)
+                except IOError:
+                    status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+                    print(f&#x27;{k}: {status} (filenames: {ev!r} vs {av!r})&#x27;)
+        else:
+            status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+            print(f&#x27;{k}: {status} (expected={ev!r}, actual={av!r})&#x27;)
+    elif k in expected.__dict__:
+        print(f&#x27;{k}: missing from actual (expected={expected.__dict__[k]!r})&#x27;)
+    else:
+        print(f&#x27;{k}: extra in actual (actual={actual.__dict__[k]!r})&#x27;)
+PYEOF</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+# Compare all keys
+for k in set(list(expected.__dict__.keys()) + list(actual.__dict__.keys())):
+    if k in expected.__dict__ and k in actual.__dict__:
+        ev, av = expected.__dict__[k], actual.__dict__[k]
+        if k in FakeConfig.FILE_KEYS:
+            if ev is None or av is None:
+                status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+                print(f&#x27;{k}: {status} (expected={ev!r}, actual={av!r})&#x27;)
+            else:
+                try:
+                    with open(ev) as f1, open(av) as f2:
+                        status = &#x27;ok&#x27; if f1.read() == f2.read() else &#x27;mismatch&#x27;
+                        print(f&#x27;{k}: {status}&#x27;)
+                except IOError:
+                    status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+                    print(f&#x27;{k}: {status} (filenames: {ev!r} vs {av!r})&#x27;)
+        else:
+            status = &#x27;ok&#x27; if ev == av else &#x27;mismatch&#x27;
+            print(f&#x27;{k}: {status} (expected={ev!r}, actual={av!r})&#x27;)
+    elif k in expected.__dict__:
+        print(f&#x27;{k}: missing from actual (expected={expected.__dict__[k]!r})&#x27;)
+    else:
+        print(f&#x27;{k}: extra in actual (actual={actual.__dict__[k]!r})&#x27;)
+PYEOF</pre></details></td><td>0</td><td>0.360s</td><td>a2d2360f</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</pre></details></td><td>1</td><td>0.559s</td><td>530fa4ce</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+print(&#x27;expected.__dict__ keys:&#x27;, list(expected.__dict__.keys()))
+print(&#x27;actual.__dict__ keys:&#x27;, list(actual.__dict__.keys()))
+print(&#x27;len(expected.__dict__):&#x27;, len(expected.__dict__))
+print(&#x27;len(actual.__dict__):&#x27;, len(actual.__dict__))
+print()
+print(&#x27;expected has assert_hostname:&#x27;, &#x27;assert_hostname&#x27; in expected.__dict__)
+print(&#x27;actual has tls_server_name:&#x27;, &#x27;tls_server_name&#x27; in actual.__dict__)
+print(&#x27;actual has assert_hostname:&#x27;, &#x27;assert_hostname&#x27; in actual.__dict__)
+PYEOF</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config_test import FakeConfig, TEST_TLS_SERVER_NAME, TEST_SSL_HOST, BEARER_TOKEN_FORMAT, TEST_DATA_BASE64
+from kubernetes.base.config.kube_config import KubeConfigLoader
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://test-host&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;kubernetes.io&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+expected = FakeConfig(
+    host=TEST_SSL_HOST,
+    token=BEARER_TOKEN_FORMAT % TEST_DATA_BASE64,
+    cert_file=None,
+    key_file=None,
+    ssl_ca_cert=None,
+    verify_ssl=True,
+    tls_server_name=TEST_TLS_SERVER_NAME
+)
+actual = FakeConfig()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(actual)
+
+print(&#x27;expected.__dict__ keys:&#x27;, list(expected.__dict__.keys()))
+print(&#x27;actual.__dict__ keys:&#x27;, list(actual.__dict__.keys()))
+print(&#x27;len(expected.__dict__):&#x27;, len(expected.__dict__))
+print(&#x27;len(actual.__dict__):&#x27;, len(actual.__dict__))
+print()
+print(&#x27;expected has assert_hostname:&#x27;, &#x27;assert_hostname&#x27; in expected.__dict__)
+print(&#x27;actual has tls_server_name:&#x27;, &#x27;tls_server_name&#x27; in actual.__dict__)
+print(&#x27;actual has assert_hostname:&#x27;, &#x27;assert_hostname&#x27; in actual.__dict__)
+PYEOF</pre></details></td><td>0</td><td>0.358s</td><td>8ec1c41e</td></tr><tr><td>write</td><td><code class="display-command">write kubernetes/base/config/kube_config.py</code><details><summary>exact command</summary><pre>/opt/receipts-d55b72ee196843008336c5741c0d5a3f/bin/busybox sh -c &#x27;mkdir -p /python/kubernetes/base/config &amp;&amp; cp /opt/receipts-d55b72ee196843008336c5741c0d5a3f/incoming/886e25a285b1317ec7e80a9c1a6a8a3c7a526e1075316ccffbced651b9515ff9 /python/kubernetes/base/config/kube_config.py&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>a917cd7e</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name -v 2&gt;&amp;1</pre></details></td><td>0</td><td>0.545s</td><td>ef2b9204</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py -v 2&gt;&amp;1 | tail -50</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python -m pytest kubernetes/base/config/kube_config_test.py -v 2&gt;&amp;1 | tail -50</pre></details></td><td>0</td><td>0.889s</td><td>9f93be55</td></tr></tbody></table></div></details><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.client import Configuration, ApiClient
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://example.com&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;base64cert&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;my-cluster-hostname&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+# Load config and check that tls_server_name is set
+config = Configuration()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(config)
+
+print(&quot;Configuration assert_hostname:&quot;, config.assert_hostname)
+print(&quot;Configuration tls_server_name:&quot;, config.tls_server_name)
+
+# Create ApiClient and check the pool manager args
+api_client = ApiClient(configuration=config)
+print(&quot;\nApiClient pool_manager kwargs (assert_hostname):&quot;)
+# Check the pool_manager configuration
+if hasattr(api_client.pool_manager, &#x27;assert_hostname&#x27;):
+    print(&quot;  assert_hostname set:&quot;, api_client.pool_manager.assert_hostname)
+else:
+    print(&quot;  assert_hostname not directly accessible (urllib3 version dependent)&quot;)
+
+print(&quot;\nTest passed: tls-server-name is properly propagated!&quot;)
+PYEOF</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.client import Configuration, ApiClient
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://example.com&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;base64cert&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;my-cluster-hostname&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+# Load config and check that tls_server_name is set
+config = Configuration()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(config)
+
+print(&quot;Configuration assert_hostname:&quot;, config.assert_hostname)
+print(&quot;Configuration tls_server_name:&quot;, config.tls_server_name)
+
+# Create ApiClient and check the pool manager args
+api_client = ApiClient(configuration=config)
+print(&quot;\nApiClient pool_manager kwargs (assert_hostname):&quot;)
+# Check the pool_manager configuration
+if hasattr(api_client.pool_manager, &#x27;assert_hostname&#x27;):
+    print(&quot;  assert_hostname set:&quot;, api_client.pool_manager.assert_hostname)
+else:
+    print(&quot;  assert_hostname not directly accessible (urllib3 version dependent)&quot;)
+
+print(&quot;\nTest passed: tls-server-name is properly propagated!&quot;)
+PYEOF</pre></details></td><td>1</td><td>0.362s</td><td>06cb8668</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.client import Configuration, ApiClient
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://example.com&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;my-cluster-hostname&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+# Load config and check that tls_server_name is set
+config = Configuration()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(config)
+
+print(&quot;Configuration assert_hostname:&quot;, config.assert_hostname)
+print(&quot;Configuration tls_server_name:&quot;, config.tls_server_name)
+
+# Create ApiClient and verify the configuration is passed through
+api_client = ApiClient(configuration=config)
+print(&quot;\nApiClient configuration assert_hostname:&quot;, api_client.configuration.assert_hostname)
+print(&quot;ApiClient configuration tls_server_name:&quot;, api_client.configuration.tls_server_name)
+
+print(&quot;\nTest passed: tls-server-name is properly propagated from kubeconfig to Configuration to ApiClient!&quot;)
+PYEOF</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.client import Configuration, ApiClient
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://example.com&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;my-cluster-hostname&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+# Load config and check that tls_server_name is set
+config = Configuration()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(config)
+
+print(&quot;Configuration assert_hostname:&quot;, config.assert_hostname)
+print(&quot;Configuration tls_server_name:&quot;, config.tls_server_name)
+
+# Create ApiClient and verify the configuration is passed through
+api_client = ApiClient(configuration=config)
+print(&quot;\nApiClient configuration assert_hostname:&quot;, api_client.configuration.assert_hostname)
+print(&quot;ApiClient configuration tls_server_name:&quot;, api_client.configuration.tls_server_name)
+
+print(&quot;\nTest passed: tls-server-name is properly propagated from kubeconfig to Configuration to ApiClient!&quot;)
+PYEOF</pre></details></td><td>0</td><td>0.333s</td><td>d6311cee</td></tr><tr><td>command</td><td><code class="display-command">cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.client import Configuration, ApiClient
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://example.com&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;my-cluster-hostname&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+# Load config and check that tls_server_name is set
+config = Configuration()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(config)
+
+print(&quot;Configuration assert_hostname:&quot;, config.assert_hostname)
+print(&quot;Configuration tls_server_name:&quot;, config.tls_server_name)
+
+# Now also set assert_hostname to tls_server_name for urllib3 compatibility
+# This is what rest.py does when configuration.assert_hostname is not None
+if config.tls_server_name is not None:
+    config.assert_hostname = config.tls_server_name
+
+print(&quot;\nAfter setting assert_hostname:&quot;)
+print(&quot;Configuration assert_hostname:&quot;, config.assert_hostname)
+
+# Create ApiClient
+api_client = ApiClient(configuration=config)
+print(&quot;\nApiClient configuration assert_hostname:&quot;, api_client.configuration.assert_hostname)
+print(&quot;ApiClient configuration tls_server_name:&quot;, api_client.configuration.tls_server_name)
+PYEOF</code><details><summary>exact command</summary><pre>cd /python &amp;&amp; python &lt;&lt; &#x27;PYEOF&#x27;
+from kubernetes.base.config.kube_config import KubeConfigLoader
+from kubernetes.client import Configuration, ApiClient
+
+TEST_KUBE_CONFIG = {
+    &#x27;current-context&#x27;: &#x27;tls-server-name&#x27;,
+    &#x27;contexts&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;context&#x27;: {&#x27;cluster&#x27;: &#x27;tls-server-name&#x27;, &#x27;user&#x27;: &#x27;ssl&#x27;}}
+    ],
+    &#x27;clusters&#x27;: [
+        {&#x27;name&#x27;: &#x27;tls-server-name&#x27;, &#x27;cluster&#x27;: {
+            &#x27;server&#x27;: &#x27;https://example.com&#x27;,
+            &#x27;certificate-authority-data&#x27;: &#x27;Y2VydHM=&#x27;,
+            &#x27;insecure-skip-tls-verify&#x27;: False,
+            &#x27;tls-server-name&#x27;: &#x27;my-cluster-hostname&#x27;
+        }}
+    ],
+    &#x27;users&#x27;: [
+        {&#x27;name&#x27;: &#x27;ssl&#x27;, &#x27;user&#x27;: {}}
+    ]
+}
+
+# Load config and check that tls_server_name is set
+config = Configuration()
+loader = KubeConfigLoader(config_dict=TEST_KUBE_CONFIG, active_context=&#x27;tls-server-name&#x27;)
+loader.load_and_set(config)
+
+print(&quot;Configuration assert_hostname:&quot;, config.assert_hostname)
+print(&quot;Configuration tls_server_name:&quot;, config.tls_server_name)
+
+# Now also set assert_hostname to tls_server_name for urllib3 compatibility
+# This is what rest.py does when configuration.assert_hostname is not None
+if config.tls_server_name is not None:
+    config.assert_hostname = config.tls_server_name
+
+print(&quot;\nAfter setting assert_hostname:&quot;)
+print(&quot;Configuration assert_hostname:&quot;, config.assert_hostname)
+
+# Create ApiClient
+api_client = ApiClient(configuration=config)
+print(&quot;\nApiClient configuration assert_hostname:&quot;, api_client.configuration.assert_hostname)
+print(&quot;ApiClient configuration tls_server_name:&quot;, api_client.configuration.tls_server_name)
+PYEOF</pre></details></td><td>0</td><td>0.341s</td><td>cb59201e</td></tr><tr><td>diff</td><td><code class="display-command">capture patch</code><details><summary>exact command</summary><pre>compute patch in executor staging agent1-f87ebfab4fcd43e4b65c2069feb82d78: /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false add -A &amp;&amp; /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false diff --cached --binary --no-ext-diff --no-textconv --no-renames e8ec481d20fea82be5afe43acb4c8818eb880351</pre></details></td><td>0</td><td>0.226s</td><td>b189aad07382</td></tr></tbody></table></div><div class="pad"><dl><dt>Finish summary</dt><dd>Fixed the issue where the Kubernetes Python client doesn&#x27;t honor the `tls-server-name` setting from kubeconfig.
+
+**Changes made to `kubernetes/base/config/kube_config.py`:**
+
+1. **`_load_cluster_info` method**: Added reading of `tls-server-name` from the cluster section of kubeconfig:
+   ```python
+   if &#x27;tls-server-name&#x27; in self._cluster:
+       self.tls_server_name = self._cluster[&#x27;tls-server-name&#x27;]
+   ```
+
+2. **`_set_config` method**: Added propagation of `tls_server_name` to the Configuration object:
+   ```python
+   if hasattr(self, &#x27;tls_server_name&#x27;):
+       client_configuration.tls_server_name = self.tls_server_name
+   ```
+
+**Result:** The `tls-server-name` value from kubeconfig is now properly propagated to the `Configuration` object as `tls_server_name`, which can be used by the API client for proper TLS SNI handling. All 78 tests in `kube_config_test.py` pass, including the `test_tls_server_name` test.</dd><dt>Worker outcome</dt><dd>finished</dd></dl><ul class="claims"><li>Target tests pass: yes</li><li>Full suite passes: yes</li><li>Files changed: kubernetes/base/config/kube_config.py</li><li>Ran tests: yes</li></ul></div></div><div class="stack"><div class="card"><h3>Witness branch w1</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>apply</td><td><code class="display-command">apply patch 064fced8e93b</code><details><summary>exact command</summary><pre>git update-index -q --refresh; git apply -v --3way --recount --ignore-space-change --whitespace=nowarn /opt/receipts-83e5fd0e1bcc4469b5f266de88d5ece0/incoming/064fced8e93b1897d3f995fcb1b8042acfff0bfe11404bd9935e20d0e7d949ea.diff</pre></details></td><td>0</td><td>0.020s</td><td>f8ab7a6b5d7a</td></tr><tr><td>verification</td><td><code class="display-command">pytest (witness) kubernetes/base/config/kube_config_test.py</code><details><summary>exact command</summary><pre>/opt/receipts-8eb795369c1546b487d9c916f016f398/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-8eb795369c1546b487d9c916f016f398/receipts_pytest.py --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning kubernetes/base/config/kube_config_test.py -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/w1-2.xml</pre></details></td><td>0</td><td>1.991s</td><td>f8ab7a6b5d7a</td></tr></tbody></table></div></div><h3>Gate predicate checklist</h3><div class="table-box"><table class="predicates"><thead><tr><th scope="col">Predicate</th><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Evidence</th></tr></thead><tbody><tr><td><code>R1_fail_to_pass</code></td><td>Failing specification tests now pass</td><td><span class="pass">PASS</span></td><td>target tests passed: kubernetes/base/config/kube_config_test.py::TestKubeConfigLoader::test_tls_server_name</td></tr><tr><td><code>R2_pass_to_pass</code></td><td>Previously passing tests kept</td><td><span class="pass">PASS</span></td><td>77 baseline-passing tests still pass</td></tr><tr><td><code>R3_no_shrink</code></td><td>No removed tests or new skips</td><td><span class="pass">PASS</span></td><td>all 78 baseline tests collected; skips unchanged (0)</td></tr><tr><td><code>R4_patch_scope</code></td><td>Patch scope</td><td><span class="pass">PASS</span></td><td>patch touches 1 file(s), all in scope</td></tr><tr><td><code>R5_provenance</code></td><td>Witness chain and patch digest</td><td><span class="pass">PASS</span></td><td>agent chain d5820fe7 -&gt; cb59201e unbroken over 38 receipt(s); witness chain d5820fe7 -&gt; 516aa7d8 unbroken over 2 receipt(s); applied digest matches</td></tr><tr><td><code>R6_claim_audit</code></td><td>Agent claim audit (advisory)</td><td><span class="fail">FAIL</span></td><td>claimed green but never ran the tests on this branch</td></tr></tbody></table></div></div></div><div class="comparison card"><div><h3>What it said</h3><dl><dt>Finish summary</dt><dd>Fixed the issue where the Kubernetes Python client doesn&#x27;t honor the `tls-server-name` setting from kubeconfig.
+
+**Changes made to `kubernetes/base/config/kube_config.py`:**
+
+1. **`_load_cluster_info` method**: Added reading of `tls-server-name` from the cluster section of kubeconfig:
+   ```python
+   if &#x27;tls-server-name&#x27; in self._cluster:
+       self.tls_server_name = self._cluster[&#x27;tls-server-name&#x27;]
+   ```
+
+2. **`_set_config` method**: Added propagation of `tls_server_name` to the Configuration object:
+   ```python
+   if hasattr(self, &#x27;tls_server_name&#x27;):
+       client_configuration.tls_server_name = self.tls_server_name
+   ```
+
+**Result:** The `tls-server-name` value from kubeconfig is now properly propagated to the `Configuration` object as `tls_server_name`, which can be used by the API client for proper TLS SNI handling. All 78 tests in `kube_config_test.py` pass, including the `test_tls_server_name` test.</dd><dt>Worker outcome</dt><dd>finished</dd></dl><ul class="claims"><li>Target tests pass: yes</li><li>Full suite passes: yes</li><li>Files changed: kubernetes/base/config/kube_config.py</li><li>Ran tests: yes</li></ul></div><div><h3>What the record shows</h3><p>unsupported: claimed green but never ran the tests on this branch</p></div></div><div class="card pad stack"><h3>SWE-rebench&#x27;s official grader: resolved</h3><p>Agrees with the gate</p></div></section><section class="stack"><h2>Shipped patch</h2><pre class="diff"><span class="">diff --git a/kubernetes/base/config/kube_config.py b/kubernetes/base/config/kube_config.py</span><span class="">index a62df410..5e63ab70 100644</span><span class="">--- a/kubernetes/base/config/kube_config.py</span><span class="">+++ b/kubernetes/base/config/kube_config.py</span><span class="">@@ -565,6 +565,8 @@ class KubeConfigLoader(object):</span><span class="">                         self._user, &#x27;client-key&#x27;,</span><span class="">                         file_base_path=base_path,</span><span class="">                         temp_file_path=self._temp_file_path).as_file()</span><span class="added">+        if &#x27;tls-server-name&#x27; in self._cluster:</span><span class="added">+            self.tls_server_name = self._cluster[&#x27;tls-server-name&#x27;]</span><span class="">         if &#x27;insecure-skip-tls-verify&#x27; in self._cluster:</span><span class="">             self.verify_ssl = not self._cluster[&#x27;insecure-skip-tls-verify&#x27;]</span><span class=""> </span><span class="">@@ -582,6 +584,8 @@ class KubeConfigLoader(object):</span><span class="">         for key in keys:</span><span class="">             if key in self.__dict__:</span><span class="">                 setattr(client_configuration, key, getattr(self, key))</span><span class="added">+        if hasattr(self, &#x27;tls_server_name&#x27;):</span><span class="added">+            client_configuration.tls_server_name = self.tls_server_name</span><span class=""> </span><span class="">     def load_and_set(self, client_configuration):</span><span class="">         self._load_authentication()</span></pre></section><section class="card pad stack"><h2>Model and costs</h2><dl><dt>Model</dt><dd>nvidia/Nemotron-3_5-Lightning
+thinking off · temperature 1.0 · top_p 0.95</dd><dt>Tokens</dt><dd>1,236,188 tokens</dd><dt>Model cost</dt><dd>$0.08</dd><dt>Sandbox time</dt><dd>2 min 21 s</dd><dt>Sandbox cost</dt><dd>Token Factory reported cost: 0.191 (unit not published)</dd></dl><details><summary>Full environment disclosure</summary><pre>{
+  &quot;executor_kind&quot;: &quot;tokenfactory&quot;,
+  &quot;lock_sha256&quot;: &quot;23e994da177b2eef1b0d5a76ef8deb595f0b3693ad0a7e5573375b18959a81c6&quot;,
+  &quot;model&quot;: {
+    &quot;base_url&quot;: &quot;https://api.tokenfactory.nebius.com/v1/&quot;,
+    &quot;client&quot;: &quot;TokenFactoryClient&quot;,
+    &quot;max_tokens&quot;: null,
+    &quot;model&quot;: &quot;nvidia/Nemotron-3_5-Lightning&quot;,
+    &quot;temperature&quot;: 1.0,
+    &quot;thinking&quot;: false,
+    &quot;top_p&quot;: 0.95
+  },
+  &quot;pytest_config_digests&quot;: {
+    &quot;kubernetes/base/tox.ini&quot;: &quot;d4ece307e74f75c0d47052aee228492a4a46fc4868b69e57c134d5c0a1aa4799&quot;,
+    &quot;kubernetes/setup.cfg&quot;: &quot;97b6dd29221e75e0618680edba9b01c31d713eb9417f6c987931fb6bc90c81ae&quot;,
+    &quot;setup.cfg&quot;: &quot;87135eac357f313196b7091dc89e7d7abb13cfc2482692f239807dcf7514b7f9&quot;,
+    &quot;tox.ini&quot;: &quot;3fe97eda22c015880868b470aa55869f7ff8be389b242f20cc2d72a225cfd827&quot;
+  },
+  &quot;receipts_version&quot;: &quot;0.0.1&quot;,
+  &quot;test_digests&quot;: {
+    &quot;kubernetes/base/config/__init__.py&quot;: &quot;8c39609f004ff029d33ae633710938c60a70c5eb15cbaa17a9a0a781b6463e5b&quot;,
+    &quot;kubernetes/base/config/config_exception.py&quot;: &quot;9a1e3a237dfe2fbfa442025ee88a07ac011de7207deb40a034958efaa5bc48e3&quot;,
+    &quot;kubernetes/base/config/dateutil.py&quot;: &quot;80e1042328f76409815943810c16c813cd40e02144f5ccbcfc94ab3b04c20dc0&quot;,
+    &quot;kubernetes/base/config/dateutil_test.py&quot;: &quot;7dc6584a8b37115a317ed3d109827c5caf3617a4e64d8c0818f6c63c3bedecc9&quot;,
+    &quot;kubernetes/base/config/exec_provider.py&quot;: &quot;7e03e8649e935a0c7d7591ac062fa0cb3506c19b49bc7da92227030354510821&quot;,
+    &quot;kubernetes/base/config/exec_provider_test.py&quot;: &quot;63c926b202ae565210a42477ec92680f6906075de1339b846a9bf4e794586ef5&quot;,
+    &quot;kubernetes/base/config/incluster_config.py&quot;: &quot;073168688753bc350c4faba199d26f56f79cf92f2f2c53d970a7022ef4453b15&quot;,
+    &quot;kubernetes/base/config/incluster_config_test.py&quot;: &quot;ef83b2ce0c82e49e747b7ebf27b7e160c39f5cbf2e20ab4ef90a16352d21365a&quot;,
+    &quot;kubernetes/base/config/kube_config.py&quot;: &quot;85a5aa3b36bec05d13ac6e19f63f6dfac3e100d337fee9fd37aa5b24d0554a8d&quot;,
+    &quot;kubernetes/base/config/kube_config_test.py&quot;: &quot;fb59ccd487591d46bdb0c501fd38e4c975fb2986cd7f8497f80296a0e6482e51&quot;
+  }
+}</pre></details></section><section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches. In these copies the local checkout path is removed from file paths, and the home directory is shown as ~.</p><ul class="bundle"><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/attempts/1/filtered.diff" class="">attempts/1/filtered.diff</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/attempts/1/patch.diff" class="">attempts/1/patch.diff</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/attempts/1/verdict.json" class="">attempts/1/verdict.json</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/attempts/1/witness/receipts.jsonl" class="">attempts/1/witness/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/baseline.json" class="">baseline.json</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/branches/agent1/receipts.jsonl" class="">branches/agent1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/branches/base/receipts.jsonl" class="">branches/base/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/branches/official1/receipts.jsonl" class="">branches/official1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/branches/w1/receipts.jsonl" class="">branches/w1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/cost.json" class="">cost.json</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/disclosure.json" class="">disclosure.json</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/input.json" class="">input.json</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/lock.txt" class="">lock.txt</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/plan.json" class="">plan.json</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/record.json" class="">record.json</a></li><li><a href="../../raw/v2-arm-lightning/kubernetes-client__python-1933/result.json" class="">result.json</a></li></ul></section></main><footer>Generated from the run records by receipts site. No model was asked whether a fix worked.</footer></body></html>

@@ -1,0 +1,17 @@
+diff --git a/src/pymor/operators/numpy.py b/src/pymor/operators/numpy.py
+index bdb53eb4..7ea83f35 100644
+--- a/src/pymor/operators/numpy.py
++++ b/src/pymor/operators/numpy.py
+@@ -96,6 +96,12 @@ class NumpyGenericOperator(OperatorBase):
+         else:
+             return self.source.make_array(self._adjoint_mapping(V))
+ 
++    def jacobian(self, U, mu=None):
++        raise NotImplementedError
++
++    def assemble(self, mu=None):
++        raise NotImplementedError
++
+ 
+ class NumpyMatrixBasedOperator(OperatorBase):
+     """Base class for operators which assemble into a |NumpyMatrixOperator|.

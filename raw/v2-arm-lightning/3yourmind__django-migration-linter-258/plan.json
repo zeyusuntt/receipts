@@ -1,0 +1,14 @@
+{
+  "approach": "Modify the condition that detects NOT NULL to also permit CREATE INDEX statements, matching the suggestion in the issue.",
+  "files_to_edit": [
+    "django_migration_linter/sql_analyser/base.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The NOT_NULL rule triggers on CREATE INDEX ... WHERE clauses containing IS NOT NULL. The fix requires adding `not sql.startswith(\"CREATE INDEX\")` to the condition in `django_migration_linter/sql_analyser/base.py` line 43.",
+  "retries": {},
+  "usage": {
+    "completion": 106,
+    "prompt": 5813,
+    "reasoning": 0
+  }
+}

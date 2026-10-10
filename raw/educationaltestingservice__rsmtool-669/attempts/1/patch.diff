@@ -1,0 +1,310 @@
+diff --git a/rsmtool/rsmcompare.py b/rsmtool/rsmcompare.py
+index 58158171..903999fc 100644
+--- a/rsmtool/rsmcompare.py
++++ b/rsmtool/rsmcompare.py
+@@ -178,7 +178,7 @@ def run_comparison(config_file_or_obj_or_dict, output_dir):
+     )
+ 
+ 
+-def main():  # noqa: D103
++def main(argv=None):  # noqa: D103
+     # set up the basic logging configuration
+     formatter = LogFormatter()
+ 
+@@ -200,22 +200,25 @@ def main():  # noqa: D103
+     parser = setup_rsmcmd_parser("rsmcompare", uses_output_directory=True, uses_subgroups=True)
+ 
+     # if we have no arguments at all then just show the help message
+-    if len(sys.argv) < 2:
+-        sys.argv.append("-h")
++    if argv is None:
++        argv = sys.argv
++
++    if len(argv) < 2:
++        argv.append("-h")
+ 
+     # if the first argument is not one of the valid sub-commands
+     # or one of the valid optional arguments, then assume that they
+     # are arguments for the "run" sub-command. This allows the
+     # old style command-line invocations to work without modification.
+-    if sys.argv[1] not in VALID_PARSER_SUBCOMMANDS + [
++    if argv[0] not in VALID_PARSER_SUBCOMMANDS + [
+         "-h",
+         "--help",
+         "-V",
+         "--version",
+     ]:
+-        args_to_pass = ["run"] + sys.argv[1:]
++        args_to_pass = ["run"] + argv
+     else:
+-        args_to_pass = sys.argv[1:]
++        args_to_pass = argv
+     args = parser.parse_args(args=args_to_pass)
+ 
+     # call the appropriate function based on which sub-command was run
+diff --git a/rsmtool/rsmeval.py b/rsmtool/rsmeval.py
+index 930b38ca..81c1be72 100644
+--- a/rsmtool/rsmeval.py
++++ b/rsmtool/rsmeval.py
+@@ -219,7 +219,7 @@ def run_evaluation(
+     reporter.create_report(pred_analysis_config, csvdir, figdir, context="rsmeval")
+ 
+ 
+-def main():  # noqa: D103
++def main(argv=None):  # noqa: D103
+     # set up the basic logging configuration
+     formatter = LogFormatter()
+ 
+@@ -246,22 +246,25 @@ def main():  # noqa: D103
+     )
+ 
+     # if we have no arguments at all then just show the help message
+-    if len(sys.argv) < 2:
+-        sys.argv.append("-h")
++    if argv is None:
++        argv = sys.argv
++
++    if len(argv) < 2:
++        argv.append("-h")
+ 
+     # if the first argument is not one of the valid sub-commands
+     # or one of the valid optional arguments, then assume that they
+     # are arguments for the "run" sub-command. This allows the
+     # old style command-line invocations to work without modification.
+-    if sys.argv[1] not in VALID_PARSER_SUBCOMMANDS + [
++    if argv[0] not in VALID_PARSER_SUBCOMMANDS + [
+         "-h",
+         "--help",
+         "-V",
+         "--version",
+     ]:
+-        args_to_pass = ["run"] + sys.argv[1:]
++        args_to_pass = ["run"] + argv
+     else:
+-        args_to_pass = sys.argv[1:]
++        args_to_pass = argv
+     args = parser.parse_args(args=args_to_pass)
+ 
+     # call the appropriate function based on which sub-command was run
+diff --git a/rsmtool/rsmexplain.py b/rsmtool/rsmexplain.py
+index c4010516..8f77062e 100644
+--- a/rsmtool/rsmexplain.py
++++ b/rsmtool/rsmexplain.py
+@@ -525,7 +525,7 @@ def generate_report(explanation, output_dir, ids, configuration, logger=None, wa
+     reporter.create_explanation_report(configuration, csvdir, reportdir)
+ 
+ 
+-def main():
++def main(argv=None):  # noqa: D103
+     """Run rsmexplain and generate explanation reports."""
+     # set up the basic logging configuration
+     formatter = LogFormatter()
+@@ -545,23 +545,26 @@ def main():
+     # set up an argument parser via our helper function
+     parser = setup_rsmcmd_parser("rsmexplain", uses_output_directory=True, allows_overwriting=True)
+ 
+-    # if no arguments provided then just show the help message
+-    if len(sys.argv) < 2:
+-        sys.argv.append("-h")
++    # if we have no arguments at all then just show the help message
++    if argv is None:
++        argv = sys.argv
++
++    if len(argv) < 2:
++        argv.append("-h")
+ 
+     # if the first argument is not one of the valid sub-commands
+     # or one of the valid optional arguments, then assume that they
+     # are arguments for the "run" sub-command. This allows the
+     # old style command-line invocations to work without modification.
+-    if sys.argv[1] not in VALID_PARSER_SUBCOMMANDS + [
++    if argv[0] not in VALID_PARSER_SUBCOMMANDS + [
+         "-h",
+         "--help",
+         "-V",
+         "--version",
+     ]:
+-        args_to_pass = ["run"] + sys.argv[1:]
++        args_to_pass = ["run"] + argv
+     else:
+-        args_to_pass = sys.argv[1:]
++        args_to_pass = argv
+     args = parser.parse_args(args=args_to_pass)
+ 
+     if args.subcommand == "run":
+diff --git a/rsmtool/rsmpredict.py b/rsmtool/rsmpredict.py
+index eb697f37..dc8b026d 100644
+--- a/rsmtool/rsmpredict.py
++++ b/rsmtool/rsmpredict.py
+@@ -505,7 +505,7 @@ def compute_and_save_predictions(
+         )
+ 
+ 
+-def main():  # noqa: D103
++def main(argv=None):  # noqa: D103
+     # set up the basic logging configuration
+     formatter = LogFormatter()
+ 
+@@ -540,22 +540,25 @@ def main():  # noqa: D103
+     )
+ 
+     # if we have no arguments at all then just show the help message
+-    if len(sys.argv) < 2:
+-        sys.argv.append("-h")
++    if argv is None:
++        argv = sys.argv
++
++    if len(argv) < 2:
++        argv.append("-h")
+ 
+     # if the first argument is not one of the valid sub-commands
+     # or one of the valid optional arguments, then assume that they
+     # are arguments for the "run" sub-command. This allows the
+     # old style command-line invocations to work without modification.
+-    if sys.argv[1] not in VALID_PARSER_SUBCOMMANDS + [
++    if argv[0] not in VALID_PARSER_SUBCOMMANDS + [
+         "-h",
+         "--help",
+         "-V",
+         "--version",
+     ]:
+-        args_to_pass = ["run"] + sys.argv[1:]
++        args_to_pass = ["run"] + argv
+     else:
+-        args_to_pass = sys.argv[1:]
++        args_to_pass = argv
+     args = parser.parse_args(args=args_to_pass)
+ 
+     # call the appropriate function based on which sub-command was run
+diff --git a/rsmtool/rsmsummarize.py b/rsmtool/rsmsummarize.py
+index da4c8fe8..7a2efb02 100644
+--- a/rsmtool/rsmsummarize.py
++++ b/rsmtool/rsmsummarize.py
+@@ -235,7 +235,7 @@ def run_summary(
+     reporter.create_summary_report(configuration, all_experiments, csvdir)
+ 
+ 
+-def main():  # noqa: D103
++def main(argv=None):  # noqa: D103
+     # set up the basic logging configuration
+     formatter = LogFormatter()
+ 
+@@ -259,22 +259,25 @@ def main():  # noqa: D103
+     )
+ 
+     # if we have no arguments at all then just show the help message
+-    if len(sys.argv) < 2:
+-        sys.argv.append("-h")
++    if argv is None:
++        argv = sys.argv
++
++    if len(argv) < 2:
++        argv.append("-h")
+ 
+     # if the first argument is not one of the valid sub-commands
+     # or one of the valid optional arguments, then assume that they
+     # are arguments for the "run" sub-command. This allows the
+     # old style command-line invocations to work without modification.
+-    if sys.argv[1] not in VALID_PARSER_SUBCOMMANDS + [
++    if argv[0] not in VALID_PARSER_SUBCOMMANDS + [
+         "-h",
+         "--help",
+         "-V",
+         "--version",
+     ]:
+-        args_to_pass = ["run"] + sys.argv[1:]
++        args_to_pass = ["run"] + argv
+     else:
+-        args_to_pass = sys.argv[1:]
++        args_to_pass = argv
+     args = parser.parse_args(args=args_to_pass)
+ 
+     # call the appropriate function based on which sub-command was run
+diff --git a/rsmtool/rsmtool.py b/rsmtool/rsmtool.py
+index f68c8d7a..3ac2d688 100644
+--- a/rsmtool/rsmtool.py
++++ b/rsmtool/rsmtool.py
+@@ -347,7 +347,7 @@ def run_experiment(
+     reporter.create_report(pred_analysis_config, csvdir, figdir)
+ 
+ 
+-def main():  # noqa: D103
++def main(argv=None):  # noqa: D103
+     # set up the basic logging configuration
+     formatter = LogFormatter()
+ 
+@@ -374,22 +374,25 @@ def main():  # noqa: D103
+     )
+ 
+     # if we have no arguments at all then just show the help message
+-    if len(sys.argv) < 2:
+-        sys.argv.append("-h")
++    if argv is None:
++        argv = sys.argv
++
++    if len(argv) < 2:
++        argv.append("-h")
+ 
+     # if the first argument is not one of the valid sub-commands
+     # or one of the valid optional arguments, then assume that they
+     # are arguments for the "run" sub-command. This allows the
+     # old style command-line invocations to work without modification.
+-    if sys.argv[1] not in VALID_PARSER_SUBCOMMANDS + [
++    if argv[0] not in VALID_PARSER_SUBCOMMANDS + [
+         "-h",
+         "--help",
+         "-V",
+         "--version",
+     ]:
+-        args_to_pass = ["run"] + sys.argv[1:]
++        args_to_pass = ["run"] + argv
+     else:
+-        args_to_pass = sys.argv[1:]
++        args_to_pass = argv
+     args = parser.parse_args(args=args_to_pass)
+ 
+     # call the appropriate function based on which sub-command was run
+diff --git a/rsmtool/rsmxval.py b/rsmtool/rsmxval.py
+index d687b1dc..3d23d226 100644
+--- a/rsmtool/rsmxval.py
++++ b/rsmtool/rsmxval.py
+@@ -268,7 +268,7 @@ def run_cross_validation(
+     )
+ 
+ 
+-def main():  # noqa: D103
++def main(argv=None):  # noqa: D103
+     # set up the basic logging configuration
+     formatter = LogFormatter()
+ 
+@@ -295,22 +295,25 @@ def main():  # noqa: D103
+     )
+ 
+     # if we have no arguments at all then just show the help message
+-    if len(sys.argv) < 2:
+-        sys.argv.append("-h")
++    if argv is None:
++        argv = sys.argv
++
++    if len(argv) < 2:
++        argv.append("-h")
+ 
+     # if the first argument is not one of the valid sub-commands
+     # or one of the valid optional arguments, then assume that they
+     # are arguments for the "run" sub-command. This allows the
+     # old style command-line invocations to work without modification.
+-    if sys.argv[1] not in VALID_PARSER_SUBCOMMANDS + [
++    if argv[0] not in VALID_PARSER_SUBCOMMANDS + [
+         "-h",
+         "--help",
+         "-V",
+         "--version",
+     ]:
+-        args_to_pass = ["run"] + sys.argv[1:]
++        args_to_pass = ["run"] + argv
+     else:
+-        args_to_pass = sys.argv[1:]
++        args_to_pass = argv
+     args = parser.parse_args(args=args_to_pass)
+ 
+     # call the appropriate function based on which sub-command was run

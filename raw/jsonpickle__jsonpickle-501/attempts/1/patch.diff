@@ -1,0 +1,30 @@
+diff --git a/jsonpickle/unpickler.py b/jsonpickle/unpickler.py
+index 8a50dde..5d5df6f 100644
+--- a/jsonpickle/unpickler.py
++++ b/jsonpickle/unpickler.py
+@@ -690,7 +690,12 @@ class Unpickler(object):
+             # implements described default handling
+             # of state for object with instance dict
+             # and no slots
+-            instance = self._restore_from_dict(state, instance, ignorereserved=False)
++            # Update __dict__ directly to avoid double restoration of nested state
++            if hasattr(instance, '__dict__'):
++                instance.__dict__.update(state)
++            else:
++                for k, v in state.items():
++                    setattr(instance, k, v)
+         elif has_slots:
+             instance = self._restore_from_dict(state[1], instance, ignorereserved=False)
+             if has_slots_and_dict:
+@@ -708,7 +713,10 @@ class Unpickler(object):
+         return instance
+ 
+     def _restore_object_instance_variables(self, obj, instance):
+-        instance = self._restore_from_dict(obj, instance)
++        # If we have a STATE tag, defer attribute restoration to _restore_state
++        # to avoid double-processing nested mutable containers.
++        if not has_tag(obj, tags.STATE):
++            instance = self._restore_from_dict(obj, instance)
+ 
+         # Handle list and set subclasses
+         if has_tag(obj, tags.SEQ):

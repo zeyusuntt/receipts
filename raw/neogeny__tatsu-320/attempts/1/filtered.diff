@@ -1,0 +1,289 @@
+diff --git a/debug10.py b/debug10.py
+new file mode 100644
+index 0000000..5695bc7
+--- /dev/null
++++ b/debug10.py
+@@ -0,0 +1,25 @@
++from tatsu.tool import parse
++
++# Test if constants match the literal backtick content
++grammar = '''
++start = x $;
++x = `hello` ;
++'''
++
++print("Testing if constants consume backticks:")
++try:
++    # This should match the literal string `hello` including backticks
++    ast = parse(grammar, '`hello`')
++    print(f"Result: {repr(ast)}")
++except Exception as e:
++    print(f"Error: {e}")
++
++# Test what the constant should produce
++print("\nTesting constant evaluation:")
++try:
++    ast = parse(grammar, '`hello`')
++    print(f"Result: {repr(ast)}")
++    if hasattr(ast, 'x'):
++        print(f"x = {repr(ast.x)} (type: {type(ast.x)})")
++except Exception as e:
++    print(f"Error: {e}")
+\ No newline at end of file
+diff --git a/debug2.py b/debug2.py
+new file mode 100644
+index 0000000..d25155c
+--- /dev/null
++++ b/debug2.py
+@@ -0,0 +1,32 @@
++from tatsu.tool import parse
++
++# Test what happens with different constant values
++grammars = [
++    '''
++    @@grammar :: constants
++    start = int bool str null 'a' $;
++    int = `42` ;
++    bool = `True` ;
++    str = `Something` ;
++    null = `None` ;
++    ''',
++    '''
++    start = int bool str null 'a' $;
++    int = `42` ;
++    bool = `True` ;
++    str = `Something` ;
++    null = `None` ;
++    '''
++]
++
++for i, grammar in enumerate(grammars):
++    print(f"\nTest {i+1}:")
++    try:
++        ast = parse(grammar, 'a')
++        print(f"Result: {repr(ast)}")
++        if hasattr(ast, '__len__'):
++            print(f"Length: {len(ast)}")
++            for j, item in enumerate(ast):
++                print(f"  [{j}]: {repr(item)} (type: {type(item).__name__})")
++    except Exception as e:
++        print(f"Error: {e}")
+\ No newline at end of file
+diff --git a/debug3.py b/debug3.py
+new file mode 100644
+index 0000000..0753934
+--- /dev/null
++++ b/debug3.py
+@@ -0,0 +1,23 @@
++from tatsu.tool import parse
++
++# Test constants without the special grammar directive
++grammar = '''
++start = int bool str null 'a' $;
++int = `42` ;
++bool = `True` ;
++str = `Something` ;
++null = `None` ;
++'''
++
++print("Testing normal constant usage:")
++ast = parse(grammar, 'a')
++print(f"Result: {repr(ast)}")
++if hasattr(ast, '__len__'):
++    print(f"Length: {len(ast)}")
++    for j, item in enumerate(ast):
++        print(f"  [{j}]: {repr(item)} (type: {type(item).__name__})")
++        
++# Expected: (42, True, 'Something', None, 'a')
++expected = (42, True, 'Something', None, 'a')
++print(f"\nExpected: {repr(expected)}")
++print(f"Match: {ast == expected}")
+\ No newline at end of file
+diff --git a/debug4.py b/debug4.py
+new file mode 100644
+index 0000000..aaa9429
+--- /dev/null
++++ b/debug4.py
+@@ -0,0 +1,16 @@
++from tatsu.tool import parse
++
++# Simple test to see if constants work at all
++grammar = '''
++start = null 'a' $;
++null = `None` ;
++'''
++
++print("Testing simple constant:")
++try:
++    ast = parse(grammar, 'a')
++    print(f"Result: {repr(ast)}")
++except Exception as e:
++    print(f"Error: {e}")
++    import traceback
++    traceback.print_exc()
+\ No newline at end of file
+diff --git a/debug5.py b/debug5.py
+new file mode 100644
+index 0000000..e2ce263
+--- /dev/null
++++ b/debug5.py
+@@ -0,0 +1,16 @@
++from tatsu.tool import parse
++
++# Test if constants work when they should match something
++grammar = '''
++start = null $;
++null = `None` ;
++'''
++
++print("Testing constant that should consume input:")
++try:
++    ast = parse(grammar, 'None')
++    print(f"Result: {repr(ast)}")
++except Exception as e:
++    print(f"Error: {e}")
++    import traceback
++    traceback.print_exc()
+\ No newline at end of file
+diff --git a/debug6.py b/debug6.py
+new file mode 100644
+index 0000000..89d9618
+--- /dev/null
++++ b/debug6.py
+@@ -0,0 +1,17 @@
++from tatsu.tool import parse
++
++# Test the actual construct from the issue
++grammar = '''
++start = value:$ ;
++value = `None` ;
++'''
++
++print("Testing value:`None` construct:")
++try:
++    ast = parse(grammar, '')
++    print(f"Result: {repr(ast)}")
++    print(f"Type of value: {type(ast)}")
++except Exception as e:
++    print(f"Error: {e}")
++    import traceback
++    traceback.print_exc()
+\ No newline at end of file
+diff --git a/debug7.py b/debug7.py
+new file mode 100644
+index 0000000..bb6bdd0
+--- /dev/null
++++ b/debug7.py
+@@ -0,0 +1,28 @@
++from tatsu.tool import parse
++
++# Exact test from constants_test.py
++grammar = '''
++@@grammar :: constants
++start = int bool str null 'a' $;
++
++int = `42` ;
++bool = `True` ;
++str = `Something` ;
++null = `None` ;
++'''
++
++print("Testing exact test case:")
++try:
++    ast = parse(grammar, 'a')
++    print(f"Result: {repr(ast)}")
++    print(f"Length: {len(ast)}")
++    for j, item in enumerate(ast):
++        print(f"  [{j}]: {repr(item)} (type: {type(item).__name__})")
++        
++    expected = (42, True, 'Something', None, 'a')
++    print(f"\nExpected: {repr(expected)}")
++    print(f"Match: {ast == expected}")
++except Exception as e:
++    print(f"Error: {e}")
++    import traceback
++    traceback.print_exc()
+\ No newline at end of file
+diff --git a/debug8.py b/debug8.py
+new file mode 100644
+index 0000000..91ea128
+--- /dev/null
++++ b/debug8.py
+@@ -0,0 +1,27 @@
++from tatsu.tool import parse
++
++# Test WITHOUT the constants directive
++grammar = '''
++start = int bool str null 'a' $;
++
++int = `42` ;
++bool = `True` ;
++str = `Something` ;
++null = `None` ;
++'''
++
++print("Testing WITHOUT @@grammar :: constants:")
++try:
++    ast = parse(grammar, 'a')
++    print(f"Result: {repr(ast)}")
++    print(f"Length: {len(ast)}")
++    for j, item in enumerate(ast):
++        print(f"  [{j}]: {repr(item)} (type: {type(item).__name__})")
++        
++    expected = (42, True, 'Something', None, 'a')
++    print(f"\nExpected: {repr(expected)}")
++    print(f"Match: {ast == expected}")
++except Exception as e:
++    print(f"Error: {e}")
++    import traceback
++    traceback.print_exc()
+\ No newline at end of file
+diff --git a/debug9.py b/debug9.py
+new file mode 100644
+index 0000000..2ecb8aa
+--- /dev/null
++++ b/debug9.py
+@@ -0,0 +1,22 @@
++from tatsu.tool import parse
++
++# Absolutely simplest constant test
++grammar = '''
++start = x $;
++x = `hello` ;
++'''
++
++print("Testing simplest constant:")
++try:
++    ast = parse(grammar, 'world')
++    print(f"Result: {repr(ast)}")
++except Exception as e:
++    print(f"Error: {e}")
++
++# Test what it SHOULD match
++print("\nTesting what it should match:")
++try:
++    ast = parse(grammar, 'hello')
++    print(f"Result: {repr(ast)}")
++except Exception as e:
++    print(f"Error: {e}")
+\ No newline at end of file
+diff --git a/tatsu/grammars.py b/tatsu/grammars.py
+index 64c5e28..d03cd68 100644
+--- a/tatsu/grammars.py
++++ b/tatsu/grammars.py
+@@ -305,6 +305,15 @@ class Constant(Model):
+             text = self.literal
+             if '\n' in text:
+                 text = trim(text)
++            # Handle special literal values that should not be treated as f-strings
++            stripped = text.strip()
++            if stripped in ('None', 'True', 'False') or stripped.isdigit() or \
++               (stripped.startswith('-') and stripped[1:].isdigit()) or \
++               (stripped.count('.') == 1 and all(part.isdigit() for part in stripped.split('.') if part)):
++                try:
++                    return eval(stripped, {}, {})
++                except:
++                    pass  # Fall back to string treatment if eval fails
+             return eval(f'{"f" + repr(text)}', {}, dict(ctx.ast))  # pylint: disable=eval-used
+         else:
+             return self.literal

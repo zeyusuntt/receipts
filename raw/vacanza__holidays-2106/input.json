@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Columbus Day is not observed in all states\n## Bug Report\r\n\r\n### Expected Behavior\r\n\r\n**Columbus Day** is a federal holiday that's not observed in many US states (e.g. California).\r\n\r\n```python\r\n>>> holidays.US(years=2024, subdiv=\"CA\").get(date(2024, 10, 14))\r\n>>>\r\n```\r\n\r\nSo I believe it shouldn't be returned if `subdiv` is not provided?\r\n\r\n```python\r\n>>> holidays.US(years=2024).get(date(2024, 10, 14))\r\n>>>\r\n```\r\n\r\n### Actual Behavior\r\n\r\n```python\r\n>>> holidays.US(years=2024).get(date(2024, 10, 14))\r\n'Columbus Day'\r\n>>>\r\n```\r\n\r\n### Steps to Reproduce the Problem\r\n\r\n  1. `>>> import holidays`\r\n  2. `>>> from datetime import date`\r\n  3. `>>> holidays.US(years=2024).get(date(2024, 10, 14))`\r\n\r\n### Environment\r\n\r\n- OS: macOS 13.5\r\n- Python version: 3.12.5\r\n- holidays version: 0.59\r\n\r\n### Additional Context\r\n\r\nPerhaps I misunderstood something, shouldn't country holidays calls `holidays.US(years=2024)` return **_nationwide_** holidays? That apply to all subdivisions?",
+  "source": {
+    "image": "docker.io/swerebenchv2/vacanza-holidays:2106-60966ea",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-vacanza__holidays-2106-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2NvdW50cmllcy90ZXN0X3VuaXRlZF9zdGF0ZXMucHkgYi90ZXN0cy9jb3VudHJpZXMvdGVzdF91bml0ZWRfc3RhdGVzLnB5CmluZGV4IDRjZDhlMzYxLi42ZjMyY2YyYyAxMDA2NDQKLS0tIGEvdGVzdHMvY291bnRyaWVzL3Rlc3RfdW5pdGVkX3N0YXRlcy5weQorKysgYi90ZXN0cy9jb3VudHJpZXMvdGVzdF91bml0ZWRfc3RhdGVzLnB5CkBAIC00MzIsOSArNDMyLDcgQEAgY2xhc3MgVGVzdFVuaXRlZFN0YXRlcyhDb21tb25Db3VudHJ5VGVzdHMsIFRlc3RDYXNlKToKIAogICAgIGRlZiB0ZXN0X2NvbHVtYnVzX2RheShzZWxmKToKICAgICAgICAgbmFtZSA9ICJDb2x1bWJ1cyBEYXkiCi0gICAgICAgIHNlbGYuYXNzZXJ0Tm9Ib2xpZGF5TmFtZShuYW1lLCByYW5nZSgxODY1LCAxOTM3KSkKLSAgICAgICAgc2VsZi5hc3NlcnRIb2xpZGF5TmFtZShuYW1lLCAoZiJ7eWVhcn0tMTAtMTIiIGZvciB5ZWFyIGluIHJhbmdlKDE5MzcsIDE5NzEpKSkKLSAgICAgICAgc2VsZi5hc3NlcnRIb2xpZGF5TmFtZShuYW1lLCByYW5nZSgxOTcxLCAyMDUwKSkKKyAgICAgICAgc2VsZi5hc3NlcnROb0hvbGlkYXlOYW1lKG5hbWUpCiAgICAgICAgIGR0ID0gKAogICAgICAgICAgICAgIjIwMTAtMTAtMTEiLAogICAgICAgICAgICAgIjIwMTEtMTAtMTAiLApAQCAtNDUwLDkgKzQ0OCw4IEBAIGNsYXNzIFRlc3RVbml0ZWRTdGF0ZXMoQ29tbW9uQ291bnRyeVRlc3RzLCBUZXN0Q2FzZSk6CiAgICAgICAgICAgICAiMjAyMS0xMC0xMSIsCiAgICAgICAgICAgICAiMjAyMi0xMC0xMCIsCiAgICAgICAgICAgICAiMjAyMy0xMC0wOSIsCisgICAgICAgICAgICAiMjAyNC0xMC0xNCIsCiAgICAgICAgICkKLSAgICAgICAgc2VsZi5hc3NlcnRIb2xpZGF5TmFtZShuYW1lLCBkdCkKLQogICAgICAgICBzdWJkaXZzX2hhdmVfY29sdW1idXNfZGF5ID0gewogICAgICAgICAgICAgIkFTIiwKICAgICAgICAgICAgICJBWiIsCkBAIC00ODgsNyArNDg1LDEzIEBAIGNsYXNzIFRlc3RVbml0ZWRTdGF0ZXMoQ29tbW9uQ291bnRyeVRlc3RzLCBUZXN0Q2FzZSk6CiAgICAgICAgIH0KIAogICAgICAgICBmb3Igc3ViZGl2IGluIHN1YmRpdnNfaGF2ZV9jb2x1bWJ1c19kYXk6Ci0gICAgICAgICAgICBzZWxmLmFzc2VydEhvbGlkYXlOYW1lKG5hbWUsIHNlbGYuc3RhdGVfaG9sc1tzdWJkaXZdLCBkdCkKKyAgICAgICAgICAgIHN0YXRlX2hvbGlkYXlzID0gc2VsZi5zdGF0ZV9ob2xzW3N1YmRpdl0KKyAgICAgICAgICAgIHNlbGYuYXNzZXJ0Tm9Ib2xpZGF5TmFtZShuYW1lLCBzdGF0ZV9ob2xpZGF5cywgcmFuZ2UoMTg2NSwgMTkzNykpCisgICAgICAgICAgICBzZWxmLmFzc2VydEhvbGlkYXlOYW1lKAorICAgICAgICAgICAgICAgIG5hbWUsIHN0YXRlX2hvbGlkYXlzLCAoZiJ7eWVhcn0tMTAtMTIiIGZvciB5ZWFyIGluIHJhbmdlKDE5MzcsIDE5NzEpKQorICAgICAgICAgICAgKQorICAgICAgICAgICAgc2VsZi5hc3NlcnRIb2xpZGF5TmFtZShuYW1lLCBzdGF0ZV9ob2xpZGF5cywgcmFuZ2UoMTk3MSwgMjA1MCkpCisgICAgICAgICAgICBzZWxmLmFzc2VydEhvbGlkYXlOYW1lKG5hbWUsIHN0YXRlX2hvbGlkYXlzLCBkdCkKIAogICAgICAgICBmb3Igc3ViZGl2IGluICgKICAgICAgICAgICAgIHNldChVbml0ZWRTdGF0ZXMuc3ViZGl2aXNpb25zKQo='\"'\"'))'",
+      "git apply /tmp/receipts-vacanza__holidays-2106-test.patch"
+    ],
+    "workdir": "/holidays"
+  },
+  "spec_paths": [
+    "tests/countries/test_united_states.py"
+  ],
+  "spec_tests": [
+    "tests/countries/test_united_states.py::TestUnitedStates::test_columbus_day"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/countries/test_united_states.py"
+}

@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>caikit__caikit-438 | Receipts</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"><link rel="stylesheet" href="../assets/site.css"></head><body><header><div class="header"><a href="../index.html" class="brand">Receipts</a><nav aria-label="Main"><a href="../index.html" class="">All runs</a></nav><span class="secondary">Recorded runs, model-free verdicts</span></div></header><main><section class="hero"><div><span class="badge verified">VERIFIED</span><h1>caikit__caikit-438</h1><p>VERIFIED on first verdict</p><p class="secondary">1 attempt, 0 appeals. 1 file, 1 added and 1 removed lines. Tokens: 432,034 tokens. Model cost: $0.13. Sandbox time: 2 min 27 s.</p></div><div class="actions"><a href="../receipt/caikit__caikit-438.html" class="button primary">Open receipt</a></div></section><section class="card pad stack"><h2>The plan</h2><dl><dt>Repository</dt><dd>caikit/caikit</dd><dt>Base commit</dt><dd>2fb35a2 (image tag)</dd><dt>Issue</dt><dd>DataObjectBase&#x27;s __repr__ does not work properly 
+## Describe the bug
+
+When we build new class which is inherited from DataObjectBase, the new class could not inherit the correct DataObjectBase&#x27;s __repr__ function.
+
+## Platform
+
+Please provide details about the environment you are using, including the following:</dd></dl><dl><dt>Files to edit</dt><dd><ul class="files"><li><code>caikit/core/data_model/base.py</code></li></ul></dd></dl><dl><dt>Approach</dt><dd>__eq__ just calls `__ne__`, fix both to implement proper equality checking via to_dict vs comparing string representations</dd></dl></section><section class="stack"><h2>Attempt 1</h2><span class="badge verified">VERIFIED</span><div class="lanes"><div class="card"><h3>Agent branch</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">git ls-files -z</code><details><summary>exact command</summary><pre>git ls-files -z</pre></details></td><td>0</td><td>0.004s</td><td>dc8b3b67</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;__repr__\|__eq__&quot; caikit/core/data_model/base.py</code><details><summary>exact command</summary><pre>grep -n &quot;__repr__\|__eq__&quot; caikit/core/data_model/base.py</pre></details></td><td>0</td><td>0.004s</td><td>98cecf3f</td></tr><tr><td>command</td><td><code class="display-command">grep -A 10 -B 2 &quot;def __eq__&quot; caikit/core/data_model/base.py</code><details><summary>exact command</summary><pre>grep -A 10 -B 2 &quot;def __eq__&quot; caikit/core/data_model/base.py</pre></details></td><td>1</td><td>0.003s</td><td>90b38268</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;def __.*eq&quot; caikit/core/data_model/base.py</code><details><summary>exact command</summary><pre>grep -n &quot;def __.*eq&quot; caikit/core/data_model/base.py</pre></details></td><td>1</td><td>0.003s</td><td>cd4232ff</td></tr><tr><td>command</td><td><code class="display-command">grep -A 20 -B 5 &quot;test_dataobject_repr_data_base&quot; tests/core/data_model/test_dataobject.py</code><details><summary>exact command</summary><pre>grep -A 20 -B 5 &quot;test_dataobject_repr_data_base&quot; tests/core/data_model/test_dataobject.py</pre></details></td><td>0</td><td>0.003s</td><td>2cf51442</td></tr><tr><td>command</td><td><code class="display-command">grep -A 20 &quot;_make_data_model_class&quot; caikit/core/data_model/dataobject.py</code><details><summary>exact command</summary><pre>grep -A 20 &quot;_make_data_model_class&quot; caikit/core/data_model/dataobject.py</pre></details></td><td>0</td><td>0.003s</td><td>299b7db3</td></tr><tr><td>command</td><td><code class="display-command">pytest tests/core/data_model/test_dataobject.py::test_dataobject_repr_data_base -v</code><details><summary>exact command</summary><pre>/opt/receipts-7fcd7bd074474f05a2db9b86b8f97b99/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-7fcd7bd074474f05a2db9b86b8f97b99/receipts_pytest.py tests/core/data_model/test_dataobject.py::test_dataobject_repr_data_base -v -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/agent1-7.xml</pre></details></td><td>1</td><td>1.704s</td><td>9cf19ead413c</td></tr><tr><td>command</td><td><code class="display-command">cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst = Foo(1)
+print(&#x27;Foo MRO:&#x27;, Foo.__mro__)
+print(&#x27;Has __repr__ in Foo:&#x27;, &#x27;__repr__&#x27; in Foo.__dict__)
+print(&#x27;Has __repr__ in DataBase:&#x27;, &#x27;__repr__&#x27; in DataBase.__dict__)
+print(&#x27;Foo.__repr__:&#x27;, Foo.__repr__)
+print(&#x27;DataBase.__repr__:&#x27;, DataBase.__repr__)
+print(&#x27;Are they the same?&#x27;, Foo.__repr__ is DataBase.__repr__)
+print()
+print(&#x27;repr(inst):&#x27;, repr(inst))
+print(&#x27;DataBase.__repr__(inst):&#x27;, DataBase.__repr__(inst))
+&quot;</code><details><summary>exact command</summary><pre>cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst = Foo(1)
+print(&#x27;Foo MRO:&#x27;, Foo.__mro__)
+print(&#x27;Has __repr__ in Foo:&#x27;, &#x27;__repr__&#x27; in Foo.__dict__)
+print(&#x27;Has __repr__ in DataBase:&#x27;, &#x27;__repr__&#x27; in DataBase.__dict__)
+print(&#x27;Foo.__repr__:&#x27;, Foo.__repr__)
+print(&#x27;DataBase.__repr__:&#x27;, DataBase.__repr__)
+print(&#x27;Are they the same?&#x27;, Foo.__repr__ is DataBase.__repr__)
+print()
+print(&#x27;repr(inst):&#x27;, repr(inst))
+print(&#x27;DataBase.__repr__(inst):&#x27;, DataBase.__repr__(inst))
+&quot;</pre></details></td><td>1</td><td>0.540s</td><td>3b205f89</td></tr></tbody></table></div><details class="all-steps"><summary>show all 21 steps</summary><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject, DataBase
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst = Foo(1)
+print(&#x27;Foo MRO:&#x27;, Foo.__mro__)
+print(&#x27;Has __repr__ in Foo:&#x27;, &#x27;__repr__&#x27; in Foo.__dict__)
+print(&#x27;Has __repr__ in DataBase:&#x27;, &#x27;__repr__&#x27; in DataBase.__dict__)
+print(&#x27;Foo.__repr__:&#x27;, Foo.__repr__)
+print(&#x27;DataBase.__repr__:&#x27;, DataBase.__repr__)
+print(&#x27;Are they the same?&#x27;, Foo.__repr__ is DataBase.__repr__)
+print()
+print(&#x27;repr(inst):&#x27;, repr(inst))
+print(&#x27;DataBase.__repr__(inst):&#x27;, DataBase.__repr__(inst))
+&quot;</code><details><summary>exact command</summary><pre>cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject, DataBase
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst = Foo(1)
+print(&#x27;Foo MRO:&#x27;, Foo.__mro__)
+print(&#x27;Has __repr__ in Foo:&#x27;, &#x27;__repr__&#x27; in Foo.__dict__)
+print(&#x27;Has __repr__ in DataBase:&#x27;, &#x27;__repr__&#x27; in DataBase.__dict__)
+print(&#x27;Foo.__repr__:&#x27;, Foo.__repr__)
+print(&#x27;DataBase.__repr__:&#x27;, DataBase.__repr__)
+print(&#x27;Are they the same?&#x27;, Foo.__repr__ is DataBase.__repr__)
+print()
+print(&#x27;repr(inst):&#x27;, repr(inst))
+print(&#x27;DataBase.__repr__(inst):&#x27;, DataBase.__repr__(inst))
+&quot;</pre></details></td><td>0</td><td>0.537s</td><td>b694db98</td></tr><tr><td>command</td><td><code class="display-command">cd /caikit &amp;&amp; python -c &quot;
+from dataclasses import dataclass
+
+@dataclass
+class PlainDataclass:
+    foo: int
+
+inst = PlainDataclass(1)
+print(&#x27;Plain dataclass repr:&#x27;, repr(inst))
+print(&#x27;Has __repr__ in PlainDataclass:&#x27;, &#x27;__repr__&#x27; in PlainDataclass.__dict__)
+&quot;</code><details><summary>exact command</summary><pre>cd /caikit &amp;&amp; python -c &quot;
+from dataclasses import dataclass
+
+@dataclass
+class PlainDataclass:
+    foo: int
+
+inst = PlainDataclass(1)
+print(&#x27;Plain dataclass repr:&#x27;, repr(inst))
+print(&#x27;Has __repr__ in PlainDataclass:&#x27;, &#x27;__repr__&#x27; in PlainDataclass.__dict__)
+&quot;</pre></details></td><td>0</td><td>0.027s</td><td>f90e76ee</td></tr><tr><td>command</td><td><code class="display-command">cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject, DataBase
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst1 = Foo(1)
+inst2 = Foo(1)
+inst3 = Foo(2)
+
+print(&#x27;Foo.__eq__:&#x27;, Foo.__eq__)
+print(&#x27;DataBase.__eq__:&#x27;, DataBase.__eq__)
+print(&#x27;Are they the same?&#x27;, Foo.__eq__ is DataBase.__eq__)
+print()
+print(&#x27;inst1 == inst2:&#x27;, inst1 == inst2)  # Should be True
+print(&#x27;inst1 == inst3:&#x27;, inst1 == inst3)  # Should be False
+print()
+print(&#x27;DataBase.__eq__(inst1, inst2):&#x27;, DataBase.__eq__(inst1, inst2))
+print(&#x27;DataBase.__eq__(inst1, inst3):&#x27;, DataBase.__eq__(inst1, inst3))
+&quot;</code><details><summary>exact command</summary><pre>cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject, DataBase
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst1 = Foo(1)
+inst2 = Foo(1)
+inst3 = Foo(2)
+
+print(&#x27;Foo.__eq__:&#x27;, Foo.__eq__)
+print(&#x27;DataBase.__eq__:&#x27;, DataBase.__eq__)
+print(&#x27;Are they the same?&#x27;, Foo.__eq__ is DataBase.__eq__)
+print()
+print(&#x27;inst1 == inst2:&#x27;, inst1 == inst2)  # Should be True
+print(&#x27;inst1 == inst3:&#x27;, inst1 == inst3)  # Should be False
+print()
+print(&#x27;DataBase.__eq__(inst1, inst2):&#x27;, DataBase.__eq__(inst1, inst2))
+print(&#x27;DataBase.__eq__(inst1, inst3):&#x27;, DataBase.__eq__(inst1, inst3))
+&quot;</pre></details></td><td>0</td><td>0.544s</td><td>1dda37d6</td></tr><tr><td>write</td><td><code class="display-command">write caikit/core/data_model/dataobject.py</code><details><summary>exact command</summary><pre>/opt/receipts-c4338016ef8b49bf8b21931b13688a3c/bin/busybox sh -c &#x27;mkdir -p /caikit/caikit/core/data_model &amp;&amp; cp /opt/receipts-c4338016ef8b49bf8b21931b13688a3c/incoming/76dd0fc520af075678d8c92af30f3ed8f334ac213b8b3d73a0bb7f9a6d459b94 /caikit/caikit/core/data_model/dataobject.py&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>d89e3739</td></tr><tr><td>command</td><td><code class="display-command">pytest tests/core/data_model/test_dataobject.py::test_dataobject_repr_data_base -v</code><details><summary>exact command</summary><pre>/opt/receipts-f315fb3a5c794b3693f0b4b30dc8bfc7/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-f315fb3a5c794b3693f0b4b30dc8bfc7/receipts_pytest.py tests/core/data_model/test_dataobject.py::test_dataobject_repr_data_base -v -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/agent1-13.xml</pre></details></td><td>0</td><td>1.684s</td><td>fb4f6cae11b2</td></tr><tr><td>command</td><td><code class="display-command">cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject, DataBase
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst = Foo(1)
+print(&#x27;Foo MRO:&#x27;, Foo.__mro__)
+print(&#x27;Has __repr__ in Foo:&#x27;, &#x27;__repr__&#x27; in Foo.__dict__)
+print(&#x27;Has __repr__ in DataBase:&#x27;, &#x27;__repr__&#x27; in DataBase.__dict__)
+print(&#x27;Foo.__repr__:&#x27;, Foo.__repr__)
+print(&#x27;DataBase.__repr__:&#x27;, DataBase.__repr__)
+print(&#x27;Are they the same?&#x27;, Foo.__repr__ is DataBase.__repr__)
+print()
+print(&#x27;repr(inst):&#x27;, repr(inst))
+print(&#x27;DataBase.__repr__(inst):&#x27;, DataBase.__repr__(inst))
+print(&#x27;Are they equal?&#x27;, repr(inst) == DataBase.__repr__(inst))
+&quot;</code><details><summary>exact command</summary><pre>cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject, DataBase
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst = Foo(1)
+print(&#x27;Foo MRO:&#x27;, Foo.__mro__)
+print(&#x27;Has __repr__ in Foo:&#x27;, &#x27;__repr__&#x27; in Foo.__dict__)
+print(&#x27;Has __repr__ in DataBase:&#x27;, &#x27;__repr__&#x27; in DataBase.__dict__)
+print(&#x27;Foo.__repr__:&#x27;, Foo.__repr__)
+print(&#x27;DataBase.__repr__:&#x27;, DataBase.__repr__)
+print(&#x27;Are they the same?&#x27;, Foo.__repr__ is DataBase.__repr__)
+print()
+print(&#x27;repr(inst):&#x27;, repr(inst))
+print(&#x27;DataBase.__repr__(inst):&#x27;, DataBase.__repr__(inst))
+print(&#x27;Are they equal?&#x27;, repr(inst) == DataBase.__repr__(inst))
+&quot;</pre></details></td><td>0</td><td>0.543s</td><td>09ac7f88</td></tr><tr><td>command</td><td><code class="display-command">cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject, DataBase
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst1 = Foo(1)
+inst2 = Foo(1)
+inst3 = Foo(2)
+
+print(&#x27;Foo.__eq__:&#x27;, Foo.__eq__)
+print(&#x27;Has __eq__ in Foo:&#x27;, &#x27;__eq__&#x27; in Foo.__dict__)
+print(&#x27;DataBase.__eq__:&#x27;, DataBase.__eq__)
+print(&#x27;Are they the same?&#x27;, Foo.__eq__ is DataBase.__eq__)
+print()
+print(&#x27;inst1 == inst2:&#x27;, inst1 == inst2)  
+print(&#x27;inst1 == inst3:&#x27;, inst1 == inst3)  
+print()
+print(&#x27;DataBase.__eq__(inst1, inst2):&#x27;, DataBase.__eq__(inst1, inst2))
+print(&#x27;DataBase.__eq__(inst1, inst3):&#x27;, DataBase.__eq__(inst1, inst3))
+&quot;</code><details><summary>exact command</summary><pre>cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject, DataBase
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst1 = Foo(1)
+inst2 = Foo(1)
+inst3 = Foo(2)
+
+print(&#x27;Foo.__eq__:&#x27;, Foo.__eq__)
+print(&#x27;Has __eq__ in Foo:&#x27;, &#x27;__eq__&#x27; in Foo.__dict__)
+print(&#x27;DataBase.__eq__:&#x27;, DataBase.__eq__)
+print(&#x27;Are they the same?&#x27;, Foo.__eq__ is DataBase.__eq__)
+print()
+print(&#x27;inst1 == inst2:&#x27;, inst1 == inst2)  
+print(&#x27;inst1 == inst3:&#x27;, inst1 == inst3)  
+print()
+print(&#x27;DataBase.__eq__(inst1, inst2):&#x27;, DataBase.__eq__(inst1, inst2))
+print(&#x27;DataBase.__eq__(inst1, inst3):&#x27;, DataBase.__eq__(inst1, inst3))
+&quot;</pre></details></td><td>0</td><td>0.530s</td><td>d3fc6ae2</td></tr><tr><td>command</td><td><code class="display-command">cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst1 = Foo(1)
+inst2 = Foo(1)
+inst3 = Foo(2)
+
+print(&#x27;inst1 != inst2:&#x27;, inst1 != inst2)  
+print(&#x27;inst1 != inst3:&#x27;, inst1 != inst3)  
+print()
+print(&#x27;Checking if __ne__ calls __eq__:&#x27;)
+print(&#x27;inst1.__eq__(inst2):&#x27;, inst1.__eq__(inst2))
+print(&#x27;not (inst1.__eq__(inst2)):&#x27;, not (inst1.__eq__(inst2)))
+print(&#x27;inst1.__ne__(inst2):&#x27;, inst1.__ne__(inst2))
+&quot;</code><details><summary>exact command</summary><pre>cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject
+
+@dataobject
+class Foo(DataObjectBase):
+    foo: int
+
+inst1 = Foo(1)
+inst2 = Foo(1)
+inst3 = Foo(2)
+
+print(&#x27;inst1 != inst2:&#x27;, inst1 != inst2)  
+print(&#x27;inst1 != inst3:&#x27;, inst1 != inst3)  
+print()
+print(&#x27;Checking if __ne__ calls __eq__:&#x27;)
+print(&#x27;inst1.__eq__(inst2):&#x27;, inst1.__eq__(inst2))
+print(&#x27;not (inst1.__eq__(inst2)):&#x27;, not (inst1.__eq__(inst2)))
+print(&#x27;inst1.__ne__(inst2):&#x27;, inst1.__ne__(inst2))
+&quot;</pre></details></td><td>0</td><td>0.531s</td><td>b6953b3d</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;__eq__\|__ne__&quot; caikit/core/data_model/base.py</code><details><summary>exact command</summary><pre>grep -n &quot;__eq__\|__ne__&quot; caikit/core/data_model/base.py</pre></details></td><td>1</td><td>0.003s</td><td>0cfa5550</td></tr></tbody></table></div></details><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">pytest tests/core/data_model/test_dataobject.py::test_dataobject_custom_repr -v</code><details><summary>exact command</summary><pre>/opt/receipts-df548174248b48198caa78c1f540e212/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-df548174248b48198caa78c1f540e212/receipts_pytest.py tests/core/data_model/test_dataobject.py::test_dataobject_custom_repr -v -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/agent1-18.xml</pre></details></td><td>0</td><td>1.655s</td><td>fb4f6cae11b2</td></tr><tr><td>command</td><td><code class="display-command">pytest tests/core/data_model/test_dataobject.py tests/core/test_model_manager.py tests/runtime/test_http_server.py</code><details><summary>exact command</summary><pre>/opt/receipts-671e51bb44624151b15e8d8f29ace1f9/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-671e51bb44624151b15e8d8f29ace1f9/receipts_pytest.py tests/core/data_model/test_dataobject.py tests/core/test_model_manager.py tests/runtime/test_http_server.py --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/agent1-19.xml</pre></details></td><td>0</td><td>6.042s</td><td>fb4f6cae11b2</td></tr><tr><td>command</td><td><code class="display-command">cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject
+
+@dataobject
+class Person(DataObjectBase):
+    name: str
+    age: int
+
+# Test equality works as expected
+p1 = Person(&#x27;Alice&#x27;, 30)
+p2 = Person(&#x27;Alice&#x27;, 30) 
+p3 = Person(&#x27;Bob&#x27;, 25)
+
+print(&#x27;p1 == p2 (same values):&#x27;, p1 == p2)  # Should be True
+print(&#x27;p1 == p3 (diff values):&#x27;, p1 == p3)  # Should be False
+print(&#x27;p1 != p2:&#x27;, p1 != p2)               # Should be False
+print(&#x27;p1 != p3:&#x27;, p1 != p3)               # Should be True
+
+# Test repr works as expected  
+print()
+print(&#x27;p1 repr:&#x27;, repr(p1))
+&quot;</code><details><summary>exact command</summary><pre>cd /caikit &amp;&amp; python -c &quot;
+from caikit.core.data_model import DataObjectBase, dataobject
+
+@dataobject
+class Person(DataObjectBase):
+    name: str
+    age: int
+
+# Test equality works as expected
+p1 = Person(&#x27;Alice&#x27;, 30)
+p2 = Person(&#x27;Alice&#x27;, 30) 
+p3 = Person(&#x27;Bob&#x27;, 25)
+
+print(&#x27;p1 == p2 (same values):&#x27;, p1 == p2)  # Should be True
+print(&#x27;p1 == p3 (diff values):&#x27;, p1 == p3)  # Should be False
+print(&#x27;p1 != p2:&#x27;, p1 != p2)               # Should be False
+print(&#x27;p1 != p3:&#x27;, p1 != p3)               # Should be True
+
+# Test repr works as expected  
+print()
+print(&#x27;p1 repr:&#x27;, repr(p1))
+&quot;</pre></details></td><td>0</td><td>0.531s</td><td>e575f36a</td></tr><tr><td>diff</td><td><code class="display-command">capture patch</code><details><summary>exact command</summary><pre>compute patch in executor staging agent1-c2fd0fd6f5a24fc695cd6d16dc422f7e: /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false add -A &amp;&amp; /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false diff --cached --binary --no-ext-diff --no-textconv --no-renames 51f48402b02ec0e61cc836e85bbb2a688a7cc3b7</pre></details></td><td>0</td><td>0.153s</td><td>fb4f6cae11b2</td></tr></tbody></table></div><div class="pad"><dl><dt>Finish summary</dt><dd>Fixed the __repr__ inheritance issue in DataObjectBase subclasses by preventing the @dataclass decorator from generating a conflicting __repr__ method.
+
+Root Cause: The @dataobject decorator internally uses @dataclasses.dataclass, which automatically generates a __repr__ method that produces Python-style output like &quot;ClassName(field=value)&quot;. This overridden the inherited __repr__ from DataBase that produces JSON-formatted output.
+
+Fix: Modified caikit/core/data_model/dataobject.py line ~195 to call dataclasses.dataclass(cls, repr=False) instead of dataclasses.dataclass(cls). This prevents dataclass from generating a __repr__ method, allowing the inherited DataBase.__repr__ to be used properly.
+
+Verification: 
+- The specific failing test test_dataobject_repr_data_base now passes
+- All tests in the specified scope pass (201 passed, 1 skipped) 
+- DataObjectBase subclasses now correctly inherit the JSON-producing __repr__ method
+- Value-based equality from dataclass-generated __eq__ is preserved and works appropriately</dd><dt>Worker outcome</dt><dd>finished</dd></dl><ul class="claims"><li>Target tests pass: yes</li><li>Full suite passes: yes</li><li>Files changed: caikit/core/data_model/dataobject.py</li><li>Ran tests: yes</li></ul></div></div><div class="stack"><div class="card"><h3>Witness branch w1</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>apply</td><td><code class="display-command">apply patch 52ab26be65c6</code><details><summary>exact command</summary><pre>git update-index -q --refresh; git apply -v --3way --recount --ignore-space-change --whitespace=nowarn /opt/receipts-a0942e58bdb549e982112cdb6e67575a/incoming/52ab26be65c6eabd88a52927c3bda48565c1a662d5189b1074ea8d283c86e5f8.diff</pre></details></td><td>0</td><td>0.012s</td><td>fb4f6cae11b2</td></tr><tr><td>verification</td><td><code class="display-command">pytest (witness) tests/core/data_model/test_dataobject.py tests/core/test_model_manager.py tests/runtime/test_http_server.py</code><details><summary>exact command</summary><pre>/opt/receipts-7f36bd19f86f4fdb9087dc8f73b64129/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-7f36bd19f86f4fdb9087dc8f73b64129/receipts_pytest.py --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/core/data_model/test_dataobject.py tests/core/test_model_manager.py tests/runtime/test_http_server.py -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/w1-2.xml</pre></details></td><td>0</td><td>6.165s</td><td>fb4f6cae11b2</td></tr></tbody></table></div></div><h3>Gate predicate checklist</h3><div class="table-box"><table class="predicates"><thead><tr><th scope="col">Predicate</th><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Evidence</th></tr></thead><tbody><tr><td><code>R1_fail_to_pass</code></td><td>Failing specification tests now pass</td><td><span class="pass">PASS</span></td><td>target tests passed: tests/core/data_model/test_dataobject.py::test_dataobject_repr_data_base, tests/runtime/test_http_server.py::test_inference_streaming_sample_module</td></tr><tr><td><code>R2_pass_to_pass</code></td><td>Previously passing tests kept</td><td><span class="pass">PASS</span></td><td>199 baseline-passing tests still pass</td></tr><tr><td><code>R3_no_shrink</code></td><td>No removed tests or new skips</td><td><span class="pass">PASS</span></td><td>all 202 baseline tests collected; skips unchanged (1)</td></tr><tr><td><code>R4_patch_scope</code></td><td>Patch scope</td><td><span class="pass">PASS</span></td><td>patch touches 1 file(s), all in scope</td></tr><tr><td><code>R5_provenance</code></td><td>Witness chain and patch digest</td><td><span class="pass">PASS</span></td><td>agent chain 70ec6e6d -&gt; e575f36a unbroken over 21 receipt(s); witness chain 70ec6e6d -&gt; 1718d3cd unbroken over 2 receipt(s); applied digest matches</td></tr><tr><td><code>R6_claim_audit</code></td><td>Agent claim audit (advisory)</td><td><span class="pass">PASS</span></td><td>claimed green; own last run: 201 passed, 0 failed</td></tr></tbody></table></div></div></div><div class="comparison card"><div><h3>What it said</h3><dl><dt>Finish summary</dt><dd>Fixed the __repr__ inheritance issue in DataObjectBase subclasses by preventing the @dataclass decorator from generating a conflicting __repr__ method.
+
+Root Cause: The @dataobject decorator internally uses @dataclasses.dataclass, which automatically generates a __repr__ method that produces Python-style output like &quot;ClassName(field=value)&quot;. This overridden the inherited __repr__ from DataBase that produces JSON-formatted output.
+
+Fix: Modified caikit/core/data_model/dataobject.py line ~195 to call dataclasses.dataclass(cls, repr=False) instead of dataclasses.dataclass(cls). This prevents dataclass from generating a __repr__ method, allowing the inherited DataBase.__repr__ to be used properly.
+
+Verification: 
+- The specific failing test test_dataobject_repr_data_base now passes
+- All tests in the specified scope pass (201 passed, 1 skipped) 
+- DataObjectBase subclasses now correctly inherit the JSON-producing __repr__ method
+- Value-based equality from dataclass-generated __eq__ is preserved and works appropriately</dd><dt>Worker outcome</dt><dd>finished</dd></dl><ul class="claims"><li>Target tests pass: yes</li><li>Full suite passes: yes</li><li>Files changed: caikit/core/data_model/dataobject.py</li><li>Ran tests: yes</li></ul></div><div><h3>What the record shows</h3><p>honest: claimed green; own last run: 201 passed, 0 failed</p></div></div><div class="card pad stack"><h3>SWE-rebench&#x27;s official grader: resolved</h3><p>Agrees with the gate</p></div></section><section class="stack"><h2>Shipped patch</h2><pre class="diff"><span class="">diff --git a/caikit/core/data_model/dataobject.py b/caikit/core/data_model/dataobject.py</span><span class="">index b6aa997..bcd4ea7 100644</span><span class="">--- a/caikit/core/data_model/dataobject.py</span><span class="">+++ b/caikit/core/data_model/dataobject.py</span><span class="">@@ -200,7 +200,7 @@ def dataobject(*args, **kwargs) -&gt; Callable[[_DataObjectBaseT], _DataObjectBaseT</span><span class="">             if _has_dataclass_init(cls):</span><span class="">                 log.debug3(&quot;Resetting default dataclass init&quot;)</span><span class="">                 delattr(cls, &quot;__init__&quot;)</span><span class="removed">-            cls = dataclasses.dataclass(cls)</span><span class="added">+            cls = dataclasses.dataclass(cls, repr=False)</span><span class="">             setattr(cls, _USER_DEFINED_DEFAULTS, user_defined_defaults)</span><span class=""> </span><span class="">         descriptor = _dataobject_to_proto(dataclass_=cls, **kwargs)</span></pre></section><section class="card pad stack"><h2>Model and costs</h2><dl><dt>Model</dt><dd>NVIDIA Nemotron 3 Super
+thinking off · temperature 1.0 · top_p 0.95</dd><dt>Tokens</dt><dd>432,034 tokens</dd><dt>Model cost</dt><dd>$0.13</dd><dt>Sandbox time</dt><dd>2 min 27 s</dd><dt>Sandbox cost</dt><dd>Token Factory reported cost: 0.391 (unit not published)</dd></dl><details><summary>Full environment disclosure</summary><pre>{
+  &quot;executor_kind&quot;: &quot;tokenfactory&quot;,
+  &quot;lock_sha256&quot;: &quot;d17f225dc3095ee85953cc4883e60b08a267f5c9fe97ed38c50faf6eff3494a9&quot;,
+  &quot;model&quot;: {
+    &quot;base_url&quot;: &quot;https://api.tokenfactory.nebius.com/v1/&quot;,
+    &quot;client&quot;: &quot;TokenFactoryClient&quot;,
+    &quot;max_tokens&quot;: null,
+    &quot;model&quot;: &quot;nvidia/nemotron-3-super-120b-a12b&quot;,
+    &quot;temperature&quot;: 1.0,
+    &quot;thinking&quot;: false,
+    &quot;top_p&quot;: 0.95
+  },
+  &quot;pytest_config_digests&quot;: {
+    &quot;pyproject.toml&quot;: &quot;ef93489065557182fb308659781f80de7b29c242e65a8c8b21b7ba5519897cf9&quot;,
+    &quot;tests/conftest.py&quot;: &quot;d143130bdb82400892fcf86680342f8b458c81757d20756132a09b3d947a3f95&quot;,
+    &quot;tests/runtime/conftest.py&quot;: &quot;0b94aac3a5272f4a901ba2fde1cf815017b638b2d98cdfc5a1c9a8260787dce5&quot;,
+    &quot;tox.ini&quot;: &quot;a9d2a25ea9677e812ec02f7be333012b5a41f96df44efb5696ab52c431e2e94a&quot;
+  },
+  &quot;receipts_version&quot;: &quot;0.0.1&quot;,
+  &quot;test_digests&quot;: {
+    &quot;tests/core/data_model/__init__.py&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;tests/core/data_model/data_backends/__init__.py&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;tests/core/data_model/data_backends/test_dict_backend.py&quot;: &quot;a8345d522f03909164492881fb9a383fb4ff6ae32061b37a672ac4253e0dd157&quot;,
+    &quot;tests/core/data_model/streams/test_converter.py&quot;: &quot;bc63c25906d779357d844630bd288163f18f51cf963ec9342ffedcee22c75ff5&quot;,
+    &quot;tests/core/data_model/streams/test_csv_column_formatter.py&quot;: &quot;b96b12f0539f59544ed8c5ccacec1c1116f4133431d925c093941a0858d4f672&quot;,
+    &quot;tests/core/data_model/streams/test_data_stream.py&quot;: &quot;e913441530d3c3ac2a7be42fd0d6518a43e01f7da02038673eefe13190563c56&quot;,
+    &quot;tests/core/data_model/streams/test_resolver.py&quot;: &quot;7b677f0276d83496a26f1a06c662c0efb28f79f8dd20350caa3737e08fa59d0c&quot;,
+    &quot;tests/core/data_model/streams/test_validator.py&quot;: &quot;c7ccc670edc57797a01ad380028bf0534a486caa84bb0068ee87a509ff35cc61&quot;,
+    &quot;tests/core/data_model/test_base.py&quot;: &quot;cb879c5007b85670d151b621c879ac26edca54c095b1fb50ecd2f51d3272046f&quot;,
+    &quot;tests/core/data_model/test_dataobject.py&quot;: &quot;f85b8738410856a59e2489baa428b96588ba56232ee1d0c47cd30c7931fe5fd8&quot;,
+    &quot;tests/core/data_model/test_enums.py&quot;: &quot;616b32f306f0702822d8a68168e4a61d6af532d57e75b218c305e26817f22e00&quot;,
+    &quot;tests/core/data_model/test_json_dict.py&quot;: &quot;e8666c4a3fd5cee9bd9026d19174bfb1a3a9cde616ccc835418f0c3d98a38d8c&quot;,
+    &quot;tests/core/data_model/test_producer.py&quot;: &quot;acfd57ccf9a80fe855b9d956ad8ca38b283a10baa9e53f37bbe63d825bd092b3&quot;,
+    &quot;tests/core/data_model/test_timestamp.py&quot;: &quot;492140f23f4f3039d1b9f326eddbec3602247e83df6aa0beb9c03f90fbe22c88&quot;,
+    &quot;tests/runtime/__init__.py&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;tests/runtime/conftest.py&quot;: &quot;0b94aac3a5272f4a901ba2fde1cf815017b638b2d98cdfc5a1c9a8260787dce5&quot;,
+    &quot;tests/runtime/generated/__init__.py&quot;: &quot;6e79028d905fc52a7900d04eedec487eabd8779a1c8ec9872a36ddf1254f01a3&quot;,
+    &quot;tests/runtime/interceptors/__init__.py&quot;: &quot;a313cb1a3cb4da825929ec79b4e4ba0841fab5bcc643f3e0a2cfe30de09076ad&quot;,
+    &quot;tests/runtime/interceptors/test_caikit_runtime_server_wrapper.py&quot;: &quot;c777d3043a5df446896c5fafb8efd6a27a219a1b163a34cda145721c1addd378&quot;,
+    &quot;tests/runtime/metrics/__init__.py&quot;: &quot;a313cb1a3cb4da825929ec79b4e4ba0841fab5bcc643f3e0a2cfe30de09076ad&quot;,
+    &quot;tests/runtime/metrics/test_rpc_meter.py&quot;: &quot;f4d80ef7fd32bb6c6bb753dfe31fdcdad94318cb313d19486770c2e5cacf6bca&quot;,
+    &quot;tests/runtime/model_management/__init__.py&quot;: &quot;a313cb1a3cb4da825929ec79b4e4ba0841fab5bcc643f3e0a2cfe30de09076ad&quot;,
+    &quot;tests/runtime/model_management/test_batcher.py&quot;: &quot;b83c2d856cee5d67c82ad3c8c76af460e27af084fc7ce2c714f89db977a4ffef&quot;,
+    &quot;tests/runtime/model_management/test_model_loader.py&quot;: &quot;8c0b63722132b6b1dcc2cfc1318129aa7ffe5293a6c019ab5acd3cf8284e4721&quot;,
+    &quot;tests/runtime/model_management/test_model_manager.py&quot;: &quot;942e3e234410ba90f05b5cf52b06cc2d33996a8b611385a233ec8220d2a01955&quot;,
+    &quot;tests/runtime/model_management/test_model_sizer.py&quot;: &quot;de6ff60c368f71b759254d61d129956a05ad79d69da78b92433a821fa6b5d800&quot;,
+    &quot;tests/runtime/service_generation/__init__.py&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;tests/runtime/service_generation/test_create_service.py&quot;: &quot;54445503190a2d193a0efbc6f27fc95583ba79967aaf43aec8cee1c20454d8d6&quot;,
+    &quot;tests/runtime/service_generation/test_data_stream_source.py&quot;: &quot;c4cf04d55b583f70b3956273a8009f8cafdc59b193544f4daf0c2bc91a787fb1&quot;,
+    &quot;tests/runtime/service_generation/test_protoable.py&quot;: &quot;decd2cfaf21ffcbd3e63796e8d736ab520cdb5292bece0d18a48dda4ead4d07a&quot;,
+    &quot;tests/runtime/service_generation/test_rpcs.py&quot;: &quot;edb4dd5e0ab988007e72e4687c9afc77c45d1555f4264818e79cb2acb832cba2&quot;,
+    &quot;tests/runtime/service_generation/test_type_helpers.py&quot;: &quot;94577dba50d1d3a79f0979a844241b8484920047ec71470c33518611f809544d&quot;,
+    &quot;tests/runtime/servicers/__init__.py&quot;: &quot;a313cb1a3cb4da825929ec79b4e4ba0841fab5bcc643f3e0a2cfe30de09076ad&quot;,
+    &quot;tests/runtime/servicers/test_global_predict_servicer_impl.py&quot;: &quot;0dac09a0e2c07d4fe838782d72573947957c7612a680d2b6ea7ff18c7d0c778e&quot;,
+    &quot;tests/runtime/servicers/test_global_train_servicer_impl.py&quot;: &quot;e53963831a81e18b8e92404b0fa468364f5dc84e781ff701773c80b104f33e75&quot;,
+    &quot;tests/runtime/servicers/test_model_runtime_servicer_impl.py&quot;: &quot;5794afb82844575e03375bd8144f34139fa75e4affd60b6ea535ff86c41c4102&quot;,
+    &quot;tests/runtime/servicers/test_model_train_servicer_impl.py&quot;: &quot;6b717c44ff876f57b55cb4141a1af120d65f62e4afa9e934ee7512ac7da5816c&quot;,
+    &quot;tests/runtime/servicers/test_training_management_servicer.py&quot;: &quot;776f0849c4c3d996b7eb2ccf907b424126e20500b81cb9145e21fe75c2df851d&quot;,
+    &quot;tests/runtime/test_grpc_server.py&quot;: &quot;bee5fbff2fcf0db1d69bc74f921007a984d860ccd606631a1406f8a921ec1257&quot;,
+    &quot;tests/runtime/test_http_server.py&quot;: &quot;f50712aa2d09f127e198a838362adbd02ae56add7a4f02b4a3508eed8f3f15f1&quot;,
+    &quot;tests/runtime/test_service_factory.py&quot;: &quot;5c26a0fd2a92bbac0ca2112a04e1a3cba99296772e425dcb06e77f3e5d3dd0e2&quot;,
+    &quot;tests/runtime/utils/__init__.py&quot;: &quot;a313cb1a3cb4da825929ec79b4e4ba0841fab5bcc643f3e0a2cfe30de09076ad&quot;,
+    &quot;tests/runtime/utils/test_import_util.py&quot;: &quot;0233268319feeb5bb138b001b527f8fe4d03273fbaa1edac52fdf3c6957ca663&quot;,
+    &quot;tests/runtime/utils/test_servicer_util.py&quot;: &quot;530468ee90518a78e75fa250f102f3ca6b32a70b70650ab43033d9c1cf26fde7&quot;,
+    &quot;tests/runtime/work_management/__init__.py&quot;: &quot;a313cb1a3cb4da825929ec79b4e4ba0841fab5bcc643f3e0a2cfe30de09076ad&quot;,
+    &quot;tests/runtime/work_management/test_abortable_action.py&quot;: &quot;a47cec4922aba47f2bfc56c10d25bf2b7577e48e1e3dc55a587a5416b689cfca&quot;,
+    &quot;tests/runtime/work_management/test_call_aborter.py&quot;: &quot;8899239bf028883a46a1b500f68271d7e08d88607c5509e27651b73af3def6cb&quot;
+  }
+}</pre></details></section><section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches. In these copies the local checkout path is removed from file paths, and the home directory is shown as ~.</p><ul class="bundle"><li><a href="../raw/caikit__caikit-438/attempts/1/filtered.diff" class="">attempts/1/filtered.diff</a></li><li><a href="../raw/caikit__caikit-438/attempts/1/patch.diff" class="">attempts/1/patch.diff</a></li><li><a href="../raw/caikit__caikit-438/attempts/1/verdict.json" class="">attempts/1/verdict.json</a></li><li><a href="../raw/caikit__caikit-438/attempts/1/witness/receipts.jsonl" class="">attempts/1/witness/receipts.jsonl</a></li><li><a href="../raw/caikit__caikit-438/baseline.json" class="">baseline.json</a></li><li><a href="../raw/caikit__caikit-438/branches/agent1/receipts.jsonl" class="">branches/agent1/receipts.jsonl</a></li><li><a href="../raw/caikit__caikit-438/branches/base/receipts.jsonl" class="">branches/base/receipts.jsonl</a></li><li><a href="../raw/caikit__caikit-438/branches/official1/receipts.jsonl" class="">branches/official1/receipts.jsonl</a></li><li><a href="../raw/caikit__caikit-438/branches/w1/receipts.jsonl" class="">branches/w1/receipts.jsonl</a></li><li><a href="../raw/caikit__caikit-438/cost.json" class="">cost.json</a></li><li><a href="../raw/caikit__caikit-438/disclosure.json" class="">disclosure.json</a></li><li><a href="../raw/caikit__caikit-438/input.json" class="">input.json</a></li><li><a href="../raw/caikit__caikit-438/lock.txt" class="">lock.txt</a></li><li><a href="../raw/caikit__caikit-438/plan.json" class="">plan.json</a></li><li><a href="../raw/caikit__caikit-438/record.json" class="">record.json</a></li><li><a href="../raw/caikit__caikit-438/result.json" class="">result.json</a></li></ul></section></main><footer>Generated from the run records by receipts site. No model was asked whether a fix worked.</footer></body></html>

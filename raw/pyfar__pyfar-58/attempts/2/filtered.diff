@@ -1,0 +1,102 @@
+diff --git a/pyfar/coordinates.py b/pyfar/coordinates.py
+index bff6420..ef8c8ea 100644
+--- a/pyfar/coordinates.py
++++ b/pyfar/coordinates.py
+@@ -1887,6 +1887,48 @@ def cyl2cart(azimuth, height, radius):
+ 
+     return x, y, z
+ 
++
++        """
++        return Coordinates(
++            self._points[:, 0].copy(), 
++
++    def copy(self):
++        """Return a copy of the coordinates.
++        
++        Returns
++        -------
++        Coordinates
++            A copy of the coordinates.
++        """
++            self._points[:, 1].copy(), 
++            self._points[:, 2].copy(),
++            domain=self._system['domain'],
++            convention=self._system['convention'],
++            unit=self._system['unit'],
++            weights=self._weights.copy() if self._weights is not None else None,
++            sh_order=self._sh_order,
++            comment=self._comment)
++
++
++    def copy(self):
++        """Return a copy of the coordinates.
++        
++        Returns
++        -------
++        Coordinates
++            A copy of the coordinates.
++        """
++        return Coordinates(
++            self._points[:, 0].copy(), 
++            self._points[:, 1].copy(), 
++            self._points[:, 2].copy(),
++            domain=self._system['domain'],
++            convention=self._system['convention'],
++            unit=self._system['unit'],
++            weights=self._weights.copy() if self._weights is not None else None,
++            sh_order=self._sh_order,
++            comment=self._comment)
++
+     # def __setitem__(self, index, item):
+     #     """Set Coordinates at index
+     #     """
+diff --git a/pyfar/orientations.py b/pyfar/orientations.py
+index 0baa856..a68cc1b 100644
+--- a/pyfar/orientations.py
++++ b/pyfar/orientations.py
+@@ -205,3 +205,13 @@ class Orientations(Rotation):
+             raise ValueError(f"Expected assigned value to have shape"
+                              f" or (1, 4), got {quat.shape}")
+         self._quat[idx] = quat
++
++    def copy(self):
++        """Return a copy of the orientations.
++        
++        Returns
++        -------
++        Orientations
++            A copy of the orientations.
++        """
++        return Orientations(self.as_quat())
+diff --git a/pyfar/signal.py b/pyfar/signal.py
+index daee267..95b915b 100644
+--- a/pyfar/signal.py
++++ b/pyfar/signal.py
+@@ -394,6 +394,26 @@ class Signal(Audio):
+         """
+         return SignalIterator(self._data.__iter__(), self)
+ 
++    def copy(self):
++        """Return a copy of the signal.
++        
++        Returns a shallow copy of the Signal object with deep copies of 
++        the underlying data arrays.
++        
++        Returns
++        -------
++        Signal
++            A copy of the signal.
++        """
++        return Signal(
++            self._data.copy(),
++            sampling_rate=self._sampling_rate,
++            n_samples=self._n_samples,
++            domain=self._domain,
++            fft_norm=self._fft_norm,
++            dtype=self._dtype,
++            comment=self._comment)
++
+ 
+ class SignalIterator(object):
+     """Iterator for signals

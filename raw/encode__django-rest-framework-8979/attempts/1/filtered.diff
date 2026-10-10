@@ -1,0 +1,45 @@
+diff --git a/rest_framework/serializers.py b/rest_framework/serializers.py
+index a3d68b03..80ae9a9d 100644
+--- a/rest_framework/serializers.py
++++ b/rest_framework/serializers.py
+@@ -680,10 +680,29 @@ class ListSerializer(BaseSerializer):
+                 api_settings.NON_FIELD_ERRORS_KEY: [message]
+             }, code='min_length')
+ 
++        # Validate that instance length matches data length when instance is provided
++        if self.instance is not None and not isinstance(self.instance, models.manager.BaseManager):
++            if len(self.instance) != len(data):
++                raise AssertionError(
++                    'Mismatched instances and data items (%s instances for %s data items)' % 
++                    (len(self.instance), len(data))
++                )
++
+         ret = []
+         errors = []
+ 
+-        for item in data:
++        for idx, item in enumerate(data):
++            # Set the instance on the child serializer to the corresponding item
++            # when validating in the context of many=True
++            if self.instance is not None and isinstance(self.instance, (list, tuple)):
++                child_instance = self.instance[idx]
++            else:
++                child_instance = getattr(self, 'instance', None)
++            
++            # Temporarily bind the child instance
++            old_child_instance = self.child.instance
++            self.child.instance = child_instance
++            
+             try:
+                 validated = self.child.run_validation(item)
+             except ValidationError as exc:
+@@ -691,6 +710,9 @@ class ListSerializer(BaseSerializer):
+             else:
+                 ret.append(validated)
+                 errors.append({})
++            finally:
++                # Restore the original instance
++                self.child.instance = old_child_instance
+ 
+         if any(errors):
+             raise ValidationError(errors)

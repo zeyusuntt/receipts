@@ -1,0 +1,32 @@
+diff --git a/pyanalyze/name_check_visitor.py b/pyanalyze/name_check_visitor.py
+index 3692076..6160315 100644
+--- a/pyanalyze/name_check_visitor.py
++++ b/pyanalyze/name_check_visitor.py
+@@ -5199,6 +5199,27 @@ class NameCheckVisitor(node_visitor.ReplacingNodeVisitor):
+             self.log(logging.INFO, "Ignoring callee", callee_wrapped)
+             return AnyValue(AnySource.error)
+ 
++        # Special case: disallow calling Any() directly
++        is_any_call = False
++        if isinstance(callee_wrapped, AnyValue):
++            is_any_call = True
++        elif isinstance(node, ast.Call):
++            # Check for direct name: Any(...)
++            if isinstance(node.func, ast.Name) and node.func.id == "Any":
++                is_any_call = True
++            # Check for attribute access: typing.Any(...) 
++            elif isinstance(node.func, ast.Attribute) and node.func.attr == "Any":
++                is_any_call = True
++        
++        if is_any_call:
++            if node is not None:
++                self._show_error_if_checking(
++                    node,
++                    "Cannot call Any() directly; use cast() instead or remove the call",
++                    error_code=ErrorCode.incompatible_call,
++                )
++            return AnyValue(AnySource.error)
++
+         extended_argspec = self.signature_from_value(callee_wrapped, node)
+         if extended_argspec is ANY_SIGNATURE:
+             # don't bother calling it

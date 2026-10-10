@@ -1,0 +1,50 @@
+diff --git a/qupulse/_program/tabor.py b/qupulse/_program/tabor.py
+index b92c76f..690cfca 100644
+--- a/qupulse/_program/tabor.py
++++ b/qupulse/_program/tabor.py
+@@ -473,7 +473,11 @@ class TaborProgram(ProgramEntry):
+         if np.any(segment_lengths % 16 > 0) or np.any(segment_lengths < 192):
+             raise TaborException('At least one waveform has a length that is smaller 192 or not a multiple of 16')
+ 
++        # Deduplicate segments by their hash to avoid uploading identical waveforms multiple times
+         segments = []
++        seen_hash_to_index = {}  # maps segment hash to index in segments list
++        unique_lengths_dict = {}  # maps segment hash to its length (first occurrence)
++        
+         for i, waveform in enumerate(self._parsed_program.waveforms):
+             t = time_array[:segment_lengths[i]]
+             marker_time = t[::2]
+@@ -484,11 +488,28 @@ class TaborProgram(ProgramEntry):
+             marker_a = self._marker_data(waveform, marker_time, 0)
+             marker_b = self._marker_data(waveform, marker_time, 1)
+             segment = TaborSegment.from_sampled(ch_a=segment_a,
+-                                   ch_b=segment_b,
+-                                   marker_a=marker_a,
+-                                   marker_b=marker_b)
+-            segments.append(segment)
+-        return segments, segment_lengths
++                                               ch_b=segment_b,
++                                               marker_a=marker_a,
++                                               marker_b=marker_b)
++            segment_hash = segment._hash
++            segment_len = segment_lengths[i]
++            
++            if segment_hash not in seen_hash_to_index:
++                seen_hash_to_index[segment_hash] = len(segments)
++                unique_lengths_dict[segment_hash] = segment_len
++                segments.append(segment)
++        
++        # Build unique lengths in order of first appearance among unique segments
++        unique_lengths = []
++        seen_in_order = set()
++        for segment in segments:
++            h = segment._hash
++            if h not in seen_in_order:
++                unique_lengths.append(unique_lengths_dict[h])
++                seen_in_order.add(h)
++        
++        return segments, np.array(unique_lengths, dtype=np.int64)
++
+ 
+     def setup_single_sequence_mode(self) -> None:
+         assert self.program.depth() == 1

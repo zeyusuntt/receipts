@@ -1,0 +1,1645 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>zopefoundation__btrees-163 | Receipts</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"><link rel="stylesheet" href="../../assets/site.css"></head><body><header><div class="header"><a href="../../index.html" class="brand">Receipts</a><nav aria-label="Main"><a href="../../index.html" class="">All runs</a></nav><span class="secondary">Recorded runs, model-free verdicts</span></div></header><main><section class="hero"><div><span class="badge rejected">REJECTED</span><h1>zopefoundation__btrees-163</h1><p>REJECTED</p><p class="secondary">2 attempts, 1 appeal. Final attempted patch: 0 files, 0 added and 0 removed lines. No patch shipped. Tokens: 3,597,706 tokens. Model cost: $0.22. Sandbox time: 9 min 23 s.</p></div><div class="actions"><a href="../../receipt/v2-arm-lightning/zopefoundation__btrees-163.html" class="button primary">Open receipt</a></div></section><section class="card pad stack"><h2>The plan</h2><dl><dt>Repository</dt><dd>zopefoundation/btrees</dd><dt>Base commit</dt><dd>02bcfde (image tag)</dd><dt>Issue</dt><dd>Python 2: OxBTrees allow types as keys; Python 3 does not
+Consider:
+```python
+class Old:
+    pass
+
+class New(object):
+    pass</dd></dl><dl><dt>Files to edit</dt><dd><ul class="files"><li><code>src/BTrees/_compat.py</code></li><li><code>src/BTrees/_base.py</code></li><li><code>src/BTrees/objectkeymacros.h</code></li></ul></dd></dl><dl><dt>Approach</dt><dd>Detect when a key is a type object (i.e., isinstance(key, type)) and raise a descriptive error. First check the Python-level comparison logic in _base.py, then check the C-level macros in objectkeymacros.h if needed.</dd></dl></section><section class="stack"><h2>Attempt 1</h2><span class="badge rejected">REJECTED</span><div class="lanes"><div class="card"><h3>Agent branch</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">git ls-files -z</code><details><summary>exact command</summary><pre>git ls-files -z</pre></details></td><td>0</td><td>0.003s</td><td>1663eeaa</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;Object has default comparison&quot; src/BTrees/_base.py</code><details><summary>exact command</summary><pre>grep -n &quot;Object has default comparison&quot; src/BTrees/_base.py</pre></details></td><td>1</td><td>0.003s</td><td>dfa96388</td></tr><tr><td>command</td><td><code class="display-command">grep -rn &quot;Object has default comparison&quot; src/BTrees/</code><details><summary>exact command</summary><pre>grep -rn &quot;Object has default comparison&quot; src/BTrees/</pre></details></td><td>0</td><td>0.006s</td><td>8d6e48c9</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;testNewStyleClassWithCustomMetaClassAllowed\|testRejectDefaultComparisonOnSet&quot; src/BTrees/tests/test_OOBTree.py</code><details><summary>exact command</summary><pre>grep -n &quot;testNewStyleClassWithCustomMetaClassAllowed\|testRejectDefaultComparisonOnSet&quot; src/BTrees/tests/test_OOBTree.py</pre></details></td><td>0</td><td>0.003s</td><td>843ccf3d</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+class Old: pass
+class New(object): pass
+from BTrees import family64
+bt = family64.OO.BTree()
+try:
+    bt[Old] = 1
+    print(&#x27;Old worked&#x27;)
+except TypeError as e:
+    print(f&#x27;Old failed: {e}&#x27;)
+try:
+    bt[New] = 1
+    print(&#x27;New worked&#x27;)
+except TypeError as e:
+    print(f&#x27;New failed: {e}&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+class Old: pass
+class New(object): pass
+from BTrees import family64
+bt = family64.OO.BTree()
+try:
+    bt[Old] = 1
+    print(&#x27;Old worked&#x27;)
+except TypeError as e:
+    print(f&#x27;Old failed: {e}&#x27;)
+try:
+    bt[New] = 1
+    print(&#x27;New worked&#x27;)
+except TypeError as e:
+    print(f&#x27;New failed: {e}&#x27;)
+&quot;</pre></details></td><td>1</td><td>0.016s</td><td>44d0f6a6</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . 2&gt;&amp;1 | tail -5</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . 2&gt;&amp;1 | tail -5</pre></details></td><td>0</td><td>1.916s</td><td>328615be</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -10</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -10</pre></details></td><td>0</td><td>32.857s</td><td>e193bebb</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+class Old: pass
+class New(object): pass
+from BTrees import family64
+bt = family64.OO.BTree()
+try:
+    bt[Old] = 1
+    print(&#x27;Old worked&#x27;)
+except TypeError as e:
+    print(f&#x27;Old failed: {e}&#x27;)
+try:
+    bt[New] = 1
+    print(&#x27;New worked&#x27;)
+except TypeError as e:
+    print(f&#x27;New failed: {e}&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+class Old: pass
+class New(object): pass
+from BTrees import family64
+bt = family64.OO.BTree()
+try:
+    bt[Old] = 1
+    print(&#x27;Old worked&#x27;)
+except TypeError as e:
+    print(f&#x27;Old failed: {e}&#x27;)
+try:
+    bt[New] = 1
+    print(&#x27;New worked&#x27;)
+except TypeError as e:
+    print(f&#x27;New failed: {e}&#x27;)
+&quot;</pre></details></td><td>0</td><td>0.077s</td><td>3a7accb1</td></tr></tbody></table></div><details class="all-steps"><summary>show all 52 steps</summary><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">python3 -c &quot;
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects
+print(&#x27;Old type:&#x27;, type(Old))
+print(&#x27;New type:&#x27;, type(New))
+print(&#x27;Old tp_richcompare:&#x27;, type(Old).tp_richcompare)
+print(&#x27;New tp_richcompare:&#x27;, type(New).tp_richcompare)
+print(&#x27;Old tp_compare:&#x27;, type(Old).tp_compare)
+print(&#x27;New tp_compare:&#x27;, type(New).tp_compare)
+
+# Compare with an instance
+obj_old = Old()
+obj_new = New()
+print(&#x27;obj_old tp_richcompare:&#x27;, type(obj_old).tp_richcompare)
+print(&#x27;obj_new tp_richcompare:&#x27;, type(obj_new).tp_richcompare)
+&quot;</code><details><summary>exact command</summary><pre>python3 -c &quot;
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects
+print(&#x27;Old type:&#x27;, type(Old))
+print(&#x27;New type:&#x27;, type(New))
+print(&#x27;Old tp_richcompare:&#x27;, type(Old).tp_richcompare)
+print(&#x27;New tp_richcompare:&#x27;, type(New).tp_richcompare)
+print(&#x27;Old tp_compare:&#x27;, type(Old).tp_compare)
+print(&#x27;New tp_compare:&#x27;, type(New).tp_compare)
+
+# Compare with an instance
+obj_old = Old()
+obj_new = New()
+print(&#x27;obj_old tp_richcompare:&#x27;, type(obj_old).tp_richcompare)
+print(&#x27;obj_new tp_richcompare:&#x27;, type(obj_new).tp_richcompare)
+&quot;</pre></details></td><td>1</td><td>0.013s</td><td>3cd02099</td></tr><tr><td>command</td><td><code class="display-command">python3 -c &quot;
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects
+print(&#x27;Old type:&#x27;, type(Old))
+print(&#x27;New type:&#x27;, type(New))
+print(&#x27;Old instance tp_richcompare:&#x27;, type(Old()).tp_richcompare)
+print(&#x27;New instance tp_richcompare:&#x27;, type(New()).tp_richcompare)
+print(&#x27;Old instance tp_compare:&#x27;, type(Old()).tp_compare)
+print(&#x27;New instance tp_compare:&#x27;, type(New()).tp_compare)
+
+# Check the type object&#x27;s own comparison
+print()
+print(&#x27;Old has __cmp__:&#x27;, hasattr(Old, &#x27;__cmp__&#x27;))
+print(&#x27;New has __cmp__:&#x27;, hasattr(New, &#x27;__cmp__&#x27;))
+print(&#x27;Old has __lt__:&#x27;, hasattr(Old, &#x27;__lt__&#x27;))
+print(&#x27;New has __lt__:&#x27;, hasattr(New, &#x27;__lt__&#x27;))
+print(&#x27;Old has __gt__:&#x27;, hasattr(Old, &#x27;__gt__&#x27;))
+print(&#x27;New has __gt__:&#x27;, hasattr(New, &#x27;__gt__&#x27;))
+&quot;</code><details><summary>exact command</summary><pre>python3 -c &quot;
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects
+print(&#x27;Old type:&#x27;, type(Old))
+print(&#x27;New type:&#x27;, type(New))
+print(&#x27;Old instance tp_richcompare:&#x27;, type(Old()).tp_richcompare)
+print(&#x27;New instance tp_richcompare:&#x27;, type(New()).tp_richcompare)
+print(&#x27;Old instance tp_compare:&#x27;, type(Old()).tp_compare)
+print(&#x27;New instance tp_compare:&#x27;, type(New()).tp_compare)
+
+# Check the type object&#x27;s own comparison
+print()
+print(&#x27;Old has __cmp__:&#x27;, hasattr(Old, &#x27;__cmp__&#x27;))
+print(&#x27;New has __cmp__:&#x27;, hasattr(New, &#x27;__cmp__&#x27;))
+print(&#x27;Old has __lt__:&#x27;, hasattr(Old, &#x27;__lt__&#x27;))
+print(&#x27;New has __lt__:&#x27;, hasattr(New, &#x27;__lt__&#x27;))
+print(&#x27;Old has __gt__:&#x27;, hasattr(Old, &#x27;__gt__&#x27;))
+print(&#x27;New has __gt__:&#x27;, hasattr(New, &#x27;__gt__&#x27;))
+&quot;</pre></details></td><td>1</td><td>0.014s</td><td>851bf32e</td></tr><tr><td>command</td><td><code class="display-command">python3 -c &quot;
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects
+print(&#x27;Old instance tp_richcompare:&#x27;, type(Old()).tp_richcompare)
+print(&#x27;New instance tp_richcompare:&#x27;, type(New()).tp_richcompare)
+print(&#x27;Old instance tp_compare:&#x27;, type(Old()).tp_compare)
+print(&#x27;New instance tp_compare:&#x27;, type(New()).tp_compare)
+
+# Check the type object&#x27;s own comparison
+print()
+print(&#x27;Old has __cmp__:&#x27;, hasattr(Old, &#x27;__cmp__&#x27;))
+print(&#x27;New has __cmp__:&#x27;, hasattr(New, &#x27;__cmp__&#x27;))
+print(&#x27;Old has __lt__:&#x27;, hasattr(Old, &#x27;__lt__&#x27;))
+print(&#x27;New has __lt__:&#x27;, hasattr(New, &#x27;__lt__&#x27;))
+print(&#x27;Old has __gt__:&#x27;, hasattr(Old, &#x27;__gt__&#x27;))
+print(&#x27;New has __gt__:&#x27;, hasattr(New, &#x27;__gt__&#x27;))
+&quot;</code><details><summary>exact command</summary><pre>python3 -c &quot;
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects
+print(&#x27;Old instance tp_richcompare:&#x27;, type(Old()).tp_richcompare)
+print(&#x27;New instance tp_richcompare:&#x27;, type(New()).tp_richcompare)
+print(&#x27;Old instance tp_compare:&#x27;, type(Old()).tp_compare)
+print(&#x27;New instance tp_compare:&#x27;, type(New()).tp_compare)
+
+# Check the type object&#x27;s own comparison
+print()
+print(&#x27;Old has __cmp__:&#x27;, hasattr(Old, &#x27;__cmp__&#x27;))
+print(&#x27;New has __cmp__:&#x27;, hasattr(New, &#x27;__cmp__&#x27;))
+print(&#x27;Old has __lt__:&#x27;, hasattr(Old, &#x27;__lt__&#x27;))
+print(&#x27;New has __lt__:&#x27;, hasattr(New, &#x27;__lt__&#x27;))
+print(&#x27;Old has __gt__:&#x27;, hasattr(Old, &#x27;__gt__&#x27;))
+print(&#x27;New has __gt__:&#x27;, hasattr(New, &#x27;__gt__&#x27;))
+&quot;</pre></details></td><td>1</td><td>0.013s</td><td>a58550e8</td></tr><tr><td>command</td><td><code class="display-command">python3 -c &quot;
+import sys
+print(&#x27;Python version:&#x27;, sys.version)
+
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects
+print(&#x27;Old instance tp_richcompare:&#x27;, type(Old()).tp_richcompare)
+print(&#x27;New instance tp_richcompare:&#x27;, type(New()).tp_richcompare)
+print(&#x27;Old instance tp_compare:&#x27;, type(Old()).tp_compare)
+print(&#x27;New instance tp_compare:&#x27;, type(New()).tp_compare)
+
+# Check the type object&#x27;s own comparison
+print()
+print(&#x27;Old has __cmp__:&#x27;, hasattr(Old, &#x27;__cmp__&#x27;))
+print(&#x27;New has __cmp__:&#x27;, hasattr(New, &#x27;__cmp__&#x27;))
+print(&#x27;Old has __lt__:&#x27;, hasattr(Old, &#x27;__lt__&#x27;))
+print(&#x27;New has __lt__:&#x27;, hasattr(New, &#x27;__lt__&#x27;))
+print(&#x27;Old has __gt__:&#x27;, hasattr(Old, &#x27;__gt__&#x27;))
+print(&#x27;New has __gt__:&#x27;, hasattr(New, &#x27;__gt__&#x27;))
+
+# Check __dict__ for the type itself
+print()
+print(&#x27;Old.__dict__ keys:&#x27;, list(Old.__dict__.keys())[:10])
+print(&#x27;New.__dict__ keys:&#x27;, list(New.__dict__.keys())[:10])
+&quot;</code><details><summary>exact command</summary><pre>python3 -c &quot;
+import sys
+print(&#x27;Python version:&#x27;, sys.version)
+
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects
+print(&#x27;Old instance tp_richcompare:&#x27;, type(Old()).tp_richcompare)
+print(&#x27;New instance tp_richcompare:&#x27;, type(New()).tp_richcompare)
+print(&#x27;Old instance tp_compare:&#x27;, type(Old()).tp_compare)
+print(&#x27;New instance tp_compare:&#x27;, type(New()).tp_compare)
+
+# Check the type object&#x27;s own comparison
+print()
+print(&#x27;Old has __cmp__:&#x27;, hasattr(Old, &#x27;__cmp__&#x27;))
+print(&#x27;New has __cmp__:&#x27;, hasattr(New, &#x27;__cmp__&#x27;))
+print(&#x27;Old has __lt__:&#x27;, hasattr(Old, &#x27;__lt__&#x27;))
+print(&#x27;New has __lt__:&#x27;, hasattr(New, &#x27;__lt__&#x27;))
+print(&#x27;Old has __gt__:&#x27;, hasattr(Old, &#x27;__gt__&#x27;))
+print(&#x27;New has __gt__:&#x27;, hasattr(New, &#x27;__gt__&#x27;))
+
+# Check __dict__ for the type itself
+print()
+print(&#x27;Old.__dict__ keys:&#x27;, list(Old.__dict__.keys())[:10])
+print(&#x27;New.__dict__ keys:&#x27;, list(New.__dict__.keys())[:10])
+&quot;</pre></details></td><td>1</td><td>0.013s</td><td>0112f7c0</td></tr><tr><td>command</td><td><code class="display-command">python3 -c &quot;
+import sys
+print(&#x27;Python version:&#x27;, sys.version)
+
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects using __dict__
+print(&#x27;Old instance __dict__ keys:&#x27;, list(type(Old()).__dict__.keys()))
+print(&#x27;New instance __dict__ keys:&#x27;, list(type(New()).__dict__.keys()))
+
+# Use object.__getattribute__ or direct struct access
+import ctypes
+
+# Let&#x27;s just check the attributes via the type
+print()
+print(&#x27;Old has __lt__ in class dict:&#x27;, &#x27;__lt__&#x27; in Old.__dict__)
+print(&#x27;New has __lt__ in class dict:&#x27;, &#x27;__lt__&#x27; in New.__dict__)
+print(&#x27;Old has __cmp__ in class dict:&#x27;, &#x27;__cmp__&#x27; in Old.__dict__)
+print(&#x27;New has __cmp__ in class dict:&#x27;, &#x27;__cmp__&#x27; in New.__dict__)
+
+# Check if type objects have a richcompare set
+print()
+print(&#x27;type(Old()).tp_richcompare:&#x27;, type(Old()).tp_richcompare)
+print(&#x27;type(New()).tp_richcompare:&#x27;, type(New()).tp_richcompare)
+print(&#x27;type(Old()).tp_compare:&#x27;, type(Old()).tp_compare)
+print(&#x27;type(New()).tp_compare:&#x27;, type(New()).tp_compare)
+&quot;</code><details><summary>exact command</summary><pre>python3 -c &quot;
+import sys
+print(&#x27;Python version:&#x27;, sys.version)
+
+class Old: pass
+class New(object): pass
+
+# Check what tp_richcompare and tp_compare are for type objects using __dict__
+print(&#x27;Old instance __dict__ keys:&#x27;, list(type(Old()).__dict__.keys()))
+print(&#x27;New instance __dict__ keys:&#x27;, list(type(New()).__dict__.keys()))
+
+# Use object.__getattribute__ or direct struct access
+import ctypes
+
+# Let&#x27;s just check the attributes via the type
+print()
+print(&#x27;Old has __lt__ in class dict:&#x27;, &#x27;__lt__&#x27; in Old.__dict__)
+print(&#x27;New has __lt__ in class dict:&#x27;, &#x27;__lt__&#x27; in New.__dict__)
+print(&#x27;Old has __cmp__ in class dict:&#x27;, &#x27;__cmp__&#x27; in Old.__dict__)
+print(&#x27;New has __cmp__ in class dict:&#x27;, &#x27;__cmp__&#x27; in New.__dict__)
+
+# Check if type objects have a richcompare set
+print()
+print(&#x27;type(Old()).tp_richcompare:&#x27;, type(Old()).tp_richcompare)
+print(&#x27;type(New()).tp_richcompare:&#x27;, type(New()).tp_richcompare)
+print(&#x27;type(Old()).tp_compare:&#x27;, type(Old()).tp_compare)
+print(&#x27;type(New()).tp_compare:&#x27;, type(New()).tp_compare)
+&quot;</pre></details></td><td>1</td><td>0.016s</td><td>36c7a263</td></tr><tr><td>command</td><td><code class="display-command">python3 -c &quot;
+import sys
+print(&#x27;Python version:&#x27;, sys.version)
+
+class Old: pass
+class New(object): pass
+
+# Use PyObject_GenericGetAttr or just look at the type&#x27;s attributes
+print(&#x27;type(Old).__dict__ keys:&#x27;, list(type(Old).__dict__.keys())[:20])
+print(&#x27;type(New).__dict__ keys:&#x27;, list(type(New).__dict__.keys())[:20])
+
+# Check if type has __lt__ etc at the metalevel
+print()
+print(&#x27;Old.__lt__:&#x27;, Old.__lt__ if hasattr(Old, &#x27;__lt__&#x27;) else &#x27;N/A&#x27;)
+print(&#x27;New.__lt__:&#x27;, New.__lt__ if hasattr(New, &#x27;__lt__&#x27;) else &#x27;N/A&#x27;)
+
+# Check the actual C-level attributes via __dict__
+print()
+print(&#x27;Old class __dict__ has richcompare:&#x27;, &#x27;tp_richcompare&#x27; in Old.__dict__)
+print(&#x27;New class __dict__ has richcompare:&#x27;, &#x27;tp_richcompare&#x27; in New.__dict__)
+
+# Try via __class__
+print()
+print(&#x27;Old.__class__:&#x27;, Old.__class__)
+print(&#x27;New.__class__:&#x27;, New.__class__)
+&quot;</code><details><summary>exact command</summary><pre>python3 -c &quot;
+import sys
+print(&#x27;Python version:&#x27;, sys.version)
+
+class Old: pass
+class New(object): pass
+
+# Use PyObject_GenericGetAttr or just look at the type&#x27;s attributes
+print(&#x27;type(Old).__dict__ keys:&#x27;, list(type(Old).__dict__.keys())[:20])
+print(&#x27;type(New).__dict__ keys:&#x27;, list(type(New).__dict__.keys())[:20])
+
+# Check if type has __lt__ etc at the metalevel
+print()
+print(&#x27;Old.__lt__:&#x27;, Old.__lt__ if hasattr(Old, &#x27;__lt__&#x27;) else &#x27;N/A&#x27;)
+print(&#x27;New.__lt__:&#x27;, New.__lt__ if hasattr(New, &#x27;__lt__&#x27;) else &#x27;N/A&#x27;)
+
+# Check the actual C-level attributes via __dict__
+print()
+print(&#x27;Old class __dict__ has richcompare:&#x27;, &#x27;tp_richcompare&#x27; in Old.__dict__)
+print(&#x27;New class __dict__ has richcompare:&#x27;, &#x27;tp_richcompare&#x27; in New.__dict__)
+
+# Try via __class__
+print()
+print(&#x27;Old.__class__:&#x27;, Old.__class__)
+print(&#x27;New.__class__:&#x27;, New.__class__)
+&quot;</pre></details></td><td>0</td><td>0.013s</td><td>6d26b5d3</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import ObjectKey
+
+# Test with a type object
+class Old: pass
+
+try:
+    ok = ObjectKey(Old)
+    print(&#x27;Old key created:&#x27;, ok)
+except TypeError as e:
+    print(&#x27;Old key failed:&#x27;, e)
+
+# Test with an instance
+try:
+    ok = ObjectKey(Old())
+    print(&#x27;Old instance key created:&#x27;, ok)
+except TypeError as e:
+    print(&#x27;Old instance key failed:&#x27;, e)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import ObjectKey
+
+# Test with a type object
+class Old: pass
+
+try:
+    ok = ObjectKey(Old)
+    print(&#x27;Old key created:&#x27;, ok)
+except TypeError as e:
+    print(&#x27;Old key failed:&#x27;, e)
+
+# Test with an instance
+try:
+    ok = ObjectKey(Old())
+    print(&#x27;Old instance key created:&#x27;, ok)
+except TypeError as e:
+    print(&#x27;Old instance key failed:&#x27;, e)
+&quot;</pre></details></td><td>1</td><td>0.064s</td><td>c38ea970</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import _CheckDefaultComparison
+
+# Test with a type object
+class Old: pass
+
+try:
+    checker = _CheckDefaultComparison()
+    ok = checker(Old)
+    print(&#x27;Old key created:&#x27;, ok)
+except TypeError as e:
+    print(&#x27;Old key failed:&#x27;, e)
+
+# Test with an instance
+try:
+    ok = checker(Old())
+    print(&#x27;Old instance key created:&#x27;, ok)
+except TypeError as e:
+    print(&#x27;Old instance key failed:&#x27;, e)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import _CheckDefaultComparison
+
+# Test with a type object
+class Old: pass
+
+try:
+    checker = _CheckDefaultComparison()
+    ok = checker(Old)
+    print(&#x27;Old key created:&#x27;, ok)
+except TypeError as e:
+    print(&#x27;Old key failed:&#x27;, e)
+
+# Test with an instance
+try:
+    ok = checker(Old())
+    print(&#x27;Old instance key created:&#x27;, ok)
+except TypeError as e:
+    print(&#x27;Old instance key failed:&#x27;, e)
+&quot;</pre></details></td><td>1</td><td>0.063s</td><td>656f2a8e</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test with a type object
+class Old: pass
+
+bt = family64.OO.BTree()
+try:
+    bt[Old] = 1
+    print(&#x27;Old worked&#x27;)
+except TypeError as e:
+    print(&#x27;Old failed:&#x27;, e)
+
+# Test with an instance
+try:
+    bt[Old()] = 1
+    print(&#x27;Old instance worked&#x27;)
+except TypeError as e:
+    print(&#x27;Old instance failed:&#x27;, e)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test with a type object
+class Old: pass
+
+bt = family64.OO.BTree()
+try:
+    bt[Old] = 1
+    print(&#x27;Old worked&#x27;)
+except TypeError as e:
+    print(&#x27;Old failed:&#x27;, e)
+
+# Test with an instance
+try:
+    bt[Old()] = 1
+    print(&#x27;Old instance worked&#x27;)
+except TypeError as e:
+    print(&#x27;Old instance failed:&#x27;, e)
+&quot;</pre></details></td><td>0</td><td>0.066s</td><td>30b3f04e</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test with an instance of new-style class
+class New(object):
+    pass
+
+bt = family64.OO.BTree()
+try:
+    bt[New()] = 1
+    print(&#x27;New instance worked&#x27;)
+except TypeError as e:
+    print(&#x27;New instance failed:&#x27;, e)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test with an instance of new-style class
+class New(object):
+    pass
+
+bt = family64.OO.BTree()
+try:
+    bt[New()] = 1
+    print(&#x27;New instance worked&#x27;)
+except TypeError as e:
+    print(&#x27;New instance failed:&#x27;, e)
+&quot;</pre></details></td><td>0</td><td>0.063s</td><td>c1713988</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+import sys
+
+class Foo:
+    pass
+
+# Let&#x27;s check the richcompare
+print(&#x27;Foo.__lt__:&#x27;, Foo.__lt__)
+print(&#x27;type(Foo).__lt__:&#x27;, type(Foo).__lt__)
+
+# Instances
+f = Foo()
+print(&#x27;type(f).tp_richcompare:&#x27;, type(f).tp_richcompare)
+print(&#x27;type(Foo).tp_richcompare:&#x27;, type(Foo).tp_richcompare)
+print(&#x27;Are they the same?&#x27;, type(f).tp_richcompare is type(Foo).tp_richcompare)
+
+# Check the C-level comparison
+# The check is: if (Py_TYPE(arg)-&gt;tp_richcompare == Py_TYPE(object_)-&gt;tp_richcompare)
+# For a BTree key, object_ is some sentinel
+
+# Let&#x27;s manually check what happens with type vs instance
+print()
+print(&#x27;type(Foo) is type:&#x27;, type(Foo) is type)
+print(&#x27;type(f) is type:&#x27;, type(f) is type)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+import sys
+
+class Foo:
+    pass
+
+# Let&#x27;s check the richcompare
+print(&#x27;Foo.__lt__:&#x27;, Foo.__lt__)
+print(&#x27;type(Foo).__lt__:&#x27;, type(Foo).__lt__)
+
+# Instances
+f = Foo()
+print(&#x27;type(f).tp_richcompare:&#x27;, type(f).tp_richcompare)
+print(&#x27;type(Foo).tp_richcompare:&#x27;, type(Foo).tp_richcompare)
+print(&#x27;Are they the same?&#x27;, type(f).tp_richcompare is type(Foo).tp_richcompare)
+
+# Check the C-level comparison
+# The check is: if (Py_TYPE(arg)-&gt;tp_richcompare == Py_TYPE(object_)-&gt;tp_richcompare)
+# For a BTree key, object_ is some sentinel
+
+# Let&#x27;s manually check what happens with type vs instance
+print()
+print(&#x27;type(Foo) is type:&#x27;, type(Foo) is type)
+print(&#x27;type(f) is type:&#x27;, type(f) is type)
+&quot;</pre></details></td><td>1</td><td>0.013s</td><td>aa8cc727</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+import sys
+
+class Foo:
+    pass
+
+# Instances
+f = Foo()
+print(&#x27;type(f):&#x27;, type(f))
+print(&#x27;type(f).__name__:&#x27;, type(f).__name__)
+
+# Access via object
+print(&#x27;f.__dict__:&#x27;, f.__dict__)
+
+# The richcompare is on the type, not instance
+print(&#x27;type(f).tp_richcompare:&#x27;, end=&#x27; &#x27;)
+try:
+    print(type(f).tp_richcompare)
+except AttributeError as e:
+    print(&#x27;Error:&#x27;, e)
+
+# Let&#x27;s use ctypes or just check the descriptor
+print()
+print(&#x27;Has __lt__ via getattr:&#x27;, hasattr(f, &#x27;__lt__&#x27;))
+print(&#x27;Has __lt__ on type:&#x27;, hasattr(Foo, &#x27;__lt__&#x27;))
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+import sys
+
+class Foo:
+    pass
+
+# Instances
+f = Foo()
+print(&#x27;type(f):&#x27;, type(f))
+print(&#x27;type(f).__name__:&#x27;, type(f).__name__)
+
+# Access via object
+print(&#x27;f.__dict__:&#x27;, f.__dict__)
+
+# The richcompare is on the type, not instance
+print(&#x27;type(f).tp_richcompare:&#x27;, end=&#x27; &#x27;)
+try:
+    print(type(f).tp_richcompare)
+except AttributeError as e:
+    print(&#x27;Error:&#x27;, e)
+
+# Let&#x27;s use ctypes or just check the descriptor
+print()
+print(&#x27;Has __lt__ via getattr:&#x27;, hasattr(f, &#x27;__lt__&#x27;))
+print(&#x27;Has __lt__ on type:&#x27;, hasattr(Foo, &#x27;__lt__&#x27;))
+&quot;</pre></details></td><td>0</td><td>0.012s</td><td>744613f5</td></tr><tr><td>command</td><td><code class="display-command">find /BTrees -name &quot;*.c&quot; -o -name &quot;*.h&quot; | head -20</code><details><summary>exact command</summary><pre>find /BTrees -name &quot;*.c&quot; -o -name &quot;*.h&quot; | head -20</pre></details></td><td>0</td><td>0.005s</td><td>1cadc4a3</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;check_argument_cmp\|Object has default&quot; /BTrees/src/BTrees/objectkeymacros.h</code><details><summary>exact command</summary><pre>grep -n &quot;check_argument_cmp\|Object has default&quot; /BTrees/src/BTrees/objectkeymacros.h</pre></details></td><td>0</td><td>0.003s</td><td>a6f7e763</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet -xvs 2&gt;&amp;1 | head -40</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet -xvs 2&gt;&amp;1 | head -40</pre></details></td><td>0</td><td>0.280s</td><td>8ca750bd</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet -xvs 2&gt;&amp;1 | tail -30</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet -xvs 2&gt;&amp;1 | tail -30</pre></details></td><td>0</td><td>0.231s</td><td>d7b36a17</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>0</td><td>0.223s</td><td>30308dfc</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;type(item) is type\|isinstance.*type&quot; /BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>grep -n &quot;type(item) is type\|isinstance.*type&quot; /BTrees/_datatypes.py</pre></details></td><td>2</td><td>0.003s</td><td>120d45bb</td></tr><tr><td>command</td><td><code class="display-command">grep -n &quot;type(item) is type\|isinstance.*type&quot; /BTrees/src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>grep -n &quot;type(item) is type\|isinstance.*type&quot; /BTrees/src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.003s</td><td>c41f1b05</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import OOBTree
+
+t = OOBTree.OOBTreePy()
+
+# Test with a type that has custom __lt__
+class Meta(type):
+    def __lt__(cls, other):
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;Custom meta class test:&#x27;)
+try:
+    t[cls] = (1, 2)
+    print(&#x27;  Success! Key accepted&#x27;)
+except TypeError as e:
+    print(f&#x27;  Failed: {e}&#x27;)
+
+# Test with a plain type
+class New(object):
+    pass
+
+print(&#x27;Plain type test:&#x27;)
+try:
+    t[New] = 1
+    print(&#x27;  Success! Key accepted&#x27;)
+except TypeError as e:
+    print(f&#x27;  Failed: {e}&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import OOBTree
+
+t = OOBTree.OOBTreePy()
+
+# Test with a type that has custom __lt__
+class Meta(type):
+    def __lt__(cls, other):
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;Custom meta class test:&#x27;)
+try:
+    t[cls] = (1, 2)
+    print(&#x27;  Success! Key accepted&#x27;)
+except TypeError as e:
+    print(f&#x27;  Failed: {e}&#x27;)
+
+# Test with a plain type
+class New(object):
+    pass
+
+print(&#x27;Plain type test:&#x27;)
+try:
+    t[New] = 1
+    print(&#x27;  Success! Key accepted&#x27;)
+except TypeError as e:
+    print(f&#x27;  Failed: {e}&#x27;)
+&quot;</pre></details></td><td>0</td><td>0.063s</td><td>0511b1d5</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import OOBTree
+print(&#x27;OOBTreePy:&#x27;, OOBTree.OOBTreePy)
+print(&#x27;OOBTree:&#x27;, OOBTree.OOBTree)
+
+# Check which one is being used
+t = OOBTree.OOBTreePy()
+print(&#x27;Using OOBTreePy&#x27;)
+
+# Test with a type that has custom __lt__
+class Meta(type):
+    def __lt__(cls, other):
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;Custom meta class test:&#x27;)
+try:
+    t[cls] = (1, 2)
+    print(&#x27;  Success! Key accepted&#x27;)
+except TypeError as e:
+    print(f&#x27;  Failed: {e}&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import OOBTree
+print(&#x27;OOBTreePy:&#x27;, OOBTree.OOBTreePy)
+print(&#x27;OOBTree:&#x27;, OOBTree.OOBTree)
+
+# Check which one is being used
+t = OOBTree.OOBTreePy()
+print(&#x27;Using OOBTreePy&#x27;)
+
+# Test with a type that has custom __lt__
+class Meta(type):
+    def __lt__(cls, other):
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;Custom meta class test:&#x27;)
+try:
+    t[cls] = (1, 2)
+    print(&#x27;  Success! Key accepted&#x27;)
+except TypeError as e:
+    print(f&#x27;  Failed: {e}&#x27;)
+&quot;</pre></details></td><td>0</td><td>0.063s</td><td>5cf034e5</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+import BTrees
+print(&#x27;BTrees file:&#x27;, BTrees.__file__)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+import BTrees
+print(&#x27;BTrees file:&#x27;, BTrees.__file__)
+&quot;</pre></details></td><td>0</td><td>0.063s</td><td>8e8fc6dd</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import _compat
+print(&#x27;PY2:&#x27;, _compat.PY2)
+print(&#x27;PY3:&#x27;, _compat.PY3)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import _compat
+print(&#x27;PY2:&#x27;, _compat.PY2)
+print(&#x27;PY3:&#x27;, _compat.PY3)
+&quot;</pre></details></td><td>0</td><td>0.063s</td><td>cd87732e</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import OOBTree
+t = OOBTree.OOBTreePy()
+print(&#x27;Type:&#x27;, type(t))
+print(&#x27;MRO:&#x27;, type(t).__mro__)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import OOBTree
+t = OOBTree.OOBTreePy()
+print(&#x27;Type:&#x27;, type(t))
+print(&#x27;MRO:&#x27;, type(t).__mro__)
+&quot;</pre></details></td><td>0</td><td>0.066s</td><td>39576a4a</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import _compat
+print(&#x27;Should attempt C optimizations:&#x27;, _compat._should_attempt_c_optimizations())
+
+from BTrees import _base
+print(&#x27;Base module:&#x27;, _base.__file__)
+
+# Check if C extensions are available
+import importlib
+try:
+    c_mod = importlib.import_module(&#x27;BTrees._OOBTree&#x27;)
+    print(&#x27;C extension available:&#x27;, c_mod)
+except ImportError as e:
+    print(&#x27;C extension not available:&#x27;, e)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import _compat
+print(&#x27;Should attempt C optimizations:&#x27;, _compat._should_attempt_c_optimizations())
+
+from BTrees import _base
+print(&#x27;Base module:&#x27;, _base.__file__)
+
+# Check if C extensions are available
+import importlib
+try:
+    c_mod = importlib.import_module(&#x27;BTrees._OOBTree&#x27;)
+    print(&#x27;C extension available:&#x27;, c_mod)
+except ImportError as e:
+    print(&#x27;C extension not available:&#x27;, e)
+&quot;</pre></details></td><td>0</td><td>0.063s</td><td>b154745f</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+class Meta(type):
+    def __lt__(cls, other):
+        print(f&#x27;__lt__ called with cls={cls}, other={other}&#x27;)
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;cls:&#x27;, cls)
+print(&#x27;cls.__lt__:&#x27;, cls.__lt__)
+print(&#x27;cls.__lt__.__objclass__:&#x27;, getattr(cls.__lt__, &#x27;__objclass__&#x27;, None))
+print(&#x27;cls.__lt__.__func__:&#x27;, getattr(cls.__lt__, &#x27;__func__&#x27;, None))
+
+# Check if it&#x27;s the default object __lt__
+import types
+print(&#x27;object.__lt__:&#x27;, object.__lt__)
+print(&#x27;cls.__lt__ is object.__lt__:&#x27;, cls.__lt__ is object.__lt__)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+class Meta(type):
+    def __lt__(cls, other):
+        print(f&#x27;__lt__ called with cls={cls}, other={other}&#x27;)
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;cls:&#x27;, cls)
+print(&#x27;cls.__lt__:&#x27;, cls.__lt__)
+print(&#x27;cls.__lt__.__objclass__:&#x27;, getattr(cls.__lt__, &#x27;__objclass__&#x27;, None))
+print(&#x27;cls.__lt__.__func__:&#x27;, getattr(cls.__lt__, &#x27;__func__&#x27;, None))
+
+# Check if it&#x27;s the default object __lt__
+import types
+print(&#x27;object.__lt__:&#x27;, object.__lt__)
+print(&#x27;cls.__lt__ is object.__lt__:&#x27;, cls.__lt__ is object.__lt__)
+&quot;</pre></details></td><td>0</td><td>0.013s</td><td>b05f3bf2</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -c &quot;
+from BTrees import OOBTree
+t = OOBTree.OOBTreePy()
+print(&#x27;Using Python implementation&#x27;)
+
+class Meta(type):
+    def __lt__(cls, other):
+        print(f&#x27;__lt__ called with cls={cls}, other={other}&#x27;)
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;Custom meta class test:&#x27;)
+try:
+    t[cls] = (1, 2)
+    print(&#x27;  Success! Key accepted&#x27;)
+except TypeError as e:
+    print(f&#x27;  Failed: {e}&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -c &quot;
+from BTrees import OOBTree
+t = OOBTree.OOBTreePy()
+print(&#x27;Using Python implementation&#x27;)
+
+class Meta(type):
+    def __lt__(cls, other):
+        print(f&#x27;__lt__ called with cls={cls}, other={other}&#x27;)
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;Custom meta class test:&#x27;)
+try:
+    t[cls] = (1, 2)
+    print(&#x27;  Success! Key accepted&#x27;)
+except TypeError as e:
+    print(f&#x27;  Failed: {e}&#x27;)
+&quot;</pre></details></td><td>0</td><td>0.055s</td><td>134e2310</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -c &quot;
+from BTrees import _datatypes
+import inspect
+print(inspect.getsource(_datatypes._CheckDefaultComparison._check_default_comparison))
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -c &quot;
+from BTrees import _datatypes
+import inspect
+print(inspect.getsource(_datatypes._CheckDefaultComparison._check_default_comparison))
+&quot;</pre></details></td><td>1</td><td>0.063s</td><td>a2d46399</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;def _check_default_comparison&quot; src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;def _check_default_comparison&quot; src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.003s</td><td>dd8baece</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;165,215p&#x27; src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;165,215p&#x27; src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.003s</td><td>7c64ec3e</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;27,60p&#x27; src/BTrees/tests/test_OOBTree.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;27,60p&#x27; src/BTrees/tests/test_OOBTree.py</pre></details></td><td>0</td><td>0.004s</td><td>4107b7c8</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+class C(object):
+    pass
+
+from BTrees._base import Bucket
+t = Bucket()
+
+try:
+    t[C()] = 1
+except TypeError as e:
+    print(&#x27;Instance error:&#x27;, e.args[0])
+
+# Check what the item looks like
+print(&#x27;type(C()):&#x27;, type(C()))
+print(&#x27;C() is type:&#x27;, type(C()) is type)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+class C(object):
+    pass
+
+from BTrees._base import Bucket
+t = Bucket()
+
+try:
+    t[C()] = 1
+except TypeError as e:
+    print(&#x27;Instance error:&#x27;, e.args[0])
+
+# Check what the item looks like
+print(&#x27;type(C()):&#x27;, type(C()))
+print(&#x27;C() is type:&#x27;, type(C()) is type)
+&quot;</pre></details></td><td>1</td><td>0.065s</td><td>8770056b</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+t = family64.OO.BTree()
+
+class C(object):
+    pass
+
+try:
+    t[C()] = 1
+except TypeError as e:
+    print(&#x27;Instance error:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+t = family64.OO.BTree()
+
+class C(object):
+    pass
+
+try:
+    t[C()] = 1
+except TypeError as e:
+    print(&#x27;Instance error:&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.063s</td><td>810d4eba</td></tr><tr><td>write</td><td><code class="display-command">write src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>/opt/receipts-cf7b169ff5ef4f728db22d3fd98b1023/bin/busybox sh -c &#x27;mkdir -p /BTrees/src/BTrees &amp;&amp; cp /opt/receipts-cf7b169ff5ef4f728db22d3fd98b1023/incoming/5cdee71e7f1d65a08e4bce2615b9dccd62d562ab2789f7830de988fe0ec0d00a /BTrees/src/BTrees/_datatypes.py&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>5cf0f8cf</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+class C(object):
+    pass
+
+from BTrees import family64
+t = family64.OO.BTree()
+
+try:
+    t[C()] = 1
+except TypeError as e:
+    print(&#x27;Current message:&#x27;, e.args[0])
+    # The test expects: &#x27;Object of class C has default comparison&#x27;
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+class C(object):
+    pass
+
+from BTrees import family64
+t = family64.OO.BTree()
+
+try:
+    t[C()] = 1
+except TypeError as e:
+    print(&#x27;Current message:&#x27;, e.args[0])
+    # The test expects: &#x27;Object of class C has default comparison&#x27;
+&quot;</pre></details></td><td>0</td><td>0.065s</td><td>ea0c2ecd</td></tr><tr><td>write</td><td><code class="display-command">write src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>/opt/receipts-634ffd4002084a0c9c9bbfc841df1157/bin/busybox sh -c &#x27;mkdir -p /BTrees/src/BTrees &amp;&amp; cp /opt/receipts-634ffd4002084a0c9c9bbfc841df1157/incoming/5dde3123ede9a95be945b7ecc8c34b46a9664d91bef017c148a438470cfc30e5 /BTrees/src/BTrees/_datatypes.py&#x27;</pre></details></td><td>0</td><td>0.004s</td><td>a63511b2</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object
+class Old: pass
+class New(object): pass
+
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+try:
+    t = family64.OO.BTree()
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object
+class Old: pass
+class New(object): pass
+
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+try:
+    t = family64.OO.BTree()
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.066s</td><td>c8eb8cb2</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+class Old: pass
+class New(object): pass
+
+print(&#x27;type(Old):&#x27;, type(Old))
+print(&#x27;type(Old) is type:&#x27;, type(Old) is type)
+print(&#x27;type(New):&#x27;, type(New))
+print(&#x27;type(New) is type:&#x27;, type(New) is type)
+
+# Check the item being passed
+print()
+print(&#x27;Old itself:&#x27;, Old)
+print(&#x27;type(Old) is type:&#x27;, type(Old) is type)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+class Old: pass
+class New(object): pass
+
+print(&#x27;type(Old):&#x27;, type(Old))
+print(&#x27;type(Old) is type:&#x27;, type(Old) is type)
+print(&#x27;type(New):&#x27;, type(New))
+print(&#x27;type(New) is type:&#x27;, type(New) is type)
+
+# Check the item being passed
+print()
+print(&#x27;Old itself:&#x27;, Old)
+print(&#x27;type(Old) is type:&#x27;, type(Old) is type)
+&quot;</pre></details></td><td>0</td><td>0.012s</td><td>f4c88d1a</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import _CheckDefaultComparison
+
+class Old: pass
+
+checker = _CheckDefaultComparison()
+try:
+    result = checker(Old)
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import _CheckDefaultComparison
+
+class Old: pass
+
+checker = _CheckDefaultComparison()
+try:
+    result = checker(Old)
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</pre></details></td><td>1</td><td>0.066s</td><td>a930afb7</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import _AbstractKeyDataType
+
+class Old: pass
+
+# Find the checker
+for name in dir(_AbstractKeyDataType):
+    obj = getattr(_AbstractKeyDataType, name)
+    if hasattr(obj, &#x27;_check_default_comparison&#x27;):
+        print(f&#x27;Found {name}&#x27;)
+        checker = obj()
+        try:
+            result = checker._check_default_comparison(Old)
+            print(&#x27;Result:&#x27;, result)
+        except TypeError as e:
+            print(&#x27;Error:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import _AbstractKeyDataType
+
+class Old: pass
+
+# Find the checker
+for name in dir(_AbstractKeyDataType):
+    obj = getattr(_AbstractKeyDataType, name)
+    if hasattr(obj, &#x27;_check_default_comparison&#x27;):
+        print(f&#x27;Found {name}&#x27;)
+        checker = obj()
+        try:
+            result = checker._check_default_comparison(Old)
+            print(&#x27;Result:&#x27;, result)
+        except TypeError as e:
+            print(&#x27;Error:&#x27;, e.args[0])
+&quot;</pre></details></td><td>1</td><td>0.063s</td><td>7e3d76a9</td></tr></tbody></table></div></details><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;class.*KeyDataType\|class.*_Key&quot; src/BTrees/_datatypes.py | head -20</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;class.*KeyDataType\|class.*_Key&quot; src/BTrees/_datatypes.py | head -20</pre></details></td><td>0</td><td>0.004s</td><td>b43f8540</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import KeyDataType
+
+class Old: pass
+
+# Create a checker
+checker = KeyDataType()
+try:
+    result = checker._check_default_comparison(Old)
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import KeyDataType
+
+class Old: pass
+
+# Create a checker
+checker = KeyDataType()
+try:
+    result = checker._check_default_comparison(Old)
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</pre></details></td><td>1</td><td>0.063s</td><td>6a2169ce</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;def _check_default_comparison&quot; src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;def _check_default_comparison&quot; src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.003s</td><td>0daa19d5</td></tr><tr><td>diff</td><td><code class="display-command">capture patch</code><details><summary>exact command</summary><pre>compute patch in executor staging agent1-571c77f2a0ae416a9ed3369d0e2898f7: /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false add -A &amp;&amp; /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false diff --cached --binary --no-ext-diff --no-textconv --no-renames 58a6c373740db08e0e09a63b0e62625ee399248e</pre></details></td><td>0</td><td>0.088s</td><td>6f3204abd16b</td></tr></tbody></table></div><div class="pad"><dl><dt>Finish summary</dt><dd>turn budget exhausted after 60 turn(s)</dd><dt>Worker outcome</dt><dd>budget_exhausted</dd></dl><p class="secondary">Claims not recorded</p></div></div><div class="stack"><div class="card"><h3>Witness branch w1</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>apply</td><td><code class="display-command">apply patch 93d46f7fa211</code><details><summary>exact command</summary><pre>git update-index -q --refresh; git apply -v --3way --recount --ignore-space-change --whitespace=nowarn /opt/receipts-42539c6bd877404e8f463707a7019fe3/incoming/93d46f7fa211a2eb3c799238d1a4314ae03b726590cbfbfbdcb6b6c3dc0d5fad.diff</pre></details></td><td>0</td><td>0.008s</td><td>11cc80606120</td></tr><tr><td>verification</td><td><code class="display-command">pytest (witness) src/BTrees/tests/common.py src/BTrees/tests/test_OOBTree.py</code><details><summary>exact command</summary><pre>/opt/receipts-eb1be5acb9e04839bd3db39d4120bbaf/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-eb1be5acb9e04839bd3db39d4120bbaf/receipts_pytest.py --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning src/BTrees/tests/common.py src/BTrees/tests/test_OOBTree.py -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/w1-2.xml</pre></details></td><td>1</td><td>2.174s</td><td>11cc80606120</td></tr></tbody></table></div></div><h3>Gate predicate checklist</h3><div class="table-box"><table class="predicates"><thead><tr><th scope="col">Predicate</th><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Evidence</th></tr></thead><tbody><tr><td><code>R1_fail_to_pass</code></td><td>Failing specification tests now pass</td><td><span class="fail">FAIL</span></td><td>src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed failed; src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet failed</td></tr><tr><td><code>R2_pass_to_pass</code></td><td>Previously passing tests kept</td><td><span class="pass">PASS</span></td><td>263 baseline-passing tests still pass</td></tr><tr><td><code>R3_no_shrink</code></td><td>No removed tests or new skips</td><td><span class="pass">PASS</span></td><td>all 291 baseline tests collected; skips unchanged (18)</td></tr><tr><td><code>R4_patch_scope</code></td><td>Patch scope</td><td><span class="pass">PASS</span></td><td>patch touches 1 file(s), all in scope</td></tr><tr><td><code>R5_provenance</code></td><td>Witness chain and patch digest</td><td><span class="pass">PASS</span></td><td>agent chain 08bf2e2d -&gt; 0daa19d5 unbroken over 52 receipt(s); witness chain 08bf2e2d -&gt; 56f0357b unbroken over 2 receipt(s); applied digest matches</td></tr><tr><td><code>R6_claim_audit</code></td><td>Agent claim audit (advisory)</td><td><span class="fail">FAIL</span></td><td>branch ended without a finish call</td></tr></tbody></table></div></div></div><div class="comparison card"><div><h3>What it said</h3><dl><dt>Finish summary</dt><dd>turn budget exhausted after 60 turn(s)</dd><dt>Worker outcome</dt><dd>budget_exhausted</dd></dl><p class="secondary">Claims not recorded</p></div><div><h3>What the record shows</h3><p>no claim: branch ended without a finish call</p></div></div><div class="card pad stack"><h3>SWE-rebench&#x27;s official grader: not resolved</h3><p>Agrees with the gate</p></div></section><section class="stack"><h2>Attempt 2, on appeal</h2><span class="badge rejected">REJECTED</span><div class="stack"><h3>Appeal evidence sent to the agent</h3><pre class="appeal">R1_fail_to_pass: src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed failed; src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet failed
+Claim audit: branch ended without a finish call
+
+Fix the source so these checks pass. Tests and pytest configuration are read-only.</pre></div><div class="lanes"><div class="card"><h3>Agent branch</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;140,170p&#x27; src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;140,170p&#x27; src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.003s</td><td>2c14fa24</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import O
+
+class Old: pass
+
+checker = O()
+try:
+    result = checker._check_default_comparison(Old)
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import O
+
+class Old: pass
+
+checker = O()
+try:
+    result = checker._check_default_comparison(Old)
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.067s</td><td>b980154a</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import O
+
+class C(object):
+    pass
+
+checker = O()
+try:
+    result = checker._check_default_comparison(C())
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import O
+
+class C(object):
+    pass
+
+checker = O()
+try:
+    result = checker._check_default_comparison(C())
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.066s</td><td>018b5da6</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import O
+
+class C(object):
+    pass
+
+checker = O()
+try:
+    result = checker._check_default_comparison(C())
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+    # Expected: &#x27;Object of class C has default comparison&#x27;
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import O
+
+class C(object):
+    pass
+
+checker = O()
+try:
+    result = checker._check_default_comparison(C())
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+    # Expected: &#x27;Object of class C has default comparison&#x27;
+&quot;</pre></details></td><td>0</td><td>0.063s</td><td>5ae50140</td></tr><tr><td>write</td><td><code class="display-command">write src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>/opt/receipts-4ccd3c4dfe7341a683aaa25aebe662f1/bin/busybox sh -c &#x27;mkdir -p /BTrees/src/BTrees &amp;&amp; cp /opt/receipts-4ccd3c4dfe7341a683aaa25aebe662f1/incoming/9f8b5a8071460d5eac0876c5c3374b3ee49545cccd773d7aa693d469c24921ef /BTrees/src/BTrees/_datatypes.py&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>69d5c289</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import O
+
+class C(object):
+    pass
+
+checker = O()
+try:
+    result = checker._check_default_comparison(C())
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+    # Expected: &#x27;Object of class C has default comparison&#x27;
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees._datatypes import O
+
+class C(object):
+    pass
+
+checker = O()
+try:
+    result = checker._check_default_comparison(C())
+    print(&#x27;Result:&#x27;, result)
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+    # Expected: &#x27;Object of class C has default comparison&#x27;
+&quot;</pre></details></td><td>0</td><td>0.065s</td><td>68953626</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object Old
+class Old: pass
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+class New(object): pass
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+t = family64.OO.BTree()
+try:
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 4: plain type with custom meta&#x27;)
+class Meta(type):
+    pass
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+try:
+    bt[cls] = 1
+    print(&#x27;  Result: key accepted (unexpected)&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED (rejected):&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object Old
+class Old: pass
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+class New(object): pass
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+t = family64.OO.BTree()
+try:
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 4: plain type with custom meta&#x27;)
+class Meta(type):
+    pass
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+try:
+    bt[cls] = 1
+    print(&#x27;  Result: key accepted (unexpected)&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED (rejected):&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.066s</td><td>10a48524</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+class Meta(type):
+    def __lt__(cls, other):
+        print(&#x27;__lt__ called!&#x27;)
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;cls.__lt__:&#x27;, cls.__lt__)
+print(&#x27;cls.__lt__.__objclass__:&#x27;, getattr(cls.__lt__, &#x27;__objclass__&#x27;, None))
+print(&#x27;cls.__lt__.__func__:&#x27;, getattr(cls.__lt__, &#x27;__func__&#x27;, None))
+
+# Check if it&#x27;s the default
+import object as _object
+print(&#x27;object.__lt__:&#x27;, _object.__lt__)
+print(&#x27;cls.__lt__ is object.__lt__:&#x27;, cls.__lt__ is _object.__lt__)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+class Meta(type):
+    def __lt__(cls, other):
+        print(&#x27;__lt__ called!&#x27;)
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;cls.__lt__:&#x27;, cls.__lt__)
+print(&#x27;cls.__lt__.__objclass__:&#x27;, getattr(cls.__lt__, &#x27;__objclass__&#x27;, None))
+print(&#x27;cls.__lt__.__func__:&#x27;, getattr(cls.__lt__, &#x27;__func__&#x27;, None))
+
+# Check if it&#x27;s the default
+import object as _object
+print(&#x27;object.__lt__:&#x27;, _object.__lt__)
+print(&#x27;cls.__lt__ is object.__lt__:&#x27;, cls.__lt__ is _object.__lt__)
+&quot;</pre></details></td><td>1</td><td>0.013s</td><td>70677df8</td></tr></tbody></table></div><details class="all-steps"><summary>show all 59 steps</summary><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+class Meta(type):
+    def __lt__(cls, other):
+        print(&#x27;__lt__ called!&#x27;)
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;cls.__lt__:&#x27;, cls.__lt__)
+print(&#x27;cls.__lt__.__objclass__:&#x27;, getattr(cls.__lt__, &#x27;__objclass__&#x27;, None))
+print(&#x27;cls.__lt__.__func__:&#x27;, getattr(cls.__lt__, &#x27;__func__&#x27;, None))
+
+# Check if it&#x27;s the default
+print(&#x27;object.__lt__:&#x27;, object.__lt__)
+print(&#x27;cls.__lt__ is object.__lt__:&#x27;, cls.__lt__ is object.__lt__)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+class Meta(type):
+    def __lt__(cls, other):
+        print(&#x27;__lt__ called!&#x27;)
+        return 1
+
+cls = Meta(&#x27;Class&#x27;, (object,), {})
+print(&#x27;cls.__lt__:&#x27;, cls.__lt__)
+print(&#x27;cls.__lt__.__objclass__:&#x27;, getattr(cls.__lt__, &#x27;__objclass__&#x27;, None))
+print(&#x27;cls.__lt__.__func__:&#x27;, getattr(cls.__lt__, &#x27;__func__&#x27;, None))
+
+# Check if it&#x27;s the default
+print(&#x27;object.__lt__:&#x27;, object.__lt__)
+print(&#x27;cls.__lt__ is object.__lt__:&#x27;, cls.__lt__ is object.__lt__)
+&quot;</pre></details></td><td>0</td><td>0.014s</td><td>e7f02721</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>0</td><td>0.225s</td><td>7f97fffc</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>1</td><td>0.229s</td><td>58a17edf</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;195,215p&#x27; src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;195,215p&#x27; src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.003s</td><td>1ee452fc</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;215,235p&#x27; src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;215,235p&#x27; src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.003s</td><td>404e7168</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet -xvs 2&gt;&amp;1</pre></details></td><td>0</td><td>0.211s</td><td>19b54272</td></tr><tr><td>write</td><td><code class="display-command">write src/BTrees/objectkeymacros.h</code><details><summary>exact command</summary><pre>/opt/receipts-364f19a2720445a2b4593d42287fa601/bin/busybox sh -c &#x27;mkdir -p /BTrees/src/BTrees &amp;&amp; cp /opt/receipts-364f19a2720445a2b4593d42287fa601/incoming/8fc80f17737ce0094f16939570270428a316866bf9d53706f04cdd48d9e04c02 /BTrees/src/BTrees/objectkeymacros.h&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>347d27b8</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object Old
+class Old: pass
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+class New(object): pass
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+t = family64.OO.BTree()
+try:
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 4: plain instance with custom comparison&#x27;)
+class D(object):
+    def __lt__(self, other):
+        return 1
+try:
+    t = family64.OO.BTree()
+    t[D()] = 1
+    print(&#x27;  PASSED: key accepted (has custom __lt__)&#x27;)
+except TypeError as e:
+    print(&#x27;  FAILED:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object Old
+class Old: pass
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+class New(object): pass
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+t = family64.OO.BTree()
+try:
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 4: plain instance with custom comparison&#x27;)
+class D(object):
+    def __lt__(self, other):
+        return 1
+try:
+    t = family64.OO.BTree()
+    t[D()] = 1
+    print(&#x27;  PASSED: key accepted (has custom __lt__)&#x27;)
+except TypeError as e:
+    print(&#x27;  FAILED:&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.070s</td><td>d557cfa7</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;15,45p&#x27; src/BTrees/objectkeymacros.h</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;15,45p&#x27; src/BTrees/objectkeymacros.h</pre></details></td><td>0</td><td>0.004s</td><td>5a8f97e4</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -5</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -5</pre></details></td><td>0</td><td>33.141s</td><td>9cd71237</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object Old
+class Old: pass
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+class New(object): pass
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+t = family64.OO.BTree()
+try:
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 4: plain instance with custom comparison&#x27;)
+class D(object):
+    def __lt__(self, other):
+        return 1
+try:
+    t = family64.OO.BTree()
+    t[D()] = 1
+    print(&#x27;  PASSED: key accepted (has custom __lt__)&#x27;)
+except TypeError as e:
+    print(&#x27;  FAILED:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object Old
+class Old: pass
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+class New(object): pass
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+t = family64.OO.BTree()
+try:
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 4: plain instance with custom comparison&#x27;)
+class D(object):
+    def __lt__(self, other):
+        return 1
+try:
+    t = family64.OO.BTree()
+    t[D()] = 1
+    print(&#x27;  PASSED: key accepted (has custom __lt__)&#x27;)
+except TypeError as e:
+    print(&#x27;  FAILED:&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.069s</td><td>4c728289</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>1</td><td>0.228s</td><td>76aa715e</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import OOBTree
+t = OOBTree.OOBTreePy()
+print(&#x27;Using OOBTreePy&#x27;)
+
+class C(object):
+    pass
+
+try:
+    t[C()] = 1
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import OOBTree
+t = OOBTree.OOBTreePy()
+print(&#x27;Using OOBTreePy&#x27;)
+
+class C(object):
+    pass
+
+try:
+    t[C()] = 1
+except TypeError as e:
+    print(&#x27;Error:&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.071s</td><td>b1b12a5f</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;_makeOne&quot; src/BTrees/tests/common.py | head -5</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;_makeOne&quot; src/BTrees/tests/common.py | head -5</pre></details></td><td>0</td><td>0.005s</td><td>6a38d10e</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;134,145p&#x27; src/BTrees/tests/common.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;134,145p&#x27; src/BTrees/tests/common.py</pre></details></td><td>0</td><td>0.003s</td><td>7363b03c</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;_getTargetClass&quot; src/BTrees/tests/test_OOBTree.py | head -5</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;_getTargetClass&quot; src/BTrees/tests/test_OOBTree.py | head -5</pre></details></td><td>0</td><td>0.005s</td><td>dfb3d07f</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;class TestAutoOOBTree&quot; src/BTrees/tests/test_OOBTree.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;class TestAutoOOBTree&quot; src/BTrees/tests/test_OOBTree.py</pre></details></td><td>1</td><td>0.003s</td><td>4f5756d4</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;TestAutoOOBTree&quot; src/BTrees/tests/test_OOBTree.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;TestAutoOOBTree&quot; src/BTrees/tests/test_OOBTree.py</pre></details></td><td>1</td><td>0.003s</td><td>ff2837c5</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;class.*OOBTreeTest&quot; src/BTrees/tests/test_OOBTree.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;class.*OOBTreeTest&quot; src/BTrees/tests/test_OOBTree.py</pre></details></td><td>0</td><td>0.003s</td><td>f22d4682</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; grep -n &quot;class BTreeTests&quot; src/BTrees/tests/common.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; grep -n &quot;class BTreeTests&quot; src/BTrees/tests/common.py</pre></details></td><td>0</td><td>0.003s</td><td>16104e7c</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;1291,1350p&#x27; src/BTrees/tests/common.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;1291,1350p&#x27; src/BTrees/tests/common.py</pre></details></td><td>0</td><td>0.004s</td><td>c3617eea</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;19,55p&#x27; src/BTrees/tests/test_OOBTree.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;19,55p&#x27; src/BTrees/tests/test_OOBTree.py</pre></details></td><td>0</td><td>0.003s</td><td>0fd577dd</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees.tests.test_OOBTree import OOBTreeTest
+test = OOBTreeTest()
+target = test._getTargetClass()
+print(&#x27;Target class:&#x27;, target)
+print(&#x27;Is OOBTreePy:&#x27;, target is OOBTree.OOBTreePy)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees.tests.test_OOBTree import OOBTreeTest
+test = OOBTreeTest()
+target = test._getTargetClass()
+print(&#x27;Target class:&#x27;, target)
+print(&#x27;Is OOBTreePy:&#x27;, target is OOBTree.OOBTreePy)
+&quot;</pre></details></td><td>1</td><td>0.088s</td><td>a4439337</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees.tests.test_OOBTree import TestAutoOOBTreeOOBTreeTest
+test = TestAutoOOBTreeOOBTreeTest()
+target = test._getTargetClass()
+print(&#x27;Target class:&#x27;, target)
+print(&#x27;Is OOBTreePy:&#x27;, target is OOBTree.OOBTreePy if &#x27;OOBTree&#x27; in dir() else &#x27;N/A&#x27;)
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees.tests.test_OOBTree import TestAutoOOBTreeOOBTreeTest
+test = TestAutoOOBTreeOOBTreeTest()
+target = test._getTargetClass()
+print(&#x27;Target class:&#x27;, target)
+print(&#x27;Is OOBTreePy:&#x27;, target is OOBTree.OOBTreePy if &#x27;OOBTree&#x27; in dir() else &#x27;N/A&#x27;)
+&quot;</pre></details></td><td>0</td><td>0.082s</td><td>5f921417</td></tr><tr><td>write</td><td><code class="display-command">write src/BTrees/objectkeymacros.h</code><details><summary>exact command</summary><pre>/opt/receipts-ba21762421a3439abc648e8b74e97a0d/bin/busybox sh -c &#x27;mkdir -p /BTrees/src/BTrees &amp;&amp; cp /opt/receipts-ba21762421a3439abc648e8b74e97a0d/incoming/d8d1a51188b79bd5dd52a93a21aa7c1dfb14e15730372832dcee8d75edda042c /BTrees/src/BTrees/objectkeymacros.h&#x27;</pre></details></td><td>0</td><td>0.004s</td><td>f8f8399b</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -3</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -3</pre></details></td><td>0</td><td>26.201s</td><td>eed31c91</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1</pre></details></td><td>1</td><td>26.144s</td><td>9f47113d</td></tr><tr><td>write</td><td><code class="display-command">write src/BTrees/objectkeymacros.h</code><details><summary>exact command</summary><pre>/opt/receipts-3f0778aebf394f10a9d41098527dc755/bin/busybox sh -c &#x27;mkdir -p /BTrees/src/BTrees &amp;&amp; cp /opt/receipts-3f0778aebf394f10a9d41098527dc755/incoming/7f9a97bd46b20911fdf82a3703bcf5b2ff60e56e0b92cc1b948123d69d06b0f1 /BTrees/src/BTrees/objectkeymacros.h&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>5409e838</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -10</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -10</pre></details></td><td>0</td><td>26.720s</td><td>31a0a218</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | grep -A 5 &quot;error:&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | grep -A 5 &quot;error:&quot;</pre></details></td><td>0</td><td>26.213s</td><td>85334bc8</td></tr><tr><td>write</td><td><code class="display-command">write src/BTrees/objectkeymacros.h</code><details><summary>exact command</summary><pre>/opt/receipts-5d8e42aa67e343e4aaeddaed723486c3/bin/busybox sh -c &#x27;mkdir -p /BTrees/src/BTrees &amp;&amp; cp /opt/receipts-5d8e42aa67e343e4aaeddaed723486c3/incoming/8fc80f17737ce0094f16939570270428a316866bf9d53706f04cdd48d9e04c02 /BTrees/src/BTrees/objectkeymacros.h&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>fc2f96a3</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -5</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -5</pre></details></td><td>0</td><td>33.082s</td><td>258b861a</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object Old
+class Old: pass
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+class New(object): pass
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+t = family64.OO.BTree()
+try:
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 4: plain instance with custom comparison&#x27;)
+class D(object):
+    def __lt__(self, other):
+        return 1
+try:
+    t = family64.OO.BTree()
+    t[D()] = 1
+    print(&#x27;  PASSED: key accepted (has custom __lt__)&#x27;)
+except TypeError as e:
+    print(&#x27;  FAILED:&#x27;, e.args[0])
+&quot;</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -c &quot;
+from BTrees import family64
+
+# Test 1: type object Old
+class Old: pass
+bt = family64.OO.BTree()
+
+print(&#x27;Test 1: type object Old&#x27;)
+try:
+    bt[Old] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 2: type object New&#x27;)
+class New(object): pass
+try:
+    bt[New] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 3: instance of class C&#x27;)
+class C(object):
+    pass
+t = family64.OO.BTree()
+try:
+    t[C()] = 1
+    print(&#x27;  FAILED: should have raised TypeError&#x27;)
+except TypeError as e:
+    print(&#x27;  PASSED:&#x27;, e.args[0])
+
+print()
+print(&#x27;Test 4: plain instance with custom comparison&#x27;)
+class D(object):
+    def __lt__(self, other):
+        return 1
+try:
+    t = family64.OO.BTree()
+    t[D()] = 1
+    print(&#x27;  PASSED: key accepted (has custom __lt__)&#x27;)
+except TypeError as e:
+    print(&#x27;  FAILED:&#x27;, e.args[0])
+&quot;</pre></details></td><td>0</td><td>0.065s</td><td>ccdeb9fb</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>1</td><td>0.228s</td><td>ad2f05c5</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>1</td><td>0.242s</td><td>f6d473dc</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; git diff src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; git diff src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.004s</td><td>07dd8793</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; git stash</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; git stash</pre></details></td><td>0</td><td>0.016s</td><td>26d03032</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -3</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; pip install -e . --no-build-isolation 2&gt;&amp;1 | tail -3</pre></details></td><td>0</td><td>33.197s</td><td>10ed4fea</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>1</td><td>0.231s</td><td>c19d1f6f</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>0</td><td>0.228s</td><td>137ffb2a</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; git stash pop</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; git stash pop</pre></details></td><td>0</td><td>0.013s</td><td>f8e23696</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; git diff src/BTrees/objectkeymacros.h</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; git diff src/BTrees/objectkeymacros.h</pre></details></td><td>0</td><td>0.005s</td><td>beca044e</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; git checkout src/BTrees/objectkeymacros.h</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; git checkout src/BTrees/objectkeymacros.h</pre></details></td><td>0</td><td>0.005s</td><td>0cbc5815</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; sed -n &#x27;165,225p&#x27; src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; sed -n &#x27;165,225p&#x27; src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.003s</td><td>4573f2a1</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; git diff src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; git diff src/BTrees/_datatypes.py</pre></details></td><td>0</td><td>0.004s</td><td>1baafd2e</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>1</td><td>0.243s</td><td>55c4b679</td></tr><tr><td>write</td><td><code class="display-command">write src/BTrees/_datatypes.py</code><details><summary>exact command</summary><pre>/opt/receipts-faf2143ec5794808a3ec71b08df44bd6/bin/busybox sh -c &#x27;mkdir -p /BTrees/src/BTrees &amp;&amp; cp /opt/receipts-faf2143ec5794808a3ec71b08df44bd6/incoming/5c3ece89fe96f961361bbb3416835b9ef81f05becc78934a5cc9918e434b0ee8 /BTrees/src/BTrees/_datatypes.py&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>888d4f2c</td></tr></tbody></table></div></details><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>1</td><td>0.251s</td><td>fc51fed2</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; git stash</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; git stash</pre></details></td><td>0</td><td>0.017s</td><td>5f26f9c3</td></tr><tr><td>command</td><td><code class="display-command">cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /BTrees &amp;&amp; PURE_PYTHON=1 python3 -m pytest src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed -xvs 2&gt;&amp;1</pre></details></td><td>1</td><td>0.249s</td><td>f2a67e28</td></tr><tr><td>diff</td><td><code class="display-command">capture patch</code><details><summary>exact command</summary><pre>compute patch in executor staging agent1-e2f4dc46e30c460c8bc234efcef9c689: /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false add -A &amp;&amp; /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false diff --cached --binary --no-ext-diff --no-textconv --no-renames 58a6c373740db08e0e09a63b0e62625ee399248e</pre></details></td><td>0</td><td>0.076s</td><td>b58776558fad</td></tr></tbody></table></div><div class="pad"><dl><dt>Finish summary</dt><dd>turn budget exhausted after 60 turn(s)</dd><dt>Worker outcome</dt><dd>budget_exhausted</dd></dl><p class="secondary">Claims not recorded</p></div></div><div class="stack"><div class="card"><h3>Witness branch w2</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>apply</td><td><code class="display-command">apply patch e3b0c44298fc</code><details><summary>exact command</summary><pre>git update-index -q --refresh; git apply -v --3way --recount --ignore-space-change --whitespace=nowarn /opt/receipts-a9824cfb87a7456da15e4cb709818eda/incoming/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.diff</pre></details></td><td>0</td><td>1.889s</td><td>aa0dab9348bd</td></tr><tr><td>verification</td><td><code class="display-command">pytest (witness) src/BTrees/tests/common.py src/BTrees/tests/test_OOBTree.py</code><details><summary>exact command</summary><pre>/opt/receipts-35d59c6c007c472f9f527c49282460a2/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-35d59c6c007c472f9f527c49282460a2/receipts_pytest.py --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning src/BTrees/tests/common.py src/BTrees/tests/test_OOBTree.py -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/w2-2.xml</pre></details></td><td>1</td><td>2.041s</td><td>aa0dab9348bd</td></tr></tbody></table></div></div><h3>Gate predicate checklist</h3><div class="table-box"><table class="predicates"><thead><tr><th scope="col">Predicate</th><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Evidence</th></tr></thead><tbody><tr><td><code>R1_fail_to_pass</code></td><td>Failing specification tests now pass</td><td><span class="fail">FAIL</span></td><td>src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testNewStyleClassWithCustomMetaClassAllowed failed; src/BTrees/tests/test_OOBTree.py::TestAutoOOBTreeOOBTreeTest::testRejectDefaultComparisonOnSet failed</td></tr><tr><td><code>R2_pass_to_pass</code></td><td>Previously passing tests kept</td><td><span class="pass">PASS</span></td><td>263 baseline-passing tests still pass</td></tr><tr><td><code>R3_no_shrink</code></td><td>No removed tests or new skips</td><td><span class="pass">PASS</span></td><td>all 291 baseline tests collected; skips unchanged (18)</td></tr><tr><td><code>R4_patch_scope</code></td><td>Patch scope</td><td><span class="pass">PASS</span></td><td>patch touches 0 file(s), all in scope</td></tr><tr><td><code>R5_provenance</code></td><td>Witness chain and patch digest</td><td><span class="pass">PASS</span></td><td>agent chain 08bf2e2d -&gt; f2a67e28 unbroken over 111 receipt(s); witness chain 08bf2e2d -&gt; f3c2e8fc unbroken over 2 receipt(s); applied digest matches</td></tr><tr><td><code>R6_claim_audit</code></td><td>Agent claim audit (advisory)</td><td><span class="fail">FAIL</span></td><td>branch ended without a finish call</td></tr></tbody></table></div></div></div><div class="comparison card"><div><h3>What it said</h3><dl><dt>Finish summary</dt><dd>turn budget exhausted after 60 turn(s)</dd><dt>Worker outcome</dt><dd>budget_exhausted</dd></dl><p class="secondary">Claims not recorded</p></div><div><h3>What the record shows</h3><p>no claim: branch ended without a finish call</p></div></div><div class="card pad stack"><h3>SWE-rebench&#x27;s official grader: not resolved</h3><p>Agrees with the gate</p></div></section><section class="stack"><h2>Shipped patch</h2><p class="secondary">No patch shipped.</p></section><section class="card pad stack"><h2>Model and costs</h2><dl><dt>Model</dt><dd>nvidia/Nemotron-3_5-Lightning
+thinking off · temperature 1.0 · top_p 0.95</dd><dt>Tokens</dt><dd>3,597,706 tokens</dd><dt>Model cost</dt><dd>$0.22</dd><dt>Sandbox time</dt><dd>9 min 23 s</dd><dt>Sandbox cost</dt><dd>Token Factory reported cost: 2.586 (unit not published)</dd></dl><details><summary>Full environment disclosure</summary><pre>{
+  &quot;executor_kind&quot;: &quot;tokenfactory&quot;,
+  &quot;lock_sha256&quot;: &quot;a720051c6a6c66eb72deebb485f5ef9e60f27d2222fc395c86fc1ca30cdb6107&quot;,
+  &quot;model&quot;: {
+    &quot;base_url&quot;: &quot;https://api.tokenfactory.nebius.com/v1/&quot;,
+    &quot;client&quot;: &quot;TokenFactoryClient&quot;,
+    &quot;max_tokens&quot;: null,
+    &quot;model&quot;: &quot;nvidia/Nemotron-3_5-Lightning&quot;,
+    &quot;temperature&quot;: 1.0,
+    &quot;thinking&quot;: false,
+    &quot;top_p&quot;: 0.95
+  },
+  &quot;pytest_config_digests&quot;: {
+    &quot;pyproject.toml&quot;: &quot;fd9345eff5e1766dafcb8eb5146768e6d77938d09f471591241b58c774b1372f&quot;,
+    &quot;setup.cfg&quot;: &quot;f235beb57b3392d99046bef5b021d5117d04386a565d257a12b8864f28f16538&quot;,
+    &quot;tox.ini&quot;: &quot;a2e3230b735542b0a855dd8c2a19581f6d0d9659b1e84f5899f817b603a77830&quot;
+  },
+  &quot;receipts_version&quot;: &quot;0.0.1&quot;,
+  &quot;test_digests&quot;: {
+    &quot;src/BTrees/tests/__init__.py&quot;: &quot;9c56b8b27ed218c802c55b2cd77336feecda244b00dca4c833cfe3f13b17fd3c&quot;,
+    &quot;src/BTrees/tests/_test_builder.py&quot;: &quot;a03d082be26dd6c893c2eed1f89da63437e165147955a5b3d5b0a7a691712971&quot;,
+    &quot;src/BTrees/tests/common.py&quot;: &quot;ecb7e6c95a6fe13914d4aea542ddfe98b134ffc08b69e3d6b9622a3370766af8&quot;,
+    &quot;src/BTrees/tests/testBTrees.py&quot;: &quot;175ad0171a4a8835e74af54873cef70e6483be0187ddfd8a7b4c57640d6b63d3&quot;,
+    &quot;src/BTrees/tests/testBTreesUnicode.py&quot;: &quot;025d0e9cec9312ad1cb2a3efb941375a0bb42e72a2e4ad14603f83e5da10df3e&quot;,
+    &quot;src/BTrees/tests/testConflict.py&quot;: &quot;6c64a7871fea79d4e4cdeded3798aeb5ce3c6eac72d9bd49bca1df62713afead&quot;,
+    &quot;src/BTrees/tests/testPersistency.py&quot;: &quot;940e835fd1ec5a90e9012a325f6e7756ca900ca51df73f3222c6a5a648463539&quot;,
+    &quot;src/BTrees/tests/test_Length.py&quot;: &quot;12a2fe009efa82bb883105621847b731bf5212ff1354827190b2c1e7b6e53d4c&quot;,
+    &quot;src/BTrees/tests/test_OOBTree.py&quot;: &quot;854b0d99143a2c5d5d2890a3d1446e5b937482a69c26861f810daa1792fffbd2&quot;,
+    &quot;src/BTrees/tests/test__base.py&quot;: &quot;f195137d8c979cd5c1911574684ec352eb0982d5d41c628f0a5bd52f8a310536&quot;,
+    &quot;src/BTrees/tests/test__datatypes.py&quot;: &quot;b208b57a0487e36eab5944a9f573e5fa1b4005da19e7dd135b417c9f504c9845&quot;,
+    &quot;src/BTrees/tests/test_btreesubclass.py&quot;: &quot;efa00fdf81e47f1388d485bf0af8a22a32c59d3a29f84d07174da8c44e4a821d&quot;,
+    &quot;src/BTrees/tests/test_check.py&quot;: &quot;07e0e72b71c15a86eb41577b7f84763856181aab7eb0c55feba78411cd0184c4&quot;,
+    &quot;src/BTrees/tests/test_dynamic_btrees.py&quot;: &quot;12650e64878c8e7b4d4ec6b203fa9326198f5c8bff69e53c53718911787df43d&quot;,
+    &quot;src/BTrees/tests/test_fsBTree.py&quot;: &quot;831d87e40eb140c0f97df83e05979753b539f1e836fda035a2a552edb390a564&quot;,
+    &quot;src/BTrees/tests/test_utils.py&quot;: &quot;de2464d6e46485ec15169923087b427a5d330fad42a9b9692718745fa2eefe6e&quot;
+  }
+}</pre></details></section><section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches. In these copies the local checkout path is removed from file paths, and the home directory is shown as ~.</p><ul class="bundle"><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/attempts/1/filtered.diff" class="">attempts/1/filtered.diff</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/attempts/1/patch.diff" class="">attempts/1/patch.diff</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/attempts/1/verdict.json" class="">attempts/1/verdict.json</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/attempts/1/witness/receipts.jsonl" class="">attempts/1/witness/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/attempts/2/filtered.diff" class="">attempts/2/filtered.diff</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/attempts/2/patch.diff" class="">attempts/2/patch.diff</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/attempts/2/verdict.json" class="">attempts/2/verdict.json</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/attempts/2/witness/receipts.jsonl" class="">attempts/2/witness/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/baseline.json" class="">baseline.json</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/branches/agent1/receipts.jsonl" class="">branches/agent1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/branches/base/receipts.jsonl" class="">branches/base/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/branches/official1/receipts.jsonl" class="">branches/official1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/branches/official2/receipts.jsonl" class="">branches/official2/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/branches/w1/receipts.jsonl" class="">branches/w1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/branches/w2/receipts.jsonl" class="">branches/w2/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/cost.json" class="">cost.json</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/disclosure.json" class="">disclosure.json</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/input.json" class="">input.json</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/lock.txt" class="">lock.txt</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/plan.json" class="">plan.json</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/record.json" class="">record.json</a></li><li><a href="../../raw/v2-arm-lightning/zopefoundation__btrees-163/result.json" class="">result.json</a></li></ul></section></main><footer>Generated from the run records by receipts site. No model was asked whether a fix worked.</footer></body></html>

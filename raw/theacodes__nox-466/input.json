@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Some conda commands not logged.\nWhen using `venv_backend=\"conda\"`, the `conda create` command is not logged, even if `-v` is provided, since `log=False` is hard-coded in [`nox/virtualenv.py`](https://github.com/theacodes/nox/blob/master/nox/virtualenv.py#L243):\r\n\r\n```python\r\n        nox.command.run(cmd, silent=True, log=False)\r\n```\r\n\r\nFrom the docs, I expected that running `nox -v` would log all commands.",
+  "source": {
+    "image": "docker.io/swerebenchv2/theacodes-nox:466-8ee3ebe",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-theacodes__nox-466-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfdmlydHVhbGVudi5weSBiL3Rlc3RzL3Rlc3RfdmlydHVhbGVudi5weQppbmRleCBjODVjMDhiLi44ZmUxYzQxIDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X3ZpcnR1YWxlbnYucHkKKysrIGIvdGVzdHMvdGVzdF92aXJ0dWFsZW52LnB5CkBAIC0yMTAsNiArMjEwLDIzIEBAIGRlZiB0ZXN0X2NvbmRhZW52X2NyZWF0ZV9pbnRlcnByZXRlcihtYWtlX2NvbmRhKToKICAgICAgICAgYXNzZXJ0IGRpcl8uam9pbigiYmluIiwgInB5dGhvbjMuNyIpLmNoZWNrKCkKIAogCitAcHl0ZXN0Lm1hcmsuc2tpcGlmKG5vdCBIQVNfQ09OREEsIHJlYXNvbj0iTWlzc2luZyBjb25kYSBjb21tYW5kLiIpCitkZWYgdGVzdF9jb25kYV9lbnZfY3JlYXRlX3ZlcmJvc2UobWFrZV9jb25kYSk6CisgICAgdmVudiwgZGlyXyA9IG1ha2VfY29uZGEoKQorICAgIHdpdGggbW9jay5wYXRjaCgibm94LnZpcnR1YWxlbnYubm94LmNvbW1hbmQucnVuIikgYXMgbW9ja19ydW46CisgICAgICAgIHZlbnYuY3JlYXRlKCkKKworICAgIGFyZ3MsIGt3YXJncyA9IG1vY2tfcnVuLmNhbGxfYXJncworICAgIGFzc2VydCBrd2FyZ3NbImxvZyJdIGlzIEZhbHNlCisKKyAgICBub3gub3B0aW9ucy52ZXJib3NlID0gVHJ1ZQorICAgIHdpdGggbW9jay5wYXRjaCgibm94LnZpcnR1YWxlbnYubm94LmNvbW1hbmQucnVuIikgYXMgbW9ja19ydW46CisgICAgICAgIHZlbnYuY3JlYXRlKCkKKworICAgIGFyZ3MsIGt3YXJncyA9IG1vY2tfcnVuLmNhbGxfYXJncworICAgIGFzc2VydCBrd2FyZ3NbImxvZyJdCisKKwogQG1vY2sucGF0Y2goIm5veC52aXJ0dWFsZW52Ll9TWVNURU0iLCBuZXc9IldpbmRvd3MiKQogZGVmIHRlc3RfY29uZGFlbnZfYmluX3dpbmRvd3MobWFrZV9jb25kYSk6CiAgICAgdmVudiwgZGlyXyA9IG1ha2VfY29uZGEoKQo='\"'\"'))'",
+      "git apply /tmp/receipts-theacodes__nox-466-test.patch"
+    ],
+    "workdir": "/nox"
+  },
+  "spec_paths": [
+    "tests/test_virtualenv.py"
+  ],
+  "spec_tests": [
+    "tests/test_virtualenv.py::test_conda_env_create_verbose"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_virtualenv.py"
+}

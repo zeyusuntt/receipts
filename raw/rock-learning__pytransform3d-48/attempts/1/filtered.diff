@@ -1,0 +1,17 @@
+diff --git a/pytransform3d/rotations.py b/pytransform3d/rotations.py
+index 19bd0e2..d7248e4 100644
+--- a/pytransform3d/rotations.py
++++ b/pytransform3d/rotations.py
+@@ -133,8 +133,10 @@ def angle_between_vectors(a, b, fast=False):
+         Angle between a and b
+     """
+     if len(a) != 3 or fast:
+-        return np.arccos(np.dot(a, b) /
+-                         (np.linalg.norm(a) * np.linalg.norm(b)))
++        cos_angle = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
++        # Clip due to floating point errors
++        cos_angle = min(1.0, max(-1.0, cos_angle))
++        return np.arccos(cos_angle)
+     else:
+         return np.arctan2(np.linalg.norm(np.cross(a, b)), np.dot(a, b))
+ 

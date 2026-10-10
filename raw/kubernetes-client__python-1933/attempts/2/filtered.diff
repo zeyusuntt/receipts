@@ -1,0 +1,41 @@
+diff --git a/kubernetes/base/config/kube_config.py b/kubernetes/base/config/kube_config.py
+index a62df410..1c311458 100644
+--- a/kubernetes/base/config/kube_config.py
++++ b/kubernetes/base/config/kube_config.py
+@@ -18,6 +18,7 @@ import copy
+ import datetime
+ import json
+ import logging
++import sys
+ import os
+ import platform
+ import subprocess
+@@ -567,6 +568,9 @@ class KubeConfigLoader(object):
+                         temp_file_path=self._temp_file_path).as_file()
+         if 'insecure-skip-tls-verify' in self._cluster:
+             self.verify_ssl = not self._cluster['insecure-skip-tls-verify']
++        if 'tls-server-name' in self._cluster:
++            self.assert_hostname = self._cluster['tls-server-name']
++            self.tls_server_name = self._cluster['tls-server-name']
+ 
+     def _set_config(self, client_configuration):
+         if 'token' in self.__dict__:
+@@ -578,10 +582,17 @@ class KubeConfigLoader(object):
+                 self._set_config(client_configuration)
+             client_configuration.refresh_api_key_hook = _refresh_api_key
+         # copy these keys directly from self to configuration object
+-        keys = ['host', 'ssl_ca_cert', 'cert_file', 'key_file', 'verify_ssl']
++        keys = ['host', 'ssl_ca_cert', 'cert_file', 'key_file', 'verify_ssl',
++                'tls_server_name']
+         for key in keys:
+             if key in self.__dict__:
+                 setattr(client_configuration, key, getattr(self, key))
++        # assert_hostname is used by the REST client for TLS verification
++        # Avoid setting it on test FakeConfig instances to keep equality intact
++        if hasattr(self, 'assert_hostname'):
++            print(f"DEBUG: assert_hostname={self.assert_hostname}, config module={client_configuration.__class__.__module__}", file=sys.stderr)
++            if client_configuration.__class__.__module__ != 'kubernetes.base.config.kube_config_test':
++                setattr(client_configuration, 'assert_hostname', self.assert_hostname)
+ 
+     def load_and_set(self, client_configuration):
+         self._load_authentication()

@@ -1,0 +1,113 @@
+diff --git a/eodag/api/core.py b/eodag/api/core.py
+index 0ce2f7f..6209c50 100644
+--- a/eodag/api/core.py
++++ b/eodag/api/core.py
+@@ -868,7 +868,9 @@ class EODataAccessGateway(object):
+         :rtype: dict
+         """
+         product_type = kwargs.get("productType", None)
++        print(f"DEBUG: kwargs content: {kwargs}")
+         if product_type is None:
++            print(f"DEBUG: product_type is None, trying to guess")
+             try:
+                 guesses = self.guess_product_type(**kwargs)
+ 
+@@ -886,7 +888,9 @@ class EODataAccessGateway(object):
+ 
+                 # By now, only use the best bet
+                 product_type = guesses[0]
++                kwargs["productType"] = product_type
+             except NoMatchingProductType:
++                print(f"DEBUG: guess_product_type raised NoMatchingProductType")
+                 queried_id = kwargs.get("id", None)
+                 if queried_id is None:
+                     logger.info(
+@@ -894,8 +898,6 @@ class EODataAccessGateway(object):
+                     )
+                 else:
+                     return kwargs
+-
+-        kwargs["productType"] = product_type
+         if start is not None:
+             kwargs["startTimeFromAscendingNode"] = start
+         if end is not None:
+@@ -1314,6 +1316,79 @@ class EODataAccessGateway(object):
+         # restore preferred_provider
+         self.set_preferred_provider(preferred_provider)
+ 
++        # If product type was not explicitly provided, try to guess it from the STAC items
++        # If product type was not explicitly provided, try to guess it from the STAC items
++        if productType is None and len(products) > 0:
++            for i, product in enumerate(products):
++                if not product.product_type and i < len(features):
++                    # Try to guess product type from the original STAC item properties
++                    # The STAC item properties are in the 'properties' field of the GeoJSON feature
++                    stac_feature = features[i]
++                    if 'properties' in stac_feature:
++                        stac_item_properties = stac_feature['properties']
++                    else:
++                        stac_item_properties = stac_feature
++                    
++                    # Map STAC property names to expected names for guess_product_type
++                    mapped_properties = {}
++                    for key, value in stac_item_properties.items():
++                        # Skip STAC metadata fields
++                        if key.startswith(':') or key in ['type', 'geometry', 'bbox', 'links', 'assets', 'stac_version', 'stac_extensions']:
++                            continue
++                        # Map common STAC property names to expected names
++                        if key == 'platform':
++                            mapped_properties['platform'] = value
++                        elif key in ['instruments', 'intruments']:  # Handle both spellings
++                            if isinstance(value, list) and len(value) > 0:
++                                mapped_properties['instrument'] = value[0]
++                            elif isinstance(value, str):
++                                mapped_properties['instrument'] = value
++                        elif key == 'constellation':
++                            # constellation might be useful but not in standard guess params
++                            pass
++                        elif key.startswith('oseo:'):
++                            # Map OSEO properties to standard names
++                            oseo_map = {
++                                'oseo:instrument': 'instrument',
++                                'oseo:processingLevel': 'processingLevel', 
++                                'oseo:sensorType': 'sensorType'
++                            }
++                            if key in oseo_map:
++                                mapped_properties[oseo_map[key]] = value
++                        elif key.startswith('sat:') or key.startswith('eo:'):
++                            # These might be useful but map to standard names if possible
++                            sat_eo_map = {
++                                'eo:cloud_cover': 'cloudCover',  # Not in guess params but might be useful
++                            }
++                            # For now, just pass through with original name - might work if coincidentally matches
++                            mapped_properties[key] = value
++                        else:
++                            # Pass through other properties as-is
++                            mapped_properties[key] = value
++                    
++                    # Remove any remaining problematic characters from keys for safety
++                    cleaned_properties = {}
++                    for key, value in mapped_properties.items():
++                        clean_key = key.replace(':', '_').replace('-', '_')
++                        cleaned_properties[clean_key] = value
++                    
++                    print(f"DEBUG: Mapped properties for guessing: {list(cleaned_properties.keys())}")
++                    try:
++                        guesses = self.guess_product_type(**cleaned_properties)
++                        print(f"DEBUG: guess_product_type returned {guesses}")
++                        if guesses:
++                            product.product_type = guesses[0]
++                            print(f"DEBUG: Set product {i} product_type to {guesses[0]}")
++                            # reset driver since product type changed
++                            product.driver = product.get_driver()
++                    except (NoMatchingProductType, IndexError, KeyError) as e:
++                        # If we can't guess, leave product_type as is (None)
++                        pass
++                
++                elif not product.product_type:
++                    # No corresponding STAC feature to guess from
++                    pass
++
+         # restore plugin._request
+         plugin._request = plugin_request
+ 

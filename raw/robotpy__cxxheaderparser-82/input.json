@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "[PARSE BUG]:  function with trailing return type\n### Problem description\n\n**function with trailing return type having implementation won't parse**\r\nparse error evaluating '{': unexpected '{'\r\nauto test() -> void\r\n{\r\n}\r\n\r\nthe declaration parses correctly\r\nauto test2() -> void;\r\n\r\nordinary return type having implementation parses\r\nvoid test3()\r\n{\r\n}\r\n\r\nI double checked  https://robotpy.github.io/cxxheaderparser/ has the same error\n\n### C++ code that can't be parsed correctly (please double-check that https://robotpy.github.io/cxxheaderparser/ has the same error)\n\n```text\nauto test() -> void\r\n{\r\n}\n```\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/robotpy-cxxheaderparser:82-9883a4e",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-robotpy__cxxheaderparser-82-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfZm4ucHkgYi90ZXN0cy90ZXN0X2ZuLnB5CmluZGV4IDc3ZmFjZmIuLjFhNGZiNGUgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3Rlc3RfZm4ucHkKKysrIGIvdGVzdHMvdGVzdF9mbi5weQpAQCAtMTE5NCwzICsxMTk0LDY3IEBAIGRlZiB0ZXN0X2F1dG9fZGVjbHR5cGVfcmV0dXJuKCkgLT4gTm9uZToKICAgICAgICAgICAgIF0KICAgICAgICAgKQogICAgICkKKworCitkZWYgdGVzdF9mbl90cmFpbGluZ19yZXR1cm5fd2l0aF9ib2R5KCkgLT4gTm9uZToKKyAgICBjb250ZW50ID0gIiIiCisgICAgICBhdXRvIHRlc3QoKSAtPiB2b2lkCisgICAgICB7CisgICAgICB9CisgICAgIiIiCisgICAgZGF0YSA9IHBhcnNlX3N0cmluZyhjb250ZW50LCBjbGVhbmRvYz1UcnVlKQorCisgICAgYXNzZXJ0IGRhdGEgPT0gUGFyc2VkRGF0YSgKKyAgICAgICAgbmFtZXNwYWNlPU5hbWVzcGFjZVNjb3BlKAorICAgICAgICAgICAgZnVuY3Rpb25zPVsKKyAgICAgICAgICAgICAgICBGdW5jdGlvbigKKyAgICAgICAgICAgICAgICAgICAgcmV0dXJuX3R5cGU9VHlwZSgKKyAgICAgICAgICAgICAgICAgICAgICAgIHR5cGVuYW1lPVBRTmFtZShzZWdtZW50cz1bRnVuZGFtZW50YWxTcGVjaWZpZXIobmFtZT0idm9pZCIpXSkKKyAgICAgICAgICAgICAgICAgICAgKSwKKyAgICAgICAgICAgICAgICAgICAgbmFtZT1QUU5hbWUoc2VnbWVudHM9W05hbWVTcGVjaWZpZXIobmFtZT0idGVzdCIpXSksCisgICAgICAgICAgICAgICAgICAgIHBhcmFtZXRlcnM9W10sCisgICAgICAgICAgICAgICAgICAgIGhhc19ib2R5PVRydWUsCisgICAgICAgICAgICAgICAgICAgIGhhc190cmFpbGluZ19yZXR1cm49VHJ1ZSwKKyAgICAgICAgICAgICAgICApCisgICAgICAgICAgICBdCisgICAgICAgICkKKyAgICApCisKKworZGVmIHRlc3RfbWV0aG9kX3RyYWlsaW5nX3JldHVybl93aXRoX2JvZHkoKSAtPiBOb25lOgorICAgIGNvbnRlbnQgPSAiIiIKKyAgICAgIHN0cnVjdCBYIHsKKyAgICAgICAgICBhdXRvIHRlc3QoKSAtPiB2b2lkCisgICAgICAgICAgeworICAgICAgICAgIH0KKyAgICAgIH07CisgICAgIiIiCisgICAgZGF0YSA9IHBhcnNlX3N0cmluZyhjb250ZW50LCBjbGVhbmRvYz1UcnVlKQorCisgICAgYXNzZXJ0IGRhdGEgPT0gUGFyc2VkRGF0YSgKKyAgICAgICAgbmFtZXNwYWNlPU5hbWVzcGFjZVNjb3BlKAorICAgICAgICAgICAgY2xhc3Nlcz1bCisgICAgICAgICAgICAgICAgQ2xhc3NTY29wZSgKKyAgICAgICAgICAgICAgICAgICAgY2xhc3NfZGVjbD1DbGFzc0RlY2woCisgICAgICAgICAgICAgICAgICAgICAgICB0eXBlbmFtZT1QUU5hbWUoCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2VnbWVudHM9W05hbWVTcGVjaWZpZXIobmFtZT0iWCIpXSwgY2xhc3NrZXk9InN0cnVjdCIKKyAgICAgICAgICAgICAgICAgICAgICAgICkKKyAgICAgICAgICAgICAgICAgICAgKSwKKyAgICAgICAgICAgICAgICAgICAgbWV0aG9kcz1bCisgICAgICAgICAgICAgICAgICAgICAgICBNZXRob2QoCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuX3R5cGU9VHlwZSgKKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZW5hbWU9UFFOYW1lKAorICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2VnbWVudHM9W0Z1bmRhbWVudGFsU3BlY2lmaWVyKG5hbWU9InZvaWQiKV0KKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKQorICAgICAgICAgICAgICAgICAgICAgICAgICAgICksCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgbmFtZT1QUU5hbWUoc2VnbWVudHM9W05hbWVTcGVjaWZpZXIobmFtZT0idGVzdCIpXSksCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgcGFyYW1ldGVycz1bXSwKKyAgICAgICAgICAgICAgICAgICAgICAgICAgICBoYXNfYm9keT1UcnVlLAorICAgICAgICAgICAgICAgICAgICAgICAgICAgIGhhc190cmFpbGluZ19yZXR1cm49VHJ1ZSwKKyAgICAgICAgICAgICAgICAgICAgICAgICAgICBhY2Nlc3M9InB1YmxpYyIsCisgICAgICAgICAgICAgICAgICAgICAgICApCisgICAgICAgICAgICAgICAgICAgIF0sCisgICAgICAgICAgICAgICAgKQorICAgICAgICAgICAgXQorICAgICAgICApCisgICAgKQo='\"'\"'))'",
+      "git apply /tmp/receipts-robotpy__cxxheaderparser-82-test.patch"
+    ],
+    "workdir": "/cxxheaderparser"
+  },
+  "spec_paths": [
+    "tests/test_fn.py"
+  ],
+  "spec_tests": [
+    "tests/test_fn.py::test_fn_trailing_return_with_body",
+    "tests/test_fn.py::test_method_trailing_return_with_body"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_fn.py"
+}

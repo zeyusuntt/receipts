@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>gitpython-developers__gitpython-1832 | Receipts</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"><link rel="stylesheet" href="../../assets/site.css"></head><body><header><div class="header"><a href="../../index.html" class="brand">Receipts</a><nav aria-label="Main"><a href="../../index.html" class="">All runs</a></nav><span class="secondary">Recorded runs, model-free verdicts</span></div></header><main><section class="hero"><div><span class="badge verified">VERIFIED</span><h1>gitpython-developers__gitpython-1832</h1><p>VERIFIED on first verdict</p><p class="secondary">1 attempt, 0 appeals. 1 file, 6 added and 0 removed lines. Tokens: 1,039,321 tokens. Model cost: $0.06. Sandbox time: 2 min 52 s.</p></div><div class="actions"><a href="../../receipt/v2-arm-lightning/gitpython-developers__gitpython-1832.html" class="button primary">Open receipt</a></div></section><section class="card pad stack"><h2>The plan</h2><dl><dt>Repository</dt><dd>gitpython-developers/gitpython</dd><dt>Base commit</dt><dd>afa5754 (image tag)</dd><dt>Issue</dt><dd>If `diff.external` is set, diffing via API fails silently as external tool isn&#x27;t understood
+GitPython version: 3.1.42.
+
+```python
+from git import Repo
+
+repo = Repo(&quot;.&quot;)
+print(repo.index.diff(&quot;HEAD&quot;))</dd></dl><dl><dt>Files to edit</dt><dd><ul class="files"><li><code>git/diff.py</code></li></ul></dd></dl><dl><dt>Approach</dt><dd>Check how diff.external affects git diff invocation and add `--no-ext-diff` flag when external is set to ensure diffs work correctly with external diff tools configured.</dd></dl></section><section class="stack"><h2>Attempt 1</h2><span class="badge verified">VERIFIED</span><div class="lanes"><div class="card"><h3>Agent branch</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">git ls-files -z</code><details><summary>exact command</summary><pre>git ls-files -z</pre></details></td><td>0</td><td>0.004s</td><td>9fb53ea6</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git config diff.external 2&gt;/dev/null; git config --get diff.external 2&gt;/dev/null || echo &quot;not set&quot;</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git config diff.external 2&gt;/dev/null; git config --get diff.external 2&gt;/dev/null || echo &quot;not set&quot;</pre></details></td><td>0</td><td>0.005s</td><td>24cfe843</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+repo.config_writer().set_value(&#x27;user&#x27;, &#x27;name&#x27;, &#x27;test&#x27;).release()
+repo.config_writer().set_value(&#x27;user&#x27;, &#x27;email&#x27;, &#x27;test@test.com&#x27;).release()
+f = open(&#x27;test.txt&#x27;, &#x27;w&#x27;)
+f.write(&#x27;hello&#x27;)
+f.close()
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;)
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+print(list(repo.index.diff(&#x27;HEAD&#x27;)))
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    print(list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True)))
+except Exception as e:
+    print(f&#x27;Error: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+repo.config_writer().set_value(&#x27;user&#x27;, &#x27;name&#x27;, &#x27;test&#x27;).release()
+repo.config_writer().set_value(&#x27;user&#x27;, &#x27;email&#x27;, &#x27;test@test.com&#x27;).release()
+f = open(&#x27;test.txt&#x27;, &#x27;w&#x27;)
+f.write(&#x27;hello&#x27;)
+f.close()
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;)
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+print(list(repo.index.diff(&#x27;HEAD&#x27;)))
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    print(list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True)))
+except Exception as e:
+    print(f&#x27;Error: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.142s</td><td>8ff17273</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;test &lt;test@test.com&gt;&#x27;)
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+print(list(repo.index.diff(&#x27;HEAD&#x27;)))
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    print(list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True)))
+except Exception as e:
+    print(f&#x27;Error: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;test &lt;test@test.com&gt;&#x27;)
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+print(list(repo.index.diff(&#x27;HEAD&#x27;)))
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    print(list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True)))
+except Exception as e:
+    print(f&#x27;Error: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.088s</td><td>8937185a</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo, Index
+import tempfile, os
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+# Need to use proper Index
+idx = repo.index
+idx.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+print(list(repo.index.diff(&#x27;HEAD&#x27;)))
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo, Index
+import tempfile, os
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+# Need to use proper Index
+idx = repo.index
+idx.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+print(list(repo.index.diff(&#x27;HEAD&#x27;)))
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.083s</td><td>03586fe1</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+print(list(repo.index.diff(&#x27;HEAD&#x27;)))
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+print(list(repo.index.diff(&#x27;HEAD&#x27;)))
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.094s</td><td>8cb7d452</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(result)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config.get(&#x27;diff.external&#x27;))
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(result)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.094s</td><td>99aee2a4</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;import git; print(git.__version__)&quot;</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;import git; print(git.__version__)&quot;</pre></details></td><td>0</td><td>0.084s</td><td>f470e6a1</td></tr></tbody></table></div><details class="all-steps"><summary>show all 56 steps</summary><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;import git; print(dir(git.Config))&quot;</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;import git; print(dir(git.Config))&quot;</pre></details></td><td>1</td><td>0.082s</td><td>61f93eda</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;))
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Check diff.external
+print(&#x27;diff.external:&#x27;, repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;))
+&quot;
+</pre></details></td><td>1</td><td>0.094s</td><td>1bd6a393</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Check diff.external
+try:
+    val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+    print(&#x27;diff.external:&#x27;, val)
+except Exception as e:
+    print(f&#x27;Error getting diff.external: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Check diff.external
+try:
+    val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+    print(&#x27;diff.external:&#x27;, val)
+except Exception as e:
+    print(f&#x27;Error getting diff.external: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>0</td><td>0.091s</td><td>1e9dec56</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+try:
+    val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+    print(&#x27;diff.external after set:&#x27;, val)
+except Exception as e:
+    print(f&#x27;Error: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+try:
+    val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+    print(&#x27;diff.external after set:&#x27;, val)
+except Exception as e:
+    print(f&#x27;Error: {e}&#x27;)
+&quot;
+</pre></details></td><td>0</td><td>0.086s</td><td>08bcd5be</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>0</td><td>0.087s</td><td>04ff1b69</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.092s</td><td>f8da75fc</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.create_head(&#x27;main&#x27;)  # Create HEAD
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.create_head(&#x27;main&#x27;)  # Create HEAD
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.094s</td><td>9b58574a</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)  # This should work
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+# Just add file to index, don&#x27;t commit
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)  # This should work
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.094s</td><td>88e26dad</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;import git; print(git.__file__)&quot;</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;import git; print(git.__file__)&quot;</pre></details></td><td>0</td><td>0.078s</td><td>854af4b0</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.093s</td><td>37988306</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+import sys
+sys.path.insert(0, &#x27;.&#x27;)
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+import sys
+sys.path.insert(0, &#x27;.&#x27;)
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.092s</td><td>fe783f18</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python --version</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python --version</pre></details></td><td>0</td><td>0.003s</td><td>20384e2f</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git log --oneline -3</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git log --oneline -3</pre></details></td><td>0</td><td>0.005s</td><td>90daa817</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git show --stat HEAD</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git show --stat HEAD</pre></details></td><td>0</td><td>0.005s</td><td>828517fe</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git log -1 --format=&#x27;%H&#x27;</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git log -1 --format=&#x27;%H&#x27;</pre></details></td><td>0</td><td>0.004s</td><td>5e444e0d</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git rev-parse HEAD</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git rev-parse HEAD</pre></details></td><td>0</td><td>0.004s</td><td>ecaf1997</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+repo = Repo(&#x27;.&#x27;)
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+repo = Repo(&#x27;.&#x27;)
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing
+print(&#x27;diff HEAD:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch:&#x27;, d.diff[:50] if d.diff else &#x27;None&#x27;)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;diff HEAD patch (create_patch=True):&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  patch length:&#x27;, len(d.diff) if d.diff else 0)
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.088s</td><td>a80ec2c3</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git config --list | grep diff</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git config --list | grep diff</pre></details></td><td>1</td><td>0.004s</td><td>fab68917</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git diff --help 2&gt;&amp;1 | head -20</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git diff --help 2&gt;&amp;1 | head -20</pre></details></td><td>0</td><td>0.005s</td><td>9792d539</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_patch_with_external_engine -xvs 2&gt;&amp;1 | head -60</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_patch_with_external_engine -xvs 2&gt;&amp;1 | head -60</pre></details></td><td>0</td><td>0.562s</td><td>b357a8f6</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_patch_with_external_engine -xvs 2&gt;&amp;1 | tail -40</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_patch_with_external_engine -xvs 2&gt;&amp;1 | tail -40</pre></details></td><td>0</td><td>0.501s</td><td>277b5310</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check if we can get the config
+try:
+    val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+    print(&#x27;diff.external:&#x27;, val)
+except Exception as e:
+    print(f&#x27;Error: {e}&#x27;)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+# Create a test repo  
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check if we can get the config
+try:
+    val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+    print(&#x27;diff.external:&#x27;, val)
+except Exception as e:
+    print(f&#x27;Error: {e}&#x27;)
+&quot;
+</pre></details></td><td>1</td><td>0.093s</td><td>7aabc063</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile
+
+tmpdir = tempfile.mkdtemp()
+import os
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile
+
+tmpdir = tempfile.mkdtemp()
+import os
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+&quot;
+</pre></details></td><td>1</td><td>0.098s</td><td>f2fdc446</td></tr><tr><td>command</td><td><code class="display-command">cd /tmp &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /tmp &amp;&amp; python -c &quot;
+from git import Repo
+import tempfile, os
+
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+&quot;
+</pre></details></td><td>1</td><td>0.092s</td><td>11768ef9</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python &lt;&lt; &#x27;EOF&#x27;
+from git import Repo
+import tempfile, os
+
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+EOF
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python &lt;&lt; &#x27;EOF&#x27;
+from git import Repo
+import tempfile, os
+
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+EOF
+</pre></details></td><td>1</td><td>0.088s</td><td>9f7e05de</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python &lt;&lt; &#x27;EOF&#x27;
+import sys
+sys.path.insert(0, &#x27;.&#x27;)
+from git import Repo
+import tempfile, os
+
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+EOF
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python &lt;&lt; &#x27;EOF&#x27;
+import sys
+sys.path.insert(0, &#x27;.&#x27;)
+from git import Repo
+import tempfile, os
+
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+EOF
+</pre></details></td><td>1</td><td>0.092s</td><td>676d86cf</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -c &quot;
+import tempfile, os
+os.chdir(&#x27;/tmp/&#x27; + os.urandom(4).hex())
+import git
+print(git.__version__)
+&quot;
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -c &quot;
+import tempfile, os
+os.chdir(&#x27;/tmp/&#x27; + os.urandom(4).hex())
+import git
+print(git.__version__)
+&quot;
+</pre></details></td><td>1</td><td>0.029s</td><td>5699f465</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git config --global diff.external &#x27;difftool&#x27; 2&gt;/dev/null; git config --global --list | grep diff</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git config --global diff.external &#x27;difftool&#x27; 2&gt;/dev/null; git config --global --list | grep diff</pre></details></td><td>1</td><td>0.006s</td><td>bef621f8</td></tr><tr><td>command</td><td><code class="display-command">export HOME=/tmp/home &amp;&amp; mkdir -p /tmp/home &amp;&amp; cd /GitPython &amp;&amp; git config --global --list | grep diff</code><details><summary>exact command</summary><pre>export HOME=/tmp/home &amp;&amp; mkdir -p /tmp/home &amp;&amp; cd /GitPython &amp;&amp; git config --global --list | grep diff</pre></details></td><td>1</td><td>0.007s</td><td>f82a02b9</td></tr><tr><td>write</td><td><code class="display-command">write git/diff.py</code><details><summary>exact command</summary><pre>/opt/receipts-d991ddcf0db845358d91acd8df4319cc/bin/busybox sh -c &#x27;mkdir -p /GitPython/git &amp;&amp; cp /opt/receipts-d991ddcf0db845358d91acd8df4319cc/incoming/a4996204a806972b50f70c0a78f2e5b300c2d510b4e81c3be34cdaffbc3abada /GitPython/git/diff.py&#x27;</pre></details></td><td>0</td><td>0.005s</td><td>81f87bfe</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_patch_with_external_engine -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_patch_with_external_engine -xvs 2&gt;&amp;1</pre></details></td><td>0</td><td>0.846s</td><td>083641c2</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py -xvs 2&gt;&amp;1 | tail -60</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py -xvs 2&gt;&amp;1 | tail -60</pre></details></td><td>0</td><td>0.558s</td><td>4f27e2ac</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py -v --deselect test/test_diff.py::TestDiff::test_diff_interface 2&gt;&amp;1 | tail -30</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py -v --deselect test/test_diff.py::TestDiff::test_diff_interface 2&gt;&amp;1 | tail -30</pre></details></td><td>0</td><td>1.338s</td><td>81a7c570</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_with_staged_file -xvs 2&gt;&amp;1 | tail -30</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_with_staged_file -xvs 2&gt;&amp;1 | tail -30</pre></details></td><td>0</td><td>0.463s</td><td>73478a33</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_raw -xvs 2&gt;&amp;1 | tail -20</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_raw -xvs 2&gt;&amp;1 | tail -20</pre></details></td><td>0</td><td>0.335s</td><td>acfbbc7d</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py -k &quot;not test_diff_interface and not test_diff_with_staged_file and not test_rename_override&quot; -v 2&gt;&amp;1 | tail -30</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py -k &quot;not test_diff_interface and not test_diff_with_staged_file and not test_rename_override&quot; -v 2&gt;&amp;1 | tail -30</pre></details></td><td>0</td><td>1.177s</td><td>bf36c309</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python &lt;&lt; &#x27;EOF&#x27;
+import tempfile, os
+from git import Repo
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing with create_patch=True
+print(&#x27;\nDiff HEAD with create_patch=True:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;\nDiff HEAD^..HEAD with create_patch=True:&#x27;)
+try:
+    result = list(repo.head.commit.diff(&#x27;HEAD^&#x27;, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;\nDiff working tree with create_patch=True:&#x27;)
+try:
+    result = list(repo.head.commit.diff(None, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+EOF
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python &lt;&lt; &#x27;EOF&#x27;
+import tempfile, os
+from git import Repo
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing with create_patch=True
+print(&#x27;\nDiff HEAD with create_patch=True:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;\nDiff HEAD^..HEAD with create_patch=True:&#x27;)
+try:
+    result = list(repo.head.commit.diff(&#x27;HEAD^&#x27;, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;\nDiff working tree with create_patch=True:&#x27;)
+try:
+    result = list(repo.head.commit.diff(None, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+EOF
+</pre></details></td><td>1</td><td>0.093s</td><td>664eb3b3</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python &lt;&lt; &#x27;EOF&#x27;
+import sys
+sys.path.insert(0, &#x27;.&#x27;)
+import tempfile, os
+from git import Repo
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing with create_patch=True
+print(&#x27;\nDiff HEAD with create_patch=True:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;\nDiff HEAD^..HEAD with create_patch=True:&#x27;)
+try:
+    result = list(repo.head.commit.diff(&#x27;HEAD^&#x27;, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;\nDiff working tree with create_patch=True:&#x27;)
+try:
+    result = list(repo.head.commit.diff(None, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+EOF
+</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python &lt;&lt; &#x27;EOF&#x27;
+import sys
+sys.path.insert(0, &#x27;.&#x27;)
+import tempfile, os
+from git import Repo
+
+# Create a test repo
+tmpdir = tempfile.mkdtemp()
+os.chdir(tmpdir)
+repo = Repo.init()
+
+with open(&#x27;test.txt&#x27;, &#x27;w&#x27;) as f:
+    f.write(&#x27;hello&#x27;)
+repo.index.add([&#x27;test.txt&#x27;])
+repo.index.commit(&#x27;initial&#x27;, author=&#x27;Test &lt;test@test.com&gt;&#x27;)
+
+# Set diff.external
+repo.config_writer().set_value(&#x27;diff&#x27;, &#x27;external&#x27;, &#x27;difftool&#x27;).release()
+
+# Check diff.external
+val = repo.config_reader().get_value(&#x27;diff&#x27;, &#x27;external&#x27;)
+print(&#x27;diff.external:&#x27;, val)
+
+# Try diffing with create_patch=True
+print(&#x27;\nDiff HEAD with create_patch=True:&#x27;)
+try:
+    result = list(repo.index.diff(&#x27;HEAD&#x27;, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;\nDiff HEAD^..HEAD with create_patch=True:&#x27;)
+try:
+    result = list(repo.head.commit.diff(&#x27;HEAD^&#x27;, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+
+print(&#x27;\nDiff working tree with create_patch=True:&#x27;)
+try:
+    result = list(repo.head.commit.diff(None, create_patch=True))
+    print(&#x27;Result:&#x27;, result)
+    if result:
+        for d in result:
+            print(&#x27;  Lines in diff:&#x27;, len(d.diff.splitlines()) if d.diff else 0)
+            if d.diff:
+                print(&#x27;  First line:&#x27;, d.diff.splitlines()[0][:80])
+except Exception as e:
+    print(f&#x27;Error: {type(e).__name__}: {e}&#x27;)
+EOF
+</pre></details></td><td>1</td><td>0.094s</td><td>6ab96632</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; head -30 test/test_diff.py</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; head -30 test/test_diff.py</pre></details></td><td>0</td><td>0.003s</td><td>b3939b11</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; head -50 test/lib.py</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; head -50 test/lib.py</pre></details></td><td>1</td><td>0.003s</td><td>7ebb23bb</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; find . -name &quot;lib.py&quot; -path &quot;*/test/*&quot; 2&gt;/dev/null</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; find . -name &quot;lib.py&quot; -path &quot;*/test/*&quot; 2&gt;/dev/null</pre></details></td><td>0</td><td>0.007s</td><td>2fd96830</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; ls test/</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; ls test/</pre></details></td><td>0</td><td>0.004s</td><td>d127c63f</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; head -50 test/lib/__init__.py</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; head -50 test/lib/__init__.py</pre></details></td><td>0</td><td>0.003s</td><td>30ec5b0f</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; head -50 test/lib/helper.py</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; head -50 test/lib/helper.py</pre></details></td><td>0</td><td>0.003s</td><td>213a8805</td></tr></tbody></table></div></details><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; git diff git/diff.py</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; git diff git/diff.py</pre></details></td><td>0</td><td>0.005s</td><td>6944f5d9</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_patch_with_external_engine -xvs 2&gt;&amp;1</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py::TestDiff::test_diff_patch_with_external_engine -xvs 2&gt;&amp;1</pre></details></td><td>0</td><td>0.843s</td><td>f349798d</td></tr><tr><td>command</td><td><code class="display-command">cd /GitPython &amp;&amp; python -m pytest test/test_diff.py -k &quot;not test_diff_interface and not test_diff_with_staged_file and not test_rename_override and not test_diff_patch_with_external_engine&quot; -v 2&gt;&amp;1 | tail -30</code><details><summary>exact command</summary><pre>cd /GitPython &amp;&amp; python -m pytest test/test_diff.py -k &quot;not test_diff_interface and not test_diff_with_staged_file and not test_rename_override and not test_diff_patch_with_external_engine&quot; -v 2&gt;&amp;1 | tail -30</pre></details></td><td>0</td><td>1.200s</td><td>080ebc54</td></tr><tr><td>diff</td><td><code class="display-command">capture patch</code><details><summary>exact command</summary><pre>compute patch in executor staging agent1-01a2c06f0c384b68af9dd6e40e607fc5: /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false add -A &amp;&amp; /opt/homebrew/Cellar/git/2.53.0/bin/git -c core.hooksPath=/dev/null -c core.attributesFile=/dev/null -c diff.external= -c core.quotePath=false diff --cached --binary --no-ext-diff --no-textconv --no-renames 7d08710dd4a353b15bdfc3dd1d7df64853f398fc</pre></details></td><td>0</td><td>0.078s</td><td>50055652ad69</td></tr></tbody></table></div><div class="pad"><dl><dt>Finish summary</dt><dd>turn budget exhausted after 60 turn(s)</dd><dt>Worker outcome</dt><dd>budget_exhausted</dd></dl><p class="secondary">Claims not recorded</p></div></div><div class="stack"><div class="card"><h3>Witness branch w1</h3><div class="table-box"><table class="commands"><thead><tr><th scope="col">Kind</th><th scope="col">Command</th><th scope="col">Exit</th><th scope="col">Duration</th><th scope="col">Digest</th></tr></thead><tbody><tr><td>apply</td><td><code class="display-command">apply patch b592d679b9ba</code><details><summary>exact command</summary><pre>git update-index -q --refresh; git apply -v --3way --recount --ignore-space-change --whitespace=nowarn /opt/receipts-1cba3f478b2f48a2a8da817b5515c644/incoming/b592d679b9bac3a4717d5638d141844b448af99c29f3bafdf3d0ba962850e433.diff</pre></details></td><td>0</td><td>0.010s</td><td>daa060b566d0</td></tr><tr><td>verification</td><td><code class="display-command">pytest (witness) test/test_diff.py</code><details><summary>exact command</summary><pre>/opt/receipts-c55712b06f7949eda170a693f3b84078/bin/busybox mkdir -p /opt/receipts/reports &amp;&amp; python -I /opt/receipts-c55712b06f7949eda170a693f3b84078/receipts_pytest.py --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/test_diff.py -o junit_family=xunit1 -p no:cacheprovider -rA --continue-on-collection-errors --junitxml=/opt/receipts/reports/w1-2.xml</pre></details></td><td>1</td><td>1.854s</td><td>8adfa1b040db</td></tr></tbody></table></div></div><h3>Gate predicate checklist</h3><div class="table-box"><table class="predicates"><thead><tr><th scope="col">Predicate</th><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Evidence</th></tr></thead><tbody><tr><td><code>R1_fail_to_pass</code></td><td>Failing specification tests now pass</td><td><span class="pass">PASS</span></td><td>target tests passed: test/test_diff.py::TestDiff::test_diff_patch_with_external_engine</td></tr><tr><td><code>R2_pass_to_pass</code></td><td>Previously passing tests kept</td><td><span class="pass">PASS</span></td><td>16 baseline-passing tests still pass</td></tr><tr><td><code>R3_no_shrink</code></td><td>No removed tests or new skips</td><td><span class="pass">PASS</span></td><td>all 20 baseline tests collected; skips unchanged (0)</td></tr><tr><td><code>R4_patch_scope</code></td><td>Patch scope</td><td><span class="pass">PASS</span></td><td>patch touches 1 file(s), all in scope</td></tr><tr><td><code>R5_provenance</code></td><td>Witness chain and patch digest</td><td><span class="pass">PASS</span></td><td>agent chain c09cbb4e -&gt; 080ebc54 unbroken over 56 receipt(s); witness chain c09cbb4e -&gt; 763d58f9 unbroken over 2 receipt(s); applied digest matches</td></tr><tr><td><code>R6_claim_audit</code></td><td>Agent claim audit (advisory)</td><td><span class="fail">FAIL</span></td><td>branch ended without a finish call</td></tr></tbody></table></div></div></div><div class="comparison card"><div><h3>What it said</h3><dl><dt>Finish summary</dt><dd>turn budget exhausted after 60 turn(s)</dd><dt>Worker outcome</dt><dd>budget_exhausted</dd></dl><p class="secondary">Claims not recorded</p></div><div><h3>What the record shows</h3><p>no claim: branch ended without a finish call</p></div></div><div class="card pad stack"><h3>SWE-rebench&#x27;s official grader: resolved</h3><p>Agrees with the gate</p></div></section><section class="stack"><h2>Shipped patch</h2><pre class="diff"><span class="">diff --git a/git/diff.py b/git/diff.py</span><span class="">index aba1a108..95f17c97 100644</span><span class="">--- a/git/diff.py</span><span class="">+++ b/git/diff.py</span><span class="">@@ -163,6 +163,12 @@ class Diffable:</span><span class="">         # Fixes: https://github.com/gitpython-developers/GitPython/issues/172</span><span class="">         args.append(&quot;--no-color&quot;)</span><span class=""> </span><span class="added">+        # When diff.external is configured, git may try to use the external</span><span class="added">+        # diff tool instead of producing diff output. Add --no-ext-diff to</span><span class="added">+        # ensure git produces diff output regardless of external diff settings.</span><span class="added">+        # Fixes: https://github.com/gitpython-developers/GitPython/issues/852</span><span class="added">+        args.append(&quot;--no-ext-diff&quot;)</span><span class="added">+</span><span class="">         if paths is not None and not isinstance(paths, (tuple, list)):</span><span class="">             paths = [paths]</span><span class=""> </span></pre></section><section class="card pad stack"><h2>Model and costs</h2><dl><dt>Model</dt><dd>nvidia/Nemotron-3_5-Lightning
+thinking off · temperature 1.0 · top_p 0.95</dd><dt>Tokens</dt><dd>1,039,321 tokens</dd><dt>Model cost</dt><dd>$0.06</dd><dt>Sandbox time</dt><dd>2 min 52 s</dd><dt>Sandbox cost</dt><dd>Token Factory reported cost: 0.184 (unit not published)</dd></dl><details><summary>Full environment disclosure</summary><pre>{
+  &quot;executor_kind&quot;: &quot;tokenfactory&quot;,
+  &quot;lock_sha256&quot;: &quot;141da6fcb059055f9e0e84fd099cc7fb455ba3f74d59f6dceba890b050c8345d&quot;,
+  &quot;model&quot;: {
+    &quot;base_url&quot;: &quot;https://api.tokenfactory.nebius.com/v1/&quot;,
+    &quot;client&quot;: &quot;TokenFactoryClient&quot;,
+    &quot;max_tokens&quot;: null,
+    &quot;model&quot;: &quot;nvidia/Nemotron-3_5-Lightning&quot;,
+    &quot;temperature&quot;: 1.0,
+    &quot;thinking&quot;: false,
+    &quot;top_p&quot;: 0.95
+  },
+  &quot;pytest_config_digests&quot;: {
+    &quot;git/ext/gitdb/gitdb/ext/smmap/setup.cfg&quot;: &quot;ab79da958fe98e62e8fc6231b831d66554f0d1322ea0069cccc77fbf18b26a30&quot;,
+    &quot;git/ext/gitdb/gitdb/ext/smmap/tox.ini&quot;: &quot;5034f8a07f45eddaf9c49e86d83ac12f03945db427c556a20d1fc82ed687b146&quot;,
+    &quot;pyproject.toml&quot;: &quot;b923a23e2be63c650efb326056cea5fbcf1131acc0356c632837a17480f83302&quot;,
+    &quot;tox.ini&quot;: &quot;bab2b724960bc60ac2f6007a7d011e0425cd34f58a593b9c8def2729fcaa90a5&quot;
+  },
+  &quot;receipts_version&quot;: &quot;0.0.1&quot;,
+  &quot;test_digests&quot;: {
+    &quot;test/__init__.py&quot;: &quot;a4058c2abdb4a31cd42a01a6ad33ff3973483df348513ccbb3cb6dab9333c60e&quot;,
+    &quot;test/fixtures/.gitconfig&quot;: &quot;856d65e2574bb80ba21f59916a6daf8bec77b5c0d2a649c7fa3b42cf8909387a&quot;,
+    &quot;test/fixtures/blame&quot;: &quot;e040d14977606d1b711d4ff69404855c2ede35284bd9c56adc8538ded2d6943e&quot;,
+    &quot;test/fixtures/blame_binary&quot;: &quot;60bce81ea4c0bafd94bfc2082e1e27750c49fc0d5cd3dd7be84fb777914c42c3&quot;,
+    &quot;test/fixtures/blame_complex_revision&quot;: &quot;b4f82e2ecaa62f18ee6568399d171d64265e6818be2ce7954041df4d7e97fc1d&quot;,
+    &quot;test/fixtures/blame_incremental&quot;: &quot;dd55edae4f0b56a7d2e5fdafb0fe434f3154de8a5e7af51b10d414ab6daf4ddc&quot;,
+    &quot;test/fixtures/blame_incremental_2.11.1_plus&quot;: &quot;24303fc427af3ab38c0de296f94f2cbd8780d04f0f6b7b08ec6f0600ba71387c&quot;,
+    &quot;test/fixtures/cat_file.py&quot;: &quot;ed10c8ca61b2072c3c2353a26de9d733e0d5b19d3fee0a5acde6181b80b91833&quot;,
+    &quot;test/fixtures/cat_file_blob&quot;: &quot;64ec88ca00b268e5ba1a35678a1b5316d212f4f366b2477232534a8aeca37f3c&quot;,
+    &quot;test/fixtures/cat_file_blob_nl&quot;: &quot;1894a19c85ba153acbf743ac4e43fc004c891604b26f8c69e1e83ea2afc7c48f&quot;,
+    &quot;test/fixtures/cat_file_blob_size&quot;: &quot;25d4f2a86deb5e2574bb3210b67bb24fcc4afb19f93a7b65a057daa874a9d18e&quot;,
+    &quot;test/fixtures/commit_invalid_data&quot;: &quot;42557e3f0e66c35561a7aaa2bc0418e647013ff04c27f38874b0a29e67ace52c&quot;,
+    &quot;test/fixtures/commit_with_gpgsig&quot;: &quot;de29ffb493e442fd8ad70171f8f1aa6826507b8d2588c9e5f5c318389f24ad30&quot;,
+    &quot;test/fixtures/diff_2&quot;: &quot;b3113ec64579950ad411ba65969d97fc07057cf52652bdb0bd2b1cf6a91940b7&quot;,
+    &quot;test/fixtures/diff_2f&quot;: &quot;9dad754fc47576125438a78ef9f11e1f298ec615cdae3bf3ce603fafbc7aa093&quot;,
+    &quot;test/fixtures/diff_abbrev-40_full-index_M_raw_no-color&quot;: &quot;016f9811fbadc87fd157268fda70933e1b63be47ea5a2ecd54be2cf406f7430c&quot;,
+    &quot;test/fixtures/diff_change_in_type&quot;: &quot;5a8d6209a4f56017c69f9652278d07ee255ea972a6faffaa267b015012aba6c2&quot;,
+    &quot;test/fixtures/diff_change_in_type_raw&quot;: &quot;ebb298b7022541d4d2c1eb000672184d9c45822c0f855c815da0c5a0f5d116de&quot;,
+    &quot;test/fixtures/diff_copied_mode&quot;: &quot;af32a38711bf1d6bb330902e1a5552e9129857a83b2a8f2585cd42770c468fe8&quot;,
+    &quot;test/fixtures/diff_copied_mode_raw&quot;: &quot;76cb2ff45b97cd1ffebab26b91a6640724b11e8b2b18cca76b84f18d5b0e97e9&quot;,
+    &quot;test/fixtures/diff_f&quot;: &quot;b0db06dba6d8bea538a4afd1c1a85a3be2f26bc3bd5e89f0972b61f1da3fa6d6&quot;,
+    &quot;test/fixtures/diff_file_with_colon&quot;: &quot;5e29a77abc03ef4837b309bcc724e4e69de9511251639170557ef42f4a641342&quot;,
+    &quot;test/fixtures/diff_file_with_spaces&quot;: &quot;04ebd092ae008d0fdc4757b488b60341d36ad812daf8fe71848e176a5ee161c1&quot;,
+    &quot;test/fixtures/diff_i&quot;: &quot;efddab110bcff50f8c371677fc5b2f846e5e984fead674fd8e9990fc0d611561&quot;,
+    &quot;test/fixtures/diff_index_patch&quot;: &quot;6f2f07c4a3b974189747bbe5e06db8a7b25fb00d4f5f63eff20aaad170beac07&quot;,
+    &quot;test/fixtures/diff_index_raw&quot;: &quot;a1d3573d9438ae5067a987c9bef4ca192f10bdf244df758dfd7fa5211313f0d2&quot;,
+    &quot;test/fixtures/diff_initial&quot;: &quot;d5125383b4124dd30696a2c3be315484ab55d1b015d8d156f2b1c18339557f28&quot;,
+    &quot;test/fixtures/diff_mode_only&quot;: &quot;a6a0ce1c12e6d3d4d6674a2b7dff92ee90a4424b43daca285b9994446d2fa8b4&quot;,
+    &quot;test/fixtures/diff_new_mode&quot;: &quot;6fbd040cda02fe07eafcffdf545088a93dd61d4fcfd25fb58e1b91d9c4842458&quot;,
+    &quot;test/fixtures/diff_numstat&quot;: &quot;fcbb35ef5befb04457951889d62d6d039bc7ca8602cedde12a8ac59a273b5321&quot;,
+    &quot;test/fixtures/diff_p&quot;: &quot;0679a20782eb41503b14af793d803fc68cdddf232416edb11208e96b8532e447&quot;,
+    &quot;test/fixtures/diff_patch_binary&quot;: &quot;08b5a2803d31d33de7fdfa5d87c2e5904c91532ee80e258cf822691aba963e23&quot;,
+    &quot;test/fixtures/diff_patch_unsafe_paths&quot;: &quot;8ec73618cf23e7aa6e1039cc1219411c6e23221ce2374b98f1cbb31934ed1e6c&quot;,
+    &quot;test/fixtures/diff_raw_binary&quot;: &quot;f8f50fa9fe70a29f0a926b9b1e73cae910158a7949b907fd2eaa385417dfdb72&quot;,
+    &quot;test/fixtures/diff_rename&quot;: &quot;f9fe24ab0d19b759516593a6b79234c3d25e9dbaf73e78324c7d9079441fbfc8&quot;,
+    &quot;test/fixtures/diff_rename_raw&quot;: &quot;5550548c61285d658c61016af9dc84ef4f038a30a71bdef8427efda65553dfd4&quot;,
+    &quot;test/fixtures/diff_tree_numstat_root&quot;: &quot;35b0687d09b7c069bed61cb3f17288a3132d0bf6f3cf8c7c4e5c71b85f0b2c35&quot;,
+    &quot;test/fixtures/env_case.py&quot;: &quot;fdee9918a4d3cf416f8f91dfd064e404144ed4d64f4de864259627a3a24fea01&quot;,
+    &quot;test/fixtures/for_each_ref_with_path_component&quot;: &quot;8475528951cd116e4f2923cfe33171c6962ce046253d227dcbecb29339295a39&quot;,
+    &quot;test/fixtures/git_config&quot;: &quot;c17e34feca0f5060ca2c4edc3958e15a5d93c8289011b08ab39bc78e97e600b2&quot;,
+    &quot;test/fixtures/git_config-inc.cfg&quot;: &quot;8d88e33607d8041904017623e702f2ede9fe2125dbbd5c8e39f3a62ac51161d7&quot;,
+    &quot;test/fixtures/git_config_global&quot;: &quot;fed1431d84d6d47c6e7b6597aa369f566fdbf5e33e3a34d5e964c3db26776aa3&quot;,
+    &quot;test/fixtures/git_config_multiple&quot;: &quot;c61ca7fdd7fde42adb59f03f61657f635791f5ba5b73ec59c56027cc2253514e&quot;,
+    &quot;test/fixtures/git_config_with_comments&quot;: &quot;43d207ac1e0a137975e625e8603f7ee1320cc9dfeb15ccd0d423c0bbe088f1b5&quot;,
+    &quot;test/fixtures/git_config_with_empty_value&quot;: &quot;ebcea28ac8f19dec7861e4f8a96763b10876d97f140f0e72cca49eade7c54933&quot;,
+    &quot;test/fixtures/git_file&quot;: &quot;e3842bf7ff1396ec5618f88f8c34f8744c85f31ddfbe703d5bb9a80cd88500aa&quot;,
+    &quot;test/fixtures/index&quot;: &quot;38178ce17a1d8b37011602bfed2f767dd8cd4da8ad3711b348191c1d75d642fb&quot;,
+    &quot;test/fixtures/index_merge&quot;: &quot;21db51455f39822f5d1850b82cdb86ad9536cadb4600000d792d3faaf34ef39c&quot;,
+    &quot;test/fixtures/issue-301_stderr&quot;: &quot;cfa40bfd4802290d4c32f88d40d761336da13a0a74d337c9c9ce4b0a6ec997ae&quot;,
+    &quot;test/fixtures/ls_tree_a&quot;: &quot;b81bc863cfbb1e7681bd2b1562281825db1b7ac971aed7de5e1fad5972ad3a77&quot;,
+    &quot;test/fixtures/ls_tree_b&quot;: &quot;a56dda211717300d59484dfad38f5f2567a255097de6a93fdf553c121dd37357&quot;,
+    &quot;test/fixtures/ls_tree_commit&quot;: &quot;70e8335f941caafcb82d4e1d20191c73addc72b38f04b69be43b0240f569cff1&quot;,
+    &quot;test/fixtures/ls_tree_empty&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;test/fixtures/polyglot&quot;: &quot;02374e63f39eff088eec899b9dc8c1afb45c606a2f4fca3520fb035a49248659&quot;,
+    &quot;test/fixtures/reflog_HEAD&quot;: &quot;f09e73c2c25199d6fcc5d5b2428454cc96099c349a7a8d2b2dae6eb61068bf24&quot;,
+    &quot;test/fixtures/reflog_invalid_date&quot;: &quot;565018936906b370b24a98495743a65b0a5664afee07d1712024c8099b8ac123&quot;,
+    &quot;test/fixtures/reflog_invalid_email&quot;: &quot;d4ea0d76818a35c34a595400bf964a4a0544b74cd292282f1ce4ecdcc321556d&quot;,
+    &quot;test/fixtures/reflog_invalid_newsha&quot;: &quot;8bec6987e0b5d9d653f9d10a592e154c3b57e00cd05547021772977cca7d1aed&quot;,
+    &quot;test/fixtures/reflog_invalid_oldsha&quot;: &quot;82ecd71fec1039fcf7c9024530287386e5dc810e86eab1934b0948741557f168&quot;,
+    &quot;test/fixtures/reflog_invalid_sep&quot;: &quot;d03f561d6a48184dad4170fcbad0dcabe6dbc5d8159d658200c2bfbf0237fb30&quot;,
+    &quot;test/fixtures/reflog_master&quot;: &quot;2b5f955f5a10de033fdb7a938d557ef3240e5de5ee46d78f8145c013a0f54d5a&quot;,
+    &quot;test/fixtures/rev_list&quot;: &quot;a493c566e246c0bcd0ea6e0fd9ded535a44b74c79f1b1c6dced814f5f41f0825&quot;,
+    &quot;test/fixtures/rev_list_bisect_all&quot;: &quot;ce3fe6e0595b511901c561047ae70c77e8ab839ee39b7713542090a0dcc93c87&quot;,
+    &quot;test/fixtures/rev_list_commit_diffs&quot;: &quot;9fcaa153c14712aafb67ccfc3ef44610e0ef7ae3db148b9a5c1f146064ea4cf7&quot;,
+    &quot;test/fixtures/rev_list_commit_idabbrev&quot;: &quot;5bf707731a2be6c146792f3e9e622958d8a6fb0b4563beb7e87c21d3849fbdef&quot;,
+    &quot;test/fixtures/rev_list_commit_stats&quot;: &quot;d5b6606033778aa8dd22266d614b8f3595dcc896250e2baccb7770e6eb67af73&quot;,
+    &quot;test/fixtures/rev_list_count&quot;: &quot;c3206695a038e9b167b57685ea7c76f2985d0cfc136555b9909afbd6946b99bd&quot;,
+    &quot;test/fixtures/rev_list_delta_a&quot;: &quot;8a4adca1890edf5d6f6c24bfc687b2284ea6c982a528fe5bcbcf0a538a06eaa2&quot;,
+    &quot;test/fixtures/rev_list_delta_b&quot;: &quot;8a24c62511769f366bb072d7075a0e7196a82ef9d218007707d3cbb7969c9a7a&quot;,
+    &quot;test/fixtures/rev_list_single&quot;: &quot;62a009a3043fba34bc9149cd7c1966f226ca63b922e6fbb69d773fbedfb89ead&quot;,
+    &quot;test/fixtures/rev_parse&quot;: &quot;cbd88ce47e903f10cb12818ef43e2a48c06e0f0e27cf5f7a73954c7e50b5ada9&quot;,
+    &quot;test/fixtures/show_empty_commit&quot;: &quot;c5e2a834238550f65c4b3b55de894a4aceaed787d5747c239e41982ec11c667f&quot;,
+    &quot;test/fixtures/uncommon_branch_prefix_FETCH_HEAD&quot;: &quot;34edfa0c1e075a5e2c3a2b11e84745ae84c36a403ee173b1da4938945408b224&quot;,
+    &quot;test/fixtures/uncommon_branch_prefix_stderr&quot;: &quot;e3eac9957bcfbbed41ca3673b145095c5aee3d1c5a9fb0b9b2c36d33ba996dea&quot;,
+    &quot;test/lib/__init__.py&quot;: &quot;d0753d600ef9c3e3252e77634bae6626b18ce5e81e4a6ffb593944faf1f7d811&quot;,
+    &quot;test/lib/helper.py&quot;: &quot;8f9eaa7f51521efbf91f2969c4cbe4644b1b68725ee8a341542b59d511de5897&quot;,
+    &quot;test/performance/__init__.py&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;test/performance/lib.py&quot;: &quot;d5977dce58405ce229e558cb04c71ca4f1a28bd1668822371e5f4aa22225ba85&quot;,
+    &quot;test/performance/test_commit.py&quot;: &quot;64b905aee8a27fb171558258369cd63e7827232e7d8cf83f8844987a9c6f9a99&quot;,
+    &quot;test/performance/test_odb.py&quot;: &quot;4e8492fee0e57529f31945c5a3551094a00f4109626ce5a19527fccac184d03b&quot;,
+    &quot;test/performance/test_streams.py&quot;: &quot;314fa5eea3e253273d541daa14b56e6fee6ea2b01d760ea119d89f3b843f0fb6&quot;,
+    &quot;test/test_actor.py&quot;: &quot;3b217a31451d05d807ba38f818fddbcc26625697432d606c82f3fc8edb48db46&quot;,
+    &quot;test/test_base.py&quot;: &quot;3ba6bc733bfc93e2a5c63c97031234c0d429d7bfec8bb3f3e30ea735dcdd67f6&quot;,
+    &quot;test/test_blob.py&quot;: &quot;a09945d2c44614e7b7def1c7a099db67fd9267e4f2af4ea1ef2388541c8abd5d&quot;,
+    &quot;test/test_blob_filter.py&quot;: &quot;1da911ad20133fc2578525d214707790535224e72c3055b8345185c94ab65205&quot;,
+    &quot;test/test_clone.py&quot;: &quot;d0fcbb09f5d6d59430ef823ac22dc12d21fe6df15119c15e1cff76f0a6292de0&quot;,
+    &quot;test/test_commit.py&quot;: &quot;ce52a82248b3f61f787dad80cf17265d50b2e2c1329e37a889b65b0c823a88cb&quot;,
+    &quot;test/test_config.py&quot;: &quot;21c21842ebd1a152280a8f4c623a1164eae012066a465ef07fac34d537d53556&quot;,
+    &quot;test/test_db.py&quot;: &quot;07bfe4ad07f2159a9fc8fd78b07f2e1e0b0bcd2d803d780e469e06cb72092301&quot;,
+    &quot;test/test_diff.py&quot;: &quot;4b3d5c752bf7437d219c1e4b946aa1f70dc1af47b23b002935de3de93b5ab9e8&quot;,
+    &quot;test/test_docs.py&quot;: &quot;1b79d471ffa2213391307332e2ce5dac0a6384008f4db869748381362bde6ce5&quot;,
+    &quot;test/test_exc.py&quot;: &quot;b3e81fac53a17e6ac5ea6b493a9f30d543c26449d2813403130ce15155562d0d&quot;,
+    &quot;test/test_fun.py&quot;: &quot;c3c4242a32a82c5120c460f12fc03e6e80ef841a9eee7990b1a520f916d15316&quot;,
+    &quot;test/test_git.py&quot;: &quot;337f36b85e77acae6137ad56f0c914a1e63eaec241fd41460419ed49e81d2e66&quot;,
+    &quot;test/test_index.py&quot;: &quot;2a6cd9392497dbf6eb3c9f937dedc1e06669181ab3cbf451863201b99239f4df&quot;,
+    &quot;test/test_installation.py&quot;: &quot;55847185bb77d3b87288660b666514ed3723790b9f15bdec81a64adc15b90785&quot;,
+    &quot;test/test_quick_doc.py&quot;: &quot;c49c34fc27c047aca467cd3a23c23e220a1b1ce0174f410b8578b4d25d490bbd&quot;,
+    &quot;test/test_reflog.py&quot;: &quot;d9ae88d0f388ccef183d7fc6216d5079b1c5400b7f4814cec5d2f0963fffe8fc&quot;,
+    &quot;test/test_refs.py&quot;: &quot;ffd784a70b2df286ee9f1619e7ed29ec634655b8aa4da10b20ebaf8b7595ed66&quot;,
+    &quot;test/test_remote.py&quot;: &quot;3b20b40da183350512f534ae7ffdd34faf55ac1188c5525c995c52d84a42a0ce&quot;,
+    &quot;test/test_repo.py&quot;: &quot;01869a1c8bb94679ad49d1b2652f4cc114e782751677653f56af90ed13af4c28&quot;,
+    &quot;test/test_stats.py&quot;: &quot;cadc3b9d963a9aa3b8ca8b2f3d0075a2f6f0163b12961acdcf003e576b83aff5&quot;,
+    &quot;test/test_submodule.py&quot;: &quot;9d6b3d4914ac4e8d7a2b4c072374db54e9681992e2784ca9127ef6a4d2e9cd28&quot;,
+    &quot;test/test_tree.py&quot;: &quot;6d38caf49bf51e9c9866df817be139ac967646a9ac4f8e326d0d7b0ef9b92388&quot;,
+    &quot;test/test_util.py&quot;: &quot;78bae6b1950c40b4f2d30c267bc3eb1fa5dab7996cc4f537f812ce3acacbdd2d&quot;,
+    &quot;test/tstrunner.py&quot;: &quot;7f04901e71f26e5384528c6afaef0e0ce1c2ee9a9c9006141ac348b81507c969&quot;
+  }
+}</pre></details></section><section class="card pad"><h2>The bundle</h2><p class="secondary">Recorded JSON and patches. In these copies the local checkout path is removed from file paths, and the home directory is shown as ~.</p><ul class="bundle"><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/attempts/1/filtered.diff" class="">attempts/1/filtered.diff</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/attempts/1/patch.diff" class="">attempts/1/patch.diff</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/attempts/1/verdict.json" class="">attempts/1/verdict.json</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/attempts/1/witness/receipts.jsonl" class="">attempts/1/witness/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/baseline.json" class="">baseline.json</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/branches/agent1/receipts.jsonl" class="">branches/agent1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/branches/base/receipts.jsonl" class="">branches/base/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/branches/official1/receipts.jsonl" class="">branches/official1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/branches/w1/receipts.jsonl" class="">branches/w1/receipts.jsonl</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/cost.json" class="">cost.json</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/disclosure.json" class="">disclosure.json</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/input.json" class="">input.json</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/lock.txt" class="">lock.txt</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/plan.json" class="">plan.json</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/record.json" class="">record.json</a></li><li><a href="../../raw/v2-arm-lightning/gitpython-developers__gitpython-1832/result.json" class="">result.json</a></li></ul></section></main><footer>Generated from the run records by receipts site. No model was asked whether a fix worked.</footer></body></html>

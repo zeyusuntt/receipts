@@ -1,0 +1,26 @@
+diff --git a/exercise/staff_views.py b/exercise/staff_views.py
+index 7c25404b..33681109 100644
+--- a/exercise/staff_views.py
++++ b/exercise/staff_views.py
+@@ -343,16 +343,11 @@ class NextUnassessedSubmitterView(ExerciseBaseView, BaseRedirectView):
+     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+         # Query submitters who have not been assessed yet.
+         submitter = None
+-        submitters = (UserProfile.objects
+-            .filter(submissions__exercise=self.exercise)
+-            .annotate(
+-                count_assessed=Count(
+-                    'submissions__id',
+-                    filter=(Q(submissions__grader__isnull=False)),
+-                ),
+-            )
+-            .filter(count_assessed=0)
+-            .order_by('id'))
++        submitters = UserProfile.objects.filter(
++            submissions__exercise=self.exercise
++        ).exclude(
++            submissions__grader__isnull=False
++        ).distinct().order_by('id')
+ 
+         previous_user_id = request.GET.get('prev')
+         if previous_user_id:

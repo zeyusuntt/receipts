@@ -1,0 +1,16 @@
+diff --git a/src/SeleniumLibrary/base/librarycomponent.py b/src/SeleniumLibrary/base/librarycomponent.py
+index f386d24..340503c 100644
+--- a/src/SeleniumLibrary/base/librarycomponent.py
++++ b/src/SeleniumLibrary/base/librarycomponent.py
+@@ -79,3 +79,11 @@ class LibraryComponent(ContextAware):
+             return os.path.dirname(logfile)
+         except RobotNotRunningError:
+             return os.getcwdu() if PY2 else os.getcwd()
++
++    @property
++    def event_firing_webdriver(self):
++        return self.ctx.event_firing_webdriver
++
++    @event_firing_webdriver.setter
++    def event_firing_webdriver(self, value):
++        self.ctx.event_firing_webdriver = value

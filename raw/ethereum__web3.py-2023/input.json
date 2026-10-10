@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "gethdev AutoProvider does not consider the WEB3_PROVIDER_URI environment variable\n* Version: 5.13.0\r\n* Python: 3.8.5\r\n* OS: Linux (Ubuntu 20.04.1 LTS)\r\n\r\n### What was wrong?\r\n\r\nWhen using `web3.auto.gethdev`, the `WEB3_PROVIDER_URI` environment variable does not appear to be honored.\r\n\r\n```\r\n$ export WEB3_PROVIDER_URI=file:///path/to/node/geth.ipc\r\n\r\n$ python3\r\nPython 3.8.5 (default, Jul 28 2020, 12:59:40)\r\n[GCC 9.3.0] on linux\r\nType \"help\", \"copyright\", \"credits\" or \"license\" for more information.\r\n>>> from web3.auto.gethdev import w3\r\n>>> w3.eth.filter({'fromBlock': 'latest'})\r\n\r\nTraceback (most recent call last):\r\n  File \"<stdin>\", line 1, in <module>\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/eth.py\", line 491, in filter\r\n    _filter_id = self.web3.manager.request_blocking(\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/manager.py\", line 154, in request_blocking\r\n    response = self._make_request(method, params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/manager.py\", line 133, in _make_request\r\n    return request_func(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 74, in apply_formatters\r\n    response = make_request(method, formatted_params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/gas_price_strategy.py\", line 34, in middleware\r\n    return make_request(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 74, in apply_formatters\r\n    response = make_request(method, formatted_params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/attrdict.py\", line 33, in middleware\r\n    response = make_request(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 74, in apply_formatters\r\n    response = make_request(method, formatted_params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/normalize_errors.py\", line 25, in middleware\r\n    result = make_request(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 76, in apply_formatters\r\n    response = make_request(method, params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 74, in apply_formatters\r\n    response = make_request(method, formatted_params)\r\n  File \"cytoolz/functoolz.pyx\", line 250, in cytoolz.functoolz.curry.__call__\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/middleware/formatting.py\", line 76, in apply_formatters\r\n    response = make_request(method, params)\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/providers/ipc.py\", line 234, in make_request\r\n    with self._lock, self._socket as sock:\r\n  File \"/<path>/.local/lib/python3.8/site-packages/web3/providers/ipc.py\", line 55, in __enter__\r\n    raise FileNotFoundError(\"cannot connect to IPC socket at path: %r\" % self.ipc_path)\r\nFileNotFoundError: cannot connect to IPC socket at path: None\r\n```\r\n\r\n### How can it be fixed?\r\n\r\nApply this environment variable to the gethdev autoprovider.",
+  "source": {
+    "image": "docker.io/swerebenchv2/ethereum-web3.py:2023-73d1c7c",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-ethereum__web3.py-2023-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2NvcmUvcHJvdmlkZXJzL3Rlc3RfYXV0b19wcm92aWRlci5weSBiL3Rlc3RzL2NvcmUvcHJvdmlkZXJzL3Rlc3RfYXV0b19wcm92aWRlci5weQppbmRleCA2ZmQ3NzNhOS4uYzBlMzAyOTUgMTAwNjQ0Ci0tLSBhL3Rlc3RzL2NvcmUvcHJvdmlkZXJzL3Rlc3RfYXV0b19wcm92aWRlci5weQorKysgYi90ZXN0cy9jb3JlL3Byb3ZpZGVycy90ZXN0X2F1dG9fcHJvdmlkZXIucHkKQEAgLTE3LDYgKzE3LDkgQEAgZnJvbSB3ZWIzLnByb3ZpZGVycyBpbXBvcnQgKAogZnJvbSB3ZWIzLnByb3ZpZGVycy5hdXRvIGltcG9ydCAoCiAgICAgbG9hZF9wcm92aWRlcl9mcm9tX2Vudmlyb25tZW50LAogKQorZnJvbSB3ZWIzLnByb3ZpZGVycy5pcGMgaW1wb3J0ICgKKyAgICBnZXRfZGV2X2lwY19wYXRoLAorKQogCiAjIFVnbHkgaGFjayB0byBpbXBvcnQgaW5mdXJhIG5vdyB0aGF0IEFQSSBLRVkgaXMgcmVxdWlyZWQKIG9zLmVudmlyb25bJ1dFQjNfSU5GVVJBX0FQSV9LRVknXSA9ICd0ZXN0JwpAQCAtNTEsNiArNTQsMTMgQEAgZGVmIHRlc3RfbG9hZF9wcm92aWRlcl9mcm9tX2Vudihtb25rZXlwYXRjaCwgdXJpLCBleHBlY3RlZF90eXBlLCBleHBlY3RlZF9hdHRycykKICAgICAgICAgYXNzZXJ0IGdldGF0dHIocHJvdmlkZXIsIGF0dHIpID09IHZhbAogCiAKK2RlZiB0ZXN0X2dldF9kZXZfaXBjX3BhdGgobW9ua2V5cGF0Y2gsIHRtcF9wYXRoKToKKyAgICB1cmkgPSBzdHIodG1wX3BhdGgpCisgICAgbW9ua2V5cGF0Y2guc2V0ZW52KCdXRUIzX1BST1ZJREVSX1VSSScsIHVyaSkKKyAgICBwYXRoID0gZ2V0X2Rldl9pcGNfcGF0aCgpCisgICAgYXNzZXJ0IHBhdGggPT0gdXJpCisKKwogQHB5dGVzdC5tYXJrLnBhcmFtZXRyaXplKCdlbnZpcm9uX25hbWUnLCBbJ1dFQjNfSU5GVVJBX0FQSV9LRVknLCAnV0VCM19JTkZVUkFfUFJPSkVDVF9JRCddKQogZGVmIHRlc3Rfd2ViM19hdXRvX2luZnVyYV9lbXB0eV9rZXkobW9ua2V5cGF0Y2gsIGNhcGxvZywgZW52aXJvbl9uYW1lKToKICAgICBtb25rZXlwYXRjaC5zZXRlbnYoJ1dFQjNfSU5GVVJBX1NDSEVNRScsICdodHRwcycpCg=='\"'\"'))'",
+      "git apply /tmp/receipts-ethereum__web3.py-2023-test.patch"
+    ],
+    "workdir": "/web3.py"
+  },
+  "spec_paths": [
+    "tests/core/providers/test_auto_provider.py"
+  ],
+  "spec_tests": [
+    "tests/core/providers/test_auto_provider.py::test_get_dev_ipc_path"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/core/providers/test_auto_provider.py"
+}

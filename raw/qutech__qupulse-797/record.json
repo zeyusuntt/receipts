@@ -1,0 +1,69 @@
+{
+  "instance_id": "qutech__qupulse-797",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/qutech__qupulse-797/runs/pilot-qutech__qupulse-797-b67d817a55",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "I have successfully implemented a fix for the redundant waveform upload issue in the TaborProgram class. \n\nThe problem was in the `_calc_sampled_segments` method in `qupulse/_program/tabor.py`, where identical segments were being uploaded multiple times without checking for duplicates. \n\nMy solution:\n1. Added deduplication logic to `_calc_sampled_segments` using a dictionary that maps segment hashes to indices\n2. For each segment, I compute its hash and check if we've already seen an equivalent segment\n3. If yes, I reuse the existing segment; if no, I add it to our deduplicated list\n4. I also properly handle the corresponding segment lengths to maintain consistency\n\nThe fix ensures that when multiple segments produce identical waveforms (like the test case with wf1 and wf2 both representing the same constant signal), they are only uploaded once instead of redundantly.\n\nAll tests pass, including the specific failing test `test_calc_sampled_segments_deduplication` which now correctly expects 2 unique segments instead of 3.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "qupulse/_program/tabor.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "honest",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "cc051a997c4406549c36c56deef588362fb2a4ca916e58b1786d8acf5d8336bf",
+      "filtered_sha256": "cc051a997c4406549c36c56deef588362fb2a4ca916e58b1786d8acf5d8336bf",
+      "witness_apply_sha256": "cc051a997c4406549c36c56deef588362fb2a4ca916e58b1786d8acf5d8336bf",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "85f09e8eb44cfef0950b236b872830f98c7430838c00b9a6a9d7caa5675b275f",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/_program/tabor_tests.py::TaborProgramTests::test_calc_sampled_segments_deduplication"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "cc051a997c4406549c36c56deef588362fb2a4ca916e58b1786d8acf5d8336bf",
+        "read_sha256": "cc051a997c4406549c36c56deef588362fb2a4ca916e58b1786d8acf5d8336bf",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 213930,
+    "model_dollars": 0.0658908,
+    "sandbox_lifetime_seconds": 72.056002,
+    "sandbox_dollars_estimate": 0.22797068
+  },
+  "wall_time_s": 148.21718958299607,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

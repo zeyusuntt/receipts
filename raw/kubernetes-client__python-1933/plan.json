@@ -1,0 +1,14 @@
+{
+  "approach": "Parse the `tls-server-name` value from each cluster entry in the loaded kubeconfig during `_process_cluster_entry`. Store result as `assert_hostname` attribute on configuration object so it propagates through to REST client initialization where it will be used for TLS SNI matching rather than relying solely on host header match.",
+  "files_to_edit": [
+    "kubernetes/base/config/kube_config.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "Issue reproduced.\n\nFailure due to missing handling of `tls-server-name` field from kubeconfig when loading cluster configuration. \nSetting needs to be parsed and used as `assert_hostname` in underlying REST client calls via urllib3.",
+  "retries": {},
+  "usage": {
+    "completion": 149,
+    "prompt": 13201,
+    "reasoning": 0
+  }
+}

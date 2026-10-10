@@ -1,0 +1,18 @@
+diff --git a/allauth/account/views.py b/allauth/account/views.py
+index d2ab9163..380da665 100644
+--- a/allauth/account/views.py
++++ b/allauth/account/views.py
+@@ -264,6 +264,13 @@ class SignupView(
+         except ImmediateHttpResponse as e:
+             return e.response
+ 
++    def get_initial(self):
++        initial = super(SignupView, self).get_initial()
++        email = get_request_param(self.request, "email")
++        if email:
++            initial["email"] = email
++        return initial
++
+     def get_context_data(self, **kwargs):
+         ret = super(SignupView, self).get_context_data(**kwargs)
+         form = ret["form"]

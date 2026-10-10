@@ -1,0 +1,20 @@
+diff --git a/nox/virtualenv.py b/nox/virtualenv.py
+index a6bf844..8caddc8 100644
+--- a/nox/virtualenv.py
++++ b/nox/virtualenv.py
+@@ -250,7 +250,14 @@ class CondaEnv(ProcessEnv):
+         logger.info(
+             "Creating conda env in {} with {}".format(self.location_name, python_dep)
+         )
+-        nox.command.run(cmd, silent=True, log=False)
++        # Import locally to avoid circular imports
++        from nox._options import noxfile_options as options
++        # Handle both possible interfaces for accessing verbose flag
++        verbose = getattr(options, 'verbose', False)
++        # Convert None to False for boolean evaluation
++        if verbose is None:
++            verbose = False
++        nox.command.run(cmd, silent=True, log=verbose)
+ 
+         return True
+ 

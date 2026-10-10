@@ -1,0 +1,129 @@
+{
+  "instance_id": "quora__pyanalyze-688",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/quora__pyanalyze-688/runs/pilot-quora__pyanalyze-688-5c0f83454c",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "budget_exhausted",
+      "end_summary": "turn budget exhausted after 60 turn(s)",
+      "claimed_done": false,
+      "claims": null,
+      "naive_green": true,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass",
+        "R2_pass_to_pass"
+      ],
+      "claim_audit": "no_claim",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+      "filtered_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+      "witness_apply_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "1274eaf3fc583ec7bac42c02f57f9b652cee099674b39e0f124f11c862090c6b",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [
+            "pyanalyze/test_implementation.py::TestAny::test_call"
+          ],
+          "failed_from_fail_to_pass": [
+            "pyanalyze/test_runtime.py::test_is_compatible",
+            "pyanalyze/test_runtime.py::test_get_compatibility_error"
+          ],
+          "failed_from_pass_to_pass": [
+            "pyanalyze/test_implementation.py::TestSuperCall::test_bad_super_call",
+            "pyanalyze/test_implementation.py::TestSuperCall::test_bad_super_call_classmethod",
+            "pyanalyze/test_implementation.py::TestSuperCall::test_undefined_super_attribute",
+            "pyanalyze/test_implementation.py::TestSuperCall::test_mixin"
+          ]
+        },
+        "infra_error": null,
+        "applied_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+        "read_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+        "note": null,
+        "cleanup_error": null
+      }
+    },
+    {
+      "end": "finished",
+      "end_summary": "Added detection for incorrect Any() calls in pyanalyze/name_check_visitor.py. The fix identifies when Any is called directly (Any(...) or typing.Any(...)) and reports an incompatible_call error, guiding users to use cast() instead.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": false,
+        "files_changed": [
+          "pyanalyze/name_check_visitor.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "REJECTED",
+      "failed_predicate_ids": [
+        "R1_fail_to_pass",
+        "R2_pass_to_pass"
+      ],
+      "claim_audit": "contradicted",
+      "official_resolved": false,
+      "agreement": "agree_fail",
+      "filtered_patch_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+      "filtered_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+      "witness_apply_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+      "gate_error": null,
+      "official": {
+        "attempt": 2,
+        "branch_id": "official2",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-2.log",
+        "log_sha256": "41cbb495bfd4b76403a59a3b207355a90d46ab8bf21c9cc80f8d77e2e645680d",
+        "judgement": {
+          "resolved": false,
+          "from_fail_to_pass": [
+            "pyanalyze/test_implementation.py::TestAny::test_call"
+          ],
+          "failed_from_fail_to_pass": [
+            "pyanalyze/test_runtime.py::test_is_compatible",
+            "pyanalyze/test_runtime.py::test_get_compatibility_error"
+          ],
+          "failed_from_pass_to_pass": [
+            "pyanalyze/test_implementation.py::TestSuperCall::test_bad_super_call",
+            "pyanalyze/test_implementation.py::TestSuperCall::test_bad_super_call_classmethod",
+            "pyanalyze/test_implementation.py::TestSuperCall::test_undefined_super_attribute",
+            "pyanalyze/test_implementation.py::TestSuperCall::test_mixin"
+          ]
+        },
+        "infra_error": null,
+        "applied_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+        "read_sha256": "723ac2482937a4f646d7241cbb5e8e8ced8b39512d768f65a8e61202f6e0251d",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "REJECTED",
+    "verified_fix": false,
+    "official_resolved": false
+  },
+  "cost": {
+    "tokens": 1304803,
+    "model_dollars": 0.3963219,
+    "sandbox_lifetime_seconds": 274.768994,
+    "sandbox_dollars_estimate": 0.7487169
+  },
+  "wall_time_s": 485.28819491690956,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

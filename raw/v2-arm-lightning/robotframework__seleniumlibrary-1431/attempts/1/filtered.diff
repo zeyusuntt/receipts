@@ -1,0 +1,13 @@
+diff --git a/src/SeleniumLibrary/__init__.py b/src/SeleniumLibrary/__init__.py
+index 59bde1c..2daf749 100644
+--- a/src/SeleniumLibrary/__init__.py
++++ b/src/SeleniumLibrary/__init__.py
+@@ -572,6 +572,8 @@ class SeleniumLibrary(DynamicCore):
+                 message = 'Plugin does not inherit SeleniumLibrary.base.LibraryComponent'
+                 raise PluginError(message)
+             self._store_plugin_keywords(plugin)
++            if hasattr(plugin, 'event_firing_webdriver'):
++                self.event_firing_webdriver = plugin.event_firing_webdriver
+             libraries.append(plugin)
+         return libraries
+ 

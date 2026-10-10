@@ -1,0 +1,32 @@
+diff --git a/lib/cartopy/io/shapereader.py b/lib/cartopy/io/shapereader.py
+index 704b2924..c45f40e7 100644
+--- a/lib/cartopy/io/shapereader.py
++++ b/lib/cartopy/io/shapereader.py
+@@ -33,6 +33,7 @@ from pathlib import Path
+ from urllib.error import HTTPError
+ 
+ import shapefile
++import pyproj
+ import shapely.geometry as sgeom
+ 
+ from cartopy import config
+@@ -143,6 +144,19 @@ class BasicReader:
+ 
+         self._fields = self._reader.fields
+ 
++        # Try to read the associated .prj file for CRS information
++        self.crs = None
++        shp_path = Path(filename)
++        prj_path = shp_path.with_suffix('.prj')
++        if prj_path.is_file():
++            try:
++                prj_wkt = prj_path.read_text(encoding='utf-8').strip()
++                if prj_wkt:
++                    self.crs = pyproj.CRS(prj_wkt)
++            except Exception:
++                # If we can't parse the .prj file, leave crs as None
++                pass
++
+     def close(self):
+         return self._reader.close()
+ 

@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "`subtract_overscan` incorrectly allows a numpy array as input\nSee https://github.com/astropy/ccdproc/blob/main/ccdproc/core.py#L478\n\nBoth the docstring and code later in the function clearly assumes the thing passed in is a `CCDData` object.",
+  "source": {
+    "image": "docker.io/swerebenchv2/astropy-ccdproc:867-541f59e",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-astropy__ccdproc-867-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2NjZHByb2MvdGVzdHMvdGVzdF9jY2Rwcm9jLnB5IGIvY2NkcHJvYy90ZXN0cy90ZXN0X2NjZHByb2MucHkKaW5kZXggYjc5ODgzYS4uYjJiYzBhZCAxMDA2NDQKLS0tIGEvY2NkcHJvYy90ZXN0cy90ZXN0X2NjZHByb2MucHkKKysrIGIvY2NkcHJvYy90ZXN0cy90ZXN0X2NjZHByb2MucHkKQEAgLTMwNSw2ICszMDUsOSBAQCBkZWYgdGVzdF9zdWJ0cmFjdF9vdmVyc2Nhbl9mYWlscygpOgogICAgICMgRG9lcyBhIGZpdHNfc2VjdGlvbiB3aGljaCBpcyBub3QgYSBzdHJpbmcgcmFpc2UgYW4gZXJyb3I/CiAgICAgd2l0aCBweXRlc3QucmFpc2VzKFR5cGVFcnJvcik6CiAgICAgICAgIHN1YnRyYWN0X292ZXJzY2FuKGNjZF9kYXRhLCBmaXRzX3NlY3Rpb249NSkKKyAgICAjIERvIHdlIHJhaXNlIGFuIGVycm9yIGlmIHRoZSBpbnB1dCBpcyBhIHBsYWluIGFycmF5PworICAgIHdpdGggcHl0ZXN0LnJhaXNlcyhUeXBlRXJyb3IpOgorICAgICAgICBzdWJ0cmFjdF9vdmVyc2NhbihucC56ZXJvcygoMTAsIDEwKSksIGZpdHNfc2VjdGlvbj0iWzE6MTBdIikKIAogCiBkZWYgdGVzdF90cmltX2ltYWdlX2ZpdHNfc2VjdGlvbl9yZXF1aXJlc19zdHJpbmcoKToK'\"'\"'))'",
+      "git apply /tmp/receipts-astropy__ccdproc-867-test.patch"
+    ],
+    "workdir": "/ccdproc"
+  },
+  "spec_paths": [
+    "ccdproc/tests/test_ccdproc.py"
+  ],
+  "spec_tests": [
+    "ccdproc/tests/test_ccdproc.py::test_subtract_overscan_fails"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning ccdproc/tests/test_ccdproc.py"
+}

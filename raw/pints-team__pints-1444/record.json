@@ -1,0 +1,70 @@
+{
+  "instance_id": "pints-team__pints-1444",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/pints-team__pints-1444/runs/pilot-pints-team__pints-1444-190773ed22",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Successfully implemented the missing MultiSequentialEvaluator class to enable optional copying of logpdfs before running MCMC chains. \n\nChanges made:\n1. Added MultiSequentialEvaluator class to pints/_evaluation.py that evaluates a list of functions on corresponding input values\n2. Updated pints/__init__.py to export MultiSequentialEvaluator making it available as pints.MultiSequentialEvaluator\n\nThe implementation passes the previously failing test (pints/tests/test_evaluators.py::TestEvaluators::test_multi_sequential) and maintains backward compatibility with all existing evaluator tests. This resolves the AttributeError that occurred when trying to use pints.MultiSequentialEvaluator and enables the requested functionality for MCMC controllers to use separate log_pdf objects per chain.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": false,
+        "files_changed": [
+          "pints/_evaluation.py",
+          "pints/__init__.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "honest",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "0107fc59f441390f58db3438aa09f70efcb1fc9307896c5ef62ecdc22b10eb0a",
+      "filtered_sha256": "0107fc59f441390f58db3438aa09f70efcb1fc9307896c5ef62ecdc22b10eb0a",
+      "witness_apply_sha256": "0107fc59f441390f58db3438aa09f70efcb1fc9307896c5ef62ecdc22b10eb0a",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 1,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "0de133def15d1f8c1702c089fbb77fee5c2b26820c364a789b11db4a011c92f7",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "pints/tests/test_evaluators.py::TestEvaluators::test_multi_sequential"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "0107fc59f441390f58db3438aa09f70efcb1fc9307896c5ef62ecdc22b10eb0a",
+        "read_sha256": "0107fc59f441390f58db3438aa09f70efcb1fc9307896c5ef62ecdc22b10eb0a",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 747294,
+    "model_dollars": 0.2309772,
+    "sandbox_lifetime_seconds": 322.998732,
+    "sandbox_dollars_estimate": 0.88533306
+  },
+  "wall_time_s": 737.9250593751203,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

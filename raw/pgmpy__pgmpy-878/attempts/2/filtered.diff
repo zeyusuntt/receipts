@@ -1,0 +1,25 @@
+diff --git a/pgmpy/models/BayesianModel.py b/pgmpy/models/BayesianModel.py
+index 7d8cb8b..37d22f3 100644
+--- a/pgmpy/models/BayesianModel.py
++++ b/pgmpy/models/BayesianModel.py
+@@ -285,7 +285,7 @@ class BayesianModel(DirectedGraph):
+             for cpd in self.cpds:
+                 if cpd.variable == node:
+                     return cpd
+-            raise ValueError("CPD not added for the node: {node}".format(node=node))
++            return None
+         else:
+             return self.cpds
+ 
+@@ -344,9 +344,9 @@ class BayesianModel(DirectedGraph):
+             True if all the checks are passed
+         """
+         for node in self.nodes():
+-            cpd = self.get_cpds(node=node)
++            cpd = next((c for c in self.cpds if c.variable == node), None)
+ 
+-            if isinstance(cpd, TabularCPD):
++            if cpd is not None and isinstance(cpd, TabularCPD):
+                 evidence = cpd.variables[:0:-1]
+                 parents = self.get_parents(node)
+                 if set(evidence if evidence else []) != set(parents if parents else []):

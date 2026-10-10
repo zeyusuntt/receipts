@@ -1,0 +1,109 @@
+diff --git a/fs/ftpfs.py b/fs/ftpfs.py
+index 86f0495..9ee6408 100644
+--- a/fs/ftpfs.py
++++ b/fs/ftpfs.py
+@@ -16,6 +16,8 @@ from collections import OrderedDict
+ from contextlib import contextmanager
+ from ftplib import FTP
+ 
++from .time import epoch_to_datetime
++
+ try:
+     from ftplib import FTP_TLS
+ except ImportError as err:
+@@ -654,6 +656,44 @@ class FTPFS(FS):
+             # type: (_F, Text, Optional[_OpendirFactory]) -> SubFS[_F]
+             pass
+ 
++    def getmodified(self, path):
++        # type: (Text) -> Optional[datetime.datetime]
++        """Get the modification time of a file.
++
++        Uses the MDTM command if supported, otherwise falls back to
++        parsing the modification time from the directory listing.
++
++        Returns:
++            `~datetime.datetime`: the modification time, or `None` if
++            it cannot be determined.
++        """
++        _path = self.validatepath(path)
++
++        # Try MDTM first if supported
++        if "MDTM" in self.features:
++            with ftp_errors(self, path=path):
++                try:
++                    response = self.ftp.sendcmd(
++                        str("MDTM ") + _encode(_path, self.ftp.encoding)
++                    )
++                    # MDTM response format: 213 YYYYMMDDHHMMSS
++                    # Example: 213 20210825140215
++                    text = _decode(response, self.ftp.encoding)
++                    # Extract the timestamp after the status code
++                    parts = text.split()
++                    if len(parts) >= 2:
++                        time_str = parts[1]
++                        if len(time_str) >= 14:
++                            return epoch_to_datetime(
++                                self._parse_ftp_time(time_str)
++                            )
++                except error_perm:
++                    pass  # Fall through to directory listing
++
++        # Fall back to getinfo
++        info = self.getinfo(_path, ("details",))
++        return info.modified if info else None
++
+     def getinfo(self, path, namespaces=None):
+         # type: (Text, Optional[Container[Text]]) -> Info
+         _path = self.validatepath(path)
+@@ -667,6 +707,17 @@ class FTPFS(FS):
+                 }
+             )
+ 
++        # If only "modified" detail is requested, try MDTM first
++        if "modified" in namespaces and not self.supports_mlst:
++            modified = self.getmodified(_path)
++            if modified is not None:
++                details = {"modified": modified}
++                if "basic" in namespaces:
++                    details["name"] = basename(_path)
++                if "type" in namespaces:
++                    details["type"] = int(ResourceType.file)
++                return Info(details)
++
+         if self.supports_mlst:
+             with self._lock:
+                 with ftp_errors(self, path=path):
+diff --git a/fs/memoryfs.py b/fs/memoryfs.py
+index c34d60a..79468de 100644
+--- a/fs/memoryfs.py
++++ b/fs/memoryfs.py
+@@ -4,6 +4,7 @@ from __future__ import absolute_import
+ from __future__ import unicode_literals
+ 
+ import contextlib
++import datetime
+ import io
+ import os
+ import time
+@@ -395,6 +396,20 @@ class MemoryFS(FS):
+             raise errors.ResourceNotFound(path)
+         return dir_entry.to_info(namespaces=namespaces)
+ 
++    def getmodified(self, path):
++        # type: (Text) -> Optional[datetime.datetime]
++        """Get the modification time of a file.
++
++        Returns:
++            `~datetime.datetime`: the modification time, or `None` if
++            the file does not exist.
++        """
++        _path = self.validatepath(path)
++        dir_entry = self._get_dir_entry(_path)
++        if dir_entry is None:
++            return None
++        return datetime.datetime.fromtimestamp(dir_entry.modified_time)
++
+     def listdir(self, path):
+         # type: (Text) -> List[Text]
+         self.check()

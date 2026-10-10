@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Detect and use docstrings set after-the-fact.\nTwisted has some code that does something like\n\n``` python\nif _PY3:\n   def func(args):\n       pass\nelse:\n    def func(args):\n        pass\n\nfunc.__doc__ = \"\"\"\nfunc does some stuff.\n```\n\nto avoid duplicating a docstring. Unfortunately, pydoctor doesn't pick this up, so it appears that `func` is undocumented.\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/twisted-pydoctor:191-f26e7be",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-twisted__pydoctor-191-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3B5ZG9jdG9yL3Rlc3QvdGVzdF9hc3RidWlsZGVyLnB5IGIvcHlkb2N0b3IvdGVzdC90ZXN0X2FzdGJ1aWxkZXIucHkKaW5kZXggY2U5OWU5ZjQuLmRjYTc4YTRmIDEwMDY0NAotLS0gYS9weWRvY3Rvci90ZXN0L3Rlc3RfYXN0YnVpbGRlci5weQorKysgYi9weWRvY3Rvci90ZXN0L3Rlc3RfYXN0YnVpbGRlci5weQpAQCAtNTM2LDYgKzUzNiw1NyBAQCBkZWYgdGVzdF9pbmxpbmVfZG9jc3RyaW5nX2Fubm90YXRlZF9pbnN0YW5jZXZhcigpOgogICAgIGIgPSBDLmNvbnRlbnRzWydiJ10KICAgICBhc3NlcnQgYi5kb2NzdHJpbmcgPT0gIiIiaW5saW5lIGRvYyBmb3IgYiIiIgogCitkZWYgdGVzdF9kb2NzdHJpbmdfYXNzaWdubWVudChjYXBzeXMpOgorICAgIG1vZCA9IGZyb21UZXh0KCcnJworICAgIGRlZiBmdW4oKToKKyAgICAgICAgcGFzcworCisgICAgY2xhc3MgQ0xTOgorCisgICAgICAgIGRlZiBtZXRob2QxKCk6CisgICAgICAgICAgICAiIiJUZW1wIGRvY3N0cmluZy4iIiIKKyAgICAgICAgICAgIHBhc3MKKworICAgICAgICBkZWYgbWV0aG9kMigpOgorICAgICAgICAgICAgcGFzcworCisgICAgICAgIG1ldGhvZDEuX19kb2NfXyA9ICJVcGRhdGVkIGRvY3N0cmluZyAjMSIKKworICAgIGZ1bi5fX2RvY19fID0gIkhhcHB5IEhhcHB5IEpveSBKb3kiCisgICAgQ0xTLl9fZG9jX18gPSAiQ2xlYXJzIHRoZSBzY3JlZW4iCisgICAgQ0xTLm1ldGhvZDIuX19kb2NfXyA9ICJVcGRhdGVkIGRvY3N0cmluZyAjMiIKKworICAgIE5vbmUuX19kb2NfXyA9ICJGcmVlIGx1bmNoISIKKyAgICByZWFsLl9fZG9jX18gPSAiU2Vjb25kIGJyZWFrZmFzdCIKKyAgICBmdW4uX19kb2NfXyA9IGNvZGVjcy5lbmNvZGUoJ1BucmZuZSBmbnlucScsICdyb3QxMycpCisgICAgQ0xTLm1ldGhvZDEuX19kb2NfXyA9IDQKKyAgICAnJycpCisgICAgZnVuID0gbW9kLmNvbnRlbnRzWydmdW4nXQorICAgIGFzc2VydCBmdW4ua2luZCA9PSAnRnVuY3Rpb24nCisgICAgYXNzZXJ0IGZ1bi5kb2NzdHJpbmcgPT0gIiIiSGFwcHkgSGFwcHkgSm95IEpveSIiIgorICAgIENMUyA9IG1vZC5jb250ZW50c1snQ0xTJ10KKyAgICBhc3NlcnQgQ0xTLmtpbmQgPT0gJ0NsYXNzJworICAgIGFzc2VydCBDTFMuZG9jc3RyaW5nID09ICIiIkNsZWFycyB0aGUgc2NyZWVuIiIiCisgICAgbWV0aG9kMSA9IENMUy5jb250ZW50c1snbWV0aG9kMSddCisgICAgYXNzZXJ0IG1ldGhvZDEua2luZCA9PSAnTWV0aG9kJworICAgIGFzc2VydCBtZXRob2QxLmRvY3N0cmluZyA9PSAiVXBkYXRlZCBkb2NzdHJpbmcgIzEiCisgICAgbWV0aG9kMiA9IENMUy5jb250ZW50c1snbWV0aG9kMiddCisgICAgYXNzZXJ0IG1ldGhvZDIua2luZCA9PSAnTWV0aG9kJworICAgIGFzc2VydCBtZXRob2QyLmRvY3N0cmluZyA9PSAiVXBkYXRlZCBkb2NzdHJpbmcgIzIiCisgICAgY2FwdHVyZWQgPSBjYXBzeXMucmVhZG91dGVycigpCisgICAgbGluZXMgPSBjYXB0dXJlZC5vdXQuc3BsaXQoJ1xuJykKKyAgICBhc3NlcnQgbGVuKGxpbmVzKSA+IDAgYW5kIGxpbmVzWzBdID09IFwKKyAgICAgICAgIjx1bmtub3duPjoyMDogVW5hYmxlIHRvIGZpZ3VyZSBvdXQgdGFyZ2V0IGZvciBfX2RvY19fIGFzc2lnbm1lbnQiCisgICAgYXNzZXJ0IGxlbihsaW5lcykgPiAxIGFuZCBsaW5lc1sxXSA9PSBcCisgICAgICAgICI8dW5rbm93bj46MjE6IFVuYWJsZSB0byBmaWd1cmUgb3V0IHRhcmdldCBmb3IgX19kb2NfXyBhc3NpZ25tZW50OiAiIFwKKyAgICAgICAgImNvbXB1dGVkIGZ1bGwgbmFtZSBub3QgZm91bmQ6IHJlYWwiCisgICAgYXNzZXJ0IGxlbihsaW5lcykgPiAyIGFuZCBsaW5lc1syXSA9PSBcCisgICAgICAgICI8dW5rbm93bj46MjI6IFVuYWJsZSB0byBmaWd1cmUgb3V0IHZhbHVlIGZvciBfX2RvY19fIGFzc2lnbm1lbnQsICIgXAorICAgICAgICAibWF5YmUgdG9vIGNvbXBsZXgiCisgICAgYXNzZXJ0IGxlbihsaW5lcykgPiAzIGFuZCBsaW5lc1szXSA9PSBcCisgICAgICAgICI8dW5rbm93bj46MjM6IElnbm9yaW5nIHZhbHVlIGFzc2lnbmVkIHRvIF9fZG9jX186IG5vdCBhIHN0cmluZyIKKyAgICBhc3NlcnQgbGVuKGxpbmVzKSA9PSA1IGFuZCBsaW5lc1stMV0gPT0gJycKKwogZGVmIHRlc3RfdmFyaWFibGVfc2NvcGVzKCk6CiAgICAgbW9kID0gZnJvbVRleHQoJycnCiAgICAgbCA9IDEK'\"'\"'))'",
+      "git apply /tmp/receipts-twisted__pydoctor-191-test.patch"
+    ],
+    "workdir": "/pydoctor"
+  },
+  "spec_paths": [
+    "pydoctor/test/test_astbuilder.py"
+  ],
+  "spec_tests": [
+    "pydoctor/test/test_astbuilder.py::test_docstring_assignment"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pydoctor/test/test_astbuilder.py"
+}

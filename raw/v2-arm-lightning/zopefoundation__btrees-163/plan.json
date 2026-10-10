@@ -1,0 +1,16 @@
+{
+  "approach": "Detect when a key is a type object (i.e., isinstance(key, type)) and raise a descriptive error. First check the Python-level comparison logic in _base.py, then check the C-level macros in objectkeymacros.h if needed.",
+  "files_to_edit": [
+    "src/BTrees/_compat.py",
+    "src/BTrees/_base.py",
+    "src/BTrees/objectkeymacros.h"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The issue is that type objects used as BTree keys fail with 'Object has default comparison' error in Python 3 but work in Python 2. The fix needs to detect type objects and either reject them with a clearer message or special-case them.",
+  "retries": {},
+  "usage": {
+    "completion": 152,
+    "prompt": 11261,
+    "reasoning": 0
+  }
+}

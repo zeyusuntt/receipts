@@ -1,0 +1,69 @@
+{
+  "instance_id": "datadog__datadogpy-555",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-arm-lightning/datadog__datadogpy-555/runs/pilot-datadog__datadogpy-555-5e9a23aa00",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the `AttributeError: 'str' object has no attribute 'decode'` bug in `datadog/dogshell/wrap.py`. The `build_event_body` function was unconditionally calling `.decode(\"utf-8\", \"replace\")` on the `notifications` parameter, but in Python 3, command-line arguments like `--notify_error` are already `str` objects. The fix adds a type check using `isinstance(notifications, bytes)` before decoding, so strings pass through unchanged while bytes are still decoded properly.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "datadog/dogshell/wrap.py"
+        ]
+      },
+      "naive_green": false,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "unsupported",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "44a65bdaa64b2f3f3bd3126f55b90c6a063c120df5bfd9d6766d6db0cba58be5",
+      "filtered_sha256": "44a65bdaa64b2f3f3bd3126f55b90c6a063c120df5bfd9d6766d6db0cba58be5",
+      "witness_apply_sha256": "44a65bdaa64b2f3f3bd3126f55b90c6a063c120df5bfd9d6766d6db0cba58be5",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "26d3ce93bacb9c0aaf96977eee2a9b1bb4b4dd1cb5dcf92554c3637ac95b04a2",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_build_event_body"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "44a65bdaa64b2f3f3bd3126f55b90c6a063c120df5bfd9d6766d6db0cba58be5",
+        "read_sha256": "44a65bdaa64b2f3f3bd3126f55b90c6a063c120df5bfd9d6766d6db0cba58be5",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 47238,
+    "model_dollars": 0.00306072,
+    "sandbox_lifetime_seconds": 55.067969,
+    "sandbox_dollars_estimate": 0.04247354
+  },
+  "wall_time_s": 103.62085083406419,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

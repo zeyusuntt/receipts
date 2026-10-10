@@ -1,0 +1,38 @@
+diff --git a/docformatter.py b/docformatter.py
+index 37140c0..4cc469d 100755
+--- a/docformatter.py
++++ b/docformatter.py
+@@ -491,6 +491,7 @@ def format_docstring(
+     post_description_blank=False,
+     force_wrap=False,
+     strict=True,
++    close_quotes_on_newline=True,
+ ):
+     """Return formatted version of docstring.
+ 
+@@ -555,12 +556,23 @@ def format_docstring(
+ '''
+     else:
+         if not make_summary_multi_line:
+-            return wrap_summary(
+-                open_quote + normalize_summary(contents) + '"""',
++            combined = open_quote + normalize_summary(contents) + '"""'
++            # Determine if the combined summary (without newlines from wrapping) fits
++            # within the summary wrap limit.
++            combined_len = len(open_quote + normalize_summary(contents))
++            fits_on_one_line = summary_wrap_length == 0 or combined_len <= summary_wrap_length
++            wrapped = wrap_summary(
++                combined,
+                 wrap_length=summary_wrap_length,
+                 initial_indent=indentation,
+                 subsequent_indent=indentation,
+             ).strip()
++            if close_quotes_on_newline and not fits_on_one_line and not force_wrap and wrapped.rstrip().strip() != '"""':
++                # Move closing quotes to a new line
++                without_close = wrapped.rsplit('"""', 1)[0].rstrip()
++                return without_close + '\n' + indentation + '"""'
++            else:
++                return wrapped
+         beginning = f"{open_quote}\n{indentation}"
+         ending = f'\n{indentation}"""'
+         summary_wrapped = wrap_summary(

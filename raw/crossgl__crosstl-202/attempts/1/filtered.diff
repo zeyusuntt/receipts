@@ -1,0 +1,73 @@
+diff --git a/crosstl/src/backend/DirectX/DirectxAst.py b/crosstl/src/backend/DirectX/DirectxAst.py
+index b314f05..ba1796a 100644
+--- a/crosstl/src/backend/DirectX/DirectxAst.py
++++ b/crosstl/src/backend/DirectX/DirectxAst.py
+@@ -141,3 +141,12 @@ class UnaryOpNode(ASTNode):
+ 
+     def __str__(self):
+         return f"({self.op}{self.operand})"
++
++
++class WhileNode(ASTNode):
++    def __init__(self, condition, body):
++        self.condition = condition
++        self.body = body
++
++    def __repr__(self):
++        return f"WhileNode(condition={self.condition}, body={self.body})"
+diff --git a/crosstl/src/backend/DirectX/DirectxLexer.py b/crosstl/src/backend/DirectX/DirectxLexer.py
+index c42565b..b08ffa9 100644
+--- a/crosstl/src/backend/DirectX/DirectxLexer.py
++++ b/crosstl/src/backend/DirectX/DirectxLexer.py
+@@ -19,6 +19,7 @@ TOKENS = [
+     ("ELSE_IF", r"\belse\sif\b"),
+     ("ELSE", r"\belse\b"),
+     ("FOR", r"\bfor\b"),
++    ("WHILE", r"\bwhile\b"),
+     ("REGISTER", r"\bregister\b"),
+     ("IDENTIFIER", r"[a-zA-Z_][a-zA-Z0-9_]*"),
+     ("NUMBER", r"\d+(\.\d+)?"),
+@@ -72,6 +73,7 @@ KEYWORDS = {
+     "if": "IF",
+     "else": "ELSE",
+     "for": "FOR",
++    "while": "WHILE",
+     "register": "REGISTER",
+ }
+ 
+diff --git a/crosstl/src/backend/DirectX/DirectxParser.py b/crosstl/src/backend/DirectX/DirectxParser.py
+index 61fd544..eaa3cde 100644
+--- a/crosstl/src/backend/DirectX/DirectxParser.py
++++ b/crosstl/src/backend/DirectX/DirectxParser.py
+@@ -12,6 +12,7 @@ from .DirectxAst import (
+     UnaryOpNode,
+     VariableNode,
+     VectorConstructorNode,
++    WhileNode,
+ )
+ from .DirectxLexer import HLSLLexer
+ 
+@@ -193,6 +194,8 @@ class HLSLParser:
+             return self.parse_if_statement()
+         elif self.current_token[0] == "FOR":
+             return self.parse_for_statement()
++        elif self.current_token[0] == "WHILE":
++            return self.parse_while_statement()
+         elif self.current_token[0] == "RETURN":
+             return self.parse_return_statement()
+         else:
+@@ -340,6 +343,14 @@ class HLSLParser:
+ 
+         return ForNode(init, condition, update, body)
+ 
++    def parse_while_statement(self):
++        self.eat("WHILE")
++        self.eat("LPAREN")
++        condition = self.parse_expression()
++        self.eat("RPAREN")
++        body = self.parse_block()
++        return WhileNode(condition, body)
++
+     def parse_return_statement(self):
+         self.eat("RETURN")
+         value = self.parse_expression()

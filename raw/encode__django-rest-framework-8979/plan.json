@@ -1,0 +1,14 @@
+{
+  "approach": "Modify `BaseSerializer.run_validation` to bind each child serializer with the matching instance from the `instance` list when `many=True`. Specifically, iterate through zipped children (`self.child`) and items (`data`), binding each child\u2019s `instance` to the respective element from the provided `instance` iterable prior to validation.",
+  "files_to_edit": [
+    "rest_framework/serializers.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "During bulk validation with `many=True`, the validator incorrectly receives the full list of instances as `self.instance` instead of each individual instance per item.",
+  "retries": {},
+  "usage": {
+    "completion": 124,
+    "prompt": 17696,
+    "reasoning": 0
+  }
+}

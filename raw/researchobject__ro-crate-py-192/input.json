@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Allow entities to be passed in as `properties` values when initialising an entity\nExample demonstrating the issue:\r\n```python\r\nfrom rocrate.model import ContextEntity, Person\r\nfrom rocrate.rocrate import ROCrate\r\n\r\ncrate = ROCrate()\r\n\r\nalice = crate.add(\r\n    Person(\r\n        crate,\r\n        \"https://orcid.org/0000-0000-0000-0000\",\r\n        properties={\"name\": \"Alice Doe\", \"affiliation\": \"University of Flatland\"},\r\n    )\r\n)\r\nbob = crate.add(\r\n    Person(\r\n        crate,\r\n        \"https://orcid.org/0000-0000-0000-0001\",\r\n        properties={\"name\": \"Bob Doe\", \"affiliation\": \"University of Flatland\"},\r\n    )\r\n)\r\n\r\ndata = crate.add_file(\r\n    \"data.csv\",\r\n    properties={\r\n        \"name\": \"Data file\",\r\n        \"encodingFormat\": \"text/csv\",\r\n        \"author\": [alice, bob],\r\n    },\r\n)\r\n\r\ncrate.write(\"out_crate\")\r\n```\r\nRunning this yields an error:\r\n```\r\nTraceback (most recent call last):\r\n  File \"/home/eli/roc/testing/crate.py\", line 30, in <module>\r\n    crate.write(\"crate_out\")\r\n  File \"/home/eli/roc/testing/.venv-zenodo/lib/python3.12/site-packages/rocrate/rocrate.py\", line 453, in write\r\n    writable_entity.write(base_path)\r\n  File \"/home/eli/roc/testing/.venv-zenodo/lib/python3.12/site-packages/rocrate/model/metadata.py\", line 80, in write\r\n    json.dump(as_jsonld, outfile, indent=4, sort_keys=True)\r\n. . .\r\nTypeError: Object of type Person is not JSON serializable\r\n```\r\n\r\nThis is because including the author entities in `properties` isn't supported. Instead I would have to use\r\n```python\r\ndata = crate.add_file(\r\n    \"data.csv\",\r\n    properties={\r\n        \"name\": \"Data file\",\r\n        \"encodingFormat\": \"text/csv\",\r\n    },\r\n)\r\ndata[\"author\"] = [alice, bob]\r\n```\r\n\r\nIn my opinion this is a less intuitive way of doing things, and it's not straightforward for the user to understand why the second method works and the first one doesn't. \r\n\r\nSolution\r\n\r\nBehind the scenes we are using a [custom setter](https://github.com/ResearchObject/ro-crate-py/blob/d31f2027b16fb535275c8c8f6c353f58cde64cef/rocrate/model/entity.py#L100) to set individual properties, but [`Entity.__init__()` ](https://github.com/ResearchObject/ro-crate-py/blob/d31f2027b16fb535275c8c8f6c353f58cde64cef/rocrate/model/entity.py#L31) skips activating that function when handling the `properties` argument, the referenced entities don't get connected properly. We can update that `__init__` function so that it triggers `__setitem__`. This way, both methods of setting the author would be equivalent.",
+  "source": {
+    "image": "docker.io/swerebenchv2/researchobject-ro-crate-py:192-d31f202",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-researchobject__ro-crate-py-192-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvdGVzdF9tb2RlbC5weSBiL3Rlc3QvdGVzdF9tb2RlbC5weQppbmRleCAxOTM1Y2M4Li40NDY1ZWNlIDEwMDY0NAotLS0gYS90ZXN0L3Rlc3RfbW9kZWwucHkKKysrIGIvdGVzdC90ZXN0X21vZGVsLnB5CkBAIC01MTMsMyArNTEzLDUyIEBAIGRlZiB0ZXN0X2ltbXV0YWJsZV9pZCgpOgogICAgIHAgPSBjcmF0ZS5hZGQoUGVyc29uKGNyYXRlLCAiI2ZvbyIpKQogICAgIHdpdGggcHl0ZXN0LnJhaXNlcyhBdHRyaWJ1dGVFcnJvcik6CiAgICAgICAgIHAuaWQgPSAiI2JhciIKKworCitkZWYgdGVzdF9lbnRpdHlfaW5fcHJvcGVydGllcyh0bXBkaXIpOgorICAgIGZpbGVfaWQgPSAiZGF0YS5jc3YiCisgICAgZmlsZV9wYXRoID0gdG1wZGlyIC8gZmlsZV9pZAorICAgIHdpdGggb3BlbihmaWxlX3BhdGgsICJ3dCIpIGFzIGZvdXQ6CisgICAgICAgIGZvdXQud3JpdGUoIkRBVEFcbiIpCisgICAgY3JhdGUgPSBST0NyYXRlKCkKKyAgICBhbGljZV9pZCA9ICJodHRwczovL29yY2lkLm9yZy8wMDAwLTAwMDAtMDAwMC0wMDAwIgorICAgIGJvYl9pZCA9ICJodHRwczovL29yY2lkLm9yZy8wMDAwLTAwMDAtMDAwMC0wMDAxIgorICAgIGFsaWNlID0gY3JhdGUuYWRkKFBlcnNvbihjcmF0ZSwgYWxpY2VfaWQsIHByb3BlcnRpZXM9eworICAgICAgICAibmFtZSI6ICJBbGljZSBEb2UiLAorICAgICAgICAiYWZmaWxpYXRpb24iOiAiVW5pdmVyc2l0eSBvZiBGbGF0bGFuZCIsCisgICAgfSkpCisgICAgYm9iID0gY3JhdGUuYWRkKFBlcnNvbihjcmF0ZSwgYm9iX2lkLCBwcm9wZXJ0aWVzPXsKKyAgICAgICAgIm5hbWUiOiAiQm9iIERvZSIsCisgICAgICAgICJhZmZpbGlhdGlvbiI6ICJVbml2ZXJzaXR5IG9mIEZsYXRsYW5kIiwKKyAgICB9KSkKKyAgICBkYXRhID0gY3JhdGUuYWRkX2ZpbGUoZmlsZV9wYXRoLCBwcm9wZXJ0aWVzPXsKKyAgICAgICAgIm5hbWUiOiAiRGF0YSBmaWxlIiwKKyAgICAgICAgImVuY29kaW5nRm9ybWF0IjogInRleHQvY3N2IiwKKyAgICAgICAgImF1dGhvciI6IFthbGljZSwgYm9iXSwKKyAgICB9KQorICAgIGF1dGhvcnMgPSBkYXRhWyJhdXRob3IiXQorICAgIGFzc2VydCBsZW4oYXV0aG9ycykgPT0gMgorICAgIGFzc2VydCBhdXRob3JzWzBdIGlzIGFsaWNlCisgICAgYXNzZXJ0IGF1dGhvcnNbMV0gaXMgYm9iCisKKyAgICBib29rID0gY3JhdGUuYWRkKENvbnRleHRFbnRpdHkoY3JhdGUsICIjNDRjYXRzIiwgcHJvcGVydGllcz17CisgICAgICAgICJAdHlwZSI6ICJCb29rIiwKKyAgICAgICAgIm5hbWUiOiAiNDQgQ2F0cyIsCisgICAgICAgICJhdXRob3IiOiBhbGljZSwKKyAgICB9KSkKKyAgICBhc3NlcnQgYm9vay50eXBlID09ICJCb29rIgorICAgIGFzc2VydCBib29rWyJhdXRob3IiXSBpcyBhbGljZQorCisgICAgb3V0X3BhdGggPSB0bXBkaXIgLyAicm9fY3JhdGVfb3V0IgorICAgIGNyYXRlLndyaXRlKG91dF9wYXRoKQorICAgIGFzc2VydCAob3V0X3BhdGggLyBmaWxlX2lkKS5pc19maWxlKCkKKyAgICBvdXRfY3JhdGUgPSBST0NyYXRlKG91dF9wYXRoKQorICAgIG91dF9hbGljZSA9IG91dF9jcmF0ZS5nZXQoYWxpY2VfaWQpCisgICAgb3V0X2JvYiA9IG91dF9jcmF0ZS5nZXQoYm9iX2lkKQorICAgIG91dF9kYXRhID0gb3V0X2NyYXRlLmdldChmaWxlX2lkKQorICAgIG91dF9hdXRob3JzID0gb3V0X2RhdGFbImF1dGhvciJdCisgICAgYXNzZXJ0IGxlbihvdXRfYXV0aG9ycykgPT0gMgorICAgIGFzc2VydCBvdXRfYXV0aG9yc1swXSBpcyBvdXRfYWxpY2UKKyAgICBhc3NlcnQgb3V0X2F1dGhvcnNbMV0gaXMgb3V0X2JvYgorICAgIGFzc2VydCBvdXRfYWxpY2UgPT0gYWxpY2UKKyAgICBhc3NlcnQgb3V0X2JvYiA9PSBib2IK'\"'\"'))'",
+      "git apply /tmp/receipts-researchobject__ro-crate-py-192-test.patch"
+    ],
+    "workdir": "/ro-crate-py"
+  },
+  "spec_paths": [
+    "test/test_model.py"
+  ],
+  "spec_tests": [
+    "test/test_model.py::test_entity_in_properties"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/test_model.py"
+}

@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Nested dictionaries in `py/state` incorrectly restored when tracking object references\nRepro:\r\n```python\r\nimport jsonpickle\r\n\r\n\r\nclass MyClass:\r\n    def __init__(self, o):\r\n        self.o = o\r\n\r\n    def __getstate__(self):\r\n        return self.__dict__\r\n\r\n\r\ni1 = MyClass({\"a\": \"a\"})\r\ni2 = MyClass({\"b\": \"b\"})\r\noriginal = [i1, i1, i2, i2]\r\n\r\nassert original[0] is original[1]  # ok\r\nassert original[2] is original[3]  # ok\r\n\r\njson = jsonpickle.encode(original)\r\n# Correctly encoded as:\r\n# [\r\n#   {\"py/object\": \"__main__.MyClass\", \"py/state\": {\"o\": {\"a\": \"a\"}}},\r\n#   {\"py/id\": 1},\r\n#   {\"py/object\": \"__main__.MyClass\", \"py/state\": {\"o\": {\"b\": \"b\"}}},\r\n#   {\"py/id\": 4}\r\n# ]\r\n\r\ndecoded = jsonpickle.decode(json)\r\nassert decoded[0] is decoded[1]  # ok\r\nassert decoded[2] is decoded[3]  # fail\r\n```\r\n\r\nThe assertion fails because `decoded[3]` is incorrectly set to the dictionary `{'a': 'a'}`, instead of the second instance of `MyClass`.\r\n\r\nI think this only occurs for types that define `__getstate__` without also defining `__setstate__`.\r\n\r\nThis occurs because `Unpickler._restore_state` will first restore the dict under `py/state`, which tracks references of any objects under it. But then it goes into `_restore_from_dict`, which restores the same dict _again_, tracking the references of any objects under it _again_. \r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/jsonpickle-jsonpickle:501-e84268a",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-jsonpickle__jsonpickle-501-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2pzb25waWNrbGVfdGVzdC5weSBiL3Rlc3RzL2pzb25waWNrbGVfdGVzdC5weQppbmRleCA0MWUyMzhmLi4wMTJmZDA4IDEwMDY0NAotLS0gYS90ZXN0cy9qc29ucGlja2xlX3Rlc3QucHkKKysrIGIvdGVzdHMvanNvbnBpY2tsZV90ZXN0LnB5CkBAIC0xMTAyLDYgKzExMDIsOSBAQCBjbGFzcyBQaWNrbGVQcm90b2NvbDJHZXRTdGF0ZURpY3QoUGlja2xlUHJvdG9jb2wyVGhpbmcpOgogICAgIGRlZiBfX2dldHN0YXRlX18oc2VsZik6CiAgICAgICAgIHJldHVybiB7J21hZ2ljJzogVHJ1ZX0KIAorY2xhc3MgUGlja2xlUHJvdG9jb2wyR2V0U3RhdGVOZXN0ZWREaWN0KFBpY2tsZVByb3RvY29sMlRoaW5nKToKKyAgICBkZWYgX19nZXRzdGF0ZV9fKHNlbGYpOgorICAgICAgICByZXR1cm4geyduZXN0ZWQnOiB7J21hZ2ljJzogVHJ1ZX19CiAKIGNsYXNzIFBpY2tsZVByb3RvY29sMkdldFN0YXRlU2xvdHMoUGlja2xlUHJvdG9jb2wyVGhpbmcpOgogICAgIGRlZiBfX2dldHN0YXRlX18oc2VsZik6CkBAIC0xNTU1LDYgKzE1NTgsMjAgQEAgY2xhc3MgUGlja2xpbmdQcm90b2NvbDJUZXN0Q2FzZShTa2lwcGFibGVUZXN0KToKICAgICAgICAgZGVjb2RlZCA9IGpzb25waWNrbGUuZGVjb2RlKGVuY29kZWQpCiAgICAgICAgIHNlbGYuYXNzZXJ0VHJ1ZShkZWNvZGVkLm1hZ2ljKQogCisgICAgZGVmIHRlc3RfcmVzdG9yZV9uZXN0ZWRfZGljdF9zdGF0ZV93aXRoX3JlZmVyZW5jZXNfcHJlc2VydmVkKHNlbGYpOgorICAgICAgICAiIiIKKyAgICAgICAgRW5zdXJlIHRoYXQgbmVzdGVkIGRpY3RzIGluICJweS9zdGF0ZSIgYXJlIG5vdCBkdXBsaWNhdGVkIHdoZW4gdHJhY2tpbmcKKyAgICAgICAgb2JqZWN0cyB0byBwcmVzZXJ2ZSByZWZlcmVuY2VzCisgICAgICAgICIiIgorICAgICAgICBpbnN0YW5jZTEgPSBQaWNrbGVQcm90b2NvbDJHZXRTdGF0ZU5lc3RlZERpY3QoJ3doYXRldnMnKQorICAgICAgICBpbnN0YW5jZTIgPSBQaWNrbGVQcm90b2NvbDJHZXRTdGF0ZU5lc3RlZERpY3QoJ2RpZmZlcmVudCcpCisgICAgICAgIGVuY29kZWQgPSBqc29ucGlja2xlLmVuY29kZShbaW5zdGFuY2UxLCBpbnN0YW5jZTEsIGluc3RhbmNlMiwgaW5zdGFuY2UyXSkKKyAgICAgICAgZGVjb2RlZCA9IGpzb25waWNrbGUuZGVjb2RlKGVuY29kZWQpCisgICAgICAgIHNlbGYuYXNzZXJ0VHJ1ZShkZWNvZGVkWzBdLm5lc3RlZFsnbWFnaWMnXSkKKyAgICAgICAgc2VsZi5hc3NlcnRJcyhkZWNvZGVkWzFdLCBkZWNvZGVkWzBdKQorICAgICAgICBzZWxmLmFzc2VydFRydWUoZGVjb2RlZFsyXS5uZXN0ZWRbJ21hZ2ljJ10pCisgICAgICAgIHNlbGYuYXNzZXJ0SXMoZGVjb2RlZFszXSwgZGVjb2RlZFsyXSkKKwogICAgIGRlZiB0ZXN0X3Jlc3RvcmVfc2xvdHNfc3RhdGUoc2VsZik6CiAgICAgICAgICIiIgogICAgICAgICBFbnN1cmUgdGhhdCBpZiBnZXRzdGF0ZSByZXR1cm5zIGEgMi10dXBsZSB3aXRoIGEgZGljdCBpbiB0aGUgc2Vjb25kCg=='\"'\"'))'",
+      "git apply /tmp/receipts-jsonpickle__jsonpickle-501-test.patch"
+    ],
+    "workdir": "/jsonpickle"
+  },
+  "spec_paths": [
+    "tests/jsonpickle_test.py"
+  ],
+  "spec_tests": [
+    "tests/jsonpickle_test.py::PicklingProtocol2TestCase::test_restore_nested_dict_state_with_references_preserved"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/jsonpickle_test.py"
+}

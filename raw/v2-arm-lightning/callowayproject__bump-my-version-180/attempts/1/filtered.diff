@@ -1,0 +1,36 @@
+diff --git a/bumpversion/versioning/serialization.py b/bumpversion/versioning/serialization.py
+index b119d65..a7c36f4 100644
+--- a/bumpversion/versioning/serialization.py
++++ b/bumpversion/versioning/serialization.py
+@@ -131,7 +131,30 @@ def serialize(version: Version, serialize_patterns: List[str], context: MutableM
+ 
+     chosen_pattern = sorted_patterns[0]["pattern"]
+     logger.debug("Using serialization format '%s'", chosen_pattern)
+-    serialized = chosen_pattern.format(**local_context)
++
++    # Handle format specifiers like {:02} for zero-padding
++    # Python's format spec works on integers, but version values are strings
++    # We need to convert them to int when a format spec is present
++    
++    # Extract format specs from the pattern to know which values need int conversion
++    format_specs = {}
++    for field_match in re.finditer(r'\{(\w+)(?::([^}]*))?\}', chosen_pattern):
++        var_name = field_match.group(1)
++        spec = field_match.group(2) if field_match.group(2) else ""
++        if spec:
++            format_specs[var_name] = spec
++    
++    # Convert values with format specs to int
++    serialized_context = dict(local_context)
++    for var_name, spec in format_specs.items():
++        if var_name in serialized_context:
++            try:
++                serialized_context[var_name] = int(serialized_context[var_name])
++            except (ValueError, TypeError):
++                # If conversion fails, keep as string
++                pass
++    
++    serialized = chosen_pattern.format(**serialized_context)
+     logger.debug("Serialized to '%s'", serialized)
+     logger.dedent()
+ 

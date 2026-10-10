@@ -1,0 +1,53 @@
+diff --git a/rest_framework/serializers.py b/rest_framework/serializers.py
+index a3d68b03..a734f5fe 100644
+--- a/rest_framework/serializers.py
++++ b/rest_framework/serializers.py
+@@ -162,6 +162,18 @@ class BaseSerializer(Field):
+             key: value for key, value in kwargs.items()
+             if key in LIST_SERIALIZER_KWARGS
+         })
++        
++        # Validate instance/data length mismatch early for many=True
++        if 'instance' in kwargs and kwargs['instance'] is not None:
++            instance = kwargs['instance']
++            data = kwargs.get('data', [])
++            if not isinstance(instance, models.manager.BaseManager) and hasattr(instance, '__len__') and hasattr(data, '__len__'):
++                if len(instance) != len(data):
++                    raise AssertionError(
++                        'Mismatched instances and data items (%s instances for %s data items)' % 
++                        (len(instance), len(data))
++                    )
++
+         meta = getattr(cls, 'Meta', None)
+         list_serializer_class = getattr(meta, 'list_serializer_class', ListSerializer)
+         return list_serializer_class(*args, **list_kwargs)
+@@ -683,7 +695,18 @@ class ListSerializer(BaseSerializer):
+         ret = []
+         errors = []
+ 
+-        for item in data:
++        for idx, item in enumerate(data):
++            # Set the instance on the child serializer to the corresponding item
++            # when validating in the context of many=True
++            if self.instance is not None and isinstance(self.instance, (list, tuple)):
++                child_instance = self.instance[idx]
++            else:
++                child_instance = getattr(self, 'instance', None)
++            
++            # Temporarily bind the child instance
++            old_child_instance = self.child.instance
++            self.child.instance = child_instance
++            
+             try:
+                 validated = self.child.run_validation(item)
+             except ValidationError as exc:
+@@ -691,6 +714,9 @@ class ListSerializer(BaseSerializer):
+             else:
+                 ret.append(validated)
+                 errors.append({})
++            finally:
++                # Restore the original instance
++                self.child.instance = old_child_instance
+ 
+         if any(errors):
+             raise ValidationError(errors)

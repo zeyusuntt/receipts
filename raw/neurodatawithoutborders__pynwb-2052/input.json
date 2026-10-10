@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "[Bug]: `add_data_interface` fails silently on pynwb 3.0\n### What happened?\n\nIt seems that now in pynwb 3.0 the method `add_data_interface` was replaced by `add`.\nBut the method `add_data_interface` does not add the structure or throws an error. \n\n### Steps to Reproduce\n\n```python\nfrom pynwb.testing.mock.file import mock_NWBFile\nfrom pynwb.testing.mock.ecephys import mock_ElectricalSeries\n\n\nnwbfile = mock_NWBFile()\n\n# Create processing modules\necephys_module = nwbfile.create_processing_module('ecephys', 'Example ecephys data')\n\nelectrical_series = mock_ElectricalSeries()\necephys_module.add_data_interface(electrical_series)\n\nassert len(nwbfile.processing[\"ecephys\"].data_interfaces) == 1\n```\n\n\n\n- [x] I agree to follow this project's [Code of Conduct](https://github.com/NeurodataWithoutBorders/pynwb/blob/dev/.github/CODE_OF_CONDUCT.rst)\n- [x] Have you checked the [Contributing](https://github.com/NeurodataWithoutBorders/pynwb/blob/dev/docs/CONTRIBUTING.rst) document?\n- [x] Have you ensured this bug was not already [reported](https://github.com/NeurodataWithoutBorders/pynwb/issues)?",
+  "source": {
+    "image": "docker.io/swerebenchv2/neurodatawithoutborders-pynwb:2052-01d9ab9",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-neurodatawithoutborders__pynwb-2052-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3VuaXQvdGVzdF9iYXNlLnB5IGIvdGVzdHMvdW5pdC90ZXN0X2Jhc2UucHkKaW5kZXggYWE2NGQ2M2QuLmM3NWJhMWUyIDEwMDY0NAotLS0gYS90ZXN0cy91bml0L3Rlc3RfYmFzZS5weQorKysgYi90ZXN0cy91bml0L3Rlc3RfYmFzZS5weQpAQCAtNTAsNiArNTAsOCBAQCBjbGFzcyBUZXN0UHJvY2Vzc2luZ01vZHVsZShUZXN0Q2FzZSk6CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZXhjX21zZz1tc2cKICAgICAgICAgKToKICAgICAgICAgICAgIHNlbGYucG0uYWRkX2RhdGFfaW50ZXJmYWNlKHRzKQorICAgICAgICAgICAgc2VsZi5hc3NlcnRJbih0cy5uYW1lLCBzZWxmLnBtLmNvbnRhaW5lcnMpCisgICAgICAgICAgICBzZWxmLmFzc2VydElzKHRzLCBzZWxmLnBtLmNvbnRhaW5lcnNbdHMubmFtZV0pCiAKICAgICBkZWYgdGVzdF9kZXByZWNhdGVkX2FkZF9jb250YWluZXIoc2VsZik6CiAgICAgICAgIHRzID0gc2VsZi5fY3JlYXRlX3RpbWVfc2VyaWVzKCkKQEAgLTU4LDYgKzYwLDggQEAgY2xhc3MgVGVzdFByb2Nlc3NpbmdNb2R1bGUoVGVzdENhc2UpOgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGV4Y19tc2c9bXNnCiAgICAgICAgICk6CiAgICAgICAgICAgICBzZWxmLnBtLmFkZF9jb250YWluZXIodHMpCisgICAgICAgICAgICBzZWxmLmFzc2VydEluKHRzLm5hbWUsIHNlbGYucG0uY29udGFpbmVycykKKyAgICAgICAgICAgIHNlbGYuYXNzZXJ0SXModHMsIHNlbGYucG0uY29udGFpbmVyc1t0cy5uYW1lXSkKIAogICAgIGRlZiB0ZXN0X2dldF9kYXRhX2ludGVyZmFjZShzZWxmKToKICAgICAgICAgIiIiVGVzdCBhZGRpbmcgYSBkYXRhIGludGVyZmFjZSB0byBhIFByb2Nlc3NpbmdNb2R1bGUgYW5kIHJldHJpZXZpbmcgaXQgdXNpbmcgZ2V0KC4uLikuIiIiCg=='\"'\"'))'",
+      "git apply /tmp/receipts-neurodatawithoutborders__pynwb-2052-test.patch"
+    ],
+    "workdir": "/pynwb"
+  },
+  "spec_paths": [
+    "tests/unit/test_base.py"
+  ],
+  "spec_tests": [
+    "tests/unit/test_base.py::TestProcessingModule::test_deprecated_add_data_interface"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/unit/test_base.py"
+}

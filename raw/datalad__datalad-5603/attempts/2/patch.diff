@@ -1,0 +1,22 @@
+diff --git a/datalad/support/github_.py b/datalad/support/github_.py
+index 6848a6785..85ddaa345 100644
+--- a/datalad/support/github_.py
++++ b/datalad/support/github_.py
+@@ -60,6 +60,17 @@ def _token_str(token):
+     return token[:3] + '...'
+ 
+ 
++def _gh_exception(exc_cls, *args):
++    """Instantiate a GitHub exception, compatible with changes in PyGithub.
++    Some exceptions (e.g. BadCredentialsException) now require a ``headers``
++    argument. If only two arguments are provided, assume ``headers=None``.
++    """
++    if exc_cls is gh.BadCredentialsException and len(args) == 2:
++        # status, data -> add headers
++        return exc_cls(args[0], args[1], None)
++    return exc_cls(*args)
++
++
+ def _get_tokens_for_login(login, tokens):
+     selected_tokens = []
+     for t in tokens:

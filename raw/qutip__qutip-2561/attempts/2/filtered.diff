@@ -1,0 +1,52 @@
+diff --git a/qutip/core/dimensions.py b/qutip/core/dimensions.py
+index 56fe3539..1f2015ba 100644
+--- a/qutip/core/dimensions.py
++++ b/qutip/core/dimensions.py
+@@ -923,10 +923,19 @@ class Dimensions(metaclass=MetaDims):
+         flatl = self.to_.flat()
+         stepr = self.from_.step()
+         flatr = self.from_.flat()
+-        return tuple(np.concatenate([
+-            np.array(flatl)[np.argsort(stepl)[::-1]],
+-            np.array(flatr)[np.argsort(stepr)[::-1]],
+-        ]))
++        if self.issuper and isinstance(self.to_, SuperSpace) and isinstance(self.from_, SuperSpace):
++            # For superoperators where both input and output are superoperators,
++            # the order of left and right indices is swapped to match
++            # column‑stacking convention.
++            return tuple(np.concatenate([
++                np.array(flatr)[np.argsort(stepr)[::-1]],
++                np.array(flatl)[np.argsort(stepl)[::-1]],
++            ]))
++        else:
++            return tuple(np.concatenate([
++                np.array(flatl)[np.argsort(stepl)[::-1]],
++                np.array(flatr)[np.argsort(stepr)[::-1]],
++            ]))
+ 
+     def _get_tensor_perm(self):
+         """
+@@ -936,10 +945,19 @@ class Dimensions(metaclass=MetaDims):
+         # dims_to_tensor_perm
+         stepl = self.to_.step()
+         stepr = self.from_.step()
+-        return list(np.concatenate([
+-            np.argsort(stepl)[::-1],
+-            np.argsort(stepr)[::-1] + len(stepl)
+-        ]))
++        if self.issuper and isinstance(self.to_, SuperSpace) and isinstance(self.from_, SuperSpace):
++            # For superoperators where both input and output are superoperators,
++            # the order of left and right indices is swapped to match
++            # column‑stacking convention.
++            return list(np.concatenate([
++                np.argsort(stepr)[::-1],
++                np.argsort(stepl)[::-1] + len(stepr)
++            ]))
++        else:
++            return list(np.concatenate([
++                np.argsort(stepl)[::-1],
++                np.argsort(stepr)[::-1] + len(stepl)
++            ]))
+ 
+     def remove(self, idx: int | list[int]) -> "Dimensions":
+         """

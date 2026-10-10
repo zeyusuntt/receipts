@@ -1,0 +1,69 @@
+{
+  "instance_id": "datadog__datadogpy-555",
+  "status": "ran",
+  "reason": null,
+  "run_dir": "pilot/v2-P/datadog__datadogpy-555/runs/pilot-datadog__datadogpy-555-8e5399c81a",
+  "executor_kind": "tokenfactory",
+  "attempts": [
+    {
+      "end": "finished",
+      "end_summary": "Fixed the AttributeError in dogwrap when using notify_success, notify_warning, or notify_error flags. The issue was that in Python 3, these notification values are strings (Unicode) coming from argparse, but the code was trying to call .decode() on them as if they were bytes. Modified the build_event_body function in datadog/dogshell/wrap.py to check if each variable (stdout, stderr, notifications) is bytes before decoding, otherwise use it directly as a string.",
+      "claimed_done": true,
+      "claims": {
+        "tests_run": true,
+        "target_tests_pass": true,
+        "full_suite_pass": true,
+        "files_changed": [
+          "datadog/dogshell/wrap.py"
+        ]
+      },
+      "naive_green": true,
+      "gate_status": "PASS",
+      "failed_predicate_ids": [],
+      "claim_audit": "honest",
+      "official_resolved": true,
+      "agreement": "agree_pass",
+      "filtered_patch_sha256": "44db727ca9612ef445cde1e952462da2df5da8258f33ae85957164a053b30f54",
+      "filtered_sha256": "44db727ca9612ef445cde1e952462da2df5da8258f33ae85957164a053b30f54",
+      "witness_apply_sha256": "44db727ca9612ef445cde1e952462da2df5da8258f33ae85957164a053b30f54",
+      "gate_error": null,
+      "official": {
+        "attempt": 1,
+        "branch_id": "official1",
+        "apply_exit_code": 0,
+        "test_exit_code": 0,
+        "timed_out": false,
+        "log_path": "official/attempt-1.log",
+        "log_sha256": "ba47007fc3328a32807a55ab9764c149c5daa7aa4c75f4212cf63c512c571e4b",
+        "judgement": {
+          "resolved": true,
+          "from_fail_to_pass": [
+            "tests/unit/dogwrap/test_dogwrap.py::TestDogwrap::test_build_event_body"
+          ],
+          "failed_from_fail_to_pass": [],
+          "failed_from_pass_to_pass": []
+        },
+        "infra_error": null,
+        "applied_sha256": "44db727ca9612ef445cde1e952462da2df5da8258f33ae85957164a053b30f54",
+        "read_sha256": "44db727ca9612ef445cde1e952462da2df5da8258f33ae85957164a053b30f54",
+        "note": null,
+        "cleanup_error": null
+      }
+    }
+  ],
+  "final": {
+    "gate_status": "PASS",
+    "verified_fix": true,
+    "official_resolved": true
+  },
+  "cost": {
+    "tokens": 50540,
+    "model_dollars": 0.015942,
+    "sandbox_lifetime_seconds": 55.482039,
+    "sandbox_dollars_estimate": 0.05271383
+  },
+  "wall_time_s": 95.90184995811433,
+  "cleanup_error": null,
+  "prior_infrastructure_errors": [],
+  "prior_interrupted_runs": []
+}

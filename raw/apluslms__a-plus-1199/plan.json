@@ -1,0 +1,14 @@
+{
+  "approach": "1. Create a helper function that returns True if a userprofile has ever had a manually graded submission via existing `manual_grading_required()`\n2. Modify `_find_next_unassessed_submitter` to call this predicate at submission granularity\u2014skipping candidates whose submitter is already graded anywhere\n3. Preserve round-robin cycling via modulo indexing but apply filtering upstream.",
+  "files_to_edit": [
+    "exercise/staff_views.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The bug likely stems from the logic in `exercise/staff_views.py`'s `_find_next_unassessed_submitter`, where assessments are determined solely by whether each individual submission has been assessed\u2014not considering that a single student might have multiple submissions and becomes \"done\" upon any one being assessed.\nWe need to adjust how we detect whether a student (identified by their userprofile) still requires assessment: they\u2019re ineligible if ANY of their submissions have been manually graded.\nThus, during iteration over candidate submissions, we should skip any whose submitter appears elsewhere in an already-assessed submission.",
+  "retries": {},
+  "usage": {
+    "completion": 227,
+    "prompt": 17616,
+    "reasoning": 0
+  }
+}

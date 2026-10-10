@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Ignore \"_\" vars in \"Unused Variable\" check\n\n*Original report by [archardlias](https://launchpad.net/~archardlias) on [Launchpad](https://bugs.launchpad.net/bugs/1328169):*\n\n------------------------------------\n\nWould it be possible to ignore variables named \"_\" from \"Unused Variable\" checks?\n\nI'm not really sure whether \"_\" is officially specified anywhere. But I do see it a lot and in a lot of languages including python to denote a variable to be ignored (place holder dummy). PyLint implements this pseudo(?)-convention (? second-hand knowledge).\n\nWould be great, since I would love to be explicit about \"things returned but not used\" instead of just calling without assignment which looks tantamount to \"this function does never return anything / does not contain a return statement\". A great plus in signature visibility throughout the code, specially for first-time readers.\n\nBest regards,\n~arlias\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/pycqa-pyflakes:335-4b2d720",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pycqa__pyflakes-335-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3B5Zmxha2VzL3Rlc3QvdGVzdF9pbXBvcnRzLnB5IGIvcHlmbGFrZXMvdGVzdC90ZXN0X2ltcG9ydHMucHkKaW5kZXggNTg2YTBhNS4uODZlMWQzNyAxMDA2NDQKLS0tIGEvcHlmbGFrZXMvdGVzdC90ZXN0X2ltcG9ydHMucHkKKysrIGIvcHlmbGFrZXMvdGVzdC90ZXN0X2ltcG9ydHMucHkKQEAgLTk0LDYgKzk0LDEzIEBAIGNsYXNzIFRlc3RJbXBvcnRhdGlvbk9iamVjdChUZXN0Q2FzZSk6CiAgICAgICAgIGFzc2VydCBiaW5kaW5nLnNvdXJjZV9zdGF0ZW1lbnQgPT0gJ2Zyb20gX19mdXR1cmVfXyBpbXBvcnQgcHJpbnRfZnVuY3Rpb24nCiAgICAgICAgIGFzc2VydCBzdHIoYmluZGluZykgPT0gJ19fZnV0dXJlX18ucHJpbnRfZnVuY3Rpb24nCiAKKyAgICBkZWYgdGVzdF91bnVzZWRJbXBvcnRfdW5kZXJzY29yZShzZWxmKToKKyAgICAgICAgIiIiCisgICAgICAgIFRoZSBtYWdpYyB1bmRlcnNjb3JlIHZhciBzaG91bGQgYmUgcmVwb3J0ZWQgYXMgdW51c2VkIHdoZW4gdXNlZCBhcyBhbgorICAgICAgICBpbXBvcnQgYWxpYXMuCisgICAgICAgICIiIgorICAgICAgICBzZWxmLmZsYWtlcygnaW1wb3J0IGZ1IGFzIF8nLCBtLlVudXNlZEltcG9ydCkKKwogCiBjbGFzcyBUZXN0KFRlc3RDYXNlKToKIApkaWZmIC0tZ2l0IGEvcHlmbGFrZXMvdGVzdC90ZXN0X290aGVyLnB5IGIvcHlmbGFrZXMvdGVzdC90ZXN0X290aGVyLnB5CmluZGV4IDM2NGIzNzUuLjRkYmFmMjMgMTAwNjQ0Ci0tLSBhL3B5Zmxha2VzL3Rlc3QvdGVzdF9vdGhlci5weQorKysgYi9weWZsYWtlcy90ZXN0L3Rlc3Rfb3RoZXIucHkKQEAgLTExNzUsNiArMTE3NSwxNiBAQCBjbGFzcyBUZXN0VW51c2VkQXNzaWdubWVudChUZXN0Q2FzZSk6CiAgICAgICAgICAgICBiID0gMQogICAgICAgICAnJycsIG0uVW51c2VkVmFyaWFibGUpCiAKKyAgICBkZWYgdGVzdF91bnVzZWRVbmRlcnNjb3JlVmFyaWFibGUoc2VsZik6CisgICAgICAgICIiIgorICAgICAgICBEb24ndCB3YXJuIHdoZW4gdGhlIG1hZ2ljICJfIiAodW5kZXJzY29yZSkgdmFyaWFibGUgaXMgdW51c2VkLgorICAgICAgICBTZWUgaXNzdWUgIzIwMi4KKyAgICAgICAgIiIiCisgICAgICAgIHNlbGYuZmxha2VzKCcnJworICAgICAgICBkZWYgYSh1bnVzZWRfcGFyYW0pOgorICAgICAgICAgICAgXyA9IHVudXNlZF9wYXJhbQorICAgICAgICAnJycpCisKICAgICBkZWYgdGVzdF91bnVzZWRWYXJpYWJsZUFzTG9jYWxzKHNlbGYpOgogICAgICAgICAiIiIKICAgICAgICAgVXNpbmcgbG9jYWxzKCkgaXQgaXMgcGVyZmVjdGx5IHZhbGlkIHRvIGhhdmUgdW51c2VkIHZhcmlhYmxlcwo='\"'\"'))'",
+      "git apply /tmp/receipts-pycqa__pyflakes-335-test.patch"
+    ],
+    "workdir": "/pyflakes"
+  },
+  "spec_paths": [
+    "pyflakes/test/test_imports.py",
+    "pyflakes/test/test_other.py"
+  ],
+  "spec_tests": [
+    "pyflakes/test/test_other.py::TestUnusedAssignment::test_unusedUnderscoreVariable"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pyflakes/test/test_imports.py pyflakes/test/test_other.py"
+}
