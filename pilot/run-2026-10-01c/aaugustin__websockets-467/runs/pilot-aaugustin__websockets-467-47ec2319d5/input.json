@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Pong's CancelledError races with ConnectionClosed error\nI upgraded to the current version of this library and I find it difficult to handle `asyncio.CancelledError` in case the pong is being cancelled due to a disconnect.\r\n\r\nWhat happens in my server is that I'm waiting for pongs in one task while sending and receiving in another task. Both tasks are being waited for. The result is that in some occasions, `asyncio.CancelledError` is raised before `websockets.ConnectionClosed` and vice versa. When the `asyncio.CancelledError` is raised first, there is no context on why it has been raised.\r\n\r\nAnother problem with `asyncio.CancelledError` is that there's no way (IIRC) of finding out whether the current task has been cancelled or the task I'm waiting for has been cancelled. But this mainly is an awkward concept of asyncio and not this libraries fault. It seems one has to be extremely careful on when to cancel a task and when not to cancel a task and instead use other ways to signal cancellation (which highly depends on the task). This may clash with the design choice of this library.\r\n\r\nTL;DR: I would prefer it if this library would raise `websockets.ConnectionClosed` in the pong's future instead of cancelling the pong.",
+  "source": {
+    "image": "docker.io/swerebenchv2/aaugustin-websockets:467-638df3a",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-aaugustin__websockets-467-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfcHJvdG9jb2wucHkgYi90ZXN0cy90ZXN0X3Byb3RvY29sLnB5CmluZGV4IDEzM2EwMTUuLjA2Mzk2MGEgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3Rlc3RfcHJvdG9jb2wucHkKKysrIGIvdGVzdHMvdGVzdF9wcm90b2NvbC5weQpAQCAtNjA1LDEzICs2MDUsMTQgQEAgY2xhc3MgQ29tbW9uVGVzdHM6CiAgICAgICAgIHNlbGYucnVuX2xvb3Bfb25jZSgpCiAgICAgICAgIHNlbGYuYXNzZXJ0VHJ1ZShwaW5nLmRvbmUoKSkKIAotICAgIGRlZiB0ZXN0X2NhbmNlbF9waW5nKHNlbGYpOgorICAgIGRlZiB0ZXN0X2Fib3J0X3Bpbmcoc2VsZik6CiAgICAgICAgIHBpbmcgPSBzZWxmLmxvb3AucnVuX3VudGlsX2NvbXBsZXRlKHNlbGYucHJvdG9jb2wucGluZygpKQogICAgICAgICAjIFJlbW92ZSB0aGUgZnJhbWUgZnJvbSB0aGUgYnVmZmVyLCBlbHNlIGNsb3NlX2Nvbm5lY3Rpb24oKSBjb21wbGFpbnMuCiAgICAgICAgIHNlbGYubGFzdF9zZW50X2ZyYW1lKCkKLSAgICAgICAgc2VsZi5hc3NlcnRGYWxzZShwaW5nLmNhbmNlbGxlZCgpKQorICAgICAgICBzZWxmLmFzc2VydEZhbHNlKHBpbmcuZG9uZSgpKQogICAgICAgICBzZWxmLmNsb3NlX2Nvbm5lY3Rpb24oKQotICAgICAgICBzZWxmLmFzc2VydFRydWUocGluZy5jYW5jZWxsZWQoKSkKKyAgICAgICAgc2VsZi5hc3NlcnRUcnVlKHBpbmcuZG9uZSgpKQorICAgICAgICBzZWxmLmFzc2VydElzSW5zdGFuY2UocGluZy5leGNlcHRpb24oKSwgQ29ubmVjdGlvbkNsb3NlZCkKIAogICAgIGRlZiB0ZXN0X2Fja25vd2xlZGdlX3ByZXZpb3VzX3BpbmdzKHNlbGYpOgogICAgICAgICBwaW5ncyA9IFsK'\"'\"'))'",
+      "git apply /tmp/receipts-aaugustin__websockets-467-test.patch"
+    ],
+    "workdir": "/websockets"
+  },
+  "spec_tests": [
+    "tests/test_protocol.py::ServerTests::test_abort_ping",
+    "tests/test_protocol.py::ClientTests::test_abort_ping"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_protocol.py"
+}

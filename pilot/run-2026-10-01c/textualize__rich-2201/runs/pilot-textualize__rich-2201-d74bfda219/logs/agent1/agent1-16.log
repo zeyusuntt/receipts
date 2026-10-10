@@ -1,0 +1,278 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /rich/tests
+configfile: pytest.ini
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+tests/test_console.py::test_export_svg FAILED                            [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_export_svg ________________________________
+
+    def test_export_svg():
+        console = Console(record=True, width=100)
+        console.print(
+            "[b red on blue reverse]foo[/] [blink][link=https://example.org]Click[/link]"
+        )
+        svg = console.export_svg()
+        svg_main_code_hash = (
+            "857433718"  # hard-coded here after the 1st time we ran this test
+        )
+        expected_svg = EXPECTED_SVG.replace("${SVG_HASH}", svg_main_code_hash)
+>       assert svg == expected_svg
+E       assert '<svg width="1484.0" height="384" viewBox="0 0 1484.0 384"\n     xmlns="http://www.w3.org/2000/svg">\n    <style>\n        @font-face {\n            font-family: "Rich Fira Code";\n            src: local("FiraCode-Regular"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");\n            font-style: normal;\n            font-weight: 400;\n        }\n        @font-face {\n            font-family: "Rich Fira Code";\n            src: local("FiraCode-Bold"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");\n            font-style: bold;\n            font-weight: 700;\n        }\n        .rich-svg-857433718-terminal-wrapper span {\n            display: inline-block;\n            white-space: pre;\n            vertical-align: top;\n            font-size: 18px;\n            font-family:\'Rich Fira Code\',\'Cascadia Code\',Monaco,Menlo,\'DejaVu Sans Mono\',consolas,\'Courier New\',monospace;\n        }\n        .rich-svg-857433718-terminal-wrapper a {\n            text-decoration: none;\n            color: inherit;\n        }\n        .rich-svg-857433718-terminal-body .blink {\n           animation: rich-svg-857433718-blinker 1s infinite;\n        }\n        @keyframes rich-svg-857433718-blinker {\n            from { opacity: 1.0; }\n            50% { opacity: 0.3; }\n            to { opacity: 1.0; }\n        }\n        .rich-svg-857433718-terminal-wrapper {\n            padding: 140px;\n            padding-top: 100px;\n        }\n        .rich-svg-857433718-terminal {\n            position: relative;\n            display: flex;\n            flex-direction: column;\n            align-items: center;\n            background-color: #0c0c0c;\n            border-radius: 14px;\n            outline: 1px solid #484848;\n        }\n        .rich-svg-857433718-terminal:after {\n            position: absolute;\n            width: 100%;\n            height: 100%;\n            content: \'\';\n            border-radius: 14px;\n            background: rgb(71,77,102);\n            background: linear-gradient(90deg, #804D69 0%, #4E4B89 100%);\n            transform: rotate(-4.5deg);\n            z-index: -1;\n        }\n        .rich-svg-857433718-terminal-header {\n            position: relative;\n            width: 100%;\n            background-color: #2e2e2e;\n            margin-bottom: 12px;\n            font-weight: bold;\n            border-radius: 14px 14px 0 0;\n            color: #f2f2f2;\n            font-size: 18px;\n            box-shadow: inset 0px -1px 0px 0px #4e4e4e,\n                        inset 0px -4px 8px 0px #1a1a1a;\n        }\n        .rich-svg-857433718-terminal-title-tab {\n            display: inline-block;\n            margin-top: 14px;\n            margin-left: 124px;\n            font-family: sans-serif;\n            padding: 14px 28px;\n            border-radius: 6px 6px 0 0;\n            background-color: #0c0c0c;\n            box-shadow: inset 0px 1px 0px 0px #4e4e4e,\n                        0px -4px 4px 0px #1e1e1e,\n                        inset 1px 0px 0px 0px #4e4e4e,\n                        inset -1px 0px 0px 0px #4e4e4e;\n        }\n        .rich-svg-857433718-terminal-traffic-lights {\n            position: absolute;\n            top: 24px;\n            left: 20px;\n        }\n        .rich-svg-857433718-terminal-body {\n            line-height: 22px;\n            padding: 14px;\n        }\n        .rich-svg-857433718-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}\n.rich-svg-857433718-terminal-body .r2 {color: #2472c8; text-decoration-color: #2472c8; background-color: #cd3131; font-weight: bold}\n.rich-svg-857433718-terminal-body .r3 {;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}\n    </style>\n    <foreignObject x="0" y="0" width="100%" height="100%">\n        <body xmlns="http://www.w3.org/1999/xhtml">\n            <div class="rich-svg-857433718-terminal-wrapper">\n                <div class="rich-svg-857433718-terminal">\n                    <div class="rich-svg-857433718-terminal-header">\n                        <svg class="rich-svg-857433718-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">\n                            <circle cx="14" cy="8" r="8" fill="#ff6159"/>\n                            <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>\n                            <circle cx="62" cy="8" r="8" fill="#28c941"/>\n                        </svg>\n                        <div class="rich-svg-857433718-terminal-title-tab">Rich</div>\n                    </div>\n                    <div class="rich-svg-857433718-terminal-body">\n                        <div><span class="r2">foo</span><span class="r1"> </span><span class="r3"><span class="blink"><a href="https://example.org">Click</a></span></span><span class="r1">                                                                                           </span></div>\n<div><span class="r1"></span><span class="r1">                                                                                                    </span></div>\n                    </div>\n                </div>\n            </div>\n        </body>\n    </foreignObject>\n</svg>\n' == '<svg width="1484.0" height="384" viewBox="0 0 1484.0 384"\n     xmlns="http://www.w3.org/2000/svg">\n    <style>\n        @font-face {\n            font-family: "Rich Fira Code";\n            src: local("FiraCode-Regular"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");\n            font-style: normal;\n            font-weight: 400;\n        }\n        @font-face {\n            font-family: "Rich Fira Code";\n            src: local("FiraCode-Bold"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");\n            font-style: bold;\n            font-weight: 700;\n        }\n        .rich-svg-857433718-terminal-wrapper span {\n            display: inline-block;\n            white-space: pre;\n            vertical-align: top;\n            font-size: 18px;\n            font-family:\'Rich Fira Code\',\'Cascadia Code\',Monaco,Menlo,\'DejaVu Sans Mono\',consolas,\'Courier New\',monospace;\n        }\n        .rich-svg-857433718-terminal-wrapper a {\n            text-decoration: none;\n            color: inherit;\n        }\n        .rich-svg-857433718-terminal-body .blink {\n           animation: rich-svg-857433718-blinker 1s infinite;\n        }\n        @keyframes rich-svg-857433718-blinker {\n            from { opacity: 1.0; }\n            50% { opacity: 0.3; }\n            to { opacity: 1.0; }\n        }\n        .rich-svg-857433718-terminal-wrapper {\n            padding: 140px;\n            padding-top: 100px;\n        }\n        .rich-svg-857433718-terminal {\n            position: relative;\n            display: flex;\n            flex-direction: column;\n            align-items: center;\n            background-color: #0c0c0c;\n            border-radius: 14px;\n            box-shadow: 0 0 0 1px #484848;\n        }\n        .rich-svg-857433718-terminal:after {\n            position: absolute;\n            width: 100%;\n            height: 100%;\n            content: \'\';\n            border-radius: 14px;\n            background: rgb(71,77,102);\n            background: linear-gradient(90deg, #804D69 0%, #4E4B89 100%);\n            transform: rotate(-4.5deg);\n            z-index: -1;\n        }\n        .rich-svg-857433718-terminal-header {\n            position: relative;\n            width: 100%;\n            background-color: #2e2e2e;\n            margin-bottom: 12px;\n            font-weight: bold;\n            border-radius: 14px 14px 0 0;\n            color: #f2f2f2;\n            font-size: 18px;\n            box-shadow: inset 0px -1px 0px 0px #4e4e4e,\n                        inset 0px -4px 8px 0px #1a1a1a;\n        }\n        .rich-svg-857433718-terminal-title-tab {\n            display: inline-block;\n            margin-top: 14px;\n            margin-left: 124px;\n            font-family: sans-serif;\n            padding: 14px 28px;\n            border-radius: 6px 6px 0 0;\n            background-color: #0c0c0c;\n            box-shadow: inset 0px 1px 0px 0px #4e4e4e,\n                        0px -4px 4px 0px #1e1e1e,\n                        inset 1px 0px 0px 0px #4e4e4e,\n                        inset -1px 0px 0px 0px #4e4e4e;\n        }\n        .rich-svg-857433718-terminal-traffic-lights {\n            position: absolute;\n            top: 24px;\n            left: 20px;\n        }\n        .rich-svg-857433718-terminal-body {\n            line-height: 22px;\n            padding: 14px;\n        }\n        .rich-svg-857433718-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}\n.rich-svg-857433718-terminal-body .r2 {color: #2472c8; text-decoration-color: #2472c8; background-color: #cd3131; font-weight: bold}\n.rich-svg-857433718-terminal-body .r3 {;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}\n    </style>\n    <foreignObject x="0" y="0" width="100%" height="100%">\n        <body xmlns="http://www.w3.org/1999/xhtml">\n            <div class="rich-svg-857433718-terminal-wrapper">\n                <div class="rich-svg-857433718-terminal">\n                    <div class="rich-svg-857433718-terminal-header">\n                        <svg class="rich-svg-857433718-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">\n                            <circle cx="14" cy="8" r="8" fill="#ff6159"/>\n                            <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>\n                            <circle cx="62" cy="8" r="8" fill="#28c941"/>\n                        </svg>\n                        <div class="rich-svg-857433718-terminal-title-tab">Rich</div>\n                    </div>\n                    <div class="rich-svg-857433718-terminal-body">\n                        <div><span class="r2">foo</span><span class="r1"> </span><span class="r3"><span class="blink"><a href="https://example.org">Click</a></span></span><span class="r1">                                                                                           </span></div>\n<div><span class="r1"></span><span class="r1">                                                                                                    </span></div>\n                    </div>\n                </div>\n            </div>\n        </body>\n    </foreignObject>\n</svg>\n'
+E         
+E           <svg width="1484.0" height="384" viewBox="0 0 1484.0 384"
+E                xmlns="http://www.w3.org/2000/svg">
+E               <style>
+E                   @font-face {
+E                       font-family: "Rich Fira Code";
+E                       src: local("FiraCode-Regular"),
+E                            url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),
+E                            url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");
+E                       font-style: normal;
+E                       font-weight: 400;
+E                   }
+E                   @font-face {
+E                       font-family: "Rich Fira Code";
+E                       src: local("FiraCode-Bold"),
+E                            url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),
+E                            url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");
+E                       font-style: bold;
+E                       font-weight: 700;
+E                   }
+E                   .rich-svg-857433718-terminal-wrapper span {
+E                       display: inline-block;
+E                       white-space: pre;
+E                       vertical-align: top;
+E                       font-size: 18px;
+E                       font-family:'Rich Fira Code','Cascadia Code',Monaco,Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace;
+E                   }
+E                   .rich-svg-857433718-terminal-wrapper a {
+E                       text-decoration: none;
+E                       color: inherit;
+E                   }
+E                   .rich-svg-857433718-terminal-body .blink {
+E                      animation: rich-svg-857433718-blinker 1s infinite;
+E                   }
+E                   @keyframes rich-svg-857433718-blinker {
+E                       from { opacity: 1.0; }
+E                       50% { opacity: 0.3; }
+E                       to { opacity: 1.0; }
+E                   }
+E                   .rich-svg-857433718-terminal-wrapper {
+E                       padding: 140px;
+E                       padding-top: 100px;
+E                   }
+E                   .rich-svg-857433718-terminal {
+E                       position: relative;
+E                       display: flex;
+E                       flex-direction: column;
+E                       align-items: center;
+E                       background-color: #0c0c0c;
+E                       border-radius: 14px;
+E         -             box-shadow: 0 0 0 1px #484848;
+E         +             outline: 1px solid #484848;
+E                   }
+E                   .rich-svg-857433718-terminal:after {
+E                       position: absolute;
+E                       width: 100%;
+E                       height: 100%;
+E                       content: '';
+E                       border-radius: 14px;
+E                       background: rgb(71,77,102);
+E                       background: linear-gradient(90deg, #804D69 0%, #4E4B89 100%);
+E                       transform: rotate(-4.5deg);
+E                       z-index: -1;
+E                   }
+E                   .rich-svg-857433718-terminal-header {
+E                       position: relative;
+E                       width: 100%;
+E                       background-color: #2e2e2e;
+E                       margin-bottom: 12px;
+E                       font-weight: bold;
+E                       border-radius: 14px 14px 0 0;
+E                       color: #f2f2f2;
+E                       font-size: 18px;
+E                       box-shadow: inset 0px -1px 0px 0px #4e4e4e,
+E                                   inset 0px -4px 8px 0px #1a1a1a;
+E                   }
+E                   .rich-svg-857433718-terminal-title-tab {
+E                       display: inline-block;
+E                       margin-top: 14px;
+E                       margin-left: 124px;
+E                       font-family: sans-serif;
+E                       padding: 14px 28px;
+E                       border-radius: 6px 6px 0 0;
+E                       background-color: #0c0c0c;
+E                       box-shadow: inset 0px 1px 0px 0px #4e4e4e,
+E                                   0px -4px 4px 0px #1e1e1e,
+E                                   inset 1px 0px 0px 0px #4e4e4e,
+E                                   inset -1px 0px 0px 0px #4e4e4e;
+E                   }
+E                   .rich-svg-857433718-terminal-traffic-lights {
+E                       position: absolute;
+E                       top: 24px;
+E                       left: 20px;
+E                   }
+E                   .rich-svg-857433718-terminal-body {
+E                       line-height: 22px;
+E                       padding: 14px;
+E                   }
+E                   .rich-svg-857433718-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}
+E           .rich-svg-857433718-terminal-body .r2 {color: #2472c8; text-decoration-color: #2472c8; background-color: #cd3131; font-weight: bold}
+E           .rich-svg-857433718-terminal-body .r3 {;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}
+E               </style>
+E               <foreignObject x="0" y="0" width="100%" height="100%">
+E                   <body xmlns="http://www.w3.org/1999/xhtml">
+E                       <div class="rich-svg-857433718-terminal-wrapper">
+E                           <div class="rich-svg-857433718-terminal">
+E                               <div class="rich-svg-857433718-terminal-header">
+E                                   <svg class="rich-svg-857433718-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">
+E                                       <circle cx="14" cy="8" r="8" fill="#ff6159"/>
+E                                       <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>
+E                                       <circle cx="62" cy="8" r="8" fill="#28c941"/>
+E                                   </svg>
+E                                   <div class="rich-svg-857433718-terminal-title-tab">Rich</div>
+E                               </div>
+E                               <div class="rich-svg-857433718-terminal-body">
+E                                   <div><span class="r2">foo</span><span class="r1"> </span><span class="r3"><span class="blink"><a href="https://example.org">Click</a></span></span><span class="r1">                                                                                           </span></div>
+E           <div><span class="r1"></span><span class="r1">                                                                                                    </span></div>
+E                               </div>
+E                           </div>
+E                       </div>
+E                   </body>
+E               </foreignObject>
+E           </svg>
+
+tests/test_console.py:631: AssertionError
+----------------------------- Captured stdout call -----------------------------
+foo Click
+----------- generated xml file: /opt/receipts/reports/agent1-16.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_console.py::test_export_svg - assert '<svg width="1484.0" height="384" viewBox="0 0 1484.0 384"\n     xmlns="http://www.w3.org/2000/svg">\n    <style>\n        @font-face {\n            font-family: "Rich Fira Code";\n            src: local("FiraCode-Regular"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");\n            font-style: normal;\n            font-weight: 400;\n        }\n        @font-face {\n            font-family: "Rich Fira Code";\n            src: local("FiraCode-Bold"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");\n            font-style: bold;\n            font-weight: 700;\n        }\n        .rich-svg-857433718-terminal-wrapper span {\n            display: inline-block;\n            white-space: pre;\n            vertical-align: top;\n            font-size: 18px;\n            font-family:\'Rich Fira Code\',\'Cascadia Code\',Monaco,Menlo,\'DejaVu Sans Mono\',consolas,\'Courier New\',monospace;\n        }\n        .rich-svg-857433718-terminal-wrapper a {\n            text-decoration: none;\n            color: inherit;\n        }\n        .rich-svg-857433718-terminal-body .blink {\n           animation: rich-svg-857433718-blinker 1s infinite;\n        }\n        @keyframes rich-svg-857433718-blinker {\n            from { opacity: 1.0; }\n            50% { opacity: 0.3; }\n            to { opacity: 1.0; }\n        }\n        .rich-svg-857433718-terminal-wrapper {\n            padding: 140px;\n            padding-top: 100px;\n        }\n        .rich-svg-857433718-terminal {\n            position: relative;\n            display: flex;\n            flex-direction: column;\n            align-items: center;\n            background-color: #0c0c0c;\n            border-radius: 14px;\n            outline: 1px solid #484848;\n        }\n        .rich-svg-857433718-terminal:after {\n            position: absolute;\n            width: 100%;\n            height: 100%;\n            content: \'\';\n            border-radius: 14px;\n            background: rgb(71,77,102);\n            background: linear-gradient(90deg, #804D69 0%, #4E4B89 100%);\n            transform: rotate(-4.5deg);\n            z-index: -1;\n        }\n        .rich-svg-857433718-terminal-header {\n            position: relative;\n            width: 100%;\n            background-color: #2e2e2e;\n            margin-bottom: 12px;\n            font-weight: bold;\n            border-radius: 14px 14px 0 0;\n            color: #f2f2f2;\n            font-size: 18px;\n            box-shadow: inset 0px -1px 0px 0px #4e4e4e,\n                        inset 0px -4px 8px 0px #1a1a1a;\n        }\n        .rich-svg-857433718-terminal-title-tab {\n            display: inline-block;\n            margin-top: 14px;\n            margin-left: 124px;\n            font-family: sans-serif;\n            padding: 14px 28px;\n            border-radius: 6px 6px 0 0;\n            background-color: #0c0c0c;\n            box-shadow: inset 0px 1px 0px 0px #4e4e4e,\n                        0px -4px 4px 0px #1e1e1e,\n                        inset 1px 0px 0px 0px #4e4e4e,\n                        inset -1px 0px 0px 0px #4e4e4e;\n        }\n        .rich-svg-857433718-terminal-traffic-lights {\n            position: absolute;\n            top: 24px;\n            left: 20px;\n        }\n        .rich-svg-857433718-terminal-body {\n            line-height: 22px;\n            padding: 14px;\n        }\n        .rich-svg-857433718-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}\n.rich-svg-857433718-terminal-body .r2 {color: #2472c8; text-decoration-color: #2472c8; background-color: #cd3131; font-weight: bold}\n.rich-svg-857433718-terminal-body .r3 {;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}\n    </style>\n    <foreignObject x="0" y="0" width="100%" height="100%">\n        <body xmlns="http://www.w3.org/1999/xhtml">\n            <div class="rich-svg-857433718-terminal-wrapper">\n                <div class="rich-svg-857433718-terminal">\n                    <div class="rich-svg-857433718-terminal-header">\n                        <svg class="rich-svg-857433718-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">\n                            <circle cx="14" cy="8" r="8" fill="#ff6159"/>\n                            <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>\n                            <circle cx="62" cy="8" r="8" fill="#28c941"/>\n                        </svg>\n                        <div class="rich-svg-857433718-terminal-title-tab">Rich</div>\n                    </div>\n                    <div class="rich-svg-857433718-terminal-body">\n                        <div><span class="r2">foo</span><span class="r1"> </span><span class="r3"><span class="blink"><a href="https://example.org">Click</a></span></span><span class="r1">                                                                                           </span></div>\n<div><span class="r1"></span><span class="r1">                                                                                                    </span></div>\n                    </div>\n                </div>\n            </div>\n        </body>\n    </foreignObject>\n</svg>\n' == '<svg width="1484.0" height="384" viewBox="0 0 1484.0 384"\n     xmlns="http://www.w3.org/2000/svg">\n    <style>\n        @font-face {\n            font-family: "Rich Fira Code";\n            src: local("FiraCode-Regular"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");\n            font-style: normal;\n            font-weight: 400;\n        }\n        @font-face {\n            font-family: "Rich Fira Code";\n            src: local("FiraCode-Bold"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),\n                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");\n            font-style: bold;\n            font-weight: 700;\n        }\n        .rich-svg-857433718-terminal-wrapper span {\n            display: inline-block;\n            white-space: pre;\n            vertical-align: top;\n            font-size: 18px;\n            font-family:\'Rich Fira Code\',\'Cascadia Code\',Monaco,Menlo,\'DejaVu Sans Mono\',consolas,\'Courier New\',monospace;\n        }\n        .rich-svg-857433718-terminal-wrapper a {\n            text-decoration: none;\n            color: inherit;\n        }\n        .rich-svg-857433718-terminal-body .blink {\n           animation: rich-svg-857433718-blinker 1s infinite;\n        }\n        @keyframes rich-svg-857433718-blinker {\n            from { opacity: 1.0; }\n            50% { opacity: 0.3; }\n            to { opacity: 1.0; }\n        }\n        .rich-svg-857433718-terminal-wrapper {\n            padding: 140px;\n            padding-top: 100px;\n        }\n        .rich-svg-857433718-terminal {\n            position: relative;\n            display: flex;\n            flex-direction: column;\n            align-items: center;\n            background-color: #0c0c0c;\n            border-radius: 14px;\n            box-shadow: 0 0 0 1px #484848;\n        }\n        .rich-svg-857433718-terminal:after {\n            position: absolute;\n            width: 100%;\n            height: 100%;\n            content: \'\';\n            border-radius: 14px;\n            background: rgb(71,77,102);\n            background: linear-gradient(90deg, #804D69 0%, #4E4B89 100%);\n            transform: rotate(-4.5deg);\n            z-index: -1;\n        }\n        .rich-svg-857433718-terminal-header {\n            position: relative;\n            width: 100%;\n            background-color: #2e2e2e;\n            margin-bottom: 12px;\n            font-weight: bold;\n            border-radius: 14px 14px 0 0;\n            color: #f2f2f2;\n            font-size: 18px;\n            box-shadow: inset 0px -1px 0px 0px #4e4e4e,\n                        inset 0px -4px 8px 0px #1a1a1a;\n        }\n        .rich-svg-857433718-terminal-title-tab {\n            display: inline-block;\n            margin-top: 14px;\n            margin-left: 124px;\n            font-family: sans-serif;\n            padding: 14px 28px;\n            border-radius: 6px 6px 0 0;\n            background-color: #0c0c0c;\n            box-shadow: inset 0px 1px 0px 0px #4e4e4e,\n                        0px -4px 4px 0px #1e1e1e,\n                        inset 1px 0px 0px 0px #4e4e4e,\n                        inset -1px 0px 0px 0px #4e4e4e;\n        }\n        .rich-svg-857433718-terminal-traffic-lights {\n            position: absolute;\n            top: 24px;\n            left: 20px;\n        }\n        .rich-svg-857433718-terminal-body {\n            line-height: 22px;\n            padding: 14px;\n        }\n        .rich-svg-857433718-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}\n.rich-svg-857433718-terminal-body .r2 {color: #2472c8; text-decoration-color: #2472c8; background-color: #cd3131; font-weight: bold}\n.rich-svg-857433718-terminal-body .r3 {;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}\n    </style>\n    <foreignObject x="0" y="0" width="100%" height="100%">\n        <body xmlns="http://www.w3.org/1999/xhtml">\n            <div class="rich-svg-857433718-terminal-wrapper">\n                <div class="rich-svg-857433718-terminal">\n                    <div class="rich-svg-857433718-terminal-header">\n                        <svg class="rich-svg-857433718-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">\n                            <circle cx="14" cy="8" r="8" fill="#ff6159"/>\n                            <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>\n                            <circle cx="62" cy="8" r="8" fill="#28c941"/>\n                        </svg>\n                        <div class="rich-svg-857433718-terminal-title-tab">Rich</div>\n                    </div>\n                    <div class="rich-svg-857433718-terminal-body">\n                        <div><span class="r2">foo</span><span class="r1"> </span><span class="r3"><span class="blink"><a href="https://example.org">Click</a></span></span><span class="r1">                                                                                           </span></div>\n<div><span class="r1"></span><span class="r1">                                                                                                    </span></div>\n                    </div>\n                </div>\n            </div>\n        </body>\n    </foreignObject>\n</svg>\n'
+  
+    <svg width="1484.0" height="384" viewBox="0 0 1484.0 384"
+         xmlns="http://www.w3.org/2000/svg">
+        <style>
+            @font-face {
+                font-family: "Rich Fira Code";
+                src: local("FiraCode-Regular"),
+                     url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),
+                     url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");
+                font-style: normal;
+                font-weight: 400;
+            }
+            @font-face {
+                font-family: "Rich Fira Code";
+                src: local("FiraCode-Bold"),
+                     url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),
+                     url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");
+                font-style: bold;
+                font-weight: 700;
+            }
+            .rich-svg-857433718-terminal-wrapper span {
+                display: inline-block;
+                white-space: pre;
+                vertical-align: top;
+                font-size: 18px;
+                font-family:'Rich Fira Code','Cascadia Code',Monaco,Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace;
+            }
+            .rich-svg-857433718-terminal-wrapper a {
+                text-decoration: none;
+                color: inherit;
+            }
+            .rich-svg-857433718-terminal-body .blink {
+               animation: rich-svg-857433718-blinker 1s infinite;
+            }
+            @keyframes rich-svg-857433718-blinker {
+                from { opacity: 1.0; }
+                50% { opacity: 0.3; }
+                to { opacity: 1.0; }
+            }
+            .rich-svg-857433718-terminal-wrapper {
+                padding: 140px;
+                padding-top: 100px;
+            }
+            .rich-svg-857433718-terminal {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                background-color: #0c0c0c;
+                border-radius: 14px;
+  -             box-shadow: 0 0 0 1px #484848;
+  +             outline: 1px solid #484848;
+            }
+            .rich-svg-857433718-terminal:after {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                content: '';
+                border-radius: 14px;
+                background: rgb(71,77,102);
+                background: linear-gradient(90deg, #804D69 0%, #4E4B89 100%);
+                transform: rotate(-4.5deg);
+                z-index: -1;
+            }
+            .rich-svg-857433718-terminal-header {
+                position: relative;
+                width: 100%;
+                background-color: #2e2e2e;
+                margin-bottom: 12px;
+                font-weight: bold;
+                border-radius: 14px 14px 0 0;
+                color: #f2f2f2;
+                font-size: 18px;
+                box-shadow: inset 0px -1px 0px 0px #4e4e4e,
+                            inset 0px -4px 8px 0px #1a1a1a;
+            }
+            .rich-svg-857433718-terminal-title-tab {
+                display: inline-block;
+                margin-top: 14px;
+                margin-left: 124px;
+                font-family: sans-serif;
+                padding: 14px 28px;
+                border-radius: 6px 6px 0 0;
+                background-color: #0c0c0c;
+                box-shadow: inset 0px 1px 0px 0px #4e4e4e,
+                            0px -4px 4px 0px #1e1e1e,
+                            inset 1px 0px 0px 0px #4e4e4e,
+                            inset -1px 0px 0px 0px #4e4e4e;
+            }
+            .rich-svg-857433718-terminal-traffic-lights {
+                position: absolute;
+                top: 24px;
+                left: 20px;
+            }
+            .rich-svg-857433718-terminal-body {
+                line-height: 22px;
+                padding: 14px;
+            }
+            .rich-svg-857433718-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}
+    .rich-svg-857433718-terminal-body .r2 {color: #2472c8; text-decoration-color: #2472c8; background-color: #cd3131; font-weight: bold}
+    .rich-svg-857433718-terminal-body .r3 {;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}
+        </style>
+        <foreignObject x="0" y="0" width="100%" height="100%">
+            <body xmlns="http://www.w3.org/1999/xhtml">
+                <div class="rich-svg-857433718-terminal-wrapper">
+                    <div class="rich-svg-857433718-terminal">
+                        <div class="rich-svg-857433718-terminal-header">
+                            <svg class="rich-svg-857433718-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="14" cy="8" r="8" fill="#ff6159"/>
+                                <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>
+                                <circle cx="62" cy="8" r="8" fill="#28c941"/>
+                            </svg>
+                            <div class="rich-svg-857433718-terminal-title-tab">Rich</div>
+                        </div>
+                        <div class="rich-svg-857433718-terminal-body">
+                            <div><span class="r2">foo</span><span class="r1"> </span><span class="r3"><span class="blink"><a href="https://example.org">Click</a></span></span><span class="r1">                                                                                           </span></div>
+    <div><span class="r1"></span><span class="r1">                                                                                                    </span></div>
+                        </div>
+                    </div>
+                </div>
+            </body>
+        </foreignObject>
+    </svg>
+============================== 1 failed in 0.26s ===============================

@@ -1,0 +1,85 @@
+diff --git a/babel/localedata.py b/babel/localedata.py
+index 9e272a2..c4be655 100644
+--- a/babel/localedata.py
++++ b/babel/localedata.py
+@@ -14,6 +14,9 @@
+ 
+ import os
+ import threading
++import pkgutil
++import sys
++from io import BytesIO
+ from collections import MutableMapping
+ from itertools import chain
+ 
+@@ -22,7 +25,14 @@ from babel._compat import pickle
+ 
+ _cache = {}
+ _cache_lock = threading.RLock()
+-_dirname = os.path.join(os.path.dirname(__file__), 'locale-data')
++_PACKAGE = 'babel'
++_DIRNAME = os.path.join(os.path.dirname(__file__), 'locale-data')
++
++
++def get_base_dir():
++    if getattr(sys, 'frozen', False):
++        return sys._MEIPASS
++    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+ 
+ 
+ def normalize_locale(name):
+@@ -46,7 +56,7 @@ def exists(name):
+     """
+     if name in _cache:
+         return True
+-    file_found = os.path.exists(os.path.join(_dirname, '%s.dat' % name))
++    file_found = os.path.exists(os.path.join(_DIRNAME, '%s.dat' % name))
+     return True if file_found else bool(normalize_locale(name))
+ 
+ 
+@@ -59,7 +69,7 @@ def locale_identifiers():
+     :return: a list of locale identifiers (strings)
+     """
+     return [stem for stem, extension in [
+-        os.path.splitext(filename) for filename in os.listdir(_dirname)
++        os.path.splitext(filename) for filename in os.listdir(_DIRNAME)
+     ] if extension == '.dat' and stem != 'root']
+ 
+ 
+@@ -83,7 +93,7 @@ def load(name, merge_inherited=True):
+     True
+ 
+     :param name: the locale identifier string (or "root")
+-    :param merge_inherited: whether the inherited data should be merged into
++    :param merge_interned: whether the inherited data should be merged into
+                             the data of the requested locale
+     :raise `IOError`: if no locale data file is found for the given locale
+                       identifer, or one of the locales it inherits from
+@@ -105,12 +115,14 @@ def load(name, merge_inherited=True):
+                     else:
+                         parent = '_'.join(parts[:-1])
+                 data = load(parent).copy()
+-            filename = os.path.join(_dirname, '%s.dat' % name)
+-            with open(filename, 'rb') as fileobj:
+-                if name != 'root' and merge_inherited:
+-                    merge(data, pickle.load(fileobj))
+-                else:
+-                    data = pickle.load(fileobj)
++            data_bytes = pkgutil.get_data(_PACKAGE, 'locale-data/%s.dat' % name)
++            if data_bytes is None:
++                raise IOError('No locale data file found for %r' % name)
++            fileobj = BytesIO(data_bytes)
++            if name != 'root' and merge_inherited:
++                merge(data, pickle.load(fileobj))
++            else:
++                data = pickle.load(fileobj)
+             _cache[name] = data
+         return data
+     finally:
+@@ -221,4 +233,4 @@ class LocaleDataDict(MutableMapping):
+         del self._data[key]
+ 
+     def copy(self):
+-        return LocaleDataDict(self._data.copy(), base=self.base)
++        return LocaleDataDict(self._data.copy(), base=self.base)
+\ No newline at end of file

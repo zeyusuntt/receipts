@@ -1,0 +1,18 @@
+            keyword = tk[1:]
+            tk = tokens.consume()
+            value = None
+            if tk == "(":
+                counter = 1
+                buff = [tk]
+                while counter != 0:
+                    tk = tokens.raw_read()
+                    if tk == "(":
+                        counter += 1
+                    elif tk == ")":
+                        counter -= 1
+                    buff.append(tk)
+                value = "".join(buff)
+            else:
+                value = tk
+            tk = tokens.consume()
+            self.cache.annotations.add(term, keyword, value)

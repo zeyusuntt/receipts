@@ -1,0 +1,49 @@
+diff --git a/final_verification.py b/final_verification.py
+new file mode 100644
+index 000000000..4622dd3b0
+--- /dev/null
++++ b/final_verification.py
+@@ -0,0 +1,25 @@
++"""
++Exact reproduction of the issue from the GitHub issue report.
++This should work without throwing ValueError: max() arg is an empty sequence
++"""
++from qiskit import QuantumCircuit, transpile
++from qiskit.circuit.library import GlobalPhaseGate
++
++
++qc_qiskit = QuantumCircuit(2, 2)
++
++qc_qiskit.cx(0, 1)
++
++transpiled_qc = transpile(qc_qiskit,
++                          basis_gates=['u3', 'cx'],
++                          optimization_level=3,
++                          seed_transpiler=0)
++
++transpiled_qc.append(GlobalPhaseGate(2.5928519981876477), [], [])
++
++transpiled_qc.global_phase
++
++# This line previously caused: ValueError: max() arg is an empty sequence
++result = transpiled_qc.depth()
++print(f"Circuit depth: {result}")
++print("SUCCESS: No ValueError thrown!")
+\ No newline at end of file
+diff --git a/qiskit/circuit/quantumcircuit.py b/qiskit/circuit/quantumcircuit.py
+index a157f0437..0ca807d33 100644
+--- a/qiskit/circuit/quantumcircuit.py
++++ b/qiskit/circuit/quantumcircuit.py
+@@ -3380,7 +3380,11 @@ class QuantumCircuit:
+                         reg_ints.append(idx)
+                         levels.append(op_stack[idx] + 1)
+ 
+-            max_level = max(levels)
++            # Handle case where levels is empty (e.g., GlobalPhaseGate)
++            if not levels:
++                max_level = 0
++            else:
++                max_level = max(levels)
+             for ind in reg_ints:
+                 op_stack[ind] = max_level
+ 

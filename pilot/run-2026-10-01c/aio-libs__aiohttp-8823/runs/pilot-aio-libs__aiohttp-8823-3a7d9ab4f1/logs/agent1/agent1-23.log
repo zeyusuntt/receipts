@@ -1,0 +1,479 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-8.1.1, pluggy-1.4.0 -- /usr/local/bin/python
+rootdir: /aiohttp
+configfile: setup.cfg
+plugins: cov-5.0.0, mock-3.14.0
+collecting ... collected 2 items
+
+tests/test_http_parser.py::test_request_te_chunked123[py-parser-pyloop] FAILED [ 50%]
+tests/test_http_parser.py::test_request_te_first_chunked[py-parser-pyloop] FAILED [100%]
+
+=================================== FAILURES ===================================
+_________________ test_request_te_chunked123[py-parser-pyloop] _________________
+
+parser = <aiohttp.http_parser.HttpRequestParser object at 0x711025236920>
+
+    def test_request_te_chunked123(parser: HttpRequestParser) -> None:
+        text = b"GET /test HTTP/1.1\r\n" b"transfer-encoding: chunked123\r\n\r\n"
+        with pytest.raises(
+            http_exceptions.BadHttpMessage,
+            match="Request has invalid `Transfer-Encoding`",
+        ):
+>           parser.feed_data(text)
+
+parser     = <aiohttp.http_parser.HttpRequestParser object at 0x711025236920>
+text       = b'GET /test HTTP/1.1\r\ntransfer-encoding: chunked123\r\n\r\n'
+
+tests/test_http_parser.py:533: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+aiohttp/http_parser.py:328: in feed_data
+    msg: _MsgT = self.parse_message(self._lines)
+        CONTENT_LENGTH = 'Content-Length'
+        EMPTY      = b''
+        METH_CONNECT = 'CONNECT'
+        SEC_WEBSOCKET_KEY1 = 'Sec-WebSocket-Key1'
+        SEP        = b'\r\n'
+        data       = b'GET /test HTTP/1.1\r\ntransfer-encoding: chunked123\r\n\r\n'
+        data_len   = 53
+        line       = b''
+        loop       = <_UnixSelectorEventLoop running=False closed=False debug=False>
+        messages   = []
+        pos        = 51
+        self       = <aiohttp.http_parser.HttpRequestParser object at 0x711025236920>
+        start_pos  = 53
+aiohttp/http_parser.py:631: in parse_message
+    ) = self.parse_headers(lines)
+        _hash_separator = ''
+        _question_mark_separator = ''
+        line       = 'GET /test HTTP/1.1'
+        lines      = []
+        match      = <re.Match object; span=(0, 8), match='HTTP/1.1'>
+        method     = 'GET'
+        path       = '/test'
+        path_part  = '/test'
+        qs_part    = ''
+        self       = <aiohttp.http_parser.HttpRequestParser object at 0x711025236920>
+        url        = URL('/test')
+        url_fragment = ''
+        version    = 'HTTP/1.1'
+        version_o  = HttpVersion(major=1, minor=1)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <aiohttp.http_parser.HttpRequestParser object at 0x711025236920>
+lines = []
+
+    def parse_headers(
+        self, lines: List[bytes]
+    ) -> Tuple[
+        "CIMultiDictProxy[str]", RawHeaders, Optional[bool], Optional[str], bool, bool
+    ]:
+        """Parses RFC 5322 headers from a stream.
+    
+        Line continuations are supported. Returns list of header name
+        and value pairs. Header name is in upper case.
+        """
+        headers, raw_headers = self._headers_parser.parse_headers(lines)
+        close_conn = None
+        encoding = None
+        upgrade = False
+        chunked = False
+    
+        # https://www.rfc-editor.org/rfc/rfc9110.html#section-5.5-6
+        # https://www.rfc-editor.org/rfc/rfc9110.html#name-collected-abnf
+        singletons = (
+            hdrs.CONTENT_LENGTH,
+            hdrs.CONTENT_LOCATION,
+            hdrs.CONTENT_RANGE,
+            hdrs.CONTENT_TYPE,
+            hdrs.ETAG,
+            hdrs.HOST,
+            hdrs.MAX_FORWARDS,
+            hdrs.SERVER,
+            hdrs.TRANSFER_ENCODING,
+            hdrs.USER_AGENT,
+        )
+        bad_hdr = next((h for h in singletons if len(headers.getall(h, ())) > 1), None)
+        if bad_hdr is not None:
+            raise BadHttpMessage(f"Duplicate '{bad_hdr}' header found.")
+    
+        # keep-alive
+        conn = headers.get(hdrs.CONNECTION)
+        if conn:
+            v = conn.lower()
+            if v == "close":
+                close_conn = True
+            elif v == "keep-alive":
+                close_conn = False
+            # https://www.rfc-editor.org/rfc/rfc9110.html#name-101-switching-protocols
+            elif v == "upgrade" and headers.get(hdrs.UPGRADE):
+                upgrade = True
+    
+        # encoding
+        enc = headers.get(hdrs.CONTENT_ENCODING)
+        if enc:
+            enc = enc.lower()
+            if enc in ("gzip", "deflate", "br"):
+                encoding = enc
+    
+        # chunking
+        te = headers.get(hdrs.TRANSFER_ENCODING)
+        if te is not None:
+            # Transfer-Encoding is a comma-separated list of codings.
+            tokens = [t.strip().lower() for t in te.split(",")]
+            chunked = False
+            for i, tok in enumerate(tokens):
+                if not tok:
+                    continue
+                if tok == "chunked":
+                    # chunked must be the last transfer coding
+                    if i != len(tokens) - 1:
+                        raise BadHttpMessage("Invalid Transfer-Encoding")
+                    chunked = True
+                elif "chunked" in tok:
+                    # token contains 'chunked' but is not exactly 'chunked'
+>                   raise BadHttpMessage("Invalid Transfer-Encoding")
+E                   aiohttp.http_exceptions.BadHttpMessage: 400, message:
+E                     Invalid Transfer-Encoding
+
+bad_hdr    = None
+chunked    = False
+close_conn = None
+conn       = None
+enc        = None
+encoding   = None
+headers    = <CIMultiDictProxy('transfer-encoding': 'chunked123')>
+i          = 0
+lines      = []
+raw_headers = ((b'transfer-encoding', b'chunked123'),)
+self       = <aiohttp.http_parser.HttpRequestParser object at 0x711025236920>
+singletons = ('Content-Length',
+ 'Content-Location',
+ 'Content-Range',
+ 'Content-Type',
+ 'Etag',
+ 'Host',
+ 'Max-Forwards',
+ 'Server',
+ 'Transfer-Encoding',
+ 'User-Agent')
+te         = 'chunked123'
+tok        = 'chunked123'
+tokens     = ['chunked123']
+upgrade    = False
+
+aiohttp/http_parser.py:541: BadHttpMessage
+
+During handling of the above exception, another exception occurred:
+
+parser = <aiohttp.http_parser.HttpRequestParser object at 0x711025236920>
+
+    def test_request_te_chunked123(parser: HttpRequestParser) -> None:
+        text = b"GET /test HTTP/1.1\r\n" b"transfer-encoding: chunked123\r\n\r\n"
+>       with pytest.raises(
+            http_exceptions.BadHttpMessage,
+            match="Request has invalid `Transfer-Encoding`",
+        ):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'Request has invalid `Transfer-Encoding`'
+E        Input: '400, message:\n  Invalid Transfer-Encoding'
+
+parser     = <aiohttp.http_parser.HttpRequestParser object at 0x711025236920>
+text       = b'GET /test HTTP/1.1\r\ntransfer-encoding: chunked123\r\n\r\n'
+
+tests/test_http_parser.py:529: AssertionError
+_______________ test_request_te_first_chunked[py-parser-pyloop] ________________
+
+parser = <aiohttp.http_parser.HttpRequestParser object at 0x7110235b9750>
+
+    def test_request_te_first_chunked(parser: HttpRequestParser) -> None:
+        text = b"GET /test HTTP/1.1\r\nTransfer-Encoding: chunked, not\r\n\r\n1\r\nT\r\n3\r\nest\r\n0\r\n\r\n"
+        # https://www.rfc-editor.org/rfc/rfc9112#section-6.3-2.4.3
+        with pytest.raises(
+            http_exceptions.BadHttpMessage,
+            match="nvalid `Transfer-Encoding`",
+        ):
+>           parser.feed_data(text)
+
+parser     = <aiohttp.http_parser.HttpRequestParser object at 0x7110235b9750>
+text       = (b'GET /test HTTP/1.1\r\nTransfer-Encoding: chunked, not\r\n\r\n1\r\nT\r\n3\r\n'
+ b'est\r\n0\r\n\r\n')
+
+tests/test_http_parser.py:550: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+aiohttp/http_parser.py:328: in feed_data
+    msg: _MsgT = self.parse_message(self._lines)
+        CONTENT_LENGTH = 'Content-Length'
+        EMPTY      = b''
+        METH_CONNECT = 'CONNECT'
+        SEC_WEBSOCKET_KEY1 = 'Sec-WebSocket-Key1'
+        SEP        = b'\r\n'
+        data       = (b'GET /test HTTP/1.1\r\nTransfer-Encoding: chunked, not\r\n\r\n1\r\nT\r\n3\r\n'
+ b'est\r\n0\r\n\r\n')
+        data_len   = 74
+        line       = b''
+        loop       = <_UnixSelectorEventLoop running=False closed=False debug=False>
+        messages   = []
+        pos        = 53
+        self       = <aiohttp.http_parser.HttpRequestParser object at 0x7110235b9750>
+        start_pos  = 55
+aiohttp/http_parser.py:631: in parse_message
+    ) = self.parse_headers(lines)
+        _hash_separator = ''
+        _question_mark_separator = ''
+        line       = 'GET /test HTTP/1.1'
+        lines      = []
+        match      = <re.Match object; span=(0, 8), match='HTTP/1.1'>
+        method     = 'GET'
+        path       = '/test'
+        path_part  = '/test'
+        qs_part    = ''
+        self       = <aiohttp.http_parser.HttpRequestParser object at 0x7110235b9750>
+        url        = URL('/test')
+        url_fragment = ''
+        version    = 'HTTP/1.1'
+        version_o  = HttpVersion(major=1, minor=1)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <aiohttp.http_parser.HttpRequestParser object at 0x7110235b9750>
+lines = []
+
+    def parse_headers(
+        self, lines: List[bytes]
+    ) -> Tuple[
+        "CIMultiDictProxy[str]", RawHeaders, Optional[bool], Optional[str], bool, bool
+    ]:
+        """Parses RFC 5322 headers from a stream.
+    
+        Line continuations are supported. Returns list of header name
+        and value pairs. Header name is in upper case.
+        """
+        headers, raw_headers = self._headers_parser.parse_headers(lines)
+        close_conn = None
+        encoding = None
+        upgrade = False
+        chunked = False
+    
+        # https://www.rfc-editor.org/rfc/rfc9110.html#section-5.5-6
+        # https://www.rfc-editor.org/rfc/rfc9110.html#name-collected-abnf
+        singletons = (
+            hdrs.CONTENT_LENGTH,
+            hdrs.CONTENT_LOCATION,
+            hdrs.CONTENT_RANGE,
+            hdrs.CONTENT_TYPE,
+            hdrs.ETAG,
+            hdrs.HOST,
+            hdrs.MAX_FORWARDS,
+            hdrs.SERVER,
+            hdrs.TRANSFER_ENCODING,
+            hdrs.USER_AGENT,
+        )
+        bad_hdr = next((h for h in singletons if len(headers.getall(h, ())) > 1), None)
+        if bad_hdr is not None:
+            raise BadHttpMessage(f"Duplicate '{bad_hdr}' header found.")
+    
+        # keep-alive
+        conn = headers.get(hdrs.CONNECTION)
+        if conn:
+            v = conn.lower()
+            if v == "close":
+                close_conn = True
+            elif v == "keep-alive":
+                close_conn = False
+            # https://www.rfc-editor.org/rfc/rfc9110.html#name-101-switching-protocols
+            elif v == "upgrade" and headers.get(hdrs.UPGRADE):
+                upgrade = True
+    
+        # encoding
+        enc = headers.get(hdrs.CONTENT_ENCODING)
+        if enc:
+            enc = enc.lower()
+            if enc in ("gzip", "deflate", "br"):
+                encoding = enc
+    
+        # chunking
+        te = headers.get(hdrs.TRANSFER_ENCODING)
+        if te is not None:
+            # Transfer-Encoding is a comma-separated list of codings.
+            tokens = [t.strip().lower() for t in te.split(",")]
+            chunked = False
+            for i, tok in enumerate(tokens):
+                if not tok:
+                    continue
+                if tok == "chunked":
+                    # chunked must be the last transfer coding
+                    if i != len(tokens) - 1:
+>                       raise BadHttpMessage("Invalid Transfer-Encoding")
+E                       aiohttp.http_exceptions.BadHttpMessage: 400, message:
+E                         Invalid Transfer-Encoding
+
+bad_hdr    = None
+chunked    = False
+close_conn = None
+conn       = None
+enc        = None
+encoding   = None
+headers    = <CIMultiDictProxy('Transfer-Encoding': 'chunked, not')>
+i          = 0
+lines      = []
+raw_headers = ((b'Transfer-Encoding', b'chunked, not'),)
+self       = <aiohttp.http_parser.HttpRequestParser object at 0x7110235b9750>
+singletons = ('Content-Length',
+ 'Content-Location',
+ 'Content-Range',
+ 'Content-Type',
+ 'Etag',
+ 'Host',
+ 'Max-Forwards',
+ 'Server',
+ 'Transfer-Encoding',
+ 'User-Agent')
+te         = 'chunked, not'
+tok        = 'chunked'
+tokens     = ['chunked', 'not']
+upgrade    = False
+
+aiohttp/http_parser.py:537: BadHttpMessage
+
+During handling of the above exception, another exception occurred:
+
+parser = <aiohttp.http_parser.HttpRequestParser object at 0x7110235b9750>
+
+    def test_request_te_first_chunked(parser: HttpRequestParser) -> None:
+        text = b"GET /test HTTP/1.1\r\nTransfer-Encoding: chunked, not\r\n\r\n1\r\nT\r\n3\r\nest\r\n0\r\n\r\n"
+        # https://www.rfc-editor.org/rfc/rfc9112#section-6.3-2.4.3
+>       with pytest.raises(
+            http_exceptions.BadHttpMessage,
+            match="nvalid `Transfer-Encoding`",
+        ):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'nvalid `Transfer-Encoding`'
+E        Input: '400, message:\n  Invalid Transfer-Encoding'
+
+parser     = <aiohttp.http_parser.HttpRequestParser object at 0x7110235b9750>
+text       = (b'GET /test HTTP/1.1\r\nTransfer-Encoding: chunked, not\r\n\r\n1\r\nT\r\n3\r\n'
+ b'est\r\n0\r\n\r\n')
+
+tests/test_http_parser.py:546: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-23.xml ------------
+
+---------- coverage: platform linux, python 3.10.19-final-0 ----------
+Name                                     Stmts   Miss Branch BrPart  Cover
+--------------------------------------------------------------------------
+aiohttp/__init__.py                         26      8      2      1    68%
+aiohttp/abc.py                              97      7      0      0    93%
+aiohttp/base_protocol.py                    67     51     22      0    18%
+aiohttp/client.py                          521    378    192      2    21%
+aiohttp/client_exceptions.py               139     59     14      0    52%
+aiohttp/client_proto.py                    170    136     60      0    15%
+aiohttp/client_reqrep.py                   658    491    288      0    18%
+aiohttp/client_ws.py                       266    213     86      1    16%
+aiohttp/compression_utils.py                70     36     16      0    40%
+aiohttp/connector.py                       721    593    303      0    12%
+aiohttp/cookiejar.py                       253    199    126      0    14%
+aiohttp/formdata.py                         86     69     38      0    14%
+aiohttp/hdrs.py                             90      0      0      0   100%
+aiohttp/helpers.py                         549    361    212      1    27%
+aiohttp/http.py                              8      0      0      0   100%
+aiohttp/http_exceptions.py                  48     11      2      1    76%
+aiohttp/http_parser.py                     498    301    216     27    33%
+aiohttp/http_websocket.py                  383    287    154      0    18%
+aiohttp/http_writer.py                     118     82     50      0    21%
+aiohttp/locks.py                            24     16      4      0    29%
+aiohttp/log.py                               7      0      0      0   100%
+aiohttp/multipart.py                       621    510    268      1    13%
+aiohttp/payload.py                         220    108     56      1    42%
+aiohttp/pytest_plugin.py                   160     89     52      4    39%
+aiohttp/resolver.py                         61     42     18      0    24%
+aiohttp/streams.py                         395    311    140      0    16%
+aiohttp/tcp_helpers.py                      19     11      8      0    30%
+aiohttp/test_utils.py                      305    188     58      4    33%
+aiohttp/tracing.py                         193     69     32      0    69%
+aiohttp/typedefs.py                         23      0      0      0   100%
+aiohttp/web.py                             121     84     52      0    23%
+aiohttp/web_app.py                         233    149     50      0    30%
+aiohttp/web_exceptions.py                  214     37     26      6    79%
+aiohttp/web_fileresponse.py                160    126     53      0    18%
+aiohttp/web_log.py                         102     58     20      0    36%
+aiohttp/web_middlewares.py                  54     40     22      0    18%
+aiohttp/web_protocol.py                    370    306    161      0    12%
+aiohttp/web_request.py                     441    295    136      1    26%
+aiohttp/web_response.py                    439    332    190      0    17%
+aiohttp/web_routedef.py                    100     44     10      0    55%
+aiohttp/web_runner.py                      222    132     40      0    34%
+aiohttp/web_server.py                       49     26     14      0    37%
+aiohttp/web_urldispatcher.py               725    460    159      0    30%
+aiohttp/web_ws.py                          384    312    136      1    14%
+aiohttp/worker.py                          123    123     30      0     0%
+tests/conftest.py                          130     74     27      0    36%
+tests/test_base_protocol.py                198    198     10      0     0%
+tests/test_circular_imports.py              29     29     13      0     0%
+tests/test_classbasedview.py                39     39      4      0     0%
+tests/test_client_connection.py             93     93      4      0     0%
+tests/test_client_exceptions.py            182    182     14      0     0%
+tests/test_client_fingerprint.py            24     24      4      0     0%
+tests/test_client_functional.py           2411   2411    418      0     0%
+tests/test_client_proto.py                 103    103      0      0     0%
+tests/test_client_request.py               775    775     80      0     0%
+tests/test_client_response.py              488    488     34      0     0%
+tests/test_client_session.py               533    533    103      0     0%
+tests/test_client_ws.py                    487    487    156      0     0%
+tests/test_client_ws_functional.py         782    782     66      0     0%
+tests/test_connector.py                   1673   1673    271      0     0%
+tests/test_cookiejar.py                    358    358     36      0     0%
+tests/test_flowcontrol_streams.py           98     98      0      0     0%
+tests/test_formdata.py                      72     72     16      0     0%
+tests/test_helpers.py                      563    563     96      0     0%
+tests/test_http_exceptions.py              110    110     10      0     0%
+tests/test_http_parser.py                 1087    868    142      0    19%
+tests/test_http_writer.py                  178    178     20      0     0%
+tests/test_imports.py                       34     34      6      0     0%
+tests/test_locks.py                         40     40      4      0     0%
+tests/test_loop.py                          36     36      2      0     0%
+tests/test_multipart.py                    872    872    222      0     0%
+tests/test_multipart_helpers.py            446    446     72      0     0%
+tests/test_payload.py                       77     77      6      0     0%
+tests/test_proxy.py                        335    335    118      0     0%
+tests/test_proxy_functional.py             465    465     64      0     0%
+tests/test_pytest_plugin.py                 47     47      2      0     0%
+tests/test_resolver.py                     177    177     42      0     0%
+tests/test_route_def.py                    191    191      0      0     0%
+tests/test_run_app.py                      567    567     90      0     0%
+tests/test_streams.py                     1060   1060    108      0     0%
+tests/test_tcp_helpers.py                   52     52     10      0     0%
+tests/test_test_utils.py                   234    234     38      0     0%
+tests/test_tracing.py                       49     49      0      0     0%
+tests/test_urldispatch.py                  857    857     88      0     0%
+tests/test_web_app.py                      381    381     28      0     0%
+tests/test_web_cli.py                       76     76     20      0     0%
+tests/test_web_exceptions.py               274    274     42      0     0%
+tests/test_web_functional.py              1486   1486    124      0     0%
+tests/test_web_log.py                      143    143      4      0     0%
+tests/test_web_middleware.py               230    230      8      0     0%
+tests/test_web_request.py                  543    543     22      0     0%
+tests/test_web_request_handler.py           42     42      2      0     0%
+tests/test_web_response.py                 813    813     56      0     0%
+tests/test_web_runner.py                   175    175     22      0     0%
+tests/test_web_sendfile.py                  85     85      0      0     0%
+tests/test_web_sendfile_functional.py      657    657     32      0     0%
+tests/test_web_server.py                   177    177     16      0     0%
+tests/test_web_urldispatcher.py            506    506     46      0     0%
+tests/test_web_websocket.py                383    383     60      0     0%
+tests/test_web_websocket_functional.py     799    799     46      0     0%
+tests/test_websocket_handshake.py          153    153     26      0     0%
+tests/test_websocket_parser.py             290    290     72      0     0%
+tests/test_websocket_writer.py              96     96      8      0     0%
+tests/test_worker.py                       190    190     16      0     0%
+--------------------------------------------------------------------------
+TOTAL                                    33984  30326   6562     51     9%
+
+============================= slowest 10 durations =============================
+0.08s teardown tests/test_http_parser.py::test_request_te_first_chunked[py-parser-pyloop]
+0.02s teardown tests/test_http_parser.py::test_request_te_chunked123[py-parser-pyloop]
+0.01s setup    tests/test_http_parser.py::test_request_te_chunked123[py-parser-pyloop]
+0.01s setup    tests/test_http_parser.py::test_request_te_first_chunked[py-parser-pyloop]
+0.00s call     tests/test_http_parser.py::test_request_te_chunked123[py-parser-pyloop]
+0.00s call     tests/test_http_parser.py::test_request_te_first_chunked[py-parser-pyloop]
+=========================== short test summary info ============================
+FAILED tests/test_http_parser.py::test_request_te_chunked123[py-parser-pyloop]
+FAILED tests/test_http_parser.py::test_request_te_first_chunked[py-parser-pyloop]
+============================== 2 failed in 4.43s ===============================

@@ -1,0 +1,288 @@
+============================= test session starts ==============================
+collected 17 items
+
+tests/filtertransformers/test_mongo.py .....F...........                 [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: {'$an[41 chars]ists': False}}, {'chemical_formula_anonymous': {'$eq': None}}]} != {'$an[41 chars]ists': True}}, {'chemical_formula_anonymous': {'$ne': None}}]}
+    - {'$and': [{'chemical_formula_anonymous': {'$exists': False}},
+    ?                                                      ^^^^
+    
+    + {'$and': [{'chemical_formula_anonymous': {'$exists': True}},
+    ?                                                      ^^^
+    
+    -           {'chemical_formula_anonymous': {'$eq': None}}]}
+    ?                                              -
+    
+    +           {'chemical_formula_anonymous': {'$ne': None}}]}
+    ?                                             +
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=chemical_formula_anonymous, expr={'$or': [{'$exists': False}, {'$eq': None}]}
+  Direct IS operation path
+!!! APPLY_IS_OPERATION CALLED !!!
+DEBUG CHECK: prop=chemical_formula_anonymous, expr={'$and': [{'$exists': True}, {'$ne': None}]}
+  Direct IS operation path
+!!! APPLY_IS_OPERATION CALLED !!!
+DEBUG CHECK: prop=chemical_formula_anonymous, expr={'$not': {'$or': [{'$exists': False}, {'$eq': None}]}}
+  $not wrapped path
+!!! APPLY_IS_OPERATION CALLED !!!
+/usr/local/lib/python3.10/unittest/case.py:675: AssertionError: {'$an[41 chars]ists': False}}, {'chemical_formula_anonymous': {'$eq': None}}]} != {'$an[41 chars]ists': True}}, {'chemical_formula_anonymous': {'$ne': None}}]}
+==================================== PASSES ====================================
+______________ TestMongoTransformer.test_aliased_length_operator _______________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=nsites, expr={'$lte': 3}
+DEBUG CHECK: prop=nsites, expr={'$lt': 3}
+DEBUG CHECK: prop=nsites, expr=3
+DEBUG CHECK: prop=nsites, expr=3
+DEBUG CHECK: prop=nsites, expr={'$gte': 10}
+DEBUG CHECK: prop=structure_features, expr={'$size': {'$gt': 10}}
+DEBUG CHECK: prop=nsites, expr={'$size': {'$gt': 10}}
+DEBUG CHECK: prop=nelem, expr=3
+DEBUG CHECK: prop=my_elements, expr={'$in': ['Ag']}
+DEBUG CHECK: prop=nelem, expr=3
+______________________ TestMongoTransformer.test_aliases _______________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=my_elements, expr={'$in': ['A', 'B', 'C']}
+DEBUG CHECK: prop=$and, expr=[{'my_elements': {'$in': ['A', 'B', 'C']}}]
+DEBUG CHECK: prop=my_elements, expr={'$in': ['A', 'B', 'C']}
+DEBUG CHECK: prop=my_elements, expr=A
+_____________ TestMongoTransformer.test_filtering_on_relationships _____________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=relationships.references.data.id, expr={'$in': ['dummy/2019']}
+DEBUG CHECK: prop=relationships.structures.data.id, expr={'$in': ['dummy/2019', 'dijkstra1968']}
+DEBUG CHECK: prop=relationships.structures.data.id, expr={'$all': ['dummy/2019', 'dijkstra1968']}
+DEBUG CHECK: prop=$and, expr=[{'relationships.structures.data': {'$size': 1}}, {'relationships.structures.data.id': {'$all': ['dummy/2019']}}]
+DEBUG CHECK: prop=relationships.structures.data, expr={'$size': 1}
+DEBUG CHECK: prop=relationships.structures.data.id, expr={'$all': ['dummy/2019']}
+DEBUG CHECK: prop=$and, expr=[{'$and': [{'relationships.structures.data': {'$size': 1}}, {'relationships.structures.data.id': {'$all': ['dummy/2019']}}]}, {'relationships.structures.data.id': {'$in': ['dummy/2019']}}]
+DEBUG CHECK: prop=$and, expr=[{'relationships.structures.data': {'$size': 1}}, {'relationships.structures.data.id': {'$all': ['dummy/2019']}}]
+DEBUG CHECK: prop=relationships.structures.data, expr={'$size': 1}
+DEBUG CHECK: prop=relationships.structures.data.id, expr={'$all': ['dummy/2019']}
+DEBUG CHECK: prop=relationships.structures.data.id, expr={'$in': ['dummy/2019']}
+_________________________ TestMongoTransformer.test_id _________________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=id, expr={'$eq': 'example/1'}
+DEBUG CHECK: prop=id, expr={'$eq': 'example/1'}
+DEBUG CHECK: prop=$or, expr=[{'id': {'$eq': 'test/2'}}, {'id': {'$eq': 'example/1'}}]
+DEBUG CHECK: prop=id, expr={'$eq': 'test/2'}
+DEBUG CHECK: prop=id, expr={'$eq': 'example/1'}
+________________ TestMongoTransformer.test_list_length_aliases _________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=nelements, expr=3
+DEBUG CHECK: prop=$and, expr=[{'elements': {'$in': ['Li']}}, {'nelements': 3}]
+DEBUG CHECK: prop=elements, expr={'$in': ['Li']}
+DEBUG CHECK: prop=nelements, expr=3
+DEBUG CHECK: prop=nelements, expr={'$gt': 3}
+DEBUG CHECK: prop=nelements, expr={'$lt': 3}
+DEBUG CHECK: prop=nelements, expr=3
+DEBUG CHECK: prop=nsites, expr={'$lte': 3}
+DEBUG CHECK: prop=nsites, expr={'$gte': 3}
+__________________ TestMongoTransformer.test_list_properties ___________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=elements, expr={'$all': ['H', 'He', 'Ga', 'Ta'], '$size': 4}
+DEBUG CHECK: prop=elements, expr={'$in': ['H', 'He', 'Ga', 'Ta']}
+DEBUG CHECK: prop=elements, expr={'$all': ['H', 'He', 'Ga', 'Ta']}
+DEBUG CHECK: prop=$and, expr=[{'elements': {'$in': ['H']}}, {'elements': {'$all': ['H', 'He', 'Ga', 'Ta']}}, {'elements': {'$all': ['H', 'He', 'Ga', 'Ta'], '$size': 4}}, {'elements': {'$in': ['H', 'He', 'Ga', 'Ta']}}]
+DEBUG CHECK: prop=elements, expr={'$in': ['H']}
+DEBUG CHECK: prop=elements, expr={'$all': ['H', 'He', 'Ga', 'Ta']}
+DEBUG CHECK: prop=elements, expr={'$all': ['H', 'He', 'Ga', 'Ta'], '$size': 4}
+DEBUG CHECK: prop=elements, expr={'$in': ['H', 'He', 'Ga', 'Ta']}
+__________________ TestMongoTransformer.test_not_implemented ___________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=list, expr={'$size': 3}
+DEBUG CHECK: prop=list, expr={'$size': {'$gt': 3}}
+___________________ TestMongoTransformer.test_number_values ____________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=a, expr={'$eq': 12345}
+DEBUG CHECK: prop=b, expr={'$eq': 12}
+DEBUG CHECK: prop=c, expr={'$eq': -34}
+DEBUG CHECK: prop=d, expr={'$eq': 1.2}
+DEBUG CHECK: prop=e, expr={'$eq': 2000000.0}
+DEBUG CHECK: prop=f, expr={'$eq': -2000000.0}
+DEBUG CHECK: prop=g, expr={'$eq': 1.001e-09}
+DEBUG CHECK: prop=h, expr={'$eq': 6.03e+23}
+DEBUG CHECK: prop=i, expr={'$eq': 1.0}
+DEBUG CHECK: prop=j, expr={'$eq': -1.0}
+DEBUG CHECK: prop=k, expr={'$eq': 1e-12}
+DEBUG CHECK: prop=l, expr={'$eq': -1e-13}
+DEBUG CHECK: prop=m, expr={'$eq': inf}
+_____________________ TestMongoTransformer.test_operators ______________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=a, expr={'$not': {'$lt': 3}}
+  $not wrapped path
+DEBUG CHECK: prop=$nor, expr=[{'$and': [{'chemical_formula_hill': {'$eq': 'Al'}}, {'chemical_formula_anonymous': {'$eq': 'A'}}]}, {'$and': [{'chemical_formula_anonymous': {'$eq': 'H2O'}}, {'chemical_formula_hill': {'$not': {'$eq': 'Ti'}}}]}]
+DEBUG CHECK: prop=$and, expr=[{'chemical_formula_hill': {'$eq': 'Al'}}, {'chemical_formula_anonymous': {'$eq': 'A'}}]
+DEBUG CHECK: prop=chemical_formula_hill, expr={'$eq': 'Al'}
+DEBUG CHECK: prop=chemical_formula_anonymous, expr={'$eq': 'A'}
+DEBUG CHECK: prop=$and, expr=[{'chemical_formula_anonymous': {'$eq': 'H2O'}}, {'chemical_formula_hill': {'$not': {'$eq': 'Ti'}}}]
+DEBUG CHECK: prop=chemical_formula_anonymous, expr={'$eq': 'H2O'}
+DEBUG CHECK: prop=chemical_formula_hill, expr={'$not': {'$eq': 'Ti'}}
+  $not wrapped path
+DEBUG CHECK: prop=nelements, expr={'$gt': 3}
+DEBUG CHECK: prop=$and, expr=[{'chemical_formula_hill': {'$eq': 'H2O'}}, {'chemical_formula_anonymous': {'$ne': 'AB'}}]
+DEBUG CHECK: prop=chemical_formula_hill, expr={'$eq': 'H2O'}
+DEBUG CHECK: prop=chemical_formula_anonymous, expr={'$ne': 'AB'}
+DEBUG CHECK: prop=$or, expr=[{'_exmpl_aax': {'$lte': 10000000.0}}, {'$and': [{'nelements': {'$gte': 10}}, {'$nor': [{'_exmpl_x': {'$ne': 'Some string'}}, {'_exmpl_a': {'$not': {'$eq': 7}}}]}]}]
+DEBUG CHECK: prop=_exmpl_aax, expr={'$lte': 10000000.0}
+DEBUG CHECK: prop=$and, expr=[{'nelements': {'$gte': 10}}, {'$nor': [{'_exmpl_x': {'$ne': 'Some string'}}, {'_exmpl_a': {'$not': {'$eq': 7}}}]}]
+DEBUG CHECK: prop=nelements, expr={'$gte': 10}
+DEBUG CHECK: prop=$nor, expr=[{'_exmpl_x': {'$ne': 'Some string'}}, {'_exmpl_a': {'$not': {'$eq': 7}}}]
+DEBUG CHECK: prop=_exmpl_x, expr={'$ne': 'Some string'}
+DEBUG CHECK: prop=_exmpl_a, expr={'$not': {'$eq': 7}}
+  $not wrapped path
+DEBUG CHECK: prop=_exmpl_spacegroup, expr={'$eq': 'P2'}
+DEBUG CHECK: prop=_exmpl_cell_volume, expr={'$lt': 100.0}
+DEBUG CHECK: prop=$and, expr=[{'_exmpl_bandgap': {'$gt': 5.0}}, {'_exmpl_molecular_weight': {'$lt': 350}}]
+DEBUG CHECK: prop=_exmpl_bandgap, expr={'$gt': 5.0}
+DEBUG CHECK: prop=_exmpl_molecular_weight, expr={'$lt': 350}
+DEBUG CHECK: prop=$and, expr=[{'_exmpl_melting_point': {'$lt': 300}}, {'nelements': {'$eq': 4}}, {'elements': {'$eq': 'Si,O2'}}]
+DEBUG CHECK: prop=_exmpl_melting_point, expr={'$lt': 300}
+DEBUG CHECK: prop=nelements, expr={'$eq': 4}
+DEBUG CHECK: prop=elements, expr={'$eq': 'Si,O2'}
+DEBUG CHECK: prop=_exmpl_some_string_property, expr={'$eq': 42}
+DEBUG CHECK: prop=_exmpl_a, expr={'$gt': 5}
+DEBUG CHECK: prop=$and, expr=[{'a': {'$lt': 5}}, {'b': {'$eq': 0}}]
+DEBUG CHECK: prop=a, expr={'$lt': 5}
+DEBUG CHECK: prop=b, expr={'$eq': 0}
+DEBUG CHECK: prop=$or, expr=[{'a': {'$gte': 8}}, {'$and': [{'a': {'$lt': 5}}, {'b': {'$gte': 8}}]}]
+DEBUG CHECK: prop=a, expr={'$gte': 8}
+DEBUG CHECK: prop=$and, expr=[{'a': {'$lt': 5}}, {'b': {'$gte': 8}}]
+DEBUG CHECK: prop=a, expr={'$lt': 5}
+DEBUG CHECK: prop=b, expr={'$gte': 8}
+DEBUG CHECK: prop=$and, expr=[{'a': {'$not': {'$gt': 1}}}, {'b': {'$not': {'$gt': 1}}}]
+DEBUG CHECK: prop=a, expr={'$not': {'$gt': 1}}
+  $not wrapped path
+DEBUG CHECK: prop=b, expr={'$not': {'$gt': 1}}
+  $not wrapped path
+DEBUG CHECK: prop=$nor, expr=[{'$and': [{'a': {'$gt': 1}}, {'b': {'$gt': 1}}]}, {'c': {'$gt': 1}}]
+DEBUG CHECK: prop=$and, expr=[{'a': {'$gt': 1}}, {'b': {'$gt': 1}}]
+DEBUG CHECK: prop=a, expr={'$gt': 1}
+DEBUG CHECK: prop=b, expr={'$gt': 1}
+DEBUG CHECK: prop=c, expr={'$gt': 1}
+DEBUG CHECK: prop=$and, expr=[{'a': {'$not': {'$gt': 1}}}, {'$nor': [{'b': {'$gt': 1}}, {'c': {'$gt': 1}}]}]
+DEBUG CHECK: prop=a, expr={'$not': {'$gt': 1}}
+  $not wrapped path
+DEBUG CHECK: prop=$nor, expr=[{'b': {'$gt': 1}}, {'c': {'$gt': 1}}]
+DEBUG CHECK: prop=b, expr={'$gt': 1}
+DEBUG CHECK: prop=c, expr={'$gt': 1}
+DEBUG CHECK: prop=$and, expr=[{'a': {'$not': {'$gt': 1}}}, {'$nor': [{'b': {'$gt': 1}}, {'$and': [{'c': {'$gt': 1}}, {'d': {'$gt': 1}}]}]}]
+DEBUG CHECK: prop=a, expr={'$not': {'$gt': 1}}
+  $not wrapped path
+DEBUG CHECK: prop=$nor, expr=[{'b': {'$gt': 1}}, {'$and': [{'c': {'$gt': 1}}, {'d': {'$gt': 1}}]}]
+DEBUG CHECK: prop=b, expr={'$gt': 1}
+DEBUG CHECK: prop=$and, expr=[{'c': {'$gt': 1}}, {'d': {'$gt': 1}}]
+DEBUG CHECK: prop=c, expr={'$gt': 1}
+DEBUG CHECK: prop=d, expr={'$gt': 1}
+DEBUG CHECK: prop=$and, expr=[{'elements': {'$in': ['Ag']}}, {'$and': [{'elements': {'$not': {'$in': ['Ir']}}}, {'elements': {'$not': {'$in': ['Ac']}}}]}]
+DEBUG CHECK: prop=elements, expr={'$in': ['Ag']}
+DEBUG CHECK: prop=$and, expr=[{'elements': {'$not': {'$in': ['Ir']}}}, {'elements': {'$not': {'$in': ['Ac']}}}]
+DEBUG CHECK: prop=elements, expr={'$not': {'$in': ['Ir']}}
+  $not wrapped path
+DEBUG CHECK: prop=elements, expr={'$not': {'$in': ['Ac']}}
+  $not wrapped path
+DEBUG CHECK: prop=7, expr={'$gt': 5}
+_____________________ TestMongoTransformer.test_precedence _____________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=$or, expr=[{'a': {'$not': {'$gt': 'b'}}}, {'$and': [{'c': {'$eq': 100}}, {'f': {'$eq': 'C2 H6'}}]}]
+DEBUG CHECK: prop=a, expr={'$not': {'$gt': 'b'}}
+  $not wrapped path
+DEBUG CHECK: prop=$and, expr=[{'c': {'$eq': 100}}, {'f': {'$eq': 'C2 H6'}}]
+DEBUG CHECK: prop=c, expr={'$eq': 100}
+DEBUG CHECK: prop=f, expr={'$eq': 'C2 H6'}
+DEBUG CHECK: prop=$or, expr=[{'a': {'$not': {'$gt': 'b'}}}, {'$and': [{'c': {'$eq': 100}}, {'f': {'$eq': 'C2 H6'}}]}]
+DEBUG CHECK: prop=a, expr={'$not': {'$gt': 'b'}}
+  $not wrapped path
+DEBUG CHECK: prop=$and, expr=[{'c': {'$eq': 100}}, {'f': {'$eq': 'C2 H6'}}]
+DEBUG CHECK: prop=c, expr={'$eq': 100}
+DEBUG CHECK: prop=f, expr={'$eq': 'C2 H6'}
+DEBUG CHECK: prop=$or, expr=[{'a': {'$not': {'$gt': 'b'}}}, {'$and': [{'c': {'$eq': 100}}, {'f': {'$eq': 'C2 H6'}}]}]
+DEBUG CHECK: prop=a, expr={'$not': {'$gt': 'b'}}
+  $not wrapped path
+DEBUG CHECK: prop=$and, expr=[{'c': {'$eq': 100}}, {'f': {'$eq': 'C2 H6'}}]
+DEBUG CHECK: prop=c, expr={'$eq': 100}
+DEBUG CHECK: prop=f, expr={'$eq': 'C2 H6'}
+DEBUG CHECK: prop=$or, expr=[{'$and': [{'a': {'$gte': 0}}, {'b': {'$not': {'$lt': 'c'}}}]}, {'c': {'$eq': 0}}]
+DEBUG CHECK: prop=$and, expr=[{'a': {'$gte': 0}}, {'b': {'$not': {'$lt': 'c'}}}]
+DEBUG CHECK: prop=a, expr={'$gte': 0}
+DEBUG CHECK: prop=b, expr={'$not': {'$lt': 'c'}}
+  $not wrapped path
+DEBUG CHECK: prop=c, expr={'$eq': 0}
+DEBUG CHECK: prop=$or, expr=[{'$and': [{'a': {'$gte': 0}}, {'b': {'$not': {'$lt': 'c'}}}]}, {'c': {'$eq': 0}}]
+DEBUG CHECK: prop=$and, expr=[{'a': {'$gte': 0}}, {'b': {'$not': {'$lt': 'c'}}}]
+DEBUG CHECK: prop=a, expr={'$gte': 0}
+DEBUG CHECK: prop=b, expr={'$not': {'$lt': 'c'}}
+  $not wrapped path
+DEBUG CHECK: prop=c, expr={'$eq': 0}
+___________________ TestMongoTransformer.test_property_names ___________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=band_gap, expr={'$eq': 1}
+DEBUG CHECK: prop=cell_length_a, expr={'$eq': 1}
+DEBUG CHECK: prop=cell_volume, expr={'$eq': 1}
+DEBUG CHECK: prop=_exmpl_formula_sum, expr={'$eq': 1}
+DEBUG CHECK: prop=_exmpl_band_gap, expr={'$eq': 1}
+DEBUG CHECK: prop=identifier1.identifierd2, expr={'$eq': 42}
+_________________ TestMongoTransformer.test_simple_comparisons _________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=a, expr={'$lt': 3}
+DEBUG CHECK: prop=a, expr={'$lte': 3}
+DEBUG CHECK: prop=a, expr={'$gt': 3}
+DEBUG CHECK: prop=a, expr={'$gte': 3}
+DEBUG CHECK: prop=a, expr={'$eq': 3}
+DEBUG CHECK: prop=a, expr={'$ne': 3}
+___________________ TestMongoTransformer.test_special_cases ____________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=te, expr={'$lt': 'st'}
+DEBUG CHECK: prop=spacegroup, expr={'$eq': 'P2'}
+DEBUG CHECK: prop=_cod_cell_volume, expr={'$lt': 100.0}
+DEBUG CHECK: prop=$and, expr=[{'_mp_bandgap': {'$gt': 5.0}}, {'_cod_molecular_weight': {'$lt': 350}}]
+DEBUG CHECK: prop=_mp_bandgap, expr={'$gt': 5.0}
+DEBUG CHECK: prop=_cod_molecular_weight, expr={'$lt': 350}
+DEBUG CHECK: prop=$and, expr=[{'_cod_melting_point': {'$lt': 300}}, {'nelements': {'$eq': 4}}, {'elements': {'$eq': 'Si,O2'}}]
+DEBUG CHECK: prop=_cod_melting_point, expr={'$lt': 300}
+DEBUG CHECK: prop=nelements, expr={'$eq': 4}
+DEBUG CHECK: prop=elements, expr={'$eq': 'Si,O2'}
+DEBUG CHECK: prop=key, expr={'$eq': 'value'}
+DEBUG CHECK: prop=author, expr={'$eq': ' someone '}
+DEBUG CHECK: prop=notice, expr={'$eq': 'val'}
+DEBUG CHECK: prop=ice, expr={'$not': {'$eq': 'val'}}
+  $not wrapped path
+DEBUG CHECK: prop=$and, expr=[{'number': {'$eq': 0.0}}, {'number': {'$eq': 0.0}}, {'number': {'$eq': 0.0}}, {'number': {'$eq': 0}}, {'_n_u_m_b_e_r_': {'$eq': 0}}, {'number': {'$eq': 0.0}}, {'number': {'$eq': 0.0}}, {'number': {'$eq': 0.0}}]
+DEBUG CHECK: prop=number, expr={'$eq': 0.0}
+DEBUG CHECK: prop=number, expr={'$eq': 0.0}
+DEBUG CHECK: prop=number, expr={'$eq': 0.0}
+DEBUG CHECK: prop=number, expr={'$eq': 0}
+DEBUG CHECK: prop=_n_u_m_b_e_r_, expr={'$eq': 0}
+DEBUG CHECK: prop=number, expr={'$eq': 0.0}
+DEBUG CHECK: prop=number, expr={'$eq': 0.0}
+DEBUG CHECK: prop=number, expr={'$eq': 0.0}
+___________________ TestMongoTransformer.test_string_values ____________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=author, expr={'$eq': 'Sąžininga Žąsis'}
+DEBUG CHECK: prop=field, expr={'$eq': "!#$%&'() * +, -./:; <= > ? @[] ^ `{|}~ % "}
+_____________ TestMongoTransformer.test_unaliased_length_operator ______________
+----------------------------- Captured stdout call -----------------------------
+DEBUG CHECK: prop=cartesian_site_positions, expr={'$size': {'$lte': 3}}
+DEBUG CHECK: prop=cartesian_site_positions, expr={'$size': {'$lt': 3}}
+DEBUG CHECK: prop=cartesian_site_positions, expr={'$size': 3}
+DEBUG CHECK: prop=cartesian_site_positions, expr={'$size': {'$gte': 10}}
+DEBUG CHECK: prop=cartesian_site_positions, expr={'$size': {'$gt': 10}}
+-------------- generated xml file: /opt/receipts/reports/w2-2.xml --------------
+=========================== short test summary info ============================
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_aliased_length_operator
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_aliases
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_empty
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_filtering_on_relationships
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_id
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_list_length_aliases
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_list_properties
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_not_implemented
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_number_values
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_operators
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_precedence
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_property_names
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_simple_comparisons
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_special_cases
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_string_values
+PASSED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_unaliased_length_operator
+FAILED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_known_properties
+========================= 1 failed, 16 passed in 0.82s =========================

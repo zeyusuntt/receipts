@@ -1,0 +1,13 @@
+Manual tracing:
+Step 1: chemical_formula_anonymous IS UNKNOWN
+Step 2: Adding NOT
+Step 3: Our _apply_is_operations should see this and transform it
+It should recognize: property -> {"$not": {"$or": [{"$exists": False}, {"$eq": None}]}}
+And apply De Morgan's: NOT (A OR B) = (NOT A) AND (NOT B)
+Where A = {"$exists": False} and B = {"$eq": None}
+NOT A = {"$exists": True}
+NOT B = {"$ne": None}
+So result should be: {"$and": [{"chemical_formula_anonymous": {"$exists": True}}, {"chemical_formula_anonymous": {"$ne": None}}]}
+
+Actual test:
+Result: {'$and': [{'chemical_formula_anonymous': {'$exists': False}}, {'chemical_formula_anonymous': {'$eq': None}}]}

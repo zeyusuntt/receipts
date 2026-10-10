@@ -1,0 +1,16 @@
+diff --git a/src/towncrier/templates/default.md b/src/towncrier/templates/default.md
+index 4a5a07d..8b0b06f 100644
+--- a/src/towncrier/templates/default.md
++++ b/src/towncrier/templates/default.md
+@@ -13,7 +13,11 @@
+ 
+ {% if sections[section] %}
+ {% for category, val in definitions.items() if category in sections[section] %}
++{% if render_title %}
+ ##{% if section %}#{% endif %} {{ definitions[category]['name'] }}
++{% else %}
++#{% if section %}#{% endif %} {{ definitions[category]['name'] }}
++{% endif %}
+ 
+ {% for text, values in sections[section][category].items() %}
+ - {{ text }}

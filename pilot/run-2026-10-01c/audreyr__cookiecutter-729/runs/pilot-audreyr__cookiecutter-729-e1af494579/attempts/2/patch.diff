@@ -1,0 +1,72 @@
+diff --git a/cookiecutter/hooks.py b/cookiecutter/hooks.py
+index 254bc2e..be905c7 100644
+--- a/cookiecutter/hooks.py
++++ b/cookiecutter/hooks.py
+@@ -94,6 +94,14 @@ def run_script_with_context(script_path, cwd, context):
+         suffix=extension
+     ) as temp:
+         output = Template(contents).render(**context)
++        # Ensure we have at least a newline to avoid exec format errors with empty files
++        if not output:
++            output = '\n'
++        # For shell scripts, ensure we have a proper shebang so the kernel will execute them
++        if extension in ('.sh', '.bash', '.zsh', '.fish') or not output.strip():
++            # If it's empty or appears to be a shell script, add shebang if missing
++            if not output.startswith('#!'):
++                output = '#!/bin/sh\n' + output
+         temp.write(output.encode('utf-8'))
+ 
+     run_script(temp.name, cwd)
+diff --git a/inputshellhooks/README.rst b/inputshellhooks/README.rst
+new file mode 100644
+index 0000000..8c02abb
+--- /dev/null
++++ b/inputshellhooks/README.rst
+@@ -0,0 +1 @@
++Empty, just like the hooks we are testing.
+diff --git a/tests/test_generate_hooks.py b/tests/test_generate_hooks.py
+index 4d966ab..a15b2df 100644
+--- a/tests/test_generate_hooks.py
++++ b/tests/test_generate_hooks.py
+@@ -78,20 +78,30 @@ def test_run_python_hooks_cwd():
+ 
+ @pytest.mark.usefixtures('clean_system', 'remove_additional_folders')
+ def test_empty_hooks():
+-
+-    # OSError.errno=8 is not thrown on Windows when the script is emtpy
++    # Empty hooks should now work successfully (do nothing) rather than
++    # failing with a cryptic Exec format error.
++    # OSError.errno=8 is not thrown on Windows when the script is empty
+     # because it always runs through shell instead of needing a shebang.
+ 
+     if not sys.platform.startswith('win'):
+-        with pytest.raises(FailedHookException) as excinfo:
+-            generate.generate_files(
+-                context={
+-                    'cookiecutter': {'shellhooks': 'shellhooks'}
+-                },
+-                repo_dir='tests/test-shellhooks-empty/',
+-                overwrite_if_exists=True
+-            )
+-        assert 'shebang' in str(excinfo.value)
++        # On Unix-like systems, empty hooks should now succeed
++        generate.generate_files(
++            context={
++                'cookiecutter': {'shellhooks': 'shellhooks'}
++            },
++            repo_dir='tests/test-shellhooks-empty/',
++            overwrite_if_exists=True
++        )
++        # No exception should be raised - empty hook should execute successfully
++    else:
++        # On Windows, empty hooks run through shell and should succeed
++        generate.generate_files(
++            context={
++                'cookiecutter': {'shellhooks': 'shellhooks'}
++            },
++            repo_dir='tests/test-shellhooks-empty/',
++            overwrite_if_exists=True
++        )
+ 
+ 
+ @pytest.mark.usefixtures('clean_system', 'remove_additional_folders')

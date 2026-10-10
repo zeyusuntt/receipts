@@ -1,0 +1,7 @@
+{
+  "approach": "Update `__init__` signature of `OpenAPI`, store `self.openapi_file_path`, modify `_load_default_api_doc`/`generate_openapi_dict` logic: generate OpenAPI doc only if no custom file was provided (and fallback stays same). Then pass the argument from `Robyn.__init__` into its creation of `openapi`. Need to also update how `app = Robyn(...)` calls in tests supply `openapi_file_path` via positional args? Actually they currently do so via keyword on instantiation, but our tests don't construct directly\u2014instead rely on internal default `openapi`: we need to allow passing along arbitrary extra kwarg in initialization of `Robyn`? Wait look again at test:\n\n    app = Robyn(__file__, openapi_file_path=\"openapi_config.json\")\n\nIt seems they already invoke `Robyn` with such a keyword. In current `Robyn.__init__` there's no such arg\u2014so it'd error unless we first extend `Robyn.__init__` to capture unknown keyword arguments and forward them to `OpenAPI(...)`. Better: explicitly add `openapi_file_path=None` parameter to `Robyn.__init__` then propagate.\n\nThus two edits needed: inside robyn/__init__.py edit `Robyn.__init__`, and robyn/openapi.py edit `OpenAPI.__init__` and loading logic.}], ",
+  "files_to_edit": [
+    "robyn/openapi.py"
+  ],
+  "hypothesis": "Modify the `OpenAPI` class constructor to accept an optional `openapi_file_path` parameter; if provided, attempt to load the spec from that file instead of auto-generating it."
+}

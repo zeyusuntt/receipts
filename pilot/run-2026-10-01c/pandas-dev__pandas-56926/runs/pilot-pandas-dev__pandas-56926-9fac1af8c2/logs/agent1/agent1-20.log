@@ -1,0 +1,31 @@
+/pandas/test_issue.py:10: FutureWarning: 'S' is deprecated and will be removed in a future version, please use 's' instead.
+  res1 = df.resample('{}S'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
+/pandas/test_issue.py:10: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  res1 = df.resample('{}S'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
+/pandas/test_issue.py:11: FutureWarning: 'S' is deprecated and will be removed in a future version, please use 's' instead.
+  res2 = df.resample('{}S'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
+/pandas/test_issue.py:11: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  res2 = df.resample('{}S'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
+/pandas/test_issue.py:31: FutureWarning: 'S' is deprecated and will be removed in a future version, please use 's' instead.
+  res1_2 = df2.resample('{}S'.format(n2)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
+/pandas/test_issue.py:31: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  res1_2 = df2.resample('{}S'.format(n2)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
+/pandas/test_issue.py:32: FutureWarning: 'S' is deprecated and will be removed in a future version, please use 's' instead.
+  res2_2 = df2.resample('{}S'.format(n2)).quantile(0.5, interpolation='nearest').iloc[0][0]
+/pandas/test_issue.py:32: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  res2_2 = df2.resample('{}S'.format(n2)).quantile(0.5, interpolation='nearest').iloc[0][0]
+First few groups:
+Values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+Groups of 2: [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]]
+
+Result from Resample.apply(lambda x: x.quantile(0.5, interpolation='nearest')): 0
+Result from Resample.quantile(q=0.5, interpolation='nearest'): 0
+
+For group [0, 1]:
+NumPy percentile with method='nearest': 0
+
+Testing with groups of 10:
+First group values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+Apply result: 4
+Direct quantile result: 4
+NumPy on [0,1,...,9]: 4

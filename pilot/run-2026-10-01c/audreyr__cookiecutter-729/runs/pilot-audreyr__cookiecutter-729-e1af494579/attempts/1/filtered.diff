@@ -1,0 +1,32 @@
+diff --git a/cookiecutter/hooks.py b/cookiecutter/hooks.py
+index 254bc2e..be905c7 100644
+--- a/cookiecutter/hooks.py
++++ b/cookiecutter/hooks.py
+@@ -94,6 +94,14 @@ def run_script_with_context(script_path, cwd, context):
+         suffix=extension
+     ) as temp:
+         output = Template(contents).render(**context)
++        # Ensure we have at least a newline to avoid exec format errors with empty files
++        if not output:
++            output = '\n'
++        # For shell scripts, ensure we have a proper shebang so the kernel will execute them
++        if extension in ('.sh', '.bash', '.zsh', '.fish') or not output.strip():
++            # If it's empty or appears to be a shell script, add shebang if missing
++            if not output.startswith('#!'):
++                output = '#!/bin/sh\n' + output
+         temp.write(output.encode('utf-8'))
+ 
+     run_script(temp.name, cwd)
+diff --git a/debug_import.py b/debug_import.py
+new file mode 100644
+index 0000000..1a5600d
+--- /dev/null
++++ b/debug_import.py
+@@ -0,0 +1,6 @@
++#!/usr/bin/env python
++import cookiecutter.hooks
++print("Loading hooks from:", cookiecutter.hooks.__file__)
++import inspect
++print("run_script_with_context source:")
++print(inspect.getsource(cookiecutter.hooks.run_script_with_context))
+\ No newline at end of file

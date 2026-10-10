@@ -1,0 +1,375 @@
+diff --git a/check_failing_case.py b/check_failing_case.py
+new file mode 100644
+index 0000000000..dac6a01642
+--- /dev/null
++++ b/check_failing_case.py
+@@ -0,0 +1,29 @@
++import pandas as pd
++import numpy as np
++
++# Recreate the failing test case
++a_vals = [np.nan, 4.0, np.nan, 2.0, np.nan]
++s = pd.Series(a_vals)
++print("Original series:", s.tolist())
++print("After dropping NaN:", s.dropna().tolist())
++
++# What does Series.quantile return?
++result = s.quantile(0.5, interpolation='nearest')
++print("Series.quantile(0.5, interpolation='nearest'):", result)
++
++# What does numpy return?
++clean_vals = s.dropna().values
++print("Clean values:", clean_vals)
++numpy_result = np.percentile(clean_vals, 50, method='nearest')
++print("NumPy percentile:", numpy_result)
++
++# Manual calculation
++sorted_vals = np.sort(clean_vals)
++print("Sorted values:", sorted_vals)
++n = len(sorted_vals)
++print(f"n={n}")
++print(f"Position = q * (n-1) = 0.5 * {n-1} = {0.5 * (n-1)}")
++idx = int(0.5 * (n-1))
++frac = 0.5 * (n-1) - idx
++print(f"idx={idx}, frac={frac}")
++print(f"Values at idx={idx} and idx+1={idx+1}: {sorted_vals[idx]}, {sorted_vals[idx+1]}")
+\ No newline at end of file
+diff --git a/check_numpy_behavior.py b/check_numpy_behavior.py
+new file mode 100644
+index 0000000000..db3ed07ddf
+--- /dev/null
++++ b/check_numpy_behavior.py
+@@ -0,0 +1,21 @@
++import numpy as np
++
++# Test what NumPy actually does for various cases
++test_cases = [
++    ([0, 1], 0.5),           # n=2, q=0.5 -> position 0.5
++    ([0, 1, 2, 3], 0.5),     # n=4, q=0.5 -> position 1.5  
++    ([0, 1, 2, 3, 4, 5], 0.5), # n=6, q=0.5 -> position 2.5
++]
++
++for arr, q in test_cases:
++    arr = np.array(arr)
++    pos = q * (len(arr) - 1)
++    idx = int(pos)
++    frac = pos - idx
++    result = np.percentile(arr, q * 100, method='nearest')
++    
++    print(f"Array {arr.tolist()}, q={q}")
++    print(f"  Position: {pos} (index {idx}, frac {frac})")
++    print(f"  Values around: [{arr[idx] if idx < len(arr) else 'OOB'}, {arr[idx+1] if idx+1 < len(arr) else 'OOB'}]")
++    print(f"  NumPy result: {result}")
++    print()
+\ No newline at end of file
+diff --git a/check_numpy_behavior2.py b/check_numpy_behavior2.py
+new file mode 100644
+index 0000000000..004b347701
+--- /dev/null
++++ b/check_numpy_behavior2.py
+@@ -0,0 +1,24 @@
++import numpy as np
++
++# Test what NumPy actually does for various cases
++test_cases = [
++    ([0, 1], 0.5),           # n=2, q=0.5 -> position 0.5
++    ([0, 1, 2, 3], 0.5),     # n=4, q=0.5 -> position 1.5  
++    ([0, 1, 2, 3, 4, 5], 0.5), # n=6, q=0.5 -> position 2.5
++    ([0, 1, 2, 3, 4, 5, 6, 7], 0.5), # n=8, q=0.5 -> position 3.5
++]
++
++for arr, q in test_cases:
++    arr = np.array(arr)
++    pos = q * (len(arr) - 1)
++    idx = int(pos)
++    frac = pos - idx
++    result = np.percentile(arr, q * 100, method='nearest')
++    
++    print(f"Array {arr.tolist()}, q={q}")
++    print(f"  Position: {pos} (index {idx}, frac {frac:.1f})")
++    print(f"  Values around: [{arr[idx]}, {arr[idx+1]}]")
++    print(f"  NumPy result: {result}")
++    print(f"  Expected if rounding UP: {arr[idx+1]}")  
++    print(f"  Expected if rounding DOWN: {arr[idx]}")
++    print()
+\ No newline at end of file
+diff --git a/check_series.py b/check_series.py
+new file mode 100644
+index 0000000000..ba006e1b00
+--- /dev/null
++++ b/check_series.py
+@@ -0,0 +1,16 @@
++import pandas as pd
++import numpy as np
++
++# Check what Series does
++s = pd.Series([0, 1, 2, 3])
++print("Series:", s.tolist())
++print("Series.quantile(0.5, interpolation='nearest'):", s.quantile(0.5, interpolation='nearest'))
++print("NumPy percentile:", np.percentile(s.values, 50, method='nearest'))
++
++# Check the position calculation
++n = len(s)
++print(f"n={n}")
++print(f"(n-1) = {n-1}")
++print(f"q * (n-1) = {0.5 * (n-1)}")
++print(f"This gives index 1.5, so between indices 1 and 2")
++print(f"Lower val: {s.iloc[1]}, Upper val: {s.iloc[2]}")
+\ No newline at end of file
+diff --git a/debug_n2.py b/debug_n2.py
+new file mode 100644
+index 0000000000..9e3ec225b4
+--- /dev/null
++++ b/debug_n2.py
+@@ -0,0 +1,46 @@
++import pandas as pd
++import numpy as np
++
++# Debug n=2 case
++df = pd.DataFrame({'x': [i for i in range(4)]})  # [0,1,2,3]
++df.index = pd.to_datetime(df['x'], unit='s')
++
++n = 2
++print(f"Testing n={n}")
++print(f"DataFrame values: {df['x'].tolist()}")
++
++res1 = df.resample('{}s'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++res2 = df.resample('{}s'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
++
++print(f"Apply result: {res1}")
++print(f"Direct quantile result: {res2}")
++
++# First group is [0, 1]
++first_group = df['x'][:n].values
++print(f"First group: {first_group.tolist()}")
++
++# Check what each method gives
++s_first = pd.Series(first_group)
++print(f"Series.quantile: {s_first.quantile(0.5, interpolation='nearest')}")
++print(f"NumPy percentile: {np.percentile(first_group, 50, method='nearest')}")
++
++# Manual calculation for [0, 1]
++sorted_vals = np.sort(first_group)
++print(f"Sorted values: {sorted_vals}")
++n_len = len(sorted_vals)
++pos = 0.5 * (n_len - 1)
++print(f"Position for q=0.5: 0.5 * ({n_len}-1) = {pos}")
++idx = int(pos)
++frac = pos - idx
++print(f"Index: {idx}, Fraction: {frac}")
++print(f"Value at index {idx}: {sorted_vals[idx]}")
++print(f"Value at index {idx+1}: {sorted_vals[idx+1]}")
++print(f"Since frac={frac}:")
++if frac > 0.5:
++    print("  > 0.5 → pick HIGHER value")
++elif frac < 0.5:
++    print("  < 0.5 → pick LOWER value")
++else:  # frac == 0.5
++    print("  == 0.5 → tie breaker:")
++    print(f"    q_val > 0.5 is {0.5 > 0.5} → {'' if 0.5 > 0.5 else 'NOT'} greater")
++    print(f"    Current code picks: {'HIGHER' if 0.5 > 0.5 else 'LOWER'} value")
+\ No newline at end of file
+diff --git a/debug_numpy.py b/debug_numpy.py
+new file mode 100644
+index 0000000000..315c090d77
+--- /dev/null
++++ b/debug_numpy.py
+@@ -0,0 +1,19 @@
++import numpy as np
++import pandas as pd
++
++# Test what numpy does with method='nearest' for even-sized arrays
++test_cases = [
++    [0, 1, 2, 3],      # n=4
++    [0, 1, 2, 3, 4, 5, 6, 7],  # n=8
++    list(range(12)),   # n=12
++    list(range(20)),   # n=20
++]
++
++for i, arr in enumerate(test_cases):
++    n = len(arr)
++    print(f"\nArray {i+1} (n={n}): {arr}")
++    print(f"  NumPy percentile 50th with method='nearest': {np.percentile(arr, 50, method='nearest')}")
++    print(f"  Lower middle (index {(n-1)//2}): {arr[(n-1)//2]}")  
++    print(f"  Upper middle (index {n//2}): {arr[n//2]}")
++    # What the apply method would do (Series.quantile)
++    print(f"  Series.quantile(0.5, interpolation='nearest'): {pd.Series(arr).quantile(0.5, interpolation='nearest')}")
+\ No newline at end of file
+diff --git a/debug_original.py b/debug_original.py
+new file mode 100644
+index 0000000000..6e7f6b221e
+--- /dev/null
++++ b/debug_original.py
+@@ -0,0 +1,41 @@
++import pandas as pd
++import numpy as np
++
++# Test the original issue case
++df = pd.DataFrame({'x': [i for i in range(100)]})
++df.index = pd.to_datetime(df['x'], unit='s')
++
++n = 4  # This showed discrepancy in our earlier test
++res1 = df.resample('{}s'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++res2 = df.resample('{}s'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
++
++print(f"For n={n}:")
++print(f"Apply result: {res1}")
++print(f"Direct quantile result: {res2}")
++
++# Check what the first group actually is
++first_group = df['x'][:n]
++print(f"First group values: {first_group.tolist()}")
++
++# Check Series.quantile vs numpy
++s_first = pd.Series(first_group.values)
++print(f"Series.quantile: {s_first.quantile(0.5, interpolation='nearest')}")
++print(f"NumPy percentile: {np.percentile(first_group.values, 50, method='nearest')}")
++
++# Manual calculation
++sorted_vals = np.sort(first_group.values)
++print(f"Sorted values: {sorted_vals}")
++n_len = len(sorted_vals)
++pos = 0.5 * (n_len - 1)
++print(f"Position for q=0.5: 0.5 * ({n_len}-1) = {pos}")
++idx = int(pos)
++frac = pos - idx
++print(f"Index: {idx}, Fraction: {frac}")
++if frac > 0.5:
++    print("Should pick higher value (idx+1)")
++elif frac < 0.5:
++    print("Should pick lower value (idx)")
++else:  # frac == 0.5
++    print("EXACTLY HALF-WAY - checking tie-breaker rule")
++    print(f"q_val = 0.5, so q_val > 0.5 is {0.5 > 0.5}")
++    print("According to current code: pick LOWER value")
+\ No newline at end of file
+diff --git a/final_test.py b/final_test.py
+new file mode 100644
+index 0000000000..5954a4151a
+--- /dev/null
++++ b/final_test.py
+@@ -0,0 +1,27 @@
++import pandas as pd
++import numpy as np
++
++# Exact reproduction from the issue (assuming n=50 based on the expected results)
++df = pd.DataFrame({'x': [i for i in range(100)]})
++df.index = pd.to_datetime(df['x'], unit='s')
++
++# Using n=50 to get 2 groups of 50 elements each
++n = 50
++res1 = df.resample('{}s'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++res2 = df.resample('{}s'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
++
++print("result from Resample.apply(lambda x: x.quantile(0.5, interpolation='nearest'): \t{}".format(res1))
++print("result from Resample.quantile(q=0.5, interpolation='nearest'): \t{}".format(res2))
++
++# Check if they match now
++print("Results match:", res1 == res2)
++
++# Also test what we expect
++# First group is [0, 1, 2, ..., 49] 
++# For n=50, position = 0.5 * (50-1) = 24.5
++# So we're between sorted[24]=24 and sorted[25]=25
++# Index=24 (even), so with round-half-to-even we pick index 24 = 24
++expected = 24
++print(f"Expected result: {expected}")
++print(f"Apply matches expected: {res1 == expected}")
++print(f"Direct matches expected: {res2 == expected}")
+\ No newline at end of file
+diff --git a/pandas/_libs/groupby.pyx b/pandas/_libs/groupby.pyx
+index 8f4dfd9dcb..d200009fbd 100644
+--- a/pandas/_libs/groupby.pyx
++++ b/pandas/_libs/groupby.pyx
+@@ -1286,10 +1286,16 @@ def group_quantile(
+                     elif interp == INTERPOLATION_MIDPOINT:
+                         out[i, k] = (val + next_val) / 2.0
+                     elif interp == INTERPOLATION_NEAREST:
+-                        if frac > .5 or (frac == .5 and q_val > .5):  # Always OK?
++                        if frac > .5:
+                             out[i, k] = next_val
+-                        else:
++                        elif frac < .5:
+                             out[i, k] = val
++                        else:  # frac == .5 exactly
++                            # Round half to even: if idx is even, pick val (lower); if odd, pick next_val (upper)
++                            if idx % 2 == 0:  # idx is even
++                                out[i, k] = val
++                            else:  # idx is odd
++                                out[i, k] = next_val
+ 
+ 
+ # ----------------------------------------------------------------------
+diff --git a/test_issue.py b/test_issue.py
+new file mode 100644
+index 0000000000..e5e836db9d
+--- /dev/null
++++ b/test_issue.py
+@@ -0,0 +1,36 @@
++import pandas as pd
++import numpy as np
++
++# Reproduce the issue from the bug report
++df = pd.DataFrame({'x': [i for i in range(100)]})
++df.index = pd.to_datetime(df['x'], unit='s')
++
++# Test with n=2 second intervals to get groups of 2 elements each
++n = 2
++res1 = df.resample('{}S'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++res2 = df.resample('{}S'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
++
++print("First few groups:")
++print("Values:", df['x'][:10].tolist())
++print("Groups of 2:", [df['x'][i:i+n].tolist() for i in range(0, 10, n)])
++print()
++
++print("Result from Resample.apply(lambda x: x.quantile(0.5, interpolation='nearest')): {}".format(res1))
++print("Result from Resample.quantile(q=0.5, interpolation='nearest'): {}".format(res2))
++
++# Let's also check what numpy does directly
++test_group = np.array([0, 1])  # First group
++print("\nFor group [0, 1]:")
++print("NumPy percentile with method='nearest':", np.percentile(test_group, 50, method='nearest'))
++
++# Test with larger groups to see the pattern
++print("\nTesting with groups of 10:")
++df2 = pd.DataFrame({'x': [i for i in range(20)]})  # 0-19
++df2.index = pd.to_datetime(df2['x'], unit='s')
++n2 = 10
++res1_2 = df2.resample('{}S'.format(n2)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++res2_2 = df2.resample('{}S'.format(n2)).quantile(0.5, interpolation='nearest').iloc[0][0]
++print("First group values:", df2['x'][:10].tolist())
++print("Apply result:", res1_2)
++print("Direct quantile result:", res2_2)
++print("NumPy on [0,1,...,9]:", np.percentile(np.arange(10), 50, method='nearest'))
+\ No newline at end of file
+diff --git a/test_issue2.py b/test_issue2.py
+new file mode 100644
+index 0000000000..2c0bfa77f2
+--- /dev/null
++++ b/test_issue2.py
+@@ -0,0 +1,23 @@
++import pandas as pd
++import numpy as np
++
++# Try to reproduce the exact issue - let's test various group sizes
++df = pd.DataFrame({'x': [i for i in range(100)]})
++df.index = pd.to_datetime(df['x'], unit='s')
++
++print("Testing various group sizes to find where the discrepancy occurs:")
++print("Group Size | Apply Result | Direct Result | Expected (NumPy)")
++print("-----------|--------------|---------------|-----------------")
++
++for n in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 40, 50]:
++    try:
++        res1 = df.resample('{}s'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++        res2 = df.resample('{}s'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
++        # What numpy says for the first group
++        first_group = list(range(n))
++        numpy_result = np.percentile(first_group, 50, method='nearest')
++        print(f"{n:10} | {res1:12} | {res2:13} | {numpy_result:15}")
++        if res1 != res2:
++            print(f"  ^^^ DISCREPANCY FOUND for n={n}")
++    except Exception as e:
++        print(f"{n:10} | ERROR: {e}")
+\ No newline at end of file

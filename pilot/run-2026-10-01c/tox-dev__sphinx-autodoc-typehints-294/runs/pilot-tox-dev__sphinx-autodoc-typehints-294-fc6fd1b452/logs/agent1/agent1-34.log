@@ -1,0 +1,40 @@
+=== ORIGINAL ISSUE SIMULATION ===
+Docstring entering _inject_types_to_docstring:
+ 0: '.. rubric:: Notes'
+ 1: ''
+ 2: 'Hello, world.'
+ 3: ''
+
+OLD behavior result (problematic):
+ 0: ':rtype: :py:obj:`None`'
+ 1: '.. rubric:: Notes'
+ 2: ''
+ 3: 'Hello, world.'
+ 4: ''
+
+❌ OLD behavior WOULD cause Sphinx warning:
+   Line 0: ':rtype: :py:obj:`None`'
+   Line 1: '.. rubric:: Notes' (directive, no blank line after)
+   Debug: insert_index=0, len(lines_new)=5
+   Debug: lines_new[1] = '.. rubric:: Notes'
+   Debug: Applying fix - inserting blank line at index 1
+
+NEW behavior result (fixed):
+ 0: ':rtype: :py:obj:`None`'
+ 1: ''
+ 2: '.. rubric:: Notes'
+ 3: ''
+ 4: 'Hello, world.'
+ 5: ''
+
+🔍 Checking :rtype: at line 0
+   Line 0:     ':rtype: :py:obj:`None`' (:rtype:)
+   Line 1:   ''
+   Line 2:   '.. rubric:: Notes'
+   ✅ GOOD: Blank line, then directive
+
+RESULT:
+   Old behavior would cause warning: True
+   New behavior prevents warning: True
+
+🎉 FIX SUCCESSFUL

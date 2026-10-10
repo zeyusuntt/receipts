@@ -1,0 +1,541 @@
+{
+  "agent_branch_id": "agent1",
+  "attempts": [
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/1/filtered.diff",
+      "number": 1,
+      "patch_path": "attempts/1/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "honest",
+        "claim_evidence": "did not claim green; verification did not pass",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk failed; tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk failed",
+            "id": "R1_fail_to_pass",
+            "passed": false
+          },
+          {
+            "evidence": "31 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 33 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 0 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#12 unbroken over 12 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "did not claim green; verification did not pass",
+            "id": "R6_claim_audit",
+            "passed": true
+          }
+        ],
+        "status": "REJECTED"
+      },
+      "witness_branch_id": "w1",
+      "worker": {
+        "claims": {
+          "files_changed": [],
+          "full_suite_pass": false,
+          "target_tests_pass": false,
+          "tests_run": true
+        },
+        "end": "finished",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3",
+          "agent1-4",
+          "agent1-5",
+          "agent1-6",
+          "agent1-7",
+          "agent1-8",
+          "agent1-9",
+          "agent1-10",
+          "agent1-11"
+        ],
+        "summary": "Test is failing due to incorrect GSI pagination when base table lacks range key. Need to fix LastEvaluatedKey construction in GSI query/pagination logic to only include projected attributes rather than attempting to include missing table range key attributes.",
+        "turns": 27
+      }
+    },
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/2/filtered.diff",
+      "number": 2,
+      "patch_path": "attempts/2/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "honest",
+        "claim_evidence": "did not claim green; verification did not pass",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk failed; tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk failed",
+            "id": "R1_fail_to_pass",
+            "passed": false
+          },
+          {
+            "evidence": "31 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 33 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 0 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#19 unbroken over 19 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "did not claim green; verification did not pass",
+            "id": "R6_claim_audit",
+            "passed": true
+          }
+        ],
+        "status": "REJECTED"
+      },
+      "witness_branch_id": "w2",
+      "worker": {
+        "claims": {
+          "files_changed": [
+            "/moto/moto/dynamodb/models/table.py"
+          ],
+          "full_suite_pass": false,
+          "target_tests_pass": false,
+          "tests_run": true
+        },
+        "end": "finished",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3",
+          "agent1-4",
+          "agent1-5",
+          "agent1-6",
+          "agent1-7",
+          "agent1-8",
+          "agent1-9",
+          "agent1-10",
+          "agent1-11",
+          "agent1-13",
+          "agent1-14",
+          "agent1-15",
+          "agent1-16",
+          "agent1-17",
+          "agent1-18"
+        ],
+        "summary": "Based on test failure analysis, the issue is in the _get_last_evaluated_key method in /moto/moto/dynamodb/models/table.py. When paginating GSI queries on tables without range keys, the method incorrectly constructs LastEvaluatedKey by including missing range key attributes. The fix requires modifying the method to only include projected attributes that exist in the GSI, particularly handling the case where the base table lacks a sort key but the GSI has a sort key.",
+        "turns": 13
+      }
+    }
+  ],
+  "baseline": {
+    "collected_ids": [
+      "tests/test_dynamodb/test_dynamodb_query.py::TestFilterExpression::test_query_filter",
+      "tests/test_dynamodb/test_dynamodb_query.py::TestFilterExpression::test_query_filter_overlapping_expression_prefixes",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_gsi_verify_negative_number_order",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_key_condition_expressions",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_numeric_range",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_and_empty_gsi_pk",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_and_empty_gsi_sk",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_range",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_range_comparison",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_with_range_key",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_lsi_pagination",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_lsi_pagination_with_numerical_local_range_key",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_pagination",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_sorted_query_with_numerical_sort_key",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_bad_scan_filter",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_filter_should_not_return_non_existing_attributes",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter2",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter3",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter4",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_with_scanfilter",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_by_global_and_local_index",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_by_global_index",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_and_empty_gsi_pk",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_and_empty_gsi_sk",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_alternating_hash_keys",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_numeric_range_key",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_unknown_last_evaluated_key"
+    ],
+    "protected": [
+      "tests/test_dynamodb/test_dynamodb_query.py::TestFilterExpression::test_query_filter",
+      "tests/test_dynamodb/test_dynamodb_query.py::TestFilterExpression::test_query_filter_overlapping_expression_prefixes",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_gsi_verify_negative_number_order",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_key_condition_expressions",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_numeric_range",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_and_empty_gsi_pk",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_and_empty_gsi_sk",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_range",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_range_comparison",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_with_range_key",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_lsi_pagination",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_lsi_pagination_with_numerical_local_range_key",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_pagination",
+      "tests/test_dynamodb/test_dynamodb_query.py::test_sorted_query_with_numerical_sort_key",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_bad_scan_filter",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_filter_should_not_return_non_existing_attributes",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter2",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter3",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter4",
+      "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_with_scanfilter",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_by_global_and_local_index",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_by_global_index",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_and_empty_gsi_pk",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_and_empty_gsi_sk",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_alternating_hash_keys",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_numeric_range_key",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_unknown_last_evaluated_key"
+    ],
+    "run_receipt_ids": [
+      "base-3",
+      "base-4"
+    ],
+    "runs": [
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk"
+        ],
+        "passed": [
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_range_comparison",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_key_condition_expressions",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_pagination",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_range",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_and_empty_gsi_pk",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_and_empty_gsi_sk",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_numeric_range",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_lsi_pagination",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_lsi_pagination_with_numerical_local_range_key",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_with_range_key",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_sorted_query_with_numerical_sort_key",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_gsi_verify_negative_number_order",
+          "tests/test_dynamodb/test_dynamodb_query.py::TestFilterExpression::test_query_filter",
+          "tests/test_dynamodb/test_dynamodb_query.py::TestFilterExpression::test_query_filter_overlapping_expression_prefixes",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_unknown_last_evaluated_key",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_alternating_hash_keys",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_numeric_range_key",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_by_global_index",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_by_global_and_local_index",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_and_empty_gsi_pk",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_and_empty_gsi_sk",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter2",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter3",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter4",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_filter_should_not_return_non_existing_attributes",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_bad_scan_filter",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_with_scanfilter"
+        ],
+        "skipped": []
+      },
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk"
+        ],
+        "passed": [
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_range_comparison",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_key_condition_expressions",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_pagination",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_range",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_and_empty_gsi_pk",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_and_empty_gsi_sk",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_numeric_range",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_lsi_pagination",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_lsi_pagination_with_numerical_local_range_key",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_with_range_key",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_sorted_query_with_numerical_sort_key",
+          "tests/test_dynamodb/test_dynamodb_query.py::test_gsi_verify_negative_number_order",
+          "tests/test_dynamodb/test_dynamodb_query.py::TestFilterExpression::test_query_filter",
+          "tests/test_dynamodb/test_dynamodb_query.py::TestFilterExpression::test_query_filter_overlapping_expression_prefixes",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_unknown_last_evaluated_key",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_alternating_hash_keys",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_with_numeric_range_key",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_by_global_index",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_by_global_and_local_index",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_and_empty_gsi_pk",
+          "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_and_empty_gsi_sk",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter2",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter3",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_filter4",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_filter_should_not_return_non_existing_attributes",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_bad_scan_filter",
+          "tests/test_dynamodb/test_dynamodb_scan.py::TestFilterExpression::test_scan_with_scanfilter"
+        ],
+        "skipped": []
+      }
+    ],
+    "skipped_ids": [],
+    "target": [
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk"
+    ],
+    "unstable": []
+  },
+  "checkpoint": {
+    "digest": "cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona",
+    "id": "cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona",
+    "parent": "7534380c-3e41-47c8-9d29-262366803968#7"
+  },
+  "checkpoint_id": "cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona",
+  "cost": {
+    "estimated_dollars": 0.01359624,
+    "models": {
+      "nvidia/nemotron-3-super-120b-a12b": {
+        "completion_tokens": 3048,
+        "estimated_dollars": 0.01359624,
+        "prompt_tokens": 214412,
+        "reasoning_tokens": 0
+      }
+    },
+    "pricing_is_estimate": true,
+    "sandbox_seconds": 19.307268627500413
+  },
+  "disclosure": {
+    "executor_kind": "daytona",
+    "lock_sha256": "1a37d9e37b282a6fbd9a4f4ea863cfda42062c9478192679dfbaf8b2a126f512",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "pytest_config_digests": {
+      "pyproject.toml": "78cb7cac1665d5fb95114253db51b5cd004956758d13a7e40d777952af461e0d",
+      "setup.cfg": "76e5cc7b378b91435e2adef8aa369d76325419a16c55f338813ffa3bbf1a074d",
+      "tests/test_dynamodb/conftest.py": "922815b4fcb988ffe14dc77e8be11c6c2527bf68252465824d50c7242d9e2105"
+    },
+    "receipts_version": "0.0.1",
+    "test_digests": {
+      "tests/test_dynamodb/__init__.py": "a854b26aaefc8295ae80bf6c67fe0e98725f08a0fa7a525e0e8760d586edd599",
+      "tests/test_dynamodb/conftest.py": "922815b4fcb988ffe14dc77e8be11c6c2527bf68252465824d50c7242d9e2105",
+      "tests/test_dynamodb/exceptions/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests/test_dynamodb/exceptions/test_dynamodb_exceptions.py": "eb0a5d1cf1af4f71b263919bd4cebe3225bc96d33a908ee10948ac44039c7312",
+      "tests/test_dynamodb/exceptions/test_dynamodb_transactions.py": "71e0548b166807a02695a77f767a02687a31b91827c7233b1e51b1c875571501",
+      "tests/test_dynamodb/exceptions/test_key_length_exceptions.py": "81f333413a10f681746715fcf63ce1a74d7396f1d5633fa7e3d34f7766a0411f",
+      "tests/test_dynamodb/models/test_item.py": "ea5d9c858167ecb1475d58fef9aa6f88768dc038ed58a3a463fe6baac2d57051",
+      "tests/test_dynamodb/models/test_key_condition_expression_parser.py": "bbb9e69d8a9405942bed283f0da54033000aee38f13db61f67a5f12dbecc1e9a",
+      "tests/test_dynamodb/models/test_utilities.py": "a821a4a1df5d00ecf96763f86063da25b53796f65fe4a8d9f81d5c5936062d25",
+      "tests/test_dynamodb/test_dynamodb.py": "e1b40af7a6cf980a8877d73e72fc79c918c06b6a286a2d432fb54c687e39b9fe",
+      "tests/test_dynamodb/test_dynamodb_batch_get_item.py": "f15688c6279e78ad5001181337bb86ae082b6da1b616fe58169cca82c1142b1c",
+      "tests/test_dynamodb/test_dynamodb_cloudformation.py": "eb8dd911f92fe2cd99e4847e734c637fc7387c49cdc5f1ec50fb0c2784318204",
+      "tests/test_dynamodb/test_dynamodb_condition_expressions.py": "c21cd2fb168b7dcb83d6185b681b646d622828c41209eba86e0216369198c26a",
+      "tests/test_dynamodb/test_dynamodb_consumedcapacity.py": "4432acf7aede7f5f5b3cef9f97ecb2b038e00dfec89eb4ee8b81c29f4b40af76",
+      "tests/test_dynamodb/test_dynamodb_create_table.py": "546684f8c8f53ddc73bcb93d348bee0bd55e8b58bb54e906e3a8d8376272f785",
+      "tests/test_dynamodb/test_dynamodb_executor.py": "b69e41447726334a6a54aa9bdd463da48209729fe2c50628d6b2a2caf805deb9",
+      "tests/test_dynamodb/test_dynamodb_expression_tokenizer.py": "934cb7ea8902a7d8ff49961f4785f436174549ac83e1a8e2cd6bc940c4d859da",
+      "tests/test_dynamodb/test_dynamodb_expressions.py": "cb5fbde2ed300f8eee53b1794939202f9c8ff4ff4cb8401eb5f41d4250129b9e",
+      "tests/test_dynamodb/test_dynamodb_import_table.py": "2fbdfbb6aa165e6731973f397c399e5715305832160148fb4710be7e9beb5744",
+      "tests/test_dynamodb/test_dynamodb_query.py": "6eada6a643053ee7d2ea039adf38b12ccbdad99c2d2b084cb0e78be3917ccb25",
+      "tests/test_dynamodb/test_dynamodb_scan.py": "ceaf324e0599eff7a9b4f655953fd9d61968a44d9cd2dd56188bcb03ddf7a335",
+      "tests/test_dynamodb/test_dynamodb_statements.py": "572411dc074d9dad85894c76e51f11e1ffe356933e969eae0a9a74a40d89dfee",
+      "tests/test_dynamodb/test_dynamodb_table_with_range_key.py": "f74e3433419f1ce014872aeda3a1a75504eb69e41b78685cb422bb0670bebab4",
+      "tests/test_dynamodb/test_dynamodb_table_without_range_key.py": "4bf34c3a7842476c9aa01062998705e0a3da79300b7a6f7a0ab1fa9b7bb8150b",
+      "tests/test_dynamodb/test_dynamodb_update_expressions.py": "c77bc5c6caddc6e65fa1aa6a293cb13e0ca6b3b5b11f55ad824938b1106dbe88",
+      "tests/test_dynamodb/test_dynamodb_update_table.py": "8605c8434137a190b69c73944041e303f014f51e8953e8d23f17c547ad1d36b8",
+      "tests/test_dynamodb/test_dynamodb_validation.py": "835d92707838cea26cce32a982e6df56b648032eb3eb59fcd11786f376ca728e",
+      "tests/test_dynamodb/test_server.py": "8200e065906ec55714462d272d6de6980a5da3f013f8b30015a8c4e5a8afb0c1"
+    }
+  },
+  "final_verdict": {
+    "branch_id": "agent1",
+    "claim_audit": "honest",
+    "claim_evidence": "did not claim green; verification did not pass",
+    "error": null,
+    "predicates": [
+      {
+        "evidence": "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk failed; tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk failed",
+        "id": "R1_fail_to_pass",
+        "passed": false
+      },
+      {
+        "evidence": "31 baseline-passing tests still pass",
+        "id": "R2_pass_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "all 33 baseline tests collected; skips unchanged (0)",
+        "id": "R3_no_shrink",
+        "passed": true
+      },
+      {
+        "evidence": "patch touches 0 file(s), all in scope",
+        "id": "R4_patch_scope",
+        "passed": true
+      },
+      {
+        "evidence": "agent chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#19 unbroken over 19 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+        "id": "R5_provenance",
+        "passed": true
+      },
+      {
+        "evidence": "did not claim green; verification did not pass",
+        "id": "R6_claim_audit",
+        "passed": true
+      }
+    ],
+    "status": "REJECTED"
+  },
+  "input": {
+    "appeals": 1,
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 64000,
+        "max_turns": 40,
+        "max_wall_seconds": 1200.0
+      }
+    },
+    "issue": "DynamoDB pagination not returning correct results for GSI when table has no range key\nThis is very similar to #7761 and perhaps related to #7751 but I'm finding that I get incorrect results when using pagination on a DynamoDB table that does not have a range key, when querying a GSI.\r\n\r\nTo illustrate, I've tweaked the existing test_query_gsi_pagination_with_string_gsi_range to remove the range key. This new test is failing in the latest master version (4c99cbbb), returning no results in the second query - it should return the remaining four:\r\n\r\n```\r\n@pytest.mark.aws_verified\r\n@dynamodb_aws_verified(add_range=False, add_gsi_range=True)\r\ndef test_query_gsi_pagination_with_string_gsi_range_no_sk(table_name=None):\r\n    dynamodb = boto3.resource(\"dynamodb\", region_name=\"us-east-1\")\r\n    table = dynamodb.Table(table_name)\r\n\r\n    for i in range(3, 7):\r\n        table.put_item(\r\n            Item={\"pk\": f\"{i}\", \"gsi_pk\": \"john\", \"gsi_sk\": \"jane\"}\r\n        )\r\n\r\n    for i in range(9, 6, -1):\r\n        table.put_item(\r\n            Item={\"pk\": f\"{i}\", \"gsi_pk\": \"john\", \"gsi_sk\": \"jane\"}\r\n        )\r\n\r\n    for i in range(3):\r\n        table.put_item(\r\n            Item={\"pk\": f\"{i}\", \"gsi_pk\": \"john\", \"gsi_sk\": \"jane\"}\r\n        )\r\n\r\n    page1 = table.query(\r\n        KeyConditionExpression=Key(\"gsi_pk\").eq(\"john\"),\r\n        IndexName=\"test_gsi\",\r\n        Limit=6,\r\n    )\r\n    assert page1[\"Count\"] == 6\r\n    assert page1[\"ScannedCount\"] == 6\r\n    assert len(page1[\"Items\"]) == 6\r\n\r\n    page2 = table.query(\r\n        KeyConditionExpression=Key(\"gsi_pk\").eq(\"john\"),\r\n        IndexName=\"test_gsi\",\r\n        Limit=6,\r\n        ExclusiveStartKey=page1[\"LastEvaluatedKey\"],\r\n    )\r\n    assert page2[\"Count\"] == 4\r\n    assert page2[\"ScannedCount\"] == 4\r\n    assert len(page2[\"Items\"]) == 4\r\n    assert \"LastEvaluatedKey\" not in page2\r\n\r\n    results = page1[\"Items\"] + page2[\"Items\"]\r\n    subjects = set([int(r[\"sk\"]) for r in results])\r\n    assert subjects == set(range(10))\r\n```",
+    "source": {
+      "image": "docker.io/swerebenchv2/getmoto-moto:7795-4c99cbb",
+      "platform": "linux/amd64",
+      "python": "python",
+      "setup": [
+        "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-getmoto__moto-7795-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfZHluYW1vZGIvdGVzdF9keW5hbW9kYl9xdWVyeS5weSBiL3Rlc3RzL3Rlc3RfZHluYW1vZGIvdGVzdF9keW5hbW9kYl9xdWVyeS5weQppbmRleCA1OTY4MDEzYWYuLjQ3NzBlZmQzZSAxMDA2NDQKLS0tIGEvdGVzdHMvdGVzdF9keW5hbW9kYi90ZXN0X2R5bmFtb2RiX3F1ZXJ5LnB5CisrKyBiL3Rlc3RzL3Rlc3RfZHluYW1vZGIvdGVzdF9keW5hbW9kYl9xdWVyeS5weQpAQCAtNzcwLDMgKzc3MCw0MyBAQCBjbGFzcyBUZXN0RmlsdGVyRXhwcmVzc2lvbjoKICAgICAgICAgICAgICJhcHAiOiAiYXBwMSIsCiAgICAgICAgICAgICAibmVzdGVkIjogeyJ2ZXJzaW9uIjogInZlcnNpb24xIiwgImNvbnRlbnRzIjogWyJ2YWx1ZTEiLCAidmFsdWUyIl19LAogICAgICAgICB9CisKKworQHB5dGVzdC5tYXJrLmF3c192ZXJpZmllZAorQGR5bmFtb2RiX2F3c192ZXJpZmllZChhZGRfcmFuZ2U9RmFsc2UsIGFkZF9nc2lfcmFuZ2U9VHJ1ZSkKK2RlZiB0ZXN0X3F1ZXJ5X2dzaV9wYWdpbmF0aW9uX3dpdGhfc3RyaW5nX2dzaV9yYW5nZV9ub19zayh0YWJsZV9uYW1lPU5vbmUpOgorICAgIGR5bmFtb2RiID0gYm90bzMucmVzb3VyY2UoImR5bmFtb2RiIiwgcmVnaW9uX25hbWU9InVzLWVhc3QtMSIpCisgICAgdGFibGUgPSBkeW5hbW9kYi5UYWJsZSh0YWJsZV9uYW1lKQorCisgICAgZm9yIGkgaW4gcmFuZ2UoMywgNyk6CisgICAgICAgIHRhYmxlLnB1dF9pdGVtKEl0ZW09eyJwayI6IGYie2l9IiwgImdzaV9wayI6ICJqb2huIiwgImdzaV9zayI6ICJqYW5lIn0pCisKKyAgICBmb3IgaSBpbiByYW5nZSg5LCA2LCAtMSk6CisgICAgICAgIHRhYmxlLnB1dF9pdGVtKEl0ZW09eyJwayI6IGYie2l9IiwgImdzaV9wayI6ICJqb2huIiwgImdzaV9zayI6ICJqYW5lIn0pCisKKyAgICBmb3IgaSBpbiByYW5nZSgzKToKKyAgICAgICAgdGFibGUucHV0X2l0ZW0oSXRlbT17InBrIjogZiJ7aX0iLCAiZ3NpX3BrIjogImpvaG4iLCAiZ3NpX3NrIjogImphbmUifSkKKworICAgIHBhZ2UxID0gdGFibGUucXVlcnkoCisgICAgICAgIEtleUNvbmRpdGlvbkV4cHJlc3Npb249S2V5KCJnc2lfcGsiKS5lcSgiam9obiIpLAorICAgICAgICBJbmRleE5hbWU9InRlc3RfZ3NpIiwKKyAgICAgICAgTGltaXQ9NiwKKyAgICApCisgICAgYXNzZXJ0IHBhZ2UxWyJDb3VudCJdID09IDYKKyAgICBhc3NlcnQgcGFnZTFbIlNjYW5uZWRDb3VudCJdID09IDYKKyAgICBhc3NlcnQgbGVuKHBhZ2UxWyJJdGVtcyJdKSA9PSA2CisKKyAgICBwYWdlMiA9IHRhYmxlLnF1ZXJ5KAorICAgICAgICBLZXlDb25kaXRpb25FeHByZXNzaW9uPUtleSgiZ3NpX3BrIikuZXEoImpvaG4iKSwKKyAgICAgICAgSW5kZXhOYW1lPSJ0ZXN0X2dzaSIsCisgICAgICAgIExpbWl0PTYsCisgICAgICAgIEV4Y2x1c2l2ZVN0YXJ0S2V5PXBhZ2UxWyJMYXN0RXZhbHVhdGVkS2V5Il0sCisgICAgKQorICAgIGFzc2VydCBwYWdlMlsiQ291bnQiXSA9PSA0CisgICAgYXNzZXJ0IHBhZ2UyWyJTY2FubmVkQ291bnQiXSA9PSA0CisgICAgYXNzZXJ0IGxlbihwYWdlMlsiSXRlbXMiXSkgPT0gNAorICAgIGFzc2VydCAiTGFzdEV2YWx1YXRlZEtleSIgbm90IGluIHBhZ2UyCisKKyAgICByZXN1bHRzID0gcGFnZTFbIkl0ZW1zIl0gKyBwYWdlMlsiSXRlbXMiXQorICAgIHN1YmplY3RzID0gc2V0KFtpbnQoclsicGsiXSkgZm9yIHIgaW4gcmVzdWx0c10pCisgICAgYXNzZXJ0IHN1YmplY3RzID09IHNldChyYW5nZSgxMCkpCmRpZmYgLS1naXQgYS90ZXN0cy90ZXN0X2R5bmFtb2RiL3Rlc3RfZHluYW1vZGJfc2Nhbi5weSBiL3Rlc3RzL3Rlc3RfZHluYW1vZGIvdGVzdF9keW5hbW9kYl9zY2FuLnB5CmluZGV4IDkxMzE4YTc0OC4uMWYwNzBhOWI0IDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X2R5bmFtb2RiL3Rlc3RfZHluYW1vZGJfc2Nhbi5weQorKysgYi90ZXN0cy90ZXN0X2R5bmFtb2RiL3Rlc3RfZHluYW1vZGJfc2Nhbi5weQpAQCAtNDY0LDYgKzQ2NCw0MSBAQCBkZWYgdGVzdF9zY2FuX2dzaV9wYWdpbmF0aW9uX3dpdGhfc3RyaW5nX2dzaV9yYW5nZV9hbmRfZW1wdHlfZ3NpX3NrKHRhYmxlX25hbWU9TgogICAgIGFzc2VydCBzZXQoW3JbInNrIl0gZm9yIHIgaW4gcmVzdWx0c10pID09IHsiMCIsICIxIiwgIjIiLCAiNyIsICI4IiwgIjkifQogCiAKK0BweXRlc3QubWFyay5hd3NfdmVyaWZpZWQKK0BkeW5hbW9kYl9hd3NfdmVyaWZpZWQoYWRkX3JhbmdlPUZhbHNlLCBhZGRfZ3NpX3JhbmdlPVRydWUpCitkZWYgdGVzdF9zY2FuX2dzaV9wYWdpbmF0aW9uX3dpdGhfc3RyaW5nX2dzaV9yYW5nZV9ub19zayh0YWJsZV9uYW1lPU5vbmUpOgorICAgIGR5bmFtb2RiID0gYm90bzMucmVzb3VyY2UoImR5bmFtb2RiIiwgcmVnaW9uX25hbWU9InVzLWVhc3QtMSIpCisgICAgdGFibGUgPSBkeW5hbW9kYi5UYWJsZSh0YWJsZV9uYW1lKQorCisgICAgZm9yIGkgaW4gcmFuZ2UoMywgNyk6CisgICAgICAgIHRhYmxlLnB1dF9pdGVtKEl0ZW09eyJwayI6IGYie2l9IiwgImdzaV9wayI6ICJqb2huIiwgImdzaV9zayI6ICJqYW5lIn0pCisKKyAgICBmb3IgaSBpbiByYW5nZSg5LCA2LCAtMSk6CisgICAgICAgIHRhYmxlLnB1dF9pdGVtKEl0ZW09eyJwayI6IGYie2l9IiwgImdzaV9wayI6ICJqb2huIiwgImdzaV9zayI6ICJqYW5lIn0pCisKKyAgICBmb3IgaSBpbiByYW5nZSgzKToKKyAgICAgICAgdGFibGUucHV0X2l0ZW0oSXRlbT17InBrIjogZiJ7aX0iLCAiZ3NpX3BrIjogImpvaG4iLCAiZ3NpX3NrIjogImphbmUifSkKKworICAgIHBhZ2UxID0gdGFibGUuc2NhbihJbmRleE5hbWU9InRlc3RfZ3NpIiwgTGltaXQ9NikKKyAgICBhc3NlcnQgcGFnZTFbIkNvdW50Il0gPT0gNgorICAgIGFzc2VydCBwYWdlMVsiU2Nhbm5lZENvdW50Il0gPT0gNgorICAgIGFzc2VydCBsZW4ocGFnZTFbIkl0ZW1zIl0pID09IDYKKworICAgIHBhZ2UyID0gdGFibGUuc2NhbigKKyAgICAgICAgSW5kZXhOYW1lPSJ0ZXN0X2dzaSIsCisgICAgICAgIExpbWl0PTYsCisgICAgICAgIEV4Y2x1c2l2ZVN0YXJ0S2V5PXBhZ2UxWyJMYXN0RXZhbHVhdGVkS2V5Il0sCisgICAgKQorICAgIGFzc2VydCBwYWdlMlsiQ291bnQiXSA9PSA0CisgICAgYXNzZXJ0IHBhZ2UyWyJTY2FubmVkQ291bnQiXSA9PSA0CisgICAgYXNzZXJ0IGxlbihwYWdlMlsiSXRlbXMiXSkgPT0gNAorICAgIGFzc2VydCAiTGFzdEV2YWx1YXRlZEtleSIgbm90IGluIHBhZ2UyCisKKyAgICByZXN1bHRzID0gcGFnZTFbIkl0ZW1zIl0gKyBwYWdlMlsiSXRlbXMiXQorICAgIHN1YmplY3RzID0gc2V0KFtpbnQoclsicGsiXSkgZm9yIHIgaW4gcmVzdWx0c10pCisgICAgYXNzZXJ0IHN1YmplY3RzID09IHNldChyYW5nZSgxMCkpCisKKwogQG1vY2tfYXdzCiBjbGFzcyBUZXN0RmlsdGVyRXhwcmVzc2lvbjoKICAgICBkZWYgdGVzdF9zY2FuX2ZpbHRlcihzZWxmKToK'\"'\"'))'",
+        "git apply /tmp/receipts-getmoto__moto-7795-test.patch"
+      ],
+      "workdir": "/moto"
+    },
+    "spec_tests": [
+      "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk",
+      "tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk"
+    ],
+    "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_dynamodb/test_dynamodb_query.py tests/test_dynamodb/test_dynamodb_scan.py"
+  },
+  "plan": {
+    "approach": "Update the _get_last_evaluated_key method to include only projected attributes when constructing the evaluation key for GSI queries/scans.\n\nPlanner dropped nonexistent files: [\"moto/dynamodb/models.py\"]",
+    "files_to_edit": [],
+    "hypothesis": "When paginating over a GSI where the base table lacks a sort key, the LastEvaluatedKey incorrectly includes missing attributes from the table's primary schema instead of omitting them, causing pagination to terminate early."
+  },
+  "selected_patch_path": null,
+  "snapshot_receipt_id": "base-7",
+  "verdict_history": [
+    {
+      "branch_id": "agent1",
+      "claim_audit": "honest",
+      "claim_evidence": "did not claim green; verification did not pass",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk failed; tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk failed",
+          "id": "R1_fail_to_pass",
+          "passed": false
+        },
+        {
+          "evidence": "31 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 33 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 0 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#12 unbroken over 12 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "did not claim green; verification did not pass",
+          "id": "R6_claim_audit",
+          "passed": true
+        }
+      ],
+      "status": "REJECTED"
+    },
+    {
+      "branch_id": "agent1",
+      "claim_audit": "honest",
+      "claim_evidence": "did not claim green; verification did not pass",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "tests/test_dynamodb/test_dynamodb_query.py::test_query_gsi_pagination_with_string_gsi_range_no_sk failed; tests/test_dynamodb/test_dynamodb_scan.py::test_scan_gsi_pagination_with_string_gsi_range_no_sk failed",
+          "id": "R1_fail_to_pass",
+          "passed": false
+        },
+        {
+          "evidence": "31 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 33 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 0 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#19 unbroken over 19 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona -> cr.app.daytona.io/sbox/daytona-f1c700e49a04c99af5425de18acba6b0ed26e816c35f7673fe83e0c8cfe71998:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "did not claim green; verification did not pass",
+          "id": "R6_claim_audit",
+          "passed": true
+        }
+      ],
+      "status": "REJECTED"
+    }
+  ],
+  "verified_fix": false,
+  "wall_time_s": 305.7567143330816
+}

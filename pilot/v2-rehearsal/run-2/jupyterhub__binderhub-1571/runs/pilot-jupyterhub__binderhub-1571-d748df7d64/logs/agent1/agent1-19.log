@@ -1,0 +1,46 @@
+def tokenize_spec(spec):
+    """Tokenize a GitHub-style spec into parts, error if spec invalid."""
+
+    spec_parts = spec.split("/", 2)  # allow ref to contain "/"
+    if len(spec_parts) != 3:
+        msg = f'Spec is not of the form "user/repo/ref", provided: "{spec}".'
+        if len(spec_parts) == 2 and spec_parts[-1] not in ("main", "master"):
+            msg += f' Did you mean "{spec}/main"?'
+        raise ValueError(msg)
+
+    return spec_parts
+
+
+def strip_suffix(text, suffix):
+    if text.endswith(suffix):
+        text = text[: -(len(suffix))]
+    return text
+
+
+class RepoProvider(LoggingConfigurable):
+    """Base class for a repo provider"""
+
+    name = Unicode(
+        help="""
+        Descriptive human readable name of this repo provider.
+        """
+    )
+
+    spec = Unicode(
+        help="""
+        The spec for this builder to parse
+        """
+    )
+
+    banned_specs = List(
+        help="""
+        List of specs to blacklist building.
+
+        Should be a list of regexes (not regex objects) that match specs which should be blacklisted
+        """,
+        config=True,
+    )
+
+    high_quota_specs = List(
+        help="""
+        List of specs to assign a higher quota limit.

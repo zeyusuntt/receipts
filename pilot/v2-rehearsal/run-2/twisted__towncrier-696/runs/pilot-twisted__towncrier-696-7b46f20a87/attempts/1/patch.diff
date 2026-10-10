@@ -1,0 +1,68 @@
+diff --git a/src/towncrier/build.py b/src/towncrier/build.py
+index e56c367..db388b1 100644
+--- a/src/towncrier/build.py
++++ b/src/towncrier/build.py
+@@ -35,6 +35,44 @@ def _get_date() -> str:
+     return date.today().isoformat()
+ 
+ 
++def _adjust_markdown_header_levels(content: str, base_level: int) -> str:
++    """
++    Adjust markdown header levels by adding base_level to each header.
++    
++    Converts:
++    # Header → #### Header (when base_level=3)
++    ## Subheader → ##### Subheader (when base_level=3)
++    """
++    lines = content.split('\n')
++    adjusted_lines = []
++    
++    for line in lines:
++        # Check if line starts with markdown header markers (after optional whitespace)
++        stripped_line = line.lstrip()
++        if stripped_line.startswith('#'):
++            # Count leading whitespace to preserve it
++            leading_whitespace = line[:len(line) - len(stripped_line)]
++            
++            # Count existing header markers in stripped line
++            header_count = 0
++            for char in stripped_line:
++                if char == '#':
++                    header_count += 1
++                else:
++                    break
++            
++            # Create new header with adjusted level (can be negative)
++            new_header_level = header_count + base_level
++            # Ensure we don't go below 0
++            new_header_level = max(0, new_header_level)
++            new_line = leading_whitespace + '#' * new_header_level + stripped_line[header_count:]
++            adjusted_lines.append(new_line)
++        else:
++            adjusted_lines.append(line)
++    
++    return '\n'.join(adjusted_lines)
++
++
+ def _validate_answer(ctx: Context, param: Option, value: bool) -> bool:
+     value_check = (
+         ctx.params.get("answer_yes")
+@@ -232,6 +270,18 @@ def __main(
+             name=project_name, version=project_version, project_date=project_date
+         )
+         if is_markdown:
++            # Calculate header level from title_format to adjust subsequent headers
++            header_level = 0
++            stripped = top_line.lstrip('#')
++            if stripped != top_line:
++                header_level = len(top_line) - len(stripped)
++            # For markdown, adjust header levels in rendered content
++            # Based on default template:
++            # - Sections start as level 2 (##)  
++            # - Should become: title_level + 1
++            # - So adjustment = (title_level + 1) - 2 = title_level - 1
++            section_adjustment = header_level - 1
++            rendered = _adjust_markdown_header_levels(rendered, section_adjustment)
+             parts = [top_line]
+         else:
+             parts = [top_line, config.underlines[0] * len(top_line)]

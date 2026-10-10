@@ -1,0 +1,80 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /amaranth
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_lib_data.py::LayoutTestCase::test_const FAILED                [100%]
+
+=================================== FAILURES ===================================
+__________________________ LayoutTestCase.test_const ___________________________
+
+self = <tests.test_lib_data.LayoutTestCase testMethod=test_const>
+
+    def test_const(self):
+        sl = StructLayout({
+            "a": unsigned(1),
+            "b": unsigned(2)
+        })
+        self.assertRepr(sl.const(None), "(const 3'd0)")
+        self.assertRepr(sl.const({"a": 0b1, "b": 0b10}), "(const 3'd5)")
+    
+        fl = FlexibleLayout(2, {
+            "a": Field(unsigned(1), 0),
+            "b": Field(unsigned(2), 0)
+        })
+>       self.assertRepr(fl.const({"a": 0b11}), "(const 2'd1)")
+
+tests/test_lib_data.py:397: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = FlexibleLayout(2, {'a': Field(unsigned(1), 0), 'b': Field(unsigned(2), 0)})
+init = {'a': 3}
+
+    def const(self, init):
+        """Convert a constant initializer to a constant.
+    
+        Converts ``init``, which may be a sequence or a mapping of field values, to a constant.
+    
+        Returns
+        -------
+        :class:`Const`
+            A constant that has the same value as a view with this layout that was initialized with
+            an all-zero value and had every field assigned to the corresponding value in the order
+            in which they appear in ``init``.
+        """
+        if init is None:
+            iterator = iter(())
+        elif isinstance(init, Mapping):
+            iterator = init.items()
+        elif isinstance(init, Sequence):
+            iterator = enumerate(init)
+        else:
+            raise TypeError("Layout constant initializer must be a mapping or a sequence, not {!r}"
+                            .format(init))
+    
+        int_value = 0
+        for key, key_value in iterator:
+            field = self[key]
+            cast_field_shape = Shape.cast(field.shape)
+            if isinstance(field.shape, ShapeCastable):
+                key_value = Const.cast(field.shape.const(key_value))
+                if key_value.shape() != cast_field_shape:
+                    raise ValueError("Constant returned by {!r}.const() must have the shape that "
+                                     "it casts to, {!r}, and not {!r}"
+                                     .format(field.shape, cast_field_shape,
+                                             key_value.shape()))
+            else:
+                key_value = Const.cast(key_value)
+                if key_value.shape() != cast_field_shape:
+>                   raise ValueError("Constant returned by {!r}.const() must have the shape that "
+                                     "it casts to, {!r}, and not {!r}"
+                                     .format(field.shape, cast_field_shape,
+                                             key_value.shape()))
+E                   ValueError: Constant returned by unsigned(1).const() must have the shape that it casts to, unsigned(1), and not unsigned(2)
+
+amaranth/lib/data.py:244: ValueError
+----------- generated xml file: /opt/receipts/reports/agent1-20.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_lib_data.py::LayoutTestCase::test_const - ValueError: Const...
+============================== 1 failed in 0.09s ===============================

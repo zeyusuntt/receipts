@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "UVCal objects don't use x_orientation properly\nThis occurs twice.\r\n\r\nhttps://github.com/RadioAstronomySoftwareGroup/pyuvdata/blob/fb15b4a3f1546da06ba2531e04455eb3e6d9a7ea/pyuvdata/uvcal.py#L764\r\n\r\nhttps://github.com/RadioAstronomySoftwareGroup/pyuvdata/blob/fb15b4a3f1546da06ba2531e04455eb3e6d9a7ea/pyuvdata/uvcal.py#L780\r\n\r\nBoth times, `jstr2num` should use `self.x_orientation` to allow for queries with `Jee` or `Jnn` in `get_gains()`, `get_flags()`, and `get_qualities()`.",
+  "source": {
+    "image": "docker.io/swerebenchv2/radioastronomysoftwaregroup-pyuvdata:724-fb15b4a",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-radioastronomysoftwaregroup__pyuvdata-724-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3B5dXZkYXRhL3Rlc3RzL3Rlc3RfdXZjYWwucHkgYi9weXV2ZGF0YS90ZXN0cy90ZXN0X3V2Y2FsLnB5CmluZGV4IDAxMmU3MmY2Li40MjQ1NWRhMSAxMDA2NDQKLS0tIGEvcHl1dmRhdGEvdGVzdHMvdGVzdF91dmNhbC5weQorKysgYi9weXV2ZGF0YS90ZXN0cy90ZXN0X3V2Y2FsLnB5CkBAIC0xNDQzLDcgKzE0NDMsNyBAQCBkZWYgdGVzdF91dmNhbF9nZXRfbWV0aG9kcygpOgogICAgIHV2Yy5yZWFkX2NhbGZpdHMob3MucGF0aC5qb2luKERBVEFfUEFUSCwgJ3plbi4yNDU3Njk4LjQwMzU1Lnh4LmdhaW4uY2FsZml0cycpKQogCiAgICAgIyB0ZXN0IGdldCBtZXRob2RzOiBhZGQgaW4gYSBrbm93biB2YWx1ZSBhbmQgbWFrZSBzdXJlIGl0IGlzIHJldHVybmVkCi0gICAga2V5ID0gKDEwLCAnSnh4JykKKyAgICBrZXkgPSAoMTAsICdKZWUnKQogICAgIHV2Yy5nYWluX2FycmF5WzFdID0gMC4wCiAgICAgZCwgZiwgcSA9IHV2Yy5nZXRfZ2FpbnMoa2V5KSwgdXZjLmdldF9mbGFncyhrZXkpLCB1dmMuZ2V0X3F1YWxpdHkoa2V5KQogCkBAIC0xNDcwLDE0ICsxNDcwLDE0IEBAIGRlZiB0ZXN0X3V2Y2FsX2dldF9tZXRob2RzKCk6CiAKICAgICAjIGNoZWNrIGhhc19rZXkKICAgICBhc3NlcnQgdXZjLl9oYXNfa2V5KGFudG51bT0xMCkKLSAgICBhc3NlcnQgdXZjLl9oYXNfa2V5KGpwb2w9J0p4eCcpCi0gICAgYXNzZXJ0IHV2Yy5faGFzX2tleShhbnRudW09MTAsIGpwb2w9J0p4eCcpCi0gICAgYXNzZXJ0IG5vdCB1dmMuX2hhc19rZXkoYW50bnVtPTEwLCBqcG9sPSdKeXknKQotICAgIGFzc2VydCBub3QgdXZjLl9oYXNfa2V5KGFudG51bT0xMDEsIGpwb2w9J0p4eCcpCisgICAgYXNzZXJ0IHV2Yy5faGFzX2tleShqcG9sPSdKZWUnKQorICAgIGFzc2VydCB1dmMuX2hhc19rZXkoYW50bnVtPTEwLCBqcG9sPSdKZWUnKQorICAgIGFzc2VydCBub3QgdXZjLl9oYXNfa2V5KGFudG51bT0xMCwganBvbD0nSm5uJykKKyAgICBhc3NlcnQgbm90IHV2Yy5faGFzX2tleShhbnRudW09MTAxLCBqcG9sPSdKZWUnKQogCiAgICAgIyB0ZXN0IGV4Y2VwdGlvbnMKICAgICBweXRlc3QucmFpc2VzKFZhbHVlRXJyb3IsIHV2Yy5nZXRfZ2FpbnMsIDEpCi0gICAgcHl0ZXN0LnJhaXNlcyhWYWx1ZUVycm9yLCB1dmMuZ2V0X2dhaW5zLCAoMTAsICdKeXknKSkKKyAgICBweXRlc3QucmFpc2VzKFZhbHVlRXJyb3IsIHV2Yy5nZXRfZ2FpbnMsICgxMCwgJ0pubicpKQogICAgIHV2Yy5jYWxfdHlwZSA9ICdkZWxheScKICAgICBweXRlc3QucmFpc2VzKFZhbHVlRXJyb3IsIHV2Yy5nZXRfZ2FpbnMsIDEwKQogCg=='\"'\"'))'",
+      "git apply /tmp/receipts-radioastronomysoftwaregroup__pyuvdata-724-test.patch"
+    ],
+    "workdir": "/pyuvdata"
+  },
+  "spec_tests": [
+    "pyuvdata/tests/test_uvcal.py::test_uvcal_get_methods"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pyuvdata/tests/test_uvcal.py"
+}

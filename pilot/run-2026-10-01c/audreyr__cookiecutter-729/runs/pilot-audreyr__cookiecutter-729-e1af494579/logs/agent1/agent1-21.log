@@ -1,0 +1,29 @@
+Loading hooks from: /cookiecutter/cookiecutter/hooks.py
+run_script_with_context source:
+def run_script_with_context(script_path, cwd, context):
+    """
+    Executes a script after rendering with it Jinja.
+
+    :param script_path: Absolute path to the script to run.
+    :param cwd: The directory to run the script from.
+    :param context: Cookiecutter project template context.
+    """
+    _, extension = os.path.splitext(script_path)
+
+    contents = io.open(script_path, 'r', encoding='utf-8').read()
+
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        mode='wb',
+        suffix=extension
+    ) as temp:
+        output = Template(contents).render(**context)
+        # Ensure we have at least a newline to avoid exec format errors with empty files
+        if not output:
+            output = '\n'
+        # TEMP DEBUG: Always write something identifiable to see if our code runs
+        temp.write(b"# DEBUG: This should appear in temp file\n")
+        temp.write(output.encode('utf-8'))
+
+    run_script(temp.name, cwd)
+

@@ -1,0 +1,55 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /sanic-ext
+configfile: pyproject.toml
+plugins: anyio-4.12.1, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/extensions/openapi/test_schema.py::test_schema_fields FAILED
+
+=================================== FAILURES ===================================
+______________________________ test_schema_fields ______________________________
+
+    def test_schema_fields():
+        class Pet:
+            name = String(example="Snoopy")
+    
+        class Single:
+            pet = Pet
+    
+            class Ignore:
+                ...
+    
+        class Multiple:
+            pets = [Pet]
+    
+        pet_schema = Schema.make(Pet).serialize()
+        single_schema = Schema.make(Single).serialize()
+        multiple_schema = Schema.make(Multiple).serialize()
+    
+        assert pet_schema == {
+            "type": "object",
+            "properties": {"name": {"type": "string", "example": "Snoopy"}},
+        }
+>       assert single_schema == {
+            "type": "object",
+            "properties": {"pet": pet_schema},
+        }
+E       AssertionError: assert {'type': 'object'} == {'properties'...pe': 'object'}
+E         
+E         Omitting 1 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'properties': {'pet': {'properties': {'name': {'example': 'Snoopy',
+E                                                         'type': 'string'}},
+E                                 'type': 'object'}}}
+E         ...
+E         
+E         ...Full output truncated (15 lines hidden), use '-vv' to show
+
+tests/extensions/openapi/test_schema.py:73: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-14.xml ------------
+=========================== short test summary info ============================
+FAILED tests/extensions/openapi/test_schema.py::test_schema_fields - Assertio...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.05s ===============================

@@ -1,0 +1,15 @@
+Input expr: {'$not': {'chemical_formula_anonymous': {'$or': [{'$exists': False}, {'$eq': None}]}}}
+Taking $not wrapped path
+not_content: {'chemical_formula_anonymous': {'$or': [{'$exists': False}, {'$eq': None}]}}
+inner_prop: chemical_formula_anonymous
+inner_expr: {'$or': [{'$exists': False}, {'$eq': None}]}
+Found IS operation inside $not
+op_key: $or
+op_value: [{'$exists': False}, {'$eq': None}]
+new_operands: [{'chemical_formula_anonymous': {'$exists': False}}, {'chemical_formula_anonymous': {'$eq': None}}]
+Traceback (most recent call last):
+  File "/optimade-python-tools/test_logic.py", line 63, in <module>
+    test_logic()
+  File "/optimade-python-tools/test_logic.py", line 57, in test_logic
+    negated_operads.append(negated_operadnt)
+NameError: name 'negated_operads' is not defined. Did you mean: 'negated_operands'?

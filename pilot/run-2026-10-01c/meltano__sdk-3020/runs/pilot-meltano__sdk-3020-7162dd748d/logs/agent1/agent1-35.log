@@ -1,0 +1,73 @@
+============================= test session starts ==============================
+collected 7 items
+
+tests/core/sinks/test_sql_sink.py .....FF                                [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: assert 'foo_bar' == 'foo-bar'
+      
+      - foo-bar
+      ?    ^
+      + foo_bar
+      ?    ^
+----------------------------- Captured stderr call -----------------------------
+2026-10-01 23:23:06,493 | INFO     | sql-target-mock      | Skipping parse of env var settings...
+2026-10-01 23:23:06,493 | INFO     | sql-target-mock.foo-bar | Initializing target sink for stream 'foo-bar'...
+------------------------------ Captured log call -------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+/sdk/tests/core/sinks/test_sql_sink.py:137: AssertionError: assert 'foo_bar' == 'foo-bar'
+E   AssertionError: assert 'foo_bar_baz' == 'foo-bar-baz'
+      
+      - foo-bar-baz
+      ?    ^   ^
+      + foo_bar_baz
+      ?    ^   ^
+----------------------------- Captured stderr call -----------------------------
+2026-10-01 23:23:06,496 | INFO     | sql-target-mock      | Skipping parse of env var settings...
+2026-10-01 23:23:06,497 | INFO     | sql-target-mock.foo-bar-baz | Initializing target sink for stream 'foo-bar-baz'...
+------------------------------ Captured log call -------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+/sdk/tests/core/sinks/test_sql_sink.py:137: AssertionError: assert 'foo_bar_baz' == 'foo-bar-baz'
+==================================== PASSES ====================================
+________________ TestDuckDBSink.test_generate_insert_statement _________________
+---------------------------- Captured stderr setup -----------------------------
+2026-10-01 23:23:06,475 | INFO     | sql-target-mock.foo  | Initializing target sink for stream 'foo'...
+------------------------------ Captured log setup ------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+______________ TestDuckDBSink.test_table_name[no-default-schema] _______________
+----------------------------- Captured stderr call -----------------------------
+2026-10-01 23:23:06,483 | INFO     | sql-target-mock      | Skipping parse of env var settings...
+2026-10-01 23:23:06,484 | INFO     | sql-target-mock.foo  | Initializing target sink for stream 'foo'...
+------------------------------ Captured log call -------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+___________ TestDuckDBSink.test_table_name[no-default-schema-2-part] ___________
+----------------------------- Captured stderr call -----------------------------
+2026-10-01 23:23:06,486 | INFO     | sql-target-mock      | Skipping parse of env var settings...
+2026-10-01 23:23:06,486 | INFO     | sql-target-mock.foo-bar | Initializing target sink for stream 'foo-bar'...
+------------------------------ Captured log call -------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+___________ TestDuckDBSink.test_table_name[no-default-schema-3-part] ___________
+----------------------------- Captured stderr call -----------------------------
+2026-10-01 23:23:06,488 | INFO     | sql-target-mock      | Skipping parse of env var settings...
+2026-10-01 23:23:06,489 | INFO     | sql-target-mock.foo-bar-baz | Initializing target sink for stream 'foo-bar-baz'...
+------------------------------ Captured log call -------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+________________ TestDuckDBSink.test_table_name[default-schema] ________________
+----------------------------- Captured stderr call -----------------------------
+2026-10-01 23:23:06,491 | INFO     | sql-target-mock      | Skipping parse of env var settings...
+2026-10-01 23:23:06,491 | INFO     | sql-target-mock.foo  | Initializing target sink for stream 'foo'...
+------------------------------ Captured log call -------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+----------- generated xml file: /opt/receipts/reports/agent1-35.xml ------------
+============================= slowest 10 durations =============================
+
+(10 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+PASSED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_generate_insert_statement
+PASSED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[no-default-schema]
+PASSED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[no-default-schema-2-part]
+PASSED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[no-default-schema-3-part]
+PASSED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[default-schema]
+FAILED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[default-schema-2-part]
+FAILED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[default-schema-3-part]
+========================= 2 failed, 5 passed in 0.04s ==========================

@@ -1,0 +1,21 @@
+
+            - Adds levitation (#123)
+            - Extends levitation (#124)
+
+
+
+        """
+        )
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual(expected_output, result.output)
+
+    @with_project(
+        config="""
+        [tool.towncrier]
+        package = "foo"
+        filename = "NEWS.md"
+        title_format = "[{project_date}] CUSTOM RELEASE for {name} version {version}"
+        """
+    )
+    def test_title_format_custom_markdown(self, runner):

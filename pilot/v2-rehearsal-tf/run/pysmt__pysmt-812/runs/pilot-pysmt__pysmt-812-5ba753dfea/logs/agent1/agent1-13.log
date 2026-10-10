@@ -1,0 +1,14 @@
+Simple declaration OK
+Traceback (most recent call last):
+  File "<string>", line 14, in <module>
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 867, in get_script
+    for cmd in self.get_command_generator(script):
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 881, in get_command_generator
+    for cmd in self.get_command(tokens):
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 1182, in get_command
+    yield fun(current, tokens)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 1263, in _cmd_declare_fun
+    self.consume_closing(tokens, current)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 1141, in consume_closing
+    raise PysmtSyntaxError("Unexpected token '%s' in %s command. "
+pysmt.exceptions.PysmtSyntaxError: Line 0, Col 23: Unexpected token '(' in declare-fun command. Expected ')'

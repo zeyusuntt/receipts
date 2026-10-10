@@ -1,0 +1,7 @@
+{
+  "approach": "Update the typed dict factory's field extraction logic to perform exact object identity comparisons (`is`) instead of relying solely on `in` membership testing when determining if an annotation represents a Required or NotRequired wrapper around another type, ensuring proper unwrapping regardless of how these qualifiers were constructed internally across different runtime environments.}]}",
+  "files_to_edit": [
+    "polyfactory/factories/typed_dict_factory.py"
+  ],
+  "hypothesis": "During processing of TypedDict fields via `__annotations__`, when encountering `Required[X]` constructs formed from Python version-specific internal representations rather than direct subclasses of `_SpecialForm`, equality checks against known special forms fail; adding fallback identity comparison resolves this while maintaining compatibility."
+}

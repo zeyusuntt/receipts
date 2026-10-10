@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Invalid spacing between `:rtype:` and following directives\nIn the 1.21.0 release, the position of the emitted `:rtype:` field seems to have changed so that it is now earlier in the docstring, rather than reliably being at the end.  This is fine, except when the place the injector chooses to place it is immediately before a `.. <whatever>::` directive. There doesn't seem to reliable be a blank line inserted after it, and if not, Sphinx complains that the field list ends unexpectedly.\r\n\r\nFor example, given this Python file `tmp/__init__.py`:\r\n```python\r\ndef my_function() -> None:\r\n    \"\"\"\r\n    .. rubric:: Notes\r\n\r\n    Hello, world.\r\n    \"\"\"\r\n```\r\nand this Sphinx `conf.py`:\r\n```python\r\nproject = 'tmp'\r\nextensions = [\r\n    \"sphinx.ext.autodoc\",\r\n    \"sphinx_autodoc_typehints\",\r\n]\r\n```\r\nrunning Sphinx's `make html` gives:\r\n```text\r\nRunning Sphinx v6.1.3\r\nloading pickled environment... done\r\nbuilding [mo]: targets for 0 po files that are out of date\r\nwriting output...\r\nbuilding [html]: targets for 0 source files that are out of date\r\nupdating environment: 0 added, 1 changed, 0 removed\r\nreading sources... [100%] index\r\n/Users/jake/tmp/autodoc-typehints/pkg/tmp/__init__.py:docstring of tmp.my_function:1: WARNING: Field list ends without a blank line; unexpected unindent.\r\nlooking for now-outdated files... none found\r\npickling environment... done\r\nchecking consistency... done\r\npreparing documents... done\r\nwriting output... [100%] index\r\ngenerating indices... genindex py-modindex done\r\nwriting additional pages... search done\r\ncopying static files... done\r\ncopying extra files... done\r\ndumping search index in English (code: en)... done\r\ndumping object inventory... done\r\nbuild succeeded, 1 warning.\r\n```\r\n\r\nThe docstring enters `_inject_types_to_docstring` as\r\n```text\r\n.. rubric:: Notes\r\n\r\nHello, world.\r\n\r\n```\r\nand is modified to\r\n```text\r\n:rtype: :py:obj:`None`\r\n.. rubric:: Notes\r\n\r\nHello, world.\r\n\r\n```\r\n\r\nThis also happens if there's any regular text before the `.. rubric:: notes` as well (which is a bit more of a realistic scenario).",
+  "source": {
+    "image": "docker.io/swerebenchv2/tox-dev-sphinx-autodoc-typehints:294-0f42705",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-tox-dev__sphinx-autodoc-typehints-294-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3Rfc3BoaW54X2F1dG9kb2NfdHlwZWhpbnRzLnB5IGIvdGVzdHMvdGVzdF9zcGhpbnhfYXV0b2RvY190eXBlaGludHMucHkKaW5kZXggNmQyNzI4Yi4uM2JlNDYzOCAxMDA2NDQKLS0tIGEvdGVzdHMvdGVzdF9zcGhpbnhfYXV0b2RvY190eXBlaGludHMucHkKKysrIGIvdGVzdHMvdGVzdF9zcGhpbnhfYXV0b2RvY190eXBlaGludHMucHkKQEAgLTQ3MCw2ICs0NzAsOCBAQCBkZWYgdGVzdF9zcGhpbnhfb3V0cHV0KAogICAgICMgVGhlcmUgc2hvdWxkIGJlIGEgd2FybmluZyBhYm91dCBhbiB1bnJlc29sdmVkIGZvcndhcmQgcmVmZXJlbmNlCiAgICAgd2FybmluZ3MgPSB3YXJuaW5nLmdldHZhbHVlKCkuc3RyaXAoKQogICAgIGFzc2VydCAiQ2Fubm90IHJlc29sdmUgZm9yd2FyZCByZWZlcmVuY2UgaW4gdHlwZSBhbm5vdGF0aW9ucyBvZiAiIGluIHdhcm5pbmdzLCB3YXJuaW5ncworICAgICMgVGhlcmUgc2hvdWxkIG5vdCBiZSB3YXJuaW5ncyBhYm91dCBpbmNvcnJlY3QgYmxvY2sgZW5kaW5ncy4KKyAgICBhc3NlcnQgIkZpZWxkIGxpc3QgZW5kcyB3aXRob3V0IGEgYmxhbmsgbGluZTsgdW5leHBlY3RlZCB1bmluZGVudC4iIG5vdCBpbiB3YXJuaW5ncywgd2FybmluZ3MKIAogICAgIGZvcm1hdF9hcmdzID0ge30KICAgICBmb3IgaW5kZW50YXRpb25fbGV2ZWwgaW4gcmFuZ2UoMik6Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-tox-dev__sphinx-autodoc-typehints-294-test.patch"
+    ],
+    "workdir": "/sphinx-autodoc-typehints"
+  },
+  "spec_tests": [
+    "tests/test_sphinx_autodoc_typehints.py::test_sphinx_output[no_doc_param_type]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_sphinx_autodoc_typehints.py"
+}

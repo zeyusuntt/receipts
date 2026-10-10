@@ -1,0 +1,7 @@
+{
+  "approach": "Pass the resolved profile when creating the ConnectionManager instance in the `__init__` method of the `Stack` class, mirroring how other optional parameters like `iam_role`, etc., are handled. This ensures the connection manager receives the profile specified in the config, matching what the tests expect based on the fixture or test setup.",
+  "files_to_edit": [
+    "sceptre/stack.py"
+  ],
+  "hypothesis": "Line uses wrong key names when unpacking arguments.\n\nSpecifically:\n-- When constructing CM doesn't include profile keyword so passes empty/default (maybe called incorrectly)\n-- Region extraction also relies on extra attribute stored elsewhere? We'll follow same pattern we see in repr line 59 => access via connection_manager attributes; these likely fall back properly.\n--- However missing param leads mgr initialization lacking specific values though defaults perhaps okay? Actually failure manifests when caller expects non-default profile being fed through specfic \nexpected maybe due to usage later requiring picking proper auth chain.\nSo solution adjust explicit args when instantiating ConnectionManager inside stack init.}]}]=[]]>]{!=null}|===|<>!=(())[{)(><@*&%$#!}{"
+}

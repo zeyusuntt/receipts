@@ -1,0 +1,31 @@
+
+            else:
+                error_message.append("Is your repo public?")
+
+            await self.fail(" ".join(error_message))
+            return
+
+        self.ref_url = await provider.get_resolved_ref_url()
+        resolved_spec = await provider.get_resolved_spec()
+
+        badge_base_url = self.get_badge_base_url()
+        self.binder_launch_host = badge_base_url or "{proto}://{host}{base_url}".format(
+            proto=self.request.protocol,
+            host=self.request.host,
+            base_url=self.settings["base_url"],
+        )
+        # These are relative URLs so do not have a leading /
+        self.binder_request = "v2/{provider}/{spec}".format(
+            provider=provider_prefix,
+            spec=spec,
+        )
+        self.binder_persistent_request = "v2/{provider}/{spec}".format(
+            provider=provider_prefix,
+            spec=resolved_spec,
+        )
+
+        # generate a complete build name (for GitHub: `build-{user}-{repo}-{ref}`)
+
+        image_prefix = self.settings["image_prefix"]
+
+        # Enforces max 255 characters before image

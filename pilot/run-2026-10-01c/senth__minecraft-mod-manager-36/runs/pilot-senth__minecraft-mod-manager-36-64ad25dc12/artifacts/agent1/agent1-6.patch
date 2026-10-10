@@ -1,0 +1,18 @@
+diff --git a/minecraft_mod_manager/gateways/sqlite.py b/minecraft_mod_manager/gateways/sqlite.py
+index 7305020..5435dbc 100644
+--- a/minecraft_mod_manager/gateways/sqlite.py
++++ b/minecraft_mod_manager/gateways/sqlite.py
+@@ -105,8 +105,11 @@ class Sqlite:
+             )
+         return mods
+ 
+-    def exists(self, id: str) -> bool:
+-        self._cursor.execute(f"SELECT 1 FROM mod WHERE {_Column.c_id}=?", [id])
++    def exists(self, id: str, filter_active: bool = True) -> bool:
++        if filter_active:
++            self._cursor.execute(f"SELECT 1 FROM mod WHERE {_Column.c_id}=? AND {_Column.c_active}=1", [id])
++        else:
++            self._cursor.execute(f"SELECT 1 FROM mod WHERE {_Column.c_id}=?", [id])
+         return bool(self._cursor.fetchone())
+ 
+     def update_mod(self, mod: Mod):

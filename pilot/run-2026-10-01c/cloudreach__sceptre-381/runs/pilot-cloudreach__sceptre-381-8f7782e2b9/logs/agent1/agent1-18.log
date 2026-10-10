@@ -1,0 +1,80 @@
+            ConfigReader(self.test_sceptre_directory)._check_version(config)
+
+    @freeze_time("2012-01-01")
+    @pytest.mark.parametrize("stack_name,config,expected", [
+        (
+            "name",
+            {
+                "template_bucket_name": "bucket-name",
+                "template_key_prefix": "prefix"
+            },
+            {
+                 "bucket_name": "bucket-name",
+                 "bucket_key": "prefix/name/2012-01-01-00-00-00-000000Z.json"
+            }
+        ),
+        (
+            "name",
+            {
+                "template_bucket_name": "bucket-name",
+            },
+            {
+                 "bucket_name": "bucket-name",
+                 "bucket_key": "name/2012-01-01-00-00-00-000000Z.json"
+            }
+        ),
+        (
+            "name", {}, None
+        )
+    ]
+    )
+    def test_collect_s3_details(self, stack_name, config, expected):
+        details = ConfigReader._collect_s3_details(stack_name, config)
+        assert details == expected
+
+    @patch("sceptre.config_reader.ConfigReader._collect_s3_details")
+    @patch("sceptre.config_reader.Stack")
+    def test_construct_stack_with_valid_config(
+        self, mock_Stack, mock_collect_s3_details
+    ):
+        mock_Stack.return_value = sentinel.stack
+        mock_collect_s3_details.return_value = sentinel.s3_details
+        config_reader = ConfigReader(self.test_sceptre_directory)
+        stack = config_reader.construct_stack(
+            "account/environment/region/vpc.yaml"
+        )
+        mock_Stack.assert_called_with(
+                name="account/environment/region/vpc",
+                project_code="account_project_code",
+                template_path=os.path.join(
+                    self.test_sceptre_directory, "path/to/template"
+                ),
+                region="region_region",
+                iam_role="account_iam_role",
+                parameters={"param1": "val1"},
+                sceptre_user_data={},
+                hooks={},
+                s3_details=sentinel.s3_details,
+                dependencies=[],
+                role_arn=None,
+                protected=False,
+                tags={},
+                external_name=None,
+                notifications=None,
+                on_failure=None
+        )
+        assert stack == sentinel.stack
+
+    @pytest.mark.parametrize("filepaths,targets,results", [
+        (
+            ["A/1.yaml"], ["A"], [
+                {
+                    "A": {"stacks": ["A/1"], "environments": {}}
+                }
+            ]
+        ),
+        (
+            ["A/1.yaml", "A/2.yaml", "A/3.yaml"], ["A"], [
+                {
+                    "A": {
+                        "stacks": ["A/3", "A/2", "A/1"],

@@ -1,0 +1,108 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pymdown-extensions
+configfile: tox.ini
+plugins: cov-7.0.0
+collecting ... collected 3 items
+
+tests/test_extensions/test_snippets.py::TestSnippets::test_section_ignore_double_start_section PASSED [ 33%]
+tests/test_extensions/test_snippets.py::TestSnippets::test_section_inline_escaped_other_section FAILED [ 66%]
+tests/test_extensions/test_snippets.py::TestSnippets::test_section_inline_ignore_other_section FAILED [100%]
+
+=================================== FAILURES ===================================
+____________ TestSnippets.test_section_inline_escaped_other_section ____________
+
+self = <tests.test_extensions.test_snippets.TestSnippets testMethod=test_section_inline_escaped_other_section>
+
+    def test_section_inline_escaped_other_section(self):
+        """Test nested escaped sections."""
+    
+>       self.check_markdown(
+            R'''
+            ```
+            -8<- "section_nested.txt:css-section3"
+            ```
+            ''',
+            '''
+            <div class="highlight"><pre><span></span><code>div {
+                color: red;
+                /* --8&lt;-- [start: css-section4] */
+                background-color: white;
+                padding: 16px
+                /* --8&lt;-- [end: css-section4] */
+            }
+            </code></pre></div>
+            ''',
+            True
+        )
+
+tests/test_extensions/test_snippets.py:358: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/util.py:91: in check_markdown
+    self.assertTrue(not diff)
+E   AssertionError: False is not true
+----------------------------- Captured stdout call -----------------------------
+--- Expected
++++ Actual
+@@ -1,8 +1,8 @@
+ <div class="highlight"><pre><span></span><code>div {
+     color: red;
+-    /* --8&lt;-- [start: css-section4] */
++    /* ;--8&lt;-- [start: css-section4] */
+     background-color: white;
+     padding: 16px
+-    /* --8&lt;-- [end: css-section4] */
++    /* ;--8&lt;-- [end: css-section4] */
+ }
+ </code></pre></div>
+____________ TestSnippets.test_section_inline_ignore_other_section _____________
+
+self = <tests.test_extensions.test_snippets.TestSnippets testMethod=test_section_inline_ignore_other_section>
+
+    def test_section_inline_ignore_other_section(self):
+        """Test nested sections."""
+    
+>       self.check_markdown(
+            R'''
+            ```
+            -8<- "section_nested.txt:css-section"
+            ```
+            ''',
+            '''
+            <div class="highlight"><pre><span></span><code>div {
+                color: red;
+                background-color: white;
+                padding: 16px
+            }
+            </code></pre></div>
+            ''',
+            True
+        )
+
+tests/test_extensions/test_snippets.py:338: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/util.py:91: in check_markdown
+    self.assertTrue(not diff)
+E   AssertionError: False is not true
+----------------------------- Captured stdout call -----------------------------
+--- Expected
++++ Actual
+@@ -1,6 +1,8 @@
+ <div class="highlight"><pre><span></span><code>div {
+     color: red;
++    /* --8&lt;-- [start: css-section2] */
+     background-color: white;
+     padding: 16px
++    /* --8&lt;-- [end: css-section2] */
+ }
+ </code></pre></div>
+==================================== PASSES ====================================
+____________ TestSnippets.test_section_ignore_double_start_section _____________
+----------------------------- Captured stdout call -----------------------------
+
+----------- generated xml file: /opt/receipts/reports/agent1-43.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_extensions/test_snippets.py::TestSnippets::test_section_ignore_double_start_section
+FAILED tests/test_extensions/test_snippets.py::TestSnippets::test_section_inline_escaped_other_section
+FAILED tests/test_extensions/test_snippets.py::TestSnippets::test_section_inline_ignore_other_section
+========================= 2 failed, 1 passed in 0.27s ==========================

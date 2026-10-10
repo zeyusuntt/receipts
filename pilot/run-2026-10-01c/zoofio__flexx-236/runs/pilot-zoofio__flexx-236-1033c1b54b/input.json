@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Provide models with initial data\nSometimes a model needs information at initialization time, that you want to provide in a flexible way, something like:\r\n\r\n```py\r\nclass MyModel(app.Model):\r\n\r\n    def init(self, the_info):\r\n         ...\r\n\r\n...\r\n\r\nm = MyModel(the_info=...)\r\n```\r\n\r\nCurrently, the `init()` is always argumentless. The required behavior can be achieved by making a property `info`, the value of which can be used inside the `init()`. However, a property suggests that the info can be modified/reset after the model is instantiated, which is not always the case.\r\n\r\nIn other words, there are situations where a `Model` needs information at initialization time, but for which a property does not make sense conceptually.\r\n\r\nSome possible solutions:\r\n\r\nA. Any keyword arguments used to instantiate a `Model` which do not correspond to properties are passed to the `init()` as kwargs. You'd thus need to write it like `def init(self, info=None)` to make it a keyword arg. In theory it could also map to positional args by inspecting the signature, but that feels a bit too magical, I think. \r\n\r\nI am a bit worried about error reporting if a user makes a type in a property name. We would need to inspect the `init()` sig to see what kwargs it accepts, so we can be sure that a kwarg is intended for the `init()`. This should thus be disallowed: `def init(self, **kwargs)`.\r\n\r\nB. Provide a new kind of property, similar to the current `readonly` that *must* be provided at initialization and is readonly afterwards. This adds less conceptual stuff for the user to learn, as it's just a kind of property.\r\n\r\nC. Use positional arguments. The `Model.__init__()` could catch the positional arguments and pass them to the `init()`. The only downside is that for Models run as an app via `app.launch` or `app.serve` we'd need to provide a way to set these args, but we already do that for the kwargs, so I guess that could work ...\r\n\r\n\r\ncc @korijn @Maxyme",
+  "source": {
+    "image": "docker.io/swerebenchv2/zoofio-flexx:236-abb20f9",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-zoofio__flexx-236-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2ZsZXh4L2FwcC90ZXN0cy90ZXN0X21vZGVsLnB5IGIvZmxleHgvYXBwL3Rlc3RzL3Rlc3RfbW9kZWwucHkKaW5kZXggM2YzZDkyOS4uMjk1ZTA5ZSAxMDA2NDQKLS0tIGEvZmxleHgvYXBwL3Rlc3RzL3Rlc3RfbW9kZWwucHkKKysrIGIvZmxleHgvYXBwL3Rlc3RzL3Rlc3RfbW9kZWwucHkKQEAgLTg1LDYgKzg1LDEzIEBAIGNsYXNzIEZvbzYoRm9vMSk6CiAgICAgICAgICAgICByZXR1cm4ge30KIAogCitjbGFzcyBGb283KE1vZGVsKToKKyAgICAKKyAgICBkZWYgaW5pdChzZWxmLCBmb28sIGJhcj0wKToKKyAgICAgICAgc2VsZi5mb28gPSBmb28KKyAgICAgICAgc2VsZi5iYXIgPSBiYXIKKworCiBkZWYgdGVzdF9wYWlyaW5nMSgpOgogICAgIAogICAgIGFzc2VydCBpc2luc3RhbmNlKEZvbzEudGl0bGUsIGV2ZW50Ll9lbWl0dGVycy5Qcm9wZXJ0eSkKQEAgLTEyMCw2ICsxMjcsMzEgQEAgZGVmIHRlc3Rfb3ZlcmxvYWRpbmcoKToKICAgICBhc3NlcnQgRm9vNC5KUy5yZWQgaXMgbm90IEZvbzIuSlMucmVkCiAKIAorZGVmIHRlc3RfaW5pdF9hcmdzKCk6CisgICAgCisgICAgIyBUaGlzIHRlc3QgbmVlZHMgYSBkZWZhdWx0IHNlc3Npb24KKyAgICBzZXNzaW9uID0gYXBwLm1hbmFnZXIuZ2V0X2RlZmF1bHRfc2Vzc2lvbigpCisgICAgaWYgc2Vzc2lvbiBpcyBOb25lOgorICAgICAgICBhcHAubWFuYWdlci5jcmVhdGVfZGVmYXVsdF9zZXNzaW9uKCkKKyAgICAKKyAgICB3aXRoIHJhaXNlcyhUeXBlRXJyb3IpOgorICAgICAgICBtID0gTW9kZWwoMiwgMykKKyAgICAKKyAgICBtID0gRm9vNygyLCAzKQorICAgIGFzc2VydCBtLmZvbyA9PSAyCisgICAgYXNzZXJ0IG0uYmFyID09IDMKKyAgICAKKyAgICBtID0gRm9vNygyKQorICAgIGFzc2VydCBtLmZvbyA9PSAyCisgICAgYXNzZXJ0IG0uYmFyID09IDAKKyAgICAKKyAgICB3aXRoIHJhaXNlcyhUeXBlRXJyb3IpOgorICAgICAgICBtID0gRm9vNygpCisgICAgCisgICAgd2l0aCByYWlzZXMoVHlwZUVycm9yKToKKyAgICAgICAgbSA9IEZvbzcoMiwgMywgNCkKKworCiBkZWYgdGVzdF9ib3RoKCk6CiAgICAgIyBOZXcgcHJvcAogICAgIGFzc2VydCBGb281LnB1cnBsZSBpcyBGb281LkpTLnB1cnBsZQo='\"'\"'))'",
+      "git apply /tmp/receipts-zoofio__flexx-236-test.patch"
+    ],
+    "workdir": "/flexx"
+  },
+  "spec_tests": [
+    "flexx/app/tests/test_model.py::test_init_args"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning flexx/app/tests/test_model.py"
+}

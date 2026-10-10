@@ -1,0 +1,7 @@
+{
+  "approach": "In the protocol's connection_lost method, replace the cancellation of all outstanding ping waiters with raising a ConnectionClosed(1006, '') exception that matches the semantics of an abrupt connection loss.",
+  "files_to_edit": [
+    "src/websockets/protocol.py"
+  ],
+  "hypothesis": "During a connection closure triggered by a disconnected peer, pong futures are erroneously cancelled via connection_lost(None) instead of being resolved with ConnectionClosed exceptions."
+}

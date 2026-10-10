@@ -1,0 +1,14 @@
+{
+  "approach": "Update the `_parse_attribute_value` method to first peek at the current token. If the token begins with `:`, indicating another keyword (and thus the end of the current attribute without a value), return early with no value consumed. Otherwise, attempt to parse a value as before. This ensures compliance with the SMT-LIB grammar allowing `<attribute>` to be just a `<keyword>`. Given that full visibility into the method's implementation isn't possible here, assume necessary adjustments like adding a conditional branch based on peeking the next token to detect standalone keywords versus valued ones.}], ",
+  "files_to_edit": [
+    "pysmt/smtlib/parser/parser.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "In `pysmt/smtlib/parser/parser.py`, modify the `_parse_attribute_value` method (lines 773\u2013790) to allow attributes without associated values by checking if the current token starts with `:`. If it does, treat it as a standalone attribute; otherwise, proceed to parse a value.",
+  "retries": {},
+  "usage": {
+    "completion": 217,
+    "prompt": 16620,
+    "reasoning": 0
+  }
+}

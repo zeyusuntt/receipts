@@ -1,0 +1,16 @@
+def tokenize_spec(spec):
+    """Tokenize a GitHub-style spec into parts, error if spec invalid."""
+
+    spec_parts = spec.split("/", 2)  # allow ref to contain "/"
+    if len(spec_parts) != 3:
+        msg = f'Spec is not of the form "user/repo/ref", provided: "{spec}".'
+        if len(spec_parts) == 2 and spec_parts[-1] not in ("main", "master"):
+            msg += f' Did you mean "{spec}/main"?'
+        raise ValueError(msg)
+
+    return spec_parts
+
+
+def strip_suffix(text, suffix):
+    if text.endswith(suffix):
+        text = text[: -(len(suffix))]

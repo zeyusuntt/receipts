@@ -1,0 +1,110 @@
+diff --git a/dulwich/porcelain.py b/dulwich/porcelain.py
+index 7dcdb7ca..c3f13f4f 100644
+--- a/dulwich/porcelain.py
++++ b/dulwich/porcelain.py
+@@ -1731,17 +1731,15 @@ def get_untracked_paths(
+       untracked_files: How to handle untracked files:
+         - "no": return an empty list
+         - "all": return all files in untracked directories
+-        - "normal": Not implemented
++        - "normal": return directory paths for completely untracked directories,
++                   individual files for mixed directories
+ 
+     Note: ignored directories will never be walked for performance reasons.
+       If exclude_ignored is False, only the path to an ignored directory will
+       be yielded, no files inside the directory will be returned
+     """
+-    if untracked_files == "normal":
+-        raise NotImplementedError("normal is not yet supported")
+-
+-    if untracked_files not in ("no", "all"):
+-        raise ValueError("untracked_files must be one of (no, all)")
++    if untracked_files not in ("no", "all", "normal"):
++        raise ValueError("untracked_files must be one of (no, all, normal)")
+ 
+     if untracked_files == "no":
+         return
+@@ -1763,18 +1761,71 @@ def get_untracked_paths(
+                 del dirnames[i]
+         return dirnames
+ 
+-    for ap, is_dir in _walk_working_dir_paths(
+-        frompath, basepath, prune_dirnames=prune_dirnames
+-    ):
+-        if not is_dir:
+-            ip = path_to_tree_path(basepath, ap)
+-            if ip not in index:
+-                if not exclude_ignored or not ignore_manager.is_ignored(
+-                    os.path.relpath(ap, basepath)
+-                ):
+-                    yield os.path.relpath(ap, frompath)
+-
+-    yield from ignored_dirs
++    if untracked_files == "all":
++        # Original behavior - walk all files and check individually
++        for ap, is_dir in _walk_working_dir_paths(
++            frompath, basepath, prune_dirnames=prune_dirnames
++        ):
++            if not is_dir:
++                ip = path_to_tree_path(basepath, ap)
++                if ip not in index:
++                    if not exclude_ignored or not ignore_manager.is_ignored(
++                        os.path.relpath(ap, basepath)
++                    ):
++                        yield os.path.relpath(ap, frompath)
++        yield from ignored_dirs
++    else:  # untracked_files == "normal"
++        # Optimized behavior: avoid walking into completely untracked directories
++        
++        for ap, is_dir in _walk_working_dir_paths(
++            frompath, basepath, prune_dirnames=prune_dirnames
++        ):
++            rel_path = os.path.relpath(ap, frompath)
++            
++            if is_dir:
++                # For directories, check if we should skip walking into them
++                dir_ip = path_to_tree_path(basepath, ap)
++                rel_dir_for_ignore = os.path.relpath(ap, basepath)
++                
++                # Check if directory itself is ignored (with proper trailing slash handling for dirs)
++                dir_ignored_path = rel_dir_for_ignore
++                if not dir_ignored_path.endswith('/'):
++                    dir_ignored_path += '/'
++                dir_ignored = ignore_manager.is_ignored(dir_ignored_path)
++                
++                if exclude_ignored and dir_ignored:
++                    # Skip ignored directories entirely
++                    continue
++                    
++                # Check if directory is completely untracked
++                is_dir_untracked = dir_ip not in index
++                
++                if is_dir_untracked and not dir_ignored:
++                    # Directory is completely untracked and not ignored
++                    # Yield directory itself and don't recurse into it
++                    if rel_path:
++                        yield rel_path + '/'
++                    else:
++                        yield './'
++                    # Signal to prune this directory from walking by returning None for dirnames
++                    # (but we can't modify dirnames in os.walk callback easily, so we'll just continue)
++                    # The prune_dirnames callback will still be called, but we've already yielded the dir
++                    continue
++                # If directory is tracked or ignored, fall through to let prune_dirnames handle ignoring
++                # and continue normal processing (directories themselves aren't yielded in normal mode)
++            else:
++                # For files, check if they're untracked and visible
++                ip = path_to_tree_path(basepath, ap)
++                rel_path_for_ignore = os.path.relpath(ap, basepath)
++                is_ignored = ignore_manager.is_ignored(rel_path_for_ignore)
++                
++                is_untracked = ip not in index
++                is_visible = not (exclude_ignored and is_ignored)
++                
++                if is_untracked and is_visible:
++                    yield rel_path
++        
++        yield from ignored_dirs
+ 
+ 
+ def get_tree_changes(repo):

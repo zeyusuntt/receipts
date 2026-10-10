@@ -1,0 +1,71 @@
+        build_token = self.get_argument("build_token", None)
+        self.check_build_token(build_token, f"{provider_prefix}/{spec}")
+        self.check_rate_limit()
+
+        # Verify if the provider is valid for EventSource.
+        # EventSource cannot handle HTTP errors, so we must validate and send
+        # error messages on the eventsource.
+        if provider_prefix not in self.settings["repo_providers"]:
+            await self.fail(f"No provider found for prefix {provider_prefix}")
+            return
+
+        # create a heartbeat
+        IOLoop.current().spawn_callback(self.keep_alive)
+
+        spec = spec.rstrip("/")
+        key = f"{provider_prefix}:{spec}"
+
+        # get a provider object that encapsulates the provider and the spec
+        try:
+            provider = self.get_provider(provider_prefix, spec=spec)
+        except Exception as e:
+            app_log.exception("Failed to get provider for %s", key)
+            await self.fail(str(e))
+            return
+
+        if provider.is_banned():
+            await self.emit(
+                {
+                    "phase": "failed",
+                    "message": f"Sorry, {spec} has been temporarily disabled from launching. Please contact admins for more info!",
+                }
+            )
+            return
+
+        repo_url = self.repo_url = provider.get_repo_url()
+
+        # labels to apply to build/launch metrics
+        self.repo_metric_labels = {
+            "provider": provider.name,
+            "repo": repo_url,
+        }
+
+        try:
+            ref = await provider.get_resolved_ref()
+        except Exception as e:
+            await self.fail(f"Error resolving ref for {key}: {e}")
+            return
+
+        if ref is None:
+            error_message = [f"Could not resolve ref for {key}. Double check your URL."]
+
+            if provider.name == "GitHub":
+                error_message.append(
+                    'GitHub recently changed default branches from "master" to "main".'
+                )
+
+                if provider.unresolved_ref == "master":
+                    error_message.append('Did you mean the "main" branch?')
+                elif provider.unresolved_ref == "main":
+                    error_message.append('Did you mean the "master" branch?')
+
+            else:
+                error_message.append("Is your repo public?")
+
+            await self.fail(" ".join(error_message))
+            return
+
+        self.ref_url = await provider.get_resolved_ref_url()
+        resolved_spec = await provider.get_resolved_spec()
+
+        badge_base_url = self.get_badge_base_url()

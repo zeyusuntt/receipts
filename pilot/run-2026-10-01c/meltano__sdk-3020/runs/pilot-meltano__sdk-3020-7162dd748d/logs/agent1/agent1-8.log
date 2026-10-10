@@ -1,0 +1,16 @@
+    )
+    def test_table_name(
+        self,
+        schema: dict,
+        stream_name: str,
+        default_target_schema: str | None,
+        expected_table_name: str,
+        expected_schema_name: str,
+    ):
+        target = DuckDBTarget(
+            config={
+                "sqlalchemy_url": "duckdb:///",
+                "default_target_schema": default_target_schema,
+            },
+        )
+

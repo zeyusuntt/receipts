@@ -1,0 +1,73 @@
+1102-                    __name__,
+1103-                )
+1104-
+1105-                if self.strict:
+1106-                    raise PdfReadError(f"Can't read object stream: {exc}")
+1107:                # Replace with null. Hopefully it's nothing important.
+1108-                obj = NullObject()
+1109-            return obj
+1110-
+1111-        if self.strict:
+1112-            raise PdfReadError("This is a fatal error in strict mode.")
+--
+1125-            retval = self._get_object_from_stream(indirect_reference)  # type: ignore
+1126-        elif (
+1127-            indirect_reference.generation in self.xref
+1128-            and indirect_reference.idnum in self.xref[indirect_reference.generation]
+1129-        ):
+1130:            if self.xref_free_entry.get(indirect_reference.generation, {}).get(
+1131-                indirect_reference.idnum, False
+1132-            ):
+1133-                return NullObject()
+1134-            start = self.xref[indirect_reference.generation][indirect_reference.idnum]
+1135-            self.stream.seek(start, 0)
+--
+1479-                        generation = int(f.group(1))
+1480-                        offset = f.start()
+1481-
+1482-                if generation not in self.xref:
+1483-                    self.xref[generation] = {}
+1484:                    self.xref_free_entry[generation] = {}
+1485-                if num in self.xref[generation]:
+1486-                    # It really seems like we should allow the last
+1487-                    # xref table in the file to override previous
+1488-                    # ones. Since we read the file backwards, assume
+1489-                    # any existing key is already set correctly.
+1490-                    pass
+1491-                else:
+1492-                    self.xref[generation][num] = offset
+1493-                    try:
+1494:                        self.xref_free_entry[generation][num] = entry_type_b == b"f"
+1495-                    except Exception:
+1496-                        pass
+1497-                    try:
+1498:                        self.xref_free_entry[65535][num] = entry_type_b == b"f"
+1499-                    except Exception:
+1500-                        pass
+1501-                cnt += 1
+1502-                num += 1
+1503-            read_non_whitespace(stream)
+--
+1511-
+1512-    def _read_xref_tables_and_trailers(
+1513-        self, stream: StreamType, startxref: Optional[int], xref_issue_nr: int
+1514-    ) -> None:
+1515-        self.xref: Dict[int, Dict[Any, Any]] = {}
+1516:        self.xref_free_entry: Dict[int, Dict[Any, Any]] = {}
+1517-        self.xref_objStm: Dict[int, Tuple[Any, Any]] = {}
+1518-        self.trailer = DictionaryObject()
+1519-        while startxref is not None:
+1520-            # load the xref table
+1521-            stream.seek(startxref, 0)
+--
+1728-                # The first entry is the type
+1729-                xref_type = get_entry(0)
+1730-                # The rest of the elements depend on the xref_type
+1731-                if xref_type == 0:
+1732-                    # linked list of free objects
+1733:                    next_free_object = get_entry(1)  # noqa: F841
+1734-                    next_generation = get_entry(2)  # noqa: F841
+1735-                elif xref_type == 1:
+1736-                    # objects that are in use but are not compressed
+1737-                    byte_offset = get_entry(1)
+1738-                    generation = get_entry(2)

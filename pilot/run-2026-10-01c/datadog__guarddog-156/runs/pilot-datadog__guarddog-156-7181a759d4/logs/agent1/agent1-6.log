@@ -1,0 +1,178 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-7.2.1, pluggy-1.0.0 -- /usr/local/bin/python
+rootdir: /guarddog, configfile: pyproject.toml
+collecting ... collected 0 items / 2 errors
+
+==================================== ERRORS ====================================
+___________ ERROR collecting tests/core/test_npm_package_scanner.py ____________
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:703: in urlopen
+    httplib_response = self._make_request(
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:386: in _make_request
+    self._validate_conn(conn)
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:1042: in _validate_conn
+    conn.connect()
+/usr/local/lib/python3.10/site-packages/urllib3/connection.py:414: in connect
+    self.sock = ssl_wrap_socket(
+/usr/local/lib/python3.10/site-packages/urllib3/util/ssl_.py:449: in ssl_wrap_socket
+    ssl_sock = _ssl_wrap_socket_impl(
+/usr/local/lib/python3.10/site-packages/urllib3/util/ssl_.py:493: in _ssl_wrap_socket_impl
+    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+/usr/local/lib/python3.10/ssl.py:513: in wrap_socket
+    return self.sslsocket_class._create(
+/usr/local/lib/python3.10/ssl.py:1104: in _create
+    self.do_handshake()
+/usr/local/lib/python3.10/ssl.py:1375: in do_handshake
+    self._sslobj.do_handshake()
+E   ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+/usr/local/lib/python3.10/site-packages/requests/adapters.py:489: in send
+    resp = conn.urlopen(
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:787: in urlopen
+    retries = retries.increment(
+/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py:550: in increment
+    raise six.reraise(type(error), error, _stacktrace)
+/usr/local/lib/python3.10/site-packages/urllib3/packages/six.py:769: in reraise
+    raise value.with_traceback(tb)
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:703: in urlopen
+    httplib_response = self._make_request(
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:386: in _make_request
+    self._validate_conn(conn)
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:1042: in _validate_conn
+    conn.connect()
+/usr/local/lib/python3.10/site-packages/urllib3/connection.py:414: in connect
+    self.sock = ssl_wrap_socket(
+/usr/local/lib/python3.10/site-packages/urllib3/util/ssl_.py:449: in ssl_wrap_socket
+    ssl_sock = _ssl_wrap_socket_impl(
+/usr/local/lib/python3.10/site-packages/urllib3/util/ssl_.py:493: in _ssl_wrap_socket_impl
+    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+/usr/local/lib/python3.10/ssl.py:513: in wrap_socket
+    return self.sslsocket_class._create(
+/usr/local/lib/python3.10/ssl.py:1104: in _create
+    self.do_handshake()
+/usr/local/lib/python3.10/ssl.py:1375: in do_handshake
+    self._sslobj.do_handshake()
+E   urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+
+During handling of the above exception, another exception occurred:
+tests/core/test_npm_package_scanner.py:6: in <module>
+    from guarddog.scanners import NPMPackageScanner
+guarddog/__init__.py:1: in <module>
+    from guarddog.scanners.npm_package_scanner import NPMPackageScanner  # NOQA
+guarddog/scanners/__init__.py:3: in <module>
+    from .npm_package_scanner import NPMPackageScanner
+guarddog/scanners/npm_package_scanner.py:8: in <module>
+    from guarddog.analyzer.analyzer import Analyzer
+guarddog/analyzer/analyzer.py:8: in <module>
+    from guarddog.analyzer.metadata import get_metadata_detectors
+guarddog/analyzer/metadata/__init__.py:3: in <module>
+    from guarddog.analyzer.metadata.pypi import PYPI_METADATA_RULES
+guarddog/analyzer/metadata/pypi/__init__.py:19: in <module>
+    detectorInstance = detectorClass()  # type: ignore
+guarddog/analyzer/metadata/typosquatting.py:14: in __init__
+    self.popular_packages = self._get_top_packages()  # Find top PyPI packages
+guarddog/analyzer/metadata/pypi/typosquatting.py:58: in _get_top_packages
+    response = requests.get(popular_packages_url).json()
+/usr/local/lib/python3.10/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/sessions.py:587: in request
+    resp = self.send(prep, **send_kwargs)
+/usr/local/lib/python3.10/site-packages/requests/sessions.py:701: in send
+    r = adapter.send(request, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/adapters.py:547: in send
+    raise ConnectionError(err, request=request)
+E   requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+___________ ERROR collecting tests/core/test_npm_package_scanner.py ____________
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:703: in urlopen
+    httplib_response = self._make_request(
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:386: in _make_request
+    self._validate_conn(conn)
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:1042: in _validate_conn
+    conn.connect()
+/usr/local/lib/python3.10/site-packages/urllib3/connection.py:414: in connect
+    self.sock = ssl_wrap_socket(
+/usr/local/lib/python3.10/site-packages/urllib3/util/ssl_.py:449: in ssl_wrap_socket
+    ssl_sock = _ssl_wrap_socket_impl(
+/usr/local/lib/python3.10/site-packages/urllib3/util/ssl_.py:493: in _ssl_wrap_socket_impl
+    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+/usr/local/lib/python3.10/ssl.py:513: in wrap_socket
+    return self.sslsocket_class._create(
+/usr/local/lib/python3.10/ssl.py:1104: in _create
+    self.do_handshake()
+/usr/local/lib/python3.10/ssl.py:1375: in do_handshake
+    self._sslobj.do_handshake()
+E   ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+/usr/local/lib/python3.10/site-packages/requests/adapters.py:489: in send
+    resp = conn.urlopen(
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:787: in urlopen
+    retries = retries.increment(
+/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py:550: in increment
+    raise six.reraise(type(error), error, _stacktrace)
+/usr/local/lib/python3.10/site-packages/urllib3/packages/six.py:769: in reraise
+    raise value.with_traceback(tb)
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:703: in urlopen
+    httplib_response = self._make_request(
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:386: in _make_request
+    self._validate_conn(conn)
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:1042: in _validate_conn
+    conn.connect()
+/usr/local/lib/python3.10/site-packages/urllib3/connection.py:414: in connect
+    self.sock = ssl_wrap_socket(
+/usr/local/lib/python3.10/site-packages/urllib3/util/ssl_.py:449: in ssl_wrap_socket
+    ssl_sock = _ssl_wrap_socket_impl(
+/usr/local/lib/python3.10/site-packages/urllib3/util/ssl_.py:493: in _ssl_wrap_socket_impl
+    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+/usr/local/lib/python3.10/ssl.py:513: in wrap_socket
+    return self.sslsocket_class._create(
+/usr/local/lib/python3.10/ssl.py:1104: in _create
+    self.do_handshake()
+/usr/local/lib/python3.10/ssl.py:1375: in do_handshake
+    self._sslobj.do_handshake()
+E   urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+
+During handling of the above exception, another exception occurred:
+tests/core/test_npm_package_scanner.py:6: in <module>
+    from guarddog.scanners import NPMPackageScanner
+guarddog/__init__.py:1: in <module>
+    from guarddog.scanners.npm_package_scanner import NPMPackageScanner  # NOQA
+guarddog/scanners/__init__.py:3: in <module>
+    from .npm_package_scanner import NPMPackageScanner
+guarddog/scanners/npm_package_scanner.py:8: in <module>
+    from guarddog.analyzer.analyzer import Analyzer
+guarddog/analyzer/analyzer.py:8: in <module>
+    from guarddog.analyzer.metadata import get_metadata_detectors
+ERROR: not found: /guarddog/tests/core/test_npm_package_scanner.py::test_download_and_get_package_info
+(no name '/guarddog/tests/core/test_npm_package_scanner.py::test_download_and_get_package_info' in any of [<Module tests/core/test_npm_package_scanner.py>])
+
+ERROR: not found: /guarddog/tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced
+(no name '/guarddog/tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced' in any of [<Module tests/core/test_npm_package_scanner.py>])
+
+guarddog/analyzer/metadata/__init__.py:3: in <module>
+    from guarddog.analyzer.metadata.pypi import PYPI_METADATA_RULES
+guarddog/analyzer/metadata/pypi/__init__.py:19: in <module>
+    detectorInstance = detectorClass()  # type: ignore
+guarddog/analyzer/metadata/typosquatting.py:14: in __init__
+    self.popular_packages = self._get_top_packages()  # Find top PyPI packages
+guarddog/analyzer/metadata/pypi/typosquatting.py:58: in _get_top_packages
+    response = requests.get(popular_packages_url).json()
+/usr/local/lib/python3.10/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/sessions.py:587: in request
+    resp = self.send(prep, **send_kwargs)
+/usr/local/lib/python3.10/site-packages/requests/sessions.py:701: in send
+    r = adapter.send(request, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/adapters.py:547: in send
+    raise ConnectionError(err, request=request)
+E   requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+------------ generated xml file: /opt/receipts/reports/agent1-6.xml ------------
+=========================== short test summary info ============================
+ERROR tests/core/test_npm_package_scanner.py - requests.exceptions.Connection...
+ERROR tests/core/test_npm_package_scanner.py - requests.exceptions.Connection...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 2 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 2 errors in 0.41s ===============================

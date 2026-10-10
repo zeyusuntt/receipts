@@ -1,0 +1,37 @@
+============================= test session starts ==============================
+collected 2 items
+
+tests/core/sinks/test_sql_sink.py FF                                     [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: assert 'foo_bar' == 'foo-bar'
+      
+      - foo-bar
+      ?    ^
+      + foo_bar
+      ?    ^
+----------------------------- Captured stderr call -----------------------------
+2026-10-01 23:22:38,487 | INFO     | sql-target-mock.foo-bar | Initializing target sink for stream 'foo-bar'...
+------------------------------ Captured log call -------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+/sdk/tests/core/sinks/test_sql_sink.py:137: AssertionError: assert 'foo_bar' == 'foo-bar'
+E   AssertionError: assert 'foo_bar_baz' == 'foo-bar-baz'
+      
+      - foo-bar-baz
+      ?    ^   ^
+      + foo_bar_baz
+      ?    ^   ^
+----------------------------- Captured stderr call -----------------------------
+2026-10-01 23:22:38,494 | INFO     | sql-target-mock      | Skipping parse of env var settings...
+2026-10-01 23:22:38,495 | INFO     | sql-target-mock.foo-bar-baz | Initializing target sink for stream 'foo-bar-baz'...
+------------------------------ Captured log call -------------------------------
+INFO     sql-target-mock:plugin_base.py:206 Skipping parse of env var settings...
+/sdk/tests/core/sinks/test_sql_sink.py:137: AssertionError: assert 'foo_bar_baz' == 'foo-bar-baz'
+----------- generated xml file: /opt/receipts/reports/agent1-29.xml ------------
+============================= slowest 10 durations =============================
+
+(6 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[default-schema-2-part]
+FAILED tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[default-schema-3-part]
+============================== 2 failed in 0.02s ===============================

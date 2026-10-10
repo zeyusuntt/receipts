@@ -1,0 +1,7 @@
+{
+  "approach": "Modify `_zeroize_xrefs` to avoid overwriting existing `null` entries.",
+  "files_to_edit": [
+    "PyPDF2/_reader.py"
+  ],
+  "hypothesis": "The `_zeroize_xrefs()` method incorrectly sets unused indices to `null`, corrupting indirect object resolution when reading `/Pages`. Fix: Skip already-zeroized sections during reprocessing."
+}

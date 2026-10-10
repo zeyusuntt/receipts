@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+hypothesis profile 'default'
+rootdir: /qiskit
+configfile: pyproject.toml
+plugins: hypothesis-6.151.9
+collecting ... collected 1 item
+
+test/python/circuit/test_circuit_properties.py::TestCircuitProperties::test_circuit_depth_expr_condition FAILED [100%]
+
+=================================== FAILURES ===================================
+___________ TestCircuitProperties.test_circuit_depth_expr_condition ____________
+'NoneType' object is not iterable
+
+During handling of the above exception, another exception occurred:
+NOTE: Incompatible Exception Representation, displaying natively:
+
+testtools.testresult.real._StringException: Traceback (most recent call last):
+  File "/qiskit/test/python/circuit/test_circuit_properties.py", line 663, in test_circuit_depth_expr_condition
+    self.assertEqual(qc.depth(), 2)
+  File "/usr/local/lib/python3.10/unittest/case.py", line 845, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "/usr/local/lib/python3.10/unittest/case.py", line 838, in _baseAssertEqual
+    raise self.failureException(msg)
+AssertionError: 1 != 2
+
+
+----------- generated xml file: /opt/receipts/reports/agent1-14.xml ------------
+=========================== short test summary info ============================
+FAILED test/python/circuit/test_circuit_properties.py::TestCircuitProperties::test_circuit_depth_expr_condition
+============================== 1 failed in 1.68s ===============================

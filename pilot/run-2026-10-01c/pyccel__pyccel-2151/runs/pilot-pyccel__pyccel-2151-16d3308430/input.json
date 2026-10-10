@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Function call in if condition printed in wrong location\nRegarding your interesting example:\r\n```python\r\ndef f(k : int):\r\n    a = {1:1.0, 2:2.0}\r\n    b = {1:True, 2: False}\r\n    if b.pop(k):\r\n        return a.pop(k)\r\n    else:\r\n        return 3.0\r\n```\r\nIt generates the following C function:\r\n```c\r\ndouble f(int64_t k)\r\n{\r\n    hmap_int64_t_double a = {0};\r\n    hmap_int64_t_bool b = {0};\r\n    double Dummy_0000;\r\n    bool Dummy_0001;\r\n    double Out_0001;\r\n    a = c_init(hmap_int64_t_double, {{INT64_C(1), 5.0}, {INT64_C(2), 6.0}});\r\n    b = c_init(hmap_int64_t_bool, {{INT64_C(1), 1}, {INT64_C(2), 0}});\r\n    if (Dummy_0001)\r\n    {\r\n        Dummy_0000 = hmap_int64_t_double_pop(&a, k);\r\n        Out_0001 = Dummy_0000;\r\n        hmap_int64_t_double_drop(&a);\r\n        hmap_int64_t_bool_drop(&b);\r\n        return Out_0001;\r\n    }\r\n    else\r\n    {\r\n        Dummy_0001 = hmap_int64_t_bool_pop(&b, k); // <-- PROBLEM\r\n        hmap_int64_t_double_drop(&a);\r\n        hmap_int64_t_bool_drop(&b);\r\n        return 3.0;\r\n    }\r\n    hmap_int64_t_double_drop(&a);\r\n    hmap_int64_t_bool_drop(&b);\r\n}\r\n```\r\nBeside the 'header guard' issue that I fixed, I think there is another issue here - `hmap_int64_t_bool_pop(&b, k)` is evaluated inside the `else` block instead of being computed before the conditional statement. This results in incorrect behavior, as the conditional logic depends on the value of `b.pop(k)` but evaluates it at the wrong point.\r\n\r\nThis issue is not specific to the `dict.pop` case. It also occurs in other cases, such as:\r\n```python\r\ndef test_min():\r\n    if min(5,6):\r\n        return 1\r\n    else:\r\n        return 0\r\n```\r\nWhich generates the following C code:\r\n```c\r\nint64_t test_min(void)\r\n{\r\n    int64_t Dummy_0000;\r\n    int64_t Dummy_0001;\r\n    if (((Dummy_0000 < Dummy_0001 ? Dummy_0000 : Dummy_0001) != 0))\r\n    {\r\n        return INT64_C(1);\r\n    }\r\n    else\r\n    {\r\n        Dummy_0000 = INT64_C(5); // <-- PROBLEM\r\n        Dummy_0001 = INT64_C(6);\r\n        return INT64_C(0);\r\n    }\r\n}\r\n```\r\nHere, the variables `Dummy_0000` and `Dummy_0001` used in the `min` function are only evaluated in the `else` block, leading to incorrect behavior because the condition depends on their values.\r\nIt seems that this issue occurs specifically within `if-else` blocks, as `if` blocks alone appear to function correctly. \r\nSince its not specific to `dict.pop`, resolving it may fall outside the scope of this PR, but it should certainly be addressed in future work. Let me know what you think :smile:\r\n\r\n_Originally posted by @emmanuel-ferdman in https://github.com/pyccel/pyccel/issues/2143#issuecomment-2587577755_\r\n            ",
+  "source": {
+    "image": "docker.io/swerebenchv2/pyccel-pyccel:2151-ce1261a",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pyccel__pyccel-2151-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2VweWNjZWwvdGVzdF9idWlsdGlucy5weSBiL3Rlc3RzL2VweWNjZWwvdGVzdF9idWlsdGlucy5weQppbmRleCBiYjg2MWQxYS4uNTRkZTZiNTcgMTAwNjQ0Ci0tLSBhL3Rlc3RzL2VweWNjZWwvdGVzdF9idWlsdGlucy5weQorKysgYi90ZXN0cy9lcHljY2VsL3Rlc3RfYnVpbHRpbnMucHkKQEAgLTEyMiw2ICsxMjIsMzIgQEAgZGVmIHRlc3RfbWluXzNfYXJncyhsYW5ndWFnZSk6CiAgICAgYXNzZXJ0IGVweWNfZigqaW50X2FyZ3MpID09IGYoKmludF9hcmdzKQogICAgIGFzc2VydCBucC5pc2Nsb3NlKGVweWNfZigqZmxvYXRfYXJncyksIGYoKmZsb2F0X2FyZ3MpLCBydG9sPVJUT0wsIGF0b2w9QVRPTCkKIAorZGVmIHRlc3RfbWluX2lmKGxhbmd1YWdlKToKKyAgICBkZWYgZih4IDogJ2ludCcsIHkgOiAnaW50Jyk6CisgICAgICAgIGlmIG1pbih4K3greSwgeCt5K3kpIDwgKHgreSk6CisgICAgICAgICAgICByZXR1cm4geCt5CisgICAgICAgIGVsc2U6CisgICAgICAgICAgICByZXR1cm4geC15CisKKyAgICBlcHljX2YgPSBlcHljY2VsKGYsIGxhbmd1YWdlPWxhbmd1YWdlKQorCisgICAgaW50X2FyZ3MgPSBbcmFuZGludChtaW5faW50Ly8zLCBtYXhfaW50Ly8zKSBmb3IgXyBpbiByYW5nZSgyKV0KKworICAgIGFzc2VydCBlcHljX2YoKmludF9hcmdzKSA9PSBmKCppbnRfYXJncykKKworZGVmIHRlc3RfbWluX2luX21pbihsYW5ndWFnZSk6CisgICAgZGVmIGYoeCA6ICdpbnQnLCB5IDogJ2ludCcpOgorICAgICAgICBpZiBtaW4obWluKHgreCwreSksIG1pbih4K3kseSkpIDwgKHgreSk6ICNweWxpbnQ6IGRpc2FibGU9bmVzdGVkLW1pbi1tYXgKKyAgICAgICAgICAgIHJldHVybiB4K3kKKyAgICAgICAgZWxzZToKKyAgICAgICAgICAgIHJldHVybiB4LXkKKworICAgIGVweWNfZiA9IGVweWNjZWwoZiwgbGFuZ3VhZ2U9bGFuZ3VhZ2UpCisKKyAgICBpbnRfYXJncyA9IFtyYW5kaW50KG1pbl9pbnQvLzMsIG1heF9pbnQvLzMpIGZvciBfIGluIHJhbmdlKDIpXQorCisgICAgYXNzZXJ0IGVweWNfZigqaW50X2FyZ3MpID09IGYoKmludF9hcmdzKQorCiBAcHl0ZXN0Lm1hcmsucGFyYW1ldHJpemUoICdsYW5ndWFnZScsICgKICAgICAgICAgcHl0ZXN0LnBhcmFtKCJmb3J0cmFuIiwgbWFya3MgPSBweXRlc3QubWFyay5mb3J0cmFuKSwKICAgICAgICAgcHl0ZXN0LnBhcmFtKCJjIiwgbWFya3MgPSBbCg=='\"'\"'))'",
+      "git apply /tmp/receipts-pyccel__pyccel-2151-test.patch"
+    ],
+    "workdir": "/pyccel"
+  },
+  "spec_tests": [
+    "tests/epyccel/test_builtins.py::test_min_if[c]",
+    "tests/epyccel/test_builtins.py::test_min_in_min[c]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/epyccel/test_builtins.py"
+}

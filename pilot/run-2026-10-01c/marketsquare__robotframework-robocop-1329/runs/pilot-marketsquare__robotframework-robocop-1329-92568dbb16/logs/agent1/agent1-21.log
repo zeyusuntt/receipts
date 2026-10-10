@@ -1,0 +1,13 @@
+194:    _checkers: list[BaseChecker] | None = field(default=None, compare=False)
+202:    def checkers(self):
+203:        if self._checkers is None:
+205:        return self._checkers
+214:        """Load rules, checkers and their configuration."""
+216:        self.load_checkers()
+221:    def load_checkers(self) -> None:
+223:        Initialize checkers and rules containers and start rules discovery.
+225:        Instance of this class is passed over since it will be used to populate checkers/rules containers.
+228:        self._checkers = []
+235:        self._checkers.append(checker)
+240:        for checker in self._checkers:
+255:        if not any(not checker.disabled for checker in self._checkers):

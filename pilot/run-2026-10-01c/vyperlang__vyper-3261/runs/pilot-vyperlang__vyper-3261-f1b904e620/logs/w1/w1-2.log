@@ -1,0 +1,24 @@
+/usr/local/lib/python3.10/site-packages/web3/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/usr/local/lib/python3.10/site-packages/_pytest/config/__init__.py:318: PluggyTeardownRaisedWarning: A plugin raised an exception during an old-style hookwrapper teardown.
+Plugin: helpconfig, Hook: pytest_cmdline_parse
+ConftestImportFailure: SyntaxError: invalid syntax (expr.py, line 195) (from /vyper/tests/conftest.py)
+For more information see https://pluggy.readthedocs.io/en/stable/api_reference.html#pluggy.PluggyTeardownRaisedWarning
+  config = pluginmanager.hook.pytest_cmdline_parse(
+ImportError while loading conftest '/vyper/tests/conftest.py'.
+tests/conftest.py:11: in <module>
+    from vyper import compiler
+vyper/__init__.py:3: in <module>
+    from vyper.compiler import compile_code, compile_codes  # noqa: F401
+vyper/compiler/__init__.py:4: in <module>
+    import vyper.ast as vy_ast  # break an import cycle
+vyper/ast/__init__.py:19: in <module>
+    from . import expansion, folding  # noqa: E402
+vyper/ast/folding.py:5: in <module>
+    from vyper.builtins.functions import DISPATCH_TABLE
+vyper/builtins/functions.py:39: in <module>
+    from vyper.codegen.expr import Expr
+E     File "/vyper/vyper/codegen/expr.py", line 195
+E       elif self.expr.attr == "codesize" or self.expr.attr == "is_contract":
+E       ^^^^
+E   SyntaxError: invalid syntax

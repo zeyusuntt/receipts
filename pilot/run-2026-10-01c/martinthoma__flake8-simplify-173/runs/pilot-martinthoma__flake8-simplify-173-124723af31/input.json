@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "[New Rule]: rewrite dict.get(key, None) as dict.get(key)\n## Explanation\r\n\r\n`dict.get(key)` returns `None` by default if `key` is missing.\r\n\r\n## Example\r\n\r\n```python\r\n# Bad\r\ndict.get(key, None)\r\n\r\n# Good\r\ndict.get(key)\r\n```\r\n\r\n\r\n## Related\r\n\r\nAdding this rule should be coordinated with https://github.com/charliermarsh/ruff/issues/3546 for consistent naming.",
+  "source": {
+    "image": "docker.io/swerebenchv2/martinthoma-flake8-simplify:173-d3cb955",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-martinthoma__flake8-simplify-173-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfOTAwX3J1bGVzLnB5IGIvdGVzdHMvdGVzdF85MDBfcnVsZXMucHkKaW5kZXggMDI5MDgwYi4uM2YxZDE3YiAxMDA2NDQKLS0tIGEvdGVzdHMvdGVzdF85MDBfcnVsZXMucHkKKysrIGIvdGVzdHMvdGVzdF85MDBfcnVsZXMucHkKQEAgLTE4MSwzICsxODEsMjYgQEAgZGVmIHRlc3Rfc2ltOTA5X2ZhbHNlX3Bvc2l0aXZlcyhzKToKICAgICByZXN1bHRzID0gX3Jlc3VsdHMocykKICAgICBmb3IgcmVzdWx0IGluIHJlc3VsdHM6CiAgICAgICAgIGFzc2VydCAiU0lNOTA5IiBub3QgaW4gcmVzdWx0CisKKworQHB5dGVzdC5tYXJrLnBhcmFtZXRyaXplKAorICAgICgicyIsICJtc2ciKSwKKyAgICAoCisgICAgICAgICgKKyAgICAgICAgICAgICJkLmdldChrZXksIE5vbmUpIiwKKyAgICAgICAgICAgICIxOjAgU0lNOTEwIFVzZSAnZC5nZXQoa2V5KScgaW5zdGVhZCBvZiAnZC5nZXQoa2V5LCBOb25lKSciLAorICAgICAgICApLAorICAgICAgICAoCisgICAgICAgICAgICAiZC5nZXQoJ2tleScsIE5vbmUpIiwKKyAgICAgICAgICAgICIxOjAgU0lNOTEwIFVzZSAnZC5nZXQoXCJrZXlcIiknIGluc3RlYWQgb2YgJ2QuZ2V0KCdrZXknLCBOb25lKSciLAorICAgICAgICApLAorICAgICAgICAoCisgICAgICAgICAgICAiZC5nZXQoa2V5KSIsCisgICAgICAgICAgICBOb25lLAorICAgICAgICApLAorICAgICksCispCitkZWYgdGVzdF9zaW05MTAocywgbXNnKToKKyAgICBleHBlY3RlZCA9IHttc2d9IGlmIG1zZyBpcyBub3QgTm9uZSBlbHNlIHNldCgpCisgICAgcmVzdWx0cyA9IF9yZXN1bHRzKHMpCisgICAgYXNzZXJ0IHJlc3VsdHMgPT0gZXhwZWN0ZWQK'\"'\"'))'",
+      "git apply /tmp/receipts-martinthoma__flake8-simplify-173-test.patch"
+    ],
+    "workdir": "/flake8-simplify"
+  },
+  "spec_tests": [
+    "tests/test_900_rules.py::test_sim910[d.get(key,",
+    "tests/test_900_rules.py::test_sim910[d.get('key',"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_900_rules.py"
+}

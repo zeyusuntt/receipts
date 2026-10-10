@@ -1,0 +1,95 @@
+diff --git a/b2/api.py b/b2/api.py
+index 7bf33da..a10f73b 100644
+--- a/b2/api.py
++++ b/b2/api.py
+@@ -150,12 +150,18 @@ class B2Api(object):
+         self.cache.save_bucket(bucket)
+         return bucket
+ 
+-    def download_file_by_id(self, file_id, download_dest, progress_listener=None):
++    def download_file_by_id(self, file_id, download_dest, progress_listener=None, range_=None):
+         progress_listener = progress_listener or DoNothingProgressListener()
+-        self.session.download_file_by_id(
++        range_start, range_end = (None, None)
++        if range_ is not None:
++            range_start, range_end = range_
++        self.raw_api.download_file_by_id(
++            self.account_info.get_download_url(),
++            self.account_info.get_account_auth_token_or_none(),
+             file_id,
+             DownloadDestProgressWrapper(download_dest, progress_listener),
+-            url_factory=self.account_info.get_download_url
++            range_start=range_start,
++            range_end=range_end
+         )
+         progress_listener.close()
+ 
+diff --git a/b2/bucket.py b/b2/bucket.py
+index 722bd90..60868a8 100644
+--- a/b2/bucket.py
++++ b/b2/bucket.py
+@@ -112,8 +112,12 @@ class Bucket(object):
+     def cancel_large_file(self, file_id):
+         return self.api.cancel_large_file(file_id)
+ 
+-    def download_file_by_id(self, file_id, download_dest, progress_listener=None):
+-        self.api.download_file_by_id(file_id, download_dest, progress_listener)
++    def download_file_by_id(self, file_id, download_dest, progress_listener=None, range_=None):
++        range_start, range_end = (None, None)
++        if range_ is not None:
++            range_start, range_end = range_
++        self.api.download_file_by_id(file_id, download_dest, progress_listener, 
++                                   range_start, range_end)
+ 
+     def download_file_by_name(self, file_name, download_dest, progress_listener=None):
+         progress_listener = progress_listener or DoNothingProgressListener()
+diff --git a/b2/raw_api.py b/b2/raw_api.py
+index 9451eb1..866d278 100644
+--- a/b2/raw_api.py
++++ b/b2/raw_api.py
+@@ -156,9 +156,11 @@ class B2RawApi(AbstractRawApi):
+             fileName=file_name
+         )
+ 
+-    def download_file_by_id(self, download_url, account_auth_token_or_none, file_id, download_dest):
++    def download_file_by_id(self, download_url, account_auth_token_or_none, file_id, download_dest, 
++                           range_start=None, range_end=None):
+         url = download_url + '/b2api/v1/b2_download_file_by_id?fileId=' + file_id
+-        return self._download_file_from_url(url, account_auth_token_or_none, download_dest)
++        return self._download_file_from_url(url, account_auth_token_or_none, download_dest, 
++                                          range_start, range_end)
+ 
+     def download_file_by_name(
+         self, download_url, account_auth_token_or_none, bucket_name, file_name, download_dest
+@@ -166,7 +168,8 @@ class B2RawApi(AbstractRawApi):
+         url = download_url + '/file/' + bucket_name + '/' + b2_url_encode(file_name)
+         return self._download_file_from_url(url, account_auth_token_or_none, download_dest)
+ 
+-    def _download_file_from_url(self, url, account_auth_token_or_none, download_dest):
++    def _download_file_from_url(self, url, account_auth_token_or_none, download_dest,
++                               range_start=None, range_end=None):
+         """
+         Downloads a file from given url and stores it in the given download_destination.
+ 
+@@ -175,12 +178,20 @@ class B2RawApi(AbstractRawApi):
+         :param url: The full URL to download from
+         :param account_auth_token_or_none: an optional account auth token to pass in
+         :param download_dest: where to put the file when it is downloaded
+-        :param progress_listener: where to notify about progress downloading
++        :param range_start: start byte for range download (inclusive)
++        :param range_end: end byte for range download (inclusive). If None, read to end.
+         :return:
+         """
+         request_headers = {}
+         if account_auth_token_or_none is not None:
+             request_headers['Authorization'] = account_auth_token_or_none
++        
++        # Add range header if specified
++        if range_start is not None or range_end is not None:
++            range_header = 'bytes={}-'.format(range_start)
++            if range_end is not None:
++                range_header = '{}{}'.format(range_header, range_end)
++            request_headers['Range'] = range_header
+ 
+         with self.b2_http.get_content(url, request_headers) as response:
+ 

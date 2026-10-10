@@ -1,0 +1,58 @@
+diff --git a/pysmt/smtlib/parser/parser.py b/pysmt/smtlib/parser/parser.py
+index 40f5ec5..a323441 100644
+--- a/pysmt/smtlib/parser/parser.py
++++ b/pysmt/smtlib/parser/parser.py
+@@ -765,28 +765,38 @@ class SmtLibParser(object):
+         term = self.get_expression(tokens)
+ 
+         tk = tokens.consume()
++        iteration = 0
+         while tk != ")":
++            iteration += 1
++            if iteration > 1000:
++                raise RuntimeError("Infinite loop in _enter_annotation")
+             if not tk.startswith(":"):
+                 raise PysmtSyntaxError("Annotations keyword should start with"
+                                        " colon! Offending token: '%s'" % tk,
+                                        tokens.pos_info)
+             keyword = tk[1:]
+-            tk = tokens.consume()
+-            value = None
+-            if tk == "(":
+-                counter = 1
+-                buff = [tk]
+-                while counter != 0:
+-                    tk = tokens.raw_read()
+-                    if tk == "(":
+-                        counter += 1
+-                    elif tk == ")":
+-                        counter -= 1
+-                    buff.append(tk)
+-                value = "".join(buff)
++            lookahead = tokens.consume()
++            if lookahead.startswith(":") or lookahead == ")":
++                # Stand-alone attribute (no value)
++                value = None
++                tk = lookahead   # advance to the next token (attribute or ')')
+             else:
+-                value = tk
+-            tk = tokens.consume()
++                # There is a value; lookahead is its first token
++                if lookahead == "(":
++                    counter = 1
++                    buff = [lookahead]
++                    while counter != 0:
++                        tk_val = tokens.raw_read()
++                        if tk_val == "(":
++                            counter += 1
++                        elif tk_val == ")":
++                            counter -= 1
++                        buff.append(tk_val)
++                    value = "".join(buff)
++                    tk = tokens.consume()  # consume token after closing ')'
++                else:
++                    value = lookahead
++                    tk = tokens.consume()  # consume token after atomic value
+             self.cache.annotations.add(term, keyword, value)
+ 
+         assert len(stack[-1]) == 0

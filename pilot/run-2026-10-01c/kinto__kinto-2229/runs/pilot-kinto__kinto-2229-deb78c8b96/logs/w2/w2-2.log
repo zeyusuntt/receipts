@@ -1,0 +1,175 @@
+============================= test session starts ==============================
+collected 97 items
+
+tests/plugins/test_accounts.py ...........F........FFFF...FF..F.F....... [ 42%]
+.....................FF..........                                        [ 76%]
+tests/test_views_admin.py .......................                        [100%]
+
+=================================== FAILURES ===================================
+/usr/local/lib/python3.7/site-packages/webtest/app.py:689: webtest.app.AppError: Bad response: 201 Created (not 400)
+/kinto/tests/plugins/test_accounts.py:286: assert 'user' not in {'capabilities': {'accounts': {'description': 'Manage user accounts.', 'url': 'https://kinto.readthedocs.io/en/latest/...ed': True}}, 'http_api_version': '1.22', 'project_docs': 'https://kinto.readthedocs.io/', 'project_name': 'kinto', ...}
+/usr/local/lib/python3.7/site-packages/webtest/app.py:689: webtest.app.AppError: Bad response: 201 Created (not 400)
+/kinto/tests/plugins/test_accounts.py:266: AssertionError: assert 'validated' in {'email-context': {'activation-form-url': 'https://example.com', 'name': 'Alice'}, 'id': 'alice@example.com', 'last_modified': 1790902469469, 'password': '$2b$12$Om4qEo4x/JlB/1WX.00niuBNd2R0lIfH9rxAVW/Kys4U0pmhSpI/2'}
+/usr/local/lib/python3.7/site-packages/webtest/app.py:689: webtest.app.AppError: Bad response: 403 Forbidden (not 200)
+/kinto/tests/plugins/test_accounts.py:386: assert 1 == 2
+/usr/local/lib/python3.7/site-packages/webtest/app.py:689: webtest.app.AppError: Bad response: 403 Forbidden (not 200)
+/kinto/tests/plugins/test_accounts.py:305: AssertionError: assert None is not None
+/usr/local/lib/python3.7/site-packages/webtest/app.py:689: webtest.app.AppError: Bad response: 403 Forbidden (not 200)
+/usr/local/lib/python3.7/site-packages/webtest/app.py:689: webtest.app.AppError: Bad response: 201 Created (not 400)
+/usr/local/lib/python3.7/site-packages/webtest/app.py:689: webtest.app.AppError: Bad response: 201 Created (not 400)
+=============================== warnings summary ===============================
+tests/plugins/test_accounts.py: 16 warnings
+tests/test_views_admin.py: 1 warning
+  /kinto/kinto/core/initialization.py:555: UserWarning: HTTPS is not enabled
+    warnings.warn("HTTPS is not enabled")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+_ AccountUpdateTest.test_authentication_with_old_password_is_denied_after_change _
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/alice' not granted to 'system.Everyone'.
+___________ AccountUpdateTest.test_cannot_patch_someone_else_account ___________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'write' on '/accounts/bob' not granted to 'account:alice'.
+_____________ AccountUpdateTest.test_cannot_patch_unknown_account ______________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'write' on '/accounts/bob' not granted to 'account:alice'.
+_________ AccountDeleteTest.test_authentication_is_denied_after_delete _________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/alice' not granted to 'system.Everyone'.
+________ AccountViewsTest.test_account_detail_is_forbidden_if_anonymous ________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/alice' not granted to 'system.Everyone'.
+___________ AccountViewsTest.test_cannot_obtain_someone_else_account ___________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/bob' not granted to 'account:alice'.
+_____________ AccountViewsTest.test_cannot_obtain_unknown_account ______________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/jeanine' not granted to 'account:alice'.
+_________________ AdminTest.test_admin_can_delete_all_accounts _________________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/bob' not granted to 'system.Everyone'.
+________________ AdminTest.test_admin_can_delete_other_accounts ________________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/bob' not granted to 'system.Everyone'.
+_________________ AdminTest.test_admin_can_set_others_password _________________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/bob' not granted to 'system.Everyone'.
+________________ CreateUserTest.test_create_user_aborted_by_eof ________________
+----------------------------- Captured stdout call -----------------------------
+User creation aborted
+_ CreateUserTest.test_create_user_with_a_valid_username_and_password_confirmation _
+----------------------------- Captured stdout call -----------------------------
+Creating user 'username'
+_ CreateUserTest.test_create_user_with_an_invalid_username_and_password_confirmation_recovers _
+----------------------------- Captured stdout call -----------------------------
+{} is not a valid username.
+Username should match ^[a-zA-Z0-9][+.@a-zA-Z0-9_-]*$, please try again.
+Sorry, passwords do not match, please try again.
+Creating user 'username'
+_ CreateUserTest.test_create_user_with_valid_username_and_password_parameters __
+----------------------------- Captured stdout call -----------------------------
+Creating user 'username'
+________ DeleteUserDataTest.test_cannot_delete_user_without_permission _________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'delete' on '/__user_data__/basicauth:b18233a84114d7ad1d69d01185b8958a25d9f34e01c0cbf9e132df084d298b47' not granted to 'basicauth:b18233a84114d7ad1d69d01185b8958a25d9f34e01c0cbf9e132df084d298b47'.
+-------------- generated xml file: /opt/receipts/reports/w2-2.xml --------------
+=========================== short test summary info ============================
+PASSED tests/plugins/test_accounts.py::BadAccountsConfigTest::test_raise_configuration_if_accounts_not_mentioned
+PASSED tests/plugins/test_accounts.py::HelloViewTest::test_accounts_capability_if_enabled
+PASSED tests/plugins/test_accounts.py::HelloActivationViewTest::test_account_validation_capability_if_enabled
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_account_can_be_created_with_put
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_account_can_have_metadata
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_anyone_can_create_an_account
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_authentication_checks_bcrypt_again_if_password_changes
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_authentication_does_not_call_bcrypt_twice
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_authentication_is_accepted_if_account_exists
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_authentication_refresh_the_cache_each_time_we_authenticate
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_cannot_create_account_if_already_exists
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_id_can_be_email
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_id_field_is_mandatory
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_password_field_is_mandatory
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_password_is_stored_encrypted
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_reset_password_view_not_active
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_returns_existing_account_if_authenticated
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_username_and_account_id_must_match
+PASSED tests/plugins/test_accounts.py::AccountCreationTest::test_validate_view_not_active
+PASSED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_previously_created_accounts_can_still_authenticate
+PASSED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_reset_password_bad_email
+PASSED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_reset_password_bad_user
+PASSED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_user_creation_listener
+PASSED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_user_validation_listener
+PASSED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_validation_fail_bad_user
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_authentication_with_new_password_is_accepted_after_change
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_authentication_with_old_password_is_denied_after_change
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_cannot_patch_someone_else_account
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_cannot_patch_unknown_account
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_metadata_can_be_changed
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_password_can_be_changed
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_username_and_account_id_must_match
+PASSED tests/plugins/test_accounts.py::AccountDeleteTest::test_account_can_be_deleted
+PASSED tests/plugins/test_accounts.py::AccountDeleteTest::test_authentication_is_denied_after_delete
+PASSED tests/plugins/test_accounts.py::AccountViewsTest::test_account_detail_is_forbidden_if_anonymous
+PASSED tests/plugins/test_accounts.py::AccountViewsTest::test_account_list_is_forbidden_if_anonymous
+PASSED tests/plugins/test_accounts.py::AccountViewsTest::test_account_record_can_be_obtained_if_authenticated
+PASSED tests/plugins/test_accounts.py::AccountViewsTest::test_accounts_list_contains_only_one_record
+PASSED tests/plugins/test_accounts.py::AccountViewsTest::test_cannot_obtain_someone_else_account
+PASSED tests/plugins/test_accounts.py::AccountViewsTest::test_cannot_obtain_unknown_account
+PASSED tests/plugins/test_accounts.py::PermissionsEndpointTest::test_account_create_read_write_permissions_
+PASSED tests/plugins/test_accounts.py::PermissionsEndpointTest::test_permissions_endpoint_is_compatible_with_accounts_plugin
+PASSED tests/plugins/test_accounts.py::PermissionsEndpointTestUnauthenticatedCreatePermission::test_permissions_endpoint_is_compatible_with_accounts_plugin
+PASSED tests/plugins/test_accounts.py::AdminTest::test_admin_can_delete_all_accounts
+PASSED tests/plugins/test_accounts.py::AdminTest::test_admin_can_delete_other_accounts
+PASSED tests/plugins/test_accounts.py::AdminTest::test_admin_can_get_other_accounts
+PASSED tests/plugins/test_accounts.py::AdminTest::test_admin_can_retrieve_accounts_list
+PASSED tests/plugins/test_accounts.py::AdminTest::test_admin_can_set_others_password
+PASSED tests/plugins/test_accounts.py::AdminTest::test_user_created_by_admin_can_delete_her_record
+PASSED tests/plugins/test_accounts.py::AdminTest::test_user_created_by_admin_with_post_can_see_her_record
+PASSED tests/plugins/test_accounts.py::AdminTest::test_user_created_by_admin_with_put_can_see_her_record
+PASSED tests/plugins/test_accounts.py::CheckAdminCreateTest::test_raise_if_create_but_no_write
+PASSED tests/plugins/test_accounts.py::WithBasicAuthTest::test_fallsback_on_basicauth
+PASSED tests/plugins/test_accounts.py::WithBasicAuthTest::test_id_field_is_mandatory
+PASSED tests/plugins/test_accounts.py::WithBasicAuthTest::test_password_field_is_mandatory
+PASSED tests/plugins/test_accounts.py::WithBasicAuthTest::test_raise_configuration_if_wrong_error
+PASSED tests/plugins/test_accounts.py::CreateUserTest::test_create_user_aborted_by_eof
+PASSED tests/plugins/test_accounts.py::CreateUserTest::test_create_user_in_read_only_displays_an_error
+PASSED tests/plugins/test_accounts.py::CreateUserTest::test_create_user_when_not_included_displays_an_error
+PASSED tests/plugins/test_accounts.py::CreateUserTest::test_create_user_with_a_valid_username_and_password_confirmation
+PASSED tests/plugins/test_accounts.py::CreateUserTest::test_create_user_with_an_invalid_username_and_password_confirmation_recovers
+PASSED tests/plugins/test_accounts.py::CreateUserTest::test_create_user_with_valid_username_and_password_parameters
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_cannot_delete_user_without_permission
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_doomed_bucket_collection_no_longer_has_any_perms
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_doomed_bucket_collection_was_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_doomed_bucket_doomed_collection_was_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_doomed_bucket_was_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_doomed_collection_no_longer_has_any_perms
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_double_delete_is_ok
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_event_emitted_for_bucket_deletion
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_event_emitted_for_record_deletion
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_event_not_emitted_for_coalesced_collection_deletion
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_bucket_doomed_collection_was_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_bucket_no_longer_has_doomed_user_perm
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_bucket_was_not_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_collection_doomed_record_was_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_collection_safe_record_was_not_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_collection_was_not_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_group_doomed_user_was_removed
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_group_not_deleted
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_safe_record_no_longer_has_doomed_user_perm
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_shared_bucket_permissions_are_correct
+PASSED tests/test_views_admin.py::DeleteUserDataTest::test_shared_bucket_was_not_deleted
+PASSED tests/test_views_admin.py::GetParentUriTest::test_parent_uri_accepts_pathological_urls
+PASSED tests/test_views_admin.py::GetParentUriTest::test_parent_uri_behaves_sensibly_for_unknown_resources
+FAILED tests/plugins/test_accounts.py::AccountCreationTest::test_cannot_create_other_account_if_authenticated
+FAILED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_cant_authenticate_with_unactivated_account
+FAILED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_create_account_fails_if_not_email
+FAILED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_create_account_stores_activated_field
+FAILED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_fail_use_reset_password_bad_data
+FAILED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_reset_password_sends_email
+FAILED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_use_reset_password_to_change_password
+FAILED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_validation_fail_bad_activation_key
+FAILED tests/plugins/test_accounts.py::AccountValidationCreationTest::test_validation_validates_user
+FAILED tests/plugins/test_accounts.py::CreateOtherUserTest::test_create_other_forbidden_without_write
+FAILED tests/plugins/test_accounts.py::CreateOtherUserTest::test_create_other_id_is_still_required
+================= 11 failed, 86 passed, 17 warnings in 30.30s ==================

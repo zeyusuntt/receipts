@@ -1,0 +1,14 @@
+diff --git a/guarddog/scanners/npm_package_scanner.py b/guarddog/scanners/npm_package_scanner.py
+index df9e335..d1935c2 100644
+--- a/guarddog/scanners/npm_package_scanner.py
++++ b/guarddog/scanners/npm_package_scanner.py
+@@ -44,7 +44,8 @@ class NPMPackageScanner(PackageScanner):
+ 
+         tarball_url = details["dist"]["tarball"]
+         file_extension = pathlib.Path(tarball_url).suffix
+-        zippath = os.path.join(directory, package_name + file_extension)
++        safe_package_name = package_name.replace("/", "_")
++        zippath = os.path.join(directory, safe_package_name + file_extension)
+         unzippedpath = zippath.removesuffix(file_extension)
+         self.download_compressed(tarball_url, zippath, unzippedpath)
+ 

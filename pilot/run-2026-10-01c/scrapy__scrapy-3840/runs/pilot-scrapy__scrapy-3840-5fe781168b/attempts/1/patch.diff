@@ -1,0 +1,68 @@
+diff --git a/scrapy/loader/__init__.py b/scrapy/loader/__init__.py
+index 20f0f90c..9e35b704 100644
+--- a/scrapy/loader/__init__.py
++++ b/scrapy/loader/__init__.py
+@@ -110,7 +110,11 @@ class ItemLoader(object):
+             if value is None:
+                 break
+             proc = wrap_loader_context(proc, self.context)
+-            value = proc(value)
++            try:
++                value = proc(value)
++            except Exception as e:
++                raise ValueError("Error with processor for value=%r error='%s: %s'" % \
++                    (value, type(e).__name__, str(e)))
+         return value
+ 
+     def load_item(self):
+@@ -151,7 +155,11 @@ class ItemLoader(object):
+     def _process_input_value(self, field_name, value):
+         proc = self.get_input_processor(field_name)
+         proc = wrap_loader_context(proc, self.context)
+-        return proc(value)
++        try:
++            return proc(value)
++        except Exception as e:
++            raise ValueError("Error with input processor: field=%r value=%r error='%s: %s'" % \
++                (field_name, value, type(e).__name__, str(e)))
+ 
+     def _get_item_field_attr(self, field_name, key, default=None):
+         if isinstance(self.item, Item):
+diff --git a/scrapy/loader/processors.py b/scrapy/loader/processors.py
+index bf7c74bf..c188830c 100644
+--- a/scrapy/loader/processors.py
++++ b/scrapy/loader/processors.py
+@@ -22,10 +22,14 @@ class MapCompose(object):
+         else:
+             context = self.default_loader_context
+         wrapped_funcs = [wrap_loader_context(f, context) for f in self.functions]
+-        for func in wrapped_funcs:
++        for i, func in enumerate(wrapped_funcs):
+             next_values = []
+             for v in values:
+-                next_values += arg_to_iter(func(v))
++                try:
++                    next_values += arg_to_iter(func(v))
++                except Exception as e:
++                    raise ValueError("Error in MapCompose function %d: value=%r error='%s: %s'" % \
++                        (i, v, type(e).__name__, str(e)))
+             values = next_values
+         return values
+ 
+@@ -43,10 +47,14 @@ class Compose(object):
+         else:
+             context = self.default_loader_context
+         wrapped_funcs = [wrap_loader_context(f, context) for f in self.functions]
+-        for func in wrapped_funcs:
++        for i, func in enumerate(wrapped_funcs):
+             if value is None and self.stop_on_none:
+                 break
+-            value = func(value)
++            try:
++                value = func(value)
++            except Exception as e:
++                raise ValueError("Error in Compose function %d: value=%r error='%s: %s'" % \
++                    (i, value, type(e).__name__, str(e)))
+         return value
+ 
+ 

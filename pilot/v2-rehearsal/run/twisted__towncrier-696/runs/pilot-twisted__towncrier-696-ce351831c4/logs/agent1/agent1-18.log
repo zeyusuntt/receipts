@@ -1,0 +1,55 @@
+=== TEMPLATE CONTENT ===
+'{% if render_title %}\n{% if versiondata.name %}\n# {{ versiondata.name }} {{ versiondata.version }} ({{ versiondata.date }})\n{% else %}\n# {{ versiondata.version }} ({{ versiondata.date }})\n{% endif %}\n{% endif %}\n{% for section, _ in sections.items() %}\n{% if section %}\n\n## {{section}}\n{% endif %}\n\n{% if sections[section] %}\n{% for category, val in definitions.items() if category in sections[section] %}\n##{% if section %}#{% endif %} {{ definitions[category][\'name\'] }}\n\n{% for text, values in sections[section][category].items() %}\n- {{ text }}\n{%- if values %}\n{% if "\\n  - " in text or \'\\n  * \' in text %}\n\n\n  (\n{%- else %}\n{% if text %} ({% endif %}\n{%- endif -%}\n{%- for issue in values %}\n{{ issue.split(": ", 1)[0] }}{% if not loop.last %}, {% endif %}\n{%- endfor %}\n{% if text %}){% endif %}\n\n{% else %}\n\n{% endif %}\n{% endfor %}\n\n{% if issues_by_category[section][category] and "]: " in issues_by_category[section][category][0] %}\n{% for issue in issues_by_category[section][category] %}\n{{ issue }}\n{% endfor %}\n\n{% endif %}\n{% if sections[section][category]|length == 0 %}\nNo significant changes.\n\n{% else %}\n{% endif %}\n{% endfor %}\n{% else %}\nNo significant changes.\n\n{% endif %}\n{% endfor +%}\n{#\nThis comment adds one more newline at the end of the rendered newsfile content.\nIn this way the there are 2 newlines between the latest release and the previous release content.\n#}\n'
+========================
+
+=== INPUT DATA ===
+render_title: False
+sections keys: ['']
+sections['']: {'feature': {'Adds levitation': ['#123']}}
+bool(sections['']): True
+'' is falsy: True
+==================
+
+=== RESULT ===
+'\n\n\n\n\n\n## Features\n\n\n- Adds levitation\n\n (\n#123\n)\n\n\n\n\n\n\n\n\n\n\n'
+--------------
+Formatted:
+
+
+
+
+
+
+## Features
+
+
+- Adds levitation
+
+ (
+#123
+)
+
+
+
+
+
+
+
+
+
+
+
+--------------
+
+=== TESTING WITH TRUTHY SECTION ===
+Traceback (most recent call last):
+  File "/towncrier/src/towncrier/debug_real.py", line 70, in <module>
+    result_truthy = template.render(**test_data_truthy)
+  File "/usr/local/lib/python3.10/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/usr/local/lib/python3.10/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "<template>", line 38, in top-level template code
+  File "/usr/local/lib/python3.10/site-packages/jinja2/environment.py", line 471, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'dict object' has no attribute 'Web'

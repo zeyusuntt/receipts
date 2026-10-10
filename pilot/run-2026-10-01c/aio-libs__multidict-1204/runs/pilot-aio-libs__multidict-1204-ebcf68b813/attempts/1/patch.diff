@@ -1,0 +1,35 @@
+diff --git a/multidict/_multidict_py.py b/multidict/_multidict_py.py
+index 8a21d79..5292020 100644
+--- a/multidict/_multidict_py.py
++++ b/multidict/_multidict_py.py
+@@ -795,6 +795,30 @@ class MultiDict(_CSMixin, MutableMultiMapping[_V]):
+         self._resize(estimate_log2_keysize(newsize), False)
+         self._extend_items(items)
+ 
++    def merge(self, arg: MDArg[_V] = None, /, **kwargs: _V) -> None:
++        """Merge current MultiDict with more values, adding only keys that don't exist.
++
++        Similar to extend(), but only adds items where the key is not already present.
++        """
++        items = self._parse_args(arg, kwargs)
++        # Filter out items whose keys already exist in self
++        filtered_items = []
++        for e in items:
++            identity = e.identity
++            hash_ = e.hash
++            found = False
++            for slot, idx, existing in self._keys.iter_hash(hash_):
++                if existing.identity == identity:
++                    found = True
++                    break
++            if not found:
++                filtered_items.append(e)
++        
++        if filtered_items:
++            newsize = self._used + len(filtered_items)
++            self._resize(estimate_log2_keysize(newsize), False)
++            self._extend_items(filtered_items)
++
+     def _parse_args(
+         self,
+         arg: MDArg[_V],

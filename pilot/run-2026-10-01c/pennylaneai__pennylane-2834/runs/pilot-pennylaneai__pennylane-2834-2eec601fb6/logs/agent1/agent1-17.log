@@ -1,0 +1,21 @@
+            # it will always be the first coefficient due to processing.
+            unshifted_coeffs.append(coeffs[0])
+            coeffs, multipliers, op_shifts = recipe[1:].T
+
+        # generate the gradient tapes
+        else:
+        g_tapes = generate_shifted_tapes(tape, idx, op_shifts, multipliers)
+
+        gradient_tapes.extend(g_tapes)
+        shapes.append(len(g_tapes))
+
+    def processing_fn(results):
+        # Apply the same squeezing as in qml.QNode to make the transform output consistent.
+        # pylint: disable=protected-access
+        if tape._qfunc_output is not None and not isinstance(tape._qfunc_output, Sequence):
+            results = [qml.math.squeeze(res) for res in results]
+
+        grads = []
+        grads = []
+        start = 1 if unshifted_coeffs and f0 is None else 0
+        r0 = f0 or results[0]

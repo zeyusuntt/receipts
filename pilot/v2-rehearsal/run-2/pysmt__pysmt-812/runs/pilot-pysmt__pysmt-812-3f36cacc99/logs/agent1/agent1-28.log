@@ -1,0 +1,39 @@
+Traceback (most recent call last):
+  File "/tmp/debug_test2.py", line 17, in <module>
+    script = parser.get_script(buf)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 888, in get_script
+    for cmd in self.get_command_generator(script):
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 902, in get_command_generator
+    for cmd in self.get_command(tokens):
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 1203, in get_command
+    yield fun(current, tokens)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 1311, in _cmd_define_fun
+    ebody = self.get_expression(tokens)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 848, in get_expression
+    fun(stack, tokens, tk)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 770, in _enter_annotation
+    raise PysmtSyntaxError("Annotations keyword should start with"
+pysmt.exceptions.PysmtSyntaxError: Annotations keyword should start with colon! Offending token: '"v__AT1"'
+Traceback (most recent call last):
+  File "/tmp/debug_test2.py", line 48, in <module>
+    script = parser.get_script(buf)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 888, in get_script
+    for cmd in self.get_command_generator(script):
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 902, in get_command_generator
+    for cmd in self.get_command(tokens):
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 1203, in get_command
+    yield fun(current, tokens)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 1311, in _cmd_define_fun
+    ebody = self.get_expression(tokens)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 848, in get_expression
+    fun(stack, tokens, tk)
+  File "/pysmt/pysmt/smtlib/parser/parser.py", line 770, in _enter_annotation
+    raise PysmtSyntaxError("Annotations keyword should start with"
+pysmt.exceptions.PysmtSyntaxError: Annotations keyword should start with colon! Offending token: '('
+Test 1: Symbol value
+Error: Line 2, Col 57: Annotations keyword should start with colon! Offending token: '"v__AT1"'
+
+==================================================
+
+Test 2: Parenthesized value
+Error: Line 1, Col 48: Annotations keyword should start with colon! Offending token: '('

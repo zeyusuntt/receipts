@@ -1,7 +1,7 @@
 <h1 align="center">Receipts</h1>
 <p align="center"><b>The coding agent that is not allowed to grade its own homework.</b><br>
 You write the failing test. Receipts writes the fix with NVIDIA Nemotron 3 Super on Nebius Token Factory, re-runs your tests itself in a clean Token Factory Sandbox the agent never touched, and hands you a receipt anyone can re-verify.</p>
-<p align="center"><a href="https://zeyusuntt.github.io/receipts/"><b>Receipts from real runs</b></a> · <a href="https://youtu.be/{video_id}"><b>Video (2:57)</b></a> · <a href="REPORT-v2.md"><b>False-Done Report</b></a> · <a href="#re-verify-it-yourself"><b>Re-verify it yourself</b></a></p>
+<p align="center"><a href="https://zeyusuntt.github.io/receipts/"><b>Receipts from real runs</b></a> · <a href="https://youtu.be/tSJwtfb1-T8"><b>Video (2:57)</b></a> · <a href="REPORT-v2.md"><b>False-Done Report</b></a> · <a href="#re-verify-it-yourself"><b>Re-verify it yourself</b></a></p>
 
 | | On 100 SWE-rebench tasks held out from development, chosen by a rule fixed in advance | Proof |
 |---:|---|---|

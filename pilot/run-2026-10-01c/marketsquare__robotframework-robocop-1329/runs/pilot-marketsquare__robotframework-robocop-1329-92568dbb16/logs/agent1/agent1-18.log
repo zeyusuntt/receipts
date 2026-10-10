@@ -1,0 +1,23 @@
+
+Checkers have three basic types:
+
+- ``VisitorChecker`` uses Robot Framework parsing API and Python `ast` module for traversing Robot code as nodes,
+
+- ``ProjectChecker`` extends ``VisitorChecker`` and has ``scan_project`` method called after visiting all the files
+
+- ``RawFileChecker`` simply reads Robot file as normal file and scans every line.
+
+Each rule has a unique rule id (for example ``DOC01``) consisting of:
+
+--
+        """Perform generic ast visit on file node."""
+        self.generic_visit(node)
+
+
+class ProjectChecker(VisitorChecker):
+    def scan_project(self) -> list[Diagnostic]:
+        """
+        Perform checks on the whole project.
+
+        This method is called after visiting all files. Accumulating any necessary data for check depends on
+        the checker.

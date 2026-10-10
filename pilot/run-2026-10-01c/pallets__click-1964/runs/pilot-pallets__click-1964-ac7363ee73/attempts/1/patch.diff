@@ -1,0 +1,13 @@
+diff --git a/src/click/core.py b/src/click/core.py
+index 3d11ab5..67f800f 100644
+--- a/src/click/core.py
++++ b/src/click/core.py
+@@ -2692,7 +2692,7 @@ class Option(Parameter):
+         show_default_is_str = isinstance(self.show_default, str)
+ 
+         if show_default_is_str or (
+-            default_value is not None and (self.show_default or ctx.show_default)
++            default_value is not None and (self.show_default if self.show_default is not None else ctx.show_default)
+         ):
+             if show_default_is_str:
+                 default_string = f"({self.show_default})"

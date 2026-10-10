@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Multiple aliases for ArgParseConfigLoader\nHi, [in v5.0 L990](https://github.com/ipython/traitlets/commit/e3e01bc2cf2fcb4c88f6d954e2fd4e4dc283f76a#diff-faeef4cfbb1bced1eba160187ed70f9a7f115e86a98cf5ffdefcc9ef52fd527dR983), alias tuples are explicitly unpacked as 2-element tuples. I didn't manage to find any discussion on this, but I didn't see an obvious reason for introducing this restriction so I was wondering if this was accidental. The documentation currently just states that `A key in both those dictionaries [flags & aliases] might be a string or tuple of strings`. I can re-structure my applications to enumerate aliases separately, but it seems a little unnecessary and increases the length of the help menu.\r\n\r\n ```diff\r\n                   if not isinstance(alias, tuple):\r\n879,882c879,880\r\n<                     short_alias, alias = alias, None\r\n<                 else:\r\n<                     short_alias, alias = alias\r\n<                 for al in (short_alias, alias):\r\n<                     if al is None:\r\n<                         continue\r\n---\r\n>                     alias = (alias,)\r\n>                 for al in alias:\r\n```\r\n\r\nHappy to submit PR / unit tests if I didn't miss something.             ",
+  "source": {
+    "image": "docker.io/swerebenchv2/ipython-traitlets:687-4a16b8b",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-ipython__traitlets-687-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3RyYWl0bGV0cy9jb25maWcvdGVzdHMvdGVzdF9hcHBsaWNhdGlvbi5weSBiL3RyYWl0bGV0cy9jb25maWcvdGVzdHMvdGVzdF9hcHBsaWNhdGlvbi5weQppbmRleCBmMzg3NjVjLi42OTA0ZDg4IDEwMDY0NAotLS0gYS90cmFpdGxldHMvY29uZmlnL3Rlc3RzL3Rlc3RfYXBwbGljYXRpb24ucHkKKysrIGIvdHJhaXRsZXRzL2NvbmZpZy90ZXN0cy90ZXN0X2FwcGxpY2F0aW9uLnB5CkBAIC0zNzEsNiArMzcxLDI0IEBAIGNsYXNzIFRlc3RBcHBsaWNhdGlvbihUZXN0Q2FzZSk6CiAgICAgICAgIGFwcC5pbml0X2ZvbygpCiAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoYXBwLmZvby5qLCAxMCkKIAorICAgIGRlZiB0ZXN0X2FsaWFzZXNfbXVsdGlwbGUoc2VsZik6CisgICAgICAgICMgVGVzdCBtdWx0aXBsZSA+IDIgYWxpYXNlcyBmb3IgdGhlIHNhbWUgYXJndW1lbnQKKyAgICAgICAgY2xhc3MgVGVzdE11bHRpQWxpYXNBcHAoQXBwbGljYXRpb24pOgorICAgICAgICAgICAgZm9vID0gSW50ZWdlcihjb25maWc9VHJ1ZSkKKyAgICAgICAgICAgIGFsaWFzZXMgPSB7KCJmIiwgImJhciIsICJxdXgiKTogIlRlc3RNdWx0aUFsaWFzQXBwLmZvbyJ9CisKKyAgICAgICAgYXBwID0gVGVzdE11bHRpQWxpYXNBcHAoKQorICAgICAgICBhcHAucGFyc2VfY29tbWFuZF9saW5lKFsiLWYiLCAiMyJdKQorICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGFwcC5mb28sIDMpCisKKyAgICAgICAgYXBwID0gVGVzdE11bHRpQWxpYXNBcHAoKQorICAgICAgICBhcHAucGFyc2VfY29tbWFuZF9saW5lKFsiLS1iYXIiLCAiNCJdKQorICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGFwcC5mb28sIDQpCisKKyAgICAgICAgYXBwID0gVGVzdE11bHRpQWxpYXNBcHAoKQorICAgICAgICBhcHAucGFyc2VfY29tbWFuZF9saW5lKFsiLS1xdXgiLCAiNSJdKQorICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGFwcC5mb28sIDUpCisKICAgICBkZWYgdGVzdF9hbGlhc2VzX2hlbHBfbXNnKHNlbGYpOgogICAgICAgICBhcHAgPSBNeUFwcCgpCiAgICAgICAgIHN0ZG91dCA9IGlvLlN0cmluZ0lPKCkK'\"'\"'))'",
+      "git apply /tmp/receipts-ipython__traitlets-687-test.patch"
+    ],
+    "workdir": "/traitlets"
+  },
+  "spec_tests": [
+    "traitlets/config/tests/test_application.py::TestApplication::test_aliases_multiple"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning traitlets/config/tests/test_application.py"
+}

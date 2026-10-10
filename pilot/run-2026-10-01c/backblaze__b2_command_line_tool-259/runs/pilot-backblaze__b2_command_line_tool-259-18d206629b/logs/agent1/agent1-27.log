@@ -1,0 +1,27 @@
+        file_sim = self.file_name_and_id_to_file[key]
+        del self.file_name_and_id_to_file[key]
+        del self.file_id_to_file[file_id]
+        return dict(fileId=file_id, fileName=file_name, uploadTimestamp=file_sim.upload_timestamp)
+
+    def download_file_by_id(self, file_id, download_dest):
+        file_sim = self.file_id_to_file[file_id]
+        self._download_file_sim(download_dest, file_sim)
+
+    def download_file_by_name(self, file_name, download_dest):
+        files = self.list_file_names(file_name, 1)['files']
+--
+        bucket = self._get_bucket_by_id(bucket_id)
+        del self.bucket_name_to_bucket[bucket.bucket_name]
+        del self.bucket_id_to_bucket[bucket_id]
+        return bucket.bucket_dict()
+
+    def download_file_by_id(self, download_url, account_auth_token_or_none, file_id, download_dest):
+        # TODO: check auth token if bucket is not public
+        bucket_id = self.file_id_to_bucket_id[file_id]
+        bucket = self._get_bucket_by_id(bucket_id)
+        bucket.download_file_by_id(file_id, download_dest)
+
+    def download_file_by_name(
+        self, download_url, account_auth_token_or_none, bucket_name, file_name, download_dest
+    ):
+        assert download_url == self.DOWNLOAD_URL

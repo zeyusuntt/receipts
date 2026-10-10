@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "\u0414\u0435\u043b\u0430\u0442\u044c \u043f\u043e\u0432\u0442\u043e\u0440\u043d\u044b\u0435 \u0437\u0430\u043f\u0440\u043e\u0441\u044b \u043f\u0440\u0438 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0438 \u043e\u0448\u0438\u0431\u043e\u043a \u0432\u043d\u0443\u0442\u0440\u0438 ServerRequestHandler.single_request()\n\u041e\u0448\u0438\u0431\u043a\u0438, \u043f\u0440\u0438 \u043a\u043e\u0442\u043e\u0440\u044b\u0445 \u0434\u0435\u043b\u0430\u0442\u044c \u043f\u043e\u0432\u0442\u043e\u0440\u044b:\r\n- aiohttp.client_exceptions.ClientPayloadError\r\n- aiohttp.client_exceptions.ServerDisconnectedError\r\n\r\n\u041d\u0430 \u0442\u0440\u0435\u0442\u0438\u0439 \u0440\u0430\u0437 \u043c\u043e\u0436\u043d\u043e \u043f\u043e\u0434\u043d\u0438\u043c\u0430\u0442\u044c \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u0443\u044e \u043e\u0448\u0438\u0431\u043a\u0443 \u043d\u0430\u0432\u0435\u0440\u0445.",
+  "source": {
+    "image": "docker.io/swerebenchv2/leshchenko1979-fast-bitrix24:114-0045d7c",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-leshchenko1979__fast_bitrix24-114-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2Zhc3RfYml0cml4MjQvdGVzdHMvdGVzdF9hc3luYy5weSBiL2Zhc3RfYml0cml4MjQvdGVzdHMvdGVzdF9hc3luYy5weQppbmRleCA0ZDM0OGY1Li5iZjM5MDcwIDEwMDY0NAotLS0gYS9mYXN0X2JpdHJpeDI0L3Rlc3RzL3Rlc3RfYXN5bmMucHkKKysrIGIvZmFzdF9iaXRyaXgyNC90ZXN0cy90ZXN0X2FzeW5jLnB5CkBAIC01Miw3ICs1Miw4IEBAIGFzeW5jIGRlZiBhc3NlcnRfdGltZV9hY3F1aXJlKGJpdHJpeCwgYWNxdWlyZV9hbW91bnQsIHRpbWVfZXhwZWN0ZWQpOgogICAgIHQxID0gbW9ub3RvbmljKCkKIAogICAgIGZvciBfIGluIHJhbmdlKGFjcXVpcmVfYW1vdW50KToKLSAgICAgICAgYXdhaXQgYml0cml4LnNyaC5fYWNxdWlyZSgpCisgICAgICAgIGFzeW5jIHdpdGggYml0cml4LnNyaC5hY3F1aXJlKCk6CisgICAgICAgICAgICBwYXNzCiAKICAgICB0MiA9IG1vbm90b25pYygpCiAK'\"'\"'))'",
+      "git apply /tmp/receipts-leshchenko1979__fast_bitrix24-114-test.patch"
+    ],
+    "workdir": "/fast_bitrix24"
+  },
+  "spec_tests": [
+    "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential",
+    "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning fast_bitrix24/tests/test_async.py"
+}

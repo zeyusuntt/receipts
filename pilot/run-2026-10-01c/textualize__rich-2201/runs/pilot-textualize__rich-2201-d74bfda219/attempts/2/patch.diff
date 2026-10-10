@@ -1,0 +1,26 @@
+diff --git a/rich/_export_format.py b/rich/_export_format.py
+index f9217b2..09ad1c1 100644
+--- a/rich/_export_format.py
++++ b/rich/_export_format.py
+@@ -69,7 +69,8 @@ CONSOLE_SVG_FORMAT = """\
+             align-items: center;
+             background-color: {theme_background_color};
+             border-radius: 14px;
+-            outline: 1px solid #484848;
++            box-shadow: 0 0 0 1px #484848;
++            overflow: hidden;
+         }}
+         .{classes_prefix}-terminal:after {{
+             position: absolute;
+diff --git a/tests/test_console.py b/tests/test_console.py
+index b0cdfe5..1f9dd5c 100644
+--- a/tests/test_console.py
++++ b/tests/test_console.py
+@@ -544,6 +544,7 @@ EXPECTED_SVG = """\
+             background-color: #0c0c0c;
+             border-radius: 14px;
+             box-shadow: 0 0 0 1px #484848;
++            overflow: hidden;
+         }
+         .rich-svg-${SVG_HASH}-terminal:after {
+             position: absolute;

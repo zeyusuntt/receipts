@@ -1,0 +1,57 @@
+diff --git a/kinto/plugins/accounts/views/__init__.py b/kinto/plugins/accounts/views/__init__.py
+index 3491381c..5972bb72 100644
+--- a/kinto/plugins/accounts/views/__init__.py
++++ b/kinto/plugins/accounts/views/__init__.py
+@@ -119,9 +119,42 @@ class Account(resource.Resource):
+         return result
+ 
+     def process_object(self, new, old=None):
++        print(f"[DEBUG] process_object called")
++        print(f"[DEBUG] new: {new}")
++        print(f"[DEBUG] old: {old}")
+         new = super(Account, self).process_object(new, old)
+-
+-        new["password"] = hash_password(new["password"])
++        print(f"[DEBUG] after super: {new}")
++
++        # Check if this is a PATCH request and password wasn't explicitly provided
++        is_patch = self.request.method.lower() == "patch"
++        password_explicitly_provided = "password" in self.request.validated.get("body", {})
++        
++        print(f"[DEBUG] is_patch: {is_patch}")
++        print(f"[DEBUG] password_explicitly_provided: {password_explicitly_provided}")
++
++        # Only hash password if it's being explicitly provided (not None or empty)
++        # For PATCH requests, if password wasn't explicitly provided, preserve existing
++        if "password" in new and new["password"]:
++            if is_patch and not password_explicitly_provided:
++                print(f"[DEBUG] PATCH without explicit password - preserving existing")
++                # Keep the existing password as-is (it's already hashed)
++                pass
++            else:
++                print(f"[DEBUG] Hashing password: {new['password']}")
++                new["password"] = hash_password(new["password"])
++        # If password is not in the patch data at all, preserve the old password
++        elif old is not None and "password" not in new:
++            print(f"[DEBUG] Preserving old password: {old.get('password')}")
++            new["password"] = old.get("password")
++        else:
++            print(f"[DEBUG] Neither condition met")
++            print(f"[DEBUG] 'password' in new: {'password' in new}")
++            if 'password' in new:
++                print(f"[DEBUG] new['password']: {new['password']}")
++            print(f"[DEBUG] old is not None: {old is not None}")
++            if old is not None:
++                print(f"[DEBUG] 'password' in old: {'password' in old}")
++        return new
+ 
+         # Do not let accounts be created without usernames.
+         if self.model.id_field not in new:
+diff --git a/tmp/list.txt b/tmp/list.txt
+new file mode 100644
+index 00000000..0d8c8ed2
+--- /dev/null
++++ b/tmp/list.txt
+@@ -0,0 +1 @@
++listing
+\ No newline at end of file

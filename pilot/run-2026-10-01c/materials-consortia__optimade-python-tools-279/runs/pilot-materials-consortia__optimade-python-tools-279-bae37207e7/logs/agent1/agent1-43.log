@@ -1,0 +1,23 @@
+Input expr: {'$not': {'chemical_formula_anonymous': {'$or': [{'$exists': False}, {'$eq': None}]}}}
+Taking $not wrapped path
+not_content: {'chemical_formula_anonymous': {'$or': [{'$exists': False}, {'$eq': None}]}}
+inner_prop: chemical_formula_anonymous
+inner_expr: {'$or': [{'$exists': False}, {'$eq': None}]}
+Found IS operation inside $not
+op_key: $or
+op_value: [{'$exists': False}, {'$eq': None}]
+new_operands: [{'chemical_formula_anonymous': {'$exists': False}}, {'chemical_formula_anonymous': {'$eq': None}}]
+Processing NOT OR case
+  Processing operand 0: {'chemical_formula_anonymous': {'$exists': False}}
+    prop_name: chemical_formula_anonymous
+    inner_dict: {'$exists': False}
+      k=$exists, v=False
+        Setting $exists to True
+    negated_operadnt: {'chemical_formula_anonymous': {'$exists': True}}
+  Processing operand 1: {'chemical_formula_anonymous': {'$eq': None}}
+    prop_name: chemical_formula_anonymous
+    inner_dict: {'$eq': None}
+      k=$eq, v=None
+        Setting $ne to None
+    negated_operadnt: {'chemical_formula_anonymous': {'$ne': None}}
+Final result: {'$and': [{'chemical_formula_anonymous': {'$exists': True}}, {'chemical_formula_anonymous': {'$ne': None}}]}

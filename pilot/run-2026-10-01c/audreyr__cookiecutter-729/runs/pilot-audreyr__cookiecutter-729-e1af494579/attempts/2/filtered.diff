@@ -1,0 +1,26 @@
+diff --git a/cookiecutter/hooks.py b/cookiecutter/hooks.py
+index 254bc2e..be905c7 100644
+--- a/cookiecutter/hooks.py
++++ b/cookiecutter/hooks.py
+@@ -94,6 +94,14 @@ def run_script_with_context(script_path, cwd, context):
+         suffix=extension
+     ) as temp:
+         output = Template(contents).render(**context)
++        # Ensure we have at least a newline to avoid exec format errors with empty files
++        if not output:
++            output = '\n'
++        # For shell scripts, ensure we have a proper shebang so the kernel will execute them
++        if extension in ('.sh', '.bash', '.zsh', '.fish') or not output.strip():
++            # If it's empty or appears to be a shell script, add shebang if missing
++            if not output.startswith('#!'):
++                output = '#!/bin/sh\n' + output
+         temp.write(output.encode('utf-8'))
+ 
+     run_script(temp.name, cwd)
+diff --git a/inputshellhooks/README.rst b/inputshellhooks/README.rst
+new file mode 100644
+index 0000000..8c02abb
+--- /dev/null
++++ b/inputshellhooks/README.rst
+@@ -0,0 +1 @@
++Empty, just like the hooks we are testing.

@@ -1,0 +1,295 @@
+============================= test session starts ==============================
+collected 229 items
+
+tests/test_porcelain.py ......ss........................................ [ 20%]
+.........................ss............................................. [ 52%]
+..........................F........F.F.................................. [ 83%]
+.....................................                                    [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: Lists differ: ['untracked_dir/', 'untracked_dir/file1.txt', 'untracked_dir/file2.txt'] != ['untracked_dir/']
+    
+    First list contains 2 additional elements.
+    First extra element 1:
+    'untracked_dir/file1.txt'
+    
+    - ['untracked_dir/', 'untracked_dir/file1.txt', 'untracked_dir/file2.txt']
+    + ['untracked_dir/']
+/usr/local/lib/python3.10/unittest/case.py:675: AssertionError: Lists differ: ['untracked_dir/', 'untracked_dir/file1.txt', 'untracked_dir/file2.txt'] != ['untracked_dir/']
+E   AssertionError: Lists differ: ['mixed_dir/', 'mixed_dir/untracked.txt'] != ['mixed_dir/untracked.txt']
+    
+    First differing element 0:
+    'mixed_dir/'
+    'mixed_dir/untracked.txt'
+    
+    First list contains 1 additional elements.
+    First extra element 1:
+    'mixed_dir/untracked.txt'
+    
+    - ['mixed_dir/', 'mixed_dir/untracked.txt']
+    ?  --------------
+    
+    + ['mixed_dir/untracked.txt']
+/usr/local/lib/python3.10/unittest/case.py:675: AssertionError: Lists differ: ['mixed_dir/', 'mixed_dir/untracked.txt'] != ['mixed_dir/untracked.txt']
+E   AssertionError: Lists differ: ['untracked_dir/', 'untracked_dir/file1', 'untracked_dir/f[56 chars]le3'] != ['untracked_dir/']
+    
+    First list contains 4 additional elements.
+    First extra element 1:
+    'untracked_dir/file1'
+    
+    - ['untracked_dir/',
+    ?                  ^
+    
+    + ['untracked_dir/']
+    ?                  ^
+    
+    -  'untracked_dir/file1',
+    -  'untracked_dir/file2',
+    -  'untracked_dir/nested/',
+    -  'untracked_dir/nested/file3']
+/usr/local/lib/python3.10/unittest/case.py:675: AssertionError: Lists differ: ['untracked_dir/', 'untracked_dir/file1', 'untracked_dir/f[56 chars]le3'] != ['untracked_dir/']
+==================================== PASSES ====================================
+____________________________ ServerTests.test_pull _____________________________
+----------------------------- Captured stderr call -----------------------------
+127.0.0.1 - - [01/Oct/2026 17:45:43] "GET /info/refs?service=git-upload-pack HTTP/1.1" 200 285
+counting objects: 2, done.
+127.0.0.1 - - [01/Oct/2026 17:45:43] "POST /git-upload-pack HTTP/1.1" 200 258
+copying pack entries: 0/2copying pack entries: 1/2copied 1 pack entries
+generating index: 0/2generating index: 1/2
+____________________________ ServerTests.test_push _____________________________
+----------------------------- Captured stderr call -----------------------------
+127.0.0.1 - - [01/Oct/2026 17:45:43] "GET /info/refs?service=git-receive-pack HTTP/1.1" 200 195
+127.0.0.1 - - [01/Oct/2026 17:45:43] "POST /git-receive-pack HTTP/1.1" 200 52
+Push to http://localhost:37555 successful.
+Ref refs/heads/master updated
+=========================== short test summary info ============================
+PASSED tests/test_porcelain.py::ArchiveTests::test_simple
+PASSED tests/test_porcelain.py::UpdateServerInfoTests::test_simple
+PASSED tests/test_porcelain.py::CommitTests::test_custom_author
+PASSED tests/test_porcelain.py::CommitTests::test_no_verify
+PASSED tests/test_porcelain.py::CommitTests::test_timezone
+PASSED tests/test_porcelain.py::CommitTests::test_unicode
+PASSED tests/test_porcelain.py::TimezoneTests::test_different_envs
+PASSED tests/test_porcelain.py::TimezoneTests::test_internal_format
+PASSED tests/test_porcelain.py::TimezoneTests::test_iso8601
+PASSED tests/test_porcelain.py::TimezoneTests::test_missing_or_malformed
+PASSED tests/test_porcelain.py::TimezoneTests::test_no_envs
+PASSED tests/test_porcelain.py::TimezoneTests::test_rfc_2822
+PASSED tests/test_porcelain.py::CleanTests::test_from_root
+PASSED tests/test_porcelain.py::CleanTests::test_from_subdir
+PASSED tests/test_porcelain.py::CloneTests::test_bare_local_with_checkout
+PASSED tests/test_porcelain.py::CloneTests::test_clone_pathlib
+PASSED tests/test_porcelain.py::CloneTests::test_detached_head
+PASSED tests/test_porcelain.py::CloneTests::test_fetch_symref
+PASSED tests/test_porcelain.py::CloneTests::test_no_checkout_with_bare
+PASSED tests/test_porcelain.py::CloneTests::test_no_head_no_checkout
+PASSED tests/test_porcelain.py::CloneTests::test_no_head_no_checkout_outstream_errstream_autofallback
+PASSED tests/test_porcelain.py::CloneTests::test_simple_local
+PASSED tests/test_porcelain.py::CloneTests::test_simple_local_with_checkout
+PASSED tests/test_porcelain.py::CloneTests::test_source_broken
+PASSED tests/test_porcelain.py::InitTests::test_bare
+PASSED tests/test_porcelain.py::InitTests::test_init_bare_pathlib
+PASSED tests/test_porcelain.py::InitTests::test_init_pathlib
+PASSED tests/test_porcelain.py::InitTests::test_non_bare
+PASSED tests/test_porcelain.py::AddTests::test_add_broken_symlink
+PASSED tests/test_porcelain.py::AddTests::test_add_default_paths
+PASSED tests/test_porcelain.py::AddTests::test_add_default_paths_includes_modified_files
+PASSED tests/test_porcelain.py::AddTests::test_add_default_paths_subdir
+PASSED tests/test_porcelain.py::AddTests::test_add_directory_contents
+PASSED tests/test_porcelain.py::AddTests::test_add_directory_with_gitignore
+PASSED tests/test_porcelain.py::AddTests::test_add_directory_with_tracked_files
+PASSED tests/test_porcelain.py::AddTests::test_add_file
+PASSED tests/test_porcelain.py::AddTests::test_add_file_absolute_path
+PASSED tests/test_porcelain.py::AddTests::test_add_file_clrf_conversion
+PASSED tests/test_porcelain.py::AddTests::test_add_file_through_symlink
+PASSED tests/test_porcelain.py::AddTests::test_add_ignored
+PASSED tests/test_porcelain.py::AddTests::test_add_multiple_directories
+PASSED tests/test_porcelain.py::AddTests::test_add_nested_directories
+PASSED tests/test_porcelain.py::AddTests::test_add_not_in_repo
+PASSED tests/test_porcelain.py::AddTests::test_add_repo_path
+PASSED tests/test_porcelain.py::AddTests::test_add_symlink_absolute_to_system
+PASSED tests/test_porcelain.py::AddTests::test_add_symlink_chain
+PASSED tests/test_porcelain.py::AddTests::test_add_symlink_outside_repo
+PASSED tests/test_porcelain.py::AddTests::test_add_symlink_relative_outside_repo
+PASSED tests/test_porcelain.py::AddTests::test_add_symlink_to_directory_inside_repo
+PASSED tests/test_porcelain.py::AddTests::test_add_symlink_to_file_inside_repo
+PASSED tests/test_porcelain.py::RemoveTests::test_remove_file
+PASSED tests/test_porcelain.py::RemoveTests::test_remove_file_removed_on_disk
+PASSED tests/test_porcelain.py::RemoveTests::test_remove_file_staged
+PASSED tests/test_porcelain.py::LogTests::test_empty_message
+PASSED tests/test_porcelain.py::LogTests::test_max_entries
+PASSED tests/test_porcelain.py::LogTests::test_no_revisions
+PASSED tests/test_porcelain.py::LogTests::test_simple
+PASSED tests/test_porcelain.py::ShowTests::test_blob
+PASSED tests/test_porcelain.py::ShowTests::test_commit_no_parent
+PASSED tests/test_porcelain.py::ShowTests::test_commit_with_change
+PASSED tests/test_porcelain.py::ShowTests::test_nolist
+PASSED tests/test_porcelain.py::ShowTests::test_simple
+PASSED tests/test_porcelain.py::ShowTests::test_tag
+PASSED tests/test_porcelain.py::ShowTests::test_tag_unicode
+PASSED tests/test_porcelain.py::SymbolicRefTests::test_set_force_wrong_symbolic_ref
+PASSED tests/test_porcelain.py::SymbolicRefTests::test_set_symbolic_ref
+PASSED tests/test_porcelain.py::SymbolicRefTests::test_set_symbolic_ref_other_than_master
+PASSED tests/test_porcelain.py::SymbolicRefTests::test_set_wrong_symbolic_ref
+PASSED tests/test_porcelain.py::DiffTreeTests::test_empty
+PASSED tests/test_porcelain.py::CommitTreeTests::test_simple
+PASSED tests/test_porcelain.py::RevListTests::test_simple
+PASSED tests/test_porcelain.py::TagCreateTests::test_annotated
+PASSED tests/test_porcelain.py::TagCreateTests::test_unannotated
+PASSED tests/test_porcelain.py::TagCreateTests::test_unannotated_unicode
+PASSED tests/test_porcelain.py::TagListTests::test_empty
+PASSED tests/test_porcelain.py::TagListTests::test_simple
+PASSED tests/test_porcelain.py::TagDeleteTests::test_simple
+PASSED tests/test_porcelain.py::ResetTests::test_hard_commit
+PASSED tests/test_porcelain.py::ResetTests::test_hard_commit_short_hash
+PASSED tests/test_porcelain.py::ResetTests::test_hard_deletes_files_in_subdirs
+PASSED tests/test_porcelain.py::ResetTests::test_hard_deletes_untracked_files
+PASSED tests/test_porcelain.py::ResetTests::test_hard_head
+PASSED tests/test_porcelain.py::ResetTests::test_hard_reset_to_remote_branch
+PASSED tests/test_porcelain.py::ResetFileTests::test_reset_modify_file_to_commit
+PASSED tests/test_porcelain.py::ResetFileTests::test_reset_remove_file_to_commit
+PASSED tests/test_porcelain.py::ResetFileTests::test_resetfile_with_dir
+PASSED tests/test_porcelain.py::RevertTests::test_revert_custom_message
+PASSED tests/test_porcelain.py::RevertTests::test_revert_multiple
+PASSED tests/test_porcelain.py::RevertTests::test_revert_no_commit
+PASSED tests/test_porcelain.py::RevertTests::test_revert_no_parent
+PASSED tests/test_porcelain.py::RevertTests::test_revert_simple
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_remote_branch
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_remote_branch_then_master_then_remote_branch_again
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_added_files
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_file_in_sub_directory
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_modified_file_not_present
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_modified_file_not_present_forced
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_modified_files
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_multiple_files_in_sub_directory
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_new_files
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_unstaged_files
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_branch_with_untracked_files
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_commit_sha
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_existing_branch
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_head
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_to_non_existing_branch
+PASSED tests/test_porcelain.py::CheckoutTests::test_checkout_with_deleted_files
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_branch
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_bytes_vs_string_target
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_commit
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_error_messages
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_force
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_full_ref_paths
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_head_reference
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_new_branch
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_new_branch_from_commit
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_nonexistent_ref
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_partial_sha
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_preserves_untracked_files
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_tag
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_with_staged_addition
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_with_staged_modification_conflict
+PASSED tests/test_porcelain.py::GeneralCheckoutTests::test_checkout_with_uncommitted_changes
+PASSED tests/test_porcelain.py::SubmoduleTests::test_add
+PASSED tests/test_porcelain.py::SubmoduleTests::test_empty
+PASSED tests/test_porcelain.py::SubmoduleTests::test_init
+PASSED tests/test_porcelain.py::PushTests::test_delete
+PASSED tests/test_porcelain.py::PushTests::test_diverged
+PASSED tests/test_porcelain.py::PushTests::test_local_missing
+PASSED tests/test_porcelain.py::PushTests::test_new
+PASSED tests/test_porcelain.py::PushTests::test_simple
+PASSED tests/test_porcelain.py::PullTests::test_diverged
+PASSED tests/test_porcelain.py::PullTests::test_no_refspec
+PASSED tests/test_porcelain.py::PullTests::test_no_remote_location
+PASSED tests/test_porcelain.py::PullTests::test_pull_updates_working_tree
+PASSED tests/test_porcelain.py::PullTests::test_simple
+PASSED tests/test_porcelain.py::StatusTests::test_empty
+PASSED tests/test_porcelain.py::StatusTests::test_get_tree_changes_add
+PASSED tests/test_porcelain.py::StatusTests::test_get_tree_changes_delete
+PASSED tests/test_porcelain.py::StatusTests::test_get_tree_changes_modify
+PASSED tests/test_porcelain.py::StatusTests::test_get_untracked_paths
+PASSED tests/test_porcelain.py::StatusTests::test_get_untracked_paths_invalid_untracked_files
+PASSED tests/test_porcelain.py::StatusTests::test_get_untracked_paths_subdir
+PASSED tests/test_porcelain.py::StatusTests::test_get_untracked_paths_subrepo
+PASSED tests/test_porcelain.py::StatusTests::test_get_untracked_paths_top_level_issue_1247
+PASSED tests/test_porcelain.py::StatusTests::test_status_all
+PASSED tests/test_porcelain.py::StatusTests::test_status_autocrlf_input
+PASSED tests/test_porcelain.py::StatusTests::test_status_autocrlf_true
+PASSED tests/test_porcelain.py::StatusTests::test_status_base
+PASSED tests/test_porcelain.py::StatusTests::test_status_crlf_mismatch
+PASSED tests/test_porcelain.py::StatusTests::test_status_untracked_path
+PASSED tests/test_porcelain.py::StatusTests::test_status_wrong_untracked_files_value
+PASSED tests/test_porcelain.py::UploadPackTests::test_upload_pack
+PASSED tests/test_porcelain.py::ReceivePackTests::test_receive_pack
+PASSED tests/test_porcelain.py::BranchListTests::test_new_branch
+PASSED tests/test_porcelain.py::BranchListTests::test_standard
+PASSED tests/test_porcelain.py::BranchCreateTests::test_branch_exists
+PASSED tests/test_porcelain.py::BranchCreateTests::test_new_branch
+PASSED tests/test_porcelain.py::BranchDeleteTests::test_simple
+PASSED tests/test_porcelain.py::BranchDeleteTests::test_simple_unicode
+PASSED tests/test_porcelain.py::FetchTests::test_simple
+PASSED tests/test_porcelain.py::FetchTests::test_with_remote_name
+PASSED tests/test_porcelain.py::RepackTests::test_empty
+PASSED tests/test_porcelain.py::RepackTests::test_simple
+PASSED tests/test_porcelain.py::LsTreeTests::test_empty
+PASSED tests/test_porcelain.py::LsTreeTests::test_recursive
+PASSED tests/test_porcelain.py::LsTreeTests::test_simple
+PASSED tests/test_porcelain.py::LsRemoteTests::test_empty
+PASSED tests/test_porcelain.py::LsRemoteTests::test_some
+PASSED tests/test_porcelain.py::LsFilesTests::test_empty
+PASSED tests/test_porcelain.py::LsFilesTests::test_simple
+PASSED tests/test_porcelain.py::RemoteAddTests::test_exists
+PASSED tests/test_porcelain.py::RemoteAddTests::test_new
+PASSED tests/test_porcelain.py::RemoteRemoveTests::test_remove
+PASSED tests/test_porcelain.py::CheckIgnoreTests::test_check_added_abs
+PASSED tests/test_porcelain.py::CheckIgnoreTests::test_check_added_rel
+PASSED tests/test_porcelain.py::CheckIgnoreTests::test_check_ignored
+PASSED tests/test_porcelain.py::UpdateHeadTests::test_set_new_branch
+PASSED tests/test_porcelain.py::UpdateHeadTests::test_set_to_branch
+PASSED tests/test_porcelain.py::UpdateHeadTests::test_set_to_branch_detached
+PASSED tests/test_porcelain.py::UpdateHeadTests::test_set_to_commit_detached
+PASSED tests/test_porcelain.py::MailmapTests::test_mailmap_lookup
+PASSED tests/test_porcelain.py::MailmapTests::test_no_mailmap
+PASSED tests/test_porcelain.py::FsckTests::test_git_dir
+PASSED tests/test_porcelain.py::FsckTests::test_none
+PASSED tests/test_porcelain.py::DescribeTests::test_no_commits
+PASSED tests/test_porcelain.py::DescribeTests::test_single_commit
+PASSED tests/test_porcelain.py::DescribeTests::test_tag
+PASSED tests/test_porcelain.py::DescribeTests::test_tag_and_commit
+PASSED tests/test_porcelain.py::DescribeTests::test_tag_and_commit_full
+PASSED tests/test_porcelain.py::DescribeTests::test_untagged_commit_abbreviation
+PASSED tests/test_porcelain.py::PathToTreeTests::test_path_to_tree_path_base
+PASSED tests/test_porcelain.py::PathToTreeTests::test_path_to_tree_path_error
+PASSED tests/test_porcelain.py::PathToTreeTests::test_path_to_tree_path_rel
+PASSED tests/test_porcelain.py::PathToTreeTests::test_path_to_tree_path_syntax
+PASSED tests/test_porcelain.py::GetObjectByPathTests::test_encoding
+PASSED tests/test_porcelain.py::GetObjectByPathTests::test_missing
+PASSED tests/test_porcelain.py::GetObjectByPathTests::test_simple
+PASSED tests/test_porcelain.py::WriteTreeTests::test_simple
+PASSED tests/test_porcelain.py::ActiveBranchTests::test_simple
+PASSED tests/test_porcelain.py::FindUniqueAbbrevTests::test_simple
+PASSED tests/test_porcelain.py::PackRefsTests::test_all
+PASSED tests/test_porcelain.py::PackRefsTests::test_not_all
+PASSED tests/test_porcelain.py::ServerTests::test_pull
+PASSED tests/test_porcelain.py::ServerTests::test_push
+PASSED tests/test_porcelain.py::ForEachTests::test_for_each_ref
+PASSED tests/test_porcelain.py::ForEachTests::test_for_each_ref_pattern
+PASSED tests/test_porcelain.py::SparseCheckoutTests::test_destructive_refuse_uncommitted_changes_without_force
+PASSED tests/test_porcelain.py::SparseCheckoutTests::test_fnmatch_gitignore_pattern_expansion
+PASSED tests/test_porcelain.py::SparseCheckoutTests::test_force_removes_local_changes_for_excluded_paths
+PASSED tests/test_porcelain.py::SparseCheckoutTests::test_only_included_paths_appear_in_wtree
+PASSED tests/test_porcelain.py::SparseCheckoutTests::test_previously_included_paths_become_excluded
+PASSED tests/test_porcelain.py::ConeModeTests::test_add_and_merge_dirs
+PASSED tests/test_porcelain.py::ConeModeTests::test_force_removal_of_local_mods
+PASSED tests/test_porcelain.py::ConeModeTests::test_init_excludes_everything
+PASSED tests/test_porcelain.py::ConeModeTests::test_set_overwrites_old_dirs
+PASSED tests/test_porcelain.py::ConeModeTests::test_set_specific_dirs
+PASSED tests/test_porcelain.py::UnpackObjectsTest::test_unpack_objects
+PASSED tests/test_porcelain.py::CountObjectsTests::test_count_objects_empty_repo
+PASSED tests/test_porcelain.py::CountObjectsTests::test_count_objects_verbose_empty_repo
+PASSED tests/test_porcelain.py::CountObjectsTests::test_count_objects_verbose_with_objects
+PASSED tests/test_porcelain.py::CountObjectsTests::test_count_objects_with_loose_objects
+SKIPPED [1] tests/test_porcelain.py:466: gpg is not available
+SKIPPED [1] tests/test_porcelain.py:503: gpg is not available
+SKIPPED [1] tests/test_porcelain.py:1911: gpg is not available
+SKIPPED [1] tests/test_porcelain.py:1954: gpg is not available
+FAILED tests/test_porcelain.py::StatusTests::test_get_untracked_paths_normal
+FAILED tests/test_porcelain.py::StatusTests::test_status_mixed_tracked_untracked
+FAILED tests/test_porcelain.py::StatusTests::test_status_untracked_path_normal
+=================== 3 failed, 222 passed, 4 skipped in 4.04s ===================

@@ -1,0 +1,28 @@
+Testing input processor error...
+Caught expected error: Error with input processor: field='name' value=['not_a_number'] error='TypeError: <lambda>() takes 1 positional argument but 2 were given'
+Traceback (most recent call last):
+  File "/scrapy/scrapy/loader/__init__.py", line 159, in _process_input_value
+    return proc(value)
+TypeError: <lambda>() takes 1 positional argument but 2 were given
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_error_messages.py", line 18, in test_input_processor_error
+    loader.add_value('name', 'not_a_number')
+  File "/scrapy/scrapy/loader/__init__.py", line 81, in add_value
+    self._add_value(field_name, value)
+  File "/scrapy/scrapy/loader/__init__.py", line 95, in _add_value
+    processed_value = self._process_input_value(field_name, value)
+  File "/scrapy/scrapy/loader/__init__.py", line 162, in _process_input_value
+    (field_name, value, type(e).__name__, str(e)))
+ValueError: Error with input processor: field='name' value=['not_a_number'] error='TypeError: <lambda>() takes 1 positional argument but 2 were given'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_error_messages.py", line 66, in <module>
+    test_input_processor_error()
+  File "test_error_messages.py", line 24, in test_input_processor_error
+    assert "value='not_a_number'" in str(e)
+AssertionError

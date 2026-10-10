@@ -1,0 +1,71 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /rich/tests
+configfile: pytest.ini
+plugins: cov-7.0.0
+collecting ... collected 2 items
+
+tests/test_console.py::test_export_svg FAILED                            [ 50%]
+tests/test_console.py::test_save_svg FAILED                              [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_export_svg ________________________________
+
+    def test_export_svg():
+        console = Console(record=True, width=100)
+        console.print(
+            "[b red on blue reverse]foo[/] [blink][link=https://example.org]Click[/link]"
+        )
+        svg = console.export_svg()
+        svg_main_code_hash = (
+            "857433718"  # hard-coded here after the 1st time we ran this test
+        )
+        expected_svg = EXPECTED_SVG.replace("${SVG_HASH}", svg_main_code_hash)
+>       assert svg == expected_svg
+E       assert '<svg width="...ct>\n</svg>\n' == '<svg width="...ct>\n</svg>\n'
+E         
+E           <svg width="1484.0" height="384" viewBox="0 0 1484.0 384"
+E                xmlns="http://www.w3.org/2000/svg">
+E               <style>
+E                   @font-face {
+E                       font-family: "Rich Fira Code";
+E                       src: local("FiraCode-Regular"),...
+E         
+E         ...Full output truncated (116 lines hidden), use '-vv' to show
+
+tests/test_console.py:631: AssertionError
+----------------------------- Captured stdout call -----------------------------
+foo Click
+________________________________ test_save_svg _________________________________
+
+    def test_save_svg():
+        console = Console(record=True, width=100)
+        console.print(
+            "[b red on blue reverse]foo[/] [blink][link=https://example.org]Click[/link]"
+        )
+        svg_main_code_hash = "857433718"
+        expected_svg = EXPECTED_SVG.replace("${SVG_HASH}", svg_main_code_hash)
+        with tempfile.TemporaryDirectory() as path:
+            export_path = os.path.join(path, "example.svg")
+            console.save_svg(export_path)
+            with open(export_path, "rt") as svg_file:
+>               assert svg_file.read() == expected_svg
+E               assert '<svg width="...ct>\n</svg>\n' == '<svg width="...ct>\n</svg>\n'
+E                 
+E                   <svg width="1484.0" height="384" viewBox="0 0 1484.0 384"
+E                        xmlns="http://www.w3.org/2000/svg">
+E                       <style>
+E                           @font-face {
+E                               font-family: "Rich Fira Code";
+E                               src: local("FiraCode-Regular"),...
+E                 
+E                 ...Full output truncated (116 lines hidden), use '-vv' to show
+
+tests/test_console.py:645: AssertionError
+----------------------------- Captured stdout call -----------------------------
+foo Click
+----------- generated xml file: /opt/receipts/reports/agent1-18.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_console.py::test_export_svg - assert '<svg width="...ct>\n<...
+FAILED tests/test_console.py::test_save_svg - assert '<svg width="...ct>\n</s...
+============================== 2 failed in 0.24s ===============================

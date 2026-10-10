@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pydriller
+configfile: pytest.ini
+collecting ... collected 1 item
+
+tests/integration/test_reverse_order.py::test_should_visit_descendent_order_with_filters FAILED [100%]
+
+=================================== FAILURES ===================================
+_______________ test_should_visit_descendent_order_with_filters ________________
+
+    def test_should_visit_descendent_order_with_filters():
+        lc = list(RepositoryMining('test-repos/small_repo',
+                                   from_commit='1f99848edadfffa903b8ba1286a935f1b92b2845',
+                                   to_commit='6411e3096dd2070438a17b225f44475136e54e3a',
+                                   reversed_order=True).traverse_commits())
+>       assert len(lc) == 3
+E       assert 2 == 3
+E        +  where 2 = len([<pydriller.domain.commit.Commit object at 0x76cce7d167a0>, <pydriller.domain.commit.Commit object at 0x76cce7d16800>])
+
+tests/integration/test_reverse_order.py:48: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-15.xml ------------
+=========================== short test summary info ============================
+FAILED tests/integration/test_reverse_order.py::test_should_visit_descendent_order_with_filters
+============================== 1 failed in 0.17s ===============================

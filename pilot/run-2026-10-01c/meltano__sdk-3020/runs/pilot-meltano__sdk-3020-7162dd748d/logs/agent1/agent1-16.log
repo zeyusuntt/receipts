@@ -1,0 +1,10 @@
+    @property
+    def table_name(self) -> str:
+        """Return the table name, with no schema or database part.
+
+        Returns:
+            The target table name.
+        """
+        parts = self.stream_name.split("-")
+        table = self.stream_name if len(parts) == 1 else parts[-1]
+        return self.conform_name(table, "table")

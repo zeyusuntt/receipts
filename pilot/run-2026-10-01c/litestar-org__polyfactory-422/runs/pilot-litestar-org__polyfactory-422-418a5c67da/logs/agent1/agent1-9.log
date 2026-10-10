@@ -1,0 +1,25 @@
+Debugging normalize_annotation...
+Processing name: typing_extensions.Required[str]
+  Type: <class 'typing._GenericAlias'>
+  is_new_type: False
+  is_annotated: False
+  sys.version_info <= (3, 9): False
+  origin: typing_extensions.Required (type: <class 'typing_extensions._ExtensionsSpecialForm'>)
+  TYPE_MAPPING keys: [typing.DefaultDict, typing.Deque, typing.Dict, typing.FrozenSet, typing.Iterable]...
+  origin in TYPE_MAPPING: False
+  args: (<class 'str'>,)
+  normalized args: (<class 'str'>,)
+  Trying to create: typing_extensions.Required[(<class 'str'>,)]
+  Error: Required accepts only a single type. Got (<class 'str'>,).
+Traceback (most recent call last):
+  File "/polyfactory/debug_normalize.py", line 49, in <module>
+    result = origin[normalized_args] if origin is not type else annotation
+  File "/usr/local/lib/python3.10/typing.py", line 312, in inner
+    return func(*args, **kwds)
+  File "/usr/local/lib/python3.10/typing.py", line 403, in __getitem__
+    return self._getitem(self, parameters)
+  File "/usr/local/lib/python3.10/site-packages/typing_extensions.py", line 2393, in Required
+    item = typing._type_check(parameters, f'{self._name} accepts only a single type.')
+  File "/usr/local/lib/python3.10/typing.py", line 176, in _type_check
+    raise TypeError(f"{msg} Got {arg!r:.100}.")
+TypeError: Required accepts only a single type. Got (<class 'str'>,).

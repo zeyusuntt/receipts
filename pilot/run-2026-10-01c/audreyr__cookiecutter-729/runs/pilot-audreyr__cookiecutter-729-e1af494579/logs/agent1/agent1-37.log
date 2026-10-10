@@ -1,0 +1,48 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /cookiecutter
+collecting ... collected 6 items
+
+tests/test_generate_hooks.py::test_ignore_hooks_dirs PASSED              [ 16%]
+tests/test_generate_hooks.py::test_run_python_hooks PASSED               [ 33%]
+tests/test_generate_hooks.py::test_run_python_hooks_cwd PASSED           [ 50%]
+tests/test_generate_hooks.py::test_empty_hooks PASSED                    [ 66%]
+tests/test_generate_hooks.py::test_oserror_hooks ERROR                   [ 83%]
+tests/test_generate_hooks.py::test_run_shell_hooks PASSED                [100%]
+
+==================================== ERRORS ====================================
+_____________________ ERROR at setup of test_oserror_hooks _____________________
+file /cookiecutter/tests/test_generate_hooks.py, line 107
+  @pytest.mark.usefixtures('clean_system', 'remove_additional_folders')
+  def test_oserror_hooks(mocker):
+E       fixture 'mocker' not found
+>       available fixtures: capfd, capfdbinary, caplog, capsys, capsysbinary, clean_system, doctest_namespace, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, remove_additional_folders, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/cookiecutter/tests/test_generate_hooks.py:107
+==================================== PASSES ====================================
+____________________________ test_ignore_hooks_dirs ____________________________
+----------------------------- Captured stdout call -----------------------------
+pre generation hook
+pre generation hook
+____________________________ test_run_python_hooks _____________________________
+----------------------------- Captured stdout call -----------------------------
+pre generation hook
+pre generation hook
+__________________________ test_run_python_hooks_cwd ___________________________
+----------------------------- Captured stdout call -----------------------------
+pre generation hook
+pre generation hook
+_____________________________ test_run_shell_hooks _____________________________
+----------------------------- Captured stdout call -----------------------------
+pre generation hook
+post generation hook
+----------- generated xml file: /opt/receipts/reports/agent1-37.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_generate_hooks.py::test_ignore_hooks_dirs
+PASSED tests/test_generate_hooks.py::test_run_python_hooks
+PASSED tests/test_generate_hooks.py::test_run_python_hooks_cwd
+PASSED tests/test_generate_hooks.py::test_empty_hooks
+PASSED tests/test_generate_hooks.py::test_run_shell_hooks
+ERROR tests/test_generate_hooks.py::test_oserror_hooks
+========================== 5 passed, 1 error in 0.18s ==========================

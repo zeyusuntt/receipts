@@ -1,0 +1,135 @@
+262:        self.xref_index = 0
+1066:        stmnum, idx = self.xref_objStm[indirect_reference.idnum]
+1068:        # This is an xref to a stream, so its type better be a stream
+1123:            and indirect_reference.idnum in self.xref_objStm
+1127:            indirect_reference.generation in self.xref
+1128:            and indirect_reference.idnum in self.xref[indirect_reference.generation]
+1130:            if self.xref_free_entry.get(indirect_reference.generation, {}).get(
+1134:            start = self.xref[indirect_reference.generation][indirect_reference.idnum]
+1154:                    self.xref[indirect_reference.generation][
+1161:            if idnum != indirect_reference.idnum and self.xref_index:
+1167:                        "xref table not zero-indexed."
+1169:                # xref table is corrected in non-strict mode
+1207:                if indirect_reference.generation not in self.xref:
+1208:                    self.xref[indirect_reference.generation] = {}
+1209:                self.xref[indirect_reference.generation][indirect_reference.idnum] = (
+1332:        startxref = self._find_startxref_pos(stream)
+1334:        # check and eventually correct the startxref only in not strict
+1335:        xref_issue_nr = self._get_xref_issues(stream, startxref)
+1336:        if xref_issue_nr != 0:
+1337:            if self.strict and xref_issue_nr:
+1338:                raise PdfReadError("Broken xref table")
+1339:            logger_warning(f"incorrect startxref pointer({xref_issue_nr})", __name__)
+1342:        self._read_xref_tables_and_trailers(stream, startxref, xref_issue_nr)
+1345:        if self.xref_index and not self.strict:
+1347:            for gen, xref_entry in self.xref.items():
+1350:                for id in xref_entry:
+1351:                    stream.seek(xref_entry[id], 0)
+1356:                    if pid == id - self.xref_index:
+1357:                        self._zero_xref(gen)
+1386:    def _find_startxref_pos(self, stream: StreamType) -> int:
+1387:        """Find startxref entry - the location of the xref table"""
+1390:            startxref = int(line)
+1392:            # 'startxref' may be on the same line as the location
+1393:            if not line.startswith(b"startxref"):
+1394:                raise PdfReadError("startxref not found")
+1395:            startxref = int(line[9:].strip())
+1396:            logger_warning("startxref on same line as offset", __name__)
+1399:            if line[:9] != b"startxref":
+1400:                raise PdfReadError("startxref not found")
+1401:        return startxref
+1403:    def _read_standard_xref_table(self, stream: StreamType) -> None:
+1407:            raise PdfReadError("xref table read error")
+1410:        firsttime = True  # check if the first time looking at the xref table
+1414:                self.xref_index = num
+1446:                # the next xref entry, t means we've bled into the
+1482:                if generation not in self.xref:
+1483:                    self.xref[generation] = {}
+1484:                    self.xref_free_entry[generation] = {}
+1485:                if num in self.xref[generation]:
+1487:                    # xref table in the file to override previous
+1492:                    self.xref[generation][num] = offset
+1494:                        self.xref_free_entry[generation][num] = entry_type_b == b"f"
+1498:                        self.xref_free_entry[65535][num] = entry_type_b == b"f"
+1507:                # more xrefs!
+1512:    def _read_xref_tables_and_trailers(
+1513:        self, stream: StreamType, startxref: Optional[int], xref_issue_nr: int
+1515:        self.xref: Dict[int, Dict[Any, Any]] = {}
+1516:        self.xref_free_entry: Dict[int, Dict[Any, Any]] = {}
+1517:        self.xref_objStm: Dict[int, Tuple[Any, Any]] = {}
+1519:        while startxref is not None:
+1520:            # load the xref table
+1521:            stream.seek(startxref, 0)
+1526:                startxref = self._read_xref(stream)
+1527:            elif xref_issue_nr:
+1529:                    self._rebuild_xref_table(stream)
+1532:                    xref_issue_nr = 0
+1535:                    xrefstream = self._read_pdf15_xref_stream(stream)
+1547:                    if key in xrefstream and key not in self.trailer:
+1548:                        self.trailer[NameObject(key)] = xrefstream.raw_get(key)
+1549:                if "/XRefStm" in xrefstream:
+1551:                    stream.seek(cast(int, xrefstream["/XRefStm"]) + 1, 0)
+1552:                    self._read_pdf15_xref_stream(stream)
+1554:                if "/Prev" in xrefstream:
+1555:                    startxref = cast(int, xrefstream["/Prev"])
+1559:                startxref = self._read_xref_other_error(stream, startxref)
+1561:    def _read_xref(self, stream: StreamType) -> Optional[int]:
+1562:        self._read_standard_xref_table(stream)
+1573:                self._read_pdf15_xref_stream(stream)
+1581:            startxref = new_trailer["/Prev"]
+1582:            return startxref
+1586:    def _read_xref_other_error(
+1587:        self, stream: StreamType, startxref: int
+1590:        if startxref == 0:
+1596:                "/Prev=0 in the trailer - assuming there is no previous xref table",
+1600:        # bad xref character at startxref.  Let's see if we can find
+1601:        # the xref table nearby, as we've observed this error with an
+1605:        xref_loc = tmp.find(b"xref")
+1606:        if xref_loc != -1:
+1607:            startxref -= 10 - xref_loc
+1608:            return startxref
+1609:        # No explicit xref table, try finding a cross-reference stream.
+1610:        stream.seek(startxref, 0)
+1615:                startxref += look
+1619:            return startxref
+1620:        # no xref table found at specified location
+1623:            logger_warning("Invalid parent xref., rebuild xref", __name__)
+1625:                self._rebuild_xref_table(stream)
+1628:                raise PdfReadError("can not rebuild xref")
+1630:        raise PdfReadError("Could not find xref table at specified location")
+1632:    def _read_pdf15_xref_stream(
+1638:        xrefstream = cast(ContentStream, read_object(stream, self))
+1639:        assert cast(str, xrefstream["/Type"]) == "/XRef"
+1640:        self.cache_indirect_object(generation, idnum, xrefstream)
+1641:        stream_data = BytesIO(b_(xrefstream.get_data()))
+1644:        idx_pairs = xrefstream.get("/Index", [0, xrefstream.get("/Size")])
+1645:        entry_sizes = cast(Dict[Any, Any], xrefstream.get("/W"))
+1665:            # We move backwards through the xrefs, don't replace any.
+1666:            return num in self.xref.get(generation, []) or num in self.xref_objStm  # type: ignore
+1669:        self._read_xref_subsections(idx_pairs, get_entry, used_before)
+1670:        return xrefstream
+1673:    def _get_xref_issues(stream: StreamType, startxref: int) -> int:
+1675:        stream.seek(startxref - 1, 0)  # -1 to check character before
+1680:        if line != b"xref":
+1681:            # not an xref so check if it is an XREF object
+1692:            # line = stream.read(256)  # check that it is xref obj
+1693:            # if b"/xref" not in line.lower():
+1697:    def _rebuild_xref_table(self, stream: StreamType) -> None:
+1698:        self.xref = {}
+1705:            if generation not in self.xref:
+1706:                self.xref[generation] = {}
+1707:            self.xref[generation][idnum] = m.start(1)
+1716:    def _read_xref_subsections(
+1729:                xref_type = get_entry(0)
+1730:                # The rest of the elements depend on the xref_type
+1731:                if xref_type == 0:
+1735:                elif xref_type == 1:
+1739:                    if generation not in self.xref:
+1740:                        self.xref[generation] = {}  # type: ignore
+1742:                        self.xref[generation][num] = byte_offset  # type: ignore
+1743:                elif xref_type == 2:
+1749:                        self.xref_objStm[num] = (objstr_num, obstr_idx)
+1751:                    raise PdfReadError(f"Unknown xref type: {xref_type}")
+1753:    def _zero_xref(self, generation: int) -> None:
+1754:        self.xref[generation] = {
+1755:            k - self.xref_index: v for (k, v) in list(self.xref[generation].items())

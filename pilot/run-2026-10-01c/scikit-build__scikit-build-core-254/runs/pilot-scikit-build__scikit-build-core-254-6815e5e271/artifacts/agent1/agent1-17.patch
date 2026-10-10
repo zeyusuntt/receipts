@@ -1,0 +1,225 @@
+diff --git a/scikit_build_core/build/__init__.py b/scikit_build_core/build/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/scikit_build_core/build/_scripts.py b/scikit_build_core/build/_scripts.py
+new file mode 100644
+index 0000000..474917a
+--- /dev/null
++++ b/scikit_build_core/build/_scripts.py
+@@ -0,0 +1,60 @@
++import os
++import re
++from pathlib import Path
++
++
++def process_script_dir(scripts_dir: Path) -> None:
++    """
++    Process scripts in the given directory to replace shebangs with '#!python'.
++    
++    This mimics setuptools behavior for handling Python script shebangs,
++    converting various forms of python shebangs to the generic '#!python'
++    form while preserving any arguments.
++    """
++    if not scripts_dir.is_dir():
++        return
++        
++    # Pattern matching various Python shebang formats
++    # Matches: #!/usr/bin/env python, #!/usr/bin/python3, etc.
++    # Optional version numbers and trailing arguments
++    shebang_pattern = re.compile(r'^#!.*python[0-9.]*([ \t].*)?$')
++    
++    for script_path in scripts_dir.iterdir():
++        if not script_path.is_file():
++            continue
++            
++        # Read the script content
++        try:
++            content = script_path.read_text(encoding='utf-8')
++        except (UnicodeDecodeError, OSError):
++            # Skip binary files or unreadable files
++            continue
++            
++        lines = content.splitlines(keepends=True)
++        if not lines:
++            continue
++            
++        # Check if first line matches our shebang pattern
++        first_line = lines[0].rstrip('\n\r')
++        match = shebang_pattern.match(first_line)
++        
++        if match:
++            # Extract any arguments after the python executable
++            args = match.group(1) or ''
++            
++            # Replace with generic python shebang
++            new_shebang = '#!python' + args
++            lines[0] = new_shebang + '\n'
++            
++            # Write back the modified content
++            try:
++                script_path.write_text(''.join(lines), encoding='utf-8')
++            except OSError:
++                # If we can't write, skip this file
++                continue
++                
++            # Preserve original file permissions
++            try:
++                script_path.chmod(script_path.stat().st_mode)
++            except OSError:
++                pass
+\ No newline at end of file
+diff --git a/src/scikit_build_core/build/__init__.py b/src/scikit_build_core/build/__init__.py
+index d4a403a..e69de29 100644
+--- a/src/scikit_build_core/build/__init__.py
++++ b/src/scikit_build_core/build/__init__.py
+@@ -1,83 +0,0 @@
+-"""
+-This is the entry point for the build backend. Items in this module are designed for the build backend API.
+-"""
+-
+-
+-from __future__ import annotations
+-
+-import sys
+-
+-__all__ = [
+-    "build_sdist",
+-    "build_wheel",
+-    "get_requires_for_build_sdist",
+-    "get_requires_for_build_wheel",
+-    "prepare_metadata_for_build_wheel",
+-]
+-
+-
+-def build_wheel(
+-    wheel_directory: str,
+-    config_settings: dict[str, list[str] | str] | None = None,
+-    metadata_directory: str | None = None,
+-) -> str:
+-    from .._logging import rich_print
+-    from ..errors import FailedLiveProcessError
+-    from .wheel import _build_wheel_impl
+-
+-    try:
+-        return _build_wheel_impl(
+-            wheel_directory, config_settings, metadata_directory
+-        ).wheel_filename
+-    except FailedLiveProcessError as err:
+-        sys.stdout.flush()
+-        rich_print(f"\n[red bold]*** {' '.join(err.args)}", file=sys.stderr)
+-        raise SystemExit(1) from None
+-
+-
+-def prepare_metadata_for_build_wheel(
+-    metadata_directory: str,
+-    config_settings: dict[str, list[str] | str] | None = None,
+-) -> str:
+-    from .wheel import _build_wheel_impl
+-
+-    return _build_wheel_impl(None, config_settings, metadata_directory).wheel_filename
+-
+-
+-def build_sdist(
+-    sdist_directory: str,
+-    config_settings: dict[str, list[str] | str] | None = None,
+-) -> str:
+-    from .sdist import build_sdist as skbuild_build_sdist
+-
+-    return skbuild_build_sdist(sdist_directory, config_settings)
+-
+-
+-def get_requires_for_build_sdist(
+-    config_settings: dict[str, str | list[str]] | None = None
+-) -> list[str]:
+-    from ..builder.get_requires import GetRequires
+-
+-    requires = GetRequires(config_settings)
+-
+-    return [
+-        "pathspec",
+-        "pyproject_metadata",
+-        *requires.dynamic_metadata(),
+-    ]
+-
+-
+-def get_requires_for_build_wheel(
+-    config_settings: dict[str, str | list[str]] | None = None,
+-) -> list[str]:
+-    from ..builder.get_requires import GetRequires
+-
+-    requires = GetRequires(config_settings)
+-
+-    return [
+-        "pathspec",
+-        "pyproject_metadata",
+-        *requires.cmake(),
+-        *requires.ninja(),
+-        *requires.dynamic_metadata(),
+-    ]
+diff --git a/src/scikit_build_core/build/_scripts.py b/src/scikit_build_core/build/_scripts.py
+new file mode 100644
+index 0000000..a514ecb
+--- /dev/null
++++ b/src/scikit_build_core/build/_scripts.py
+@@ -0,0 +1,60 @@
++import os
++import re
++from pathlib import Path
++
++
++def process_script_dir(scripts_dir: Path) -> None:
++    """
++    Process scripts in the given directory to replace shebangs with '#!python'.
++    
++    This mimics setuptools behavior for handling Python script shebangs,
++    converting various forms of python shebangs to the generic '#!python'
++    form while preserving any arguments.
++    """
++    if not scripts_dir.is_dir():
++        return
++        
++    # Pattern matching various Python shebang formats  
++    # Based on setuptools: ^#!.*python[0-9.]*([ \t].*)?$
++    # But extended to also catch pypy and pythonw variants as seen in tests
++    shebang_pattern = re.compile(r'^#!.*(python|pypy|pythonw)[0-9.]*([ \t].*)?$')
++    
++    for script_path in scripts_dir.iterdir():
++        if not script_path.is_file():
++            continue
++            
++        # Read the script content
++        try:
++            content = script_path.read_text(encoding='utf-8')
++        except (UnicodeDecodeError, OSError):
++            # Skip binary files or unreadable files
++            continue
++            
++        lines = content.splitlines(keepends=True)
++        if not lines:
++            continue
++            
++        # Check if first line matches our shebang pattern
++        first_line = lines[0].rstrip('\n\r')
++        match = shebang_pattern.match(first_line)
++        
++        if match:
++            # Extract any arguments after the python executable
++            args = match.group(2) or ''
++            
++            # Replace with generic python shebang
++            new_shebang = '#!python' + args
++            lines[0] = new_shebang + '\n'
++            
++            # Write back the modified content
++            try:
++                script_path.write_text(''.join(lines), encoding='utf-8')
++            except OSError:
++                # If we can't write, skip this file
++                continue
++                
++            # Preserve original file permissions
++            try:
++                script_path.chmod(script_path.stat().st_mode)
++            except OSError:
++                pass
+\ No newline at end of file

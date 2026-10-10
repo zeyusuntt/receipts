@@ -1,0 +1,41 @@
+============================= test session starts ==============================
+collected 3 items
+
+test/python/circuit/test_circuit_properties.py .FF                       [100%]
+
+=================================== FAILURES ===================================
+'NoneType' object is not iterable
+
+During handling of the above exception, another exception occurred:
+NOTE: Incompatible Exception Representation, displaying natively:
+
+testtools.testresult.real._StringException: Traceback (most recent call last):
+  File "/qiskit/test/python/circuit/test_circuit_properties.py", line 663, in test_circuit_depth_expr_condition
+    self.assertEqual(qc.depth(), 2)
+  File "/qiskit/qiskit/circuit/quantumcircuit.py", line 3373, in depth
+    if isinstance(instruction.operation.condition[0], Clbit):
+TypeError: 'Var' object is not subscriptable
+
+
+/usr/local/lib/python3.10/site-packages/_pytest/unittest.py:263: Failed: NOTE: Incompatible Exception Representation, displaying natively:
+'NoneType' object is not iterable
+
+During handling of the above exception, another exception occurred:
+NOTE: Incompatible Exception Representation, displaying natively:
+
+testtools.testresult.real._StringException: Traceback (most recent call last):
+  File "/qiskit/test/python/circuit/test_circuit_properties.py", line 681, in test_circuit_depth_expr_store
+    self.assertEqual(qc.depth(), 4)
+  File "/qiskit/qiskit/circuit/quantumcircuit.py", line 3373, in depth
+    if isinstance(instruction.operation.condition[0], Clbit):
+TypeError: 'Var' object is not subscriptable
+
+
+/usr/local/lib/python3.10/site-packages/_pytest/unittest.py:263: Failed: NOTE: Incompatible Exception Representation, displaying natively:
+==================================== PASSES ====================================
+------------ generated xml file: /opt/receipts/reports/agent1-7.xml ------------
+=========================== short test summary info ============================
+PASSED test/python/circuit/test_circuit_properties.py::TestCircuitProperties::test_circuit_depth_0_operands
+FAILED test/python/circuit/test_circuit_properties.py::TestCircuitProperties::test_circuit_depth_expr_condition
+FAILED test/python/circuit/test_circuit_properties.py::TestCircuitProperties::test_circuit_depth_expr_store
+========================= 2 failed, 1 passed in 1.85s ==========================

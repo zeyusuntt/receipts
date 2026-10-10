@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "PEP 604 not supported - exception when writing union types X | Y\nhypothesis is not recognizing the new bar-annotation for union types as a valid type on python 3.10+\r\nresulting in an exception, see minimal reproduction example below -\r\n\r\n```python\r\nfrom typing import Optional, Union\r\nfrom dataclasses import dataclass\r\n\r\n@dataclass\r\nclass A:\r\n    x: str | None\r\n\r\n@dataclass\r\nclass B:\r\n    x: Union[str, None]\r\n\r\n@dataclass\r\nclass C:\r\n    x: Optional[str]\r\n\r\n>>> st.from_type(A).example()\r\nhypothesis.errors.InvalidArgument: thing=str | None must be a type\r\n\r\n>>> st.from_type(B).example()\r\nB(x='\\U00076342v\u00af\\\\\\x8c\u00ee\u00a3\\x00\\x7f\u00b1b')\r\n\r\n>>> st.from_type(C).example()\r\nC(x='\u93c0\\U00109e07h\\x81\u00f8\\x9a\\x9c\\U0010a5e3\\x8e=\u00fb')\r\n```",
+  "source": {
+    "image": "docker.io/swerebenchv2/hypothesisworks-hypothesis:3279-d135fc4",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-hypothesisworks__hypothesis-3279-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2h5cG90aGVzaXMtcHl0aG9uL3Rlc3RzL2NvbmZ0ZXN0LnB5IGIvaHlwb3RoZXNpcy1weXRob24vdGVzdHMvY29uZnRlc3QucHkKaW5kZXggM2VjNmViZGQ0Li5iZDgwYTAwNWIgMTAwNjQ0Ci0tLSBhL2h5cG90aGVzaXMtcHl0aG9uL3Rlc3RzL2NvbmZ0ZXN0LnB5CisrKyBiL2h5cG90aGVzaXMtcHl0aG9uL3Rlc3RzL2NvbmZ0ZXN0LnB5CkBAIC0zMSw2ICszMSw4IEBAIGlmIHN5cy52ZXJzaW9uX2luZm8gPCAoMywgOCk6CiAgICAgY29sbGVjdF9pZ25vcmVfZ2xvYi5hcHBlbmQoImNvdmVyLypweTM4KiIpCiBpZiBzeXMudmVyc2lvbl9pbmZvIDwgKDMsIDkpOgogICAgIGNvbGxlY3RfaWdub3JlX2dsb2IuYXBwZW5kKCJjb3Zlci8qcHkzOSoiKQoraWYgc3lzLnZlcnNpb25faW5mbyA8ICgzLCAxMCk6CisgICAgY29sbGVjdF9pZ25vcmVfZ2xvYi5hcHBlbmQoImNvdmVyLypweTMxMCoiKQogCiBpZiBzeXMudmVyc2lvbl9pbmZvID49ICgzLCAxMSk6CiAgICAgY29sbGVjdF9pZ25vcmVfZ2xvYi5hcHBlbmQoImNvdmVyL3Rlc3RfYXN5bmNpby5weSIpICAjIEBhc3luY2lvLmNvcm91dGluZSByZW1vdmVkCmRpZmYgLS1naXQgYS9oeXBvdGhlc2lzLXB5dGhvbi90ZXN0cy9jb3Zlci90ZXN0X2xvb2t1cF9weTMxMC5weSBiL2h5cG90aGVzaXMtcHl0aG9uL3Rlc3RzL2NvdmVyL3Rlc3RfbG9va3VwX3B5MzEwLnB5Cm5ldyBmaWxlIG1vZGUgMTAwNjQ0CmluZGV4IDAwMDAwMDAwMC4uYzI0ZDEyNjhlCi0tLSAvZGV2L251bGwKKysrIGIvaHlwb3RoZXNpcy1weXRob24vdGVzdHMvY292ZXIvdGVzdF9sb29rdXBfcHkzMTAucHkKQEAgLTAsMCArMSwxOSBAQAorIyBUaGlzIGZpbGUgaXMgcGFydCBvZiBIeXBvdGhlc2lzLCB3aGljaCBtYXkgYmUgZm91bmQgYXQKKyMgaHR0cHM6Ly9naXRodWIuY29tL0h5cG90aGVzaXNXb3Jrcy9oeXBvdGhlc2lzLworIworIyBDb3B5cmlnaHQgdGhlIEh5cG90aGVzaXMgQXV0aG9ycy4KKyMgSW5kaXZpZHVhbCBjb250cmlidXRvcnMgYXJlIGxpc3RlZCBpbiBBVVRIT1JTLnJzdCBhbmQgdGhlIGdpdCBsb2cuCisjCisjIFRoaXMgU291cmNlIENvZGUgRm9ybSBpcyBzdWJqZWN0IHRvIHRoZSB0ZXJtcyBvZiB0aGUgTW96aWxsYSBQdWJsaWMgTGljZW5zZSwKKyMgdi4gMi4wLiBJZiBhIGNvcHkgb2YgdGhlIE1QTCB3YXMgbm90IGRpc3RyaWJ1dGVkIHdpdGggdGhpcyBmaWxlLCBZb3UgY2FuCisjIG9idGFpbiBvbmUgYXQgaHR0cHM6Ly9tb3ppbGxhLm9yZy9NUEwvMi4wLy4KKworZnJvbSBoeXBvdGhlc2lzIGltcG9ydCBzdHJhdGVnaWVzIGFzIHN0CisKK2Zyb20gdGVzdHMuY29tbW9uLmRlYnVnIGltcG9ydCBmaW5kX2FueQorCisKK2RlZiB0ZXN0X25hdGl2ZV91bmlvbnMoKToKKyAgICBzID0gc3QuZnJvbV90eXBlKGludCB8IGxpc3Rbc3RyXSkKKyAgICBmaW5kX2FueShzLCBsYW1iZGEgeDogaXNpbnN0YW5jZSh4LCBpbnQpKQorICAgIGZpbmRfYW55KHMsIGxhbWJkYSB4OiBpc2luc3RhbmNlKHgsIGxpc3QpKQpkaWZmIC0tZ2l0IGEvaHlwb3RoZXNpcy1weXRob24vdGVzdHMvY292ZXIvdGVzdF90ZXN0ZGVjb3JhdG9ycy5weSBiL2h5cG90aGVzaXMtcHl0aG9uL3Rlc3RzL2NvdmVyL3Rlc3RfdGVzdGRlY29yYXRvcnMucHkKaW5kZXggMjMzYTU5M2U4Li5hNWU4NzE1ZWMgMTAwNjQ0Ci0tLSBhL2h5cG90aGVzaXMtcHl0aG9uL3Rlc3RzL2NvdmVyL3Rlc3RfdGVzdGRlY29yYXRvcnMucHkKKysrIGIvaHlwb3RoZXNpcy1weXRob24vdGVzdHMvY292ZXIvdGVzdF90ZXN0ZGVjb3JhdG9ycy5weQpAQCAtNDc3LDkgKzQ3NywzIEBAIGRlZiB0ZXN0X3ByaW50c19ub3Rlc19vbmNlX29uX2ZhaWx1cmUoKToKIEBnaXZlbihsaXN0cyhpbnRlZ2VycygpLCBtYXhfc2l6ZT0wKSkKIGRlZiB0ZXN0X2VtcHR5X2xpc3RzKHhzKToKICAgICBhc3NlcnQgeHMgPT0gW10KLQotCi1kZWYgdGVzdF9naXZlbl91c2FibGVfaW5saW5lX29uX2xhbWJkYXMoKToKLSAgICB4cyA9IFtdCi0gICAgZ2l2ZW4oYm9vbGVhbnMoKSkobGFtYmRhIHg6IHhzLmFwcGVuZCh4KSkoKQotICAgIGFzc2VydCBsZW4oeHMpID09IDIgYW5kIHNldCh4cykgPT0ge0ZhbHNlLCBUcnVlfQo='\"'\"'))'",
+      "git apply /tmp/receipts-hypothesisworks__hypothesis-3279-test.patch"
+    ],
+    "workdir": "/hypothesis"
+  },
+  "spec_tests": [
+    "hypothesis-python/tests/cover/test_lookup_py310.py::test_native_unions"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning hypothesis-python/tests/conftest.py hypothesis-python/tests/cover/test_lookup_py310.py hypothesis-python/tests/cover/test_testdecorators.py"
+}

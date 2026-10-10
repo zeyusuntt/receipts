@@ -1,0 +1,47 @@
+============================= test session starts ==============================
+collected 27 items
+
+tests/test_syntax/extensions/test_toc.py .........................F.     [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: '<div[44 chars]haracter">escaped\x0295\x03character</a></li>\n</ul>\n</div>\n' != '<div[44 chars]haracter">escaped_character</a></li>\n</ul>\n</div>\n'
+      <div class="toc">
+      <ul>
+    - <li><a href="#escaped_character">escaped95character</a></li>
+    ?                                         ^^^^
+    + <li><a href="#escaped_character">escaped_character</a></li>
+    ?                                         ^
+      </ul>
+      </div>
+/usr/local/lib/python3.10/unittest/case.py:675: AssertionError: '<div[44 chars]haracter">escaped\x0295\x03character</a></li>\n</ul>\n</div>\n' != '<div[44 chars]haracter">escaped_character</a></li>\n</ul>\n</div>\n'
+==================================== PASSES ====================================
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+=========================== short test summary info ============================
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testAnchorLink
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testAnchorLinkWithCustomClass
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testAnchorLinkWithCustomClasses
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testAnchorLinkWithDoubleInlineCode
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testAnchorLinkWithSingleInlineCode
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testMaxLevel
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testMaxLevelwithBaseLevel
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testMinMaxLevel
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testMinMaxLevelwithAnchorLink
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testMinMaxLevelwithBaseLevel
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testMinMaxLevelwithPermalink
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testNl2brCompatibility
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalink
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithCustomClass
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithCustomClasses
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithCustomTitle
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithDoubleInlineCode
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithEmptyText
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithEmptyTitle
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithExtendedLatinInID
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithSingleInlineCode
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithUnicodeInID
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testPermalinkWithUnicodeTitle
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testTOCWithCustomClass
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::testTOCWithCustomClasses
+PASSED tests/test_syntax/extensions/test_toc.py::TestTOC::test_escaped_code
+FAILED tests/test_syntax/extensions/test_toc.py::TestTOC::test_escaped_char_in_id
+========================= 1 failed, 26 passed in 0.08s =========================

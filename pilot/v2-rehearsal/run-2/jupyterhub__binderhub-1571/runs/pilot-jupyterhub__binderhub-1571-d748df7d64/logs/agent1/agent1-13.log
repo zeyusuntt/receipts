@@ -1,0 +1,21 @@
+            return self.resolved_ref
+        elif cached:
+            self.log.debug("Cache outdated for %s", api_url)
+
+        ref_info = json.loads(resp.body.decode("utf-8"))
+        if "sha" not in ref_info:
+            # TODO: Figure out if we should raise an exception instead?
+            self.log.warning("No sha for %s in %s", api_url, ref_info)
+            self.resolved_ref = None
+            return None
+        # store resolved ref and cache for later
+        self.resolved_ref = ref_info["sha"]
+        self.cache.set(
+            api_url,
+            {
+                "etag": resp.headers.get("ETag"),
+                "sha": self.resolved_ref,
+            },
+        )
+        return self.resolved_ref
+

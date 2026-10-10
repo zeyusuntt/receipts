@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /optimade-python-tools
+configfile: pytest.ini
+plugins: anyio-4.12.1
+collecting ... collected 1 item
+
+tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_known_properties FAILED [100%]
+
+=================================== FAILURES ===================================
+__________________ TestMongoTransformer.test_known_properties __________________
+
+self = <test_mongo.TestMongoTransformer testMethod=test_known_properties>
+
+    def test_known_properties(self):
+        #  Filtering on Properties with unknown value
+>       self.assertEqual(
+            self.transform("chemical_formula_anonymous IS UNKNOWN"),
+            {
+                "$or": [
+                    {"chemical_formula_anonymous": {"$exists": False}},
+                    {"chemical_formula_anonymous": {"$eq": None}},
+                ]
+            },
+        )
+E       AssertionError: {'chemical_formula_anonymous': {'$or': [{'$[28 chars]e}]}} != {'$or': [{'chemical_formula_anonymous': {'$[60 chars]e}}]}
+E       - {'chemical_formula_anonymous': {'$or': [{'$exists': False}, {'$eq': None}]}}
+E       + {'$or': [{'chemical_formula_anonymous': {'$exists': False}},
+E       +          {'chemical_formula_anonymous': {'$eq': None}}]}
+
+tests/filtertransformers/test_mongo.py:603: AssertionError
+------------ generated xml file: /opt/receipts/reports/agent1-5.xml ------------
+=========================== short test summary info ============================
+FAILED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_known_properties
+============================== 1 failed in 0.30s ===============================

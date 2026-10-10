@@ -1,0 +1,21 @@
+        if shape is None:
+            shape = unsigned(1)
+        else:
+            shape = Shape.cast(shape, src_loc_at=1 + src_loc_at)
+        self.width  = shape.width
+        self.signed = shape.signed
+
+        orig_reset = reset
+        if isinstance(orig_shape, ShapeCastable):
+            try:
+                reset = Const.cast(orig_shape.const(reset))
+            except Exception:
+                raise TypeError("Reset value must be a constant initializer of {!r}"
+                                .format(orig_shape))
+            if reset.shape() != Shape.cast(orig_shape):
+                raise ValueError("Constant returned by {!r}.const() must have the shape that "
+                                 "it casts to, {!r}, and not {!r}"
+                                 .format(orig_shape, Shape.cast(orig_shape),
+                                         reset.shape()))
+        else:
+            try:

@@ -1,0 +1,81 @@
+diff --git a/debug_fix.py b/debug_fix.py
+new file mode 100644
+index 0000000..56dfb45
+--- /dev/null
++++ b/debug_fix.py
+@@ -0,0 +1,22 @@
++#!/usr/bin/env python3
++
++from pydriller.repository_mining import RepositoryMining
++
++print("=== Current behavior (what issue complains about) ===")
++print("User wants commits from 1f99... to 6411... in chronological order")
++print("But has to use reverse_order=True to get that...")
++lc = list(RepositoryMining('test-repos/small_repo',
++                           from_commit='6411e3096dd2070438a17b225f44475136e54e3a',  # User HAS to swap!
++                           to_commit='1f99848edadfffa903b8ba1286a935f1b92b2845',
++                           reversed_order=True).traverse_commits())
++for i, commit in enumerate(lc):
++    print(f"{i}: {commit.hash}")
++
++print("\n=== What user SHOULD be able to write ===")
++print("User should be able to simply specify the range normally:")
++lc = list(RepositoryMining('test-repos/small_repo',
++                           from_commit='1f99848edadfffa903b8ba1286a935f1b92b2845',  # Natural order
++                           to_commit='6411e3096dd2070438a17b225f44475136e54e3a',
++                           reversed_order=True).traverse_commits())  # But still get reverse traversal internally
++for i, commit in enumerate(lc):
++    print(f"{i}: {commit.hash}")
+\ No newline at end of file
+diff --git a/debug_order.py b/debug_order.py
+new file mode 100644
+index 0000000..3f63263
+--- /dev/null
++++ b/debug_order.py
+@@ -0,0 +1,15 @@
++#!/usr/bin/env python3
++
++from pydriller.repository_mining import RepositoryMining
++
++print("=== Normal order ===")
++lc = list(RepositoryMining('test-repos/small_repo',
++                           reversed_order=False).traverse_commits())
++for i, commit in enumerate(lc):
++    print(f"{i}: {commit.hash}")
++
++print("\n=== Reverse order ===") 
++lc = list(RepositoryMining('test-repos/small_repo',
++                           reversed_order=True).traverse_commits())
++for i, commit in enumerate(lc):
++    print(f"{i}: {commit.hash}")
+\ No newline at end of file
+diff --git a/pydriller/repository_mining.py b/pydriller/repository_mining.py
+index f5d0d7f..1191c03 100644
+--- a/pydriller/repository_mining.py
++++ b/pydriller/repository_mining.py
+@@ -88,11 +88,23 @@ class RepositoryMining:
+         :param str filepath: only commits that modified this file will be
+             analyzed
+         """
++        # When reversed_order=True, we internally traverse commits in reverse 
++        # order (newest to oldest) but we want to present them as if they were
++        # traversed oldest to newest for consistency with user expectations.
++        # Therefore, we swap the from_commit and to_commit parameters so that
++        # when users specify their range naturally (earlier to later), 
++        # the internal reverse traversal still produces the correct output.
++        effective_from_commit = from_commit
++        effective_to_commit = to_commit
++        if reversed_order and from_commit and to_commit:
++            effective_from_commit = to_commit
++            effective_to_commit = from_commit
++            
+         options = {
+             "git_repo": None,
+             "path_to_repo": path_to_repo,
+-            "from_commit": from_commit,
+-            "to_commit": to_commit,
++            "from_commit": effective_from_commit,
++            "to_commit": effective_to_commit,
+             "from_tag": from_tag,
+             "to_tag": to_tag,
+             "since": since,

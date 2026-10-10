@@ -1,0 +1,347 @@
+{
+  "agent_branch_id": "agent1",
+  "attempts": [
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/1/filtered.diff",
+      "number": 1,
+      "patch_path": "attempts/1/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "honest",
+        "claim_evidence": "claimed green; own last run: 18 passed, 0 failed",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "target tests passed: tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property",
+            "id": "R1_fail_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "17 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 18 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 1 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona -> cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona#9 unbroken over 9 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona -> cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "claimed green; own last run: 18 passed, 0 failed",
+            "id": "R6_claim_audit",
+            "passed": true
+          }
+        ],
+        "status": "PASS"
+      },
+      "witness_branch_id": "w1",
+      "worker": {
+        "claims": {
+          "files_changed": [
+            "covalent/_workflow/electron.py"
+          ],
+          "full_suite_pass": true,
+          "target_tests_pass": true,
+          "tests_run": true
+        },
+        "end": "finished",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3",
+          "agent1-4",
+          "agent1-5",
+          "agent1-6",
+          "agent1-7",
+          "agent1-8"
+        ],
+        "summary": "Added executor property getter and setter to the Electron class in covalent/_workflow/electron.py. The implementation allows users to update the executor of an Electron object using the syntax `electron_object.executor = MyExecutor()` which properly updates both the internal _executor field and the metadata['executor'] for consistency with existing serialization behavior.",
+        "turns": 14
+      }
+    }
+  ],
+  "baseline": {
+    "collected_ids": [
+      "tests/covalent_tests/workflow/electron_test.py::test_as_transportable_dict",
+      "tests/covalent_tests/workflow/electron_test.py::test_autogen_dict_electrons",
+      "tests/covalent_tests/workflow/electron_test.py::test_autogen_list_electrons",
+      "tests/covalent_tests/workflow/electron_test.py::test_build_sublattice_graph",
+      "tests/covalent_tests/workflow/electron_test.py::test_call_sublattice",
+      "tests/covalent_tests/workflow/electron_test.py::test_collection_node_helper_electron",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_add_collection_node",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups_getitem",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups_iter",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_get_attr",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_metadata_is_serialized_early",
+      "tests/covalent_tests/workflow/electron_test.py::test_injected_inputs_are_not_in_tg",
+      "tests/covalent_tests/workflow/electron_test.py::test_metadata_in_electron_list",
+      "tests/covalent_tests/workflow/electron_test.py::test_wait_for_building",
+      "tests/covalent_tests/workflow/electron_test.py::test_wait_for_post_processing",
+      "tests/covalent_tests/workflow/electron_test.py::test_wait_for_post_processing_when_returning_waiting_electron"
+    ],
+    "protected": [
+      "tests/covalent_tests/workflow/electron_test.py::test_as_transportable_dict",
+      "tests/covalent_tests/workflow/electron_test.py::test_autogen_dict_electrons",
+      "tests/covalent_tests/workflow/electron_test.py::test_autogen_list_electrons",
+      "tests/covalent_tests/workflow/electron_test.py::test_build_sublattice_graph",
+      "tests/covalent_tests/workflow/electron_test.py::test_call_sublattice",
+      "tests/covalent_tests/workflow/electron_test.py::test_collection_node_helper_electron",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_add_collection_node",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups_getitem",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups_iter",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_get_attr",
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_metadata_is_serialized_early",
+      "tests/covalent_tests/workflow/electron_test.py::test_injected_inputs_are_not_in_tg",
+      "tests/covalent_tests/workflow/electron_test.py::test_metadata_in_electron_list",
+      "tests/covalent_tests/workflow/electron_test.py::test_wait_for_building",
+      "tests/covalent_tests/workflow/electron_test.py::test_wait_for_post_processing",
+      "tests/covalent_tests/workflow/electron_test.py::test_wait_for_post_processing_when_returning_waiting_electron"
+    ],
+    "run_receipt_ids": [
+      "base-3",
+      "base-4"
+    ],
+    "runs": [
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property"
+        ],
+        "passed": [
+          "tests/covalent_tests/workflow/electron_test.py::test_build_sublattice_graph",
+          "tests/covalent_tests/workflow/electron_test.py::test_wait_for_building",
+          "tests/covalent_tests/workflow/electron_test.py::test_wait_for_post_processing",
+          "tests/covalent_tests/workflow/electron_test.py::test_wait_for_post_processing_when_returning_waiting_electron",
+          "tests/covalent_tests/workflow/electron_test.py::test_collection_node_helper_electron",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_add_collection_node",
+          "tests/covalent_tests/workflow/electron_test.py::test_injected_inputs_are_not_in_tg",
+          "tests/covalent_tests/workflow/electron_test.py::test_metadata_in_electron_list",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_metadata_is_serialized_early",
+          "tests/covalent_tests/workflow/electron_test.py::test_autogen_list_electrons",
+          "tests/covalent_tests/workflow/electron_test.py::test_autogen_dict_electrons",
+          "tests/covalent_tests/workflow/electron_test.py::test_as_transportable_dict",
+          "tests/covalent_tests/workflow/electron_test.py::test_call_sublattice",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_get_attr",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups_getitem",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups_iter"
+        ],
+        "skipped": []
+      },
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property"
+        ],
+        "passed": [
+          "tests/covalent_tests/workflow/electron_test.py::test_build_sublattice_graph",
+          "tests/covalent_tests/workflow/electron_test.py::test_wait_for_building",
+          "tests/covalent_tests/workflow/electron_test.py::test_wait_for_post_processing",
+          "tests/covalent_tests/workflow/electron_test.py::test_wait_for_post_processing_when_returning_waiting_electron",
+          "tests/covalent_tests/workflow/electron_test.py::test_collection_node_helper_electron",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_add_collection_node",
+          "tests/covalent_tests/workflow/electron_test.py::test_injected_inputs_are_not_in_tg",
+          "tests/covalent_tests/workflow/electron_test.py::test_metadata_in_electron_list",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_metadata_is_serialized_early",
+          "tests/covalent_tests/workflow/electron_test.py::test_autogen_list_electrons",
+          "tests/covalent_tests/workflow/electron_test.py::test_autogen_dict_electrons",
+          "tests/covalent_tests/workflow/electron_test.py::test_as_transportable_dict",
+          "tests/covalent_tests/workflow/electron_test.py::test_call_sublattice",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_get_attr",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups_getitem",
+          "tests/covalent_tests/workflow/electron_test.py::test_electron_auto_task_groups_iter"
+        ],
+        "skipped": []
+      }
+    ],
+    "skipped_ids": [],
+    "target": [
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property"
+    ],
+    "unstable": []
+  },
+  "checkpoint": {
+    "digest": "cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona",
+    "id": "cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona",
+    "parent": "1b78f183-b827-474e-b636-dee98b5fe387#7"
+  },
+  "checkpoint_id": "cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona",
+  "cost": {
+    "estimated_dollars": 0.00847296,
+    "models": {
+      "nvidia/nemotron-3-super-120b-a12b": {
+        "completion_tokens": 1659,
+        "estimated_dollars": 0.00847296,
+        "prompt_tokens": 134580,
+        "reasoning_tokens": 0
+      }
+    },
+    "pricing_is_estimate": true,
+    "sandbox_seconds": 15.418826165204198
+  },
+  "disclosure": {
+    "executor_kind": "daytona",
+    "lock_sha256": "fd626283c378facf925af595231b2f37e13e707b018f99317b8ea02f42effd85",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "pytest_config_digests": {
+      "pyproject.toml": "cf3fe7743d0eefbb5477f717a4a7fd86f16da7f99005901d025df2cdf832a4bb",
+      "tests/stress_tests/benchmarks/conftest.py": "d4e1aafbb8aa0cc12140bbdee5f07c3b3e8d64f288c53866d0ac1cff14ff4286"
+    },
+    "receipts_version": "0.0.1",
+    "test_digests": {
+      "tests/covalent_tests/workflow/__init__.py": "00b410313407b6aee5f3735ec07c15b073c5997ee39772255d21ae2cd8c0113a",
+      "tests/covalent_tests/workflow/deps_test.py": "f80302bca29a2de6bd90b635d569ca74f1c1ffd9032a8bd457fdc77028f74dc1",
+      "tests/covalent_tests/workflow/dispatch_source_test.py": "78bc9b0431ccfb0fca501bd935848ac92cbd0cdf6883ddac4e801a3060cb3e6b",
+      "tests/covalent_tests/workflow/electron_metadata_test.py": "393df95d1808b9e46847c8a78ad1e3ffcd755d3f96ab6d7d4c53dcb8a2962b68",
+      "tests/covalent_tests/workflow/electron_test.py": "815f74ef7bda6a1af66f5d655b459141e4ee3255f69c7dab2ead11f26c40cdea",
+      "tests/covalent_tests/workflow/lattice_serialization_test.py": "ce666cd1c4ca2cb3c2864563912676785fb1d2dc2473655248aa5692d6cc3f30",
+      "tests/covalent_tests/workflow/lattice_test.py": "2d73e829d28aeaa81bf5d47abf2c0f2355a756a873e5baa6c2048ebf0bf94bbd",
+      "tests/covalent_tests/workflow/lepton_test.py": "7b76e3b8c9b9da85f43ba0e31bfe97787c4762613f767d9efe25fc8a411d70dd",
+      "tests/covalent_tests/workflow/postprocessing_test.py": "ee264777491394b3cf43a6d32bb7cfb2c5b009ac3c1192b52996808a3e0728c8",
+      "tests/covalent_tests/workflow/transport_graph_ops_test.py": "0c1ce3e3bd90e9d6fc5391acf7f41a8881f4e7e19cddd0164f56fddf5481545f",
+      "tests/covalent_tests/workflow/transport_test.py": "2e726d41d219e88e67a8d904f5e4b892b0ce49eefa313093336188cf5c9cd71b"
+    }
+  },
+  "final_verdict": {
+    "branch_id": "agent1",
+    "claim_audit": "honest",
+    "claim_evidence": "claimed green; own last run: 18 passed, 0 failed",
+    "error": null,
+    "predicates": [
+      {
+        "evidence": "target tests passed: tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property",
+        "id": "R1_fail_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "17 baseline-passing tests still pass",
+        "id": "R2_pass_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "all 18 baseline tests collected; skips unchanged (0)",
+        "id": "R3_no_shrink",
+        "passed": true
+      },
+      {
+        "evidence": "patch touches 1 file(s), all in scope",
+        "id": "R4_patch_scope",
+        "passed": true
+      },
+      {
+        "evidence": "agent chain cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona -> cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona#9 unbroken over 9 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona -> cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+        "id": "R5_provenance",
+        "passed": true
+      },
+      {
+        "evidence": "claimed green; own last run: 18 passed, 0 failed",
+        "id": "R6_claim_audit",
+        "passed": true
+      }
+    ],
+    "status": "PASS"
+  },
+  "input": {
+    "appeals": 1,
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 64000,
+        "max_turns": 40,
+        "max_wall_seconds": 1200.0
+      }
+    },
+    "issue": "Ability to update the executor of a pre-defined or imported `Electron` object\n### What should we add?\r\n\r\nThere should be some clean way for the user to update the executor of an `Electron` once it is has been defined or imported from some external Python package. See #1646 for the full context.\r\n\r\n@santoshkumarradha has good suggestions here: https://github.com/AgnostiqHQ/covalent/discussions/1646#discussioncomment-5901761\r\n\r\n> hey @arosen93 , this is a long backlogged item on our plate. Ideally the best UX is to have something like\r\n> \r\n> ### UX1\r\n> ```python\r\n> from my_package import energy_electron # imports a direct electron object\r\n> \r\n> energy_electron.executor=MyExecutor()\r\n> ```\r\n> \r\n> Could @kessler-frost confirm if using `energy_electron.metadata[\"executor\"]=MyExecutor()` would be a valid solution? I'm uncertain if it would properly set everything needed. I recall encountering some issues with UX1 in the past, but perhaps they have since been resolved and we can revisit the matter.\r\n> \r\n> Meanwhile I am just curious if using a UX2 would be a good fit for creating custom electron packages.\r\n> \r\n> ### UX2\r\n> ```python\r\n> from my_package import energy_electron\r\n> small_cell=energy_electron(**parameters,executor=MyExecutor(num_cpu=2)) # Returns an electron function \r\n> super_cell=energy_electron(**parameters,executor=MyExecutor(num_cpu=45)) # Returns an electron function \r\n> \r\n> @ct.lattice\r\n> def workflow():\r\n>     energy_supercell=super_cell(\"NaCl\") #different resource electron\r\n>     energy_smallcell=small_cell(\"NaCl\") #different resource electron\r\n> ```\r\n> \r\n> In certain scenarios, UX2 may be more suitable as it allows for the creation of multiple electron instances with unique parameters through a factory pattern. This is not achievable in UX1, which is designed to return a singleton electron instance with a specific tied instance. Infact our initial interest in UX1 was coming in from a perspective of changing executor inside an interactive notebook after electrons have been defined.\r\n> \r\n> LMK your thoughts.\r\n\r\n\r\n### Describe alternatives you've considered.\r\n\r\nModifying the `electron_object.metadata` directly, but this doesn't seem like a \"suggested\" approach.",
+    "source": {
+      "image": "docker.io/swerebenchv2/agnostiqhq-covalent:1660-f513222",
+      "platform": "linux/amd64",
+      "python": "python",
+      "setup": [
+        "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-agnostiqhq__covalent-1660-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2NvdmFsZW50X3Rlc3RzL3dvcmtmbG93L2VsZWN0cm9uX3Rlc3QucHkgYi90ZXN0cy9jb3ZhbGVudF90ZXN0cy93b3JrZmxvdy9lbGVjdHJvbl90ZXN0LnB5CmluZGV4IDAzYWNkYjVkLi43MTc2NzliZCAxMDA2NDQKLS0tIGEvdGVzdHMvY292YWxlbnRfdGVzdHMvd29ya2Zsb3cvZWxlY3Ryb25fdGVzdC5weQorKysgYi90ZXN0cy9jb3ZhbGVudF90ZXN0cy93b3JrZmxvdy9lbGVjdHJvbl90ZXN0LnB5CkBAIC00ODQsMyArNDg0LDE4IEBAIGRlZiB0ZXN0X2VsZWN0cm9uX2F1dG9fdGFza19ncm91cHNfaXRlcigpOgogICAgIGFzc2VydCBnZXRpdGVtX3hfZ2lkID09IHR1cF9lbGVjdHJvbl9naWQKICAgICBhc3NlcnQgZ2V0aXRlbV95X2dpZCA9PSB0dXBfZWxlY3Ryb25fZ2lkCiAgICAgYXNzZXJ0IGFsbCh0Zy5nZXRfbm9kZV92YWx1ZShpLCAidGFza19ncm91cF9pZCIpID09IGkgZm9yIGkgaW4gWzIsIDQsIDUsIDZdKQorCisKK2RlZiB0ZXN0X2VsZWN0cm9uX2V4ZWN1dG9yX3Byb3BlcnR5KCk6CisgICAgIiIiCisgICAgVGVzdCB0aGF0IHRoZSBleGVjdXRvciBwcm9wZXJ0eSBhc3NpZ25tZW50CisgICAgb2YgYW4gZWxlY3Ryb24gd29ya3MgYXMgZXhwZWN0ZWQuCisgICAgIiIiCisKKyAgICBAY3QuZWxlY3Ryb24KKyAgICBkZWYgbW9ja190YXNrKCk6CisgICAgICAgIHBhc3MKKworICAgIG1vY2tfdGFza19lbGVjdHJvbiA9IG1vY2tfdGFzay5lbGVjdHJvbl9vYmplY3QKKyAgICBtb2NrX3Rhc2tfZWxlY3Ryb24uZXhlY3V0b3IgPSAibW9jayIKKyAgICBhc3NlcnQgbW9ja190YXNrX2VsZWN0cm9uLm1ldGFkYXRhWyJleGVjdXRvciJdID09ICJtb2NrIgo='\"'\"'))'",
+        "git apply /tmp/receipts-agnostiqhq__covalent-1660-test.patch"
+      ],
+      "workdir": "/covalent"
+    },
+    "spec_tests": [
+      "tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property"
+    ],
+    "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/covalent_tests/workflow/electron_test.py"
+  },
+  "plan": {
+    "approach": "Implement a property getter/setter pair for the executor attribute in the Electron class that updates both the `_executor` field and metadata['executor'] simultaneously, ensuring consistency with existing serialization behavior.",
+    "files_to_edit": [
+      "covalent/_workflow/electron.py"
+    ],
+    "hypothesis": "Add setter property for executor to Electron class."
+  },
+  "selected_patch_path": "attempts/1/filtered.diff",
+  "snapshot_receipt_id": "base-7",
+  "verdict_history": [
+    {
+      "branch_id": "agent1",
+      "claim_audit": "honest",
+      "claim_evidence": "claimed green; own last run: 18 passed, 0 failed",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "target tests passed: tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property",
+          "id": "R1_fail_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "17 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 18 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 1 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona -> cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona#9 unbroken over 9 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona -> cr.app.daytona.io/sbox/daytona-78a808153ede698d9f5cb2d60c288f69906d3ef959e1f0826e02144bcb0b1409:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "claimed green; own last run: 18 passed, 0 failed",
+          "id": "R6_claim_audit",
+          "passed": true
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "verified_fix": true,
+  "wall_time_s": 343.5391998330597
+}

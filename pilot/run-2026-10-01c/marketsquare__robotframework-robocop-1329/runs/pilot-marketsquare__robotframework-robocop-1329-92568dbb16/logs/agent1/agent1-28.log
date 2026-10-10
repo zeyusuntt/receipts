@@ -1,0 +1,56 @@
+2:    sources: sources_argument = None,
+3:    include: include_option = None,
+4:    default_include: default_include_option = None,
+5:    exclude: exclude_option = None,
+6:    default_exclude: default_exclude_option = None,
+7:    force_exclude: force_exclude_option = False,
+8:    select: Annotated[
+9:        list[str],
+10:        typer.Option(
+11:            "--select", "-s", help="Select rules to run", show_default=False, rich_help_panel="Selecting rules"
+12:        ),
+13:    ] = None,
+14:    ignore: Annotated[
+15:        list[str],
+16:        typer.Option("--ignore", "-i", help="Ignore rules", show_default=False, rich_help_panel="Selecting rules"),
+17:    ] = None,
+18:    target_version: Annotated[
+19:        config.TargetVersion,
+20:        typer.Option(
+21:            case_sensitive=False,
+22:            help="Enable only rules supported by configured version",
+23:            rich_help_panel="Selecting rules",
+24:        ),
+25:    ] = None,
+26:    threshold: Annotated[
+27:        RuleSeverity,
+28:        typer.Option(
+29:            "--threshold",
+30:            "-t",
+31:            help="Disable rules below given threshold",
+32:            show_default=RuleSeverity.INFO.value,
+33:            parser=config.parse_rule_severity,
+34:            metavar="I/W/E",
+35:            rich_help_panel="Selecting rules",
+36:        ),
+37:    ] = None,
+38:    configuration_file: config_option = None,
+39:    configure: Annotated[
+40:        list[str],
+41:        typer.Option(
+42:            "--configure",
+43:            "-c",
+44:            help="Configure checker or report with parameter value",
+45:            metavar="rule.param=value",
+46:            show_default=False,
+47:            rich_help_panel="Configuration",
+48:        ),
+49:    ] = None,
+50:    reports: Annotated[
+51:        list[str],
+52:        typer.Option(
+53:            "--reports",
+54:            "-r",
+55:            show_default=False,
+56:            help="Generate reports from reported issues. To list available reports use `list reports` command. "
+57:            "Use `all` to enable all reports.",

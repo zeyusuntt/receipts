@@ -1,0 +1,73 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /amaranth
+configfile: pyproject.toml
+collecting ... collected 3 items
+
+tests/test_lib_data.py::LayoutTestCase::test_const_field_const PASSED    [ 33%]
+tests/test_lib_data.py::ViewTestCase::test_bug_837_array_layout_getattr FAILED [ 66%]
+tests/test_lib_data.py::ViewTestCase::test_bug_837_array_layout_getitem_str FAILED [100%]
+
+=================================== FAILURES ===================================
+________________ ViewTestCase.test_bug_837_array_layout_getattr ________________
+
+self = <tests.test_lib_data.ViewTestCase testMethod=test_bug_837_array_layout_getattr>
+
+    def test_bug_837_array_layout_getattr(self):
+        with self.assertRaisesRegex(AttributeError,
+                r"^View of \(sig \$signal\) with an array layout does not have fields$"):
+>           Signal(ArrayLayout(unsigned(1), 1), reset=[0]).reset
+
+tests/test_lib_data.py:627: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+amaranth/lib/data.py:702: in __getattr__
+    item = self[name]
+amaranth/lib/data.py:667: in __getitem__
+    value = self.__target.word_select(key, Shape.cast(self.__layout.elem_shape).width)
+amaranth/hdl/ast.py:400: in word_select
+    offset = Value.cast(offset)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @staticmethod
+    def cast(obj):
+        """Converts ``obj`` to an Amaranth value.
+    
+        Booleans and integers are wrapped into a :class:`Const`. Enumerations whose members are
+        all integers are converted to a :class:`Const` with a shape that fits every member.
+        :class:`ValueCastable` objects are recursively cast to an Amaranth value.
+        """
+        while True:
+            if isinstance(obj, Value):
+                return obj
+            elif isinstance(obj, ValueCastable):
+                new_obj = obj.as_value()
+            elif isinstance(obj, Enum):
+                return Const(obj.value, Shape.cast(type(obj)))
+            elif isinstance(obj, int):
+                return Const(obj)
+            else:
+>               raise TypeError("Object {!r} cannot be converted to an Amaranth value".format(obj))
+E               TypeError: Object 'reset' cannot be converted to an Amaranth value
+
+amaranth/hdl/ast.py:174: TypeError
+______________ ViewTestCase.test_bug_837_array_layout_getitem_str ______________
+TypeError: Object 'reset' cannot be converted to an Amaranth value
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.test_lib_data.ViewTestCase testMethod=test_bug_837_array_layout_getitem_str>
+
+    def test_bug_837_array_layout_getitem_str(self):
+>       with self.assertRaisesRegex(TypeError,
+                r"^Views with array layout may only be indexed with an integer or a value, "
+                r"not 'reset'$"):
+E               AssertionError: "^Views with array layout may only be indexed with an integer or a value, not 'reset'$" does not match "Object 'reset' cannot be converted to an Amaranth value"
+
+tests/test_lib_data.py:619: AssertionError
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-27.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_lib_data.py::LayoutTestCase::test_const_field_const
+FAILED tests/test_lib_data.py::ViewTestCase::test_bug_837_array_layout_getattr
+FAILED tests/test_lib_data.py::ViewTestCase::test_bug_837_array_layout_getitem_str
+========================= 2 failed, 1 passed in 0.14s ==========================

@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "`SmtLibParser` fails to parse annotations without associated values\nWhen parsing annotations, the parser always tries to read an associated value:\nhttps://github.com/pysmt/pysmt/blob/8aaf1d3309e7402db20fafd6075a9ce7142fed85/pysmt/smtlib/parser/parser.py#L773-L790\n\nHowever, following the SMT-LIB specs:\n```\n\u3008attribute_value\u3009 ::= \u3008spec_constant\u3009 | \u3008symbol\u3009 | ( \u3008s_expr\u3009\u2217 )\n\u3008attribute\u3009 ::= \u3008keyword\u3009 | \u3008keyword\u3009 \u3008attribute_value\u3009\n```\nAn attribute can also be a single keyword, without any associated value.",
+  "source": {
+    "image": "docker.io/swerebenchv2/pysmt-pysmt:812-bbfe2c5",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pysmt__pysmt-812-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3B5c210L3Rlc3Qvc210bGliL3Rlc3RfYW5ub3RhdGlvbnMucHkgYi9weXNtdC90ZXN0L3NtdGxpYi90ZXN0X2Fubm90YXRpb25zLnB5CmluZGV4IGJjZGE3YWYuLjhlMGI3NjQgMTAwNjQ0Ci0tLSBhL3B5c210L3Rlc3Qvc210bGliL3Rlc3RfYW5ub3RhdGlvbnMucHkKKysrIGIvcHlzbXQvdGVzdC9zbXRsaWIvdGVzdF9hbm5vdGF0aW9ucy5weQpAQCAtMTY3LDggKzE2NywxMCBAQCBjbGFzcyBUZXN0QmFzaWMoVGVzdENhc2UpOgogICAgICAgICBzY3JpcHQgPSBwYXJzZXIuZ2V0X3NjcmlwdChidWYpCiAgICAgICAgIGFubiA9IHNjcmlwdC5hbm5vdGF0aW9ucwogICAgICAgICB2MCA9IHNlbGYuZW52LmZvcm11bGFfbWFuYWdlci5nZXRfc3ltYm9sKCcidl9fQVQwIicpCi0gICAgICAgIHYxX3N0ciA9IG5leHQoaXRlcihhbm5bdjBdWyJuZXh0Il0pKQotICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHYxX3N0ciwgIjp0aGlzX2lzX2NvbnNpZGVyZWRfYV92YWx1ZSIpCisgICAgICAgIHdpdGggc2VsZi5hc3NlcnRSYWlzZXMoU3RvcEl0ZXJhdGlvbik6CisgICAgICAgICAgICBuZXh0KGl0ZXIoYW5uW3YwXVsibmV4dCJdKSkKKyAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhTdG9wSXRlcmF0aW9uKToKKyAgICAgICAgICAgIG5leHQoaXRlcihhbm5bdjBdWyJ0aGlzX2lzX2NvbnNpZGVyZWRfYV92YWx1ZSJdKSkKIAogCiBpZiBfX25hbWVfXyA9PSAnX19tYWluX18nOgo='\"'\"'))'",
+      "git apply /tmp/receipts-pysmt__pysmt-812-test.patch"
+    ],
+    "workdir": "/pysmt"
+  },
+  "spec_paths": [
+    "pysmt/test/smtlib/test_annotations.py"
+  ],
+  "spec_tests": [
+    "pysmt/test/smtlib/test_annotations.py::TestBasic::test_annotations_colon_values"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pysmt/test/smtlib/test_annotations.py"
+}

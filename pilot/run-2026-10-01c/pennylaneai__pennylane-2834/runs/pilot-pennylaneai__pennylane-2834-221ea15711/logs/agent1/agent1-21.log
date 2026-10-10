@@ -1,0 +1,7 @@
+            res = qml.math.stack(res)^M$
+            g = qml.math.tensordot(res, qml.math.convert_like(gradient_coeffs[i], res), [[0], [0]])^M$
+^M$
+            if unshifted_coeffs:^M$
+                # add on the unshifted term^M$
+                g = g + unshifted_coeffs[i] * r0^M$
+^M$

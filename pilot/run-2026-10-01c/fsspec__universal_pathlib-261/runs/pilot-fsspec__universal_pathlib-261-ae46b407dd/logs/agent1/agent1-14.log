@@ -1,0 +1,43 @@
+    def samefile(self, other_path) -> bool:
+        raise NotImplementedError
+
+    @overload  # type: ignore[override]
+    def open(
+        self,
+        mode: Literal["r", "w", "a"] = "r",
+        buffering: int = ...,
+        encoding: str = ...,
+        errors: str = ...,
+        newline: str = ...,
+        **fsspec_kwargs: Any,
+    ) -> TextIO: ...
+
+    @overload
+    def open(  # type: ignore[override]
+        self,
+        mode: Literal["rb", "wb", "ab"],
+        buffering: int = ...,
+        encoding: str = ...,
+        errors: str = ...,
+--
+    def samefile(self, other: os.PathLike[str] | UPath) -> bool:
+        """Test whether two path references point to the same file or directory.
+        
+        This method compares the device and inode number of the underlying files,
+        similar to os.path.samefile().
+        Raises FileNotFoundError if either path does not exist.
+        """
+        if not isinstance(other, (UPath, os.PathLike)):
+            return NotImplemented
+        other_path = UPath(other) if not isinstance(other, UPath) else other
+        
+        # Get stat info for both paths - this will raise FileNotFoundError if needed
+        try:
+            self_stat = self.stat()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"[Errno 2] No such file or directory: {self!r}")
+        
+        try:
+            other_stat = other_path.stat()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"[Errno 2] No such file or directory: {other_path!r}")

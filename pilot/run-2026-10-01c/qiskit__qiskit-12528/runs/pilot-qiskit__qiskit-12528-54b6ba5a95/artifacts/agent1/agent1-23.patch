@@ -1,0 +1,60 @@
+diff --git a/qiskit/circuit/quantumcircuit.py b/qiskit/circuit/quantumcircuit.py
+index a157f0437..682e589d4 100644
+--- a/qiskit/circuit/quantumcircuit.py
++++ b/qiskit/circuit/quantumcircuit.py
+@@ -3355,6 +3355,8 @@ class QuantumCircuit:
+         # they are conditioned on.
+         # The max stack height is the circuit depth.
+         for instruction in self._data:
++            if instruction.operation.name == "global_phase":
++                continue
+             levels = []
+             reg_ints = []
+             for ind, reg in enumerate(instruction.qubits + instruction.clbits):
+@@ -3368,12 +3370,18 @@ class QuantumCircuit:
+             # Assuming here that there is no conditional
+             # snapshots or barriers ever.
+             if getattr(instruction.operation, "condition", None):
+-                # Controls operate over all bits of a classical register
+-                # or over a single bit
+-                if isinstance(instruction.operation.condition[0], Clbit):
+-                    condition_bits = [instruction.operation.condition[0]]
++                condition = instruction.operation.condition
++                # Safely get the first element for subscriptable conditions
++                try:
++                    first = condition[0]
++                except (TypeError, AttributeError):
++                    # If not subscriptable, treat the whole condition as the bit/register
++                    first = condition
++                if isinstance(first, Clbit):
++                    condition_bits = [first]
+                 else:
+-                    condition_bits = instruction.operation.condition[0]
++                    # Assume it's a Register-like object
++                    condition_bits = first
+                 for cbit in condition_bits:
+                     idx = bit_indices[cbit]
+                     if idx not in reg_ints:
+diff --git a/test_repro.py b/test_repro.py
+new file mode 100644
+index 000000000..48efac827
+--- /dev/null
++++ b/test_repro.py
+@@ -0,0 +1,16 @@
++from qiskit import QuantumCircuit, transpile
++from qiskit.circuit.library import GlobalPhaseGate
++
++qc_qiskit = QuantumCircuit(2, 2)
++
++qc_qiskit.cx(0, 1)
++
++transpiled_qc = transpile(qc_qiskit,
++                          basis_gates=['u3', 'cx'],
++                          optimization_level=3,
++                          seed_transpiler=0)
++
++transpiled_qc.append(GlobalPhaseGate(2.5928519981876477), [], [])
++
++print("global_phase:", transpiled_qc.global_phase)
++print("depth:", transpiled_qc.depth())
+\ No newline at end of file

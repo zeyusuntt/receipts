@@ -1,0 +1,670 @@
+diff --git a/src/towncrier/debug_build.py b/src/towncrier/debug_build.py
+new file mode 100644
+index 0000000..dacc8d9
+--- /dev/null
++++ b/src/towncrier/debug_build.py
+@@ -0,0 +1,90 @@
++#!/usr/bin/env python3
++
++# Copy the relevant parts of build.py with debug prints
++import tempfile
++import os
++import shutil
++from pathlib import Path
++
++def test_with_debug():
++    # Create a test repo like the test does
++    test_dir = tempfile.mkdtemp()
++    print(f"Test dir: {test_dir}")
++    old_cwd = os.getcwd()
++    os.chdir(test_dir)
++    
++    try:
++        # Set up the project like the test
++        os.makedirs("foo/newsfragments")
++        
++        with open("foo/__init__.py", "w") as f:
++            f.write("")
++            
++        with open("pyproject.toml", "w") as f:
++            f.write("""
++[tool.towncrier]
++package = "foo"
++filename = "NEWS.md"
++title_format = "[{project_date}] CUSTOM RELEASE for {name} version {version}"
++""")
++
++        with open("foo/newsfragments/123.feature", "w") as f:
++            f.write("Adds levitation")
++
++        # Now let's manually call the build logic with debug
++        from towncrier._settings.load import load_config_from_options
++        from towncrier.build import _main as towncrier_main
++        from click.testing import CliRunner
++        
++        runner = CliRunner()
++        
++        # Let's patch the render_fragments function to add debug info
++        import towncrier.build
++        original_render = towncrier.build.render_fragments
++        
++        def debug_render_fragments(*args, **kwargs):
++            print("=== DEBUG RENDER_FRAGMENTS CALL ===")
++            print(f"Args length: {len(args)}")
++            print(f"Kwargs keys: {list(kwargs.keys())}")
++            if 'sections' in kwargs:
++                print(f"Sections: {kwargs['sections']}")
++            if 'render_title' in kwargs:
++                print(f"Render title: {kwargs['render_title']}")
++            if 'template' in kwargs:
++                print(f"Template preview: {repr(kwargs['template'])[:200]}...")
++            print("===================================")
++            
++            result = original_render(*args, **kwargs)
++            print(f"Render result preview: {repr(result)[:200]}...")
++            return result
++        
++        towncrier.build.render_fragments = debug_render_fragments
++        
++        # Run the command
++        result = runner.invoke(
++            towncrier_main,
++            [
++                "--name",
++                "FooBarBaz",
++                "--version",
++                "7.8.9",
++                "--date",
++                "20-01-2001",
++                "--draft",
++            ],
++        )
++        
++        print("=== FINAL OUTPUT ===")
++        print(repr(result.output))
++        print("-------------------")
++        print(result.output)
++        print("====================")
++        
++        return result
++        
++    finally:
++        os.chdir(old_cwd)
++        shutil.rmtree(test_dir)
++
++if __name__ == "__main__":
++    test_with_debug()
+\ No newline at end of file
+diff --git a/src/towncrier/debug_real.py b/src/towncrier/debug_real.py
+new file mode 100644
+index 0000000..859b6a9
+--- /dev/null
++++ b/src/towncrier/debug_real.py
+@@ -0,0 +1,72 @@
++#!/usr/bin/env python3
++
++# Let's hijack the render_fragments function to see what's actually being passed
++import sys
++import os
++
++# Add the src directory to the path
++sys.path.insert(0, '/towncrier/src')
++
++from jinja2 import Template
++
++# Read the actual template file
++template_path = '/towncrier/src/towncrier/templates/default.md'
++with open(template_path, 'r') as f:
++    template_str = f.read()
++
++print("=== TEMPLATE CONTENT ===")
++print(repr(template_str))
++print("========================")
++
++# Let's simulate what we THINK should be passed
++test_data = {
++    'render_title': False,
++    'versiondata': {'name': 'FooBarBaz', 'version': '7.8.9', 'date': '20-01-2001'},
++    'sections': {
++        '': {  # Empty string section
++            'feature': {
++                'Adds levitation': ['#123']
++            }
++        }
++    },
++    'definitions': {
++        'feature': {'name': 'Features', 'showcontent': True}
++    },
++    'underlines': ['=', '-', '~'],
++    'versiondata': {'name': 'FooBarBaz', 'version': '7.8.9', 'date': '20-01-2001'},
++    'top_underline': '=',
++    'all_bullets': False,
++    'get_indent': lambda x: '  ',
++    'issues_by_category': {
++        '': {
++            'feature': ['#123']
++        }
++    }
++}
++
++print("\n=== INPUT DATA ===")
++print(f"render_title: {test_data['render_title']}")
++print(f"sections keys: {list(test_data['sections'].keys())}")
++print(f"sections['']: {test_data['sections']['']}")
++print(f"bool(sections['']): {bool(test_data['sections'][''])}")
++print(f"'' is falsy: {not bool('')}")
++print("==================")
++
++# Render it
++template = Template(template_str)
++result = template.render(**test_data)
++
++print("\n=== RESULT ===")
++print(repr(result))
++print("--------------")
++print("Formatted:")
++print(result)
++print("--------------")
++
++# Let's also test what happens if we accidentally pass a truthy section
++print("\n=== TESTING WITH TRUTHY SECTION ===")
++test_data_truthy = test_data.copy()
++test_data_truthy['sections'] = {'Web': {'feature': {'Adds levitation': ['#123']}}}
++result_truthy = template.render(**test_data_truthy)
++print("Result with 'Web' section:")
++print(repr(result_truthy))
+\ No newline at end of file
+diff --git a/src/towncrier/debug_real2.py b/src/towncrier/debug_real2.py
+new file mode 100644
+index 0000000..37512e7
+--- /dev/null
++++ b/src/towncrier/debug_real2.py
+@@ -0,0 +1,94 @@
++#!/usr/bin/env python3
++
++# Let's hijack the render_fragments function to see what's actually being passed
++import sys
++import os
++
++# Add the src directory to the path
++sys.path.insert(0, '/towncrier/src')
++
++from jinja2 import Template
++
++# Read the actual template file
++template_path = '/towncrier/src/towncrier/templates/default.md'
++with open(template_path, 'r') as f:
++    template_str = f.read()
++
++print("=== TEMPLATE CONTENT (relevant parts) ===")
++lines = template_str.split('\n')
++for i, line in enumerate(lines[10:20], 10):  # Show lines around the section logic
++    print(f"{i+1:2}: {line}")
++print("=======================================")
++
++# Let's simulate what we THINK should be passed
++test_data = {
++    'render_title': False,
++    'versiondata': {'name': 'FooBarBaz', 'version': '7.8.9', 'date': '20-01-2001'},
++    'sections': {
++        '': {  # Empty string section
++            'feature': {
++                'Adds levitation': ['#123']
++            }
++        }
++    },
++    'definitions': {
++        'feature': {'name': 'Features', 'showcontent': True}
++    },
++    'underlines': ['=', '-', '~'],
++    'versiondata': {'name': 'FooBarBaz', 'version': '7.8.9', 'date': '20-01-2001'},
++    'top_underline': '=',
++    'all_bullets': False,
++    'get_indent': lambda x: '  ',
++    'issues_by_category': {
++        '': {
++            'feature': ['#123']
++        }
++    }
++}
++
++print("\n=== INPUT DATA ANALYSIS ===")
++print(f"render_title: {test_data['render_title']}")
++section_key = list(test_data['sections'].keys())[0]
++section_value = test_data['sections'][section_key]
++print(f"section key: {repr(section_key)}")
++print(f"section value: {section_value}")
++print(f"bool(section_key): {bool(section_key)}  # Is the section name truthy?")
++print(f"bool(section_value): {bool(section_value)}  # Is the section content truthy?")
++print(f"section_key == '': {section_key == ''}")
++print(f"not section_key: {not section_key}  # This is what the template checks")
++print("===========================")
++
++# Look at the exact template logic for sections
++print("\n=== TEMPLATE LOGIC TRACE ===")
++print("For section loop:")
++print(f"  section = {repr(section_key)}")
++print(f"  {{% if section %}} → {bool(section_key)} → {'TRUE' if bool(section_key) else 'FALSE'}")
++if bool(section_key):
++    print(f"  Would output: ## {{section}} → ## {section_key}")
++else:
++    print(f"  Skipping ## {{section}} line")
++
++print()
++print("For category loop:")
++print(f"  sections[section] = {section_value}")
++print(f"  {{% if sections[section] %}} → {bool(section_value)} → {'TRUE' if bool(section_value) else 'FALSE'}")
++if bool(section_value):
++    category_name = 'feature'
++    category_def = test_data['definitions'][category_name]
++    print(f"  Processing category: {category_name}")
++    print(f"  {{% if section %}} → {bool(section_key)} → {'TRUE' if bool(section_key) else 'FALSE'}")
++    hash_count = 2 + (1 if bool(section_key) else 0)
++    print(f"  Header level: {'#' * hash_count} → {'#' * hash_count} {{ definitions[{category_name}]['name'] }}")
++    print(f"  Result: {'#' * hash_count} {category_def['name']}")
++print("============================")
++
++# Render it
++template = Template(template_str)
++result = template.render(**test_data)
++
++print("\n=== ACTUAL RESULT ===")
++print(repr(result))
++print("--------------")
++print("Formatted:")
++print(result)
++print("--------------")
+\ No newline at end of file
+diff --git a/src/towncrier/debug_template.py b/src/towncrier/debug_template.py
+new file mode 100644
+index 0000000..e7e85c5
+--- /dev/null
++++ b/src/towncrier/debug_template.py
+@@ -0,0 +1,89 @@
++#!/usr/bin/env python3
++
++# Simulate what the template receives
++from jinja2 import Template
++
++template_str = """
++{% if render_title %}
++{% if versiondata.name %}
++# {{ versiondata.name }} {{ versiondata.version }} ({{ versiondata.date }})
++{% else %}
++# {{ versiondata.version }} ({{ versiondata.date }})
++{% endif %}
++{% endif %}
++{% for section, _ in sections.items() %}
++{% if section %}
++
++## {{section}}
++{% endif %}
++
++{% if sections[section] %}
++{% for category, val in definitions.items() if category in sections[section] %}
++##{% if section %}#{% endif %} {{ definitions[category]['name'] }}
++
++{% for text, values in sections[section][category].items() %}
++- {{ text }}
++{%- if values %}
++{% if "\n  - " in text or '\n  * ' in text %}
++
++
++  (
++{%- else %}
++{% if text %} ({% endif %}
++{%- endif -%}
++{%- for issue in values %}
++{{ issue.split(": ", 1)[0] }}{% if not loop.last %}, {% endif %}
++{%- endfor %}
++{% if text %}){% endif %}
++
++{% else %}
++
++{% endif %}
++{% endfor %}
++
++{% if issues_by_category[section][category] and "]: " in issues_by_category[section][category][0] %}
++{% for issue in issues_by_category[section][category] %}
++{{ issue }}
++{% endfor %}
++
++{% endif %}
++{% if sections[section][category]|length == 0 %}
++No significant changes.
++
++{% else %}
++{% endif %}
++{% endfor %}
++{% else %}
++No significant changes.
++
++{% endif %}
++{% endfor +%}
++"""
++
++# Test data simulating the failing test case
++template = Template(template_str)
++
++result = template.render(
++    render_title=False,  # This is key - title_format is not empty
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "": {  # No section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("Result:")
++print(repr(result))
++print("\nFormatted result:")
++print(result)
+\ No newline at end of file
+diff --git a/src/towncrier/debug_test_values.py b/src/towncrier/debug_test_values.py
+new file mode 100644
+index 0000000..750dc69
+--- /dev/null
++++ b/src/towncrier/debug_test_values.py
+@@ -0,0 +1,99 @@
++#!/usr/bin/env python3
++
++from textwrap import dedent
++from twisted.trial.unittest import TestCase
++
++# Recreate the test logic
++expected_output = dedent(
++    """\
++    Loading template...
++    Finding news fragments...
++    Rendering news fragments...
++    Draft only -- nothing has been written.
++    What is seen below is what would be written.
++
++    [20-01-2001] CUSTOM RELEASE for FooBarBaz version 7.8.9
++
++    # Features
++
++    - Adds levitation (#123)
++
++
++
++    """
++)
++
++print("EXPECTED (from test file):")
++print(repr(expected_output))
++
++# Now let's get the ACTUAL output by running the test code
++import tempfile
++import os
++import shutil
++from click.testing import CliRunner
++
++test_dir = tempfile.mkdtemp()
++old_cwd = os.getcwd()
++os.chdir(test_dir)
++
++try:
++    # Set up like the test
++    os.makedirs("foo/newsfragments")
++    
++    with open("foo/__init__.py", "w") as f:
++        f.write("")
++        
++    with open("pyproject.toml", "w") as f:
++        f.write("""
++[tool.towncrier]
++package = "foo"
++filename = "NEWS.md"
++title_format = "[{project_date}] CUSTOM RELEASE for {name} version {version}"
++""")
++
++    with open("foo/newsfragments/123.feature", "w") as f:
++        f.write("Adds levitation")
++
++    from towncrier.build import _main as towncrier_main
++    runner = CliRunner()
++    
++    result = runner.invoke(
++        towncrier_main,
++        [
++            "--name",
++            "FooBarBaz",
++            "--version",
++            "7.8.9",
++            "--date",
++            "20-01-2001",
++            "--draft",
++        ],
++    )
++    
++    actual_output = result.output
++    
++    print("\nACTUAL (from running code):")
++    print(repr(actual_output))
++    
++    print(f"\nMatch: {actual_output == expected_output}")
++    
++    if actual_output != expected_output:
++        print("\nDIFFERENCE:")
++        for i, (a, b) in enumerate(zip(actual_output, expected_output)):
++            if a != b:
++                print(f"Position {i}: actual={repr(a)} expected={repr(b)}")
++                # Show some context
++                start = max(0, i-10)
++                end = min(len(actual_output), i+10)
++                print(f"  Actual context: {repr(actual_output[start:end])}")
++                print(f"  Expected context: {repr(expected_output[start:end])}")
++                break
++        else:
++            if len(actual_output) != len(expected_output):
++                print(f"Length mismatch: actual={len(actual_output)}, expected={len(expected_output)}")
++                print(f"Actual ends with: {repr(actual_output[-20:])}")
++                print(f"Expected ends with: {repr(expected_output[-20:])}")
++    
++finally:
++    os.chdir(old_cwd)
++    shutil.rmtree(test_dir)
+\ No newline at end of file
+diff --git a/src/towncrier/templates/default.md.test b/src/towncrier/templates/default.md.test
+new file mode 100644
+index 0000000..c2740e9
+--- /dev/null
++++ b/src/towncrier/templates/default.md.test
+@@ -0,0 +1,62 @@
++{% if render_title %}
++{% if versiondata.name %}
++# {{ versiondata.name }} {{ versiondata.version }} ({{ versiondata.date }})
++{% else %}
++# {{ versiondata.version }} ({{ versiondata.date }})
++{% endif %}
++{% endif %}
++{% for section, _ in sections.items() %}
++{% if section %}
++
++## {{section}}
++{% endif %}
++
++{% if sections[section] %}
++{% for category, val in definitions.items() if category in sections[section] %}
++{% if render_title %}
++##{% if section %}#{% endif %} {{ definitions[category]['name'] }}
++{% else %}
++{% if section %}#{% endif %} {{ definitions[category]['name'] }}
++{% endif %}
++
++{% for text, values in sections[section][category].items() %}
++- {{ text }}
++{%- if values %}
++{% if "\n  - " in text or '\n  * ' in text %}
++
++
++  (
++{%- else %}
++{% if text %} ({% endif %}
++{%- endif -%}
++{%- for issue in values %}
++{{ issue.split(": ", 1)[0] }}{% if not loop.last %}, {% endif %}
++{%- endfor %}
++{% if text %}){% endif %}
++
++{% else %}
++
++{% endif %}
++{% endfor %}
++
++{% if issues_by_category[section][category] and "]: " in issues_by_category[section][category][0] %}
++{% for issue in issues_by_category[section][category] %}
++{{ issue }}
++{% endfor %}
++
++{% endif %}
++{% if sections[section][category]|length == 0 %}
++No significant changes.
++
++{% else %}
++{% endif %}
++{% endfor %}
++{% else %}
++No significant changes.
++
++{% endif %}
++{% endfor +%}
++{#
++This comment adds one more newline at the end of the rendered newsfile content.
++In this way the there are 2 newlines between the latest release and the previous release content.
++#}
+\ No newline at end of file
+diff --git a/src/towncrier/test_template_fix.py b/src/towncrier/test_template_fix.py
+new file mode 100644
+index 0000000..df65e8c
+--- /dev/null
++++ b/src/towncrier/test_template_fix.py
+@@ -0,0 +1,115 @@
++#!/usr/bin/env python3
++
++from jinja2 import Template
++
++# Read the modified template
++template_path = '/towncrier/src/towncrier/templates/default.md.test'
++with open(template_path, 'r') as f:
++    template_str = f.read()
++
++print("=== TESTING MODIFIED TEMPLATE ===")
++
++# Test case 1: render_title=False (custom title format) - should give us # Features
++template = Template(template_str)
++result1 = template.render(
++    render_title=False,
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "": {  # No section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("CASE 1 - render_title=False (custom title):")
++print(repr(result1))
++print("---")
++print(result1)
++
++# Test case 2: render_title=True (default/no custom title) - should give us ## Features  
++result2 = template.render(
++    render_title=True,
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "": {  # No section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("\nCASE 2 - render_title=True (default title):")
++print(repr(result2))
++print("---")
++print(result2)
++
++# Test case 3: With actual section - render_title=False
++result3 = template.render(
++    render_title=False,
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "Web": {  # Actual section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "Web": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("\nCASE 3 - render_title=False WITH SECTION:")
++print(repr(result3))
++print("---")
++print(result3)
++
++# Test case 4: With actual section - render_title=True
++result4 = template.render(
++    render_title=True,
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "Web": {  # Actual section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "Web": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("\nCASE 4 - render_title=True WITH SECTION:")
++print(repr(result4))
++print("---")
++print(result4)
+\ No newline at end of file

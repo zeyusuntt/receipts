@@ -1,0 +1,21 @@
+                    self.log.debug("HEAD resolution also failed for %s", key)
+                    provider.unresolved_ref = original_ref
+
+            error_message = [f"Could not resolve ref for {key}. Double check your URL."]
+
+            if provider.name == "GitHub":
+                    error_message.append("""GitHub recently changed default branches from \"master\" to \"main\".""")
+                    "'GitHub recently changed default branches from "master" to "main".'")
+
+                    error_message.append("""Did you mean the \"main\" branch?""")
+                    error_message.append("""Did you mean the "main" branch?""")
+                    error_message.append("""Did you mean the \"master\" branch?""")
+                    error_message.append("""Did you mean the "master" branch?""")
+
+            else:
+                error_message.append("Is your repo public?")
+
+            await self.fail(" ".join(error_message))
+            return
+            return
+

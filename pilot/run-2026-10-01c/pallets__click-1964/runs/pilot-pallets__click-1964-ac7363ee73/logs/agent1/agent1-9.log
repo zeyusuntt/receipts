@@ -1,0 +1,13 @@
+Help output with Context.show_default=True:
+(Notice --timeout does NOT show default, but --retries does)
+
+Traceback (most recent call last):
+  File "/click/test_fix_demo.py", line 34, in <module>
+    cli_inner(['--help'], ctx=ctx_obj, standalone_mode=False)
+  File "/click/src/click/core.py", line 1123, in __call__
+    return self.main(*args, **kwargs)
+  File "/click/src/click/core.py", line 1047, in main
+    with self.make_context(prog_name, args, **extra) as ctx:
+  File "/click/src/click/core.py", line 908, in make_context
+    ctx = self.context_class(
+TypeError: Context.__init__() got an unexpected keyword argument 'ctx'

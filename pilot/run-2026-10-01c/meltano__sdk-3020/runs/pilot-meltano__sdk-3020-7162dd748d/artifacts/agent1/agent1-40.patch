@@ -1,0 +1,160 @@
+diff --git a/singer_sdk/sinks/sql.py b/singer_sdk/sinks/sql.py
+index 9a82e59b..ba53d446 100644
+--- a/singer_sdk/sinks/sql.py
++++ b/singer_sdk/sinks/sql.py
+@@ -81,8 +81,19 @@ class SQLSink(BatchSink, t.Generic[_C]):
+             The target table name.
+         """
+         parts = self.stream_name.split("-")
+-        table = self.stream_name if len(parts) == 1 else parts[-1]
+-        return self.conform_name(table, "table")
++        # When default_target_schema is configured, don't split stream name
++        default_target_schema: str = self.config.get("default_target_schema", None)
++        if default_target_schema:
++            # Use full stream name literally when schema is explicitly configured
++            table = self.stream_name
++        else:
++            # Otherwise, assume format is [-]<schema>-<table> and extract table name
++            table = self.stream_name if len(parts) == 1 else parts[-1]
++        # Only conform when not using literal stream name (for backward compatibility)
++        if default_target_schema:
++            return table
++        else:
++            return self.conform_name(table, "table")
+ 
+     @property
+     def schema_name(self) -> str | None:
+diff --git a/test_stream_name.py b/test_stream_name.py
+new file mode 100644
+index 00000000..664a2975
+--- /dev/null
++++ b/test_stream_name.py
+@@ -0,0 +1,56 @@
++#!/usr/bin/env python3
++
++# Test script to reproduce the issue
++import sys
++sys.path.insert(0, '.')
++
++from singer_sdk.sinks.sql import SQLSink
++from singer_sdk.connectors import SQLConnector
++
++class DummyConnector(SQLConnector):
++    def __init__(self, config):
++        super().__init__(config)
++        
++    def prepare_schema(self, schema_name):
++        pass
++        
++    def prepare_table(self, full_table_name, schema, primary_keys, as_temp_table=False):
++        pass
++        
++    def bulk_insert_records(self, full_table_name, schema, records):
++        pass
++
++class DummyTarget:
++    def __init__(self):
++        self.config = {}
++
++class DummySink(SQLSink[DummyConnector]):
++    connector_class = DummyConnector
++    
++    def process_batch(self, context):
++        pass
++
++# Test the problematic case
++schema = {"type": "object", "properties": {"id": {"type": "string"}}}
++
++print("--- Test case from issue ---")
++target = DummyTarget()
++sink = DummySink(target, "tap_bigquery-weekly_fuel_prices", schema, ["id"])
++print(f"Stream name: {sink.stream_name}")
++print(f"Table name: {sink.table_name}")  # What does this produce?
++print(f"Schema name: {sink.schema_name}")
++
++# What we want: table name should be based on full stream name, not just part after last hyphen
++# Current behavior with conform_name: "tap_bigquery-weekly_fuel_prices" -> "tap_bigquery_weekly_fuel_prices"
++
++print("\n--- Simple name ---")
++sink2 = DummySink(target, "simple_stream", schema, ["id"])
++print(f"Stream name: {sink2.stream_name}")
++print(f"Table name: {sink2.table_name}")
++print(f"Schema name: {sink2.schema_name}")
++
++print("\n--- Hyphenated simple ---")
++sink3 = DummySink(target, "foo-bar", schema, ["id"])
++print(f"Stream name: {sink3.stream_name}")
++print(f"Table name: {sink3.table_name}")
++print(f"Schema name: {sink3.schema_name}")
+\ No newline at end of file
+diff --git a/verify_fix.py b/verify_fix.py
+new file mode 100644
+index 00000000..bbb54233
+--- /dev/null
++++ b/verify_fix.py
+@@ -0,0 +1,64 @@
++#!/usr/bin/env python3
++
++# Verify the fix for the issue
++import sys
++sys.path.insert(0, '.')
++
++from singer_sdk.sinks.sql import SQLSink
++from singer_sdk.connectors import SQLConnector
++
++class DummyConnector(SQLConnector):
++    def __init__(self, config):
++        super().__init__(config)
++        
++    def prepare_schema(self, schema_name):
++        pass
++        
++    def prepare_table(self, full_table_name, schema, primary_keys, as_temp_table=False):
++        pass
++        
++    def bulk_insert_records(self, full_table_name, schema, records):
++        pass
++
++class DummyTarget:
++    def __init__(self, config=None):
++        self.config = config or {}
++
++class DummySink(SQLSink[DummyConnector]):
++    connector_class = DummyConnector
++    
++    def process_batch(self, context):
++        pass
++
++# Test the exact case from the issue
++schema = {"type": "object", "properties": {"id": {"type": "string"}}}
++target = DummyTarget()
++
++print("=== Issue Verification ===")
++print("Stream name: tap_bigquery-weekly_fuel_prices")
++print("Expected: table name based on full stream name (not split)")
++print()
++
++# Test 1: No default schema (should split for backward compatibility)
++sink1 = DummySink(target, "tap_bigquery-weekly_fuel_prices", schema, ["id"])
++print(f"No default schema:")
++print(f"  Stream name: {sink1.stream_name}")
++print(f"  Table name: {sink1.table_name}")  # Should be conformed version of last part
++print(f"  Schema name: {sink1.schema_name}")
++print()
++
++# Test 2: With default schema (should NOT split, use literal stream name)
++target_with_config = DummyTarget({"default_target_schema": "my_schema"})
++sink2 = DummySink(target_with_config, "tap_bigquery-weekly_fuel_prices", schema, ["id"])
++print(f"With default schema='my_schema':")
++print(f"  Stream name: {sink2.stream_name}")
++print(f"  Table name: {sink2.table_name}")  # Should be literal stream name
++print(f"  Schema name: {sink2.schema_name}")
++print()
++
++# Test 3: Simple case for reference
++sink3 = DummySink(target, "simple_stream", schema, ["id"])
++print(f"Simple stream name:")
++print(f"  Stream name: {sink3.stream_name}")
++print(f"  Table name: {sink3.table_name}")
++print(f"  Schema name: {sink3.schema_name}")
+\ No newline at end of file

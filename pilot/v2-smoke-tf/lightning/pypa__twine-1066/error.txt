@@ -1,0 +1,105 @@
+Traceback (most recent call last):
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_async/connection_pool.py", line 256, in handle_async_request
+    raise exc from None
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_async/connection_pool.py", line 236, in handle_async_request
+    response = await connection.handle_async_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_async/connection.py", line 103, in handle_async_request
+    return await self._connection.handle_async_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_async/http11.py", line 136, in handle_async_request
+    raise exc
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_async/http11.py", line 106, in handle_async_request
+    ) = await self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_async/http11.py", line 177, in _receive_response_headers
+    event = await self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_async/http11.py", line 217, in _receive_event
+    data = await self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_backends/anyio.py", line 32, in read
+    with map_exceptions(exc_map):
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory_api.py", line 636, in run
+    operation = await asyncio.wait_for(poll, timeout=client_timeout_s)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory_api.py", line 590, in _poll
+    operation = await self._operation(operation_id, retries)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory_api.py", line 563, in _operation
+    response = await self._request(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory_api.py", line 296, in _request
+    response = await self._client.send(
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 393, in handle_async_request
+    with map_httpcore_exceptions():
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout
+operation cancellation failed: TokenFactoryApiError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory.py", line 539, in _execute
+    result = await self.api.run(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory_api.py", line 642, in run
+    raise TimeoutError(
+TimeoutError: Token Factory sandbox operation 01a0fed7-2c20-749e-be54-f57952d914d8 exceeded the client timeout
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/pilot/runner.py", line 713, in run_instance
+    result = await fix(
+             ^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/orchestrate.py", line 606, in fix
+    disclosure = await _collect_disclosure(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/orchestrate.py", line 447, in _collect_disclosure
+    lock_receipt = await ex.run(
+                   ^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/orchestrate.py", line 187, in recorded
+    result = await attribute(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory.py", line 869, in run
+    execution = await self._execute(branch, cmd, timeout_s)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory.py", line 553, in _execute
+    raise RuntimeError(f"Token Factory run timed out: {exc}") from exc
+RuntimeError: Token Factory run timed out: Token Factory sandbox operation 01a0fed7-2c20-749e-be54-f57952d914d8 exceeded the client timeout

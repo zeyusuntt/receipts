@@ -1,0 +1,7 @@
+{
+  "approach": "Add detailed exception wrapping to `_process_input_value` and `get_value` methods matching the pattern used in `get_output_value`. For consistency, also modify `Compose` and `MapCompose` processors in `scrapy/loader/processors.py` to catch exceptions and provide contextual information about failing processors.\n\nChanges needed:\n1. In `_process_input_value`: Wrap the processor call in try/except and raise ValueError with field, value, and error details.\n2. In `get_value`: Similarly wrap each processor call in loop with try/except to catch and re-raise with context.\n3. Update `Compose.__call__` and `MapCompose.__call__` in processors.py to provide detailed error messages when constituent functions fail.\n\nThis ensures errors in input processors and value-getting processors are as informative as output processor errors currently are.\n\nNote: The baseline shows failures in three specific tests that likely check for these improved error messages - test_error_processor_as_argument (get_value), test_compose, and test_mapcompose.",
+  "files_to_edit": [
+    "scrapy/loader/__init__.py"
+  ],
+  "hypothesis": "Update the InputProcessor and GetValue error handling to include verbose error messages similar to Output Processor."
+}

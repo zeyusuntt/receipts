@@ -1,0 +1,60 @@
+diff --git a/fast_bitrix24/srh.py b/fast_bitrix24/srh.py
+index 8246bd9..5abf59e 100644
+--- a/fast_bitrix24/srh.py
++++ b/fast_bitrix24/srh.py
+@@ -93,16 +93,25 @@ class ServerRequestHandler():
+ 
+     async def single_request(self, method, params=None):
+         '''Делает единичный запрос к серверу, ожидая при необходимости.'''
++        
++        max_retries = 3
++        for attempt in range(max_retries):
++            try:
++                async with self.acquire():
++                    async with self.concurrent_requests_sem, self.session.post(
++                            url=self.webhook + method, json=params) as response:
++                        r = await response.json(encoding='utf-8')
++
++                    return ServerResponse(r)
++            except (aiohttp.client_exceptions.ClientPayloadError,
++                    aiohttp.client_exceptions.ServerDisconnectedError):
++                if attempt == max_retries - 1:  # Third attempt (0-indexed)
++                    raise
++                # Continue to next retry attempt
++                continue
+ 
+-        await self._acquire()
+-
+-        async with self.concurrent_requests_sem, self.session.post(
+-                url=self.webhook + method, json=params) as response:
+-            r = await response.json(encoding='utf-8')
+-
+-        return ServerResponse(r)
+-
+-    async def _acquire(self):
++    @asynccontextmanager
++    async def acquire(self):
+         '''Ожидает, пока не станет безопасно делать запрос к серверу.'''
+ 
+         # если пул заполнен, ждать
+@@ -118,13 +127,14 @@ class ServerRequestHandler():
+         cur_time = time.monotonic()
+         self.rr.appendleft(cur_time)
+ 
+-        # подчистить пул
+-
+-        trim_time = cur_time - self.pool_size / self.requests_per_second
+-        while self.rr and self.rr[len(self.rr) - 1] < trim_time:
+-            self.rr.pop()
++        try:
++            yield
++        finally:
++            # подчистить пул
+ 
+-        return
++            trim_time = cur_time - self.pool_size / self.requests_per_second
++            while self.rr and self.rr[len(self.rr) - 1] < trim_time:
++                self.rr.pop()
+ 
+     def get_pbar(self, real_len, real_start):
+         '''Возвращает прогресс бар `tqdm()` или пустышку,

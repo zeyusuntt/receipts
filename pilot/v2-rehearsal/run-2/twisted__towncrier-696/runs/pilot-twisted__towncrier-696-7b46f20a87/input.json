@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Markdown renderer should infer header level from title format\nIf you e.g. set `title_format = \"#### {name} {version}\"`, section headers will have the same header level as the title.\n\nThis shouldn\u2019t be the case. Instead sections and section-less categories should be one header level below the title, and categories within sections one more.\n\nSince specifying arbitrarily deep header sections in the `title_format` option, this should of course work by default and not require a template.\n\nExample output:\n\n```markdown\n<!-- level(header) is defined by `title_format` \u21d2 here level 4 -->\n#### Foo 1.2.3\n\n<!-- section-less categories are at level(header) + 1 \u21d2 here level 5 -->\n##### Features\n- Added abc\n\n<!-- sections are at level(header) + 1 too \u21d2 here level 5 -->\n##### Web\n\n<!-- categories within sections are at level(header) + 2 \u21d2 here level 6 -->\n###### Bugfixes\n- Fixed xyz\n```\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/twisted-towncrier:696-f080db6",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-twisted__towncrier-696-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3NyYy90b3duY3JpZXIvdGVzdC90ZXN0X2J1aWxkLnB5IGIvc3JjL3Rvd25jcmllci90ZXN0L3Rlc3RfYnVpbGQucHkKaW5kZXggY2FmNjQyYi4uMTMxOWM1NiAxMDA2NDQKLS0tIGEvc3JjL3Rvd25jcmllci90ZXN0L3Rlc3RfYnVpbGQucHkKKysrIGIvc3JjL3Rvd25jcmllci90ZXN0L3Rlc3RfYnVpbGQucHkKQEAgLTE2LDcgKzE2LDcgQEAgZnJvbSB0d2lzdGVkLnRyaWFsLnVuaXR0ZXN0IGltcG9ydCBUZXN0Q2FzZQogCiBmcm9tIC4uX3NoZWxsIGltcG9ydCBjbGkKIGZyb20gLi5idWlsZCBpbXBvcnQgX21haW4KLWZyb20gLmhlbHBlcnMgaW1wb3J0IHJlYWQsIHJlYWRfcGtnX3Jlc291cmNlLCB3aXRoX2dpdF9wcm9qZWN0LCB3aXRoX3Byb2plY3QsIHdyaXRlCitmcm9tIC5oZWxwZXJzIGltcG9ydCByZWFkLCB3aXRoX2dpdF9wcm9qZWN0LCB3aXRoX3Byb2plY3QsIHdyaXRlCiAKIAogY2xhc3MgVGVzdENsaShUZXN0Q2FzZSk6CkBAIC0xMDg2LDcgKzEwODYsNyBAQCBjbGFzcyBUZXN0Q2xpKFRlc3RDYXNlKToKIAogICAgICAgICAgICAgWzIwLTAxLTIwMDFdIENVU1RPTSBSRUxFQVNFIGZvciBGb29CYXJCYXogdmVyc2lvbiA3LjguOQogCi0gICAgICAgICAgICAjIyBGZWF0dXJlcworICAgICAgICAgICAgIyBGZWF0dXJlcwogCiAgICAgICAgICAgICAtIEFkZHMgbGV2aXRhdGlvbiAoIzEyMykKIApAQCAtMTEwNCw3ICsxMTA0LDYgQEAgY2xhc3MgVGVzdENsaShUZXN0Q2FzZSk6CiAgICAgICAgIHBhY2thZ2UgPSAiZm9vIgogICAgICAgICBmaWxlbmFtZSA9ICJORVdTLm1kIgogICAgICAgICB0aXRsZV9mb3JtYXQgPSAiIyMjIFt7cHJvamVjdF9kYXRlfV0gQ1VTVE9NIFJFTEVBU0UgZm9yIHtuYW1lfSB2ZXJzaW9uIHt2ZXJzaW9ufSIKLSAgICAgICAgdGVtcGxhdGUgPSAiY3VzdG9tX3RlbXBsYXRlLm1kIgogICAgICAgICAiIiIKICAgICApCiAgICAgZGVmIHRlc3RfbWFya2Rvd25faW5qZWN0ZWRfYWZ0ZXJfaGVhZGVyKHNlbGYsIHJ1bm5lcik6CkBAIC0xMTM2LDEzICsxMTM1LDYgQEAgY2xhc3MgVGVzdENsaShUZXN0Q2FzZSk6CiAgICAgICAgICAgICBkZWRlbnQ9VHJ1ZSwKICAgICAgICAgKQogCi0gICAgICAgIGRlZmF1bHRfdGVtcGxhdGUgPSByZWFkX3BrZ19yZXNvdXJjZSgidGVtcGxhdGVzL2RlZmF1bHQubWQiKQotICAgICAgICBhc3NlcnQgIiMjeyUiIGluIGRlZmF1bHRfdGVtcGxhdGUKLSAgICAgICAgd3JpdGUoCi0gICAgICAgICAgICAiY3VzdG9tX3RlbXBsYXRlLm1kIiwKLSAgICAgICAgICAgIGNvbnRlbnRzPWRlZmF1bHRfdGVtcGxhdGUucmVwbGFjZSgiIyN7JSIsICIjIyMjeyUiKSwKLSAgICAgICAgKQotCiAgICAgICAgIHJlc3VsdCA9IHJ1bm5lci5pbnZva2UoX21haW4sIFsiLS1kYXRlIiwgIjAxLTAxLTIwMDEiXSwgY2F0Y2hfZXhjZXB0aW9ucz1GYWxzZSkKIAogICAgICAgICB3aXRoIG9wZW4oImZvby9uZXdzZnJhZ21lbnRzLzEyMy5mZWF0dXJlIiwgInciKSBhcyBmOgo='\"'\"'))'",
+      "git apply /tmp/receipts-twisted__towncrier-696-test.patch"
+    ],
+    "workdir": "/towncrier"
+  },
+  "spec_paths": [
+    "src/towncrier/test/test_build.py"
+  ],
+  "spec_tests": [
+    "src/towncrier/test/test_build.py::TestCli::test_title_format_custom_markdown"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning src/towncrier/test/test_build.py"
+}

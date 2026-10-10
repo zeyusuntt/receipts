@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Give `Option.show_default` higher priority wrt `Context.show_default`\nCurrently, `Context.show_default` (a global setting) overrides `Option.show_default` (a local setting). This is counterintuitive and limit expressiveness: once `Context.show_default` is set to `True`, it's impossible to disable `show_default` for a specific option.",
+  "source": {
+    "image": "docker.io/swerebenchv2/pallets-click:1964-08ecfd0",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pallets__click-1964-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3Rfb3B0aW9ucy5weSBiL3Rlc3RzL3Rlc3Rfb3B0aW9ucy5weQppbmRleCA3MzY3YTMyLi5hYjIzMGM0IDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X29wdGlvbnMucHkKKysrIGIvdGVzdHMvdGVzdF9vcHRpb25zLnB5CkBAIC02NDMsNyArNjQzLDYgQEAgZGVmIHRlc3Rfb3B0aW9uX2N1c3RvbV9jbGFzc19yZXVzYWJsZShydW5uZXIpOgogCiAgICAgIyBCb3RoIG9mIHRoZSBjb21tYW5kcyBzaG91bGQgaGF2ZSB0aGUgLS1oZWxwIG9wdGlvbiBub3cuCiAgICAgZm9yIGNtZCBpbiAoY21kMSwgY21kMik6Ci0KICAgICAgICAgcmVzdWx0ID0gcnVubmVyLmludm9rZShjbWQsIFsiLS1oZWxwIl0pCiAgICAgICAgIGFzc2VydCAiSSBhbSBhIGhlbHAgdGV4dCIgaW4gcmVzdWx0Lm91dHB1dAogICAgICAgICBhc3NlcnQgInlvdSB3b250IHNlZSBtZSIgbm90IGluIHJlc3VsdC5vdXRwdXQKQEAgLTc5NSw2ICs3OTQsMjggQEAgZGVmIHRlc3RfZG9fbm90X3Nob3dfZGVmYXVsdF9lbXB0eV9tdWx0aXBsZSgpOgogICAgIGFzc2VydCBtZXNzYWdlID09ICJ2YWx1ZXMiCiAKIAorQHB5dGVzdC5tYXJrLnBhcmFtZXRyaXplKAorICAgICgiY3R4X3ZhbHVlIiwgIm9wdF92YWx1ZSIsICJleHBlY3QiKSwKKyAgICBbCisgICAgICAgIChOb25lLCBOb25lLCBGYWxzZSksCisgICAgICAgIChOb25lLCBGYWxzZSwgRmFsc2UpLAorICAgICAgICAoTm9uZSwgVHJ1ZSwgVHJ1ZSksCisgICAgICAgIChGYWxzZSwgTm9uZSwgRmFsc2UpLAorICAgICAgICAoRmFsc2UsIEZhbHNlLCBGYWxzZSksCisgICAgICAgIChGYWxzZSwgVHJ1ZSwgVHJ1ZSksCisgICAgICAgIChUcnVlLCBOb25lLCBUcnVlKSwKKyAgICAgICAgKFRydWUsIEZhbHNlLCBGYWxzZSksCisgICAgICAgIChUcnVlLCBUcnVlLCBUcnVlKSwKKyAgICAgICAgKEZhbHNlLCAib25lIiwgVHJ1ZSksCisgICAgXSwKKykKK2RlZiB0ZXN0X3Nob3dfZGVmYXVsdF9wcmVjZWRlbmNlKGN0eF92YWx1ZSwgb3B0X3ZhbHVlLCBleHBlY3QpOgorICAgIGN0eCA9IGNsaWNrLkNvbnRleHQoY2xpY2suQ29tbWFuZCgidGVzdCIpLCBzaG93X2RlZmF1bHQ9Y3R4X3ZhbHVlKQorICAgIG9wdCA9IGNsaWNrLk9wdGlvbigiLWEiLCBkZWZhdWx0PTEsIGhlbHA9InZhbHVlIiwgc2hvd19kZWZhdWx0PW9wdF92YWx1ZSkKKyAgICBoZWxwID0gb3B0LmdldF9oZWxwX3JlY29yZChjdHgpWzFdCisgICAgYXNzZXJ0ICgiZGVmYXVsdDoiIGluIGhlbHApIGlzIGV4cGVjdAorCisKIEBweXRlc3QubWFyay5wYXJhbWV0cml6ZSgKICAgICAoImFyZ3MiLCAiZXhwZWN0IiksCiAgICAgWwo='\"'\"'))'",
+      "git apply /tmp/receipts-pallets__click-1964-test.patch"
+    ],
+    "workdir": "/click"
+  },
+  "spec_tests": [
+    "tests/test_options.py::test_show_default_precedence[True-False-False]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_options.py"
+}

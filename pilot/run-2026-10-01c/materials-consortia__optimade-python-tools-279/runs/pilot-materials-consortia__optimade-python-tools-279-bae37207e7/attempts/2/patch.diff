@@ -1,0 +1,638 @@
+diff --git a/debug_detail.py b/debug_detail.py
+new file mode 100644
+index 0000000..a183ce8
+--- /dev/null
++++ b/debug_detail.py
+@@ -0,0 +1,39 @@
++#!/usr/bin/env python3
++
++import sys
++sys.path.insert(0, '.')
++
++from optimade.filterparser import LarkParser
++from optimade.filtertransformers.mongo import MongoTransformer
++
++# Set up like the tests do
++p = LarkParser(version=(0, 10, 1), variant="default")
++t = MongoTransformer()
++transform = lambda inp: t.transform(p.parse(inp))
++
++# Let's manually trace what should happen
++print("Manual tracing:")
++
++# Step 1: What does IS UNKNOWN produce internally?
++print("Step 1: chemical_formula_anonymous IS UNKNOWN")
++# This should go through known_op_rhs and property_first_comparison
++# known_op_rhs(["IS", "UNKNOWN"]) should return {"$or": [{"$exists": False}, {"$eq": None}]}
++# property_first_comparison(["chemical_formula_anonymous", that_result]) 
++# should return {"chemical_formula_anonymous": {"$or": [{"$exists": False}, {"$eq": None}]}}
++
++# Step 2: What does NOT add?
++print("Step 2: Adding NOT")
++# NOT wraps the whole thing in {"$not": ...}
++# So we get {"chemical_formula_anonymous": {"$not": {"$or": [{"$exists": False}, {"$eq": None}]}}}
++
++print("Step 3: Our _apply_is_operations should see this and transform it")
++print("It should recognize: property -> {\"$not\": {\"$or\": [{\"$exists\": False}, {\"$eq\": None}]}}")
++print("And apply De Morgan's: NOT (A OR B) = (NOT A) AND (NOT B)")
++print("Where A = {\"$exists\": False} and B = {\"$eq\": None}")
++print("NOT A = {\"$exists\": True}")
++print("NOT B = {\"$ne\": None}") 
++print("So result should be: {\"$and\": [{\"chemical_formula_anonymous\": {\"$exists\": True}}, {\"chemical_formula_anonymous\": {\"$ne\": None}}]}")
++
++print("\nActual test:")
++result = transform("NOT chemical_formula_anonymous IS UNKNOWN")
++print(f"Result: {result}")
+\ No newline at end of file
+diff --git a/debug_not_test.py b/debug_not_test.py
+new file mode 100644
+index 0000000..d662c96
+--- /dev/null
++++ b/debug_not_test.py
+@@ -0,0 +1,33 @@
++#!/usr/bin/env python3
++
++import sys
++sys.path.insert(0, '.')
++
++from optimade.filterparser import LarkParser
++from optimade.filtertransformers.mongo import MongoTransformer
++
++# Set up like the tests do
++p = LarkParser(version=(0, 10, 1), variant="default")
++t = MongoTransformer()
++transform = lambda inp: t.transform(p.parse(inp))
++
++# Test what we get for various inputs
++print("Testing NOT chemical_formula_anonymous IS UNKNOWN:")
++result = transform("NOT chemical_formula_anonymous IS UNKNOWN")
++print(f"Result: {result}")
++print()
++
++print("Testing expected for NOT chemical_formula_anonymous IS UNKNOWN:")
++expected = {
++    "$and": [
++        {"chemical_formula_anonymous": {"$exists": True}},
++        {"chemical_formula_anonymous": {"$ne": None}},
++    ]
++}
++print(f"Expected: {expected}")
++print()
++
++print("Testing chemical_formula_anonymous IS KNOWN (should be same as above):")
++result2 = transform("chemical_formula_anonymous IS KNOWN")
++print(f"Result: {result2}")
++print()
+\ No newline at end of file
+diff --git a/debug_test.py b/debug_test.py
+new file mode 100644
+index 0000000..342aa14
+--- /dev/null
++++ b/debug_test.py
+@@ -0,0 +1,23 @@
++#!/usr/bin/env python3
++
++import sys
++sys.path.insert(0, '.')
++
++from optimade.filterparser import LarkParser
++from optimade.filtertransformers.mongo import MongoTransformer
++
++# Set up like the tests do
++p = LarkParser(version=(0, 10, 1), variant="default")
++t = MongoTransformer()
++transform = lambda inp: t.transform(p.parse(inp))
++
++# Test what we get for various inputs
++print("Testing chemical_formula_anonymous IS UNKNOWN:")
++result = transform("chemical_formula_anonymous IS UNKNOWN")
++print(f"Result: {result}")
++print()
++
++print("Testing chemical_formula_anonymous IS KNOWN:")
++result = transform("chemical_formula_anonymous IS KNOWN")
++print(f"Result: {result}")
++print()
+\ No newline at end of file
+diff --git a/optimade/filtertransformers/mongo.py b/optimade/filtertransformers/mongo.py
+index 52d82f6..a37e9a7 100755
+--- a/optimade/filtertransformers/mongo.py
++++ b/optimade/filtertransformers/mongo.py
+@@ -39,6 +39,7 @@ class MongoTransformer(Transformer):
+             query = self._apply_aliases(query)
+ 
+         query = self._apply_relationship_filtering(query)
++        query = self._apply_is_operations(query)
+         query = self._apply_length_operators(query)
+ 
+         return query
+@@ -134,7 +135,12 @@ class MongoTransformer(Transformer):
+ 
+     def known_op_rhs(self, arg):
+         # known_op_rhs: IS ( KNOWN | UNKNOWN )
+-        return {"$exists": arg[1] == "KNOWN"}
++        if arg[1] == "KNOWN":
++            # Property exists and is not null
++            return {"$and": [{"$exists": True}, {"$ne": None}]}
++        else:
++            # Property does not exist or is null
++            return {"$or": [{"$exists": False}, {"$eq": None}]}
+ 
+     def fuzzy_string_op_rhs(self, arg):
+         # fuzzy_string_op_rhs: CONTAINS value | STARTS [ WITH ] value | ENDS [ WITH ] value
+@@ -389,6 +395,164 @@ class MongoTransformer(Transformer):
+             filter_, check_for_entry_type, replace_with_relationship
+         )
+ 
++    def _apply_is_operations(self, filter_: dict) -> dict:
++        """ Transform IS operations to match the expected format where
++        $or/$and operators are at the top level with property-specific
++        conditions inside.
++
++        Handles both direct IS operations and those wrapped in $not:
++        
++        Direct:
++          {"property": {"$or": [{"$exists": False}, {"$eq": None}]}}
++        into:
++          {"$or": [{"property": {"$exists": False}}, {"property": {"$eq": None}}]}
++          
++          {"property": {"$and": [{"$exists": True}, {"$ne": None}]}}
++        into:
++          {"$and": [{"property": {"$exists": True}}, {"property": {"$ne": None}}]}
++
++        With $not:
++          {"property": {"$not": {"$or": [{"$exists": False}, {"$eq": None}]}}}
++        into:
++          {"$and": [{"property": {"$exists": True}}, {"property": {"$ne": None}}]}
++          
++          {"property": {"$not": {"$and": [{"$exists": True}, {"$ne": None}]}}}
++        into:
++          {"$or": [{"property": {"$exists": False}}, {"property": {"$eq": None}}]}
++        """
++
++        def check_is_operation(prop, expr):
++            # Check if this is an IS operation result: property -> {"$or"/"$and": [{conditions without property}]}
++            # Or a $not wrapped IS operation: property -> {"$not": {"$or"/"$and": [{conditions without property}]}}
++            print(f"DEBUG CHECK: prop={prop}, expr={expr}")
++            if not isinstance(expr, dict):
++                return False
++                
++            # Direct IS operation case
++            if "$or" in expr or "$and" in expr:
++                print(f"  Direct IS operation path")
++                if "$or" in expr and "$and" in expr:
++                    return False  # Can't have both
++                op_key = "$or" if "$or" in expr else "$and"
++                op_value = expr[op_key]
++                if not isinstance(op_value, list):
++                    return False
++                # Check that all items in the list are simple conditions (no property references)
++                for item in op_value:
++                    if not isinstance(item, dict):
++                        return False
++                    # Should contain only $exists or $eq/$ne operators without property names
++                    if not (("$exists" in item and len(item) == 1) or 
++                            (("$eq" in item or "$ne" in item) and len(item) == 1)):
++                        return False
++                return True
++                
++            # $not wrapped IS operation case
++            if "$not" in expr and len(expr) == 1:
++                print(f"  $not wrapped path")
++                not_content = expr["$not"]
++                if not isinstance(not_content, dict):
++                    return False
++                if "$or" not in not_content and "$and" not in not_content:
++                    return False
++                if "$or" in not_content and "$and" in not_content:
++                    return False  # Can't have both
++                op_key = "$or" if "$or" in not_content else "$and"
++                op_value = not_content[op_key]
++                if not isinstance(op_value, list):
++                    return False
++                # Check that all items in the list are simple conditions (no property references)
++                for item in op_value:
++                    if not isinstance(item, dict):
++                        return False
++                    # Should contain only $exists or $eq/$ne operators without property names
++                    if not (("$exists" in item and len(item) == 1) or 
++                            (("$eq" in item or "$ne" in item) and len(item) == 1)):
++                        return False
++                return True
++                
++            return False
++
++        def apply_is_operation(subdict, prop, expr):
++            print("!!! APPLY_IS_OPERATION CALLED !!!")
++            # Handle $not wrapped case
++            if "$not" in expr and len(expr) == 1:
++                not_content = expr["$not"]
++                # Determine the operator inside the $not
++                op_key = "$or" if "$or" in not_content else "$and"
++                op_value = not_content[op_key]
++                
++                # Transform each operand to include the property name
++                new_operands = []
++                for item in op_value:
++                    new_item = {}
++                    for k, v in item.items():
++                        new_item[k] = v
++                    # Add the property name to each condition
++                    new_item_with_prop = {prop: new_item}
++                    new_operands.append(new_item_with_prop)
++                
++                # Apply De Morgan's law: NOT (A OR B) = (NOT A) AND (NOT B)
++                #                   NOT (A AND B) = (NOT A) OR (NOT B)
++                # For our specific case:
++                # NOT ({$exists: False} OR {$eq: None}) = {$exists: True} AND {$ne: None}
++                # NOT ({$exists: True} AND {$ne: None}) = {$exists: False} OR {$eq: None}
++                if op_key == "$or":
++                    # NOT (OR) = AND
++                    new_op_key = "$and"
++                    # Negate the conditions: $exists:false -> $exists:true, $eq:null -> $ne:null
++                    negated_operands = []
++                    for operand in new_operands:
++                        negated_operand = {}
++                        for k, v in operand.items():
++                            if k == "$exists":
++                                negated_operand[k] = not v  # False -> True, True -> False
++                            elif k == "$eq":
++                                negated_operand["$ne"] = v  # $eq:null -> $ne:null
++                            elif k == "$ne":
++                                negated_operand["$eq"] = v  # $ne:null -> $eq:null
++                            else:
++                                negated_operand[k] = v
++                        negated_operands.append(negated_operand)
++                    return {new_op_key: negated_operands}
++                else:  # op_key == "$and"
++                    # NOT (AND) = OR
++                    new_op_key = "$or"
++                    # Negate the conditions: $exists:true -> $exists:false, $ne:null -> $eq:null
++                    negated_operands = []
++                    for operand in new_operands:
++                        negated_operand = {}
++                        for k, v in operand.items():
++                            if k == "$exists":
++                                negated_operand[k] = not v  # True -> False, False -> True
++                            elif k == "$ne":
++                                negated_operand["$eq"] = v  # $ne:null -> $eq:null
++                            elif k == "$eq":
++                                negated_operand["$ne"] = v  # $eq:null -> $ne:null
++                            else:
++                                negated_operand[k] = v
++                        negated_operands.append(negated_operand)
++                    return {new_op_key: negated_operands}
++            
++            # Direct IS operation case (no $not wrapper)
++            op_key = "$or" if "$or" in expr else "$and"
++            op_value = expr[op_key]
++            
++            # Transform each operand to include the property name
++            new_operands = []
++            for item in op_value:
++                new_item = {}
++                for k, v in item.items():
++                    new_item[k] = v
++                # Add the property name to each condition
++                new_item_with_prop = {prop: new_item}
++                new_operands.append(new_item_with_prop)
++            
++            # Return the transformed expression
++            return {op_key: new_operands}
++
++        return recursive_postprocessing(filter_, check_is_operation, apply_is_operation)
++
+ 
+ def recursive_postprocessing(filter_, condition, replacement):
+     """ Recursively descend into the query, checking each dictionary
+diff --git a/test_debug.py b/test_debug.py
+new file mode 100644
+index 0000000..127ff80
+--- /dev/null
++++ b/test_debug.py
+@@ -0,0 +1,72 @@
++#!/usr/bin/env python3
++
++# Let me create a simple test to validate my logic
++def test_logic():
++    # Simulate what we receive in apply_is_operation for NOT case
++    expr = {"$not": {"chemical_formula_anonymous": {"$or": [{"$exists": False}, {"$eq": None}]}}}
++    
++    print(f"Input expr: {expr}")
++    
++    # My new logic
++    if "$not" in expr and len(expr) == 1:
++        print("Taking $not wrapped path")
++        not_content = expr["$not"]
++        print(f"not_content: {not_content}")
++        
++        if len(not_content) == 1:
++            inner_prop = list(not_content.keys())[0]
++            inner_expr = not_content[inner_prop]
++            print(f"inner_prop: {inner_prop}")
++            print(f"inner_expr: {inner_expr}")
++            
++            if ("$or" in inner_expr or "$and" in inner_expr) and isinstance(inner_expr.get("$or" if "$or" in inner_expr else "$and"), list):
++                print("Found IS operation inside $not")
++                op_key = "$or" if "$or" in inner_expr else "$and"
++                op_value = inner_expr[op_key]
++                print(f"op_key: {op_key}")
++                print(f"op_value: {op_value}")
++                
++                # Transform each operand to include the property name
++                new_operands = []
++                for item in op_value:
++                    new_item = {}
++                    for k, v in item.items():
++                        new_item[k] = v
++                    # Add the property name to each condition
++                    new_item_with_prop = {inner_prop: new_item}
++                    new_operands.append(new_item_with_prop)
++                print(f"new_operands: {new_operands}")
++                
++                # Apply De Morgan's law
++                if op_key == "$or":
++                    # NOT (OR) = AND
++                    new_op_key = "$and"
++                    print("Processing NOT OR case")
++                    # Negate the conditions: $exists:false -> $exists:true, $eq:null -> $ne:null
++                    negated_operads = []
++                    for i, operand in enumerate(new_operands):
++                        print(f"  Processing operand {i}: {operand}")
++                        negated_operadnt = {}
++                        for k, v in operand.items():
++                            print(f"    k={k}, v={v}")
++                            if k == "$exists":
++                                new_v = not v
++                                negated_operadnt["$exists"] = new_v
++                                print(f"      Setting $exists to {new_v}")
++                            elif k == "$eq":
++                                negated_operadnt["$ne"] = v
++                                print(f"      Setting $ne to {v}")
++                            elif k == "$ne":
++                                negated_operadnt["$eq"] = v
++                                print(f"      Setting $eq to {v}")
++                            else:
++                                negated_operadnt[k] = v
++                                print(f"      Setting {k} to {v}")
++                        negated_operads.append(negated_operadnt)
++                        print(f"    negated_operadnt: {negated_operadnt}")
++                    result = {new_op_key: negated_operads}
++                    print(f"Final result: {result}")
++                    return result
++
++if __name__ == "__main__":
++    test_logic()
+\ No newline at end of file
+diff --git a/test_debug_fixed.py b/test_debug_fixed.py
+new file mode 100644
+index 0000000..abaf77f
+--- /dev/null
++++ b/test_debug_fixed.py
+@@ -0,0 +1,81 @@
++#!/usr/bin/env python3
++
++# Let me create a simple test to validate my logic
++def test_logic():
++    # Simulate what we receive in apply_is_operation for NOT case
++    expr = {"$not": {"chemical_formula_anonymous": {"$or": [{"$exists": False}, {"$eq": None}]}}}
++    
++    print(f"Input expr: {expr}")
++    
++    # My new logic
++    if "$not" in expr and len(expr) == 1:
++        print("Taking $not wrapped path")
++        not_content = expr["$not"]
++        print(f"not_content: {not_content}")
++        
++        if len(not_content) == 1:
++            inner_prop = list(not_content.keys())[0]
++            inner_expr = not_content[inner_prop]
++            print(f"inner_prop: {inner_prop}")
++            print(f"inner_expr: {inner_expr}")
++            
++            if ("$or" in inner_expr or "$and" in inner_expr) and isinstance(inner_expr.get("$or" if "$or" in inner_expr else "$and"), list):
++                print("Found IS operation inside $not")
++                op_key = "$or" if "$or" in inner_expr else "$and"
++                op_value = inner_expr[op_key]
++                print(f"op_key: {op_key}")
++                print(f"op_value: {op_value}")
++                
++                # Transform each operand to include the property name
++                new_operands = []
++                for item in op_value:
++                    new_item = {}
++                    for k, v in item.items():
++                        new_item[k] = v
++                    # Add the property name to each condition
++                    new_item_with_prop = {inner_prop: new_item}
++                    new_operands.append(new_item_with_prop)
++                print(f"new_operands: {new_operands}")
++                
++                # Apply De Morgan's law
++                if op_key == "$or":
++                    # NOT (OR) = AND
++                    new_op_key = "$and"
++                    print("Processing NOT OR case")
++                    # Negate the conditions: $exists:false -> $exists:true, $eq:null -> $ne:null
++                    negated_operads = []
++                    for i, operand in enumerate(new_operands):
++                        print(f"  Processing operand {i}: {operand}")
++                        # operand is like {'chemical_formula_anonymous': {'$exists': False}}
++                        # We need to look inside the value
++                        prop_name = list(operand.keys())[0]  # 'chemical_formula_anonymous'
++                        inner_dict = operand[prop_name]      # {'$exists': False}
++                        print(f"    prop_name: {prop_name}")
++                        print(f"    inner_dict: {inner_dict}")
++                        
++                        negated_inner_dict = {}
++                        for k, v in inner_dict.items():
++                            print(f"      k={k}, v={v}")
++                            if k == "$exists":
++                                new_v = not v
++                                negated_inner_dict["$exists"] = new_v
++                                print(f"        Setting $exists to {new_v}")
++                            elif k == "$eq":
++                                negated_inner_dict["$ne"] = v
++                                print(f"        Setting $ne to {v}")
++                            elif k == "$ne":
++                                negated_inner_dict["$eq"] = v
++                                print(f"        Setting $eq to {v}")
++                            else:
++                                negated_inner_dict[k] = v
++                                print(f"        Setting {k} to {v}")
++                        
++                        negated_operadnt = {prop_name: negated_inner_dict}
++                        negated_operads.append(negated_operadnt)
++                        print(f"    negated_operadnt: {negated_operadnt}")
++                    result = {new_op_key: negated_operads}
++                    print(f"Final result: {result}")
++                    return result
++
++if __name__ == "__main__":
++    test_logic()
+\ No newline at end of file
+diff --git a/test_direct.py b/test_direct.py
+new file mode 100644
+index 0000000..c6eab27
+--- /dev/null
++++ b/test_direct.py
+@@ -0,0 +1,17 @@
++#!/usr/bin/env python3
++
++import sys
++sys.path.insert(0, '.')
++
++from optimade.filterparser import LarkParser
++from optimade.filtertransformers.mongo import MongoTransformer
++
++# Set up like the tests do
++p = LarkParser(version=(0, 10, 1), variant="default")
++t = MongoTransformer()
++transform = lambda inp: t.transform(p.parse(inp))
++
++# Test the problematic case directly
++print("Testing NOT chemical_formula_anonymous IS UNKNOWN:")
++result = transform("NOT chemical_formula_anonymous IS UNKNOWN")
++print(f"Result: {result}")
+\ No newline at end of file
+diff --git a/test_logic.py b/test_logic.py
+new file mode 100644
+index 0000000..535cec1
+--- /dev/null
++++ b/test_logic.py
+@@ -0,0 +1,63 @@
++#!/usr/bin/env python3
++
++# Let me create a simple test to validate my logic
++def test_logic():
++    # Simulate what we receive in apply_is_operation for NOT case
++    expr = {"$not": {"chemical_formula_anonymous": {"$or": [{"$exists": False}, {"$eq": None}]}}}
++    
++    print(f"Input expr: {expr}")
++    
++    # My new logic
++    if "$not" in expr and len(expr) == 1:
++        print("Taking $not wrapped path")
++        not_content = expr["$not"]
++        print(f"not_content: {not_content}")
++        
++        if len(not_content) == 1:
++            inner_prop = list(not_content.keys())[0]
++            inner_expr = not_content[inner_prop]
++            print(f"inner_prop: {inner_prop}")
++            print(f"inner_expr: {inner_expr}")
++            
++            if ("$or" in inner_expr or "$and" in inner_expr) and isinstance(inner_expr.get("$or" if "$or" in inner_expr else "$and"), list):
++                print("Found IS operation inside $not")
++                op_key = "$or" if "$or" in inner_expr else "$and"
++                op_value = inner_expr[op_key]
++                print(f"op_key: {op_key}")
++                print(f"op_value: {op_value}")
++                
++                # Transform each operand to include the property name
++                new_operands = []
++                for item in op_value:
++                    new_item = {}
++                    for k, v in item.items():
++                        new_item[k] = v
++                    # Add the property name to each condition
++                    new_item_with_prop = {inner_prop: new_item}
++                    new_operands.append(new_item_with_prop)
++                print(f"new_operands: {new_operands}")
++                
++                # Apply De Morgan's law
++                if op_key == "$or":
++                    # NOT (OR) = AND
++                    new_op_key = "$and"
++                    # Negate the conditions: $exists:false -> $exists:true, $eq:null -> $ne:null
++                    negated_operands = []
++                    for operand in new_operands:
++                        negated_operadnt = {}
++                        for k, v in operand.items():
++                            if k == "$exists":
++                                negated_operadnt["$exists"] = not v  # False -> True, True -> False
++                            elif k == "$eq":
++                                negated_operadnt["$ne"] = v  # $eq:null -> $ne:null
++                            elif k == "$ne":
++                                negated_operadnt["$eq"] = v  # $ne:null -> $eq:null
++                            else:
++                                negated_operadnt[k] = v
++                        negated_operads.append(negated_operadnt)
++                    result = {new_op_key: negated_operands}
++                    print(f"Final result: {result}")
++                    return result
++
++if __name__ == "__main__":
++    test_logic()
+\ No newline at end of file
+diff --git a/test_logic_fixed.py b/test_logic_fixed.py
+new file mode 100644
+index 0000000..f0a5843
+--- /dev/null
++++ b/test_logic_fixed.py
+@@ -0,0 +1,63 @@
++#!/usr/bin/env python3
++
++# Let me create a simple test to validate my logic
++def test_logic():
++    # Simulate what we receive in apply_is_operation for NOT case
++    expr = {"$not": {"chemical_formula_anonymous": {"$or": [{"$exists": False}, {"$eq": None}]}}}
++    
++    print(f"Input expr: {expr}")
++    
++    # My new logic
++    if "$not" in expr and len(expr) == 1:
++        print("Taking $not wrapped path")
++        not_content = expr["$not"]
++        print(f"not_content: {not_content}")
++        
++        if len(not_content) == 1:
++            inner_prop = list(not_content.keys())[0]
++            inner_expr = not_content[inner_prop]
++            print(f"inner_prop: {inner_prop}")
++            print(f"inner_expr: {inner_expr}")
++            
++            if ("$or" in inner_expr or "$and" in inner_expr) and isinstance(inner_expr.get("$or" if "$or" in inner_expr else "$and"), list):
++                print("Found IS operation inside $not")
++                op_key = "$or" if "$or" in inner_expr else "$and"
++                op_value = inner_expr[op_key]
++                print(f"op_key: {op_key}")
++                print(f"op_value: {op_value}")
++                
++                # Transform each operand to include the property name
++                new_operands = []
++                for item in op_value:
++                    new_item = {}
++                    for k, v in item.items():
++                        new_item[k] = v
++                    # Add the property name to each condition
++                    new_item_with_prop = {inner_prop: new_item}
++                    new_operands.append(new_item_with_prop)
++                print(f"new_operands: {new_operands}")
++                
++                # Apply De Morgan's law
++                if op_key == "$or":
++                    # NOT (OR) = AND
++                    new_op_key = "$and"
++                    # Negate the conditions: $exists:false -> $exists:true, $eq:null -> $ne:null
++                    negated_operads = []
++                    for operand in new_operands:
++                        negated_operadnt = {}
++                        for k, v in operand.items():
++                            if k == "$exists":
++                                negated_operadnt["$exists"] = not v  # False -> True, True -> False
++                            elif k == "$eq":
++                                negated_operadnt["$ne"] = v  # $eq:null -> $ne:null
++                            elif k == "$ne":
++                                negated_operadnt["$eq"] = v  # $ne:null -> $eq:null
++                            else:
++                                negated_operadnt[k] = v
++                        negated_operads.append(negated_operadnt)
++                    result = {new_op_key: negated_operads}
++                    print(f"Final result: {result}")
++                    return result
++
++if __name__ == "__main__":
++    test_logic()
+\ No newline at end of file

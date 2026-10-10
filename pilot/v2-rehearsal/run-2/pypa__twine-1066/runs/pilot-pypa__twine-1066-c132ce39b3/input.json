@@ -1,0 +1,33 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Twine uploads with `provides_extras` field, not `provides_extra`\n### Is there an existing issue for this?\n\n- [X] I have searched the existing issues (open and closed), and could not find an existing issue\n\n### What keywords did you use to search existing issues?\n\nprovides_extra, provides_extras\n\n### What operating system are you using?\n\nOther\n\n### If you selected 'Other', describe your Operating System here\n\n_No response_\n\n### What version of Python are you running?\n\n```console\n$ python --version\r\nPython 3.11.8\n```\n\n\n### How did you install twine? Did you use your operating system's package manager or pip or something else?\n\n```console\n$ python -m pip install twine\n```\n\n\n### What version of twine do you have installed (include the complete output)\n\n```console\n$ twine --version\r\ntwine version 5.0.0 (importlib-metadata: 7.0.1, keyring: 24.3.0, pkginfo: 1.10.0, requests: 2.31.0, requests-toolbelt: 1.0.0, urllib3: 2.1.0)\n```\n\n\n### Which package repository are you using?\n\nPyPI\n\n### Please describe the issue that you are experiencing\n\nTwine does not correctly `POST` the `Provides-Extra` field when it is present in package metadata.\n\n### Please list the steps required to reproduce this behaviour\n\n1. Build a package with [`Provides-Extra`](https://packaging.python.org/en/latest/specifications/core-metadata/#provides-extra-multiple-use) metadata field ([example](https://files.pythonhosted.org/packages/57/90/4bcbd9d539d1b92cf38accb9e910ffa770ea4d28e7b4afce3b398f79cae6/pyroblack-2.3.48-py3-none-any.whl));\r\n2. Upload it with `twine`;\r\n3. Observe that twine `POST`s the field `provides_extras`, and not `provides_extra`;\r\n4. Observe that PyPI does not record the `Provides-Extra` values.\n\n### Anything else you'd like to mention?\n\nI introduced this bug [six years ago](https://github.com/pypa/twine/commit/7369e6219af6b61c82bfb68afac57250f5664577), so my apologies \ud83d\ude42.",
+  "source": {
+    "image": "docker.io/swerebenchv2/pypa-twine:1066-4a1fc06",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-pypa__twine-1066-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfcGFja2FnZS5weSBiL3Rlc3RzL3Rlc3RfcGFja2FnZS5weQppbmRleCA2MzY5MGFkLi5hM2YwMjdjIDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X3BhY2thZ2UucHkKKysrIGIvdGVzdHMvdGVzdF9wYWNrYWdlLnB5CkBAIC0xNzcsNyArMTc3LDcgQEAgZGVmIHRlc3RfbWV0YWRhdGFfZGljdGlvbmFyeV9rZXlzKCk6CiAgICAgICAgICJyZXF1aXJlc19leHRlcm5hbCIsCiAgICAgICAgICJyZXF1aXJlc19weXRob24iLAogICAgICAgICAjIE1ldGFkYXRhIDIuMQotICAgICAgICAicHJvdmlkZXNfZXh0cmFzIiwKKyAgICAgICAgInByb3ZpZGVzX2V4dHJhIiwKICAgICAgICAgImRlc2NyaXB0aW9uX2NvbnRlbnRfdHlwZSIsCiAgICAgICAgICMgTWV0YWRhdGEgMi4yCiAgICAgICAgICJkeW5hbWljIiwKQEAgLTI2OCw3ICsyNjgsNyBAQCBkZWYgdGVzdF9tZXRhZGF0YV9kaWN0aW9uYXJ5X3ZhbHVlcyhncGdfc2lnbmF0dXJlKToKICAgICBhc3NlcnQgcmVzdWx0WyJyZXF1aXJlc19weXRob24iXSA9PSBtZXRhLnJlcXVpcmVzX3B5dGhvbgogCiAgICAgIyBNZXRhZGF0YSAyLjEKLSAgICBhc3NlcnQgcmVzdWx0WyJwcm92aWRlc19leHRyYXMiXSA9PSBtZXRhLnByb3ZpZGVzX2V4dHJhcworICAgIGFzc2VydCByZXN1bHRbInByb3ZpZGVzX2V4dHJhIl0gPT0gbWV0YS5wcm92aWRlc19leHRyYXMKICAgICBhc3NlcnQgcmVzdWx0WyJkZXNjcmlwdGlvbl9jb250ZW50X3R5cGUiXSA9PSBtZXRhLmRlc2NyaXB0aW9uX2NvbnRlbnRfdHlwZQogCiAgICAgIyBNZXRhZGF0YSAyLjIK'\"'\"'))'",
+      "git apply /tmp/receipts-pypa__twine-1066-test.patch"
+    ],
+    "workdir": "/twine"
+  },
+  "spec_paths": [
+    "tests/test_package.py"
+  ],
+  "spec_tests": [
+    "tests/test_package.py::test_metadata_dictionary_keys",
+    "tests/test_package.py::test_metadata_dictionary_values[None]",
+    "tests/test_package.py::test_metadata_dictionary_values[gpg_signature1]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_package.py"
+}

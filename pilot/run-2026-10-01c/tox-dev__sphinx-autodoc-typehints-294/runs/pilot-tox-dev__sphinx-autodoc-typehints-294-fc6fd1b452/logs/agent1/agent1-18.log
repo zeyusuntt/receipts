@@ -1,0 +1,118 @@
+
+=== Directive at start ===
+Before:
+0: '.. rubric:: Notes'
+1: ''
+2: 'Hello'
+
+After inserting :rtype:
+0: ':rtype: :py:obj:`None`'
+1: '.. rubric:: Notes'
+2: ''
+3: 'Hello'
+
+Applied fix: inserted blank line after :rtype:
+
+Final:
+0: ':rtype: :py:obj:`None`'
+1: '.. rubric:: Notes'
+2: ''
+3: ''
+4: 'Hello'
+
+PASS: Correct blank line after :rtype: at 0
+
+=== Right before directive ===
+Before:
+0: 'Some text'
+1: ''
+2: '.. rubric:: Notes'
+3: ''
+4: 'More'
+
+After inserting :rtype:
+0: 'Some text'
+1: ''
+2: ':rtype: :py:obj:`None`'
+3: '.. rubric:: Notes'
+4: ''
+5: 'More'
+
+Applied fix: inserted blank line after :rtype:
+
+Final:
+0: 'Some text'
+1: ''
+2: ':rtype: :py:obj:`None`'
+3: '.. rubric:: Notes'
+4: ''
+5: ''
+6: 'More'
+
+PASS: Correct blank line after :rtype: at 2
+
+=== At end ===
+Before:
+0: 'Some text'
+1: ''
+2: 'Hello'
+
+After inserting :rtype:
+0: 'Some text'
+1: ''
+2: 'Hello'
+3: ':rtype: :py:obj:`None`'
+
+Final:
+0: 'Some text'
+1: ''
+2: 'Hello'
+3: ':rtype: :py:obj:`None`'
+
+INFO: No directive after :rtype: at 3 (fix not needed)
+
+=== Followed by text ===
+Before:
+0: 'Some text'
+1: ''
+2: 'Hello world'
+3: ''
+4: 'End'
+
+After inserting :rtype:
+0: ':rtype: :py:obj:`None`'
+1: 'Some text'
+2: ''
+3: 'Hello world'
+4: ''
+5: 'End'
+
+Final:
+0: ':rtype: :py:obj:`None`'
+1: 'Some text'
+2: ''
+3: 'Hello world'
+4: ''
+5: 'End'
+
+INFO: No directive after :rtype: at 0 (fix not needed)
+
+=== Empty followed by directive ===
+Before:
+0: ''
+1: '.. rubric:: Notes'
+
+After inserting :rtype:
+0: ':rtype: :py:obj:`None`'
+1: ''
+2: '.. rubric:: Notes'
+
+Final:
+0: ':rtype: :py:obj:`None`'
+1: ''
+2: '.. rubric:: Notes'
+
+INFO: No directive after :rtype: at 0 (fix not needed)
+
+
+ALL TESTS PASSED

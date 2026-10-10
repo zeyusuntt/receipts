@@ -1,0 +1,41 @@
+                    remaining=remaining,
+                    limit=rate_limit,
+                    delta=delta,
+                )
+            )
+
+        return resp
+
+    async def get_resolved_ref(self):
+        if hasattr(self, "resolved_ref"):
+            return self.resolved_ref
+
+        api_url = "{api_base_path}/repos/{user}/{repo}/commits/{ref}".format(
+            api_base_path=self.api_base_path.format(hostname=self.hostname),
+            user=self.user,
+            repo=self.repo,
+            ref=self.unresolved_ref,
+        )
+        self.log.debug("Fetching %s", api_url)
+        cached = self.cache.get(api_url)
+        if cached:
+            etag = cached["etag"]
+            self.log.debug("Cache hit for %s: %s", api_url, etag)
+        else:
+            cache_404 = self.cache_404.get(api_url)
+            if cache_404:
+                self.log.debug("Cache hit for 404 on %s", api_url)
+                return None
+            etag = None
+
+        resp = await self.github_api_request(api_url, etag=etag)
+        if resp is None:
+            self.log.debug("Caching 404 on %s", api_url)
+            self.cache_404.set(api_url, True)
+            return None
+        if resp.code == 304:
+            self.log.info("Using cached ref for %s: %s", api_url, cached["sha"])
+            self.resolved_ref = cached["sha"]
+            # refresh cache entry
+            self.cache.move_to_end(api_url)
+            return self.resolved_ref

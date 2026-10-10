@@ -1,0 +1,90 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+hypothesis profile 'default'
+rootdir: /polyfactory
+configfile: pyproject.toml
+plugins: Faker-40.4.0, hypothesis-6.151.9, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=auto, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_typeddict_factory.py::test_typeddict_with_required_and_non_required_fields FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________ test_typeddict_with_required_and_non_required_fields _____________
+
+    def test_typeddict_with_required_and_non_required_fields() -> None:
+        class TypedDictModel(TypedDict):
+            id: Required[int]
+            name: NotRequired[str]
+            annotated: Required[Annotated[int, Ge(100)]]
+            list_field: List[Dict[str, int]]
+            optional_int: Required[Optional[int]]
+    
+        class TypedDictModelFactory(TypedDictFactory[TypedDictModel]):
+            __model__ = TypedDictModel
+    
+>       result = TypedDictModelFactory.build()
+
+tests/test_typeddict_factory.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+polyfactory/factories/base.py:758: in build
+    return cast("T", cls.__model__(**cls.process_kwargs(**kwargs)))
+polyfactory/factories/base.py:719: in process_kwargs
+    for field_meta in cls.get_model_fields():
+polyfactory/factories/typed_dict_factory.py:38: in get_model_fields
+    fields_meta: list["FieldMeta"] = [
+polyfactory/factories/typed_dict_factory.py:39: in <listcomp>
+    FieldMeta.from_type(
+polyfactory/field_meta.py:134: in from_type
+    field_type = normalize_annotation(annotation, random=random)
+polyfactory/utils/helpers.py:131: in normalize_annotation
+    return origin[args] if origin is not type else annotation
+/usr/local/lib/python3.10/typing.py:312: in inner
+    return func(*args, **kwds)
+/usr/local/lib/python3.10/typing.py:403: in __getitem__
+    return self._getitem(self, parameters)
+/usr/local/lib/python3.10/site-packages/typing_extensions.py:2393: in Required
+    item = typing._type_check(parameters, f'{self._name} accepts only a single type.')
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+arg = (<class 'int'>,), msg = 'Required accepts only a single type.'
+is_argument = True, module = None
+
+    def _type_check(arg, msg, is_argument=True, module=None, *, allow_special_forms=False):
+        """Check that the argument is a type, and return it (internal helper).
+    
+        As a special case, accept None and return type(None) instead. Also wrap strings
+        into ForwardRef instances. Consider several corner cases, for example plain
+        special forms like Union are not valid, while Union[int, str] is OK, etc.
+        The msg argument is a human-readable error message, e.g::
+    
+            "Union[arg, ...]: arg should be a type."
+    
+        We append the repr() of the actual value (truncated to 100 chars).
+        """
+        invalid_generic_forms = (Generic, Protocol)
+        if not allow_special_forms:
+            invalid_generic_forms += (ClassVar,)
+            if is_argument:
+                invalid_generic_forms += (Final,)
+    
+        arg = _type_convert(arg, module=module, allow_special_forms=allow_special_forms)
+        if (isinstance(arg, _GenericAlias) and
+                arg.__origin__ in invalid_generic_forms):
+            raise TypeError(f"{arg} is not valid as type argument")
+        if arg in (Any, NoReturn, Final, TypeAlias):
+            return arg
+        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
+            raise TypeError(f"Plain {arg} is not valid as type argument")
+        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec,
+                            ParamSpecArgs, ParamSpecKwargs)):
+            return arg
+        if not callable(arg):
+>           raise TypeError(f"{msg} Got {arg!r:.100}.")
+E           TypeError: Required accepts only a single type. Got (<class 'int'>,).
+
+/usr/local/lib/python3.10/typing.py:176: TypeError
+----------- generated xml file: /opt/receipts/reports/agent1-20.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_typeddict_factory.py::test_typeddict_with_required_and_non_required_fields
+============================== 1 failed in 1.12s ===============================

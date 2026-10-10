@@ -1,0 +1,281 @@
+{
+  "agent_branch_id": "agent1",
+  "attempts": [
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/1/filtered.diff",
+      "number": 1,
+      "patch_path": "attempts/1/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "contradicted",
+        "claim_evidence": "claimed green; own last run had 0 failed, 2 errors: fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls, fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "target tests passed: fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential, fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent",
+            "id": "R1_fail_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "0 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 4 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 1 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona -> cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona#11 unbroken over 11 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona -> cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "claimed green; own last run had 0 failed, 2 errors: fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls, fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls",
+            "id": "R6_claim_audit",
+            "passed": false
+          }
+        ],
+        "status": "PASS"
+      },
+      "witness_branch_id": "w1",
+      "worker": {
+        "claims": {
+          "files_changed": [
+            "fast_bitrix24/srh.py"
+          ],
+          "full_suite_pass": false,
+          "target_tests_pass": true,
+          "tests_run": true
+        },
+        "end": "finished",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3",
+          "agent1-4",
+          "agent1-5",
+          "agent1-6",
+          "agent1-7",
+          "agent1-8",
+          "agent1-9",
+          "agent1-10"
+        ],
+        "summary": "Implemented retry logic in ServerRequestHandler.single_request() method to handle aiohttp.client_exceptions.ClientPayloadError and aiohttp.client_exceptions.ServerDisconnectedError with up to 3 attempts before raising the exception. Also modified the acquire() method to be an async context manager to support the existing test patterns.",
+        "turns": 19
+      }
+    }
+  ],
+  "baseline": {
+    "collected_ids": [
+      "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent",
+      "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential",
+      "fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls",
+      "fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls"
+    ],
+    "protected": [],
+    "run_receipt_ids": [
+      "base-3",
+      "base-4"
+    ],
+    "runs": [
+      {
+        "collection_errors": [],
+        "errors": [
+          "fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls",
+          "fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls"
+        ],
+        "failed": [
+          "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential",
+          "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent"
+        ],
+        "passed": [],
+        "skipped": []
+      },
+      {
+        "collection_errors": [],
+        "errors": [
+          "fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls",
+          "fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls"
+        ],
+        "failed": [
+          "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential",
+          "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent"
+        ],
+        "passed": [],
+        "skipped": []
+      }
+    ],
+    "skipped_ids": [],
+    "target": [
+      "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential",
+      "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent"
+    ],
+    "unstable": []
+  },
+  "checkpoint": {
+    "digest": "cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona",
+    "id": "cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona",
+    "parent": "60563f11-f23a-4746-8b57-26e062c26b39#7"
+  },
+  "checkpoint_id": "cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona",
+  "cost": {
+    "estimated_dollars": 0.00758784,
+    "models": {
+      "nvidia/nemotron-3-super-120b-a12b": {
+        "completion_tokens": 3486,
+        "estimated_dollars": 0.00758784,
+        "prompt_tokens": 112520,
+        "reasoning_tokens": 0
+      }
+    },
+    "pricing_is_estimate": true,
+    "sandbox_seconds": 14.928098123387471
+  },
+  "disclosure": {
+    "executor_kind": "daytona",
+    "lock_sha256": "99997041b38b9eac49a420b05357178a21dedfeddf78c1e4b71e2c20d78994b3",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "pytest_config_digests": {},
+    "receipts_version": "0.0.1",
+    "test_digests": {
+      "fast_bitrix24/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fast_bitrix24/tests/fixtures.py": "4a6b4b172dd0cfa5757d4aa4a4834464058d7273d929a5dc4cea21ae51a455d1",
+      "fast_bitrix24/tests/test_async.py": "b4b9798c3383d5eb9d3595fcb3161ea3f894620e29ed818c1b0cbaae4903cbfc",
+      "fast_bitrix24/tests/test_sync.py": "f66cd1d7d4c396e66bde91c1b3c8371b90c94b05dfcdc525d54a7f8133efd031"
+    }
+  },
+  "final_verdict": {
+    "branch_id": "agent1",
+    "claim_audit": "contradicted",
+    "claim_evidence": "claimed green; own last run had 0 failed, 2 errors: fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls, fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls",
+    "error": null,
+    "predicates": [
+      {
+        "evidence": "target tests passed: fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential, fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent",
+        "id": "R1_fail_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "0 baseline-passing tests still pass",
+        "id": "R2_pass_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "all 4 baseline tests collected; skips unchanged (0)",
+        "id": "R3_no_shrink",
+        "passed": true
+      },
+      {
+        "evidence": "patch touches 1 file(s), all in scope",
+        "id": "R4_patch_scope",
+        "passed": true
+      },
+      {
+        "evidence": "agent chain cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona -> cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona#11 unbroken over 11 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona -> cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+        "id": "R5_provenance",
+        "passed": true
+      },
+      {
+        "evidence": "claimed green; own last run had 0 failed, 2 errors: fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls, fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls",
+        "id": "R6_claim_audit",
+        "passed": false
+      }
+    ],
+    "status": "PASS"
+  },
+  "input": {
+    "appeals": 1,
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 64000,
+        "max_turns": 40,
+        "max_wall_seconds": 1200.0
+      }
+    },
+    "issue": "\u0414\u0435\u043b\u0430\u0442\u044c \u043f\u043e\u0432\u0442\u043e\u0440\u043d\u044b\u0435 \u0437\u0430\u043f\u0440\u043e\u0441\u044b \u043f\u0440\u0438 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0438 \u043e\u0448\u0438\u0431\u043e\u043a \u0432\u043d\u0443\u0442\u0440\u0438 ServerRequestHandler.single_request()\n\u041e\u0448\u0438\u0431\u043a\u0438, \u043f\u0440\u0438 \u043a\u043e\u0442\u043e\u0440\u044b\u0445 \u0434\u0435\u043b\u0430\u0442\u044c \u043f\u043e\u0432\u0442\u043e\u0440\u044b:\r\n- aiohttp.client_exceptions.ClientPayloadError\r\n- aiohttp.client_exceptions.ServerDisconnectedError\r\n\r\n\u041d\u0430 \u0442\u0440\u0435\u0442\u0438\u0439 \u0440\u0430\u0437 \u043c\u043e\u0436\u043d\u043e \u043f\u043e\u0434\u043d\u0438\u043c\u0430\u0442\u044c \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u0443\u044e \u043e\u0448\u0438\u0431\u043a\u0443 \u043d\u0430\u0432\u0435\u0440\u0445.",
+    "source": {
+      "image": "docker.io/swerebenchv2/leshchenko1979-fast-bitrix24:114-0045d7c",
+      "platform": "linux/amd64",
+      "python": "python",
+      "setup": [
+        "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-leshchenko1979__fast_bitrix24-114-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2Zhc3RfYml0cml4MjQvdGVzdHMvdGVzdF9hc3luYy5weSBiL2Zhc3RfYml0cml4MjQvdGVzdHMvdGVzdF9hc3luYy5weQppbmRleCA0ZDM0OGY1Li5iZjM5MDcwIDEwMDY0NAotLS0gYS9mYXN0X2JpdHJpeDI0L3Rlc3RzL3Rlc3RfYXN5bmMucHkKKysrIGIvZmFzdF9iaXRyaXgyNC90ZXN0cy90ZXN0X2FzeW5jLnB5CkBAIC01Miw3ICs1Miw4IEBAIGFzeW5jIGRlZiBhc3NlcnRfdGltZV9hY3F1aXJlKGJpdHJpeCwgYWNxdWlyZV9hbW91bnQsIHRpbWVfZXhwZWN0ZWQpOgogICAgIHQxID0gbW9ub3RvbmljKCkKIAogICAgIGZvciBfIGluIHJhbmdlKGFjcXVpcmVfYW1vdW50KToKLSAgICAgICAgYXdhaXQgYml0cml4LnNyaC5fYWNxdWlyZSgpCisgICAgICAgIGFzeW5jIHdpdGggYml0cml4LnNyaC5hY3F1aXJlKCk6CisgICAgICAgICAgICBwYXNzCiAKICAgICB0MiA9IG1vbm90b25pYygpCiAK'\"'\"'))'",
+        "git apply /tmp/receipts-leshchenko1979__fast_bitrix24-114-test.patch"
+      ],
+      "workdir": "/fast_bitrix24"
+    },
+    "spec_tests": [
+      "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential",
+      "fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent"
+    ],
+    "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning fast_bitrix24/tests/test_async.py"
+  },
+  "plan": {
+    "approach": "Wrap the body of srh.single_request in a loop that attempts the request up to 3 times, catching the specified exceptions and re-raising on the third failure.",
+    "files_to_edit": [
+      "fast_bitrix24/srh.py"
+    ],
+    "hypothesis": "ServerRequestHandler.single_request must retry on ClientPayloadError and ServerDisconnectedError up to three times."
+  },
+  "selected_patch_path": "attempts/1/filtered.diff",
+  "snapshot_receipt_id": "base-7",
+  "verdict_history": [
+    {
+      "branch_id": "agent1",
+      "claim_audit": "contradicted",
+      "claim_evidence": "claimed green; own last run had 0 failed, 2 errors: fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls, fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "target tests passed: fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_sequential, fast_bitrix24/tests/test_async.py::TestAcquire::test_acquire_intermittent",
+          "id": "R1_fail_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "0 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 4 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 1 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona -> cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona#11 unbroken over 11 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona -> cr.app.daytona.io/sbox/daytona-bad8c2bc257f6ac9ed7f9fc5608f70155973b50b50229129a7d5d311e41e5f5f:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "claimed green; own last run had 0 failed, 2 errors: fast_bitrix24/tests/test_async.py::TestAsync::test_simple_async_calls, fast_bitrix24/tests/test_async.py::TestAsync::test_simultaneous_calls",
+          "id": "R6_claim_audit",
+          "passed": false
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "verified_fix": true,
+  "wall_time_s": 190.51188862510026
+}

@@ -1,0 +1,11 @@
+1250:    def read_object_header(self, stream: StreamType) -> Tuple[int, int]:
+1251-        # Should never be necessary to read out whitespace, since the
+1252-        # cross-reference table should put us in the right spot to read the
+1253-        # object header.  In reality... some files have stupid cross reference
+1254-        # tables that are off by whitespace bytes.
+1255-        extra = False
+1256-        skip_over_comment(stream)
+1257-        extra |= skip_over_whitespace(stream)
+1258-        stream.seek(-1, 1)
+1259-        idnum = read_until_whitespace(stream)
+1260-        extra |= skip_over_whitespace(stream)

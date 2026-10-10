@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Ability to update the executor of a pre-defined or imported `Electron` object\n### What should we add?\r\n\r\nThere should be some clean way for the user to update the executor of an `Electron` once it is has been defined or imported from some external Python package. See #1646 for the full context.\r\n\r\n@santoshkumarradha has good suggestions here: https://github.com/AgnostiqHQ/covalent/discussions/1646#discussioncomment-5901761\r\n\r\n> hey @arosen93 , this is a long backlogged item on our plate. Ideally the best UX is to have something like\r\n> \r\n> ### UX1\r\n> ```python\r\n> from my_package import energy_electron # imports a direct electron object\r\n> \r\n> energy_electron.executor=MyExecutor()\r\n> ```\r\n> \r\n> Could @kessler-frost confirm if using `energy_electron.metadata[\"executor\"]=MyExecutor()` would be a valid solution? I'm uncertain if it would properly set everything needed. I recall encountering some issues with UX1 in the past, but perhaps they have since been resolved and we can revisit the matter.\r\n> \r\n> Meanwhile I am just curious if using a UX2 would be a good fit for creating custom electron packages.\r\n> \r\n> ### UX2\r\n> ```python\r\n> from my_package import energy_electron\r\n> small_cell=energy_electron(**parameters,executor=MyExecutor(num_cpu=2)) # Returns an electron function \r\n> super_cell=energy_electron(**parameters,executor=MyExecutor(num_cpu=45)) # Returns an electron function \r\n> \r\n> @ct.lattice\r\n> def workflow():\r\n>     energy_supercell=super_cell(\"NaCl\") #different resource electron\r\n>     energy_smallcell=small_cell(\"NaCl\") #different resource electron\r\n> ```\r\n> \r\n> In certain scenarios, UX2 may be more suitable as it allows for the creation of multiple electron instances with unique parameters through a factory pattern. This is not achievable in UX1, which is designed to return a singleton electron instance with a specific tied instance. Infact our initial interest in UX1 was coming in from a perspective of changing executor inside an interactive notebook after electrons have been defined.\r\n> \r\n> LMK your thoughts.\r\n\r\n\r\n### Describe alternatives you've considered.\r\n\r\nModifying the `electron_object.metadata` directly, but this doesn't seem like a \"suggested\" approach.",
+  "source": {
+    "image": "docker.io/swerebenchv2/agnostiqhq-covalent:1660-f513222",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-agnostiqhq__covalent-1660-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2NvdmFsZW50X3Rlc3RzL3dvcmtmbG93L2VsZWN0cm9uX3Rlc3QucHkgYi90ZXN0cy9jb3ZhbGVudF90ZXN0cy93b3JrZmxvdy9lbGVjdHJvbl90ZXN0LnB5CmluZGV4IDAzYWNkYjVkLi43MTc2NzliZCAxMDA2NDQKLS0tIGEvdGVzdHMvY292YWxlbnRfdGVzdHMvd29ya2Zsb3cvZWxlY3Ryb25fdGVzdC5weQorKysgYi90ZXN0cy9jb3ZhbGVudF90ZXN0cy93b3JrZmxvdy9lbGVjdHJvbl90ZXN0LnB5CkBAIC00ODQsMyArNDg0LDE4IEBAIGRlZiB0ZXN0X2VsZWN0cm9uX2F1dG9fdGFza19ncm91cHNfaXRlcigpOgogICAgIGFzc2VydCBnZXRpdGVtX3hfZ2lkID09IHR1cF9lbGVjdHJvbl9naWQKICAgICBhc3NlcnQgZ2V0aXRlbV95X2dpZCA9PSB0dXBfZWxlY3Ryb25fZ2lkCiAgICAgYXNzZXJ0IGFsbCh0Zy5nZXRfbm9kZV92YWx1ZShpLCAidGFza19ncm91cF9pZCIpID09IGkgZm9yIGkgaW4gWzIsIDQsIDUsIDZdKQorCisKK2RlZiB0ZXN0X2VsZWN0cm9uX2V4ZWN1dG9yX3Byb3BlcnR5KCk6CisgICAgIiIiCisgICAgVGVzdCB0aGF0IHRoZSBleGVjdXRvciBwcm9wZXJ0eSBhc3NpZ25tZW50CisgICAgb2YgYW4gZWxlY3Ryb24gd29ya3MgYXMgZXhwZWN0ZWQuCisgICAgIiIiCisKKyAgICBAY3QuZWxlY3Ryb24KKyAgICBkZWYgbW9ja190YXNrKCk6CisgICAgICAgIHBhc3MKKworICAgIG1vY2tfdGFza19lbGVjdHJvbiA9IG1vY2tfdGFzay5lbGVjdHJvbl9vYmplY3QKKyAgICBtb2NrX3Rhc2tfZWxlY3Ryb24uZXhlY3V0b3IgPSAibW9jayIKKyAgICBhc3NlcnQgbW9ja190YXNrX2VsZWN0cm9uLm1ldGFkYXRhWyJleGVjdXRvciJdID09ICJtb2NrIgo='\"'\"'))'",
+      "git apply /tmp/receipts-agnostiqhq__covalent-1660-test.patch"
+    ],
+    "workdir": "/covalent"
+  },
+  "spec_tests": [
+    "tests/covalent_tests/workflow/electron_test.py::test_electron_executor_property"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/covalent_tests/workflow/electron_test.py"
+}

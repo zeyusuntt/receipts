@@ -1,0 +1,8 @@
+
+        ref_info = json.loads(resp.body.decode("utf-8"))
+        if "sha" not in ref_info:
+            # TODO: Figure out if we should raise an exception instead?
+            self.log.warning("No sha for %s in %s", api_url, ref_info)
+            self.resolved_ref = None
+            return None
+        # store resolved ref and cache for later

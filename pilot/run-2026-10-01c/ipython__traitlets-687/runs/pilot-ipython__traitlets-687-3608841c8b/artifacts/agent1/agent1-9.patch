@@ -1,0 +1,22 @@
+diff --git a/traitlets/config/application.py b/traitlets/config/application.py
+index 333af49..14fdc0b 100644
+--- a/traitlets/config/application.py
++++ b/traitlets/config/application.py
+@@ -736,14 +736,14 @@ class Application(SingletonConfigurable):
+         aliases: t.Dict[str, str] = {}
+         for alias, longname in self.aliases.items():
+             if isinstance(longname, tuple):
+-                longname, _ = longname
++                longname = longname[0]
+             cls, trait = longname.split(".", 1)  # type:ignore[assignment]
+             children = mro_tree[cls]  # type:ignore[index]
+             if len(children) == 1:
+                 # exactly one descendent, promote alias
+                 cls = children[0]  # type:ignore[assignment]
+-            if not isinstance(aliases, tuple):
+-                alias = (alias,)  # type:ignore[assignment]
++            if not isinstance(alias, tuple):
++                alias = (alias,)
+             for al in alias:
+                 aliases[al] = ".".join([cls, trait])  # type:ignore[list-item]
+ 

@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Interval arithmetic: incorrect results for min and max\n```\nConsider the following operation:\n\na = iv.mpf([0,1])\nb = 0.5\n\nmin(a,b)\n\nMpmath returns the range [0,1] though there is no posible value of a that can give a result greater than 0.5\n\nThe correct response is [0,0.5]\n```\n\nOriginal issue for #258: http://code.google.com/p/mpmath/issues/detail?id=218\nOriginal author: https://code.google.com/u/117464931809270512527/\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/mpmath-mpmath:903-1c53162",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-mpmath__mpmath-903-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL21wbWF0aC90ZXN0cy90ZXN0X2ludGVydmFsLnB5IGIvbXBtYXRoL3Rlc3RzL3Rlc3RfaW50ZXJ2YWwucHkKaW5kZXggOTNlN2Y4Yi4uZjM5YTI3MCAxMDA2NDQKLS0tIGEvbXBtYXRoL3Rlc3RzL3Rlc3RfaW50ZXJ2YWwucHkKKysrIGIvbXBtYXRoL3Rlc3RzL3Rlc3RfaW50ZXJ2YWwucHkKQEAgLTEsNCArMSw2IEBACi1mcm9tIG1wbWF0aCBpbXBvcnQgaW5mLCBpdiwgbXAsIG1wZiwgbXBpLCBwaSwgc3FydAoraW1wb3J0IHB5dGVzdAorCitmcm9tIG1wbWF0aCBpbXBvcnQgaW5mLCBpdiwgbXAsIG1wZiwgbXBpLCBwaSwgc3FydCwgd29ya3ByZWMKIAogCiBkZWYgdGVzdF9pbnRlcnZhbF9pZGVudGl0eSgpOgpAQCAtMzAzLDggKzMwNSw5IEBAIGRlZiB0ZXN0X2ludGVydmFsX2NvbXBsZXgoKToKICAgICBhc3NlcnQgaXYubXBjKDIsMikgKiogKC0yKSA9PSAoMisyaikgKiogKC0yKQogICAgIGFzc2VydCBpdi5jb3MoMikuYWUobXAuY29zKDIpKQogICAgIGFzc2VydCBpdi5zaW4oMikuYWUobXAuc2luKDIpKQotICAgIGFzc2VydCBpdi5jb3MoMiszaikuYWUobXAuY29zKDIrM2opKQotICAgIGFzc2VydCBpdi5zaW4oMiszaikuYWUobXAuc2luKDIrM2opKQorICAgIHdpdGggd29ya3ByZWMoNTQpOgorICAgICAgICBhc3NlcnQgaXYuY29zKDIrM2opLmFlKG1wLmNvcygyKzNqKSkKKyAgICAgICAgYXNzZXJ0IGl2LnNpbigyKzNqKS5hZShtcC5zaW4oMiszaikpCiAKIGRlZiB0ZXN0X2ludGVydmFsX2NvbXBsZXhfYXJnKCk6CiAgICAgYXNzZXJ0IGl2LmFyZygzKSA9PSAwCkBAIC0zNTEsOSArMzU0LDkgQEAgZGVmIHRlc3RfaW50ZXJ2YWxfY29tcGxleF9hcmcoKToKIAogZGVmIHRlc3RfaW50ZXJ2YWxfYWUoKToKICAgICB4ID0gaXYubXBmKFsxLDJdKQotICAgIGFzc2VydCB4LmFlKDEpIGlzIE5vbmUKLSAgICBhc3NlcnQgeC5hZSgxLjUpIGlzIE5vbmUKLSAgICBhc3NlcnQgeC5hZSgyKSBpcyBOb25lCisgICAgcHl0ZXN0LnJhaXNlcyhWYWx1ZUVycm9yLCBsYW1iZGE6IHguYWUoMSkpCisgICAgcHl0ZXN0LnJhaXNlcyhWYWx1ZUVycm9yLCBsYW1iZGE6IHguYWUoMS41KSkKKyAgICBweXRlc3QucmFpc2VzKFZhbHVlRXJyb3IsIGxhbWJkYTogeC5hZSgyKSkKICAgICBhc3NlcnQgeC5hZSgyLjAxKSBpcyBGYWxzZQogICAgIGFzc2VydCB4LmFlKDAuOTkpIGlzIEZhbHNlCiAgICAgeCA9IGl2Lm1wZigzLjUpCkBAIC0zNjIsOCArMzY1LDggQEAgZGVmIHRlc3RfaW50ZXJ2YWxfYWUoKToKICAgICBhc3NlcnQgeC5hZSgzLjUtMWUtMTUpIGlzIFRydWUKICAgICBhc3NlcnQgeC5hZSgzLjUwMSkgaXMgRmFsc2UKICAgICBhc3NlcnQgeC5hZSgzLjQ5OSkgaXMgRmFsc2UKLSAgICBhc3NlcnQgeC5hZShpdi5tcGYoWzMuNSwzLjUwMV0pKSBpcyBOb25lCi0gICAgYXNzZXJ0IHguYWUoaXYubXBmKFszLjUsNC41KzFlLTE1XSkpIGlzIE5vbmUKKyAgICBweXRlc3QucmFpc2VzKFZhbHVlRXJyb3IsIGxhbWJkYTogeC5hZShpdi5tcGYoWzMuNSwzLjUwMV0pKSkKKyAgICBweXRlc3QucmFpc2VzKFZhbHVlRXJyb3IsIGxhbWJkYTogeC5hZShpdi5tcGYoWzMuNSw0LjUrMWUtMTVdKSkpCiAKIGRlZiB0ZXN0X2ludGVydmFsX25zdHIoKToKICAgICBpdi5kcHMgPSBuID0gMzAKQEAgLTQzOSwzICs0NDIsOSBAQCBkZWYgdGVzdF9pbnRlcnZhbF9jb252ZXJzaW9ucygpOgogICAgICAgICBhc3NlcnQgZmxvYXQoci5iKSA9PSBmbG9hdChiKQogICAgICAgICBhc3NlcnQgY29tcGxleChyLmEpID09IGNvbXBsZXgoYSkKICAgICAgICAgYXNzZXJ0IGNvbXBsZXgoci5iKSA9PSBjb21wbGV4KGIpCisKK2RlZiB0ZXN0X2lzc3VlXzI1OCgpOgorICAgIGEgPSBpdi5tcGYoWzAsIDFdKQorICAgIGIgPSAwLjUKKyAgICBweXRlc3QucmFpc2VzKFZhbHVlRXJyb3IsIGxhbWJkYTogbWluKGEsIGIpKQorICAgIHB5dGVzdC5yYWlzZXMoVmFsdWVFcnJvciwgbGFtYmRhOiBtYXgoYSwgYikpCg=='\"'\"'))'",
+      "git apply /tmp/receipts-mpmath__mpmath-903-test.patch"
+    ],
+    "workdir": "/mpmath"
+  },
+  "spec_tests": [
+    "mpmath/tests/test_interval.py::test_interval_ae",
+    "mpmath/tests/test_interval.py::test_issue_258"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning mpmath/tests/test_interval.py"
+}

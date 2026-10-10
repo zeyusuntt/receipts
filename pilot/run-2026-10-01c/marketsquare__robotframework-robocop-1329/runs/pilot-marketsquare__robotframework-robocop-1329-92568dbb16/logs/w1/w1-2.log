@@ -1,0 +1,57 @@
+============================= test session starts ==============================
+collected 2 items
+
+tests/linter/rules/keywords/unused_keyword/test_rule.py FF               [100%]
+
+=================================== FAILURES ===================================
+Actual issues are different than expected.
+Expected issues not found in actual:
+    resource.robot:10:1:10:25 [I] KW04 Keyword 'Private Not Used Keyword' is not used
+    suite.robot:19:1:19:17 [I] KW04 Keyword 'Not Used Keyword' is not used
+    suite.robot:34:1:34:21 [I] KW04 Keyword 'Embedded ${not} Used' is not used
+    tasks.robot:16:1:16:17 [I] KW04 Keyword 'Not Used Keyword' is not used
+/robotframework-robocop/tests/linter/utils/__init__.py:157: Failed: Actual issues are different than expected.
+Actual issues are different than expected.
+
+----------------------------- Captured stdout call -----------------------------
+--- expected:   
+
++++ actual:     
+
+@@ -1,29 +0,0 @@
+
+-resource.robot:10:1 KW04 Keyword 'Private Not Used Keyword' is not used
+-    |
+- 10 | Private Not Used Keyword
+-    | ^^^^^^^^^^^^^^^^^^^^^^^^ KW04
+- 11 |     [Tags]    robot:private
+- 12 |     No Operation
+-    |
+-
+-suite.robot:19:1 KW04 Keyword 'Not Used Keyword' is not used
+-    |
+- 19 | Not Used Keyword
+-    | ^^^^^^^^^^^^^^^^ KW04
+- 20 |     Nested Not Used Keyword
+-    |
+-
+-suite.robot:34:1 KW04 Keyword 'Embedded ${not} Used' is not used
+-    |
+- 34 | Embedded ${not} Used
+-    | ^^^^^^^^^^^^^^^^^^^^ KW04
+- 35 |     No Operation
+-    |
+-
+-tasks.robot:16:1 KW04 Keyword 'Not Used Keyword' is not used
+-    |
+- 16 | Not Used Keyword
+-    | ^^^^^^^^^^^^^^^^ KW04
+- 17 |     Nested Not Used Keyword
+-    |
+-
+/robotframework-robocop/tests/linter/utils/__init__.py:157: Failed: Actual issues are different than expected.
+-------------- generated xml file: /opt/receipts/reports/w1-2.xml --------------
+=========================== short test summary info ============================
+FAILED tests/linter/rules/keywords/unused_keyword/test_rule.py::TestRuleAcceptance::test_rule
+FAILED tests/linter/rules/keywords/unused_keyword/test_rule.py::TestRuleAcceptance::test_extended
+============================== 2 failed in 0.61s ===============================

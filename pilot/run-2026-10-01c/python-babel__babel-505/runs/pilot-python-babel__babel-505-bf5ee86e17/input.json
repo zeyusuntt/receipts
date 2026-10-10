@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Using __file__ in a PyInstaller environment is not possible\nBabel is not working in my projects which are processed with PyInstaller.\r\nThe reason for this: the direct access to \"`__file__`\".",
+  "source": {
+    "image": "docker.io/swerebenchv2/python-babel-babel:505-0c75f29",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-python-babel__babel-505-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfbG9jYWxlZGF0YS5weSBiL3Rlc3RzL3Rlc3RfbG9jYWxlZGF0YS5weQppbmRleCA2YTQxYWMyLi42MmFkOTNjIDEwMDY0NAotLS0gYS90ZXN0cy90ZXN0X2xvY2FsZWRhdGEucHkKKysrIGIvdGVzdHMvdGVzdF9sb2NhbGVkYXRhLnB5CkBAIC0xNCw2ICsxNCw3IEBACiBpbXBvcnQgdW5pdHRlc3QKIGltcG9ydCByYW5kb20KIGZyb20gb3BlcmF0b3IgaW1wb3J0IG1ldGhvZGNhbGxlcgoraW1wb3J0IHN5cwogCiBmcm9tIGJhYmVsIGltcG9ydCBsb2NhbGVkYXRhCiAKQEAgLTk0LDMgKzk1LDE0IEBAIGRlZiB0ZXN0X21peGVkY2FzZWRfbG9jYWxlKCk6CiAgICAgICAgIGxvY2FsZV9pZCA9ICcnLmpvaW4oWwogICAgICAgICAgICAgbWV0aG9kY2FsbGVyKHJhbmRvbS5jaG9pY2UoWydsb3dlcicsICd1cHBlciddKSkoYykgZm9yIGMgaW4gbF0pCiAgICAgICAgIGFzc2VydCBsb2NhbGVkYXRhLmV4aXN0cyhsb2NhbGVfaWQpCisKKworZGVmIHRlc3RfcGlfc3VwcG9ydF9mcm96ZW4obW9ua2V5cGF0Y2gpOgorICAgIG1vbmtleXBhdGNoLnNldGF0dHIoc3lzLCAnX01FSVBBU1MnLCAndGVzdGRpcicsIHJhaXNpbmc9RmFsc2UpCisgICAgbW9ua2V5cGF0Y2guc2V0YXR0cihzeXMsICdmcm96ZW4nLCBUcnVlLCByYWlzaW5nPUZhbHNlKQorICAgIGFzc2VydCBsb2NhbGVkYXRhLmdldF9iYXNlX2RpcigpID09ICd0ZXN0ZGlyJworCisKK2RlZiB0ZXN0X3BpX3N1cHBvcnRfbm90X2Zyb3plbigpOgorICAgIGFzc2VydCBub3QgZ2V0YXR0cihzeXMsICdmcm96ZW4nLCBGYWxzZSkKKyAgICBhc3NlcnQgbG9jYWxlZGF0YS5nZXRfYmFzZV9kaXIoKS5lbmRzd2l0aCgnYmFiZWwnKQo='\"'\"'))'",
+      "git apply /tmp/receipts-python-babel__babel-505-test.patch"
+    ],
+    "workdir": "/babel"
+  },
+  "spec_tests": [
+    "tests/test_localedata.py::test_pi_support_frozen",
+    "tests/test_localedata.py::test_pi_support_not_frozen"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_localedata.py"
+}

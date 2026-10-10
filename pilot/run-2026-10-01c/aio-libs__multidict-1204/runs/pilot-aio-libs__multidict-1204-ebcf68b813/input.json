@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Implement md.merge(other)\nThe method should be mimic to `md.extend()` but add only keys from `other` that are absent in `self`.\r\n\r\nThe behavior is very useful for merging aiohttp session defaults into passed headers for example.",
+  "source": {
+    "image": "docker.io/swerebenchv2/aio-libs-multidict:1204-acdd2d1",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-aio-libs__multidict-1204-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfbXV0YWJsZV9tdWx0aWRpY3QucHkgYi90ZXN0cy90ZXN0X211dGFibGVfbXVsdGlkaWN0LnB5CmluZGV4IGQ2ZmU0MmYuLmEzYWQ5MDkgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3Rlc3RfbXV0YWJsZV9tdWx0aWRpY3QucHkKKysrIGIvdGVzdHMvdGVzdF9tdXRhYmxlX211bHRpZGljdC5weQpAQCAtNDI5LDYgKzQyOSw1MSBAQCBjbGFzcyBUZXN0TXV0YWJsZU11bHRpRGljdDoKICAgICAgICAgZDIgPSBjYXNlX3NlbnNpdGl2ZV9tdWx0aWRpY3RfY2xhc3MocCkKICAgICAgICAgYXNzZXJ0IGQyID09IGQKIAorICAgIGRlZiB0ZXN0X21lcmdlKAorICAgICAgICBzZWxmLAorICAgICAgICBjYXNlX3NlbnNpdGl2ZV9tdWx0aWRpY3RfY2xhc3M6IHR5cGVbTXVsdGlEaWN0W1VuaW9uW3N0ciwgaW50XV1dLAorICAgICkgLT4gTm9uZToKKyAgICAgICAgZCA9IGNhc2Vfc2Vuc2l0aXZlX211bHRpZGljdF9jbGFzcyh7ImtleSI6ICJvbmUifSkKKyAgICAgICAgYXNzZXJ0IGQgPT0geyJrZXkiOiAib25lIn0KKworICAgICAgICBkLm1lcmdlKFsoImtleSIsICJvdGhlciIpLCAoImtleTIiLCAidHdvIildLCBrZXkyPTMsIGZvbz0iYmFyIikKKyAgICAgICAgYXNzZXJ0IDQgPT0gbGVuKGQpCisgICAgICAgIGl0bXMgPSBkLml0ZW1zKCkKKyAgICAgICAgIyB3ZSBjYW4ndCBndWFyYW50ZWUgb3JkZXIgb2Yga3dhcmdzCisgICAgICAgIGFzc2VydCAoImtleSIsICJvbmUiKSBpbiBpdG1zCisgICAgICAgIGFzc2VydCAoImtleTIiLCAidHdvIikgaW4gaXRtcworICAgICAgICBhc3NlcnQgKCJrZXkyIiwgMykgaW4gaXRtcworICAgICAgICBhc3NlcnQgKCJmb28iLCAiYmFyIikgaW4gaXRtcworCisgICAgICAgIG90aGVyID0gY2FzZV9zZW5zaXRpdmVfbXVsdGlkaWN0X2NsYXNzKHsia2V5IjogIm90aGVyIn0sIGJhcj0iYmF6IikKKworICAgICAgICBkLm1lcmdlKG90aGVyKQorICAgICAgICBhc3NlcnQgKCJiYXIiLCAiYmF6IikgaW4gZC5pdGVtcygpCisKKyAgICAgICAgZC5tZXJnZSh7ImtleSI6ICJvdGhlciIsICJib28iOiAibW9vIn0pCisgICAgICAgIGFzc2VydCAoImJvbyIsICJtb28iKSBpbiBkLml0ZW1zKCkKKworICAgICAgICBkLm1lcmdlKCkKKyAgICAgICAgYXNzZXJ0IDYgPT0gbGVuKGQpCisKKyAgICAgICAgYXNzZXJ0ICgia2V5IiwgIm90aGVyIikgbm90IGluIGQuaXRlbXMoKQorCisgICAgICAgIHdpdGggcHl0ZXN0LnJhaXNlcyhUeXBlRXJyb3IpOgorICAgICAgICAgICAgZC5tZXJnZSgiZm9vIiwgImJhciIpICAjIHR5cGU6IGlnbm9yZVthcmctdHlwZSwgY2FsbC1hcmddCisKKyAgICBkZWYgdGVzdF9tZXJnZV9mcm9tX3Byb3h5KAorICAgICAgICBzZWxmLAorICAgICAgICBjYXNlX3NlbnNpdGl2ZV9tdWx0aWRpY3RfY2xhc3M6IHR5cGVbTXVsdGlEaWN0W3N0cl1dLAorICAgICAgICBjYXNlX3NlbnNpdGl2ZV9tdWx0aWRpY3RfcHJveHlfY2xhc3M6IHR5cGVbTXVsdGlEaWN0UHJveHlbc3RyXV0sCisgICAgKSAtPiBOb25lOgorICAgICAgICBkID0gY2FzZV9zZW5zaXRpdmVfbXVsdGlkaWN0X2NsYXNzKFsoImEiLCAiYSIpLCAoImIiLCAiYiIpXSkKKyAgICAgICAgcHJveHkgPSBjYXNlX3NlbnNpdGl2ZV9tdWx0aWRpY3RfcHJveHlfY2xhc3MoZCkKKworICAgICAgICBkMiA9IGNhc2Vfc2Vuc2l0aXZlX211bHRpZGljdF9jbGFzcygpCisgICAgICAgIGQyLm1lcmdlKHByb3h5KQorCisgICAgICAgIGFzc2VydCBbKCJhIiwgImEiKSwgKCJiIiwgImIiKV0gPT0gbGlzdChkMi5pdGVtcygpKQorCiAKIGNsYXNzIFRlc3RDSU11dGFibGVNdWx0aURpY3Q6CiAgICAgZGVmIHRlc3RfZ2V0YWxsKAo='\"'\"'))'",
+      "git apply /tmp/receipts-aio-libs__multidict-1204-test.patch"
+    ],
+    "workdir": "/multidict"
+  },
+  "spec_tests": [
+    "tests/test_mutable_multidict.py::TestMutableMultiDict::test_merge[py]",
+    "tests/test_mutable_multidict.py::TestMutableMultiDict::test_merge_from_proxy[py]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_mutable_multidict.py"
+}

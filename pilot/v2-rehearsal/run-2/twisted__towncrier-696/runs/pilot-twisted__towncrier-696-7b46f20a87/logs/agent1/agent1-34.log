@@ -1,0 +1,11 @@
+    @with_project(
+        config="""
+        [tool.towncrier]
+        package = "foo"
+        filename = "NEWS.md"
+        title_format = "### [{project_date}] CUSTOM RELEASE for {name} version {version}"
+        """
+    )
+    def test_markdown_injected_after_header(self, runner):
+        """
+        Test that we can inject markdown after some fixed header

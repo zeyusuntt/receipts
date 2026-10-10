@@ -1,0 +1,50 @@
+        for line in lines:
+            # Check for snippets on line
+            m = self.RE_ALL_SNIPPETS.match(line)
+            if m:
+                # Count escape characters (; at start)
+                escape_count = len(m.group('escape'))
+                
+                if m.group('inline_marker'):
+                    # Handle inline snippet marker (-{1,}8<-{1,})
+                    if not m.group('escape'):
+                        # Not escaped - this is an active snippet marker
+                        if inside:
+                            # We're already inside a snippet - treat as literal text
+                            # This allows section markers inside snippets to be preserved
+                            new_lines.append(line[escape_count:])
+                        else:
+                            # We're outside - start processing this snippet
+                            inside = True
+                            
+                            # Extract the snippet path (remove quotes)
+                            path = m.group('snippet')[1:-1].strip()
+                            
+                            # Validate path
+                            if not path:
+                                new_lines.append(line[escape_count:])  # Empty path - treat as literal
+                                inside = False
+                                continue
+                                
+                            # Ignore commented out lines
+                            if path.startswith(';'):
+                                new_lines.append(line[escape_count:])  # Commented - treat as literal
+                                inside = False
+                                continue
+                                
+                            # Parse line numbers and sections
+                            end = None
+                            start = None
+                            section = None
+                            m2 = self.RE_SNIPPET_FILE.match(path)
+                            path = m2.group(1).strip()
+                            
+                            # Handle case with only line numbers specified
+                            if not path:
+                                if self.check_paths:
+                                    raise SnippetMissingError("Snippet at path '{}' could not be found".format(path))
+                                else:
+                                    new_lines.append(line[escape_count:])
+                                    inside = False
+                                    continue
+                                    

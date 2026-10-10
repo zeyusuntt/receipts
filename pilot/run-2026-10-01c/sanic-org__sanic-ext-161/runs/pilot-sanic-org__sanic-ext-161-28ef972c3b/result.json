@@ -1,0 +1,301 @@
+{
+  "agent_branch_id": "agent1",
+  "attempts": [
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/1/filtered.diff",
+      "number": 1,
+      "patch_path": "attempts/1/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "no_claim",
+        "claim_evidence": "branch ended without a finish call",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "target tests passed: tests/extensions/openapi/test_schema.py::test_schema_fields",
+            "id": "R1_fail_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "1 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 2 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 2 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona -> cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona#22 unbroken over 22 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona -> cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "branch ended without a finish call",
+            "id": "R6_claim_audit",
+            "passed": false
+          }
+        ],
+        "status": "PASS"
+      },
+      "witness_branch_id": "w1",
+      "worker": {
+        "claims": null,
+        "end": "budget_exhausted",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3",
+          "agent1-4",
+          "agent1-5",
+          "agent1-6",
+          "agent1-7",
+          "agent1-8",
+          "agent1-9",
+          "agent1-10",
+          "agent1-11",
+          "agent1-12",
+          "agent1-13",
+          "agent1-14",
+          "agent1-15",
+          "agent1-16",
+          "agent1-17",
+          "agent1-18",
+          "agent1-19",
+          "agent1-20",
+          "agent1-21"
+        ],
+        "summary": "turn budget exhausted after 40 turn(s)",
+        "turns": 40
+      }
+    }
+  ],
+  "baseline": {
+    "collected_ids": [
+      "tests/extensions/openapi/test_schema.py::test_schema_fields",
+      "tests/extensions/openapi/test_schema.py::test_schema_list"
+    ],
+    "protected": [
+      "tests/extensions/openapi/test_schema.py::test_schema_list"
+    ],
+    "run_receipt_ids": [
+      "base-3",
+      "base-4"
+    ],
+    "runs": [
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "tests/extensions/openapi/test_schema.py::test_schema_fields"
+        ],
+        "passed": [
+          "tests/extensions/openapi/test_schema.py::test_schema_list"
+        ],
+        "skipped": []
+      },
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "tests/extensions/openapi/test_schema.py::test_schema_fields"
+        ],
+        "passed": [
+          "tests/extensions/openapi/test_schema.py::test_schema_list"
+        ],
+        "skipped": []
+      }
+    ],
+    "skipped_ids": [],
+    "target": [
+      "tests/extensions/openapi/test_schema.py::test_schema_fields"
+    ],
+    "unstable": []
+  },
+  "checkpoint": {
+    "digest": "cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona",
+    "id": "cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona",
+    "parent": "7f52ab3a-5bf4-4c8d-b1f5-3ec87c55c905#7"
+  },
+  "checkpoint_id": "cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona",
+  "cost": {
+    "estimated_dollars": 0.04356072,
+    "models": {
+      "nvidia/nemotron-3-super-120b-a12b": {
+        "completion_tokens": 8176,
+        "estimated_dollars": 0.04356072,
+        "prompt_tokens": 693308,
+        "reasoning_tokens": 0
+      }
+    },
+    "pricing_is_estimate": true,
+    "sandbox_seconds": 21.748255664243892
+  },
+  "disclosure": {
+    "executor_kind": "daytona",
+    "lock_sha256": "e69fdf3dabc03f16d22d81e1eafc78cc8c99d1ad07cce704e22d80e3a3ac0342",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "pytest_config_digests": {
+      "build/lib/tests/conftest.py": "24120b3c312183cf288b3d6bc5f20c2a2ed8026ce9270d159322fa7766f99b0d",
+      "pyproject.toml": "c5bb809ef49f6341cf822007a55f776a35dbdfd32a063b156bbc453b129a7718",
+      "setup.cfg": "581adc0ca09f17cb54c9becd64385347170814b994f4fc21ce720dcad37e3604",
+      "tests/conftest.py": "24120b3c312183cf288b3d6bc5f20c2a2ed8026ce9270d159322fa7766f99b0d",
+      "tox.ini": "7a5c5badcfe0f8e9d9efb5da4a57ac42426b103738f6f62a62492f4cc1803b8e"
+    },
+    "receipts_version": "0.0.1",
+    "test_digests": {
+      "tests/extensions/openapi/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests/extensions/openapi/static/petstore.json": "80459f096fd176eacd62fa115091a9303619e37e9516d7e7b5aebc602de1cdc5",
+      "tests/extensions/openapi/test_autodoc.py": "395a821156c334fe92754ffa0fe42f40d93a89b6de9e2d49f35b0ec3a478b5f3",
+      "tests/extensions/openapi/test_body.py": "1fe1224a96046b6e7f94f16a7eaa95b8b955d0c3945c67022b71d01b6569274a",
+      "tests/extensions/openapi/test_config.py": "8c8a88c8450c4332defc6b2eb687994a3a94c0469daa647cb742733a566b8517",
+      "tests/extensions/openapi/test_decorators.py": "43f233160c40c4060cf3551aee8b71eda8383b5085dcc2aed792fde60ecb1510",
+      "tests/extensions/openapi/test_definitions.py": "5694fe827581fce0cc0d1309858bd0a1c06bc717a0e4dc8e37da1804cfbd4e8b",
+      "tests/extensions/openapi/test_deprecated.py": "06c881f805d13917884194a1285c6354dfe0280cf054134004dd48f2d0df2f5c",
+      "tests/extensions/openapi/test_exclude.py": "a4d70efa45a350a16d2c1e8ab2d37b5e4ccde01ccb134e4fe3079016ea3fead4",
+      "tests/extensions/openapi/test_external_docs.py": "825475b94875d00d2e4a44fa87f10df9221011314933815b9a2c4c8c14b9745a",
+      "tests/extensions/openapi/test_model_fields.py": "e0c854ea7a00b297d1737efb914ada852f54470528110bf5cc65ec1d44009818",
+      "tests/extensions/openapi/test_model_spec.py": "24309211649d27690d77edcac8f61197a1a6c12a572d71b123028f5a471fa2b5",
+      "tests/extensions/openapi/test_parameter.py": "a5387af392b89f9fdcf4c29087e3696377bd3a7c13d4dfaab9e5a58b90c732eb",
+      "tests/extensions/openapi/test_schema.py": "41cf227f6f786621f2778135b49df06955dbbe8d453a6c9d9ca3b068276030ff",
+      "tests/extensions/openapi/test_security.py": "85724d6b53c61867593ff1276cc2100d3d930db7b96423fde2d4863e8487f596",
+      "tests/extensions/openapi/test_specification.py": "68e9251de2d56b5c35c8f0531738dcd4f312758c786b1effcc97a11b6f15844d",
+      "tests/extensions/openapi/test_summary.py": "9870885581ea2ac452b77fff55f5e45c46b713ccdcf5fd063a8c71fefcea5e88",
+      "tests/extensions/openapi/test_tag.py": "6d6295db4ccccd4c22d82b458a6120136277da4059bd343d4321f5b159504f70",
+      "tests/extensions/openapi/test_typing.py": "8339a43627bb9c9a8d8a005751a290be91d9a34f098d4081dbc2344896772638",
+      "tests/extensions/openapi/utils.py": "e2c77ee825599886e415450e294cdb653458cf6595a44d90eef4f00ed2e54b7c"
+    }
+  },
+  "final_verdict": {
+    "branch_id": "agent1",
+    "claim_audit": "no_claim",
+    "claim_evidence": "branch ended without a finish call",
+    "error": null,
+    "predicates": [
+      {
+        "evidence": "target tests passed: tests/extensions/openapi/test_schema.py::test_schema_fields",
+        "id": "R1_fail_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "1 baseline-passing tests still pass",
+        "id": "R2_pass_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "all 2 baseline tests collected; skips unchanged (0)",
+        "id": "R3_no_shrink",
+        "passed": true
+      },
+      {
+        "evidence": "patch touches 2 file(s), all in scope",
+        "id": "R4_patch_scope",
+        "passed": true
+      },
+      {
+        "evidence": "agent chain cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona -> cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona#22 unbroken over 22 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona -> cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+        "id": "R5_provenance",
+        "passed": true
+      },
+      {
+        "evidence": "branch ended without a finish call",
+        "id": "R6_claim_audit",
+        "passed": false
+      }
+    ],
+    "status": "PASS"
+  },
+  "input": {
+    "appeals": 1,
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 64000,
+        "max_turns": 40,
+        "max_wall_seconds": 1200.0
+      }
+    },
+    "issue": "OpenAPI does not include properties to an embedded object\n**Describe the bug**\r\nIt was working nicely in sanic_openapi, but now as we attempt moving to sanic-ext it does not. \r\n\r\nWhen a schema embeds another in a field as an object, it's not embedded. Instead it embeds an object without properties. \r\n\r\n<img width=\"499\" alt=\"image\" src=\"https://user-images.githubusercontent.com/11650/208183840-b39fe311-b81b-4a25-97f0-ed7a8261add7.png\">\r\n\r\nWhen embedded as an array of objects it works as expected.\r\n\r\n<img width=\"622\" alt=\"image\" src=\"https://user-images.githubusercontent.com/11650/208183944-f6fe6144-6dea-42ae-8098-d1ad187e7326.png\">\r\n\r\n**Screenshots**\r\n\r\n`list_categories`:\r\n\r\n<img width=\"658\" alt=\"image\" src=\"https://user-images.githubusercontent.com/11650/208182721-18452639-0e65-4c59-8bfe-5eb63a0042a7.png\">\r\n\r\n`get_category`:\r\n\r\n<img width=\"171\" alt=\"image\" src=\"https://user-images.githubusercontent.com/11650/208183055-9aba10cd-2409-4b4e-87e5-c5670920d86c.png\">\r\n\r\n**To Reproduce**\r\n\r\n```python\r\nclass Category:\r\n    id = doc.Integer(required=True, example=\"1\")\r\n    name = doc.String(required=True, example=\"Full-time\")\r\n    instruction = doc.String(example=\"Category instruction template\")\r\n\r\nclass CategoryResponse:\r\n    data = Category\r\n\r\n\r\nclass CategoriesResponse:\r\n    data = [Category]\r\n\r\n\r\n@app.get(\"/api/categories\")\r\n@doc.response(200, {\"application/json\": CategoriesResponse}, \"Success\")\r\nasync def list_categories(_request):\r\n    ...\r\n\r\n@app.get(\"/api/categories/<category_id:int>\")\r\n@doc.response(200, {\"application/json\": CategoryResponse}, \"Success\")\r\nasync def get_category(_request, category_id: int):\r\n    ...\r\n```\r\n\r\n**Expected behavior**\r\n\r\nEmbedded schema appears as appropriate.\r\n\r\n**Environment (please complete the following information):**\r\n - OS: Mac OS X\r\n - Browser Firefox \r\n - Version 108b\r\n\r\n**Additional context**\r\n\r\nSanic version: 22.9.1\r\nPython 3.10.8\r\nsanic-routing==22.8.0, sanic-testing==22.9.0, sanic-ext==22.9.1\r\n",
+    "source": {
+      "image": "docker.io/swerebenchv2/sanic-org-sanic-ext:161-d98ebb0",
+      "platform": "linux/amd64",
+      "python": "python",
+      "setup": [
+        "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-sanic-org__sanic-ext-161-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2V4dGVuc2lvbnMvb3BlbmFwaS90ZXN0X3NjaGVtYS5weSBiL3Rlc3RzL2V4dGVuc2lvbnMvb3BlbmFwaS90ZXN0X3NjaGVtYS5weQppbmRleCAwNzlmODZiLi4yZjBmZjkyIDEwMDY0NAotLS0gYS90ZXN0cy9leHRlbnNpb25zL29wZW5hcGkvdGVzdF9zY2hlbWEucHkKKysrIGIvdGVzdHMvZXh0ZW5zaW9ucy9vcGVuYXBpL3Rlc3Rfc2NoZW1hLnB5CkBAIC0zLDcgKzMsNyBAQCBmcm9tIHR5cGluZyBpbXBvcnQgTGlzdAogCiBpbXBvcnQgcHl0ZXN0CiAKLWZyb20gc2FuaWNfZXh0LmV4dGVuc2lvbnMub3BlbmFwaS50eXBlcyBpbXBvcnQgU2NoZW1hCitmcm9tIHNhbmljX2V4dC5leHRlbnNpb25zLm9wZW5hcGkudHlwZXMgaW1wb3J0IFNjaGVtYSwgU3RyaW5nCiAKIAogQHB5dGVzdC5tYXJrLnNraXBpZih2ZXJzaW9uX2luZm8gPCAoMywgOSksIHJlYXNvbj0iTm90IG5lZWRlZCBvbiAzLjgiKQpAQCAtMjksNiArMjksNyBAQCBkZWYgdGVzdF9zY2hlbWFfbGlzdCgpOgogCiAgICAgc2NoZW1hID0gU2NoZW1hLm1ha2UoRm9vKQogICAgIHNlcmlhbGl6ZWQgPSBzY2hlbWEuc2VyaWFsaXplKCkKKwogICAgIGFzc2VydCAibm9fc2hvd19tZXRob2QiIG5vdCBpbiBzZXJpYWxpemVkCiAgICAgYXNzZXJ0ICJub19zaG93X2NsYXNzbWV0aG9kIiBub3QgaW4gc2VyaWFsaXplZAogICAgIGFzc2VydCAibm9fc2hvd19zdGF0aWNtZXRob2QiIG5vdCBpbiBzZXJpYWxpemVkCkBAIC00NiwzICs0NywzNCBAQCBkZWYgdGVzdF9zY2hlbWFfbGlzdCgpOgogICAgICAgICAgICAgInNob3ciOiB7InR5cGUiOiAiYm9vbGVhbiJ9LAogICAgICAgICB9LAogICAgIH0KKworCitkZWYgdGVzdF9zY2hlbWFfZmllbGRzKCk6CisgICAgY2xhc3MgUGV0OgorICAgICAgICBuYW1lID0gU3RyaW5nKGV4YW1wbGU9IlNub29weSIpCisKKyAgICBjbGFzcyBTaW5nbGU6CisgICAgICAgIHBldCA9IFBldAorCisgICAgICAgIGNsYXNzIElnbm9yZToKKyAgICAgICAgICAgIC4uLgorCisgICAgY2xhc3MgTXVsdGlwbGU6CisgICAgICAgIHBldHMgPSBbUGV0XQorCisgICAgcGV0X3NjaGVtYSA9IFNjaGVtYS5tYWtlKFBldCkuc2VyaWFsaXplKCkKKyAgICBzaW5nbGVfc2NoZW1hID0gU2NoZW1hLm1ha2UoU2luZ2xlKS5zZXJpYWxpemUoKQorICAgIG11bHRpcGxlX3NjaGVtYSA9IFNjaGVtYS5tYWtlKE11bHRpcGxlKS5zZXJpYWxpemUoKQorCisgICAgYXNzZXJ0IHBldF9zY2hlbWEgPT0geworICAgICAgICAidHlwZSI6ICJvYmplY3QiLAorICAgICAgICAicHJvcGVydGllcyI6IHsibmFtZSI6IHsidHlwZSI6ICJzdHJpbmciLCAiZXhhbXBsZSI6ICJTbm9vcHkifX0sCisgICAgfQorICAgIGFzc2VydCBzaW5nbGVfc2NoZW1hID09IHsKKyAgICAgICAgInR5cGUiOiAib2JqZWN0IiwKKyAgICAgICAgInByb3BlcnRpZXMiOiB7InBldCI6IHBldF9zY2hlbWF9LAorICAgIH0KKyAgICBhc3NlcnQgbXVsdGlwbGVfc2NoZW1hID09IHsKKyAgICAgICAgInR5cGUiOiAib2JqZWN0IiwKKyAgICAgICAgInByb3BlcnRpZXMiOiB7InBldHMiOiB7InR5cGUiOiAiYXJyYXkiLCAiaXRlbXMiOiBwZXRfc2NoZW1hfX0sCisgICAgfQo='\"'\"'))'",
+        "git apply /tmp/receipts-sanic-org__sanic-ext-161-test.patch"
+      ],
+      "workdir": "/sanic-ext"
+    },
+    "spec_tests": [
+      "tests/extensions/openapi/test_schema.py::test_schema_fields"
+    ],
+    "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/extensions/openapi/test_schema.py"
+  },
+  "plan": {
+    "approach": "Modify `_properties` to consider `cls.__dict__` instead of restricting keys to instances (`value.__dict__`).",
+    "files_to_edit": [
+      "sanic_ext/extensions/openapi/types.py"
+    ],
+    "hypothesis": "_properties function excludes attributes defined at class level."
+  },
+  "selected_patch_path": "attempts/1/filtered.diff",
+  "snapshot_receipt_id": "base-7",
+  "verdict_history": [
+    {
+      "branch_id": "agent1",
+      "claim_audit": "no_claim",
+      "claim_evidence": "branch ended without a finish call",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "target tests passed: tests/extensions/openapi/test_schema.py::test_schema_fields",
+          "id": "R1_fail_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "1 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 2 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 2 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona -> cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona#22 unbroken over 22 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona -> cr.app.daytona.io/sbox/daytona-10c7b935d761c28d208b98f53630cba18e0ac4c984c0806ba120f25dad2d130d:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "branch ended without a finish call",
+          "id": "R6_claim_audit",
+          "passed": false
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "verified_fix": true,
+  "wall_time_s": 220.08104662504047
+}

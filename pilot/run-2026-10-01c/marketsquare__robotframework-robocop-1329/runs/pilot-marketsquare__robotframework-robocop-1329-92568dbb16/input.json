@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Don't sort `ProjectChecker` messages by line number\n`ProjectChecker` messages are sorted [here](https://github.com/MarketSquare/robotframework-robocop/blob/master/robocop/run.py#L156) and because of the [comparison function](https://github.com/MarketSquare/robotframework-robocop/blob/master/robocop/rules.py#L497-L502) for messages they get sorted by line number, column and then rule id.\r\n\r\nI don't think this makes sense specifically for rules that operate on the whole project. I would prefer the checker output didn't get sorted at all in `run_project_checks()` and so the order would be up to the checker. But sorting by source path first would also be an improvement.",
+  "source": {
+    "image": "docker.io/swerebenchv2/marketsquare-robotframework-robocop:1329-9bcf80d",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-marketsquare__robotframework-robocop-1329-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2xpbnRlci9ydWxlcy9rZXl3b3Jkcy91bnVzZWRfa2V5d29yZC9leHBlY3RlZF9leHRlbmRlZC50eHQgYi90ZXN0cy9saW50ZXIvcnVsZXMva2V5d29yZHMvdW51c2VkX2tleXdvcmQvZXhwZWN0ZWRfZXh0ZW5kZWQudHh0CmluZGV4IGU2OWRlMjkuLmM3MjQ5YWIgMTAwNjQ0Ci0tLSBhL3Rlc3RzL2xpbnRlci9ydWxlcy9rZXl3b3Jkcy91bnVzZWRfa2V5d29yZC9leHBlY3RlZF9leHRlbmRlZC50eHQKKysrIGIvdGVzdHMvbGludGVyL3J1bGVzL2tleXdvcmRzL3VudXNlZF9rZXl3b3JkL2V4cGVjdGVkX2V4dGVuZGVkLnR4dApAQCAtMCwwICsxLDI5IEBACityZXNvdXJjZS5yb2JvdDoxMDoxIEtXMDQgS2V5d29yZCAnUHJpdmF0ZSBOb3QgVXNlZCBLZXl3b3JkJyBpcyBub3QgdXNlZA0KKyAgICB8DQorIDEwIHwgUHJpdmF0ZSBOb3QgVXNlZCBLZXl3b3JkDQorICAgIHwgXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eIEtXMDQNCisgMTEgfCAgICAgW1RhZ3NdICAgIHJvYm90OnByaXZhdGUNCisgMTIgfCAgICAgTm8gT3BlcmF0aW9uDQorICAgIHwNCisNCitzdWl0ZS5yb2JvdDoxOToxIEtXMDQgS2V5d29yZCAnTm90IFVzZWQgS2V5d29yZCcgaXMgbm90IHVzZWQNCisgICAgfA0KKyAxOSB8IE5vdCBVc2VkIEtleXdvcmQNCisgICAgfCBeXl5eXl5eXl5eXl5eXl5eIEtXMDQNCisgMjAgfCAgICAgTmVzdGVkIE5vdCBVc2VkIEtleXdvcmQNCisgICAgfA0KKw0KK3N1aXRlLnJvYm90OjM0OjEgS1cwNCBLZXl3b3JkICdFbWJlZGRlZCAke25vdH0gVXNlZCcgaXMgbm90IHVzZWQNCisgICAgfA0KKyAzNCB8IEVtYmVkZGVkICR7bm90fSBVc2VkDQorICAgIHwgXl5eXl5eXl5eXl5eXl5eXl5eXl4gS1cwNA0KKyAzNSB8ICAgICBObyBPcGVyYXRpb24NCisgICAgfA0KKw0KK3Rhc2tzLnJvYm90OjE2OjEgS1cwNCBLZXl3b3JkICdOb3QgVXNlZCBLZXl3b3JkJyBpcyBub3QgdXNlZA0KKyAgICB8DQorIDE2IHwgTm90IFVzZWQgS2V5d29yZA0KKyAgICB8IF5eXl5eXl5eXl5eXl5eXl4gS1cwNA0KKyAxNyB8ICAgICBOZXN0ZWQgTm90IFVzZWQgS2V5d29yZA0KKyAgICB8DQorDQpkaWZmIC0tZ2l0IGEvdGVzdHMvbGludGVyL3J1bGVzL2tleXdvcmRzL3VudXNlZF9rZXl3b3JkL3Rlc3RfcnVsZS5weSBiL3Rlc3RzL2xpbnRlci9ydWxlcy9rZXl3b3Jkcy91bnVzZWRfa2V5d29yZC90ZXN0X3J1bGUucHkKaW5kZXggMzE1YzY4NS4uZjI4M2UwOSAxMDA2NDQKLS0tIGEvdGVzdHMvbGludGVyL3J1bGVzL2tleXdvcmRzL3VudXNlZF9rZXl3b3JkL3Rlc3RfcnVsZS5weQorKysgYi90ZXN0cy9saW50ZXIvcnVsZXMva2V5d29yZHMvdW51c2VkX2tleXdvcmQvdGVzdF9ydWxlLnB5CkBAIC0xLDEwICsxLDcgQEAKLWltcG9ydCBweXRlc3QKLQogZnJvbSB0ZXN0cy5saW50ZXIudXRpbHMgaW1wb3J0IFJ1bGVBY2NlcHRhbmNlCiAKIAogY2xhc3MgVGVzdFJ1bGVBY2NlcHRhbmNlKFJ1bGVBY2NlcHRhbmNlKToKLSAgICBAcHl0ZXN0Lm1hcmsueGZhaWwocmVhc29uPSJQcm9qZWN0IGNoZWNrZXIgbmVlZHMgdG8gYmUgcmVpbXBsZW1lbnRlZCIpICAjIEZJWE1FOgogICAgIGRlZiB0ZXN0X3J1bGUoc2VsZik6CiAgICAgICAgIHNlbGYuY2hlY2tfcnVsZShzcmNfZmlsZXM9WyIuIl0sIGV4cGVjdGVkX2ZpbGU9ImV4cGVjdGVkX291dHB1dC50eHQiLCBpc3N1ZV9mb3JtYXQ9ImVuZF9jb2wiKQogCg=='\"'\"'))'",
+      "git apply /tmp/receipts-marketsquare__robotframework-robocop-1329-test.patch"
+    ],
+    "workdir": "/robotframework-robocop"
+  },
+  "spec_tests": [
+    "tests/linter/rules/keywords/unused_keyword/test_rule.py::TestRuleAcceptance::test_rule",
+    "tests/linter/rules/keywords/unused_keyword/test_rule.py::TestRuleAcceptance::test_extended"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/linter/rules/keywords/unused_keyword/test_rule.py"
+}

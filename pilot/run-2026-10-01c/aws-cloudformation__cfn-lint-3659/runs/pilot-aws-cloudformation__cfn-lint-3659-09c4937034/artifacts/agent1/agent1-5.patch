@@ -1,0 +1,18 @@
+diff --git a/src/cfnlint/conditions/_rule.py b/src/cfnlint/conditions/_rule.py
+index 2f624f6a..d0c0e6ad 100644
+--- a/src/cfnlint/conditions/_rule.py
++++ b/src/cfnlint/conditions/_rule.py
+@@ -80,8 +80,12 @@ class _Assertions:
+ 
+         assertions = []
+         for assertion in self._assertions:
+-            assertions.append(assertion.build_cnf(params))
++            assertion_result = assertion.build_cnf(params)
++            if assertion_result is not None:
++                assertions.append(assertion_result)
+ 
++        if not assertions:
++            return None
+         return And(*assertions)
+ 
+     @property

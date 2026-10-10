@@ -1,0 +1,28 @@
+Testing section_ignore_double_start_section
+--- Expected
++++ Actual
+@@ -1,6 +1,3 @@
+ <div class="highlight"><pre><span></span><code>div {
+     color: red;
+-    background-color: white;
+-    padding: 16px
+-}
+ </code></pre></div>
+TEST FAILED: False is not true
+Traceback (most recent call last):
+  File "/pymdown-extensions/debug_test.py", line 51, in <module>
+    test_instance.test_section_ignore_double_start_section()
+  File "/pymdown-extensions/debug_test.py", line 30, in test_section_ignore_double_start_section
+    self.check_markdown(
+  File "/pymdown-extensions/./tests/util.py", line 91, in check_markdown
+    self.assertTrue(not diff)
+  File "/usr/local/lib/python3.10/unittest/case.py", line 687, in assertTrue
+    raise self.failureException(msg)
+AssertionError: False is not true
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/pymdown-extensions/debug_test.py", line 63, in <module>
+    md.preprocessors[md.preprocessors.registered['snippet']].__init__(config, md)
+AttributeError: 'Registry' object has no attribute 'registered'. Did you mean: 'register'?

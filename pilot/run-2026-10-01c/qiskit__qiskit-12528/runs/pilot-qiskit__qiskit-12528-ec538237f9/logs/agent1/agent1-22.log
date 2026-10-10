@@ -1,0 +1,57 @@
+    def depth(
+        self,
+        filter_function: Callable[[CircuitInstruction], bool] = lambda x: not getattr(
+            x.operation, "_directive", False
+        ),
+    ) -> int:
+        """Return circuit depth (i.e., length of critical path).
+
+        Args:
+            filter_function: A function to decide which instructions count to increase depth.
+                Should take as a single positional input a :class:`CircuitInstruction`.
+                Instructions for which the function returns ``False`` are ignored in the
+                computation of the circuit depth.  By default filters out "directives", such as
+                :class:`.Barrier`.
+
+        Returns:
+            int: Depth of circuit.
+
+        Examples:
+            Simple calculation of total circuit depth::
+
+                from qiskit.circuit import QuantumCircuit
+                qc = QuantumCircuit(4)
+                qc.h(0)
+                qc.cx(0, 1)
+                qc.h(2)
+                qc.cx(2, 3)
+                assert qc.depth() == 2
+
+            Modifying the previous example to only calculate the depth of multi-qubit gates::
+--
+            reg_ints = []
+            for ind, reg in enumerate(instruction.qubits + instruction.clbits):
+                # Add to the stacks of the qubits and
+                # cbits used in the gate.
+                reg_ints.append(bit_indices[reg])
+                if filter_function(instruction):
+                    levels.append(op_stack[reg_ints[ind]] + 1)
+                else:
+                    levels.append(op_stack[reg_ints[ind]])
+            # Assuming here that there is no conditional
+            # snapshots or barriers ever.
+            if getattr(instruction.operation, "condition", None):
+                # Controls operate over all bits of a classical register
+                # or over a single bit
+                if isinstance(instruction.operation.condition[0], Clbit):
+                    condition_bits = [instruction.operation.condition[0]]
+                else:
+                    condition_bits = instruction.operation.condition[0]
+                for cbit in condition_bits:
+                    idx = bit_indices[cbit]
+                    if idx not in reg_ints:
+                        reg_ints.append(idx)
+                        levels.append(op_stack[idx] + 1)
+
+            max_level = max(levels)
+            for ind in reg_ints:

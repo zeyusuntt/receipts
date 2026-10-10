@@ -1,0 +1,53 @@
+diff --git a/aiohttp/http_parser.py b/aiohttp/http_parser.py
+index 568a3684..1bdd49c9 100644
+--- a/aiohttp/http_parser.py
++++ b/aiohttp/http_parser.py
+@@ -525,10 +525,23 @@ class HttpParser(abc.ABC, Generic[_MsgT]):
+         # chunking
+         te = headers.get(hdrs.TRANSFER_ENCODING)
+         if te is not None:
+-            if "chunked" == te.lower():
+-                chunked = True
+-            else:
+-                raise BadHttpMessage("Request has invalid `Transfer-Encoding`")
++            # Transfer-Encoding is a comma-separated list of codings.
++            tokens = [t.strip().lower() for t in te.split(",") if t.strip()]
++            chunked = False
++            for i, tok in enumerate(tokens):
++                if tok == "chunked":
++                    # chunked must be the last transfer coding
++                    if i != len(tokens) - 1:
++                        raise BadHttpMessage(
++                            "Request has invalid `Transfer-Encoding`"
++                        )
++                    chunked = True
++                elif tok.startswith("chunked") and tok != "chunked":
++                    # reject tokens that have 'chunked' as a prefix but are not exactly 'chunked'
++                    raise BadHttpMessage(
++                        "Request has invalid `Transfer-Encoding`"
++                    )
++                # else: unknown token, ignore
+ 
+             if hdrs.CONTENT_LENGTH in headers:
+                 raise BadHttpMessage(
+diff --git a/debug_test.py b/debug_test.py
+new file mode 100644
+index 00000000..ea3f9706
+--- /dev/null
++++ b/debug_test.py
+@@ -0,0 +1,14 @@
++import asyncio
++from unittest import mock
++from aiohttp.http_parser import HttpRequestParserPy
++from aiohttp.base_protocol import BaseProtocol
++
++protocol = mock.create_autospec(BaseProtocol, spec_set=True, instance=True)
++loop = asyncio.new_event_loop()
++parser = HttpRequestParserPy(protocol, loop, 2**16)
++text = b"GET /test HTTP/1.1\r\ntransfer-encoding: chunked123\r\n\r\n"
++try:
++    parser.feed_data(text)
++    print("No exception")
++except Exception as e:
++    print(f"Exception: {e}")
+\ No newline at end of file
