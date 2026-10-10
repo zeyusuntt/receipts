@@ -583,8 +583,10 @@ def test_real_v1_replay_matches_reviewed_counterfactual_expectations():
     launch_3 = repo_root / "pilot" / "run-2026-10-01c"
     launch_2 = repo_root / "pilot" / "aborted-2026-10-01-launch2"
     data_path = repo_root / "data" / "rebench-v2-python.jsonl"
-    if not (launch_3.is_dir() and launch_2.is_dir() and data_path.is_file()):
+    if not (launch_3.is_dir() and launch_2.is_dir()):
         pytest.skip("published v1 pilot evidence is absent")
+    if not data_path.is_file():
+        pytest.skip("the SWE-rebench-V2 extract data/rebench-v2-python.jsonl is absent (not committed)")
 
     replay = _replay_module()
     report = replay.build_replay([launch_3, launch_2], data_path)

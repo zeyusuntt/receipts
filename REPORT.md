@@ -90,8 +90,10 @@ One deviation was not anticipated by an amendment. The pre-registered H1 and H2 
 
 ## Reproduce
 
-The candidate list, the code commit and the dataset revision are fixed in `PREREGISTRATION.md` and `pilot/candidates.txt`. Every record, verdict, official log and receipt is under `pilot/`, which also keeps the aborted launches. The report numbers come from:
+The candidate list, the code commit and the dataset revision are fixed in `PREREGISTRATION.md` and `pilot/candidates.txt`. Every record, verdict, official log and receipt is under `pilot/`, which also keeps the aborted launches. Launches 1 and 2 ran in `pilot/run-2026-10-01/` and `pilot/run-2026-10-01b/` and were renamed `pilot/aborted-2026-10-01-launch1/` and `pilot/aborted-2026-10-01-launch2/` after they stopped, so their records still name the original folders. The report numbers come from:
 
 ```
 python -m receipts.cli pilot report pilot/run-2026-10-01c
 ```
+
+The generated copy in `pilot/run-2026-10-01c/REPORT.md` was made on 2026-10-02. The report code has grown since: run today, it also prints a spend table and counts the sandbox time of the one infrastructure-error run ($0.005), so the cost per verified fix reads $0.131 total and 959 sandbox seconds instead of $0.13 and 953. Every other number is the same.
