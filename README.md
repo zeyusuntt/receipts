@@ -23,21 +23,6 @@ uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json
 
 It checks the patch digests, starts the task's public image (the first run downloads it, which can take a few minutes), rebuilds the original checkpoint, replays the agent's patch through the same filter and gate on a fresh witness, grades the shipped patch with SWE-rebench's official grader, and must agree with the receipt on every check (about two minutes per receipt on Token Factory). With a Nebius account, add `--executor tokenfactory` to run it on Token Factory Sandboxes instead of Docker. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
 
-### Run it on another repo
-
-```sh
-uv run receipts fix \
-  --image ghcr.io/your-org/your-repo:test \
-  --workdir /workspace \
-  --test tests/test_widget.py::test_regression \
-  --test-patch failing-test.patch \
-  --issue-file issue.md \
-  --executor tokenfactory \
-  --out .receipts/widget-fix
-```
-
-It prints each agent and verification step as it happens, then writes the full Markdown receipt to `.receipts/widget-fix/receipt.md`.
-
 ## How it works
 
 ![Your failing test goes to Nemotron 3 Super on Nebius Token Factory, which works on an agent branch; a Token Factory Sandbox forked from the same checkpoint is the witness; plain-code gate; receipt. SWE-rebench's official grader runs separately.](docs/assets/architecture.png)
@@ -88,9 +73,11 @@ We ran Receipts as a pre-registered experiment twice: the rules, the sample and 
 
 What we found along the way about the tools we built on: [FEEDBACK.md](FEEDBACK.md).
 
-## Use it on your own repository
+## Use it on a repository
 
-Receipts works on Python repositories tested with pytest. Commit your failing test, then point Receipts at that commit; Docker clones it into a fresh container:
+Receipts works on Python repositories tested with pytest. `receipts fix` calls Nemotron, so copy `.env.example` to `.env` and set `OPENAI_API_KEY` to a Nebius Token Factory key (`--executor tokenfactory` also needs `NEBIUS_AI_PROJECT`). Re-verifying a receipt needs neither.
+
+**Your own repository, on Docker.** Commit your failing test, then point Receipts at that commit; Docker clones it into a fresh container:
 
 ```
 uv run receipts fix --repo https://github.com/you/your-repo --commit <commit with your failing test> \
@@ -99,7 +86,17 @@ uv run receipts fix --repo https://github.com/you/your-repo --commit <commit wit
 uv run receipts show runs/my-fix
 ```
 
-On Token Factory Sandboxes, give an image of your repository instead (see "Run it on another repo" above); set `OPENAI_API_KEY` and `NEBIUS_AI_PROJECT` in `.env`. Receipts never opens a pull request: you review the patch and the receipt, and you submit.
+**On Token Factory Sandboxes,** `--image` names an image in Token Factory's catalogue (every SWE-rebench-V2 image is preloaded), and `--test-patch` adds your failing test to it. This is the PyFlakes run in the demo video (VERIFIED in 1m 7s, $0.03 of Nemotron tokens):
+
+```
+uv run receipts fix --executor tokenfactory \
+  --image docker.io/swerebenchv2/pycqa-pyflakes:335-4b2d720 --workdir /pyflakes \
+  --test pyflakes/test/test_other.py::TestUnusedAssignment::test_unusedUnderscoreVariable \
+  --test-patch demo/pyflakes-335/test.patch --issue-file demo/pyflakes-335/issue.md \
+  --suite pyflakes/test --out runs/pyflakes-335
+```
+
+It prints each agent and verification step as it happens and writes the full receipt to `<out>/receipt.md`. Receipts never opens a pull request: you review the patch and the receipt, and you submit.
 
 ## Repository
 
