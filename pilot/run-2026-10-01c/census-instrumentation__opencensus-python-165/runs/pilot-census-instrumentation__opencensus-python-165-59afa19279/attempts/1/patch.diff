@@ -1,0 +1,26 @@
+diff --git a/opencensus/trace/span.py b/opencensus/trace/span.py
+index 7995dfd..5080376 100644
+--- a/opencensus/trace/span.py
++++ b/opencensus/trace/span.py
+@@ -188,6 +188,21 @@ class Span(object):
+             raise TypeError("Type Error: received {}, but requires TimeEvent.".
+                             format(type(time_event).__name__))
+ 
++    def add_annotation(self, description, **attrs):
++        """Add an annotation to the span.
++
++        :type description: str
++        :param description: Description of the annotation.
++
++        :param attrs: Additional attributes for the annotation.
++        """
++        from opencensus.trace import time_event as time_event_module
++        tevt = time_event_module.TimeEvent(
++            datetime.utcnow(),
++            time_event_module.Annotation(description,
++                                         attributes.Attributes(attrs)))
++        self.add_time_event(tevt)
++
+     def add_link(self, link):
+         """Add a Link.
+ 

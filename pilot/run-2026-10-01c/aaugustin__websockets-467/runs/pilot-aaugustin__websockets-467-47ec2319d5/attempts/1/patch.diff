@@ -1,0 +1,39 @@
+diff --git a/src/websockets/protocol.py b/src/websockets/protocol.py
+index b9bbda3..5006f01 100644
+--- a/src/websockets/protocol.py
++++ b/src/websockets/protocol.py
+@@ -919,18 +919,11 @@ class WebSocketCommonProtocol(asyncio.StreamReaderProtocol):
+             if self.keepalive_ping_task is not None:
+                 self.keepalive_ping_task.cancel()
+ 
+-            # Cancel all pending pings because they'll never receive a pong.
++            # Fail all pending pings with ConnectionClosed.
+             for ping in self.pings.values():
+-                ping.cancel()
+-            if self.pings:
+-                pings_hex = ', '.join(
+-                    binascii.hexlify(ping_id).decode() or '[empty]'
+-                    for ping_id in self.pings
+-                )
+-                plural = 's' if len(self.pings) > 1 else ''
+-                logger.debug(
+-                    "%s - canceled pending ping%s: %s", self.side, plural, pings_hex
+-                )
++                if not ping.done():
++                    ping.set_exception(ConnectionClosed(self.close_code, self.close_reason))
++            self.pings.clear()
+ 
+             # A client should wait for a TCP close from the server.
+             if self.is_client and self.transfer_data_task is not None:
+@@ -1122,6 +1115,11 @@ class WebSocketCommonProtocol(asyncio.StreamReaderProtocol):
+             self.close_code,
+             self.close_reason or '[empty]',
+         )
++        # Fail all pending pings with ConnectionClosed.
++        for ping in self.pings.values():
++            if not ping.done():
++                ping.set_exception(ConnectionClosed(self.close_code, self.close_reason))
++        self.pings.clear()
+         # If self.connection_lost_waiter isn't pending, that's a bug, because:
+         # - it's set only here in connection_lost() which is called only once;
+         # - it must never be canceled.

@@ -1,0 +1,58 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /cfn-lint
+configfile: pyproject.toml
+collecting ... collected 2 items
+
+test/unit/module/conditions/test_rules.py::TestConditionsWithRules::test_fn_equals_assertions_one FAILED [ 50%]
+test/unit/module/conditions/test_rules.py::TestConditionsWithRules::test_fn_equals_assertions_two FAILED [100%]
+
+=================================== FAILURES ===================================
+____________ TestConditionsWithRules.test_fn_equals_assertions_one _____________
+
+self = <test.unit.module.conditions.test_rules.TestConditionsWithRules testMethod=test_fn_equals_assertions_one>
+
+    def test_fn_equals_assertions_one(self):
+        template = decode_str(
+            """
+        Rules:
+          Rule1:
+            Assertions:
+            - Assert: !Equals ["A", "A"]
+        """
+        )[0]
+    
+        cfn = Template("", template)
+        self.assertEqual(len(cfn.conditions._conditions), 0)
+>       self.assertEqual(len(cfn.conditions._rules), 1)
+E       AssertionError: 0 != 1
+
+test/unit/module/conditions/test_rules.py:289: AssertionError
+____________ TestConditionsWithRules.test_fn_equals_assertions_two _____________
+
+self = <test.unit.module.conditions.test_rules.TestConditionsWithRules testMethod=test_fn_equals_assertions_two>
+
+    def test_fn_equals_assertions_two(self):
+        template = decode_str(
+            """
+        Rules:
+          Rule1:
+            Assertions:
+            - Assert: !Equals ["A", "B"]
+          Rule2:
+            Assertions:
+            - Assert: !Equals ["A", "A"]
+        """
+        )[0]
+    
+        cfn = Template("", template)
+        self.assertEqual(len(cfn.conditions._conditions), 0)
+>       self.assertEqual(len(cfn.conditions._rules), 2)
+E       AssertionError: 0 != 2
+
+test/unit/module/conditions/test_rules.py:255: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-10.xml ------------
+=========================== short test summary info ============================
+FAILED test/unit/module/conditions/test_rules.py::TestConditionsWithRules::test_fn_equals_assertions_one
+FAILED test/unit/module/conditions/test_rules.py::TestConditionsWithRules::test_fn_equals_assertions_two
+============================== 2 failed in 2.30s ===============================

@@ -1,0 +1,526 @@
+diff --git a/final_test.py b/final_test.py
+new file mode 100644
+index 0000000..31f4683
+--- /dev/null
++++ b/final_test.py
+@@ -0,0 +1,113 @@
++#!/usr/bin/env python3
++
++# Final test to demonstrate the fix for the original issue
++def simulate_original_issue():
++    """Simulate the exact scenario from the issue report"""
++    
++    # This is what the docstring looks like when entering _inject_types_to_docstring
++    lines = [
++        ".. rubric:: Notes",
++        "",
++        "Hello, world.",
++        ""
++    ]
++    
++    print("=== ORIGINAL ISSUE SIMULATION ===")
++    print("Docstring entering _inject_types_to_docstring:")
++    for i, line in enumerate(lines):
++        print(f"{i:2}: {repr(line)}")
++    
++    # Simulate the insertion of :rtype: (this was the problematic behavior)
++    formatted_annotation = ":py:obj:`None`"
++    insert_index = 0  # :rtype: gets inserted at the beginning
++    
++    # OLD behavior (without fix): just insert the line
++    lines_old = lines.copy()
++    lines_old.insert(insert_index, f":rtype: {formatted_annotation}")
++    
++    print("\nOLD behavior result (problematic):")
++    for i, line in enumerate(lines_old):
++        print(f"{i:2}: {repr(line)}")
++    
++    # Check if OLD behavior causes the Sphinx warning
++    rtype_idx_old = None
++    for i, line in enumerate(lines_old):
++        if line.startswith(":rtype:"):
++            rtype_idx_old = i
++            break
++    
++    old_has_warning = False
++    if rtype_idx_old is not None and rtype_idx_old + 1 < len(lines_old):
++        next_line = lines_old[rtype_idx_old + 1]
++        if next_line.startswith(".."):
++            old_has_warning = True
++            print(f"\n❌ OLD behavior WOULD cause Sphinx warning:")
++            print(f"   Line {rtype_idx_old}: {repr(lines_old[rtype_idx_old])}")
++            print(f"   Line {rtype_idx_old + 1}: {repr(next_line)} (directive, no blank line after)")
++    
++    # NEW behavior (with fix): insert :rtype: and ensure blank line before directive
++    lines_new = lines.copy()
++    lines_new.insert(insert_index, f":rtype: {formatted_annotation}")
++    
++    # Apply our fix - SAME LOGIC AS IN THE ACTUAL CODE (CORRECTED)
++    print(f"   Debug: insert_index={insert_index}, len(lines_new)={len(lines_new)}")
++    if insert_index + 1 < len(lines_new):
++        print(f"   Debug: lines_new[{insert_index + 1}] = {repr(lines_new[insert_index + 1])}")
++        if lines_new[insert_index + 1].startswith(".."):
++            print(f"   Debug: Applying fix - inserting blank line at index {insert_index + 1}")
++            lines_new.insert(insert_index + 1, "")  # Insert BEFORE the directive
++        else:
++            print(f"   Debug: Not applying fix - next line is not a directive")
++    else:
++        print(f"   Debug: Not applying fix - insert_index + 1 >= len(lines_new)")
++    
++    print("\nNEW behavior result (fixed):")
++    for i, line in enumerate(lines_new):
++        print(f"{i:2}: {repr(line)}")
++    
++    # Check if NEW behavior avoids the Sphinx warning
++    rtype_idx_new = None
++    for i, line in enumerate(lines_new):
++        if line.startswith(":rtype:"):
++            rtype_idx_new = i
++            break
++    
++    new_has_warning = False
++    if rtype_idx_new is not None:
++        print(f"\n🔍 Checking :rtype: at line {rtype_idx_new}")
++        # What we want to avoid is: :rtype: followed immediately by a directive
++        # What we want is: :rtype:, blank line, directive
++        if rtype_idx_new + 1 < len(lines_new):
++            next_line = lines_new[rtype_idx_new + 1]
++            print(f"   Line {rtype_idx_new}:     {repr(lines_new[rtype_idx_new])} (:rtype:)")
++            print(f"   Line {rtype_idx_new + 1}:   {repr(next_line)}")
++            
++            if next_line.startswith(".."):
++                # PROBLEM: directive immediately after :rtype:
++                new_has_warning = True
++                print(f"   ❌ PROBLEM: Directive immediately after :rtype:")
++            elif next_line == "" and rtype_idx_new + 2 < len(lines_new):
++                # GOOD: blank line after :rtype:, check what comes after
++                second_next = lines_new[rtype_idx_new + 2]
++                print(f"   Line {rtype_idx_new + 2}:   {repr(second_next)}")
++                if second_next.startswith(".."):
++                    print(f"   ✅ GOOD: Blank line, then directive")
++                else:
++                    print(f"   ⚠️  Blank line but not followed by directive")
++            else:
++                print(f"   ℹ️  Other situation")
++        else:
++            print(f"   ℹ️  :rtype: at end of lines")
++    else:
++        print(f"   ℹ️  :rtype: not found")
++    
++    print(f"\nRESULT:")
++    print(f"   Old behavior would cause warning: {old_has_warning}")
++    print(f"   New behavior prevents warning: {not new_has_warning}")
++    
++    return not new_has_warning and old_has_warning
++
++if __name__ == "__main__":
++    success = simulate_original_issue()
++    print(f"\n{'🎉 FIX SUCCESSFUL' if success else '❌ FIX FAILED'}")
++    exit(0 if success else 1)
+\ No newline at end of file
+diff --git a/src/sphinx_autodoc_typehints/__init__.py b/src/sphinx_autodoc_typehints/__init__.py
+index 997c93e..b6cd3cf 100644
+--- a/src/sphinx_autodoc_typehints/__init__.py
++++ b/src/sphinx_autodoc_typehints/__init__.py
+@@ -651,11 +651,10 @@ def _inject_types_to_docstring(
+             if insert_index == len(lines):  # ensure that :rtype: doesn't get joined with a paragraph of text
+                 lines.append("")
+                 insert_index += 1
+-            if app.config.typehints_use_rtype or insert_index == len(lines):
+-                lines.insert(insert_index, f":rtype: {formatted_annotation}")
+-            else:
+-                line = lines[insert_index]
+-                lines[insert_index] = f":return: {formatted_annotation} --{line[line.find(' '):]}"
++            lines.insert(insert_index, f":rtype: {formatted_annotation}")
++            # Ensure there's a blank line after :rtype: when followed by directives
++            if insert_index + 1 < len(lines) and lines[insert_index + 1].startswith(".."):
++                lines.insert(insert_index + 1, "")
+ 
+ 
+ def validate_config(app: Sphinx, env: BuildEnvironment, docnames: list[str]) -> None:  # noqa: U100
+diff --git a/test_edge_cases.py b/test_edge_cases.py
+new file mode 100644
+index 0000000..5b391bf
+--- /dev/null
++++ b/test_edge_cases.py
+@@ -0,0 +1,86 @@
++#!/usr/bin/env python3
++
++# Test edge cases for the fix
++def test_case(lines_desc, initial_lines, insert_index):
++    print(f"\n=== {lines_desc} ===")
++    lines = initial_lines.copy()
++    
++    print("Before:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Insert :rtype:
++    formatted_annotation = ":py:obj:`None`"
++    lines.insert(insert_index, f":rtype: {formatted_annotation}")
++    
++    print("\nAfter inserting :rtype:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Apply our fix
++    if insert_index + 1 < len(lines) and lines[insert_index + 1].startswith(".."):
++        lines.insert(insert_index + 2, "")
++        print("\nApplied fix: inserted blank line after :rtype:")
++    
++    print("\nFinal:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Validation
++    rtype_index = insert_index  # Where we inserted it
++    success = True
++    if rtype_index + 1 < len(lines) and lines[rtype_index + 1].startswith(".."):
++        if not (rtype_index + 2 < len(lines) and lines[rtype_index + 2] == ""):
++            print(f"\nFAIL: Missing blank line after :rtype: at {rtype_index}")
++            success = False
++        else:
++            print(f"\nPASS: Correct blank line after :rtype: at {rtype_index}")
++    else:
++        print(f"\nINFO: No directive after :rtype: at {rtype_index} (fix not needed)")
++    
++    return success
++
++def run_all_tests():
++    all_passed = True
++    
++    # Test 1: :rtype: at start, followed by directive
++    all_passed &= test_case(
++        "Directive at start",
++        [".. rubric:: Notes", "", "Hello"],
++        0
++    )
++    
++    # Test 2: :rtype: in middle, followed by directive
++    all_passed &= test_case(
++        "Directive in middle",
++        ["Some text", "", ".. rubric:: Notes", "", "More"],
++        0
++    )
++    
++    # Test 3: :rtype: at end (no following lines)
++    all_passed &= test_case(
++        "At end",
++        ["Some text", "", "Hello"],
++        3  # Insert at end
++    )
++    
++    # Test 4: :rtype: followed by regular text (not directive)
++    all_passed &= test_case(
++        "Followed by text",
++        ["Some text", "", "Hello world", "", "End"],
++        0
++    )
++    
++    # Test 5: Empty lines
++    all_passed &= test_case(
++        "Empty followed by directive",
++        ["", ".. rubric:: Notes"],
++        0
++    )
++    
++    return all_passed
++
++if __name__ == "__main__":
++    success = run_all_tests()
++    print(f"\n\n{'ALL TESTS PASSED' if success else 'SOME TESTS FAILED'}")
++    exit(0 if success else 1)
+\ No newline at end of file
+diff --git a/test_edge_cases_fixed.py b/test_edge_cases_fixed.py
+new file mode 100644
+index 0000000..7f66e32
+--- /dev/null
++++ b/test_edge_cases_fixed.py
+@@ -0,0 +1,86 @@
++#!/usr/bin/env python3
++
++# Test edge cases for the fix - corrected version
++def test_case(lines_desc, initial_lines, insert_index):
++    print(f"\n=== {lines_desc} ===")
++    lines = initial_lines.copy()
++    
++    print("Before:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Insert :rtype:
++    formatted_annotation = ":py:obj:`None`"
++    lines.insert(insert_index, f":rtype: {formatted_annotation}")
++    
++    print("\nAfter inserting :rtype:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Apply our fix
++    if insert_index + 1 < len(lines) and lines[insert_index + 1].startswith(".."):
++        lines.insert(insert_index + 2, "")
++        print("\nApplied fix: inserted blank line after :rtype:")
++    
++    print("\nFinal:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Validation
++    rtype_index = insert_index  # Where we inserted it
++    success = True
++    if rtype_index + 1 < len(lines) and lines[rtype_index + 1].startswith(".."):
++        if not (rtype_index + 2 < len(lines) and lines[rtype_index + 2] == ""):
++            print(f"\nFAIL: Missing blank line after :rtype: at {rtype_index}")
++            success = False
++        else:
++            print(f"\nPASS: Correct blank line after :rtype: at {rtype_index}")
++    else:
++        print(f"\nINFO: No directive after :rtype: at {rtype_index} (fix not needed)")
++    
++    return success
++
++def run_all_tests():
++    all_passed = True
++    
++    # Test 1: :rtype: at start, followed by directive
++    all_passed &= test_case(
++        "Directive at start",
++        [".. rubric:: Notes", "", "Hello"],
++        0
++    )
++    
++    # Test 2: :rtype: right before directive (simulating middle insertion)
++    all_passed &= test_case(
++        "Right before directive",
++        ["Some text", "", ".. rubric:: Notes", "", "More"],
++        2  # Insert right before the directive
++    )
++    
++    # Test 3: :rtype: at end (no following lines)
++    all_passed &= test_case(
++        "At end",
++        ["Some text", "", "Hello"],
++        3  # Insert at end
++    )
++    
++    # Test 4: :rtype: followed by regular text (not directive)
++    all_passed &= test_case(
++        "Followed by text",
++        ["Some text", "", "Hello world", "", "End"],
++        0
++    )
++    
++    # Test 5: Empty lines followed by directive
++    all_passed &= test_case(
++        "Empty followed by directive",
++        ["", ".. rubric:: Notes"],
++        0
++    )
++    
++    return all_passed
++
++if __name__ == "__main__":
++    success = run_all_tests()
++    print(f"\n\n{'ALL TESTS PASSED' if success else 'SOME TESTS FAILED'}")
++    exit(0 if success else 1)
+\ No newline at end of file
+diff --git a/test_fix.py b/test_fix.py
+new file mode 100644
+index 0000000..8f44068
+--- /dev/null
++++ b/test_fix.py
+@@ -0,0 +1,73 @@
++#!/usr/bin/env python3
++
++# Simple test to verify the fix for the spacing issue
++def my_function() -> None:
++    """
++    .. rubric:: Notes
++
++    Hello, world.
++    """
++    pass
++
++# Test the _inject_types_to_docstring function directly
++import inspect
++from sphinx.application import Sphinx
++from sphinx.config import Config
++from sphinx.ext.autodoc import Options
++from src.sphinx_autodoc_typehints import _inject_types_to_docstring
++
++# Create a mock Sphinx app
++app = Sphinx(srcdir=".", confdir=".", outdir=".", doctreedir=".", buildername="html", status=None)
++app.config.always_document_param_types = False
++app.config.typehints_document_rtype = True
++app.config.typehints_use_rtype = True
++app.config.typehints_defaults = None
++app.config.simplify_optional_unions = True
++app.config.typehints_formatter = None
++app.config.typehints_use_signature = False
++app.config.typehints_use_signature_return = False
++
++# Get the docstring lines
++lines = inspect.getdoc(my_function).split('\n')
++print("Original lines:")
++for i, line in enumerate(lines):
++    print(f"{i}: {repr(line)}")
++
++# Inject types
++_inject_types_to_docstring(
++    type_hints={"return": type(None)},  # None annotation
++    signature=inspect.signature(my_function),
++    original_obj=my_function,
++    app=app,
++    what="function",
++    name="my_function",
++    lines=lines
++)
++
++print("\nAfter injection:")
++for i, line in enumerate(lines):
++    print(f"{i}: {repr(line)}")
++
++# Check if we have proper spacing
++rtype_index = None
++for i, line in enumerate(lines):
++    if line.startswith(":rtype:"):
++        rtype_index = i
++        break
++
++if rtype_index is not None:
++    print(f"\nFound :rtype: at index {rtype_index}")
++    if rtype_index + 1 < len(lines):
++        next_line = lines[rtype_index + 1]
++        print(f"Next line: {repr(next_line)}")
++        if next_line.startswith(".."):
++            if rtype_index + 2 < len(lines) and lines[rtype_index + 2] == "":
++                print("SUCCESS: Blank line found after :rtype:")
++            else:
++                print("ISSUE: No blank line after :rtype: before directive")
++        else:
++            print("Next line is not a directive")
++    else:
++        print(":rtype: is at the end")
++else:
++    print(":rtype: not found")
+\ No newline at end of file
+diff --git a/test_fix_simple.py b/test_fix_simple.py
+new file mode 100644
+index 0000000..51086cd
+--- /dev/null
++++ b/test_fix_simple.py
+@@ -0,0 +1,52 @@
++#!/usr/bin/env python3
++
++# Test the _inject_types_to_docstring function logic directly
++def test_rtype_spacing():
++    # Simulate the lines list as it would be for the problematic case
++    lines = [
++        ".. rubric:: Notes",
++        "",
++        "Hello, world.",
++        ""
++    ]
++    
++    print("Original lines:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # This simulates what happens when we insert :rtype: at position 0
++    formatted_annotation = ":py:obj:`None`"
++    insert_index = 0
++    
++    # Insert the rtype line
++    lines.insert(insert_index, f":rtype: {formatted_annotation}")
++    
++    print("\nAfter inserting :rtype:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Apply our fix: ensure blank line after :rtype: when followed by directives
++    if insert_index + 1 < len(lines) and lines[insert_index + 1].startswith(".."):
++        lines.insert(insert_index + 2, "")
++        print("\nApplied fix: inserted blank line after :rtype:")
++    
++    print("\nFinal lines:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Verify the fix worked
++    rtype_index = 0
++    if rtype_index + 1 < len(lines) and lines[rtype_index + 1].startswith(".."):
++        if rtype_index + 2 < len(lines) and lines[rtype_index + 2] == "":
++            print("\nSUCCESS: Blank line found after :rtype: before directive")
++            return True
++        else:
++            print("\nFAIL: No blank line after :rtype: before directive")
++            return False
++    else:
++        print("\nINFO: Next line is not a directive or :rtype: is at end")
++        return True
++
++if __name__ == "__main__":
++    success = test_rtype_spacing()
++    exit(0 if success else 1)
+\ No newline at end of file
+diff --git a/test_fix_simple2.py b/test_fix_simple2.py
+new file mode 100644
+index 0000000..c9c3c7e
+--- /dev/null
++++ b/test_fix_simple2.py
+@@ -0,0 +1,54 @@
++#!/usr/bin/env python3
++
++# Test the _inject_types_to_docstring function logic with text before directive
++def test_rtype_spacing_with_text():
++    # Simulate the lines list as it would be with text before directive
++    lines = [
++        "Some description here.",
++        "",
++        ".. rubric:: Notes",
++        "",
++        "Hello, world.",
++        ""
++    ]
++    
++    print("Original lines:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # This simulates what happens when we insert :rtype: at position 0
++    formatted_annotation = ":py:obj:`None`"
++    insert_index = 0
++    
++    # Insert the rtype line
++    lines.insert(insert_index, f":rtype: {formatted_annotation}")
++    
++    print("\nAfter inserting :rtype:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Apply our fix: ensure blank line after :rtype: when followed by directives
++    if insert_index + 1 < len(lines) and lines[insert_index + 1].startswith(".."):
++        lines.insert(insert_index + 2, "")
++        print("\nApplied fix: inserted blank line after :rtype:")
++    
++    print("\nFinal lines:")
++    for i, line in enumerate(lines):
++        print(f"{i}: {repr(line)}")
++    
++    # Verify the fix worked
++    rtype_index = 0
++    if rtype_index + 1 < len(lines) and lines[rtype_index + 1].startswith(".."):
++        if rtype_index + 2 < len(lines) and lines[rtype_index + 2] == "":
++            print("\nSUCCESS: Blank line found after :rtype: before directive")
++            return True
++        else:
++            print("\nFAIL: No blank line after :rtype: before directive")
++            return False
++    else:
++        print("\nINFO: Next line is not a directive or :rtype: is at end")
++        return True
++
++if __name__ == "__main__":
++    success = test_rtype_spacing_with_text()
++    exit(0 if success else 1)
+\ No newline at end of file

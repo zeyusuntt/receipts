@@ -1,0 +1,51 @@
+Traceback (most recent call last):
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona/_utils/errors.py", line 211, in async_wrapper
+    return await async_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona/_utils/otel_decorator.py", line 129, in async_wrapper
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona/_utils/otel_decorator.py", line 257, in async_wrapper
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona/_async/filesystem.py", line 726, in list_files
+    return await self._api_client.list_files(path=path, depth=depth, _request_timeout=http_timeout(request_timeout))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/pydantic/_internal/_validate_call.py", line 35, in wrapper_function
+    return await wrapper(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona_toolbox_api_client_async/api/file_system_api.py", line 1794, in list_files
+    return self.api_client.response_deserialize(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona_toolbox_api_client_async/api_client.py", line 327, in response_deserialize
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona_toolbox_api_client_async/exceptions.py", line 141, in from_response
+    raise BadRequestException(http_resp=http_resp, body=body, data=data)
+daytona_toolbox_api_client_async.exceptions.BadRequestException: (400)
+Reason: Bad Request
+HTTP response headers: <CIMultiDictProxy('Date': 'Thu, 01 Oct 2026 19:11:06 GMT', 'Content-Type': 'application/json', 'Content-Length': '297', 'Connection': 'keep-alive', 'X-Daytona-Error-Code': 'SANDBOX_NOT_RUNNING', 'Strict-Transport-Security': 'max-age=31536000;includeSubDomains;preload')>
+HTTP response body: {"statusCode":400,"message":"bad request: failed to resolve container IP after 3 attempts: no IP address found. Is the Sandbox started?","code":"SANDBOX_NOT_RUNNING","timestamp":"2026-10-01T19:11:06.690091865Z","path":"/sandboxes/9058d39b-3098-4672-b4dd-ec39099347c7/toolbox/files","method":"GET"}
+HTTP response data: code=<DaemonErrorCode.UNKNOWN_DEFAULT_OPEN_API: 'unknown_default_open_api'> message='bad request: failed to resolve container IP after 3 attempts: no IP address found. Is the Sandbox started?' method='GET' path='/sandboxes/9058d39b-3098-4672-b4dd-ec39099347c7/toolbox/files' source=None status_code=400 timestamp='2026-10-01T19:11:06.690091865Z' additional_properties={}
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sunzeyu/Documents/nebius-hackathon-pilot/src/receipts/pilot/runner.py", line 415, in run_instance
+  File "/Users/sunzeyu/Documents/nebius-hackathon-pilot/src/receipts/orchestrate.py", line 506, in fix
+    verified = await verify_attempt(
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon-pilot/src/receipts/verify/run.py", line 114, in verify_attempt
+    patch = await ex.patch(agent, snapshot_sha)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon-pilot/src/receipts/orchestrate.py", line 163, in recorded
+    result = await attribute(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon-pilot/src/receipts/sandbox/daytona.py", line 1163, in patch
+    await self._download_tree(branch, agent_tree)
+  File "/Users/sunzeyu/Documents/nebius-hackathon-pilot/src/receipts/sandbox/daytona.py", line 681, in _download_tree
+    entries = await self.api.list_files(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon-pilot/src/receipts/sandbox/daytona.py", line 398, in list_files
+    entries = await sandbox.fs.list_files(path, depth=depth)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona/_utils/errors.py", line 213, in async_wrapper
+    process_n_raise_exception(e)
+  File "/Users/sunzeyu/Documents/nebius-hackathon/.venv/lib/python3.12/site-packages/daytona/_utils/errors.py", line 156, in process_n_raise_exception
+    raise create_daytona_error(
+daytona.common.errors.DaytonaBadRequestError: Failed to list files: bad request: failed to resolve container IP after 3 attempts: no IP address found. Is the Sandbox started?

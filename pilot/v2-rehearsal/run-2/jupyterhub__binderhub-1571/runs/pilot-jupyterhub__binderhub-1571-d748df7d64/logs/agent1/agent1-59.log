@@ -1,0 +1,31 @@
+            await self.fail(f"Error resolving ref for {key}: {e}")
+            return
+
+        if ref is None:
+            # Handle deleted default branches: if master doesn't resolve, try HEAD
+            if provider.name == "GitHub" and provider.unresolved_ref == "master":
+                self.log.info("Master branch not found, trying HEAD as fallback for %s", key)
+                # Temporarily switch to HEAD and retry
+                original_ref = provider.unresolved_ref
+                provider.unresolved_ref = "HEAD"
+                try:
+                    # Recursively call get_resolved_ref with HEAD
+                    ref = await provider.get_resolved_ref()
+                    if ref:
+                        self.log.info("Successfully resolved HEAD for %s", key)
+                        # Successfully resolved with HEAD, continue normally
+                    else:
+                        # HEAD also failed, fall through to error handling below
+                        provider.unresolved_ref = original_ref
+                except Exception:
+                    self.log.debug("HEAD resolution also failed for %s", key)
+                    provider.unresolved_ref = original_ref
+
+            error_message = [f"Could not resolve ref for {key}. Double check your URL."]
+
+            if provider.name == "GitHub":
+                error_message.append(
+                    "'GitHub recently changed default branches from "master" to "main".'")
+
+                if provider.unresolved_ref == "master":
+                    error_message.append("'Did you mean the "main" branch?'")

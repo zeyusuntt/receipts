@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+collecting ... collected 1 item
+
+tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password [DEBUG] process_object called
+[DEBUG] new: {'password': '123456', 'id': 'alice'}
+[DEBUG] old: None
+[DEBUG] after super: {'password': '123456', 'id': 'alice'}
+[DEBUG] is_patch: False
+[DEBUG] password_explicitly_provided: False
+[DEBUG] Hashing password: 123456
+[DEBUG] process_object called
+[DEBUG] new: {'password': '$2b$12$DMoBmBaoigTpmtCf1p8kQewIU9dUPWKIAFQ6mr64kes5TiE31PWrG', 'id': 'alice', 'last_modified': 1790902345432, '__permissions__': {'write': {'account:alice'}}, 'age': 'captain'}
+[DEBUG] old: {'password': '$2b$12$DMoBmBaoigTpmtCf1p8kQewIU9dUPWKIAFQ6mr64kes5TiE31PWrG', 'id': 'alice', 'last_modified': 1790902345432, '__permissions__': {'write': {'account:alice'}}}
+[DEBUG] after super: {'password': '$2b$12$DMoBmBaoigTpmtCf1p8kQewIU9dUPWKIAFQ6mr64kes5TiE31PWrG', 'id': 'alice', '__permissions__': {'write': {'account:alice'}}, 'age': 'captain'}
+[DEBUG] is_patch: True
+[DEBUG] password_explicitly_provided: False
+[DEBUG] PATCH without explicit password - preserving existing
+PASSED
+
+=============================== warnings summary ===============================
+tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password
+  /kinto/kinto/core/initialization.py:555: UserWarning: HTTPS is not enabled
+    warnings.warn("HTTPS is not enabled")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-23.xml ------------
+=========================== short test summary info ============================
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password
+========================= 1 passed, 1 warning in 1.38s =========================

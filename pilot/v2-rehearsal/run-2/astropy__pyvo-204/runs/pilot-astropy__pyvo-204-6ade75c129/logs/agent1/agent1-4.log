@@ -1,0 +1,65 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /pyvo
+plugins: requests-mock-1.12.1
+collecting ... collected 1 item
+
+pyvo/io/vosi/tests/test_tables.py::TestTables::test_all FAILED           [100%]
+
+=================================== FAILURES ===================================
+_____________________________ TestTables.test_all ______________________________
+
+self = <pyvo.io.vosi.tests.test_tables.TestTables object at 0x792a10a6d6d0>
+
+    def test_all(self):
+        tablesfile = vosi.parse_tables(
+            get_pkg_data_filename("data/tables.xml"))
+        table = next(tablesfile.iter_tables())
+    
+        assert table.name == "test.all"
+        assert table.title == "Test table"
+        assert table.description == "All test data in one table"
+        assert table.utype == "utype"
+    
+        col = table.columns[0]
+        fkc = table.foreignkeys[0]
+    
+        assert col.name == "id"
+        assert col.description == "Primary key"
+        assert col.unit == "unit"
+        assert col.ucd == "meta.id;meta.main"
+        assert col.utype == "utype"
+    
+        assert type(col.datatype) == vs.TAPType
+>       assert str(col.datatype) == "<DataType arraysize=*>VARCHAR</DataType>"
+E       assert "<DataType arraysize='*'>" == '<DataType ar...AR</DataType>'
+E         - <DataType arraysize=*>VARCHAR</DataType>
+E         + <DataType arraysize='*'>
+
+pyvo/io/vosi/tests/test_tables.py:40: AssertionError
+=============================== warnings summary ===============================
+../usr/local/lib/python3.7/site-packages/astropy/version.py:26
+  /usr/local/lib/python3.7/site-packages/astropy/version.py:26: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    for j, piece in enumerate(LooseVersion(version).version[:3]):
+
+../usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160
+../usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160
+../usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160
+../usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160
+../usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160
+../usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160
+../usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160
+../usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160
+  /usr/local/lib/python3.7/site-packages/astropy/utils/introspection.py:160: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    return LooseVersion(have_version) >= LooseVersion(version)
+
+pyvo/conftest.py:10
+pyvo/conftest.py:10
+  /pyvo/pyvo/conftest.py:10: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    if LooseVersion(astropy_version) < LooseVersion('2.0.3'):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+FAILED pyvo/io/vosi/tests/test_tables.py::TestTables::test_all - assert "<Dat...
+======================== 1 failed, 11 warnings in 0.09s ========================

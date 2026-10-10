@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "bug: Incorrect table name resolved if stream name is hyphenated\n### Singer SDK Version\n\n0.44.3\n\n### Is this a regression?\n\n- [ ] Yes\n\n### Python Version\n\nNA\n\n### Bug scope\n\nTargets (data type handling, batching, SQL object generation, etc.)\n\n### Operating System\n\n_No response_\n\n### Description\n\nFor SQL targets, if a stream name is hyphenated it is assumed to be fully-qualified and the part after the last hyphen is taken as the table name. In our case, we have a tap stream name of `tap_bigquery-weekly_fuel_prices` and expect a table of name in similar shape to be created in Snowflake - instead, `weekly_fuel_prices` is resolved which is not desirable is our case. Is there a reason for this behaviour?\n\nhttps://github.com/meltano/sdk/blob/881ffd2041c9eca9c50a5e94ffe61a121579ef61/singer_sdk/sinks/sql.py#L76-L85\n\n### Link to Slack/Linen\n\n_No response_",
+  "source": {
+    "image": "docker.io/swerebenchv2/meltano-sdk:3020-cda17b9",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-meltano__sdk-3020-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2NvcmUvc2lua3MvdGVzdF9zcWxfc2luay5weSBiL3Rlc3RzL2NvcmUvc2lua3MvdGVzdF9zcWxfc2luay5weQppbmRleCBkMWM5MjFlYy4uN2VhZjhmOTMgMTAwNjQ0Ci0tLSBhL3Rlc3RzL2NvcmUvc2lua3MvdGVzdF9zcWxfc2luay5weQorKysgYi90ZXN0cy9jb3JlL3NpbmtzL3Rlc3Rfc3FsX3NpbmsucHkKQEAgLTY0LDMgKzY0LDc1IEBAIGNsYXNzIFRlc3REdWNrREJTaW5rOgogICAgICAgICBhc3NlcnQgc3RyKHN0bXQpID09ICgKICAgICAgICAgICAgICdJTlNFUlQgSU5UTyBmb28gKGlkLCBjb2xfdHMsICJ0YWJsZSIpIFZBTFVFUyAoOmlkLCA6Y29sX3RzLCA6dGFibGUpJwogICAgICAgICApCisKKyAgICBAcHl0ZXN0Lm1hcmsucGFyYW1ldHJpemUoCisgICAgICAgICJzdHJlYW1fbmFtZSwgZGVmYXVsdF90YXJnZXRfc2NoZW1hLCBleHBlY3RlZF90YWJsZV9uYW1lLCBleHBlY3RlZF9zY2hlbWFfbmFtZSIsCisgICAgICAgIFsKKyAgICAgICAgICAgIHB5dGVzdC5wYXJhbSgKKyAgICAgICAgICAgICAgICAiZm9vIiwgICMgc3RyZWFtX25hbWUKKyAgICAgICAgICAgICAgICBOb25lLCAgIyBkZWZhdWx0X3RhcmdldF9zY2hlbWEKKyAgICAgICAgICAgICAgICAiZm9vIiwgICMgZXhwZWN0ZWRfdGFibGVfbmFtZQorICAgICAgICAgICAgICAgIE5vbmUsICAjIGV4cGVjdGVkX3NjaGVtYV9uYW1lCisgICAgICAgICAgICAgICAgaWQ9Im5vLWRlZmF1bHQtc2NoZW1hIiwKKyAgICAgICAgICAgICksCisgICAgICAgICAgICBweXRlc3QucGFyYW0oCisgICAgICAgICAgICAgICAgImZvby1iYXIiLCAgIyBzdHJlYW1fbmFtZQorICAgICAgICAgICAgICAgIE5vbmUsICAjIGRlZmF1bHRfdGFyZ2V0X3NjaGVtYQorICAgICAgICAgICAgICAgICJiYXIiLCAgIyBleHBlY3RlZF90YWJsZV9uYW1lCisgICAgICAgICAgICAgICAgImZvbyIsICAjIGV4cGVjdGVkX3NjaGVtYV9uYW1lCisgICAgICAgICAgICAgICAgaWQ9Im5vLWRlZmF1bHQtc2NoZW1hLTItcGFydCIsCisgICAgICAgICAgICApLAorICAgICAgICAgICAgcHl0ZXN0LnBhcmFtKAorICAgICAgICAgICAgICAgICJmb28tYmFyLWJheiIsICAjIHN0cmVhbV9uYW1lCisgICAgICAgICAgICAgICAgTm9uZSwgICMgZGVmYXVsdF90YXJnZXRfc2NoZW1hCisgICAgICAgICAgICAgICAgImJheiIsICAjIGV4cGVjdGVkX3RhYmxlX25hbWUKKyAgICAgICAgICAgICAgICAiYmFyIiwgICMgZXhwZWN0ZWRfc2NoZW1hX25hbWUKKyAgICAgICAgICAgICAgICBpZD0ibm8tZGVmYXVsdC1zY2hlbWEtMy1wYXJ0IiwKKyAgICAgICAgICAgICksCisgICAgICAgICAgICBweXRlc3QucGFyYW0oCisgICAgICAgICAgICAgICAgImZvbyIsICAjIHN0cmVhbV9uYW1lCisgICAgICAgICAgICAgICAgInRlc3QiLCAgIyBkZWZhdWx0X3RhcmdldF9zY2hlbWEKKyAgICAgICAgICAgICAgICAiZm9vIiwgICMgZXhwZWN0ZWRfdGFibGVfbmFtZQorICAgICAgICAgICAgICAgICJ0ZXN0IiwgICMgZXhwZWN0ZWRfc2NoZW1hX25hbWUKKyAgICAgICAgICAgICAgICBpZD0iZGVmYXVsdC1zY2hlbWEiLAorICAgICAgICAgICAgKSwKKyAgICAgICAgICAgIHB5dGVzdC5wYXJhbSgKKyAgICAgICAgICAgICAgICAiZm9vLWJhciIsICAjIHN0cmVhbV9uYW1lCisgICAgICAgICAgICAgICAgInRlc3QiLCAgIyBkZWZhdWx0X3RhcmdldF9zY2hlbWEKKyAgICAgICAgICAgICAgICAiZm9vLWJhciIsICAjIGV4cGVjdGVkX3RhYmxlX25hbWUKKyAgICAgICAgICAgICAgICAidGVzdCIsICAjIGV4cGVjdGVkX3NjaGVtYV9uYW1lCisgICAgICAgICAgICAgICAgaWQ9ImRlZmF1bHQtc2NoZW1hLTItcGFydCIsCisgICAgICAgICAgICApLAorICAgICAgICAgICAgcHl0ZXN0LnBhcmFtKAorICAgICAgICAgICAgICAgICJmb28tYmFyLWJheiIsICAjIHN0cmVhbV9uYW1lCisgICAgICAgICAgICAgICAgInRlc3QiLCAgIyBkZWZhdWx0X3RhcmdldF9zY2hlbWEKKyAgICAgICAgICAgICAgICAiZm9vLWJhci1iYXoiLCAgIyBleHBlY3RlZF90YWJsZV9uYW1lCisgICAgICAgICAgICAgICAgInRlc3QiLCAgIyBleHBlY3RlZF9zY2hlbWFfbmFtZQorICAgICAgICAgICAgICAgIGlkPSJkZWZhdWx0LXNjaGVtYS0zLXBhcnQiLAorICAgICAgICAgICAgKSwKKyAgICAgICAgXSwKKyAgICApCisgICAgZGVmIHRlc3RfdGFibGVfbmFtZSgKKyAgICAgICAgc2VsZiwKKyAgICAgICAgc2NoZW1hOiBkaWN0LAorICAgICAgICBzdHJlYW1fbmFtZTogc3RyLAorICAgICAgICBkZWZhdWx0X3RhcmdldF9zY2hlbWE6IHN0ciB8IE5vbmUsCisgICAgICAgIGV4cGVjdGVkX3RhYmxlX25hbWU6IHN0ciwKKyAgICAgICAgZXhwZWN0ZWRfc2NoZW1hX25hbWU6IHN0ciwKKyAgICApOgorICAgICAgICB0YXJnZXQgPSBEdWNrREJUYXJnZXQoCisgICAgICAgICAgICBjb25maWc9eworICAgICAgICAgICAgICAgICJzcWxhbGNoZW15X3VybCI6ICJkdWNrZGI6Ly8vIiwKKyAgICAgICAgICAgICAgICAiZGVmYXVsdF90YXJnZXRfc2NoZW1hIjogZGVmYXVsdF90YXJnZXRfc2NoZW1hLAorICAgICAgICAgICAgfSwKKyAgICAgICAgKQorCisgICAgICAgIHNpbmsgPSBEdWNrREJTaW5rKAorICAgICAgICAgICAgdGFyZ2V0LAorICAgICAgICAgICAgc3RyZWFtX25hbWU9c3RyZWFtX25hbWUsCisgICAgICAgICAgICBzY2hlbWE9c2NoZW1hLAorICAgICAgICAgICAga2V5X3Byb3BlcnRpZXM9WyJpZCJdLAorICAgICAgICApCisKKyAgICAgICAgYXNzZXJ0IHNpbmsudGFibGVfbmFtZSA9PSBleHBlY3RlZF90YWJsZV9uYW1lCisgICAgICAgIGFzc2VydCBzaW5rLnNjaGVtYV9uYW1lID09IGV4cGVjdGVkX3NjaGVtYV9uYW1lCg=='\"'\"'))'",
+      "git apply /tmp/receipts-meltano__sdk-3020-test.patch"
+    ],
+    "workdir": "/sdk"
+  },
+  "spec_tests": [
+    "tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[default-schema-2-part]",
+    "tests/core/sinks/test_sql_sink.py::TestDuckDBSink::test_table_name[default-schema-3-part]"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/core/sinks/test_sql_sink.py"
+}

@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+Tests enabled: BSD flags, root, symlinks, hardlinks, atime/mtime, modes
+Tests disabled: fuse2, fuse3
+rootdir: /borg
+configfile: pyproject.toml
+plugins: benchmark-5.2.3, cov-7.0.0, xdist-3.8.0
+collecting ... collected 3 items
+
+src/borg/testsuite/archiver/list_cmd_test.py::test_list_depth[archiver] PASSED [ 33%]
+src/borg/testsuite/archiver/list_cmd_test.py::test_list_depth[remote_archiver] PASSED [ 66%]
+src/borg/testsuite/archiver/list_cmd_test.py::test_list_depth[binary_archiver] SKIPPED [100%]
+
+=============================== warnings summary ===============================
+src/borg/__init__.py:7
+  /borg/src/borg/__init__.py:7: DeprecationWarning: Version._version is private and will be removed soon
+    __version_tuple__ = _v._version.release  # type: ignore
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+------------ generated xml file: /opt/receipts/reports/agent1-5.xml ------------
+=========================== short test summary info ============================
+PASSED src/borg/testsuite/archiver/list_cmd_test.py::test_list_depth[archiver]
+PASSED src/borg/testsuite/archiver/list_cmd_test.py::test_list_depth[remote_archiver]
+SKIPPED [1] src/borg/testsuite/archiver/list_cmd_test.py:79: No borg.exe binary available
+=================== 2 passed, 1 skipped, 1 warning in 2.46s ====================

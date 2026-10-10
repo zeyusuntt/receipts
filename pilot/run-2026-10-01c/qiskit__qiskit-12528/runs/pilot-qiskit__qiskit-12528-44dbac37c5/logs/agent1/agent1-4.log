@@ -1,0 +1,133 @@
+17:from __future__ import annotations
+22:from collections import OrderedDict, defaultdict, namedtuple
+23:from typing import (
+39:from qiskit._accelerate.circuit import CircuitData
+40:from qiskit.exceptions import QiskitError
+41:from qiskit.utils.multiprocessing import is_main_process
+42:from qiskit.circuit.instruction import Instruction
+43:from qiskit.circuit.gate import Gate
+44:from qiskit.circuit.parameter import Parameter
+45:from qiskit.circuit.exceptions import CircuitError
+46:from . import _classical_resource_map
+47:from ._utils import sort_parameters
+48:from .controlflow import ControlFlowOp
+49:from .controlflow.builder import CircuitScopeInterface, ControlFlowBuilderBlock
+50:from .controlflow.break_loop import BreakLoopOp, BreakLoopPlaceholder
+51:from .controlflow.continue_loop import ContinueLoopOp, ContinueLoopPlaceholder
+52:from .controlflow.for_loop import ForLoopOp, ForLoopContext
+53:from .controlflow.if_else import IfElseOp, IfContext
+54:from .controlflow.switch_case import SwitchCaseOp, SwitchContext
+55:from .controlflow.while_loop import WhileLoopOp, WhileLoopContext
+56:from .classical import expr, types
+57:from .parameterexpression import ParameterExpression, ParameterValueType
+58:from .quantumregister import QuantumRegister, Qubit, AncillaRegister, AncillaQubit
+59:from .classicalregister import ClassicalRegister, Clbit
+60:from .parametertable import ParameterReferences, ParameterTable, ParameterView
+61:from .parametervector import ParameterVector
+62:from .instructionset import InstructionSet
+63:from .operation import Operation
+64:from .register import Register
+65:from .bit import Bit
+66:from .quantumcircuitdata import QuantumCircuitData, CircuitInstruction
+67:from .delay import Delay
+68:from .store import Store
+72:    from qiskit.transpiler.layout import TranspileLayout  # pylint: disable=cyclic-import
+73:    from qiskit.quantum_info.operators.base_operator import BaseOperator
+74:    from qiskit.quantum_info.states.statevector import Statevector  # pylint: disable=cyclic-import
+835:       from qiskit import QuantumCircuit
+1363:        from qiskit.converters import circuit_to_dag
+2078:               from qiskit import QuantumCircuit
+2517:                from qiskit.circuit import QuantumCircuit, Parameter
+2594:                from qiskit.circuit import QuantumCircuit
+2704:                from qiskit.circuit import QuantumCircuit
+2712:                from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
+2713:                from qiskit.circuit.classical import expr, types
+2991:                from qiskit.circuit import QuantumCircuit, Qubit
+3054:        from qiskit.converters.circuit_to_instruction import circuit_to_instruction
+3079:        from qiskit.converters.circuit_to_gate import circuit_to_gate
+3105:        from qiskit.transpiler.passes.basis.decompose import Decompose
+3106:        from qiskit.transpiler.passes.synthesis import HighLevelSynthesis
+3107:        from qiskit.converters.circuit_to_dag import circuit_to_dag
+3108:        from qiskit.converters.dag_to_circuit import dag_to_circuit
+3253:               from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
+3261:        from qiskit.visualization import circuit_drawer
+3323:                from qiskit.circuit import QuantumCircuit
+3713:        from .reset import Reset
+3772:               from qiskit import QuantumCircuit
+3806:                from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+3821:        from .measure import Measure
+3837:        from qiskit.converters.circuit_to_dag import circuit_to_dag
+3920:                    from qiskit.circuit import QuantumCircuit
+3921:                    from qiskit.transpiler.passes import RemoveFinalMeasurements
+3939:        from qiskit.transpiler.passes import RemoveFinalMeasurements
+3940:        from qiskit.converters import circuit_to_dag
+4000:        from qiskit import qasm2
+4023:        from qiskit import qasm2
+4081:                >>> from qiskit.circuit import QuantumCircuit, Parameter
+4095:                >>> from qiskit.circuit import QuantumCircuit, Parameter
+4110:                >>> from qiskit.circuit import QuantumCircuit, Parameter, ParameterVector
+4230:               from qiskit.circuit import QuantumCircuit, Parameter
+4245:               from qiskit.circuit import QuantumCircuit, ParameterVector
+4416:        from .barrier import Barrier
+4467:        from .library.standard_gates.h import HGate
+4493:        from .library.standard_gates.h import CHGate
+4513:        from .library.standard_gates.i import IGate
+4530:        from .library.generalized_gates.gms import MSGate
+4546:        from .library.standard_gates.p import PhaseGate
+4574:        from .library.standard_gates.p import CPhaseGate
+4605:        from .library.standard_gates.p import MCPhaseGate
+4630:        from .library.standard_gates.r import RGate
+4657:        from .library.generalized_gates.rv import RVGate
+4679:        from .library.standard_gates.x import RCCXGate
+4705:        from .library.standard_gates.x import RC3XGate
+4729:        from .library.standard_gates.rx import RXGate
+4757:        from .library.standard_gates.rx import CRXGate
+4781:        from .library.standard_gates.rxx import RXXGate
+4800:        from .library.standard_gates.ry import RYGate
+4828:        from .library.standard_gates.ry import CRYGate
+4852:        from .library.standard_gates.ryy import RYYGate
+4868:        from .library.standard_gates.rz import RZGate
+4896:        from .library.standard_gates.rz import CRZGate
+4920:        from .library.standard_gates.rzx import RZXGate
+4939:        from .library.standard_gates.rzz import RZZGate
+4954:        from .library.standard_gates.ecr import ECRGate
+4969:        from .library.standard_gates.s import SGate
+4984:        from .library.standard_gates.s import SdgGate
+5010:        from .library.standard_gates.s import CSGate
+5041:        from .library.standard_gates.s import CSdgGate
+5061:        from .library.standard_gates.swap import SwapGate
+5076:        from .library.standard_gates.iswap import iSwapGate
+5104:        from .library.standard_gates.swap import CSwapGate
+5124:        from .library.standard_gates.sx import SXGate
+5139:        from .library.standard_gates.sx import SXdgGate
+5165:        from .library.standard_gates.sx import CSXGate
+5185:        from .library.standard_gates.t import TGate
+5200:        from .library.standard_gates.t import TdgGate
+5224:        from .library.standard_gates.u import UGate
+5258:        from .library.standard_gates.u import CUGate
+5279:        from .library.standard_gates.x import XGate
+5306:        from .library.standard_gates.x import CXGate
+5327:        from .library.standard_gates.dcx import DCXGate
+5353:        from .library.standard_gates.x import CCXGate
+5398:        from .library.standard_gates.x import MCXGrayCode, MCXRecursive, MCXVChain
+5457:        from .library.standard_gates.y import YGate
+5483:        from .library.standard_gates.y import CYGate
+5503:        from .library.standard_gates.z import ZGate
+5529:        from .library.standard_gates.z import CZGate
+5562:        from .library.standard_gates.z import CCZGate
+5585:        from qiskit.circuit.library.generalized_gates.pauli import PauliGate
+5627:                from qiskit import QuantumCircuit
+5650:                from qiskit import QuantumCircuit
+5671:                from qiskit import QuantumCircuit
+5688:        from qiskit.circuit.library.data_preparation import StatePreparation
+5742:                from qiskit import QuantumCircuit
+5765:                from qiskit import QuantumCircuit
+5786:                from qiskit import QuantumCircuit
+5803:        from .library.data_preparation.initializer import Initialize
+5836:                from qiskit import QuantumCircuit
+5845:        from .library.generalized_gates.unitary import UnitaryGate
+5989:            from qiskit.circuit import QuantumCircuit, Clbit, Qubit
+6079:            from qiskit import QuantumCircuit
+6167:            from qiskit.circuit import QuantumCircuit, Qubit, Clbit
+6249:                from qiskit.circuit import QuantumCircuit, Qubit, Clbit
+6323:            from qiskit.circuit import QuantumCircuit, ClassicalRegister, QuantumRegister

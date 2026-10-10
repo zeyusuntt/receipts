@@ -1,0 +1,61 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /optimade-python-tools
+configfile: pytest.ini
+plugins: anyio-4.12.1
+collecting ... collected 1 item
+
+tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_known_properties FAILED
+
+=================================== FAILURES ===================================
+__________________ TestMongoTransformer.test_known_properties __________________
+
+self = <test_mongo.TestMongoTransformer testMethod=test_known_properties>
+
+    def test_known_properties(self):
+        #  Filtering on Properties with unknown value
+        self.assertEqual(
+            self.transform("chemical_formula_anonymous IS UNKNOWN"),
+            {
+                "$or": [
+                    {"chemical_formula_anonymous": {"$exists": False}},
+                    {"chemical_formula_anonymous": {"$eq": None}},
+                ]
+            },
+        )
+        self.assertEqual(
+            self.transform("chemical_formula_anonymous IS KNOWN"),
+            {
+                "$and": [
+                    {"chemical_formula_anonymous": {"$exists": True}},
+                    {"chemical_formula_anonymous": {"$ne": None}},
+                ]
+            },
+        )
+>       self.assertEqual(
+            self.transform("NOT chemical_formula_anonymous IS UNKNOWN"),
+            {
+                "$and": [
+                    {"chemical_formula_anonymous": {"$exists": True}},
+                    {"chemical_formula_anonymous": {"$ne": None}},
+                ]
+            },
+        )
+E       AssertionError: {'$an[41 chars]ists': False}}, {'chemical_formula_anonymous': {'$eq': None}}]} != {'$an[41 chars]ists': True}}, {'chemical_formula_anonymous': {'$ne': None}}]}
+E       - {'$and': [{'chemical_formula_anonymous': {'$exists': False}},
+E       ?                                                      ^^^^
+E       
+E       + {'$and': [{'chemical_formula_anonymous': {'$exists': True}},
+E       ?                                                      ^^^
+E       
+E       -           {'chemical_formula_anonymous': {'$eq': None}}]}
+E       ?                                              -
+E       
+E       +           {'chemical_formula_anonymous': {'$ne': None}}]}
+E       ?                                             +
+
+tests/filtertransformers/test_mongo.py:621: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-24.xml ------------
+=========================== short test summary info ============================
+FAILED tests/filtertransformers/test_mongo.py::TestMongoTransformer::test_known_properties
+============================== 1 failed in 0.29s ===============================

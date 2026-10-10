@@ -1,0 +1,62 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /opencensus-python
+collecting ... collected 1 item
+
+tests/unit/trace/test_span.py::TestSpan::test_add_annotation FAILED      [100%]
+
+=================================== FAILURES ===================================
+_________________________ TestSpan.test_add_annotation _________________________
+
+self = <test_span.TestSpan testMethod=test_add_annotation>
+
+    def test_add_annotation(self):
+        span_name = 'test_span_name'
+        span = self._make_one(span_name)
+    
+>       span.add_annotation('This is a test', name='octo-span', age=98)
+
+tests/unit/trace/test_span.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <opencensus.trace.span.Span object at 0x744b4a9bf710>
+description = 'This is a test', attributes = {'age': 98, 'name': 'octo-span'}
+time_event_module = <module 'opencensus.trace.time_event' from '/opencensus-python/opencensus/trace/time_event.py'>
+
+    def add_annotation(self, description, **attributes):
+        """Add an annotation to the span.
+    
+        :type description: str
+        :param description: Description of the annotation.
+    
+        :param attributes: Additional attributes for the annotation.
+        """
+        from opencensus.trace import time_event as time_event_module
+        tevt = time_event_module.TimeEvent(
+            datetime.utcnow(),
+            time_event_module.Annotation(description,
+>                                        attributes.Attributes(attributes)))
+E       AttributeError: 'dict' object has no attribute 'Attributes'
+
+opencensus/trace/span.py:203: AttributeError
+=============================== warnings summary ===============================
+opencensus/__init__.py:16
+  /opencensus-python/opencensus/__init__.py:16: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+../usr/local/lib/python3.7/site-packages/pkg_resources/__init__.py:2871
+../usr/local/lib/python3.7/site-packages/pkg_resources/__init__.py:2871
+  /usr/local/lib/python3.7/site-packages/pkg_resources/__init__.py:2871: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('google')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+opencensus/__init__.py:17
+  /opencensus-python/opencensus/__init__.py:17: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('opencensus')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    pkg_resources.declare_namespace(__name__)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /opt/receipts/reports/agent1-7.xml ------------
+=========================== short test summary info ============================
+FAILED tests/unit/trace/test_span.py::TestSpan::test_add_annotation - Attribu...
+======================== 1 failed, 4 warnings in 0.11s =========================

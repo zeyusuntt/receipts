@@ -1,0 +1,37 @@
+diff --git a/src/cfnlint/conditions/_rule.py b/src/cfnlint/conditions/_rule.py
+index 2f624f6a..603208c3 100644
+--- a/src/cfnlint/conditions/_rule.py
++++ b/src/cfnlint/conditions/_rule.py
+@@ -80,8 +80,12 @@ class _Assertions:
+ 
+         assertions = []
+         for assertion in self._assertions:
+-            assertions.append(assertion.build_cnf(params))
++            assertion_result = assertion.build_cnf(params)
++            if assertion_result is not None:
++                assertions.append(assertion_result)
+ 
++        if not assertions:
++            return None
+         return And(*assertions)
+ 
+     @property
+@@ -126,10 +130,10 @@ class Rule:
+     def build_cnf(self, params: dict[str, Symbol]) -> BooleanFunction | Symbol | None:
+ 
+         if self._assertions:
+-            if self._condition:
+-                return Implies(
+-                    self._condition.build_cnf(params),
+-                    self._assertions.build_cnf(params),
+-                )
+-            return self._assertions.build_cnf(params)
+-        return None
++            condition_cnf = self._condition.build_cnf(params) if self._condition else None
++            assertions_cnf = self._assertions.build_cnf(params)
++            
++            if condition_cnf is not None and assertions_cnf is not None:
++                return Implies(condition_cnf, assertions_cnf)
++            return assertions_cnf or condition_cnf
++        return None
+\ No newline at end of file

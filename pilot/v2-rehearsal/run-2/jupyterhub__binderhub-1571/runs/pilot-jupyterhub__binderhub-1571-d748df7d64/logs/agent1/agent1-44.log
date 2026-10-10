@@ -1,0 +1,8 @@
+    def test_spec_with_suggestion(self):
+        spec = "short/suggestion"
+        error = f'Did you mean "{spec}/HEAD"?'
+        with self.assertRaisesRegex(ValueError, error):
+            user, repo, unresolved_ref = tokenize_spec(spec)
+
+
+@pytest.mark.parametrize(

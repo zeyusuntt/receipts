@@ -1,0 +1,25 @@
+256:    # Finally, we run a variation of the subclass lookup in `st.from_type`
+268:            return st.lists(st.from_type(elem_types[0])).map(tuple)
+271:        return st.tuples(*map(st.from_type, elem_types))
+273:        return st.one_of([st.from_type(t) for t in thing.__args__])
+292:        return st.from_type(annotated_type)
+306:        return st.from_type(origin)
+349:        return st.from_type(getattr(builtins, thing.__forward_arg__))
+388:# As a general rule, we try to limit this to scalars because from_type()
+475:    super: st.builds(super, st.from_type(type)),
+492:        st.lists(st.from_type(BaseException), min_size=1),
+497:        st.lists(st.from_type(Exception), min_size=1),
+618:    # Duplicate check from from_type here - only paying when needed.
+627:                    f"st.register_type_strategy({thing}, st.from_type(...))"
+634:    return st.lists(st.from_type(thing.__args__[0]))
+656:        return st.from_type(type_)
+658:        return st.from_type(type_).filter(_can_hash)
+676:        _from_hashable_type(keys_vals[0]), st.from_type(keys_vals[1])
+700:    return st.dictionaries(st.integers(), st.from_type(thing.__args__[0])).map(
+707:    return st.iterables(st.from_type(thing.__args__[0]))
+713:        keys=st.from_type(thing.__args__[0]),
+720:    return st.lists(st.from_type(thing.__args__[0])).map(collections.deque)
+775:    return GeneratorStrategy(st.from_type(yields), st.from_type(returns))
+791:        returns=st.from_type(thing.__args__[-1]),
+803:        strat = unwrap_strategies(st.from_type(bound))
+823:    ).flatmap(st.from_type)

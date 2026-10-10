@@ -1,0 +1,99 @@
+        If ``False``, the value is unsigned. If ``True``, the value is signed two's complement.
+    """
+    def __init__(self, width=1, signed=False):
+        if not isinstance(width, int) or width < 0:
+            raise TypeError("Width must be a non-negative integer, not {!r}"
+                            .format(width))
+        self.width = width
+        self.signed = signed
+
+    # The algorithm for inferring shape for standard Python enumerations is factored out so that
+    # `Shape.cast()` and Amaranth's `EnumMeta.as_shape()` can both use it.
+    @staticmethod
+    def _cast_plain_enum(obj):
+        signed = False
+        width  = 0
+        for member in obj:
+            try:
+                member_shape = Const.cast(member.value).shape()
+            except TypeError as e:
+                raise TypeError("Only enumerations whose members have constant-castable "
+                                "values can be used in Amaranth code")
+            if not signed and member_shape.signed:
+                signed = True
+--
+
+    @staticmethod
+    def cast(obj, *, src_loc_at=0):
+        while True:
+            if isinstance(obj, Shape):
+                return obj
+            elif isinstance(obj, ShapeCastable):
+                new_obj = obj.as_shape()
+            elif isinstance(obj, int):
+                return Shape(obj)
+            elif isinstance(obj, range):
+                if len(obj) == 0:
+                    return Shape(0, obj.start < 0)
+--
+            obj = new_obj
+
+    def __repr__(self):
+        if self.signed:
+            return "signed({})".format(self.width)
+        else:
+            return "unsigned({})".format(self.width)
+
+    def __eq__(self, other):
+        return (isinstance(other, Shape) and
+                self.width == other.width and self.signed == other.signed)
+
+
+def unsigned(width):
+    """Shorthand for ``Shape(width, signed=False)``."""
+    return Shape(width, signed=False)
+
+
+def signed(width):
+    """Shorthand for ``Shape(width, signed=True)``."""
+    return Shape(width, signed=True)
+
+
+class Value(metaclass=ABCMeta):
+    @staticmethod
+    def cast(obj):
+        """Converts ``obj`` to an Amaranth value.
+
+        Booleans and integers are wrapped into a :class:`Const`. Enumerations whose members are
+        all integers are converted to a :class:`Const` with a shape that fits every member.
+        :class:`ValueCastable` objects are recursively cast to an Amaranth value.
+        """
+        while True:
+            if isinstance(obj, Value):
+                return obj
+            elif isinstance(obj, ValueCastable):
+--
+            obj = new_obj
+
+    def __init__(self, *, src_loc_at=0):
+        super().__init__()
+        self.src_loc = tracer.get_src_loc(1 + src_loc_at)
+
+    def __bool__(self):
+        raise TypeError("Attempted to convert Amaranth value to Python boolean")
+
+    def __pos__(self):
+        return self
+
+    def __invert__(self):
+        return Operator("~", [self])
+    def __neg__(self):
+        return Operator("-", [self])
+
+    def __add__(self, other):
+        return Operator("+", [self, other])
+    def __radd__(self, other):
+        return Operator("+", [other, self])
+    def __sub__(self, other):
+        return Operator("-", [self, other])
+    def __rsub__(self, other):

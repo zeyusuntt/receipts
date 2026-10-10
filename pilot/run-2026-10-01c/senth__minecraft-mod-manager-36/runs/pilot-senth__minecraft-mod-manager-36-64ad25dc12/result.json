@@ -1,0 +1,344 @@
+{
+  "agent_branch_id": "agent1",
+  "attempts": [
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/1/filtered.diff",
+      "number": 1,
+      "patch_path": "attempts/1/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "honest",
+        "claim_evidence": "claimed green; own last run: 16 passed, 0 failed",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "target tests passed: minecraft_mod_manager/gateways/sqlite_test.py::test_does_not_exist_when_set_as_inactive, minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_set_as_inactive_but_not_filtering",
+            "id": "R1_fail_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "14 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 16 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 1 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona -> cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona#6 unbroken over 6 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona -> cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "claimed green; own last run: 16 passed, 0 failed",
+            "id": "R6_claim_audit",
+            "passed": true
+          }
+        ],
+        "status": "PASS"
+      },
+      "witness_branch_id": "w1",
+      "worker": {
+        "claims": {
+          "files_changed": [
+            "minecraft_mod_manager/gateways/sqlite.py"
+          ],
+          "full_suite_pass": true,
+          "target_tests_pass": true,
+          "tests_run": true
+        },
+        "end": "finished",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3",
+          "agent1-4",
+          "agent1-5"
+        ],
+        "summary": "Modified the `exists` method in sqlite.py to accept a `filter_active` parameter (default True). When filter_active is False, the query ignores the active column, allowing existence checks for both active and inactive mods. This makes the two specification tests pass while preserving existing behavior.",
+        "turns": 7
+      }
+    }
+  ],
+  "baseline": {
+    "collected_ids": [
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_does_not_exist_when_set_as_inactive",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_doesnt_exists",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_exists",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_set_as_inactive_but_not_filtering",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_raises_error_when_already_exists",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_when_calling_update_mod_but_does_not_exist",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_when_fields_set_to_none",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_skip_insert_mod_when_pretend",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_skip_update_mod_when_pretend",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test0]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test1]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test2]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test3]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test4]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_update_mod"
+    ],
+    "protected": [
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_doesnt_exists",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_exists",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_raises_error_when_already_exists",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_when_calling_update_mod_but_does_not_exist",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_when_fields_set_to_none",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_skip_insert_mod_when_pretend",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_skip_update_mod_when_pretend",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test0]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test1]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test2]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test3]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test4]",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_update_mod"
+    ],
+    "run_receipt_ids": [
+      "base-3",
+      "base-4"
+    ],
+    "runs": [
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_does_not_exist_when_set_as_inactive",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_set_as_inactive_but_not_filtering"
+        ],
+        "passed": [
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_when_fields_set_to_none",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_raises_error_when_already_exists",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_skip_insert_mod_when_pretend",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_update_mod",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_skip_update_mod_when_pretend",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_when_calling_update_mod_but_does_not_exist",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_exists",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_doesnt_exists",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test0]",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test1]",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test2]",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test3]",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test4]"
+        ],
+        "skipped": []
+      },
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_does_not_exist_when_set_as_inactive",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_set_as_inactive_but_not_filtering"
+        ],
+        "passed": [
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_when_fields_set_to_none",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_raises_error_when_already_exists",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_skip_insert_mod_when_pretend",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_update_mod",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_skip_update_mod_when_pretend",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_insert_mod_when_calling_update_mod_but_does_not_exist",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_exists",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_doesnt_exists",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test0]",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test1]",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test2]",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test3]",
+          "minecraft_mod_manager/gateways/sqlite_test.py::test_sync_with_dir[test4]"
+        ],
+        "skipped": []
+      }
+    ],
+    "skipped_ids": [],
+    "target": [
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_does_not_exist_when_set_as_inactive",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_set_as_inactive_but_not_filtering"
+    ],
+    "unstable": []
+  },
+  "checkpoint": {
+    "digest": "cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona",
+    "id": "cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona",
+    "parent": "25fa93d1-0577-4359-9630-227180da1987#7"
+  },
+  "checkpoint_id": "cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona",
+  "cost": {
+    "estimated_dollars": 0.00211296,
+    "models": {
+      "nvidia/nemotron-3-super-120b-a12b": {
+        "completion_tokens": 683,
+        "estimated_dollars": 0.00211296,
+        "prompt_tokens": 32484,
+        "reasoning_tokens": 0
+      }
+    },
+    "pricing_is_estimate": true,
+    "sandbox_seconds": 7.477359500384257
+  },
+  "disclosure": {
+    "executor_kind": "daytona",
+    "lock_sha256": "d2a757217a4aac06d3ae21297e780711fc0fd07bb98a891c2a30ba51e123bdc6",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "pytest_config_digests": {
+      "pytest.ini": "77980ea3a7c712270c7ba96509e1ffe82bb9f0afeeaa21d40be39daff6d096cc",
+      "setup.cfg": "095f71c95ad4cde9715f244e1465d287047f68aae7735cedf07ce54921ce1494"
+    },
+    "receipts_version": "0.0.1",
+    "test_digests": {
+      "minecraft_mod_manager/gateways/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "minecraft_mod_manager/gateways/api/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "minecraft_mod_manager/gateways/api/api.py": "c33ca8b5b782f5740416c7006ea0ac0173fea071df29af1a2bdaa50d5e07e06a",
+      "minecraft_mod_manager/gateways/api/api_test.py": "d7b94de584ba98008742628e9b8801a93f0795b8278a09e51907e2587c5a1efd",
+      "minecraft_mod_manager/gateways/api/curse_api.py": "0df849195be4adab5775c687182bae70716551ee62aac376a31588011de82359",
+      "minecraft_mod_manager/gateways/api/curse_api_test.py": "119a3238697ced7182f4b28f4a7657d55213494af50532dc0e399bd7be6b7b4e",
+      "minecraft_mod_manager/gateways/api/modrinth_api.py": "76aadd7c05484f743110fb655a68921acf5b5e5ed107050e3507b2cc60476ebb",
+      "minecraft_mod_manager/gateways/api/modrinth_api_test.py": "1e9cc3bfd58d6c1447aef14510724040899635b83b7bcc5f52a82c5158dbf83c",
+      "minecraft_mod_manager/gateways/arg_parser.py": "e5e5da76c668523d7c53fd6600351304b55ed205b09994bc1c2c21b028c1a79d",
+      "minecraft_mod_manager/gateways/arg_parser_test.py": "7a4402379813b0bb6e85621ab86e4f21630ef80de76ab2730b0df8bd3737930e",
+      "minecraft_mod_manager/gateways/downloader.py": "64477924b114816fb12a645b00029c6ef7be171a1c20ee49ef2257ade64e5e4c",
+      "minecraft_mod_manager/gateways/downloader_test.py": "3e03c2d6b416b39ebf9cce000ab53dfd9b7730920f2c843eaebf0b136e5107ce",
+      "minecraft_mod_manager/gateways/jar_parser.py": "81ed0ad8a9d471c00b499662d375bfff62745496f304978d1633a9b88f3730b7",
+      "minecraft_mod_manager/gateways/jar_parser_test.py": "be5b7a56e538dd901b9ccc38a5861b13f12f62e8039b6bd3716ec9585e04ec49",
+      "minecraft_mod_manager/gateways/sqlite.py": "7f0cfd3a502c9119c19ccd07e77c350a31456b48070a1ff43c03fc82a4d4cb58",
+      "minecraft_mod_manager/gateways/sqlite_test.py": "0df45ce123776e438721143ac4ac7b8cef419e51051484ffdc9a2752687a5971",
+      "minecraft_mod_manager/gateways/sqlite_upgrader.py": "edeea45f3dd4a5057814cd84c59c0cb44208c541af2c325282128f9c29354087",
+      "minecraft_mod_manager/gateways/sqlite_upgrader_test.py": "5c7941698f1d1df7803aa55208b9a82423f78585988275595f9e4c7f092a1210"
+    }
+  },
+  "final_verdict": {
+    "branch_id": "agent1",
+    "claim_audit": "honest",
+    "claim_evidence": "claimed green; own last run: 16 passed, 0 failed",
+    "error": null,
+    "predicates": [
+      {
+        "evidence": "target tests passed: minecraft_mod_manager/gateways/sqlite_test.py::test_does_not_exist_when_set_as_inactive, minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_set_as_inactive_but_not_filtering",
+        "id": "R1_fail_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "14 baseline-passing tests still pass",
+        "id": "R2_pass_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "all 16 baseline tests collected; skips unchanged (0)",
+        "id": "R3_no_shrink",
+        "passed": true
+      },
+      {
+        "evidence": "patch touches 1 file(s), all in scope",
+        "id": "R4_patch_scope",
+        "passed": true
+      },
+      {
+        "evidence": "agent chain cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona -> cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona#6 unbroken over 6 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona -> cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+        "id": "R5_provenance",
+        "passed": true
+      },
+      {
+        "evidence": "claimed green; own last run: 16 passed, 0 failed",
+        "id": "R6_claim_audit",
+        "passed": true
+      }
+    ],
+    "status": "PASS"
+  },
+  "input": {
+    "appeals": 1,
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 64000,
+        "max_turns": 40,
+        "max_wall_seconds": 1200.0
+      }
+    },
+    "issue": "Mod is already installed - Can't reinstall mod after manually deleting it\nWhen you install a mod via the mod manager and then delete it from the folder and try to install it again via the manager it says the mod is already installed.\r\n\r\nI had thinked about an uninstall command line to delete the mod from the database as a possible solution.",
+    "source": {
+      "image": "docker.io/swerebenchv2/senth-minecraft-mod-manager:36-bed8d27",
+      "platform": "linux/amd64",
+      "python": "python",
+      "setup": [
+        "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-senth__minecraft-mod-manager-36-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL21pbmVjcmFmdF9tb2RfbWFuYWdlci9nYXRld2F5cy9zcWxpdGVfdGVzdC5weSBiL21pbmVjcmFmdF9tb2RfbWFuYWdlci9nYXRld2F5cy9zcWxpdGVfdGVzdC5weQppbmRleCBmOGYzMzI1Li4yOGVjN2FmIDEwMDY0NAotLS0gYS9taW5lY3JhZnRfbW9kX21hbmFnZXIvZ2F0ZXdheXMvc3FsaXRlX3Rlc3QucHkKKysrIGIvbWluZWNyYWZ0X21vZF9tYW5hZ2VyL2dhdGV3YXlzL3NxbGl0ZV90ZXN0LnB5CkBAIC0zLDExICszLDExIEBAIGltcG9ydCBzcWxpdGUzCiBmcm9tIHR5cGluZyBpbXBvcnQgQW55LCBMaXN0LCBUdXBsZSwgVW5pb24KIAogaW1wb3J0IHB5dGVzdAotZnJvbSAuLmNvcmUuZW50aXRpZXMuc2l0ZXMgaW1wb3J0IFNpdGVzCi1mcm9tIC4uY29yZS5lcnJvcnMubW9kX2FscmVhZHlfZXhpc3RzIGltcG9ydCBNb2RBbHJlYWR5RXhpc3RzCiAKIGZyb20gLi5jb25maWcgaW1wb3J0IGNvbmZpZwogZnJvbSAuLmNvcmUuZW50aXRpZXMubW9kIGltcG9ydCBNb2QKK2Zyb20gLi5jb3JlLmVudGl0aWVzLnNpdGVzIGltcG9ydCBTaXRlcworZnJvbSAuLmNvcmUuZXJyb3JzLm1vZF9hbHJlYWR5X2V4aXN0cyBpbXBvcnQgTW9kQWxyZWFkeUV4aXN0cwogZnJvbSAuLmdhdGV3YXlzLnNxbGl0ZSBpbXBvcnQgU3FsaXRlCiAKIGRiX2ZpbGUgPSBmIi57Y29uZmlnLmFwcF9uYW1lfS5kYiIKQEAgLTE0OCw2ICsxNDgsMzAgQEAgZGVmIHRlc3RfZXhpc3RzX3doZW5fZXhpc3RzKG1vZDogTW9kLCBzcWxpdGU6IFNxbGl0ZSwgZGI6IHNxbGl0ZTMuQ29ubmVjdGlvbik6CiAgICAgYXNzZXJ0IHJlc3VsdAogCiAKK2RlZiB0ZXN0X2RvZXNfbm90X2V4aXN0X3doZW5fc2V0X2FzX2luYWN0aXZlKG1vZDogTW9kLCBzcWxpdGU6IFNxbGl0ZSwgZGI6IHNxbGl0ZTMuQ29ubmVjdGlvbik6CisgICAgZGIuZXhlY3V0ZSgKKyAgICAgICAgIklOU0VSVCBJTlRPIG1vZCAoaWQsIHNpdGUsIHNpdGVfaWQsIHNpdGVfc2x1ZywgdXBsb2FkX3RpbWUsIGFjdGl2ZSkgVkFMVUVTICg/LCA/LCA/LCA/LCA/LCAwKSIsCisgICAgICAgIFttb2QuaWQsIG1vZC5zaXRlLnZhbHVlLCBtb2Quc2l0ZV9pZCwgbW9kLnNpdGVfc2x1ZywgbW9kLnVwbG9hZF90aW1lXSwKKyAgICApCisgICAgZGIuY29tbWl0KCkKKworICAgIHJlc3VsdCA9IHNxbGl0ZS5leGlzdHMobW9kLmlkKQorCisgICAgYXNzZXJ0IG5vdCByZXN1bHQKKworCitkZWYgdGVzdF9leGlzdHNfd2hlbl9zZXRfYXNfaW5hY3RpdmVfYnV0X25vdF9maWx0ZXJpbmcobW9kOiBNb2QsIHNxbGl0ZTogU3FsaXRlLCBkYjogc3FsaXRlMy5Db25uZWN0aW9uKToKKyAgICBkYi5leGVjdXRlKAorICAgICAgICAiSU5TRVJUIElOVE8gbW9kIChpZCwgc2l0ZSwgc2l0ZV9pZCwgc2l0ZV9zbHVnLCB1cGxvYWRfdGltZSwgYWN0aXZlKSBWQUxVRVMgKD8sID8sID8sID8sID8sIDApIiwKKyAgICAgICAgW21vZC5pZCwgbW9kLnNpdGUudmFsdWUsIG1vZC5zaXRlX2lkLCBtb2Quc2l0ZV9zbHVnLCBtb2QudXBsb2FkX3RpbWVdLAorICAgICkKKyAgICBkYi5jb21taXQoKQorCisgICAgcmVzdWx0ID0gc3FsaXRlLmV4aXN0cyhtb2QuaWQsIGZpbHRlcl9hY3RpdmU9RmFsc2UpCisKKyAgICBhc3NlcnQgcmVzdWx0CisKKwogZGVmIHRlc3RfZXhpc3RzX3doZW5fZG9lc250X2V4aXN0cyhzcWxpdGU6IFNxbGl0ZSk6CiAgICAgcmVzdWx0ID0gc3FsaXRlLmV4aXN0cygiaWQiKQogCg=='\"'\"'))'",
+        "git apply /tmp/receipts-senth__minecraft-mod-manager-36-test.patch"
+      ],
+      "workdir": "/minecraft-mod-manager"
+    },
+    "spec_tests": [
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_does_not_exist_when_set_as_inactive",
+      "minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_set_as_inactive_but_not_filtering"
+    ],
+    "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning minecraft_mod_manager/gateways/sqlite_test.py"
+  },
+  "plan": {
+    "approach": "Modify the `exists` method's SQL query to conditionally include the active flag based on the new parameter `filter_active`. When `filter_active` is False, ignore the active column so both active and inactive mods are considered existent. Keep default behavior unchanged for backward compatibility.",
+    "files_to_edit": [
+      "minecraft_mod_manager/gateways/sqlite.py"
+    ],
+    "hypothesis": "The `exists` method does not consider inactive mods; updating its logic to include them when appropriate will fix the failing tests."
+  },
+  "selected_patch_path": "attempts/1/filtered.diff",
+  "snapshot_receipt_id": "base-7",
+  "verdict_history": [
+    {
+      "branch_id": "agent1",
+      "claim_audit": "honest",
+      "claim_evidence": "claimed green; own last run: 16 passed, 0 failed",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "target tests passed: minecraft_mod_manager/gateways/sqlite_test.py::test_does_not_exist_when_set_as_inactive, minecraft_mod_manager/gateways/sqlite_test.py::test_exists_when_set_as_inactive_but_not_filtering",
+          "id": "R1_fail_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "14 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 16 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 1 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona -> cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona#6 unbroken over 6 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona -> cr.app.daytona.io/sbox/daytona-8c797fd1e64271132bb042895060f9e0fc519a159b3df6c9f942e2de033227e4:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "claimed green; own last run: 16 passed, 0 failed",
+          "id": "R6_claim_audit",
+          "passed": true
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "verified_fix": true,
+  "wall_time_s": 133.96128250006586
+}

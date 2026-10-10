@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "benchopt autocomplete for file now outputs the full file path\nexample:\r\n\r\n\r\n![image](https://user-images.githubusercontent.com/8993218/170273526-90f9dd8b-9fd9-4f2b-a0a5-8f994d7f6089.png)\r\n\r\n\r\nI find it a bit long, before it was just the relative file path and that was friendlier to me",
+  "source": {
+    "image": "docker.io/swerebenchv2/benchopt-benchopt:414-b9db0e6",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-benchopt__benchopt-414-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2JlbmNob3B0L3Rlc3RzL3Rlc3RfY2xpLnB5IGIvYmVuY2hvcHQvdGVzdHMvdGVzdF9jbGkucHkKaW5kZXggYzk5ZDE5OS4uYmJkZjQ5NyAxMDA2NDQKLS0tIGEvYmVuY2hvcHQvdGVzdHMvdGVzdF9jbGkucHkKKysrIGIvYmVuY2hvcHQvdGVzdHMvdGVzdF9jbGkucHkKQEAgLTQxOSw2ICs0MTksNyBAQCBjbGFzcyBUZXN0UGxvdENtZDoKICAgICAgICAgYXNzZXJ0IGxlbihyZXN1bHRfZmlsZXMpID09IDEsIG91dC5vdXRwdXQKICAgICAgICAgcmVzdWx0X2ZpbGUgPSByZXN1bHRfZmlsZXNbMF0KICAgICAgICAgY2xzLnJlc3VsdF9maWxlID0gcmVzdWx0X2ZpbGUKKyAgICAgICAgY2xzLnJlc3VsdF9maWxlID0gc3RyKFBhdGgocmVzdWx0X2ZpbGUpLnJlbGF0aXZlX3RvKFBhdGgoKS5yZXNvbHZlKCkpKQogCiAgICAgQGNsYXNzbWV0aG9kCiAgICAgZGVmIHRlYXJkb3duX2NsYXNzKGNscyk6Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-benchopt__benchopt-414-test.patch"
+    ],
+    "workdir": "/benchopt"
+  },
+  "spec_tests": [
+    "benchopt/tests/test_cli.py::TestPlotCmd::test_shell_complete"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning benchopt/tests/test_cli.py"
+}

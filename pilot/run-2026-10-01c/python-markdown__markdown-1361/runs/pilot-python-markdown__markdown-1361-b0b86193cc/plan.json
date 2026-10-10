@@ -1,0 +1,7 @@
+{
+  "approach": "Replace direct use of `stashedHTML2text` with explicit handling via `unescape()` to correctly process numeric character references like \\[foo]. The regression arose because the function now improperly decodes placeholders instead of escaping them.",
+  "files_to_edit": [
+    "markdown/extensions/toc.py"
+  ],
+  "hypothesis": "Fix applied to `markdown/extensions/toc.py`, modifying how character references are handled during TOCToken generation."
+}

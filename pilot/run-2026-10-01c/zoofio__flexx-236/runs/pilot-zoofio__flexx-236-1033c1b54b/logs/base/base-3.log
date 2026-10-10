@@ -1,0 +1,36 @@
+============================= test session starts ==============================
+collected 11 items
+
+flexx/app/tests/test_model.py ...F....F..                                [100%]Exception ignored in: <function HasEvents.__del__ at 0x73ce8cb51710>
+Traceback (most recent call last):
+  File "/flexx/flexx/event/_hasevents.py", line 192, in __del__
+    self.dispose()
+  File "/flexx/flexx/app/model.py", line 448, in dispose
+    if self.session.status:
+AttributeError: 'int' object has no attribute 'status'
+
+
+=================================== FAILURES ===================================
+/flexx/flexx/app/model.py:356: AttributeError: 'int' object has no attribute 'register_model_class'
+/usr/local/lib/python3.7/site-packages/tornado/util.py:276: TypeError: initialize() got an unexpected keyword argument 'io_loop'
+==================================== PASSES ====================================
+___________________________ test_get_instance_by_id ____________________________
+----------------------------- Captured stderr call -----------------------------
+[W 23:38:25 flexx.app] Model instance 'blaaaa' does not exist in Python (anymore).
+____________________________ test_can_emit_in_init _____________________________
+----------------------------- Captured stderr call -----------------------------
+[W 23:38:25 flexx.event] Event type "foo" does not exist on EmitInInit4. Use "!foo" to suppress this warning.
+------------- generated xml file: /opt/receipts/reports/base-3.xml -------------
+=========================== short test summary info ============================
+PASSED flexx/app/tests/test_model.py::test_pairing1
+PASSED flexx/app/tests/test_model.py::test_no_clashes
+PASSED flexx/app/tests/test_model.py::test_overloading
+PASSED flexx/app/tests/test_model.py::test_both
+PASSED flexx/app/tests/test_model.py::test_emitters_in_JS
+PASSED flexx/app/tests/test_model.py::test_no_duplicate_code
+PASSED flexx/app/tests/test_model.py::test_get_instance_by_id
+PASSED flexx/app/tests/test_model.py::test_can_emit_in_init
+PASSED flexx/app/tests/test_model.py::test_keep_alive
+FAILED flexx/app/tests/test_model.py::test_init_args - AttributeError: 'int' ...
+FAILED flexx/app/tests/test_model.py::test_active_models - TypeError: initial...
+========================= 2 failed, 9 passed in 0.23s ==========================

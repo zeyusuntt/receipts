@@ -1,0 +1,168 @@
+diff --git a/debug_barrier.py b/debug_barrier.py
+new file mode 100644
+index 000000000..a650cacf0
+--- /dev/null
++++ b/debug_barrier.py
+@@ -0,0 +1,14 @@
++from qiskit.circuit import QuantumCircuit
++
++# Test with barriers (should not increase depth by default)
++qc2 = QuantumCircuit(2)
++qc2.h(0)
++qc2.barrier(0, 1)
++qc2.cx(0, 1)
++print("Instructions:")
++for i, inst in enumerate(qc2._data):
++    print(f"  {i}: {inst.operation.name} {inst.qubits}")
++    print(f"      _directive: {getattr(inst.operation, '_directive', 'N/A')}")
++
++print(f"Depth (default filter): {qc2.depth()}")
++print(f"Depth (count all): {qc2.depth(lambda x: True)}")
+\ No newline at end of file
+diff --git a/qiskit/circuit/quantumcircuit.py b/qiskit/circuit/quantumcircuit.py
+index a157f0437..69d2fe14c 100644
+--- a/qiskit/circuit/quantumcircuit.py
++++ b/qiskit/circuit/quantumcircuit.py
+@@ -3370,17 +3370,28 @@ class QuantumCircuit:
+             if getattr(instruction.operation, "condition", None):
+                 # Controls operate over all bits of a classical register
+                 # or over a single bit
+-                if isinstance(instruction.operation.condition[0], Clbit):
+-                    condition_bits = [instruction.operation.condition[0]]
++                if hasattr(instruction.operation.condition[0], '__getitem__'):
++                    # Traditional condition with register/bit
++                    if isinstance(instruction.operation.condition[0], Clbit):
++                        condition_bits = [instruction.operation.condition[0]]
++                    else:
++                        condition_bits = instruction.operation.condition[0]
+                 else:
+-                    condition_bits = instruction.operation.condition[0]
++                    # New-style condition with Expr - treat as single bit for depth purposes
++                    condition_bits = [instruction.operation.condition[0]] if hasattr(instruction.operation.condition[0], 'index') else []
+                 for cbit in condition_bits:
+-                    idx = bit_indices[cbit]
+-                    if idx not in reg_ints:
+-                        reg_ints.append(idx)
+-                        levels.append(op_stack[idx] + 1)
+-
+-            max_level = max(levels)
++                    if hasattr(cbit, 'index'):
++                        idx = bit_indices[cbit]
++                        if idx not in reg_ints:
++                            reg_ints.append(idx)
++                            levels.append(op_stack[idx] + 1)
++
++            # Handle instructions that operate on no qubits or clbits (e.g., GlobalPhaseGate)
++            # Handle edge case where instruction acts on no qubits/clbits (e.g., GlobalPhaseGate)
++            if not levels:
++                max_level = 1 if filter_function(instruction) else 0
++            else:
++                max_level = max(levels)
+             for ind in reg_ints:
+                 op_stack[ind] = max_level
+ 
+diff --git a/test_basic_depth.py b/test_basic_depth.py
+new file mode 100644
+index 000000000..0a9d550ac
+--- /dev/null
++++ b/test_basic_depth.py
+@@ -0,0 +1,29 @@
++from qiskit.circuit import QuantumCircuit
++
++# Test basic depth calculation
++qc = QuantumCircuit(4)
++qc.h(0)
++qc.cx(0, 1)
++qc.h(2)
++qc.cx(2, 3)
++assert qc.depth() == 2
++print("Basic depth test passed")
++
++# Test with barriers (should not increase depth by default)
++qc2 = QuantumCircuit(2)
++qc2.h(0)
++qc2.barrier(0, 1)
++qc2.cx(0, 1)
++assert qc2.depth() == 1  # Barrier filtered out by default
++print("Barrier depth test passed")
++
++# Test with barrier counted
++assert qc2.depth(lambda x: True) == 2  # Count everything
++print("Barrier counted depth test passed")
++
++# Test empty circuit
++qc3 = QuantumCircuit(1)
++assert qc3.depth() == 0
++print("Empty circuit depth test passed")
++
++print("All basic tests passed!")
+\ No newline at end of file
+diff --git a/test_basic_depth_fixed.py b/test_basic_depth_fixed.py
+new file mode 100644
+index 000000000..fd21401d0
+--- /dev/null
++++ b/test_basic_depth_fixed.py
+@@ -0,0 +1,37 @@
++from qiskit.circuit import QuantumCircuit
++
++# Test basic depth calculation
++qc = QuantumCircuit(4)
++qc.h(0)
++qc.cx(0, 1)
++qc.h(2)
++qc.cx(2, 3)
++assert qc.depth() == 2
++print("Basic depth test passed")
++
++# Test with barriers (should not increase depth by default)
++qc2 = QuantumCircuit(2)
++qc2.h(0)
++qc2.barrier(0, 1)
++qc2.cx(0, 1)
++assert qc2.depth() == 2  # Barrier takes time but doesn't add level
++print("Barrier depth test passed")
++
++# Test with barrier counted
++assert qc2.depth(lambda x: True) == 3  # Count everything
++print("Barrier counted depth test passed")
++
++# Test empty circuit
++qc3 = QuantumCircuit(1)
++assert qc3.depth() == 0
++print("Empty circuit depth test passed")
++
++# Test GlobalPhaseGate
++from qiskit.circuit.library import GlobalPhaseGate
++qc4 = QuantumCircuit(1)
++qc4.h(0)
++qc4.append(GlobalPhaseGate(1.5), [], [])
++assert qc4.depth() == 1  # Global phase should not increase depth
++print("GlobalPhaseGate depth test passed")
++
++print("All basic tests passed!")
+\ No newline at end of file
+diff --git a/test_fix.py b/test_fix.py
+new file mode 100644
+index 000000000..287354d1b
+--- /dev/null
++++ b/test_fix.py
+@@ -0,0 +1,18 @@
++from qiskit import QuantumCircuit, transpile
++from qiskit.circuit.library import GlobalPhaseGate
++
++
++qc_qiskit = QuantumCircuit(2, 2)
++
++qc_qiskit.cx(0, 1)
++
++transpiled_qc = transpile(qc_qiskit,
++                          basis_gates=['u3', 'cx'],
++                          optimization_level=3,
++                          seed_transpiler=0)
++
++transpiled_qc.append(GlobalPhaseGate(2.5928519981876477), [], [])
++
++print("Global phase:", transpiled_qc.global_phase)
++print("Depth:", transpiled_qc.depth())
++print("Success!")
+\ No newline at end of file

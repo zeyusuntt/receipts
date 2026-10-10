@@ -1,0 +1,7 @@
+{
+  "approach": "Modify the `exists` method's SQL query to conditionally include the active flag based on the new parameter `filter_active`. When `filter_active` is False, ignore the active column so both active and inactive mods are considered existent. Keep default behavior unchanged for backward compatibility.",
+  "files_to_edit": [
+    "minecraft_mod_manager/gateways/sqlite.py"
+  ],
+  "hypothesis": "The `exists` method does not consider inactive mods; updating its logic to include them when appropriate will fix the failing tests."
+}

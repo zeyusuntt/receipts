@@ -1,0 +1,54 @@
+diff --git a/flexx/app/model.py b/flexx/app/model.py
+index 92806c9..c3a330c 100644
+--- a/flexx/app/model.py
++++ b/flexx/app/model.py
+@@ -331,11 +331,30 @@ class Model(with_metaclass(ModelMeta, event.HasEvents)):
+     # CSS for this class (no css in the base class)
+     CSS = ""
+     
+-    def __init__(self, session=None, is_app=False, **kwargs):
++    def __init__(self, session=None, is_app=False, *args, **kwargs):
+         
+         # Param "is_app" is not used, but we "take" the argument so it
+         # is not mistaken for a property value.
+         
++        # If the first positional argument looks like a session but isn't,
++        # treat it as an init argument instead (allows Model(1,2) to work).
++        from .session import Session
++        if not (session is None or isinstance(session, Session)):
++            # Shift session and is_app into args
++            args = (session, is_app) + args
++            session = None
++            is_app = False
++        
++        # Separate known property kwargs from those intended for init()
++        prop_names = set(getattr(self.__class__, '__properties__', []))
++        known_kwargs = {k: v for k, v in kwargs.items() if k in prop_names}
++        init_kwargs = {k: v for k, v in kwargs.items() if k not in prop_names}
++        self._init_args = args
++        self._init_kwargs = init_kwargs
++        
++        # Merge known property kwargs for HasEvents init
++        super_init_kwargs = known_kwargs
++        
+         # Set id and register this instance
+         Model._counter += 1
+         self._id = self.__class__.__name__ + str(Model._counter)
+@@ -384,7 +403,7 @@ class Model(with_metaclass(ModelMeta, event.HasEvents)):
+         # Init HasEvents, but delay initialization of handlers
+         # We init after producing the JS command to create the corresponding
+         # object, so that subsequent commands work ok
+-        super().__init__(_init_handlers=False, **kwargs)
++        super().__init__(_init_handlers=False, **super_init_kwargs)
+         
+         # Make JS-side events known
+         for name in known_event_types_js:
+@@ -394,7 +413,7 @@ class Model(with_metaclass(ModelMeta, event.HasEvents)):
+         # subwidgets etc. This is done here, at the point where the
+         # properties are initialized, but the handlers not yet.
+         with self:
+-            self.init()
++            self.init(*self._init_args, **self._init_kwargs)
+         self._session._exec('flexx.instances.%s.init();' % self._id)
+         
+         # Initialize handlers for Python and for JS. Done after init()

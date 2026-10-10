@@ -1,0 +1,7 @@
+{
+  "approach": "Modify the `known_op_rhs` method in `optimade/filtertransformers/mongo.py` to return a query that checks both existence (`$exists: true`) and non-nullness (`$ne: null`) for `IS KNOWN`, and existence with possible null (`$exists: true`) for `IS UNKNOWN`. This aligns with the OPTIMADE spec requiring that a known property must exist and not be null.",
+  "files_to_edit": [
+    "optimade/filtertransformers/mongo.py"
+  ],
+  "hypothesis": "The MongoTransformer's `known_op_rhs` method incorrectly maps `IS KNOWN` to `$exists: true` instead of checking both existence and non-nullness via `$exists: true` and `$ne: null`, causing the test failure."
+}

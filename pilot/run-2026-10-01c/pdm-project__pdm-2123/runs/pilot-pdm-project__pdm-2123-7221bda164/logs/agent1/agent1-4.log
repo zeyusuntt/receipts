@@ -1,0 +1,1577 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0
+rootdir: /pdm
+configfile: pyproject.toml
+testpaths: tests/
+plugins: anyio-4.12.1, cov-7.0.0, pytest_httpserver-1.1.5, mock-3.15.1, xdist-3.8.0
+collected 675 items / 636 deselected / 39 selected
+
+tests/cli/test_add.py ..                                                 [  5%]
+tests/cli/test_hooks.py ...............                                  [ 43%]
+tests/cli/test_install.py .....                                          [ 56%]
+tests/cli/test_lock.py .............                                     [ 89%]
+tests/cli/test_remove.py .                                               [ 92%]
+tests/cli/test_update.py ..                                              [ 97%]
+tests/test_signals.py .                                                  [100%]
+
+=============================== warnings summary ===============================
+tests/test_integration.py:25
+  /pdm/tests/test_integration.py:25: PytestUnknownMarkWarning: Unknown pytest.mark.flaky - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flaky(reruns=3)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+__________________________ test_add_group_to_lockfile __________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+---------------------------- Captured stderr setup -----------------------------
+python.use_venv is on, creating a virtualenv for this project...
+Virtualenv is created successfully at /tmp/pytest-of-root/pytest-3/pdm-test-env0/.venv
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_add_group_to_lockfile0 is a local directory, use it directly
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests>=2.19.1
+INFO     pdm.termui:reporters.py:37   pytz
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests>=2.19.1
+INFO     pdm.termui:reporters.py:72   Adding requirement pytz
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pytz 2019.3
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 7 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60       pytz 2019.3
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+__________________ test_add_group_to_lockfile_without_package __________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_add_group_to_lockfile_wit0 is a local directory, use it directly
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   pytz
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement pytz
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pytz 2019.3
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 7 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60       pytz 2019.3
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+_______________________________ test_hooks[lock] _______________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+__________________ test_skip_option_from_signal[add-pre_lock] __________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_skip_option_from_signal_a0 is a local directory, use it directly
+_________________ test_skip_option_from_signal[add-post_lock] __________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_skip_option_from_signal_a1 is a local directory, use it directly
+________________ test_skip_option_from_signal[install-pre_lock] ________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_skip_option_from_signal_i0 is a local directory, use it directly
+_______________ test_skip_option_from_signal[install-post_lock] ________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_skip_option_from_signal_i1 is a local directory, use it directly
+_________________ test_skip_option_from_signal[lock-pre_lock] __________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+_________________ test_skip_option_from_signal[lock-post_lock] _________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+________________ test_skip_option_from_signal[remove-pre_lock] _________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log setup ------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_skip_option_from_signal_r0 is a local directory, use it directly
+________________ test_skip_option_from_signal[remove-post_lock] ________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log setup ------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_skip_option_from_signal_r1 is a local directory, use it directly
+________________ test_skip_option_from_signal[update-pre_lock] _________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_skip_option_from_signal_u0 is a local directory, use it directly
+________________ test_skip_option_from_signal[update-post_lock] ________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_skip_option_from_signal_u1 is a local directory, use it directly
+_________________ test_skip_all_option_from_signal[:all-lock] __________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+______________ test_skip_all_option_from_signal[:pre,:post-lock] _______________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+_______________ test_skip_pre_post_option_from_signal[pre-lock] ________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+_______________ test_skip_pre_post_option_from_signal[post-lock] _______________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+____________________________ test_sync_no_lockfile _____________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+__________________________ test_install_with_lockfile __________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_install_with_lockfile0 is a local directory, use it directly
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   pytz
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement pytz
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pytz 2019.3
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     pdm.termui:reporters.py:60     pytz 2019.3
+_____________________ test_install_groups_not_in_lockfile ______________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_install_groups_not_in_loc0 is a local directory, use it directly
+__________________________ test_install_locked_groups __________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   pytz
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement pytz
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pytz 2019.3
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     pdm.termui:reporters.py:60     pytz 2019.3
+_________________________ test_install_groups_and_lock _________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   pytz
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement pytz
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pytz 2019.3
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+INFO     pdm.termui:reporters.py:60     pytz 2019.3
+______________________________ test_lock_command _______________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+____________________________ test_lock_dependencies ____________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+🔒 Lock successful
+Changes are written to pdm.lock.
+----------------------------- Captured stderr call -----------------------------
+STATUS: Resolving dependencies
+STATUS: Resolving: new pin python>=3.7
+STATUS: Resolving: new pin requests 2.19.1
+STATUS: Resolving: new pin chardet 3.0.4
+STATUS: Resolving: new pin idna 2.7
+STATUS: Resolving: new pin urllib3 1.22
+STATUS: Resolving: new pin certifi 2018.11.17
+STATUS: Fetching hashes for resolved packages...
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+______________________________ test_lock_refresh _______________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+______________________ test_lock_refresh_keep_consistent _______________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+______________________ test_lock_check_no_change_success _______________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+_________________________ test_lock_check_change_fails _________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+___________________ test_innovations_with_specified_lockfile ___________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_innovations_with_specifie0 is a local directory, use it directly
+_________________ test_skip_editable_dependencies_in_metadata __________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60   python None
+__________________________ test_lock_selected_groups ___________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+___________________ test_lock_self_referencing_groups[False] ___________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   pytz
+INFO     pdm.termui:reporters.py:37   test-project[http]
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement pytz
+INFO     pdm.termui:reporters.py:72   Adding requirement test-project[http]
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_lock_self_referencing_gro0 is a local directory, use it directly
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pytz 2019.3
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement requests(from test-project 0.0.0)
+INFO     pdm.termui:reporters.py:72   Adding requirement test-project==0.0.0(from test-project 0.0.0)
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_lock_self_referencing_gro0 is a local directory, use it directly
+INFO     pdm.termui:reporters.py:87 Pinning: test-project 0.0.0
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: test-project 0.0.0
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 7 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 7 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 8 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 8 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 9 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60               python None
+INFO     pdm.termui:reporters.py:60                 pytz 2019.3
+INFO     pdm.termui:reporters.py:60   test-project[http] 0.0.0
+INFO     pdm.termui:reporters.py:60         test-project 0.0.0
+INFO     pdm.termui:reporters.py:60             requests 2.19.1
+INFO     pdm.termui:reporters.py:60              chardet 3.0.4
+INFO     pdm.termui:reporters.py:60                 idna 2.7
+INFO     pdm.termui:reporters.py:60              urllib3 1.22
+INFO     pdm.termui:reporters.py:60              certifi 2018.11.17
+___________________ test_lock_self_referencing_groups[True] ____________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   pytz
+INFO     pdm.termui:reporters.py:37   test-project[http]
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement pytz
+INFO     pdm.termui:reporters.py:72   Adding requirement test-project[http]
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_lock_self_referencing_gro1 is a local directory, use it directly
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pytz 2019.3
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement requests(from test-project 0.0.0)
+INFO     pdm.termui:reporters.py:72   Adding requirement test-project==0.0.0(from test-project 0.0.0)
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_lock_self_referencing_gro1 is a local directory, use it directly
+INFO     pdm.termui:reporters.py:87 Pinning: test-project 0.0.0
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: test-project 0.0.0
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 7 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 7 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 8 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 8 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 9 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60               python None
+INFO     pdm.termui:reporters.py:60                 pytz 2019.3
+INFO     pdm.termui:reporters.py:60   test-project[http] 0.0.0
+INFO     pdm.termui:reporters.py:60         test-project 0.0.0
+INFO     pdm.termui:reporters.py:60             requests 2.19.1
+INFO     pdm.termui:reporters.py:60              chardet 3.0.4
+INFO     pdm.termui:reporters.py:60                 idna 2.7
+INFO     pdm.termui:reporters.py:60              urllib3 1.22
+INFO     pdm.termui:reporters.py:60              certifi 2018.11.17
+______________________ test_lock_multiple_platform_wheels ______________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   pdm-hello
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement pdm-hello
+DEBUG    unearth.collector:collector.py:162 Collecting links from https://pypi.org/simple/pdm-hello/
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link https://pypi.org/simple/pdm-hello/ (from None)>: Not a file: 
+DEBUG    unearth.collector:collector.py:198 Fetching HTML page https://pypi.org/simple/pdm-hello/
+DEBUG    unearth.collector:collector.py:162 Collecting links from file:///pdm/tests/fixtures/artifacts
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/PyFunctional-1.4.3-py3-none-any.whl (from None)>: The package name doesn't match pyfunctional
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/caj2pdf-restructured-0.1.0a6.tar.gz (from None)>: The package name doesn't match caj2pdf-restructured-0.1.0a6, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/celery-4.4.2-py2.py3-none-any.whl (from None)>: The package name doesn't match celery
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1-cp36-cp36m-win_amd64.whl (from None)>: The package name doesn't match demo
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1-py2.py3-none-any.whl (from None)>: The package name doesn't match demo
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1.tar.gz (from None)>: The package name doesn't match demo-0.0.1, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1.zip (from None)>: The package name doesn't match demo-0.0.1, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/editables-0.2-py3-none-any.whl (from None)>: The package name doesn't match editables
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/first-2.0.2-py2.py3-none-any.whl (from None)>: The package name doesn't match first
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/flit_core-3.6.0-py3-none-any.whl (from None)>: The package name doesn't match flit-core
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl (from None)>: The package name doesn't match future-fstrings
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/future_fstrings-1.2.0.tar.gz (from None)>: The package name doesn't match future_fstrings-1.2.0, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/importlib_metadata-4.8.3-py3-none-any.whl (from None)>: The package name doesn't match importlib-metadata
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/jmespath-0.10.0-py2.py3-none-any.whl (from None)>: The package name doesn't match jmespath
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_backend-2.1.4-py3-none-any.whl (from None)>: The package name doesn't match pdm-backend
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_pep517-1.0.0-py3-none-any.whl (from None)>: The package name doesn't match pdm-pep517
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/poetry_core-1.3.2-py3-none-any.whl (from None)>: The package name doesn't match poetry-core
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/setuptools-65.4.1-py3-none-any.whl (from None)>: The package name doesn't match setuptools
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/typing_extensions-4.4.0-py3-none-any.whl (from None)>: The package name doesn't match typing-extensions
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/wheel-0.37.1-py2.py3-none-any.whl (from None)>: The package name doesn't match wheel
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/zipp-3.7.0-py3-none-any.whl (from None)>: The package name doesn't match zipp
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pdm-hello 0.1.0
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60      python None
+INFO     pdm.termui:reporters.py:60   pdm-hello 0.1.0
+DEBUG    unearth.collector:collector.py:162 Collecting links from https://pypi.org/simple/pdm-hello/
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link https://pypi.org/simple/pdm-hello/ (from None)>: Not a file: 
+DEBUG    unearth.collector:collector.py:198 Fetching HTML page https://pypi.org/simple/pdm-hello/ (from cache)
+DEBUG    unearth.collector:collector.py:162 Collecting links from file:///pdm/tests/fixtures/artifacts
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/PyFunctional-1.4.3-py3-none-any.whl (from None)>: The package name doesn't match pyfunctional
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/caj2pdf-restructured-0.1.0a6.tar.gz (from None)>: The package name doesn't match caj2pdf-restructured-0.1.0a6, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/celery-4.4.2-py2.py3-none-any.whl (from None)>: The package name doesn't match celery
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1-cp36-cp36m-win_amd64.whl (from None)>: The package name doesn't match demo
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1-py2.py3-none-any.whl (from None)>: The package name doesn't match demo
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1.tar.gz (from None)>: The package name doesn't match demo-0.0.1, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1.zip (from None)>: The package name doesn't match demo-0.0.1, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/editables-0.2-py3-none-any.whl (from None)>: The package name doesn't match editables
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/first-2.0.2-py2.py3-none-any.whl (from None)>: The package name doesn't match first
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/flit_core-3.6.0-py3-none-any.whl (from None)>: The package name doesn't match flit-core
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl (from None)>: The package name doesn't match future-fstrings
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/future_fstrings-1.2.0.tar.gz (from None)>: The package name doesn't match future_fstrings-1.2.0, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/importlib_metadata-4.8.3-py3-none-any.whl (from None)>: The package name doesn't match importlib-metadata
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/jmespath-0.10.0-py2.py3-none-any.whl (from None)>: The package name doesn't match jmespath
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_backend-2.1.4-py3-none-any.whl (from None)>: The package name doesn't match pdm-backend
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_pep517-1.0.0-py3-none-any.whl (from None)>: The package name doesn't match pdm-pep517
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/poetry_core-1.3.2-py3-none-any.whl (from None)>: The package name doesn't match poetry-core
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/setuptools-65.4.1-py3-none-any.whl (from None)>: The package name doesn't match setuptools
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/typing_extensions-4.4.0-py3-none-any.whl (from None)>: The package name doesn't match typing-extensions
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/wheel-0.37.1-py2.py3-none-any.whl (from None)>: The package name doesn't match wheel
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/zipp-3.7.0-py3-none-any.whl (from None)>: The package name doesn't match zipp
+DEBUG    unearth.evaluator:evaluator.py:309 Skipping package Package(name='pdm-hello', version='0.0.1'): version doesn't match ==0.1.0
+DEBUG    unearth.evaluator:evaluator.py:309 Skipping package Package(name='pdm-hello', version='0.0.1'): version doesn't match ==0.1.0
+INFO     pdm.termui:repositories.py:316 Fetching hashes for pdm-hello@0.1.0
+DEBUG    pdm.termui:caches.py:140 Downloading link file:///pdm/tests/fixtures/artifacts/pdm_hello-0.1.0-py3-none-any.whl for calculating hash
+DEBUG    pdm.termui:caches.py:140 Downloading link file:///pdm/tests/fixtures/artifacts/pdm_hello-0.1.0-py3-none-win_amd64.whl for calculating hash
+______________________ test_lock_current_platform_wheels _______________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   pdm-hello
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement pdm-hello
+DEBUG    unearth.collector:collector.py:162 Collecting links from https://pypi.org/simple/pdm-hello/
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link https://pypi.org/simple/pdm-hello/ (from None)>: Not a file: 
+DEBUG    unearth.collector:collector.py:198 Fetching HTML page https://pypi.org/simple/pdm-hello/
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link https://files.pythonhosted.org/packages/3a/c3/ac4c71f9fe5e1410c7e8c7502f1f404aea3f25aef8631149a3ad7aaf2bc9/pdm_hello-0.0.1-py3-none-any.whl (from https://pypi.org/simple/pdm-hello/)>: The target python version(3.10.19) doesn't match the requires-python specifier >=3.12
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link https://files.pythonhosted.org/packages/c2/68/53c0e481f602a11faa7817442ecc67f05bcc21990d31a8288aabfe049784/pdm_hello-0.0.1.tar.gz (from https://pypi.org/simple/pdm-hello/)>: The target python version(3.10.19) doesn't match the requires-python specifier >=3.12
+DEBUG    unearth.collector:collector.py:162 Collecting links from file:///pdm/tests/fixtures/artifacts
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/PyFunctional-1.4.3-py3-none-any.whl (from None)>: The package name doesn't match pyfunctional
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/caj2pdf-restructured-0.1.0a6.tar.gz (from None)>: The package name doesn't match caj2pdf-restructured-0.1.0a6, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/celery-4.4.2-py2.py3-none-any.whl (from None)>: The package name doesn't match celery
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1-cp36-cp36m-win_amd64.whl (from None)>: The package name doesn't match demo
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1-py2.py3-none-any.whl (from None)>: The package name doesn't match demo
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1.tar.gz (from None)>: The package name doesn't match demo-0.0.1, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1.zip (from None)>: The package name doesn't match demo-0.0.1, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/editables-0.2-py3-none-any.whl (from None)>: The package name doesn't match editables
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/first-2.0.2-py2.py3-none-any.whl (from None)>: The package name doesn't match first
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/flit_core-3.6.0-py3-none-any.whl (from None)>: The package name doesn't match flit-core
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl (from None)>: The package name doesn't match future-fstrings
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/future_fstrings-1.2.0.tar.gz (from None)>: The package name doesn't match future_fstrings-1.2.0, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/importlib_metadata-4.8.3-py3-none-any.whl (from None)>: The package name doesn't match importlib-metadata
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/jmespath-0.10.0-py2.py3-none-any.whl (from None)>: The package name doesn't match jmespath
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_backend-2.1.4-py3-none-any.whl (from None)>: The package name doesn't match pdm-backend
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_hello-0.1.0-py3-none-win_amd64.whl (from None)>: The wheel tags in pdm_hello-0.1.0-py3-none-win_amd64.whl are not compatible
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_pep517-1.0.0-py3-none-any.whl (from None)>: The package name doesn't match pdm-pep517
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/poetry_core-1.3.2-py3-none-any.whl (from None)>: The package name doesn't match poetry-core
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/setuptools-65.4.1-py3-none-any.whl (from None)>: The package name doesn't match setuptools
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/typing_extensions-4.4.0-py3-none-any.whl (from None)>: The package name doesn't match typing-extensions
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/wheel-0.37.1-py2.py3-none-any.whl (from None)>: The package name doesn't match wheel
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/zipp-3.7.0-py3-none-any.whl (from None)>: The package name doesn't match zipp
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: pdm-hello 0.1.0
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60      python None
+INFO     pdm.termui:reporters.py:60   pdm-hello 0.1.0
+DEBUG    unearth.collector:collector.py:162 Collecting links from https://pypi.org/simple/pdm-hello/
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link https://pypi.org/simple/pdm-hello/ (from None)>: Not a file: 
+DEBUG    unearth.collector:collector.py:198 Fetching HTML page https://pypi.org/simple/pdm-hello/ (from cache)
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link https://files.pythonhosted.org/packages/3a/c3/ac4c71f9fe5e1410c7e8c7502f1f404aea3f25aef8631149a3ad7aaf2bc9/pdm_hello-0.0.1-py3-none-any.whl (from https://pypi.org/simple/pdm-hello/)>: The target python version(3.10.19) doesn't match the requires-python specifier >=3.12
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link https://files.pythonhosted.org/packages/c2/68/53c0e481f602a11faa7817442ecc67f05bcc21990d31a8288aabfe049784/pdm_hello-0.0.1.tar.gz (from https://pypi.org/simple/pdm-hello/)>: The target python version(3.10.19) doesn't match the requires-python specifier >=3.12
+DEBUG    unearth.collector:collector.py:162 Collecting links from file:///pdm/tests/fixtures/artifacts
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/PyFunctional-1.4.3-py3-none-any.whl (from None)>: The package name doesn't match pyfunctional
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/caj2pdf-restructured-0.1.0a6.tar.gz (from None)>: The package name doesn't match caj2pdf-restructured-0.1.0a6, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/celery-4.4.2-py2.py3-none-any.whl (from None)>: The package name doesn't match celery
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1-cp36-cp36m-win_amd64.whl (from None)>: The package name doesn't match demo
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1-py2.py3-none-any.whl (from None)>: The package name doesn't match demo
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1.tar.gz (from None)>: The package name doesn't match demo-0.0.1, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/demo-0.0.1.zip (from None)>: The package name doesn't match demo-0.0.1, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/editables-0.2-py3-none-any.whl (from None)>: The package name doesn't match editables
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/first-2.0.2-py2.py3-none-any.whl (from None)>: The package name doesn't match first
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/flit_core-3.6.0-py3-none-any.whl (from None)>: The package name doesn't match flit-core
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl (from None)>: The package name doesn't match future-fstrings
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/future_fstrings-1.2.0.tar.gz (from None)>: The package name doesn't match future_fstrings-1.2.0, set env var UNEARTH_LOOSE_FILENAME=1 to allow legacy filename.
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/importlib_metadata-4.8.3-py3-none-any.whl (from None)>: The package name doesn't match importlib-metadata
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/jmespath-0.10.0-py2.py3-none-any.whl (from None)>: The package name doesn't match jmespath
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_backend-2.1.4-py3-none-any.whl (from None)>: The package name doesn't match pdm-backend
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_hello-0.1.0-py3-none-win_amd64.whl (from None)>: The wheel tags in pdm_hello-0.1.0-py3-none-win_amd64.whl are not compatible
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/pdm_pep517-1.0.0-py3-none-any.whl (from None)>: The package name doesn't match pdm-pep517
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/poetry_core-1.3.2-py3-none-any.whl (from None)>: The package name doesn't match poetry-core
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/setuptools-65.4.1-py3-none-any.whl (from None)>: The package name doesn't match setuptools
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/typing_extensions-4.4.0-py3-none-any.whl (from None)>: The package name doesn't match typing-extensions
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/wheel-0.37.1-py2.py3-none-any.whl (from None)>: The package name doesn't match wheel
+DEBUG    unearth.evaluator:evaluator.py:279 Skipping link <Link file:///pdm/tests/fixtures/artifacts/zipp-3.7.0-py3-none-any.whl (from None)>: The package name doesn't match zipp
+INFO     pdm.termui:repositories.py:316 Fetching hashes for pdm-hello@0.1.0
+DEBUG    pdm.termui:caches.py:140 Downloading link file:///pdm/tests/fixtures/artifacts/pdm_hello-0.1.0-py3-none-any.whl for calculating hash
+______________________ test_remove_group_not_in_lockfile _______________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_remove_group_not_in_lockf0 is a local directory, use it directly
+________________________ test_update_groups_in_lockfile ________________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_update_groups_in_lockfile0 is a local directory, use it directly
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests>=2.19.1
+INFO     pdm.termui:reporters.py:37   foo
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests>=2.19.1
+INFO     pdm.termui:reporters.py:72   Adding requirement foo
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: foo 0.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 7 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60        foo 0.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   foo>=0.1
+INFO     pdm.termui:reporters.py:37   requests>=2.19.1
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement foo>=0.1
+INFO     pdm.termui:reporters.py:72   Adding requirement requests>=2.19.1
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:87 Pinning: foo 0.2
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 7 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60        foo 0.2
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+______________________ test_update_group_not_in_lockfile _______________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+----------------------------- Captured stdout call -----------------------------
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_update_group_not_in_lockf0 is a local directory, use it directly
+______________________ test_post_lock_and_install_signals ______________________
+---------------------------- Captured stdout setup -----------------------------
+Changes are written to pyproject.toml.
+Changes are written to pyproject.toml.
+------------------------------ Captured log call -------------------------------
+INFO     pdm.termui:reporters.py:21 ======== Start resolving requirements ========
+INFO     pdm.termui:reporters.py:37   requests
+INFO     pdm.termui:reporters.py:37   python>=3.7
+INFO     pdm.termui:reporters.py:72   Adding requirement requests
+INFO     pdm.termui:reporters.py:72   Adding requirement python>=3.7
+INFO     pdm.termui:reporters.py:21 ======== Starting round 0 ========
+INFO     pdm.termui:reporters.py:87 Pinning: python None
+INFO     pdm.termui:reporters.py:21 ======== Ending round 0 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 1 ========
+INFO     pdm.termui:reporters.py:72   Adding requirement certifi>=2017.4.17(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement chardet<3.1.0,>=3.0.2(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement idna<2.8,>=2.5(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:72   Adding requirement urllib3<1.24,>=1.21.1(from requests 2.19.1)
+INFO     pdm.termui:reporters.py:87 Pinning: requests 2.19.1
+INFO     pdm.termui:reporters.py:21 ======== Ending round 1 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 2 ========
+INFO     pdm.termui:reporters.py:87 Pinning: chardet 3.0.4
+INFO     pdm.termui:reporters.py:21 ======== Ending round 2 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 3 ========
+INFO     pdm.termui:reporters.py:87 Pinning: idna 2.7
+INFO     pdm.termui:reporters.py:21 ======== Ending round 3 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 4 ========
+INFO     pdm.termui:reporters.py:87 Pinning: urllib3 1.22
+INFO     pdm.termui:reporters.py:21 ======== Ending round 4 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 5 ========
+INFO     pdm.termui:reporters.py:87 Pinning: certifi 2018.11.17
+INFO     pdm.termui:reporters.py:21 ======== Ending round 5 ========
+INFO     pdm.termui:reporters.py:21 ======== Starting round 6 ========
+INFO     pdm.termui:reporters.py:21 ======== Resolution Result ========
+INFO     pdm.termui:reporters.py:50 Stable pins:
+INFO     pdm.termui:reporters.py:60     python None
+INFO     pdm.termui:reporters.py:60   requests 2.19.1
+INFO     pdm.termui:reporters.py:60    chardet 3.0.4
+INFO     pdm.termui:reporters.py:60       idna 2.7
+INFO     pdm.termui:reporters.py:60    urllib3 1.22
+INFO     pdm.termui:reporters.py:60    certifi 2018.11.17
+INFO     unearth.preparer:preparer.py:329 The file /tmp/pytest-of-root/pytest-3/test_post_lock_and_install_sig0 is a local directory, use it directly
+------------ generated xml file: /opt/receipts/reports/agent1-4.xml ------------
+=========================== short test summary info ============================
+PASSED tests/cli/test_add.py::test_add_group_to_lockfile
+PASSED tests/cli/test_add.py::test_add_group_to_lockfile_without_package
+PASSED tests/cli/test_hooks.py::test_hooks[lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[add-pre_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[add-post_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[install-pre_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[install-post_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[lock-pre_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[lock-post_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[remove-pre_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[remove-post_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[update-pre_lock]
+PASSED tests/cli/test_hooks.py::test_skip_option_from_signal[update-post_lock]
+PASSED tests/cli/test_hooks.py::test_skip_all_option_from_signal[:all-lock]
+PASSED tests/cli/test_hooks.py::test_skip_all_option_from_signal[:pre,:post-lock]
+PASSED tests/cli/test_hooks.py::test_skip_pre_post_option_from_signal[pre-lock]
+PASSED tests/cli/test_hooks.py::test_skip_pre_post_option_from_signal[post-lock]
+PASSED tests/cli/test_install.py::test_sync_no_lockfile
+PASSED tests/cli/test_install.py::test_install_with_lockfile
+PASSED tests/cli/test_install.py::test_install_groups_not_in_lockfile
+PASSED tests/cli/test_install.py::test_install_locked_groups
+PASSED tests/cli/test_install.py::test_install_groups_and_lock
+PASSED tests/cli/test_lock.py::test_lock_command
+PASSED tests/cli/test_lock.py::test_lock_dependencies
+PASSED tests/cli/test_lock.py::test_lock_refresh
+PASSED tests/cli/test_lock.py::test_lock_refresh_keep_consistent
+PASSED tests/cli/test_lock.py::test_lock_check_no_change_success
+PASSED tests/cli/test_lock.py::test_lock_check_change_fails
+PASSED tests/cli/test_lock.py::test_innovations_with_specified_lockfile
+PASSED tests/cli/test_lock.py::test_skip_editable_dependencies_in_metadata
+PASSED tests/cli/test_lock.py::test_lock_selected_groups
+PASSED tests/cli/test_lock.py::test_lock_self_referencing_groups[False]
+PASSED tests/cli/test_lock.py::test_lock_self_referencing_groups[True]
+PASSED tests/cli/test_lock.py::test_lock_multiple_platform_wheels
+PASSED tests/cli/test_lock.py::test_lock_current_platform_wheels
+PASSED tests/cli/test_remove.py::test_remove_group_not_in_lockfile
+PASSED tests/cli/test_update.py::test_update_groups_in_lockfile
+PASSED tests/cli/test_update.py::test_update_group_not_in_lockfile
+PASSED tests/test_signals.py::test_post_lock_and_install_signals
+================ 39 passed, 636 deselected, 1 warning in 5.07s =================

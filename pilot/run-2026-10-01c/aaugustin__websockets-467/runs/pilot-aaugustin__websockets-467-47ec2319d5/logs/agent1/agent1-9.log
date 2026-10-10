@@ -1,0 +1,44 @@
+============================= test session starts ==============================
+collected 2 items
+
+tests/test_protocol.py FEFE                                              [100%]
+
+==================================== ERRORS ====================================
+_______________ ERROR at teardown of ServerTests.test_abort_ping _______________
+E   AssertionError: assert <State.CLOSED: 3> is not <State.CLOSED: 3>
+     +  where <State.CLOSED: 3> = <websockets.protocol.WebSocketCommonProtocol object at 0x70e557248ad0>.state
+     +    where <websockets.protocol.WebSocketCommonProtocol object at 0x70e557248ad0> = <TransportMock id='124130311834640'>.protocol
+     +  and   <State.CLOSED: 3> = State.CLOSED
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Exception in callback WebSocketCommonProtocol.connection_lost(None)
+handle: <Handle WebSocketCommonProtocol.connection_lost(None)>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/websockets/src/websockets/protocol.py", line 1127, in connection_lost
+    ping.set_exception(ConnectionClosed(self.close_code, self.close_reason))
+asyncio.base_futures.InvalidStateError: invalid state
+_______________ ERROR at teardown of ClientTests.test_abort_ping _______________
+E   AssertionError: assert <State.CLOSED: 3> is not <State.CLOSED: 3>
+     +  where <State.CLOSED: 3> = <websockets.protocol.WebSocketCommonProtocol object at 0x70e55754cfd0>.state
+     +    where <websockets.protocol.WebSocketCommonProtocol object at 0x70e55754cfd0> = <TransportMock id='124130315063696'>.protocol
+     +  and   <State.CLOSED: 3> = State.CLOSED
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Exception in callback WebSocketCommonProtocol.connection_lost(None)
+handle: <Handle WebSocketCommonProtocol.connection_lost(None)>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/websockets/src/websockets/protocol.py", line 1127, in connection_lost
+    ping.set_exception(ConnectionClosed(self.close_code, self.close_reason))
+asyncio.base_futures.InvalidStateError: invalid state
+=================================== FAILURES ===================================
+/websockets/tests/test_protocol.py:81: AssertionError: assert <State.CLOSED: 3> is not <State.CLOSED: 3>
+/websockets/tests/test_protocol.py:81: AssertionError: assert <State.CLOSED: 3> is not <State.CLOSED: 3>
+------------ generated xml file: /opt/receipts/reports/agent1-9.xml ------------
+=========================== short test summary info ============================
+ERROR tests/test_protocol.py::ServerTests::test_abort_ping - AssertionError: ...
+ERROR tests/test_protocol.py::ClientTests::test_abort_ping - AssertionError: ...
+FAILED tests/test_protocol.py::ServerTests::test_abort_ping - AssertionError:...
+FAILED tests/test_protocol.py::ClientTests::test_abort_ping - AssertionError:...
+========================= 2 failed, 2 errors in 50.12s =========================

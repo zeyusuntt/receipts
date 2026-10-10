@@ -1,0 +1,318 @@
+{
+  "agent_branch_id": "agent1",
+  "attempts": [
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/1/filtered.diff",
+      "number": 1,
+      "patch_path": "attempts/1/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "contradicted",
+        "claim_evidence": "claimed green; own last run had 1 failed, 0 errors: flexx/app/tests/test_model.py::test_active_models",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "target tests passed: flexx/app/tests/test_model.py::test_init_args",
+            "id": "R1_fail_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "9 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 11 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 1 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona -> cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona#16 unbroken over 16 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona -> cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "claimed green; own last run had 1 failed, 0 errors: flexx/app/tests/test_model.py::test_active_models",
+            "id": "R6_claim_audit",
+            "passed": false
+          }
+        ],
+        "status": "PASS"
+      },
+      "witness_branch_id": "w1",
+      "worker": {
+        "claims": {
+          "files_changed": [
+            "flexx/app/model.py"
+          ],
+          "full_suite_pass": false,
+          "target_tests_pass": true,
+          "tests_run": true
+        },
+        "end": "finished",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3",
+          "agent1-4",
+          "agent1-5",
+          "agent1-6",
+          "agent1-7",
+          "agent1-8",
+          "agent1-9",
+          "agent1-10",
+          "agent1-11",
+          "agent1-12",
+          "agent1-13",
+          "agent1-14",
+          "agent1-15"
+        ],
+        "summary": "Modified flexx/app/model.py to allow passing positional arguments during Model construction, which are forwarded to the init() method. The change detects when the session argument is not actually a Session instance (e.g., in test calls like Model(2,3)) and treats it as an init argument instead. This satisfies the test test_init_args while preserving existing behavior for normal usage.",
+        "turns": 26
+      }
+    }
+  ],
+  "baseline": {
+    "collected_ids": [
+      "flexx/app/tests/test_model.py::test_active_models",
+      "flexx/app/tests/test_model.py::test_both",
+      "flexx/app/tests/test_model.py::test_can_emit_in_init",
+      "flexx/app/tests/test_model.py::test_emitters_in_JS",
+      "flexx/app/tests/test_model.py::test_get_instance_by_id",
+      "flexx/app/tests/test_model.py::test_init_args",
+      "flexx/app/tests/test_model.py::test_keep_alive",
+      "flexx/app/tests/test_model.py::test_no_clashes",
+      "flexx/app/tests/test_model.py::test_no_duplicate_code",
+      "flexx/app/tests/test_model.py::test_overloading",
+      "flexx/app/tests/test_model.py::test_pairing1"
+    ],
+    "protected": [
+      "flexx/app/tests/test_model.py::test_both",
+      "flexx/app/tests/test_model.py::test_can_emit_in_init",
+      "flexx/app/tests/test_model.py::test_emitters_in_JS",
+      "flexx/app/tests/test_model.py::test_get_instance_by_id",
+      "flexx/app/tests/test_model.py::test_keep_alive",
+      "flexx/app/tests/test_model.py::test_no_clashes",
+      "flexx/app/tests/test_model.py::test_no_duplicate_code",
+      "flexx/app/tests/test_model.py::test_overloading",
+      "flexx/app/tests/test_model.py::test_pairing1"
+    ],
+    "run_receipt_ids": [
+      "base-3",
+      "base-4"
+    ],
+    "runs": [
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "flexx/app/tests/test_model.py::test_init_args",
+          "flexx/app/tests/test_model.py::test_active_models"
+        ],
+        "passed": [
+          "flexx/app/tests/test_model.py::test_pairing1",
+          "flexx/app/tests/test_model.py::test_no_clashes",
+          "flexx/app/tests/test_model.py::test_overloading",
+          "flexx/app/tests/test_model.py::test_both",
+          "flexx/app/tests/test_model.py::test_emitters_in_JS",
+          "flexx/app/tests/test_model.py::test_no_duplicate_code",
+          "flexx/app/tests/test_model.py::test_get_instance_by_id",
+          "flexx/app/tests/test_model.py::test_can_emit_in_init",
+          "flexx/app/tests/test_model.py::test_keep_alive"
+        ],
+        "skipped": []
+      },
+      {
+        "collection_errors": [],
+        "errors": [],
+        "failed": [
+          "flexx/app/tests/test_model.py::test_init_args",
+          "flexx/app/tests/test_model.py::test_active_models"
+        ],
+        "passed": [
+          "flexx/app/tests/test_model.py::test_pairing1",
+          "flexx/app/tests/test_model.py::test_no_clashes",
+          "flexx/app/tests/test_model.py::test_overloading",
+          "flexx/app/tests/test_model.py::test_both",
+          "flexx/app/tests/test_model.py::test_emitters_in_JS",
+          "flexx/app/tests/test_model.py::test_no_duplicate_code",
+          "flexx/app/tests/test_model.py::test_get_instance_by_id",
+          "flexx/app/tests/test_model.py::test_can_emit_in_init",
+          "flexx/app/tests/test_model.py::test_keep_alive"
+        ],
+        "skipped": []
+      }
+    ],
+    "skipped_ids": [],
+    "target": [
+      "flexx/app/tests/test_model.py::test_init_args"
+    ],
+    "unstable": []
+  },
+  "checkpoint": {
+    "digest": "cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona",
+    "id": "cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona",
+    "parent": "bd3413f1-fd8e-43db-9fbe-ec1b0ae5a933#7"
+  },
+  "checkpoint_id": "cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona",
+  "cost": {
+    "estimated_dollars": 0.0218856,
+    "models": {
+      "nvidia/nemotron-3-super-120b-a12b": {
+        "completion_tokens": 3545,
+        "estimated_dollars": 0.0218856,
+        "prompt_tokens": 350580,
+        "reasoning_tokens": 0
+      }
+    },
+    "pricing_is_estimate": true,
+    "sandbox_seconds": 5.972672752181992
+  },
+  "disclosure": {
+    "executor_kind": "daytona",
+    "lock_sha256": "8c4e022d69c9f0c0c27b589b7b72e5a748ac50c4feb76712987c0ec930c19d40",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "pytest_config_digests": {
+      "setup.cfg": "7ec5ef29d2217ca633f313b9e03f374709e8ce41aa1d6c3c1ed04472de960abc"
+    },
+    "receipts_version": "0.0.1",
+    "test_digests": {
+      "flexx/app/tests/test_assetstore.py": "8b9ba854a0a5031e1ae3d38b1366e289dd2542a60571811f198dba54e2bc2c1a",
+      "flexx/app/tests/test_funcs.py": "882b670d2fc24f6887ac33b51688685e4bfac8e3592dd4fba306ddf5b9b21c2c",
+      "flexx/app/tests/test_live.py": "767aec5cf24119b834f159498588af3cce763833b1620580dd3fbb4442ee1d12",
+      "flexx/app/tests/test_model.py": "a4877a0f03afbcfe2fce011455f888e19448c467b9ae8d8b439df7f0216910ed",
+      "flexx/app/tests/test_serializer.py": "44872fe599276c58e06e9567d731b2b3e11cdd6035f3c288bc683708b5d53e86"
+    }
+  },
+  "final_verdict": {
+    "branch_id": "agent1",
+    "claim_audit": "contradicted",
+    "claim_evidence": "claimed green; own last run had 1 failed, 0 errors: flexx/app/tests/test_model.py::test_active_models",
+    "error": null,
+    "predicates": [
+      {
+        "evidence": "target tests passed: flexx/app/tests/test_model.py::test_init_args",
+        "id": "R1_fail_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "9 baseline-passing tests still pass",
+        "id": "R2_pass_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "all 11 baseline tests collected; skips unchanged (0)",
+        "id": "R3_no_shrink",
+        "passed": true
+      },
+      {
+        "evidence": "patch touches 1 file(s), all in scope",
+        "id": "R4_patch_scope",
+        "passed": true
+      },
+      {
+        "evidence": "agent chain cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona -> cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona#16 unbroken over 16 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona -> cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+        "id": "R5_provenance",
+        "passed": true
+      },
+      {
+        "evidence": "claimed green; own last run had 1 failed, 0 errors: flexx/app/tests/test_model.py::test_active_models",
+        "id": "R6_claim_audit",
+        "passed": false
+      }
+    ],
+    "status": "PASS"
+  },
+  "input": {
+    "appeals": 1,
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 64000,
+        "max_turns": 40,
+        "max_wall_seconds": 1200.0
+      }
+    },
+    "issue": "Provide models with initial data\nSometimes a model needs information at initialization time, that you want to provide in a flexible way, something like:\r\n\r\n```py\r\nclass MyModel(app.Model):\r\n\r\n    def init(self, the_info):\r\n         ...\r\n\r\n...\r\n\r\nm = MyModel(the_info=...)\r\n```\r\n\r\nCurrently, the `init()` is always argumentless. The required behavior can be achieved by making a property `info`, the value of which can be used inside the `init()`. However, a property suggests that the info can be modified/reset after the model is instantiated, which is not always the case.\r\n\r\nIn other words, there are situations where a `Model` needs information at initialization time, but for which a property does not make sense conceptually.\r\n\r\nSome possible solutions:\r\n\r\nA. Any keyword arguments used to instantiate a `Model` which do not correspond to properties are passed to the `init()` as kwargs. You'd thus need to write it like `def init(self, info=None)` to make it a keyword arg. In theory it could also map to positional args by inspecting the signature, but that feels a bit too magical, I think. \r\n\r\nI am a bit worried about error reporting if a user makes a type in a property name. We would need to inspect the `init()` sig to see what kwargs it accepts, so we can be sure that a kwarg is intended for the `init()`. This should thus be disallowed: `def init(self, **kwargs)`.\r\n\r\nB. Provide a new kind of property, similar to the current `readonly` that *must* be provided at initialization and is readonly afterwards. This adds less conceptual stuff for the user to learn, as it's just a kind of property.\r\n\r\nC. Use positional arguments. The `Model.__init__()` could catch the positional arguments and pass them to the `init()`. The only downside is that for Models run as an app via `app.launch` or `app.serve` we'd need to provide a way to set these args, but we already do that for the kwargs, so I guess that could work ...\r\n\r\n\r\ncc @korijn @Maxyme",
+    "source": {
+      "image": "docker.io/swerebenchv2/zoofio-flexx:236-abb20f9",
+      "platform": "linux/amd64",
+      "python": "python",
+      "setup": [
+        "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-zoofio__flexx-236-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL2ZsZXh4L2FwcC90ZXN0cy90ZXN0X21vZGVsLnB5IGIvZmxleHgvYXBwL3Rlc3RzL3Rlc3RfbW9kZWwucHkKaW5kZXggM2YzZDkyOS4uMjk1ZTA5ZSAxMDA2NDQKLS0tIGEvZmxleHgvYXBwL3Rlc3RzL3Rlc3RfbW9kZWwucHkKKysrIGIvZmxleHgvYXBwL3Rlc3RzL3Rlc3RfbW9kZWwucHkKQEAgLTg1LDYgKzg1LDEzIEBAIGNsYXNzIEZvbzYoRm9vMSk6CiAgICAgICAgICAgICByZXR1cm4ge30KIAogCitjbGFzcyBGb283KE1vZGVsKToKKyAgICAKKyAgICBkZWYgaW5pdChzZWxmLCBmb28sIGJhcj0wKToKKyAgICAgICAgc2VsZi5mb28gPSBmb28KKyAgICAgICAgc2VsZi5iYXIgPSBiYXIKKworCiBkZWYgdGVzdF9wYWlyaW5nMSgpOgogICAgIAogICAgIGFzc2VydCBpc2luc3RhbmNlKEZvbzEudGl0bGUsIGV2ZW50Ll9lbWl0dGVycy5Qcm9wZXJ0eSkKQEAgLTEyMCw2ICsxMjcsMzEgQEAgZGVmIHRlc3Rfb3ZlcmxvYWRpbmcoKToKICAgICBhc3NlcnQgRm9vNC5KUy5yZWQgaXMgbm90IEZvbzIuSlMucmVkCiAKIAorZGVmIHRlc3RfaW5pdF9hcmdzKCk6CisgICAgCisgICAgIyBUaGlzIHRlc3QgbmVlZHMgYSBkZWZhdWx0IHNlc3Npb24KKyAgICBzZXNzaW9uID0gYXBwLm1hbmFnZXIuZ2V0X2RlZmF1bHRfc2Vzc2lvbigpCisgICAgaWYgc2Vzc2lvbiBpcyBOb25lOgorICAgICAgICBhcHAubWFuYWdlci5jcmVhdGVfZGVmYXVsdF9zZXNzaW9uKCkKKyAgICAKKyAgICB3aXRoIHJhaXNlcyhUeXBlRXJyb3IpOgorICAgICAgICBtID0gTW9kZWwoMiwgMykKKyAgICAKKyAgICBtID0gRm9vNygyLCAzKQorICAgIGFzc2VydCBtLmZvbyA9PSAyCisgICAgYXNzZXJ0IG0uYmFyID09IDMKKyAgICAKKyAgICBtID0gRm9vNygyKQorICAgIGFzc2VydCBtLmZvbyA9PSAyCisgICAgYXNzZXJ0IG0uYmFyID09IDAKKyAgICAKKyAgICB3aXRoIHJhaXNlcyhUeXBlRXJyb3IpOgorICAgICAgICBtID0gRm9vNygpCisgICAgCisgICAgd2l0aCByYWlzZXMoVHlwZUVycm9yKToKKyAgICAgICAgbSA9IEZvbzcoMiwgMywgNCkKKworCiBkZWYgdGVzdF9ib3RoKCk6CiAgICAgIyBOZXcgcHJvcAogICAgIGFzc2VydCBGb281LnB1cnBsZSBpcyBGb281LkpTLnB1cnBsZQo='\"'\"'))'",
+        "git apply /tmp/receipts-zoofio__flexx-236-test.patch"
+      ],
+      "workdir": "/flexx"
+    },
+    "spec_tests": [
+      "flexx/app/tests/test_model.py::test_init_args"
+    ],
+    "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning flexx/app/tests/test_model.py"
+  },
+  "plan": {
+    "approach": "Modify Model.__new__ to accept *args/**kwargs, capture positionals for later use, allow remaining kwargs (excluding known special ones) as init-time configuration, then forward captured pos and allowed kwargs to __init__ which passes them to init().",
+    "files_to_edit": [
+      "flexx/app/model.py"
+    ],
+    "hypothesis": "Allow passing arbitrary positional arguments during Model construction, capturing them before super().__init__ and forwarding them to init()."
+  },
+  "selected_patch_path": "attempts/1/filtered.diff",
+  "snapshot_receipt_id": "base-7",
+  "verdict_history": [
+    {
+      "branch_id": "agent1",
+      "claim_audit": "contradicted",
+      "claim_evidence": "claimed green; own last run had 1 failed, 0 errors: flexx/app/tests/test_model.py::test_active_models",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "target tests passed: flexx/app/tests/test_model.py::test_init_args",
+          "id": "R1_fail_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "9 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 11 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 1 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona -> cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona#16 unbroken over 16 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona -> cr.app.daytona.io/sbox/daytona-0e307532e44f0115b47bc7316da7b8696730e1e0948f38eea8fa570f78628e16:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "claimed green; own last run had 1 failed, 0 errors: flexx/app/tests/test_model.py::test_active_models",
+          "id": "R6_claim_audit",
+          "passed": false
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "verified_fix": true,
+  "wall_time_s": 204.07778587494977
+}

@@ -1,0 +1,49 @@
+diff --git a/pysmt/smtlib/parser/parser.py b/pysmt/smtlib/parser/parser.py
+index 40f5ec5..e71313a 100644
+--- a/pysmt/smtlib/parser/parser.py
++++ b/pysmt/smtlib/parser/parser.py
+@@ -771,23 +771,34 @@ class SmtLibParser(object):
+                                        " colon! Offending token: '%s'" % tk,
+                                        tokens.pos_info)
+             keyword = tk[1:]
+-            tk = tokens.consume()
+-            value = None
+-            if tk == "(":
++            
++            # Peek at the next token to determine if this attribute has a value
++            next_tk = tokens.consume_maybe()
++            
++            # Case 1: No value - next token is another attribute or closing parenthesis
++            if next_tk is None or next_tk == ")" or next_tk.startswith(":"):
++                # Put back the token we peeked at since it belongs to the next iteration
++                tokens.add_extra_token(next_tk)
++                value = None
++            # Case 2: S-expression value
++            elif next_tk == "(":
+                 counter = 1
+-                buff = [tk]
++                buff = [next_tk]
+                 while counter != 0:
+-                    tk = tokens.raw_read()
+-                    if tk == "(":
++                    tk_val = tokens.raw_read()
++                    if tk_val == "(":
+                         counter += 1
+-                    elif tk == ")":
++                    elif tk_val == ")":
+                         counter -= 1
+-                    buff.append(tk)
++                    buff.append(tk_val)
+                 value = "".join(buff)
++                # Don't consume the closing paren here - let the outer loop do it
++            # Case 3: Simple value token
+             else:
+-                value = tk
+-            tk = tokens.consume()
++                value = next_tk
++                
+             self.cache.annotations.add(term, keyword, value)
++            tk = tokens.consume()
+ 
+         assert len(stack[-1]) == 0
+         # re-add the ")" to the tokenizer because we consumed it, but

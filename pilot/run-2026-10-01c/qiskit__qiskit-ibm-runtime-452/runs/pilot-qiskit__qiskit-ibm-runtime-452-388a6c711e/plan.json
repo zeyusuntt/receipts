@@ -1,0 +1,7 @@
+{
+  "approach": "Modify the `__init__` of `QiskitRuntimeService` to populate unset constructor arguments from matching environment variables when they are not explicitly passed in.  The mapping is straightforward: token\u2192QISKIT_IBM_TOKEN, instance\u2192QISKIT_IBM_INSTANCE, channel\u2192QISKIT_CHANNEL.  We preserve explicit arguments over environment defaults, maintaining backward compatibility.",
+  "files_to_edit": [
+    "qiskit_ibm_runtime/qiskit_runtime_service.py"
+  ],
+  "hypothesis": "Enabling environment variable support for QiskitRuntimeService requires adding logic to load constructor parameters from environment variables during instantiation.\n\nFirst locate the primary runtime service implementation:\n\nopen qiskit_ibm_runtime/qiskit_runtime_service.py\n\nThen identify its `__init__` method signature; we\u2019ll enhance it to fall back to reading environment variables (`QISKIT_IBM_TOKEN`, `QISKIT_IBM_INSTANCE`, `QISKIT_CHANNEL`) for missing values before proceeding with validation."
+}

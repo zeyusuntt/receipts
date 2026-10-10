@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "Add ability for all `QiskitRuntimeService` constructor arguments be specified through env variables.\n**What is the expected feature or enhancement?**\r\n\r\nCurrently in order to connect to ibm-quantum channel I need to create instance of `QiskitRuntimeService` and specify constructur argument `channel`. \r\n\r\n```python\r\nservice = QiskitRuntimeService(channel=\"ibm_quantum\", instance=\"<INSTANCE>\", token=\"<TOKEN>\")\r\n```\r\n\r\nI can specify env variables `QISKIT_IBM_INSTANCE` and `QISKIT_IBM_TOKEN` and remove `instance` and `token` argument from instance creation call.\r\n\r\n```python\r\nimport os\r\n\r\nos.environ[\"QISKIT_IBM_TOKEN\"] = \"<TOKEN>\"\r\nos.environ[\"QISKIT_IBM_INSTANCE\"] = \"<INSTANCE>\"\r\n\r\nservice = QiskitRuntimeService(channel=\"ibm_quantum\")\r\n\r\nwith Estimator(..., service=service) as e:\r\n    ...\r\n```\r\n\r\nIt would be great to have all arguments to be parametrized, so in future if I want to interact with Runtime Primitives I do not need to specify service manually and service instance will be created automatically from env variables.\r\n\r\n**Acceptance criteria**\r\n\r\nSomething like that:\r\n```python\r\nimport os\r\n\r\nos.environ[\"QISKIT_IBM_TOKEN\"] = \"<TOKEN>\"\r\nos.environ[\"QISKIT_IBM_INSTANCE\"] = \"<INSTANCE>\"\r\nos.environ[\"QISKIT_CHANNEL\"] = \"<CHANNEL>\"\r\n\r\n# I do not need to create it manually anymore\r\n# service = QiskitRuntimeService()\r\n\r\nwith Estimator(...) as e: # <- this will be executed using my env variables\r\n    ...\r\n```",
+  "source": {
+    "image": "docker.io/swerebenchv2/qiskit-qiskit-ibm-runtime:452-410f324",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-qiskit__qiskit-ibm-runtime-452-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3QvdW5pdC90ZXN0X2FjY291bnQucHkgYi90ZXN0L3VuaXQvdGVzdF9hY2NvdW50LnB5CmluZGV4IGQyOTgxNzBlLi41ZDY5N2E1NSAxMDA2NDQKLS0tIGEvdGVzdC91bml0L3Rlc3RfYWNjb3VudC5weQorKysgYi90ZXN0L3VuaXQvdGVzdF9hY2NvdW50LnB5CkBAIC03MTYsNiArNzE2LDI1IEBAIGNsYXNzIFRlc3RFbmFibGVBY2NvdW50KElCTVRlc3RDYXNlKToKICAgICAgICAgICAgICAgICBjaGFubmVsID0gY2hhbm5lbCBvciAiaWJtX2Nsb3VkIgogICAgICAgICAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoc2VydmljZS5fYWNjb3VudC5jaGFubmVsLCBjaGFubmVsKQogCisgICAgZGVmIHRlc3RfZW5hYmxlX2FjY291bnRfb25seV9lbnZfdmFyaWFibGVzKHNlbGYpOgorICAgICAgICAiIiJUZXN0IGluaXRpYWxpemluZyBhY2NvdW50IHdpdGggb25seSBlbnZpcm9ubWVudCB2YXJpYWJsZXMuIiIiCisgICAgICAgIHN1YnRlc3RzID0gWyJpYm1fcXVhbnR1bSIsICJpYm1fY2xvdWQiXQorICAgICAgICB0b2tlbiA9IHV1aWQudXVpZDQoKS5oZXgKKyAgICAgICAgdXJsID0gdXVpZC51dWlkNCgpLmhleAorICAgICAgICBmb3IgY2hhbm5lbCBpbiBzdWJ0ZXN0czoKKyAgICAgICAgICAgIGVudnMgPSB7CisgICAgICAgICAgICAgICAgIlFJU0tJVF9JQk1fVE9LRU4iOiB0b2tlbiwKKyAgICAgICAgICAgICAgICAiUUlTS0lUX0lCTV9VUkwiOiB1cmwsCisgICAgICAgICAgICAgICAgIlFJU0tJVF9JQk1fQ0hBTk5FTCI6IGNoYW5uZWwsCisgICAgICAgICAgICAgICAgIlFJU0tJVF9JQk1fSU5TVEFOQ0UiOiAiaC9nL3AiCisgICAgICAgICAgICAgICAgaWYgY2hhbm5lbCA9PSAiaWJtX3F1YW50dW0iCisgICAgICAgICAgICAgICAgZWxzZSAiY3JuOjEyIiwKKyAgICAgICAgICAgIH0KKyAgICAgICAgICAgIHdpdGggY3VzdG9tX2VudnMoZW52cyk6CisgICAgICAgICAgICAgICAgc2VydmljZSA9IEZha2VSdW50aW1lU2VydmljZSgpCisgICAgICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNlcnZpY2UuX2FjY291bnQuY2hhbm5lbCwgY2hhbm5lbCkKKyAgICAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoc2VydmljZS5fYWNjb3VudC51cmwsIHVybCkKKwogICAgIGRlZiB0ZXN0X2VuYWJsZV9hY2NvdW50X2J5X2Vudl90b2tlbl91cmwoc2VsZik6CiAgICAgICAgICIiIlRlc3QgaW5pdGlhbGl6aW5nIGFjY291bnQgYnkgZW52aXJvbm1lbnQgdmFyaWFibGUgYW5kIGV4dHJhLiIiIgogICAgICAgICB0b2tlbiA9IHV1aWQudXVpZDQoKS5oZXgKQEAgLTgyMiw5ICs4NDEsOSBAQCBjbGFzcyBUZXN0RW5hYmxlQWNjb3VudChJQk1UZXN0Q2FzZSk6CiAgICAgICAgIHRva2VuID0gInRva2VuLXgiCiAgICAgICAgIHByb3hpZXMgPSB7InVybHMiOiB7Imh0dHBzIjogImxvY2FsaG9zdDo4MDgwIn19CiAgICAgICAgIHN0cl9jb250ZW50cyA9IGYiIiIKLSAgICAgICAgW2libXFdIAorICAgICAgICBbaWJtcV0KICAgICAgICAgdG9rZW4gPSB7dG9rZW59Ci0gICAgICAgIHVybCA9IGh0dHBzOi8vYXV0aC5xdWFudHVtLWNvbXB1dGluZy5pYm0uY29tL2FwaSAKKyAgICAgICAgdXJsID0gaHR0cHM6Ly9hdXRoLnF1YW50dW0tY29tcHV0aW5nLmlibS5jb20vYXBpCiAgICAgICAgIHZlcmlmeSA9IFRydWUKICAgICAgICAgZGVmYXVsdF9wcm92aWRlciA9IGlibS1xL29wZW4vbWFpbgogICAgICAgICBwcm94aWVzID0ge3Byb3hpZXN9Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-qiskit__qiskit-ibm-runtime-452-test.patch"
+    ],
+    "workdir": "/qiskit-ibm-runtime"
+  },
+  "spec_tests": [
+    "test/unit/test_account.py::TestEnableAccount::test_enable_account_only_env_variables"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning test/unit/test_account.py"
+}

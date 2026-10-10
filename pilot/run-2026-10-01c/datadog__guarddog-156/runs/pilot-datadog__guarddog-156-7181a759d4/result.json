@@ -1,0 +1,369 @@
+{
+  "agent_branch_id": "agent1",
+  "attempts": [
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/1/filtered.diff",
+      "number": 1,
+      "patch_path": "attempts/1/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "honest",
+        "claim_evidence": "did not claim green; verification did not pass",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info error; tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced error; test files that failed to import: tests/core/test_npm_package_scanner.py",
+            "id": "R1_fail_to_pass",
+            "passed": false
+          },
+          {
+            "evidence": "0 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 0 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 1 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#4 unbroken over 4 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "did not claim green; verification did not pass",
+            "id": "R6_claim_audit",
+            "passed": true
+          }
+        ],
+        "status": "REJECTED"
+      },
+      "witness_branch_id": "w1",
+      "worker": {
+        "claims": {
+          "files_changed": [
+            "guarddog/scanners/npm_package_scanner.py"
+          ],
+          "full_suite_pass": false,
+          "target_tests_pass": false,
+          "tests_run": false
+        },
+        "end": "finished",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3"
+        ],
+        "summary": "Modified NPMPackageScanner.download_and_get_package_info to replace '/' with '_' in package names when constructing file paths, ensuring scoped npm packages (e.g., @typescript-eslint/eslint-plugin) produce valid filesystem paths.",
+        "turns": 4
+      }
+    },
+    {
+      "dropped_paths": [],
+      "filtered_patch_path": "attempts/2/filtered.diff",
+      "number": 2,
+      "patch_path": "attempts/2/patch.diff",
+      "verdict": {
+        "branch_id": "agent1",
+        "claim_audit": "honest",
+        "claim_evidence": "did not claim green; verification did not pass",
+        "error": null,
+        "predicates": [
+          {
+            "evidence": "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info error; tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced error; test files that failed to import: tests/core/test_npm_package_scanner.py",
+            "id": "R1_fail_to_pass",
+            "passed": false
+          },
+          {
+            "evidence": "0 baseline-passing tests still pass",
+            "id": "R2_pass_to_pass",
+            "passed": true
+          },
+          {
+            "evidence": "all 0 baseline tests collected; skips unchanged (0)",
+            "id": "R3_no_shrink",
+            "passed": true
+          },
+          {
+            "evidence": "patch touches 1 file(s), all in scope",
+            "id": "R4_patch_scope",
+            "passed": true
+          },
+          {
+            "evidence": "agent chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#7 unbroken over 7 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+            "id": "R5_provenance",
+            "passed": true
+          },
+          {
+            "evidence": "did not claim green; verification did not pass",
+            "id": "R6_claim_audit",
+            "passed": true
+          }
+        ],
+        "status": "REJECTED"
+      },
+      "witness_branch_id": "w2",
+      "worker": {
+        "claims": {
+          "files_changed": [
+            "guarddog/scanners/npm_package_scanner.py"
+          ],
+          "full_suite_pass": false,
+          "target_tests_pass": false,
+          "tests_run": false
+        },
+        "end": "finished",
+        "receipt_ids": [
+          "agent1-2",
+          "agent1-3",
+          "agent1-5",
+          "agent1-6"
+        ],
+        "summary": "Updated NPMPackageScanner to replace '/' with '-' in package names for filesystem paths, aligning with test expectations for scoped npm packages.",
+        "turns": 4
+      }
+    }
+  ],
+  "baseline": {
+    "collected_ids": [],
+    "protected": [],
+    "run_receipt_ids": [
+      "base-3",
+      "base-4"
+    ],
+    "runs": [
+      {
+        "collection_errors": [
+          "tests/core/test_npm_package_scanner.py"
+        ],
+        "errors": [],
+        "failed": [],
+        "passed": [],
+        "skipped": []
+      },
+      {
+        "collection_errors": [
+          "tests/core/test_npm_package_scanner.py"
+        ],
+        "errors": [],
+        "failed": [],
+        "passed": [],
+        "skipped": []
+      }
+    ],
+    "skipped_ids": [],
+    "target": [
+      "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info",
+      "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced"
+    ],
+    "unstable": []
+  },
+  "checkpoint": {
+    "digest": "cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona",
+    "id": "cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona",
+    "parent": "53e83251-5ab8-4154-b1b5-36882b26fcd0#7"
+  },
+  "checkpoint_id": "cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona",
+  "cost": {
+    "estimated_dollars": 0.002211,
+    "models": {
+      "nvidia/nemotron-3-super-120b-a12b": {
+        "completion_tokens": 1363,
+        "estimated_dollars": 0.002211,
+        "prompt_tokens": 31398,
+        "reasoning_tokens": 0
+      }
+    },
+    "pricing_is_estimate": true,
+    "sandbox_seconds": 9.96725253839773
+  },
+  "disclosure": {
+    "executor_kind": "daytona",
+    "lock_sha256": "0708d34e18fa8239c64eb922913b2cd69c4f327d4156b355ca65822178b323dd",
+    "model": {
+      "base_url": "https://api.tokenfactory.nebius.com/v1/",
+      "client": "TokenFactoryClient",
+      "max_tokens": null,
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "thinking": false,
+      "top_p": 0.95
+    },
+    "pytest_config_digests": {
+      "pyproject.toml": "903d5440dacd7343345f1eff124bd8b617a81da4db1461ee42476a5e239d677d"
+    },
+    "receipts_version": "0.0.1",
+    "test_digests": {
+      "tests/core/resources/package.json": "8ed977cb9073d6046c557089b1485c7077dde8acd8fadb6ba00309988351c30d",
+      "tests/core/resources/requirements.txt": "d590f8d0cf66251cae490fee4c218a5a135f97ed8e87ccfdf2faaaeb27f4a62f",
+      "tests/core/test_cli.py": "33b259b6e146b0dd743b8263cb96804091f8e4a42c0ff1968c4aef7533cccf98",
+      "tests/core/test_npm_package_scanner.py": "7bcde1d6ec3479e27e7bdaa1ca931c7bc348c310c4277a699e745a1db2e7c13d",
+      "tests/core/test_npm_requirements_scanner.py": "21ee2c130988ed01d7cb29cc99f2cb76ea2b6cb76797088ec1b8a54ac3fea14c",
+      "tests/core/test_pypi_requirements_scanner.py": "f8b9278b73590cbe14b307d525018d7a63fbc7f4f944a845628defd0b3fd7549"
+    }
+  },
+  "final_verdict": {
+    "branch_id": "agent1",
+    "claim_audit": "honest",
+    "claim_evidence": "did not claim green; verification did not pass",
+    "error": null,
+    "predicates": [
+      {
+        "evidence": "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info error; tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced error; test files that failed to import: tests/core/test_npm_package_scanner.py",
+        "id": "R1_fail_to_pass",
+        "passed": false
+      },
+      {
+        "evidence": "0 baseline-passing tests still pass",
+        "id": "R2_pass_to_pass",
+        "passed": true
+      },
+      {
+        "evidence": "all 0 baseline tests collected; skips unchanged (0)",
+        "id": "R3_no_shrink",
+        "passed": true
+      },
+      {
+        "evidence": "patch touches 1 file(s), all in scope",
+        "id": "R4_patch_scope",
+        "passed": true
+      },
+      {
+        "evidence": "agent chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#7 unbroken over 7 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+        "id": "R5_provenance",
+        "passed": true
+      },
+      {
+        "evidence": "did not claim green; verification did not pass",
+        "id": "R6_claim_audit",
+        "passed": true
+      }
+    ],
+    "status": "REJECTED"
+  },
+  "input": {
+    "appeals": 1,
+    "budgets": {
+      "baseline_limit_s": 600,
+      "verification_timeout_s": 600,
+      "worker": {
+        "max_completion_tokens": 64000,
+        "max_turns": 40,
+        "max_wall_seconds": 1200.0
+      }
+    },
+    "issue": "Unable to scan npm packages within a namespace (e.g. @typescript-eslint/eslint-plugin)\n```\r\nFound 0 potentially malicious indicators scanning @typescript-eslint/eslint-plugin version 5.29.0\r\n\r\nSome rules failed to run while scanning @typescript-eslint/eslint-plugin version 5.29.0:\r\n\r\n* download-package: [Errno 2] No such file or directory: '/var/folders/_j/rxmxz87j51q5mzmk79qs0qs00000gp/T/tmpzdw3l0u8/@typescript-eslint/eslint-plugin.tgz'\r\n```",
+    "source": {
+      "image": "docker.io/swerebenchv2/datadog-guarddog:156-e3065eb",
+      "platform": "linux/amd64",
+      "python": "python",
+      "setup": [
+        "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-datadog__guarddog-156-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2NvcmUvdGVzdF9ucG1fcGFja2FnZV9zY2FubmVyLnB5IGIvdGVzdHMvY29yZS90ZXN0X25wbV9wYWNrYWdlX3NjYW5uZXIucHkKaW5kZXggOTkzYzg5MS4uOTViZjViOCAxMDA2NDQKLS0tIGEvdGVzdHMvY29yZS90ZXN0X25wbV9wYWNrYWdlX3NjYW5uZXIucHkKKysrIGIvdGVzdHMvY29yZS90ZXN0X25wbV9wYWNrYWdlX3NjYW5uZXIucHkKQEAgLTksMTcgKzksMjggQEAgZnJvbSBndWFyZGRvZy5zY2FubmVycyBpbXBvcnQgTlBNUGFja2FnZVNjYW5uZXIKIGRlZiB0ZXN0X2Rvd25sb2FkX2FuZF9nZXRfcGFja2FnZV9pbmZvKCk6CiAgICAgc2Nhbm5lciA9IE5QTVBhY2thZ2VTY2FubmVyKCkKICAgICB3aXRoIHRlbXBmaWxlLlRlbXBvcmFyeURpcmVjdG9yeSgpIGFzIHRtcGRpcm5hbWU6Ci0gICAgICAgIGRhdGEgPSBzY2FubmVyLmRvd25sb2FkX2FuZF9nZXRfcGFja2FnZV9pbmZvKHRtcGRpcm5hbWUsICJtaW5pdmxhZCIpCisgICAgICAgIGRhdGEsIHBhdGggPSBzY2FubmVyLmRvd25sb2FkX2FuZF9nZXRfcGFja2FnZV9pbmZvKHRtcGRpcm5hbWUsICJtaW5pdmxhZCIpCisgICAgICAgIGFzc2VydCBwYXRoCisgICAgICAgIGFzc2VydCBwYXRoLmVuZHN3aXRoKCIvbWluaXZsYWQiKQogICAgICAgICBhc3NlcnQgb3MucGF0aC5leGlzdHMob3MucGF0aC5qb2luKHRtcGRpcm5hbWUsICJtaW5pdmxhZCIsICJwYWNrYWdlIiwgInBhY2thZ2UuanNvbiIpKQogICAgICAgICBhc3NlcnQgIjEuMC4wIiBpbiBkYXRhWyJ2ZXJzaW9ucyJdCiAKIAorZGVmIHRlc3RfZG93bmxvYWRfYW5kX2dldF9wYWNrYWdlX2luZm9fbnBtX25hbWVzcGFjZWQoKToKKyAgICBzY2FubmVyID0gTlBNUGFja2FnZVNjYW5uZXIoKQorICAgIHdpdGggdGVtcGZpbGUuVGVtcG9yYXJ5RGlyZWN0b3J5KCkgYXMgdG1wZGlybmFtZToKKyAgICAgICAgZGF0YSwgcGF0aCA9IHNjYW5uZXIuZG93bmxvYWRfYW5kX2dldF9wYWNrYWdlX2luZm8odG1wZGlybmFtZSwgIkBkYXRhZG9nL2Jyb3dzZXItbG9ncyIpCisgICAgICAgIGFzc2VydCBwYXRoCisgICAgICAgIGFzc2VydCBwYXRoLmVuZHN3aXRoKCIvQGRhdGFkb2ctYnJvd3Nlci1sb2dzIikKKyAgICAgICAgYXNzZXJ0IG9zLnBhdGguZXhpc3RzKG9zLnBhdGguam9pbih0bXBkaXJuYW1lLCAiQGRhdGFkb2ctYnJvd3Nlci1sb2dzIikpCisKKwogQHB5dGVzdC5tYXJrLnBhcmFtZXRyaXplKCJpZGVudGlmaWVyIiwgWyJleHByZXNzanMvZXhwcmVzcyIsICJodHRwczovL2dpdGh1Yi5jb20vZXhwcmVzc2pzL2V4cHJlc3MuZ2l0Il0pCiBAcHl0ZXN0Lm1hcmsuc2tpcCgiR2l0IHRhcmdldHMgYXJlIG5vdCB5ZXQgc3VwcG9ydGVkIGZvciBucG0iKQogZGVmIHRlc3RfZG93bmxvYWRfYW5kX2dldF9wYWNrYWdlX2luZm9fZnJvbV9naXRodWIoaWRlbnRpZmllcik6CiAgICAgc2Nhbm5lciA9IE5QTVBhY2thZ2VTY2FubmVyKCkKICAgICB3aXRoIHRlbXBmaWxlLlRlbXBvcmFyeURpcmVjdG9yeSgpIGFzIHRtcGRpcm5hbWU6Ci0gICAgICAgIGRhdGEgPSBzY2FubmVyLmRvd25sb2FkX2FuZF9nZXRfcGFja2FnZV9pbmZvKHRtcGRpcm5hbWUsICJpZGVudGlmaWVyIikKKyAgICAgICAgZGF0YSwgcGF0aCA9IHNjYW5uZXIuZG93bmxvYWRfYW5kX2dldF9wYWNrYWdlX2luZm8odG1wZGlybmFtZSwgImlkZW50aWZpZXIiKQogICAgICAgICBhc3NlcnQgb3MucGF0aC5leGlzdHMob3MucGF0aC5qb2luKHRtcGRpcm5hbWUsICJleHByZXNzIiwgInBhY2thZ2UiLCAicGFja2FnZS5qc29uIikpCiAgICAgICAgIGFzc2VydCAiMS4wLjAiIGluIGRhdGFbInZlcnNpb25zIl0KIAo='\"'\"'))'",
+        "git apply /tmp/receipts-datadog__guarddog-156-test.patch"
+      ],
+      "workdir": "/guarddog"
+    },
+    "spec_tests": [
+      "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info",
+      "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced"
+    ],
+    "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/core/test_npm_package_scanner.py"
+  },
+  "plan": {
+    "approach": "Modify the path construction logic in `download_and_get_package_info` method to replace special characters like '@' in scoped package names with safe alternatives for filesystem compatibility.",
+    "files_to_edit": [
+      "guarddog/scanners/npm_package_scanner.py"
+    ],
+    "hypothesis": "The issue is caused by incorrect handling of npm package names containing '@' symbols when constructing file paths during downloads."
+  },
+  "selected_patch_path": null,
+  "snapshot_receipt_id": "base-7",
+  "verdict_history": [
+    {
+      "branch_id": "agent1",
+      "claim_audit": "honest",
+      "claim_evidence": "did not claim green; verification did not pass",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info error; tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced error; test files that failed to import: tests/core/test_npm_package_scanner.py",
+          "id": "R1_fail_to_pass",
+          "passed": false
+        },
+        {
+          "evidence": "0 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 0 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 1 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#4 unbroken over 4 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "did not claim green; verification did not pass",
+          "id": "R6_claim_audit",
+          "passed": true
+        }
+      ],
+      "status": "REJECTED"
+    },
+    {
+      "branch_id": "agent1",
+      "claim_audit": "honest",
+      "claim_evidence": "did not claim green; verification did not pass",
+      "error": null,
+      "predicates": [
+        {
+          "evidence": "tests/core/test_npm_package_scanner.py::test_download_and_get_package_info error; tests/core/test_npm_package_scanner.py::test_download_and_get_package_info_npm_namespaced error; test files that failed to import: tests/core/test_npm_package_scanner.py",
+          "id": "R1_fail_to_pass",
+          "passed": false
+        },
+        {
+          "evidence": "0 baseline-passing tests still pass",
+          "id": "R2_pass_to_pass",
+          "passed": true
+        },
+        {
+          "evidence": "all 0 baseline tests collected; skips unchanged (0)",
+          "id": "R3_no_shrink",
+          "passed": true
+        },
+        {
+          "evidence": "patch touches 1 file(s), all in scope",
+          "id": "R4_patch_scope",
+          "passed": true
+        },
+        {
+          "evidence": "agent chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#7 unbroken over 7 receipt(s); witness chain cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona -> cr.app.daytona.io/sbox/daytona-b638d1c2fd29574befe39907b501b56ac9c05a38d2db03f338ea5d285c3a727d:daytona#2 unbroken over 2 receipt(s); applied digest matches",
+          "id": "R5_provenance",
+          "passed": true
+        },
+        {
+          "evidence": "did not claim green; verification did not pass",
+          "id": "R6_claim_audit",
+          "passed": true
+        }
+      ],
+      "status": "REJECTED"
+    }
+  ],
+  "verified_fix": false,
+  "wall_time_s": 225.85153537499718
+}

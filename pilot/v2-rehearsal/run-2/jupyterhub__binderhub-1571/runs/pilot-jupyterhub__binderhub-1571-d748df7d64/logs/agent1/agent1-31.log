@@ -1,0 +1,71 @@
+                return
+            try:
+                # lines that start with : are comments
+                # and should be ignored by event consumers
+                self.write(":keepalive\n\n")
+                await self.flush()
+            except StreamClosedError:
+                return
+
+    def send_error(self, status_code, **kwargs):
+        """event stream cannot set an error code, so send an error event"""
+        exc_info = kwargs.get("exc_info")
+        message = ""
+        if exc_info:
+            message = self.extract_message(exc_info)
+        if not message:
+            message = responses.get(status_code, "Unknown HTTP Error")
+
+        # this cannot be async
+        evt = json.dumps(
+            {
+                "phase": "failed",
+                "status_code": status_code,
+                "message": message + "\n",
+            }
+        )
+        self.write(f"data: {evt}\n\n")
+        self.finish()
+
+    def initialize(self):
+        super().initialize()
+        if self.settings["use_registry"]:
+            self.registry = self.settings["registry"]
+
+        self.event_log = self.settings["event_log"]
+
+    async def fail(self, message):
+        await self.emit(
+            {
+                "phase": "failed",
+                "message": message + "\n",
+            }
+        )
+
+    def set_default_headers(self):
+        super().set_default_headers()
+        # set up for sending event streams
+        self.set_header("content-type", "text/event-stream")
+        self.set_header("cache-control", "no-cache")
+
+    @authenticated
+    async def get(self, provider_prefix, _unescaped_spec):
+        """Get a built image for a given spec and repo provider.
+
+        Different repo providers will require different spec information. This
+        function relies on the functionality of the tornado `GET` request.
+
+        Parameters
+        ----------
+            provider_prefix : str
+                the nickname for a repo provider (i.e. 'gh')
+            spec:
+                specifies information needed by the repo provider (i.e. user,
+                repo, ref, etc.)
+
+        """
+        prefix = "/build/" + provider_prefix
+        spec = self.get_spec_from_request(prefix)
+
+        # verify the build token and rate limit
+        build_token = self.get_argument("build_token", None)

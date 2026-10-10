@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "pysparkkernel hardcodes Python 2 syntax\nIt's fine if we have one kernel, but if we have only one it should be Python 3 syntax highlighter, just because Python 2 support is going away in PySpark some time in the next year.",
+  "source": {
+    "image": "docker.io/swerebenchv2/jupyter-incubator-sparkmagic:572-505bb11",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-jupyter-incubator__sparkmagic-572-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3NwYXJrbWFnaWMvc3BhcmttYWdpYy90ZXN0cy90ZXN0X2tlcm5lbHMucHkgYi9zcGFya21hZ2ljL3NwYXJrbWFnaWMvdGVzdHMvdGVzdF9rZXJuZWxzLnB5CmluZGV4IGJmYzhhMDUuLjlhNTAxZmIgMTAwNjQ0Ci0tLSBhL3NwYXJrbWFnaWMvc3BhcmttYWdpYy90ZXN0cy90ZXN0X2tlcm5lbHMucHkKKysrIGIvc3BhcmttYWdpYy9zcGFya21hZ2ljL3Rlc3RzL3Rlc3Rfa2VybmVscy5weQpAQCAtMzIsOCArMzIsOCBAQCBkZWYgdGVzdF9weXNwYXJrX2tlcm5lbF9jb25maWdzKCk6CiAgICAgYXNzZXJ0IGtlcm5lbC5sYW5ndWFnZV9pbmZvID09IHsKICAgICAgICAgJ25hbWUnOiAncHlzcGFyaycsCiAgICAgICAgICdtaW1ldHlwZSc6ICd0ZXh0L3gtcHl0aG9uJywKLSAgICAgICAgJ2NvZGVtaXJyb3JfbW9kZSc6IHsnbmFtZSc6ICdweXRob24nLCAndmVyc2lvbic6IDJ9LAotICAgICAgICAncHlnbWVudHNfbGV4ZXInOiAncHl0aG9uMicKKyAgICAgICAgJ2NvZGVtaXJyb3JfbW9kZSc6IHsnbmFtZSc6ICdweXRob24nLCAndmVyc2lvbic6IDN9LAorICAgICAgICAncHlnbWVudHNfbGV4ZXInOiAncHl0aG9uMycKICAgICB9CiAKIAo='\"'\"'))'",
+      "git apply /tmp/receipts-jupyter-incubator__sparkmagic-572-test.patch"
+    ],
+    "workdir": "/sparkmagic"
+  },
+  "spec_tests": [
+    "sparkmagic/sparkmagic/tests/test_kernels.py::test_pyspark_kernel_configs"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning sparkmagic/sparkmagic/tests/test_kernels.py"
+}

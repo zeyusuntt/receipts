@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/vyper/vyper/__init__.py", line 3, in <module>
+    from vyper.compiler import compile_code, compile_codes  # noqa: F401
+  File "/vyper/vyper/compiler/__init__.py", line 4, in <module>
+    import vyper.ast as vy_ast  # break an import cycle
+  File "/vyper/vyper/ast/__init__.py", line 19, in <module>
+    from . import expansion, folding  # noqa: E402
+  File "/vyper/vyper/ast/folding.py", line 5, in <module>
+    from vyper.builtins.functions import DISPATCH_TABLE
+  File "/vyper/vyper/builtins/functions.py", line 39, in <module>
+    from vyper.codegen.expr import Expr
+  File "/vyper/vyper/codegen/expr.py", line 195
+    elif self.expr.attr == "codesize" or self.expr.attr == "is_contract":
+    ^^^^
+SyntaxError: invalid syntax

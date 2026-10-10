@@ -1,0 +1,7 @@
+{
+  "approach": "Modify the condition in `_quantile_nearest` from `< 0` to `<=-1` so negative indices fall back while exact half-integer positions pick upper via rounding.",
+  "files_to_edit": [
+    "pandas/core/nanops.py"
+  ],
+  "hypothesis": "In QuantileInterp._quantile_nearest, the fallback to lower when cand_idx < 0 leads to selecting index 49 instead of 50 for even-length groups where fractional position equals integer+0.5."
+}

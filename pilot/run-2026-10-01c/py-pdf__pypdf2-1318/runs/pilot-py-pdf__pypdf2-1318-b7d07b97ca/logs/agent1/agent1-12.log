@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+collected 3 items
+
+tests/test_reader.py FF.                                                 [100%]
+
+=================================== FAILURES ===================================
+E   KeyError: '/Pages'
+/PyPDF2/PyPDF2/generic/_data_structures.py:150: KeyError: '/Pages'
+E   PyPDF2.errors.PdfReadError: /Prev=0 in the trailer (try opening with strict=False)
+
+During handling of the above exception, another exception occurred:
+E   Failed: DID NOT WARN. No warnings of type (<class 'PyPDF2.errors.PdfReadWarning'>,) were emitted.
+     Emitted warnings: [].
+------------------------------ Captured log call -------------------------------
+WARNING  PyPDF2._reader:_utils.py:374 startxref on same line as offset
+WARNING  PyPDF2._reader:_utils.py:374 Xref table not zero-indexed. ID numbers for objects will be corrected.
+/PyPDF2/tests/test_reader.py:488: Failed: DID NOT WARN. No warnings of type (<class 'PyPDF2.errors.PdfReadWarning'>,) were emitted.
+==================================== PASSES ====================================
+----------- generated xml file: /opt/receipts/reports/agent1-12.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_reader.py::test_read_missing_startxref
+FAILED tests/test_reader.py::test_zeroing_xref - KeyError: '/Pages'
+FAILED tests/test_reader.py::test_read_prev_0_trailer - Failed: DID NOT WARN....
+========================= 2 failed, 1 passed in 0.20s ==========================

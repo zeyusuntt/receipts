@@ -1,0 +1,42 @@
+============================= test session starts ==============================
+collected 6 items
+
+tests/test_generate_hooks.py ...FE.                                      [100%]
+
+==================================== ERRORS ====================================
+_____________________ ERROR at setup of test_oserror_hooks _____________________
+file /cookiecutter/tests/test_generate_hooks.py, line 97
+  @pytest.mark.usefixtures('clean_system', 'remove_additional_folders')
+  def test_oserror_hooks(mocker):
+E       fixture 'mocker' not found
+>       available fixtures: capfd, capfdbinary, caplog, capsys, capsysbinary, clean_system, doctest_namespace, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, remove_additional_folders, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/cookiecutter/tests/test_generate_hooks.py:97
+=================================== FAILURES ===================================
+/cookiecutter/tests/test_generate_hooks.py:92: Failed: DID NOT RAISE <class 'cookiecutter.exceptions.FailedHookException'>
+==================================== PASSES ====================================
+____________________________ test_ignore_hooks_dirs ____________________________
+----------------------------- Captured stdout call -----------------------------
+pre generation hook
+pre generation hook
+____________________________ test_run_python_hooks _____________________________
+----------------------------- Captured stdout call -----------------------------
+pre generation hook
+pre generation hook
+__________________________ test_run_python_hooks_cwd ___________________________
+----------------------------- Captured stdout call -----------------------------
+pre generation hook
+pre generation hook
+_____________________________ test_run_shell_hooks _____________________________
+----------------------------- Captured stdout call -----------------------------
+pre generation hook
+post generation hook
+=========================== short test summary info ============================
+PASSED tests/test_generate_hooks.py::test_ignore_hooks_dirs
+PASSED tests/test_generate_hooks.py::test_run_python_hooks
+PASSED tests/test_generate_hooks.py::test_run_python_hooks_cwd
+PASSED tests/test_generate_hooks.py::test_run_shell_hooks
+ERROR tests/test_generate_hooks.py::test_oserror_hooks
+FAILED tests/test_generate_hooks.py::test_empty_hooks - Failed: DID NOT RAISE...
+===================== 1 failed, 4 passed, 1 error in 0.18s =====================

@@ -1,0 +1,38 @@
+138:            superclass_args = getattr(superclass, "__args__", None)
+147:            if getattr(thing, "__args__", None) is not None:
+150:                args = getattr(orig_base, "__args__", None)
+190:        and getattr(thing, "__args__", None) is not None
+198:        *getattr(annotated_type, "__args__", ()),
+211:    args = getattr(type_, "__args__", None)
+262:        elem_types += getattr(thing, "__args__", None) or ()
+273:        return st.one_of([st.from_type(t) for t in thing.__args__])
+275:        args_dfs_stack = list(thing.__args__)
+280:                args_dfs_stack.extend(reversed(arg.__args__))
+289:        args = thing.__args__
+300:    # Hashable and Sized have `__args__ == ()` on Python 3.7 or later.
+304:        and len(getattr(thing, "__args__", None) or []) == 0
+334:        elem_type = (getattr(thing, "__args__", None) or ["not int"])[0]
+336:            union_elems = elem_type.__args__
+598:            # This branch is for Python < 3.8, when __args__ was not always tracked
+599:            if getattr(thing, "__args__", None) is None:
+612:    if getattr(thing, "__args__", None) is None:
+613:        # This branch is for Python < 3.8, when __args__ was not always tracked
+615:    args = (thing.__args__[0],)
+617:        args = args[0].__args__
+634:    return st.lists(st.from_type(thing.__args__[0]))
+663:    return st.sets(_from_hashable_type(thing.__args__[0]))
+668:    return st.frozensets(_from_hashable_type(thing.__args__[0]))
+674:    keys_vals = thing.__args__ * 2
+693:    return st.dictionaries(_from_hashable_type(thing.__args__[0]), st.none()).map(
+700:    return st.dictionaries(st.integers(), st.from_type(thing.__args__[0])).map(
+707:    return st.iterables(st.from_type(thing.__args__[0]))
+713:        keys=st.from_type(thing.__args__[0]),
+720:    return st.lists(st.from_type(thing.__args__[0])).map(collections.deque)
+736:    if isinstance(thing.__args__[0], typing.TypeVar):
+738:    return st.just(re.compile(thing.__args__[0]()))
+746:    if thing.__args__[0] == bytes:
+774:    yields, _, returns = thing.__args__
+783:    if not thing.__args__:  # pragma: no cover  # varies by minor version
+785:    # Note that a list can only appear in __args__ under Python 3.9 with the
+789:        if len(thing.__args__) == 1 or thing.__args__[0] == []
+791:        returns=st.from_type(thing.__args__[-1]),

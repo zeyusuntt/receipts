@@ -1,0 +1,170 @@
+============================= test session starts ==============================
+collected 86 items
+
+tests/test_console.py .................................................. [ 58%]
+...FF...............................                                     [100%]
+
+=================================== FAILURES ===================================
+E   assert '<svg width="...ct>\n</svg>\n' == '<svg width="...ct>\n</svg>\n'
+      
+      Skipping 2025 identical leading characters in diff, use -v to show
+      -           box-shadow: 0 0 0 1px #484848;
+      +           outline: 1px solid #484848;
+      +             overflow: hidden;
+                }
+                .rich-svg-857433718-terminal:after {...
+      
+      ...Full output truncated (69 lines hidden), use '-vv' to show
+----------------------------- Captured stdout call -----------------------------
+foo Click
+/rich/tests/test_console.py:631: assert '<svg width="...ct>\n</svg>\n' == '<svg width="...ct>\n</svg>\n'
+E   assert '<svg width="...ct>\n</svg>\n' == '<svg width="...ct>\n</svg>\n'
+      
+      Skipping 2025 identical leading characters in diff, use -v to show
+      -           box-shadow: 0 0 0 1px #484848;
+      +           outline: 1px solid #484848;
+      +             overflow: hidden;
+                }
+                .rich-svg-857433718-terminal:after {...
+      
+      ...Full output truncated (69 lines hidden), use '-vv' to show
+----------------------------- Captured stdout call -----------------------------
+foo Click
+/rich/tests/test_console.py:645: assert '<svg width="...ct>\n</svg>\n' == '<svg width="...ct>\n</svg>\n'
+==================================== PASSES ====================================
+_______________________________ test_print_json ________________________________
+----------------------------- Captured stdout call -----------------------------
+'\x1b[1m[\x1b[0m\n    \x1b[3;91mfalse\x1b[0m,\n    \x1b[3;92mtrue\x1b[0m,\n    \x1b[3;35mnull\x1b[0m,\n    \x1b[32m"foo"\x1b[0m\n\x1b[1m]\x1b[0m\n'
+_____________________________ test_print_json_data _____________________________
+----------------------------- Captured stdout call -----------------------------
+'\x1b[1m[\x1b[0m\n    \x1b[3;91mfalse\x1b[0m,\n    \x1b[3;92mtrue\x1b[0m,\n    \x1b[3;35mnull\x1b[0m,\n    \x1b[32m"foo"\x1b[0m\n\x1b[1m]\x1b[0m\n'
+_________________________ test_print_json_ensure_ascii _________________________
+----------------------------- Captured stdout call -----------------------------
+'\x1b[1m{\x1b[0m\n  \x1b[1;34m"foo"\x1b[0m: \x1b[32m"💩"\x1b[0m\n\x1b[1m}\x1b[0m\n'
+___________________________________ test_log ___________________________________
+----------------------------- Captured stdout call -----------------------------
+'\x1b[2;36mTIME\x1b[0m\x1b[2;36m \x1b[0m\x1b[31mfoo                                                                        \x1b[0m\n'
+_______________________________ test_export_text _______________________________
+----------------------------- Captured stdout call -----------------------------
+foo
+_______________________________ test_export_html _______________________________
+----------------------------- Captured stdout call -----------------------------
+foo <script> 'test' Click
+___________________________ test_export_html_inline ____________________________
+----------------------------- Captured stdout call -----------------------------
+foo Click
+________________________________ test_save_text ________________________________
+----------------------------- Captured stdout call -----------------------------
+foo
+________________________________ test_save_html ________________________________
+----------------------------- Captured stdout call -----------------------------
+foo
+________________________________ test_no_color _________________________________
+----------------------------- Captured stdout call -----------------------------
+'\x1b[1mFOO\x1b[0m\n'
+_________________________________ test_screen __________________________________
+----------------------------- Captured stdout call -----------------------------
+"\x1b[?1049h\x1b[H\x1b[?25lDon't panic\n\x1b[?1049l\x1b[?25h"
+______________________________ test_screen_update ______________________________
+----------------------------- Captured stdout call -----------------------------
+'\x1b[?1049h\x1b[H\x1b[?25l\x1b[34mfoo\x1b[0m\x1b[34m                 \x1b[0m\n\x1b[34m                    \x1b[0m\n\x1b[34m                    \x1b[0m\n\x1b[34m                    \x1b[0m\x1b[34mbar\x1b[0m\x1b[34m                 \x1b[0m\n\x1b[34m                    \x1b[0m\n\x1b[34m                    \x1b[0m\n\x1b[34m                    \x1b[0m\x1b[34mbar\x1b[0m\x1b[34m                 \x1b[0m\n\x1b[34m                    \x1b[0m\n\x1b[34m                    \x1b[0m\n\x1b[34m                    \x1b[0m\x1b[?1049l\x1b[?25h'
+___________________________ test_screen_update_class ___________________________
+----------------------------- Captured stdout call -----------------------------
+'\x1b[11;6Hfoo\x1b[12;6Hbar'
+______________________________ test_is_alt_screen ______________________________
+----------------------------- Captured stdout call -----------------------------
+[?1049h[H[?25l[?1049l[?25h
+______________________________ test_update_screen ______________________________
+----------------------------- Captured stdout call -----------------------------
+'\x1b[?1049h\x1b[H\x1b[?25l\x1b[1;1Hfoo                 \x1b[2;1H                    \x1b[3;1H                    \x1b[4;1H                    \x1b[5;1H                    \x1b[4;3Hbar     \x1b[5;3H        \x1b[6;3H        \x1b[7;3H        \x1b[?1049l\x1b[?25h'
+______________________________ test_reset_height _______________________________
+----------------------------- Captured stdout call -----------------------------
+'╭──────────────────╮\n│ ╭──────────────╮ │\n│ │ foo          │ │\n│ ╰──────────────╯ │\n│ ╭──────────────╮ │\n│ │ bar          │ │\n│ ╰──────────────╯ │\n│                  │\n│                  │\n│                  │\n│                  │\n╰──────────────────╯\n'
+=========================== short test summary info ============================
+PASSED tests/test_console.py::test_dumb_terminal
+PASSED tests/test_console.py::test_soft_wrap
+PASSED tests/test_console.py::test_16color_terminal
+PASSED tests/test_console.py::test_truecolor_terminal
+PASSED tests/test_console.py::test_console_options_update
+PASSED tests/test_console.py::test_console_options_update_height
+PASSED tests/test_console.py::test_init
+PASSED tests/test_console.py::test_size
+PASSED tests/test_console.py::test_size_can_fall_back_to_std_descriptors[True-no_descriptor_size0-ValueError-ValueError-ValueError-expected_size0]
+PASSED tests/test_console.py::test_size_can_fall_back_to_std_descriptors[False-no_descriptor_size1-ValueError-ValueError-ValueError-expected_size1]
+PASSED tests/test_console.py::test_size_can_fall_back_to_std_descriptors[False-ValueError-stdin_size2-ValueError-ValueError-expected_size2]
+PASSED tests/test_console.py::test_size_can_fall_back_to_std_descriptors[False-ValueError-ValueError-stdout_size3-ValueError-expected_size3]
+PASSED tests/test_console.py::test_size_can_fall_back_to_std_descriptors[False-ValueError-ValueError-ValueError-stderr_size4-expected_size4]
+PASSED tests/test_console.py::test_size_can_fall_back_to_std_descriptors[False-ValueError-ValueError-ValueError-ValueError-expected_size5]
+PASSED tests/test_console.py::test_repr
+PASSED tests/test_console.py::test_print
+PASSED tests/test_console.py::test_print_multiple
+PASSED tests/test_console.py::test_print_text
+PASSED tests/test_console.py::test_print_text_multiple
+PASSED tests/test_console.py::test_print_json
+PASSED tests/test_console.py::test_print_json_error
+PASSED tests/test_console.py::test_print_json_data
+PASSED tests/test_console.py::test_print_json_ensure_ascii
+PASSED tests/test_console.py::test_print_json_indent_none
+PASSED tests/test_console.py::test_log
+PASSED tests/test_console.py::test_log_milliseconds
+PASSED tests/test_console.py::test_print_empty
+PASSED tests/test_console.py::test_markup_highlight
+PASSED tests/test_console.py::test_print_style
+PASSED tests/test_console.py::test_show_cursor
+PASSED tests/test_console.py::test_clear
+PASSED tests/test_console.py::test_clear_no_terminal
+PASSED tests/test_console.py::test_get_style
+PASSED tests/test_console.py::test_get_style_default
+PASSED tests/test_console.py::test_get_style_error
+PASSED tests/test_console.py::test_render_error
+PASSED tests/test_console.py::test_control
+PASSED tests/test_console.py::test_capture
+PASSED tests/test_console.py::test_input
+PASSED tests/test_console.py::test_input_password
+PASSED tests/test_console.py::test_status
+PASSED tests/test_console.py::test_justify_none
+PASSED tests/test_console.py::test_justify_left
+PASSED tests/test_console.py::test_justify_center
+PASSED tests/test_console.py::test_justify_right
+PASSED tests/test_console.py::test_justify_renderable_none
+PASSED tests/test_console.py::test_justify_renderable_left
+PASSED tests/test_console.py::test_justify_renderable_center
+PASSED tests/test_console.py::test_justify_renderable_right
+PASSED tests/test_console.py::test_render_broken_renderable
+PASSED tests/test_console.py::test_export_text
+PASSED tests/test_console.py::test_export_html
+PASSED tests/test_console.py::test_export_html_inline
+PASSED tests/test_console.py::test_save_text
+PASSED tests/test_console.py::test_save_html
+PASSED tests/test_console.py::test_no_wrap
+PASSED tests/test_console.py::test_unicode_error
+PASSED tests/test_console.py::test_bell
+PASSED tests/test_console.py::test_pager
+PASSED tests/test_console.py::test_out
+PASSED tests/test_console.py::test_render_group
+PASSED tests/test_console.py::test_render_group_fit
+PASSED tests/test_console.py::test_get_time
+PASSED tests/test_console.py::test_console_style
+PASSED tests/test_console.py::test_no_color
+PASSED tests/test_console.py::test_quiet
+PASSED tests/test_console.py::test_no_nested_live
+PASSED tests/test_console.py::test_screen
+PASSED tests/test_console.py::test_screen_update
+PASSED tests/test_console.py::test_height
+PASSED tests/test_console.py::test_columns_env
+PASSED tests/test_console.py::test_lines_env
+PASSED tests/test_console.py::test_screen_update_class
+PASSED tests/test_console.py::test_is_alt_screen
+PASSED tests/test_console.py::test_set_console_title
+PASSED tests/test_console.py::test_update_screen
+PASSED tests/test_console.py::test_update_screen_lines
+PASSED tests/test_console.py::test_update_options_markup
+PASSED tests/test_console.py::test_print_width_zero
+PASSED tests/test_console.py::test_size_properties
+PASSED tests/test_console.py::test_print_newline_start
+PASSED tests/test_console.py::test_is_terminal_broken_file
+PASSED tests/test_console.py::test_detect_color_system
+PASSED tests/test_console.py::test_reset_height
+FAILED tests/test_console.py::test_export_svg - assert '<svg width="...ct>\n<...
+FAILED tests/test_console.py::test_save_svg - assert '<svg width="...ct>\n</s...
+========================= 2 failed, 84 passed in 0.23s =========================

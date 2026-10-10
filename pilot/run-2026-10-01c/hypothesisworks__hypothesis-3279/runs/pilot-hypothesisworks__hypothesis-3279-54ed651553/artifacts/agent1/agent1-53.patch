@@ -1,0 +1,30 @@
+diff --git a/hypothesis-python/src/hypothesis/strategies/_internal/core.py b/hypothesis-python/src/hypothesis/strategies/_internal/core.py
+index 96d9a8160..7ef2aa946 100644
+--- a/hypothesis-python/src/hypothesis/strategies/_internal/core.py
++++ b/hypothesis-python/src/hypothesis/strategies/_internal/core.py
+@@ -15,6 +15,7 @@ import random
+ import re
+ import string
+ import sys
++import types as builtins_types
+ import typing
+ from decimal import Context, Decimal, localcontext
+ from fractions import Fraction
+@@ -1014,6 +1015,7 @@ def _from_type(thing: Type[Ex]) -> SearchStrategy[Ex]:
+         return strategy
+ 
+     if not isinstance(thing, type):
++        print(f"DEBUG: {thing!r} is not instance of type")
+         if types.is_a_new_type(thing):
+             # Check if we have an explicitly registered strategy for this thing,
+             # resolve it so, and otherwise resolve as for the base type.
+@@ -1021,7 +1023,8 @@ def _from_type(thing: Type[Ex]) -> SearchStrategy[Ex]:
+                 return as_strategy(types._global_type_lookup[thing], thing)
+             return from_type(thing.__supertype__)
+         # Unions are not instances of `type` - but we still want to resolve them!
+-        if getattr(thing, "__origin__", None) is typing.Union:
++        if getattr(thing, "__origin__", None) is typing.Union or \
++           (hasattr(builtins_types, 'UnionType') and type(thing) is builtins_types.UnionType):
+             args = sorted(thing.__args__, key=types.type_sorting_key)
+             return one_of([from_type(t) for t in args])
+     if not types.is_a_type(thing):

@@ -1,0 +1,7 @@
+{
+  "approach": "Fix the handling of Attribute nodes whose `.value` points to a constant/literal address so they properly lower into an address type instead of hitting the generic-fallback route that ends up raising TypeCheckFailure.",
+  "files_to_edit": [
+    "vyper/codegen/expr.py"
+  ],
+  "hypothesis": "When an AddressHexLIT node representing a hexadecimal literal address access balance is processed in expr.py's parse_value_expr method, neither cls nor parent.get(\"balance\") handles the case correctly before reaching the final fallback expression handler inside parse_value_expr."
+}

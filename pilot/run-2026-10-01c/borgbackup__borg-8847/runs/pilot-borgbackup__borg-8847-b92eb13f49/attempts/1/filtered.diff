@@ -1,0 +1,34 @@
+diff --git a/src/borg/archiver/list_cmd.py b/src/borg/archiver/list_cmd.py
+index 013e695c..93f1ad39 100644
+--- a/src/borg/archiver/list_cmd.py
++++ b/src/borg/archiver/list_cmd.py
+@@ -33,6 +33,17 @@ def _list_inner(cache):
+             archive = Archive(manifest, archive_info.id, cache=cache)
+             formatter = ItemFormatter(archive, format)
+             for item in archive.iter_items(lambda item: matcher.match(item.path)):
++                # Apply depth filtering if --depth is specified
++                if hasattr(args, 'depth') and args.depth is not None:
++                    # Calculate depth of the item relative to the archive root
++                    item_path = item.path.rstrip('/')
++                    if item_path:  # Not empty path
++                        depth = item_path.count('/')
++                    else:
++                        depth = 0
++                    # Skip items deeper than specified depth
++                    if depth > args.depth:
++                        continue
+                 sys.stdout.write(formatter.format_item(item, args.json_lines, sort=True))
+ 
+         # Only load the cache if it will be used
+@@ -121,4 +132,11 @@ def build_parser_list(self, subparsers, common_parser, mid_common_parser):
+         subparser.add_argument(
+             "paths", metavar="PATH", nargs="*", type=PathSpec, help="paths to list; patterns are supported"
+         )
++        subparser.add_argument(
++            "--depth",
++            metavar="DEPTH",
++            type=int,
++            default=None,
++            help="Limit listing to the specified directory depth (0 for only the top level, 1 for one level of subdirectories, etc.)",
++        )
+         define_exclusion_group(subparser)

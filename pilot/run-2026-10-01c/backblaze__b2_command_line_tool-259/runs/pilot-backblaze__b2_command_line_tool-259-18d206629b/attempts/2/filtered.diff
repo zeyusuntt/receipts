@@ -1,0 +1,199 @@
+diff --git a/b2/api.py b/b2/api.py
+index 7bf33da..dd21f53 100644
+--- a/b2/api.py
++++ b/b2/api.py
+@@ -150,14 +150,20 @@ class B2Api(object):
+         self.cache.save_bucket(bucket)
+         return bucket
+ 
+-    def download_file_by_id(self, file_id, download_dest, progress_listener=None):
++    def download_file_by_id(self, file_id, download_dest, progress_listener=None, range_=None):
+         progress_listener = progress_listener or DoNothingProgressListener()
+-        self.session.download_file_by_id(
++        range_start, range_end = (None, None)
++        if range_ is not None:
++            range_start, range_end = range_
++        # Call the original method but capture if it's our patched version
++        return self.raw_api.download_file_by_id(
++            self.account_info.get_download_url(),
++            self.account_info.get_account_auth_token_or_none(),
+             file_id,
+             DownloadDestProgressWrapper(download_dest, progress_listener),
+-            url_factory=self.account_info.get_download_url
++            range_start=range_start,
++            range_end=range_end
+         )
+-        progress_listener.close()
+ 
+     def get_bucket_by_id(self, bucket_id):
+         return Bucket(self, bucket_id)
+diff --git a/b2/bucket.py b/b2/bucket.py
+index 722bd90..152f367 100644
+--- a/b2/bucket.py
++++ b/b2/bucket.py
+@@ -112,8 +112,14 @@ class Bucket(object):
+     def cancel_large_file(self, file_id):
+         return self.api.cancel_large_file(file_id)
+ 
+-    def download_file_by_id(self, file_id, download_dest, progress_listener=None):
+-        self.api.download_file_by_id(file_id, download_dest, progress_listener)
++    def download_file_by_id(self, file_id, download_dest, progress_listener=None, range_=None):
++        print(f"DEBUG: bucket.download_file_by_id called with range_={range_}")
++        range_start, range_end = (None, None)
++        if range_ is not None:
++            range_start, range_end = range_
++        print(f"DEBUG: calling api with range_start={range_start}, range_end={range_end}")
++        self.api.download_file_by_id(file_id, download_dest, progress_listener, 
++                                   range_start, range_end)
+ 
+     def download_file_by_name(self, file_name, download_dest, progress_listener=None):
+         progress_listener = progress_listener or DoNothingProgressListener()
+diff --git a/b2/console_tool.py b/b2/console_tool.py
+index 66b5f2c..e8dd859 100644
+--- a/b2/console_tool.py
++++ b/b2/console_tool.py
+@@ -331,22 +331,39 @@ class DeleteFileVersion(Command):
+ 
+ class DownloadFileById(Command):
+     """
+-    b2 download_file_by_id [--noProgress] <fileId> <localFileName>
++    b2 download_file_by_id [--noProgress] [--range START_END] <fileId> <localFileName>
+ 
+         Downloads the given file, and stores it in the given local file.
+ 
+         If the 'tqdm' library is installed, progress bar is displayed
+         on stderr.  Without it, simple text progress is printed.
+         Use '--noProgress' to disable progress reporting.
++        
++        For partial downloads, use --range START_END where START and END are
++        byte indices (inclusive) or omit END to read to the end of file.
+     """
+ 
+-    OPTION_FLAGS = ['noProgress']
++    OPTION_FLAGS = ['noProgress', 'range']
+     REQUIRED = ['fileId', 'localFileName']
+ 
+     def run(self, args):
+         progress_listener = make_progress_listener(args.localFileName, args.noProgress)
+         download_dest = DownloadDestLocalFile(args.localFileName)
+-        self.api.download_file_by_id(args.fileId, download_dest, progress_listener)
++        
++        range_start, range_end = None, None
++        if hasattr(args, 'range') and args.range:
++            try:
++                parts = args.range.split('_')
++                if len(parts) == 2:
++                    range_start = int(parts[0]) if parts[0] else None
++                    range_end = int(parts[1]) if parts[1] else None
++                elif len(parts) == 1 and parts[0]:
++                    range_start = int(parts[0])
++            except ValueError:
++                raise ValueError("Invalid range format. Use START_END where START and END are integers.")
++        
++        self.api.download_file_by_id(args.fileId, download_dest, progress_listener,
++                                   range_start, range_end)
+         self.console_tool._print_download_info(download_dest)
+         return 0
+ 
+diff --git a/b2/raw_api.py b/b2/raw_api.py
+index 9451eb1..4d37861 100644
+--- a/b2/raw_api.py
++++ b/b2/raw_api.py
+@@ -156,9 +156,12 @@ class B2RawApi(AbstractRawApi):
+             fileName=file_name
+         )
+ 
+-    def download_file_by_id(self, download_url, account_auth_token_or_none, file_id, download_dest):
++    def download_file_by_id(self, download_url, account_auth_token_or_none, file_id, download_dest, 
++                           range_start=None, range_end=None):
++        print(f"DEBUG: raw_api.download_file_by_id called with range_start={range_start}, range_end={range_end}")
+         url = download_url + '/b2api/v1/b2_download_file_by_id?fileId=' + file_id
+-        return self._download_file_from_url(url, account_auth_token_or_none, download_dest)
++        return self._download_file_from_url(url, account_auth_token_or_none, download_dest, 
++                                          range_start, range_end)
+ 
+     def download_file_by_name(
+         self, download_url, account_auth_token_or_none, bucket_name, file_name, download_dest
+@@ -166,7 +169,8 @@ class B2RawApi(AbstractRawApi):
+         url = download_url + '/file/' + bucket_name + '/' + b2_url_encode(file_name)
+         return self._download_file_from_url(url, account_auth_token_or_none, download_dest)
+ 
+-    def _download_file_from_url(self, url, account_auth_token_or_none, download_dest):
++    def _download_file_from_url(self, url, account_auth_token_or_none, download_dest,
++                               range_start=None, range_end=None):
+         """
+         Downloads a file from given url and stores it in the given download_destination.
+ 
+@@ -175,12 +179,20 @@ class B2RawApi(AbstractRawApi):
+         :param url: The full URL to download from
+         :param account_auth_token_or_none: an optional account auth token to pass in
+         :param download_dest: where to put the file when it is downloaded
+-        :param progress_listener: where to notify about progress downloading
++        :param range_start: start byte for range download (inclusive)
++        :param range_end: end byte for range download (inclusive). If None, read to end.
+         :return:
+         """
+         request_headers = {}
+         if account_auth_token_or_none is not None:
+             request_headers['Authorization'] = account_auth_token_or_none
++        
++        # Add range header if specified
++        if range_start is not None or range_end is not None:
++            range_header = 'bytes={}-'.format(range_start)
++            if range_end is not None:
++                range_header = '{}{}'.format(range_header, range_end)
++            request_headers['Range'] = range_header
+ 
+         with self.b2_http.get_content(url, request_headers) as response:
+ 
+diff --git a/b2/raw_simulator.py b/b2/raw_simulator.py
+index aa65cf7..c4f97d4 100644
+--- a/b2/raw_simulator.py
++++ b/b2/raw_simulator.py
+@@ -204,9 +204,9 @@ class BucketSimulator(object):
+         del self.file_id_to_file[file_id]
+         return dict(fileId=file_id, fileName=file_name, uploadTimestamp=file_sim.upload_timestamp)
+ 
+-    def download_file_by_id(self, file_id, download_dest):
++    def download_file_by_id(self, file_id, download_dest, range_start=None, range_end=None):
+         file_sim = self.file_id_to_file[file_id]
+-        self._download_file_sim(download_dest, file_sim)
++        self._download_file_sim(download_dest, file_sim, range_start, range_end)
+ 
+     def download_file_by_name(self, file_name, download_dest):
+         files = self.list_file_names(file_name, 1)['files']
+@@ -218,12 +218,16 @@ class BucketSimulator(object):
+         file_sim = self.file_name_and_id_to_file[(file_name, file_dict['fileId'])]
+         self._download_file_sim(download_dest, file_sim)
+ 
+-    def _download_file_sim(self, download_dest, file_sim):
++    def _download_file_sim(self, download_dest, file_sim, range_start=None, range_end=None):
++        start = range_start if range_start is not None else 0
++        end = range_end if range_end is not None else len(file_sim.data_bytes) - 1
++        data = file_sim.data_bytes[start:end+1]
++        
+         with download_dest.open(
+-            file_sim.file_id, file_sim.name, file_sim.content_length, file_sim.content_type,
++            file_sim.file_id, file_sim.name, len(data), file_sim.content_type,
+             file_sim.content_sha1, file_sim.file_info, file_sim.mod_time_millis()
+         ) as f:
+-            f.write(file_sim.data_bytes)
++            f.write(data)
+ 
+     def finish_large_file(self, file_id, part_sha1_array):
+         file_sim = self.file_id_to_file[file_id]
+@@ -443,11 +447,12 @@ class RawSimulator(AbstractRawApi):
+         del self.bucket_id_to_bucket[bucket_id]
+         return bucket.bucket_dict()
+ 
+-    def download_file_by_id(self, download_url, account_auth_token_or_none, file_id, download_dest):
++    def download_file_by_id(self, download_url, account_auth_token_or_none, file_id, download_dest,
++                           range_start=None, range_end=None):
+         # TODO: check auth token if bucket is not public
+         bucket_id = self.file_id_to_bucket_id[file_id]
+         bucket = self._get_bucket_by_id(bucket_id)
+-        bucket.download_file_by_id(file_id, download_dest)
++        bucket.download_file_by_id(file_id, download_dest, None, (range_start, range_end))
+ 
+     def download_file_by_name(
+         self, download_url, account_auth_token_or_none, bucket_name, file_name, download_dest

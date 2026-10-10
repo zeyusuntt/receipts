@@ -1,0 +1,41 @@
+towncrier.test.test_build
+  TestCli
+    test_title_format_custom_markdown ...                                [FAIL]
+
+===============================================================================
+[FAIL]
+Traceback (most recent call last):
+  File "/towncrier/src/towncrier/test/helpers.py", line 102, in test
+    return fn(*args, runner=runner, **kw)
+  File "/towncrier/src/towncrier/test/test_build.py", line 1099, in test_title_format_custom_markdown
+    self.assertEqual(expected_output, result.output)
+  File "/usr/local/lib/python3.10/site-packages/twisted/trial/_synctest.py", line 444, in assertEqual
+    super().assertEqual(first, second, msg)
+  File "/usr/local/lib/python3.10/unittest/case.py", line 845, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "/usr/local/lib/python3.10/unittest/case.py", line 1226, in assertMultiLineEqual
+    self.fail(self._formatMessage(msg, standardMsg))
+twisted.trial.unittest.FailTest: 'Load[206 chars]rsion 7.8.9\n\n# Features\n\n- Adds levitation (#123)\n\n\n\n' != 'Load[206 chars]rsion 7.8.9\n\n## Features\n\n- Adds levitation (#123)\n\n\n\n'
+  Loading template...
+  Finding news fragments...
+  Rendering news fragments...
+  Draft only -- nothing has been written.
+  What is seen below is what would be written.
+  
+  [20-01-2001] CUSTOM RELEASE for FooBarBaz version 7.8.9
+  
+- # Features
++ ## Features
+?  +
+  
+  - Adds levitation (#123)
+  
+  
+  
+
+
+towncrier.test.test_build.TestCli.test_title_format_custom_markdown
+-------------------------------------------------------------------------------
+Ran 1 tests in 0.017s
+
+FAILED (failures=1)

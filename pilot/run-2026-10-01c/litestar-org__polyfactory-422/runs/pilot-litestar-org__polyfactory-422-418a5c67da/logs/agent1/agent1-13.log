@@ -1,0 +1,13 @@
+Building FooFactory...
+Traceback (most recent call last):
+  File "/polyfactory/reproduce_issue.py", line 13, in <module>
+    result = FooFactory.build()
+  File "/polyfactory/polyfactory/factories/base.py", line 758, in build
+    return cast("T", cls.__model__(**cls.process_kwargs(**kwargs)))
+  File "/polyfactory/polyfactory/factories/base.py", line 741, in process_kwargs
+    result[field_meta.name] = cls.get_field_value(field_meta, field_build_parameters=field_build_parameters)
+  File "/polyfactory/polyfactory/factories/base.py", line 609, in get_field_value
+    return handle_collection_type(field_meta, origin, cls)
+  File "/polyfactory/polyfactory/value_generators/complex_types.py", line 62, in handle_collection_type
+    raise NotImplementedError(msg)
+NotImplementedError: Unsupported container type: <class 'str'>

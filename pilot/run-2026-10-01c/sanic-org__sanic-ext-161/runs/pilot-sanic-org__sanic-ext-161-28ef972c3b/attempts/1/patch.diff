@@ -1,0 +1,43 @@
+diff --git a/debug_tmp.py b/debug_tmp.py
+new file mode 100644
+index 0000000..67d7b2c
+--- /dev/null
++++ b/debug_tmp.py
+@@ -0,0 +1,17 @@
++from sanic_ext.extensions.openapi.types import String, Schema, _properties
++
++class Pet:
++    name = String(example="Snoopy")
++
++class Single:
++    pet = Pet
++
++    class Ignore:
++        ...
++
++print("Single.__dict__:", Single.__dict__)
++import inspect
++print("getmembers:")
++for name, val in inspect.getmembers(Single):
++    print(name, type(val))
++print("_properties result:", _properties(Single))
+\ No newline at end of file
+diff --git a/sanic_ext/extensions/openapi/types.py b/sanic_ext/extensions/openapi/types.py
+index 8fdbb8c..d423e5a 100644
+--- a/sanic_ext/extensions/openapi/types.py
++++ b/sanic_ext/extensions/openapi/types.py
+@@ -358,6 +358,8 @@ def _properties(value: object) -> Dict:
+             x: val
+             for x, v in getmembers(value, _is_property)
+             if (val := _extract(v)) and x in value.__dict__
++                and not (isclass(v) and getattr(value, '__qualname__', None)
++                         and getattr(v, '__qualname__', '').startswith(value.__qualname__ + '.'))
+         }
+     except AttributeError:
+         fields = {}
+@@ -382,4 +384,4 @@ def _extract(item):
+ 
+ 
+ def _is_property(item):
+-    return not isfunction(item) and not ismethod(item) and not isclass(item)
++    return not isfunction(item) and not ismethod(item)

@@ -1,0 +1,29 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "TypeError when using Const as reset value of a Signal with a lib.data.Layout\nRepro:\r\n```python3\r\nfrom amaranth import *\r\nfrom amaranth.lib import data\r\n\r\nlayout = data.StructLayout({\"foo\": unsigned(1)})\r\ns = Signal(layout, reset={\"foo\": Const(0)})\r\n```\r\n\r\nOutput:\r\n```\r\nTraceback (most recent call last):\r\n  File \"/home/jf/src/amaranth/amaranth/hdl/ast.py\", line 1040, in __init__\r\n    reset = Const.cast(orig_shape.const(reset))\r\n                       ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/home/jf/src/amaranth/amaranth/lib/data.py\", line 242, in const\r\n    key_value = Const(key_value, cast_field_shape)\r\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/home/jf/src/amaranth/amaranth/hdl/ast.py\", line 659, in __init__\r\n    self.value = int(value)\r\n                 ^^^^^^^^^^\r\nTypeError: int() argument must be a string, a bytes-like object or a real number, not 'Const'\r\n\r\nDuring handling of the above exception, another exception occurred:\r\n\r\nTraceback (most recent call last):\r\n  File \"/tmp/repro.py\", line 5, in <module>\r\n    s = Signal(layout, reset={\"foo\": Const(0)})\r\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/home/jf/src/amaranth/amaranth/hdl/ast.py\", line 973, in __call__\r\n    signal = super().__call__(shape, **kwargs, src_loc_at=src_loc_at + 1)\r\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/home/jf/src/amaranth/amaranth/hdl/ast.py\", line 1042, in __init__\r\n    raise TypeError(\"Reset value must be a constant initializer of {!r}\"\r\nTypeError: Reset value must be a constant initializer of StructLayout({'foo': unsigned(1)})\r\n```",
+  "source": {
+    "image": "docker.io/swerebenchv2/amaranth-lang-amaranth:842-ea36c80",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-amaranth-lang__amaranth-842-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3Rlc3RfbGliX2RhdGEucHkgYi90ZXN0cy90ZXN0X2xpYl9kYXRhLnB5CmluZGV4IDVjZTExMjAuLjg0NWQyNDAgMTAwNjQ0Ci0tLSBhL3Rlc3RzL3Rlc3RfbGliX2RhdGEucHkKKysrIGIvdGVzdHMvdGVzdF9saWJfZGF0YS5weQpAQCAtNDI0LDYgKzQyNCwxMCBAQCBjbGFzcyBMYXlvdXRUZXN0Q2FzZShGSERMVGVzdENhc2UpOgogICAgICAgICAgICAgICAgIHIidGhhdCBpdCBjYXN0cyB0bywgdW5zaWduZWRcKDhcKSwgYW5kIG5vdCB1bnNpZ25lZFwoMVwpJCIpOgogICAgICAgICAgICAgc2wuY29uc3QoeyJmIjogIjAxIn0pCiAKKyAgICBkZWYgdGVzdF9jb25zdF9maWVsZF9jb25zdChzZWxmKToKKyAgICAgICAgc2wgPSBTdHJ1Y3RMYXlvdXQoeyJmIjogdW5zaWduZWQoMSl9KQorICAgICAgICBzZWxmLmFzc2VydFJlcHIoc2wuY29uc3QoeyJmIjogQ29uc3QoMSl9KSwgIihjb25zdCAxJ2QxKSIpCisKICAgICBkZWYgdGVzdF9zaWduYWxfcmVzZXQoc2VsZik6CiAgICAgICAgIHNsID0gU3RydWN0TGF5b3V0KHsKICAgICAgICAgICAgICJhIjogdW5zaWduZWQoMSksCkBAIC02MTEsNiArNjE1LDE3IEBAIGNsYXNzIFZpZXdUZXN0Q2FzZShGSERMVGVzdENhc2UpOgogICAgICAgICAgICAgICAgIHIiYW5kIG1heSBvbmx5IGJlIGFjY2Vzc2VkIGJ5IGluZGV4aW5nJCIpOgogICAgICAgICAgICAgU2lnbmFsKFN0cnVjdExheW91dCh7Il9jIjogc2lnbmVkKDEpfSkpLl9jCiAKKyAgICBkZWYgdGVzdF9idWdfODM3X2FycmF5X2xheW91dF9nZXRpdGVtX3N0cihzZWxmKToKKyAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlc1JlZ2V4KFR5cGVFcnJvciwKKyAgICAgICAgICAgICAgICByIl5WaWV3cyB3aXRoIGFycmF5IGxheW91dCBtYXkgb25seSBiZSBpbmRleGVkIHdpdGggYW4gaW50ZWdlciBvciBhIHZhbHVlLCAiCisgICAgICAgICAgICAgICAgciJub3QgJ3Jlc2V0JyQiKToKKyAgICAgICAgICAgIFNpZ25hbChBcnJheUxheW91dCh1bnNpZ25lZCgxKSwgMSksIHJlc2V0PVswXSlbInJlc2V0Il0KKworICAgIGRlZiB0ZXN0X2J1Z184MzdfYXJyYXlfbGF5b3V0X2dldGF0dHIoc2VsZik6CisgICAgICAgIHdpdGggc2VsZi5hc3NlcnRSYWlzZXNSZWdleChBdHRyaWJ1dGVFcnJvciwKKyAgICAgICAgICAgICAgICByIl5WaWV3IG9mIFwoc2lnIFwkc2lnbmFsXCkgd2l0aCBhbiBhcnJheSBsYXlvdXQgZG9lcyBub3QgaGF2ZSBmaWVsZHMkIik6CisgICAgICAgICAgICBTaWduYWwoQXJyYXlMYXlvdXQodW5zaWduZWQoMSksIDEpLCByZXNldD1bMF0pLnJlc2V0CisKIAogY2xhc3MgU3RydWN0VGVzdENhc2UoRkhETFRlc3RDYXNlKToKICAgICBkZWYgdGVzdF9jb25zdHJ1Y3Qoc2VsZik6Cg=='\"'\"'))'",
+      "git apply /tmp/receipts-amaranth-lang__amaranth-842-test.patch"
+    ],
+    "workdir": "/amaranth"
+  },
+  "spec_tests": [
+    "tests/test_lib_data.py::LayoutTestCase::test_const_field_const",
+    "tests/test_lib_data.py::ViewTestCase::test_bug_837_array_layout_getattr",
+    "tests/test_lib_data.py::ViewTestCase::test_bug_837_array_layout_getitem_str"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_lib_data.py"
+}

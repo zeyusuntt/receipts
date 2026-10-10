@@ -1,0 +1,67 @@
+diff --git a/qiskit_ibm_runtime/qiskit_runtime_service.py b/qiskit_ibm_runtime/qiskit_runtime_service.py
+index e6ed4de..4a7e2a2 100644
+--- a/qiskit_ibm_runtime/qiskit_runtime_service.py
++++ b/qiskit_ibm_runtime/qiskit_runtime_service.py
+@@ -14,6 +14,7 @@
+ 
+ import json
+ import logging
++import os
+ import traceback
+ import warnings
+ from datetime import datetime
+@@ -160,6 +161,30 @@ class QiskitRuntimeService:
+         Raises:
+             IBMInputValueError: If an input is invalid.
+         """
++        # Load from environment variables if not explicitly set
++        token_from_env = False
++        url_from_env = False
++        instance_from_env = False
++        if token is None:
++            token = os.getenv("QISKIT_IBM_TOKEN")
++            if token is not None:
++                token_from_env = True
++        if url is None:
++            url = os.getenv("QISKIT_IBM_URL")
++            if url is not None:
++                url_from_env = True
++        if instance is None:
++            instance = os.getenv("QISKIT_IBM_INSTANCE")
++            if instance is not None:
++                instance_from_env = True
++        if channel is None:
++            channel = os.getenv("QISKIT_IBM_CHANNEL")
++            # Default channel to ibm_cloud only if token, url, and instance
++            # were all obtained from environment variables (i.e., not overridden
++            # by explicit arguments). This preserves the existing behavior
++            # where providing token or url without channel raises an error.
++            if channel is None and token_from_env and url_from_env and instance_from_env:
++                channel = "ibm_cloud"
+         super().__init__()
+ 
+         if auth:
+diff --git a/verify.py b/verify.py
+new file mode 100644
+index 0000000..5200a23
+--- /dev/null
++++ b/verify.py
+@@ -0,0 +1,17 @@
++import os
++os.environ["QISKIT_IBM_TOKEN"] = "abc"
++os.environ["QISKIT_IBM_URL"] = "https://test"
++os.environ["QISKIT_IBM_INSTANCE"] = "h/g/p"
++os.environ["QISKIT_IBM_CHANNEL"] = "ibm_quantum"
++
++from qiskit_ibm_runtime import QiskitRuntimeService
++service = QiskitRuntimeService()
++print("Channel:", service._account.channel)
++print("Token:", service._account.token)
++print("URL:", service._account.url)
++print("Instance:", service._account.instance)
++assert service._account.channel == "ibm_quantum"
++assert service._account.token == "abc"
++assert service._account.url == "https://test"
++assert service._account.instance == "h/g/p"
++print("SUCCESS")
+\ No newline at end of file

@@ -1,0 +1,101 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /Robyn
+configfile: pyproject.toml
+plugins: anyio-4.12.1
+collecting ... collected 1 item
+
+integration_tests/test_openapi.py::test_json_handler FAILED              [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_json_handler _______________________________
+/usr/local/lib/python3.10/site-packages/urllib3/connection.py:204: in _new_conn
+    sock = connection.create_connection(
+/usr/local/lib/python3.10/site-packages/urllib3/util/connection.py:85: in create_connection
+    raise err
+/usr/local/lib/python3.10/site-packages/urllib3/util/connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:787: in urlopen
+    response = self._make_request(
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:493: in _make_request
+    conn.request(
+/usr/local/lib/python3.10/site-packages/urllib3/connection.py:500: in request
+    self.endheaders()
+/usr/local/lib/python3.10/http/client.py:1278: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+/usr/local/lib/python3.10/http/client.py:1038: in _send_output
+    self.send(msg)
+/usr/local/lib/python3.10/http/client.py:976: in send
+    self.connect()
+/usr/local/lib/python3.10/site-packages/urllib3/connection.py:331: in connect
+    self.sock = self._new_conn()
+/usr/local/lib/python3.10/site-packages/urllib3/connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=8080): Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+/usr/local/lib/python3.10/site-packages/requests/adapters.py:644: in send
+    resp = conn.urlopen(
+/usr/local/lib/python3.10/site-packages/urllib3/connectionpool.py:841: in urlopen
+    retries = retries.increment(
+/usr/local/lib/python3.10/site-packages/urllib3/util/retry.py:535: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=8080): Max retries exceeded with url: /openapi.json (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=8080): Failed to establish a new connection: [Errno 111] Connection refused"))
+
+During handling of the above exception, another exception occurred:
+integration_tests/test_openapi.py:37: in test_json_handler
+    openapi_response = get("/openapi.json", should_check_response=False)
+integration_tests/helpers/http_methods_helpers.py:34: in get
+    response = requests.get(f"{BASE_URL}/{endpoint}", headers=headers)
+/usr/local/lib/python3.10/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/sessions.py:589: in request
+    resp = self.send(prep, **send_kwargs)
+/usr/local/lib/python3.10/site-packages/requests/sessions.py:703: in send
+    r = adapter.send(request, **kwargs)
+/usr/local/lib/python3.10/site-packages/requests/adapters.py:677: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=8080): Max retries exceeded with url: /openapi.json (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=8080): Failed to establish a new connection: [Errno 111] Connection refused"))
+=============================== warnings summary ===============================
+integration_tests/test_openapi.py:7
+  /Robyn/integration_tests/test_openapi.py:7: PytestUnknownMarkWarning: Unknown pytest.mark.benchmark - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.benchmark
+
+integration_tests/test_openapi.py:26
+  /Robyn/integration_tests/test_openapi.py:26: PytestUnknownMarkWarning: Unknown pytest.mark.benchmark - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.benchmark
+
+integration_tests/test_openapi.py:35
+  /Robyn/integration_tests/test_openapi.py:35: PytestUnknownMarkWarning: Unknown pytest.mark.benchmark - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.benchmark
+
+integration_tests/test_openapi.py:52
+  /Robyn/integration_tests/test_openapi.py:52: PytestUnknownMarkWarning: Unknown pytest.mark.benchmark - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.benchmark
+
+integration_tests/test_openapi.py:73
+  /Robyn/integration_tests/test_openapi.py:73: PytestUnknownMarkWarning: Unknown pytest.mark.benchmark - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.benchmark
+
+integration_tests/test_openapi.py:94
+  /Robyn/integration_tests/test_openapi.py:94: PytestUnknownMarkWarning: Unknown pytest.mark.benchmark - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.benchmark
+
+integration_tests/test_openapi.py:158
+  /Robyn/integration_tests/test_openapi.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.benchmark - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.benchmark
+
+integration_tests/test_openapi.py:197
+  /Robyn/integration_tests/test_openapi.py:197: PytestUnknownMarkWarning: Unknown pytest.mark.benchmark - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.benchmark
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-23.xml ------------
+=========================== short test summary info ============================
+FAILED integration_tests/test_openapi.py::test_json_handler - requests.except...
+======================== 1 failed, 8 warnings in 0.32s =========================

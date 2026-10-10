@@ -1,0 +1,24 @@
+diff --git a/covalent/_workflow/electron.py b/covalent/_workflow/electron.py
+index 0c75355..89f9a78 100644
+--- a/covalent/_workflow/electron.py
++++ b/covalent/_workflow/electron.py
+@@ -147,6 +147,19 @@ class Electron:
+ 
+         return self.metadata[name]
+ 
++    @property
++    def executor(self):
++        """Get the executor of the electron."""
++        return self.metadata.get("executor")
++
++    @executor.setter
++    def executor(self, value):
++        """Set the executor of the electron.
++        
++        Updates both the _executor field and metadata['executor'] for consistency.
++        """
++        self.metadata["executor"] = value
++
+     def get_op_function(
+         self, operand_1: Union[Any, "Electron"], operand_2: Union[Any, "Electron"], op: str
+     ) -> "Electron":

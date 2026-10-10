@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "span: provide a helper to add annotations\nI kindly would like to the addition of a helper method on Span, `add_annotation`\r\n\r\nMy use case is to add an annotation to the span like this\r\n```python\r\nwith tracer.span(name='close') as span:\r\n     if self.sock is None:\r\n           span.add_annotation('Socket was already closed')\r\n     else:\r\n           span.add_annotation('Socket is still open')\r\n           try:\r\n                self.sock.close()\r\n           except Exception as e:\r\n                span.add_annotation('Encountered an exception while closing', recoverable=True, method='memcache-close'))\r\n```\r\n\r\nI ask because as a helper method makes it easy for annotations to be made, without having to import too much or go through all the docs.\r\n\r\nPerhaps something that wraps `add_time_event` say:\r\n\r\n```python\r\ndef add_annotation(self, description, **attributes):\r\n    tevt = TimeEvent(datetime.utcnow(), Annotation(description, Attributes(attributes)))\r\n    self.add_time_event(tevt)\r\n```\r\n\r\nThank you.",
+  "source": {
+    "image": "docker.io/swerebenchv2/census-instrumentation-opencensus-python:165-ca282ca",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-census-instrumentation__opencensus-python-165-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL3VuaXQvdHJhY2UvdGVzdF9zcGFuLnB5IGIvdGVzdHMvdW5pdC90cmFjZS90ZXN0X3NwYW4ucHkKaW5kZXggNzhiMGM1Zi4uMDFmMTQ3MyAxMDA2NDQKLS0tIGEvdGVzdHMvdW5pdC90cmFjZS90ZXN0X3NwYW4ucHkKKysrIGIvdGVzdHMvdW5pdC90cmFjZS90ZXN0X3NwYW4ucHkKQEAgLTE1Miw2ICsxNTIsMTcgQEAgY2xhc3MgVGVzdFNwYW4odW5pdHRlc3QuVGVzdENhc2UpOgogCiAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwobGVuKHNwYW4udGltZV9ldmVudHMpLCAxKQogCisgICAgZGVmIHRlc3RfYWRkX2Fubm90YXRpb24oc2VsZik6CisgICAgICAgIHNwYW5fbmFtZSA9ICd0ZXN0X3NwYW5fbmFtZScKKyAgICAgICAgc3BhbiA9IHNlbGYuX21ha2Vfb25lKHNwYW5fbmFtZSkKKworICAgICAgICBzcGFuLmFkZF9hbm5vdGF0aW9uKCdUaGlzIGlzIGEgdGVzdCcsIG5hbWU9J29jdG8tc3BhbicsIGFnZT05OCkKKworICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGxlbihzcGFuLnRpbWVfZXZlbnRzKSwgMSkKKyAgICAgICAgYTAgPSBzcGFuLnRpbWVfZXZlbnRzWzBdLmFubm90YXRpb24KKyAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChhMC5kZXNjcmlwdGlvbiwgJ1RoaXMgaXMgYSB0ZXN0JykKKyAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChhMC5hdHRyaWJ1dGVzLmF0dHJpYnV0ZXMsIGRpY3QobmFtZT0nb2N0by1zcGFuJywgYWdlPTk4KSkKKwogICAgIGRlZiB0ZXN0X2FkZF9saW5rKHNlbGYpOgogICAgICAgICBmcm9tIG9wZW5jZW5zdXMudHJhY2UubGluayBpbXBvcnQgTGluawogCg=='\"'\"'))'",
+      "git apply /tmp/receipts-census-instrumentation__opencensus-python-165-test.patch"
+    ],
+    "workdir": "/opencensus-python"
+  },
+  "spec_tests": [
+    "tests/unit/trace/test_span.py::TestSpan::test_add_annotation"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/unit/trace/test_span.py"
+}

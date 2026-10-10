@@ -1,0 +1,1100 @@
+{
+  "headline": "What a verified fix costs: dollars, minutes and 1 shipped failure across 50 SWE-rebench tasks.",
+  "secondary_headline": null,
+  "ran_tasks": 50,
+  "configuration_a": {
+    "claimed_dones": 23,
+    "false_dones": 4,
+    "false_done_rate": {
+      "numerator": 4,
+      "denominator": 23,
+      "value": 0.17391304347826086,
+      "lower_95": 0.06978653563062565,
+      "upper_95": 0.3713764764022614
+    },
+    "breakdown": {
+      "spec_still_failing": 4,
+      "regression": 0,
+      "tests_removed_or_newly_skipped": 0,
+      "test_or_config_edited": 1,
+      "tests_never_run_on_final_state": 1
+    },
+    "naive_green_false_dones": 3
+  },
+  "configuration_b": {
+    "verified_fixes": 24,
+    "first_verdict": 20,
+    "appeal": 4,
+    "shipped_false_dones": 1,
+    "verified_rate": {
+      "numerator": 24,
+      "denominator": 50,
+      "value": 0.48,
+      "lower_95": 0.34797135286578046,
+      "upper_95": 0.6148825510995539
+    },
+    "cost_per_verified_fix": {
+      "tokens": 1530939.375,
+      "model_dollars": 0.095027295,
+      "sandbox_dollars_estimate": 0.035279356296038324,
+      "total_dollars_estimate": 0.13030665129603833,
+      "sandbox_lifetime_seconds": 953.4961161091438,
+      "wall_time_s": 925.4579811873651
+    }
+  },
+  "harness": {
+    "total_tool_calls": 0,
+    "classes": {
+      "bad_args": 0,
+      "command_timeout": 0,
+      "edit_invalid_utf8": 0,
+      "edit_multiple_matches": 0,
+      "edit_no_match": 0,
+      "edit_too_large": 0,
+      "finish_refused": 0,
+      "malformed_args": 0,
+      "nonzero_exit": 0,
+      "not_executed": 0,
+      "noted": 0,
+      "ok": 0,
+      "tool_error": 0,
+      "unknown_tool": 0,
+      "write_refused": 0
+    },
+    "aliases": {},
+    "edit_failure_rate": {
+      "numerator": 0,
+      "denominator": 0,
+      "value": null,
+      "lower_95": null,
+      "upper_95": null
+    },
+    "not_recorded": 1875,
+    "unreadable_logs": 8,
+    "unreadable_rows": 0,
+    "context_guard_turns": 0,
+    "context_guard_replaced_messages": 0
+  },
+  "shipped_bytes": {
+    "agree": 0,
+    "recorded": 0,
+    "not_recorded": 79,
+    "mismatches": []
+  },
+  "agreement": {
+    "matrix": {
+      "PASS": {
+        "resolved": 24,
+        "not_resolved": 1,
+        "unavailable": 0
+      },
+      "REJECTED": {
+        "resolved": 6,
+        "not_resolved": 47,
+        "unavailable": 0
+      },
+      "ERROR": {
+        "resolved": 0,
+        "not_resolved": 1,
+        "unavailable": 0
+      }
+    },
+    "disagreements": [
+      {
+        "instance_id": "aio-libs__aiohttp-8823",
+        "attempt": 1,
+        "agreement": "gate_stricter",
+        "failed_predicate_ids": [
+          "R4_patch_scope"
+        ],
+        "gate_error": null
+      },
+      {
+        "instance_id": "meltano__sdk-3020",
+        "attempt": 2,
+        "agreement": "gate_stricter",
+        "failed_predicate_ids": [
+          "R4_patch_scope"
+        ],
+        "gate_error": null
+      },
+      {
+        "instance_id": "pandas-dev__pandas-56926",
+        "attempt": 2,
+        "agreement": "gate_stricter",
+        "failed_predicate_ids": [
+          "R4_patch_scope"
+        ],
+        "gate_error": null
+      },
+      {
+        "instance_id": "py-pdf__pypdf2-1318",
+        "attempt": 2,
+        "agreement": "gate_looser",
+        "failed_predicate_ids": [],
+        "gate_error": null
+      },
+      {
+        "instance_id": "qiskit__qiskit-ibm-runtime-452",
+        "attempt": 1,
+        "agreement": "gate_stricter",
+        "failed_predicate_ids": [
+          "R2_pass_to_pass"
+        ],
+        "gate_error": null
+      },
+      {
+        "instance_id": "qiskit__qiskit-ibm-runtime-452",
+        "attempt": 2,
+        "agreement": "gate_stricter",
+        "failed_predicate_ids": [
+          "R2_pass_to_pass"
+        ],
+        "gate_error": null
+      },
+      {
+        "instance_id": "sparckles__robyn-1002",
+        "attempt": 1,
+        "agreement": "gate_stricter",
+        "failed_predicate_ids": [
+          "R4_patch_scope"
+        ],
+        "gate_error": null
+      },
+      {
+        "instance_id": "vyperlang__vyper-3261",
+        "attempt": 1,
+        "agreement": "gate_error",
+        "failed_predicate_ids": [],
+        "gate_error": "verification exited 4 (pytest usage or internal error)"
+      }
+    ]
+  },
+  "exclusions": [
+    {
+      "instance_id": "benchopt__benchopt-414",
+      "reason": "baseline suite took 362s, over the limit",
+      "run_dir": "pilot/run-2026-10-01c/benchopt__benchopt-414/runs/pilot-benchopt__benchopt-414-28588e3367"
+    },
+    {
+      "instance_id": "copier-org__copier-2007",
+      "reason": "first baseline run is not a valid pytest run (exit 137, junit=missing)",
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/copier-org__copier-2007/runs/pilot-copier-org__copier-2007-0eb84fe5c1"
+    },
+    {
+      "instance_id": "jazzband__pip-tools-822",
+      "reason": "baseline suite took 430s, over the limit",
+      "run_dir": "pilot/run-2026-10-01c/jazzband__pip-tools-822/runs/pilot-jazzband__pip-tools-822-afe27e2fe2"
+    },
+    {
+      "instance_id": "keras-team__keras-19775",
+      "reason": "first baseline run is not a valid pytest run (exit 137, junit=missing)",
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/keras-team__keras-19775/runs/pilot-keras-team__keras-19775-069c2e78ac"
+    },
+    {
+      "instance_id": "martinthoma__flake8-simplify-173",
+      "reason": "target tests did not fail in every baseline run: ['tests/test_900_rules.py::test_sim910[d.get(key,', \"tests/test_900_rules.py::test_sim910[d.get('key',\"]",
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/martinthoma__flake8-simplify-173/runs/pilot-martinthoma__flake8-simplify-173-124723af31"
+    },
+    {
+      "instance_id": "modin-project__modin-6673",
+      "reason": "baseline suite took 601s, over the limit",
+      "run_dir": "pilot/run-2026-10-01c/modin-project__modin-6673/runs/pilot-modin-project__modin-6673-c9e459e5d7"
+    },
+    {
+      "instance_id": "pyccel__pyccel-2151",
+      "reason": "target tests did not fail in every baseline run: ['tests/epyccel/test_builtins.py::test_min_if[c]', 'tests/epyccel/test_builtins.py::test_min_in_min[c]']",
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/pyccel__pyccel-2151/runs/pilot-pyccel__pyccel-2151-16d3308430"
+    },
+    {
+      "instance_id": "redis__redis-py-1895",
+      "reason": "first baseline run is not a valid pytest run (exit 3, junit=missing)",
+      "run_dir": "pilot/run-2026-10-01c/redis__redis-py-1895/runs/pilot-redis__redis-py-1895-0cb63c5305"
+    }
+  ],
+  "infrastructure_errors": [
+    {
+      "instance_id": "qiskit__qiskit-ibm-runtime-452",
+      "reason": "OSError: trusted git command failed: no output",
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/qiskit__qiskit-ibm-runtime-452/runs/pilot-qiskit__qiskit-ibm-runtime-452-d3f0655b3d"
+    }
+  ],
+  "cleanup_errors": [],
+  "instances": [
+    {
+      "instance_id": "aaugustin__websockets-467",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 186010,
+        "model_dollars": 0.01203864,
+        "sandbox_lifetime_seconds": 207.41948245768435,
+        "sandbox_dollars_estimate": 0.007674520850934321
+      },
+      "wall_time_s": 245.1921003330499,
+      "run_dir": "pilot/run-2026-10-01c/aaugustin__websockets-467/runs/pilot-aaugustin__websockets-467-47ec2319d5"
+    },
+    {
+      "instance_id": "agnostiqhq__covalent-1660",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 136239,
+        "model_dollars": 0.00847296,
+        "sandbox_lifetime_seconds": 379.08000466646627,
+        "sandbox_dollars_estimate": 0.014025960172659252
+      },
+      "wall_time_s": 372.0262207079213,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/agnostiqhq__covalent-1660/runs/pilot-agnostiqhq__covalent-1660-59e144e701"
+    },
+    {
+      "instance_id": "aio-libs__aiohttp-8823",
+      "a_claimed_done": false,
+      "a_official_resolved": true,
+      "b_outcome": "verified on appeal",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 1084645,
+        "model_dollars": 0.06689652,
+        "sandbox_lifetime_seconds": 802.9172970829532,
+        "sandbox_dollars_estimate": 0.029707939992069266
+      },
+      "wall_time_s": 767.6582314998377,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/aio-libs__aiohttp-8823/runs/pilot-aio-libs__aiohttp-8823-3a7d9ab4f1"
+    },
+    {
+      "instance_id": "aio-libs__multidict-1204",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 216776,
+        "model_dollars": 0.01348248,
+        "sandbox_lifetime_seconds": 130.47033312474377,
+        "sandbox_dollars_estimate": 0.0048274023256155195
+      },
+      "wall_time_s": 131.4931733328849,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/aio-libs__multidict-1204/runs/pilot-aio-libs__multidict-1204-ebcf68b813"
+    },
+    {
+      "instance_id": "altair-viz__altair-3068",
+      "a_claimed_done": true,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 189040,
+        "model_dollars": 0.01212018,
+        "sandbox_lifetime_seconds": 550.1168527074624,
+        "sandbox_dollars_estimate": 0.020354323550176107
+      },
+      "wall_time_s": 472.9026298339013,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/altair-viz__altair-3068/runs/pilot-altair-viz__altair-3068-ce9d8223f2"
+    },
+    {
+      "instance_id": "amaranth-lang__amaranth-842",
+      "a_claimed_done": true,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 528896,
+        "model_dollars": 0.0329151,
+        "sandbox_lifetime_seconds": 232.72672371100634,
+        "sandbox_dollars_estimate": 0.008610888777307235
+      },
+      "wall_time_s": 262.8691605411004,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/amaranth-lang__amaranth-842/runs/pilot-amaranth-lang__amaranth-842-e2ab039e57"
+    },
+    {
+      "instance_id": "audreyr__cookiecutter-729",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 673157,
+        "model_dollars": 0.04212444,
+        "sandbox_lifetime_seconds": 212.34926345781423,
+        "sandbox_dollars_estimate": 0.007856922747939126
+      },
+      "wall_time_s": 240.03359408280812,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/audreyr__cookiecutter-729/runs/pilot-audreyr__cookiecutter-729-e1af494579"
+    },
+    {
+      "instance_id": "aws-cloudformation__cfn-lint-3659",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 137021,
+        "model_dollars": 0.0090003,
+        "sandbox_lifetime_seconds": 499.21818395890296,
+        "sandbox_dollars_estimate": 0.01847107280647941
+      },
+      "wall_time_s": 426.4978812499903,
+      "run_dir": "pilot/run-2026-10-01c/aws-cloudformation__cfn-lint-3659/runs/pilot-aws-cloudformation__cfn-lint-3659-09c4937034"
+    },
+    {
+      "instance_id": "backblaze__b2_command_line_tool-259",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 1300916,
+        "model_dollars": 0.08011848,
+        "sandbox_lifetime_seconds": 319.83900033310056,
+        "sandbox_dollars_estimate": 0.01183404301232472
+      },
+      "wall_time_s": 317.2388403338846,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/backblaze__b2_command_line_tool-259/runs/pilot-backblaze__b2_command_line_tool-259-18d206629b"
+    },
+    {
+      "instance_id": "benchopt__benchopt-414",
+      "a_claimed_done": false,
+      "a_official_resolved": null,
+      "b_outcome": "excluded",
+      "b_official_resolved": null,
+      "cost": {
+        "tokens": 0,
+        "model_dollars": null,
+        "sandbox_lifetime_seconds": 364.61796979187056,
+        "sandbox_dollars_estimate": 0.013490864882299211
+      },
+      "wall_time_s": 405.1970989999827,
+      "run_dir": "pilot/run-2026-10-01c/benchopt__benchopt-414/runs/pilot-benchopt__benchopt-414-28588e3367"
+    },
+    {
+      "instance_id": "borgbackup__borg-8847",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 66563,
+        "model_dollars": 0.00420222,
+        "sandbox_lifetime_seconds": 247.34283258276992,
+        "sandbox_dollars_estimate": 0.009151684805562487
+      },
+      "wall_time_s": 272.92254408285953,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/borgbackup__borg-8847/runs/pilot-borgbackup__borg-8847-b92eb13f49"
+    },
+    {
+      "instance_id": "census-instrumentation__opencensus-python-165",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 79011,
+        "model_dollars": 0.00512856,
+        "sandbox_lifetime_seconds": 117.67548625101335,
+        "sandbox_dollars_estimate": 0.004353992991287494
+      },
+      "wall_time_s": 121.06809050007723,
+      "run_dir": "pilot/run-2026-10-01c/census-instrumentation__opencensus-python-165/runs/pilot-census-instrumentation__opencensus-python-165-59afa19279"
+    },
+    {
+      "instance_id": "cloudreach__sceptre-381",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 915836,
+        "model_dollars": 0.05643516,
+        "sandbox_lifetime_seconds": 259.94796241866425,
+        "sandbox_dollars_estimate": 0.009618074609490577
+      },
+      "wall_time_s": 256.2692340828944,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/cloudreach__sceptre-381/runs/pilot-cloudreach__sceptre-381-8f7782e2b9"
+    },
+    {
+      "instance_id": "copier-org__copier-2007",
+      "a_claimed_done": false,
+      "a_official_resolved": null,
+      "b_outcome": "excluded",
+      "b_official_resolved": null,
+      "cost": {
+        "tokens": 0,
+        "model_dollars": null,
+        "sandbox_lifetime_seconds": 46.944671917008236,
+        "sandbox_dollars_estimate": 0.0017369528609293048
+      },
+      "wall_time_s": 85.03691945900209,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/copier-org__copier-2007/runs/pilot-copier-org__copier-2007-0eb84fe5c1"
+    },
+    {
+      "instance_id": "datadog__guarddog-156",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 32761,
+        "model_dollars": 0.002211,
+        "sandbox_lifetime_seconds": 210.51613824791275,
+        "sandbox_dollars_estimate": 0.0077890971151727715
+      },
+      "wall_time_s": 238.87887308304198,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/datadog__guarddog-156/runs/pilot-datadog__guarddog-156-7181a759d4"
+    },
+    {
+      "instance_id": "facelessuser__pymdown-extensions-2003",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 3091510,
+        "model_dollars": 0.19209012,
+        "sandbox_lifetime_seconds": 537.0848161652684,
+        "sandbox_dollars_estimate": 0.01987213819811493
+      },
+      "wall_time_s": 567.6252328751143,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/facelessuser__pymdown-extensions-2003/runs/pilot-facelessuser__pymdown-extensions-2003-bc9080943d"
+    },
+    {
+      "instance_id": "fsspec__universal_pathlib-261",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 536415,
+        "model_dollars": 0.03309804,
+        "sandbox_lifetime_seconds": 175.03766833385453,
+        "sandbox_dollars_estimate": 0.006476393728352617
+      },
+      "wall_time_s": 177.52370262495242,
+      "run_dir": "pilot/run-2026-10-01c/fsspec__universal_pathlib-261/runs/pilot-fsspec__universal_pathlib-261-ae46b407dd"
+    },
+    {
+      "instance_id": "getmoto__moto-7795",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 217460,
+        "model_dollars": 0.01359624,
+        "sandbox_lifetime_seconds": 332.97679920797236,
+        "sandbox_dollars_estimate": 0.012320141570694977
+      },
+      "wall_time_s": 334.88636166695505,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/getmoto__moto-7795/runs/pilot-getmoto__moto-7795-8f3ad1c6e1"
+    },
+    {
+      "instance_id": "giampaolo__psutil-2379",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 76945,
+        "model_dollars": 0.00488652,
+        "sandbox_lifetime_seconds": 250.41992608341388,
+        "sandbox_dollars_estimate": 0.009265537265086313
+      },
+      "wall_time_s": 261.62930199992843,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/giampaolo__psutil-2379/runs/pilot-giampaolo__psutil-2379-958602dffe"
+    },
+    {
+      "instance_id": "hypothesisworks__hypothesis-3279",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "verified on appeal",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 1761664,
+        "model_dollars": 0.1076793,
+        "sandbox_lifetime_seconds": 346.77534620813094,
+        "sandbox_dollars_estimate": 0.012830687809700845
+      },
+      "wall_time_s": 358.4690129170194,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/hypothesisworks__hypothesis-3279/runs/pilot-hypothesisworks__hypothesis-3279-54ed651553"
+    },
+    {
+      "instance_id": "ipython__traitlets-687",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 143055,
+        "model_dollars": 0.0090252,
+        "sandbox_lifetime_seconds": 136.25674541504122,
+        "sandbox_dollars_estimate": 0.0050414995803565255
+      },
+      "wall_time_s": 173.4017374170944,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/ipython__traitlets-687/runs/pilot-ipython__traitlets-687-3608841c8b"
+    },
+    {
+      "instance_id": "ishepard__pydriller-84",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 895621,
+        "model_dollars": 0.05616744,
+        "sandbox_lifetime_seconds": 443.8050766661763,
+        "sandbox_dollars_estimate": 0.016420787836648524
+      },
+      "wall_time_s": 453.6834773751907,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/ishepard__pydriller-84/runs/pilot-ishepard__pydriller-84-dedbef44ef"
+    },
+    {
+      "instance_id": "jazzband__pip-tools-822",
+      "a_claimed_done": false,
+      "a_official_resolved": null,
+      "b_outcome": "excluded",
+      "b_official_resolved": null,
+      "cost": {
+        "tokens": 0,
+        "model_dollars": null,
+        "sandbox_lifetime_seconds": 433.98651520814747,
+        "sandbox_dollars_estimate": 0.016057501062701457
+      },
+      "wall_time_s": 435.5295582499821,
+      "run_dir": "pilot/run-2026-10-01c/jazzband__pip-tools-822/runs/pilot-jazzband__pip-tools-822-afe27e2fe2"
+    },
+    {
+      "instance_id": "jelmer__dulwich-1619",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 3044792,
+        "model_dollars": 0.18953706,
+        "sandbox_lifetime_seconds": 496.05203245882876,
+        "sandbox_dollars_estimate": 0.018353925200976666
+      },
+      "wall_time_s": 483.515480666887,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/jelmer__dulwich-1619/runs/pilot-jelmer__dulwich-1619-89c8879b24"
+    },
+    {
+      "instance_id": "jupyter-incubator__sparkmagic-572",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 32056,
+        "model_dollars": 0.00213126,
+        "sandbox_lifetime_seconds": 161.25998033210635,
+        "sandbox_dollars_estimate": 0.005966619272287935
+      },
+      "wall_time_s": 166.5996519580949,
+      "run_dir": "pilot/run-2026-10-01c/jupyter-incubator__sparkmagic-572/runs/pilot-jupyter-incubator__sparkmagic-572-d46ec7493e"
+    },
+    {
+      "instance_id": "keras-team__keras-19775",
+      "a_claimed_done": false,
+      "a_official_resolved": null,
+      "b_outcome": "excluded",
+      "b_official_resolved": null,
+      "cost": {
+        "tokens": 0,
+        "model_dollars": null,
+        "sandbox_lifetime_seconds": 87.57027712510899,
+        "sandbox_dollars_estimate": 0.003240100253629033
+      },
+      "wall_time_s": 152.4791045000311,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/keras-team__keras-19775/runs/pilot-keras-team__keras-19775-069c2e78ac"
+    },
+    {
+      "instance_id": "kinto__kinto-2229",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 703586,
+        "model_dollars": 0.04368144,
+        "sandbox_lifetime_seconds": 575.9582617497072,
+        "sandbox_dollars_estimate": 0.021310455684739164
+      },
+      "wall_time_s": 540.0894197500311,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/kinto__kinto-2229/runs/pilot-kinto__kinto-2229-deb78c8b96"
+    },
+    {
+      "instance_id": "leshchenko1979__fast_bitrix24-114",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 116006,
+        "model_dollars": 0.00758784,
+        "sandbox_lifetime_seconds": 156.8009523341898,
+        "sandbox_dollars_estimate": 0.0058016352363650225
+      },
+      "wall_time_s": 196.50925470795482,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/leshchenko1979__fast_bitrix24-114/runs/pilot-leshchenko1979__fast_bitrix24-114-8d7fc935c7"
+    },
+    {
+      "instance_id": "litestar-org__polyfactory-422",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "verified on appeal",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 751782,
+        "model_dollars": 0.04655862,
+        "sandbox_lifetime_seconds": 298.1015842081979,
+        "sandbox_dollars_estimate": 0.011029758615703322
+      },
+      "wall_time_s": 291.2229447499849,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/litestar-org__polyfactory-422/runs/pilot-litestar-org__polyfactory-422-418a5c67da"
+    },
+    {
+      "instance_id": "marketsquare__robotframework-robocop-1329",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 1357464,
+        "model_dollars": 0.0826542,
+        "sandbox_lifetime_seconds": 319.4044242920354,
+        "sandbox_dollars_estimate": 0.01181796369880531
+      },
+      "wall_time_s": 336.82110229111277,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/marketsquare__robotframework-robocop-1329/runs/pilot-marketsquare__robotframework-robocop-1329-92568dbb16"
+    },
+    {
+      "instance_id": "martinthoma__flake8-simplify-173",
+      "a_claimed_done": false,
+      "a_official_resolved": null,
+      "b_outcome": "excluded",
+      "b_official_resolved": null,
+      "cost": {
+        "tokens": 0,
+        "model_dollars": null,
+        "sandbox_lifetime_seconds": 6.4372516251169145,
+        "sandbox_dollars_estimate": 0.00023817831012932583
+      },
+      "wall_time_s": 40.24395704106428,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/martinthoma__flake8-simplify-173/runs/pilot-martinthoma__flake8-simplify-173-124723af31"
+    },
+    {
+      "instance_id": "materials-consortia__optimade-python-tools-279",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 3436045,
+        "model_dollars": 0.21556428,
+        "sandbox_lifetime_seconds": 572.5611393731087,
+        "sandbox_dollars_estimate": 0.021184762156805023
+      },
+      "wall_time_s": 633.145537833916,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/materials-consortia__optimade-python-tools-279/runs/pilot-materials-consortia__optimade-python-tools-279-bae37207e7"
+    },
+    {
+      "instance_id": "meltano__sdk-3020",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 832283,
+        "model_dollars": 0.05214594,
+        "sandbox_lifetime_seconds": 279.32701133191586,
+        "sandbox_dollars_estimate": 0.010335099419280886
+      },
+      "wall_time_s": 309.3318559580948,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/meltano__sdk-3020/runs/pilot-meltano__sdk-3020-7162dd748d"
+    },
+    {
+      "instance_id": "modin-project__modin-6673",
+      "a_claimed_done": false,
+      "a_official_resolved": null,
+      "b_outcome": "excluded",
+      "b_official_resolved": null,
+      "cost": {
+        "tokens": 0,
+        "model_dollars": null,
+        "sandbox_lifetime_seconds": 607.8353182079736,
+        "sandbox_dollars_estimate": 0.02248990677369502
+      },
+      "wall_time_s": 609.2008030000143,
+      "run_dir": "pilot/run-2026-10-01c/modin-project__modin-6673/runs/pilot-modin-project__modin-6673-c9e459e5d7"
+    },
+    {
+      "instance_id": "mpmath__mpmath-903",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 141705,
+        "model_dollars": 0.0086184,
+        "sandbox_lifetime_seconds": 196.02840000018477,
+        "sandbox_dollars_estimate": 0.007253050800006836
+      },
+      "wall_time_s": 223.8262833750341,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/mpmath__mpmath-903/runs/pilot-mpmath__mpmath-903-fda99c26d8"
+    },
+    {
+      "instance_id": "pallets__click-1964",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 829328,
+        "model_dollars": 0.05098818,
+        "sandbox_lifetime_seconds": 189.99263641773723,
+        "sandbox_dollars_estimate": 0.007029727547456278
+      },
+      "wall_time_s": 212.64901045779698,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/pallets__click-1964/runs/pilot-pallets__click-1964-ac7363ee73"
+    },
+    {
+      "instance_id": "pallets__werkzeug-2709",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 122301,
+        "model_dollars": 0.00764622,
+        "sandbox_lifetime_seconds": 156.1568838758394,
+        "sandbox_dollars_estimate": 0.005777804703406058
+      },
+      "wall_time_s": 185.51525699999183,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/pallets__werkzeug-2709/runs/pilot-pallets__werkzeug-2709-478474470d"
+    },
+    {
+      "instance_id": "pandas-dev__pandas-56926",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 2695821,
+        "model_dollars": 0.16414434,
+        "sandbox_lifetime_seconds": 1887.1831099179108,
+        "sandbox_dollars_estimate": 0.06982577506696269
+      },
+      "wall_time_s": 1750.9072151670698,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/pandas-dev__pandas-56926/runs/pilot-pandas-dev__pandas-56926-9fac1af8c2"
+    },
+    {
+      "instance_id": "pdm-project__pdm-2123",
+      "a_claimed_done": true,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 423301,
+        "model_dollars": 0.02607558,
+        "sandbox_lifetime_seconds": 1005.7058758731,
+        "sandbox_dollars_estimate": 0.0372111174073047
+      },
+      "wall_time_s": 846.3716660831124,
+      "run_dir": "pilot/run-2026-10-01c/pdm-project__pdm-2123/runs/pilot-pdm-project__pdm-2123-7221bda164"
+    },
+    {
+      "instance_id": "pennylaneai__pennylane-2834",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 1808208,
+        "model_dollars": 0.11090808,
+        "sandbox_lifetime_seconds": 376.1270840843208,
+        "sandbox_dollars_estimate": 0.01391670211111987
+      },
+      "wall_time_s": 349.82011666707695,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/pennylaneai__pennylane-2834/runs/pilot-pennylaneai__pennylane-2834-221ea15711"
+    },
+    {
+      "instance_id": "py-pdf__pypdf2-1318",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "shipped false done",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 1388635,
+        "model_dollars": 0.0854745,
+        "sandbox_lifetime_seconds": 414.01905145915225,
+        "sandbox_dollars_estimate": 0.015318704903988633
+      },
+      "wall_time_s": 434.92226841603406,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/py-pdf__pypdf2-1318/runs/pilot-py-pdf__pypdf2-1318-b7d07b97ca"
+    },
+    {
+      "instance_id": "pyccel__pyccel-2151",
+      "a_claimed_done": false,
+      "a_official_resolved": null,
+      "b_outcome": "excluded",
+      "b_official_resolved": null,
+      "cost": {
+        "tokens": 0,
+        "model_dollars": null,
+        "sandbox_lifetime_seconds": 57.20420195790939,
+        "sandbox_dollars_estimate": 0.0021165554724426475
+      },
+      "wall_time_s": 89.71202541701496,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/pyccel__pyccel-2151/runs/pilot-pyccel__pyccel-2151-16d3308430"
+    },
+    {
+      "instance_id": "pytest-dev__pyfakefs-1075",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 39793,
+        "model_dollars": 0.00258072,
+        "sandbox_lifetime_seconds": 138.28545379196294,
+        "sandbox_dollars_estimate": 0.005116561790302628
+      },
+      "wall_time_s": 178.07586745801382,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/pytest-dev__pyfakefs-1075/runs/pilot-pytest-dev__pyfakefs-1075-b8124f683a"
+    },
+    {
+      "instance_id": "python-babel__babel-505",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 307650,
+        "model_dollars": 0.02033676,
+        "sandbox_lifetime_seconds": 344.16316050011665,
+        "sandbox_dollars_estimate": 0.012734036938504317
+      },
+      "wall_time_s": 358.2980065001175,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/python-babel__babel-505/runs/pilot-python-babel__babel-505-bf5ee86e17"
+    },
+    {
+      "instance_id": "python-markdown__markdown-1361",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 106164,
+        "model_dollars": 0.00663264,
+        "sandbox_lifetime_seconds": 110.20515254093334,
+        "sandbox_dollars_estimate": 0.004077590644014533
+      },
+      "wall_time_s": 139.4109332920052,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/python-markdown__markdown-1361/runs/pilot-python-markdown__markdown-1361-b0b86193cc"
+    },
+    {
+      "instance_id": "qiskit__qiskit-12528",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 641545,
+        "model_dollars": 0.0412341,
+        "sandbox_lifetime_seconds": 2609.2291676248424,
+        "sandbox_dollars_estimate": 0.09654147920211917
+      },
+      "wall_time_s": 2205.6166654170956,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/qiskit__qiskit-12528/runs/pilot-qiskit__qiskit-12528-54b6ba5a95"
+    },
+    {
+      "instance_id": "qiskit__qiskit-ibm-runtime-452",
+      "a_claimed_done": false,
+      "a_official_resolved": true,
+      "b_outcome": "refused",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 885519,
+        "model_dollars": 0.05587938,
+        "sandbox_lifetime_seconds": 318.868917041691,
+        "sandbox_dollars_estimate": 0.011798149930542567
+      },
+      "wall_time_s": 308.2280577500351,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/qiskit__qiskit-ibm-runtime-452/runs/pilot-qiskit__qiskit-ibm-runtime-452-388a6c711e"
+    },
+    {
+      "instance_id": "radioastronomysoftwaregroup__pyuvdata-724",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 26205,
+        "model_dollars": 0.00175824,
+        "sandbox_lifetime_seconds": 358.11388599989004,
+        "sandbox_dollars_estimate": 0.013250213781995932
+      },
+      "wall_time_s": 349.95936316601,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/radioastronomysoftwaregroup__pyuvdata-724/runs/pilot-radioastronomysoftwaregroup__pyuvdata-724-860a10de44"
+    },
+    {
+      "instance_id": "redis__redis-py-1895",
+      "a_claimed_done": false,
+      "a_official_resolved": null,
+      "b_outcome": "excluded",
+      "b_official_resolved": null,
+      "cost": {
+        "tokens": 0,
+        "model_dollars": null,
+        "sandbox_lifetime_seconds": 3.8363750830758363,
+        "sandbox_dollars_estimate": 0.00014194587807380595
+      },
+      "wall_time_s": 34.246747584082186,
+      "run_dir": "pilot/run-2026-10-01c/redis__redis-py-1895/runs/pilot-redis__redis-py-1895-0cb63c5305"
+    },
+    {
+      "instance_id": "sanic-org__sanic-ext-161",
+      "a_claimed_done": false,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 701484,
+        "model_dollars": 0.04356072,
+        "sandbox_lifetime_seconds": 199.42482433421537,
+        "sandbox_dollars_estimate": 0.0073787185003659685
+      },
+      "wall_time_s": 224.95811074995436,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/sanic-org__sanic-ext-161/runs/pilot-sanic-org__sanic-ext-161-28ef972c3b"
+    },
+    {
+      "instance_id": "scikit-build__scikit-build-core-254",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 132683,
+        "model_dollars": 0.00866784,
+        "sandbox_lifetime_seconds": 66.26573087391444,
+        "sandbox_dollars_estimate": 0.002451832042334834
+      },
+      "wall_time_s": 68.1341843327973,
+      "run_dir": "pilot/run-2026-10-01c/scikit-build__scikit-build-core-254/runs/pilot-scikit-build__scikit-build-core-254-6815e5e271"
+    },
+    {
+      "instance_id": "scrapy__scrapy-3840",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 214436,
+        "model_dollars": 0.01359714,
+        "sandbox_lifetime_seconds": 187.77918883413076,
+        "sandbox_dollars_estimate": 0.006947829986862838
+      },
+      "wall_time_s": 219.82102600019425,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/scrapy__scrapy-3840/runs/pilot-scrapy__scrapy-3840-5fe781168b"
+    },
+    {
+      "instance_id": "senth__minecraft-mod-manager-36",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 33167,
+        "model_dollars": 0.00211296,
+        "sandbox_lifetime_seconds": 137.64660124992952,
+        "sandbox_dollars_estimate": 0.005092924246247392
+      },
+      "wall_time_s": 139.58613008307293,
+      "run_dir": "pilot/run-2026-10-01c/senth__minecraft-mod-manager-36/runs/pilot-senth__minecraft-mod-manager-36-64ad25dc12"
+    },
+    {
+      "instance_id": "sparckles__robyn-1002",
+      "a_claimed_done": false,
+      "a_official_resolved": true,
+      "b_outcome": "verified on appeal",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 1131404,
+        "model_dollars": 0.06919968,
+        "sandbox_lifetime_seconds": 3888.8331263330765,
+        "sandbox_dollars_estimate": 0.14388682567432381
+      },
+      "wall_time_s": 3479.4191094997805,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/sparckles__robyn-1002/runs/pilot-sparckles__robyn-1002-f0626d0b22"
+    },
+    {
+      "instance_id": "textualize__rich-2201",
+      "a_claimed_done": true,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 828462,
+        "model_dollars": 0.05069232,
+        "sandbox_lifetime_seconds": 333.66829079110175,
+        "sandbox_dollars_estimate": 0.012345726759270766
+      },
+      "wall_time_s": 335.4662111250218,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/textualize__rich-2201/runs/pilot-textualize__rich-2201-d74bfda219"
+    },
+    {
+      "instance_id": "tox-dev__sphinx-autodoc-typehints-294",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "refused",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 801647,
+        "model_dollars": 0.05012382,
+        "sandbox_lifetime_seconds": 228.55990149918944,
+        "sandbox_dollars_estimate": 0.008456716355470009
+      },
+      "wall_time_s": 247.053197250003,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/tox-dev__sphinx-autodoc-typehints-294/runs/pilot-tox-dev__sphinx-autodoc-typehints-294-fc6fd1b452"
+    },
+    {
+      "instance_id": "vyperlang__vyper-3261",
+      "a_claimed_done": false,
+      "a_official_resolved": false,
+      "b_outcome": "gate error",
+      "b_official_resolved": false,
+      "cost": {
+        "tokens": 585407,
+        "model_dollars": 0.03698832,
+        "sandbox_lifetime_seconds": 311.9831327497959,
+        "sandbox_dollars_estimate": 0.011543375911742449
+      },
+      "wall_time_s": 334.0370307499543,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/vyperlang__vyper-3261/runs/pilot-vyperlang__vyper-3261-f1b904e620"
+    },
+    {
+      "instance_id": "zoofio__flexx-236",
+      "a_claimed_done": true,
+      "a_official_resolved": true,
+      "b_outcome": "verified on first verdict",
+      "b_official_resolved": true,
+      "cost": {
+        "tokens": 354125,
+        "model_dollars": 0.0218856,
+        "sandbox_lifetime_seconds": 174.2258856659755,
+        "sandbox_dollars_estimate": 0.006446357769641094
+      },
+      "wall_time_s": 209.41118950000964,
+      "run_dir": "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-2026-10-01c/zoofio__flexx-236/runs/pilot-zoofio__flexx-236-1033c1b54b"
+    }
+  ],
+  "truncated_test_ids": [],
+  "peak_live_sandboxes": 0,
+  "peak_live_sandboxes_at": null,
+  "records_without_sandbox_intervals": 58,
+  "model_retries": {}
+}

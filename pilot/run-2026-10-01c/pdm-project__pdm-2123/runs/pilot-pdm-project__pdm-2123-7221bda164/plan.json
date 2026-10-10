@@ -1,0 +1,7 @@
+{
+  "approach": "Modify `_identify_candidate` to use the raw candidate identifier (`Candidate.id`) directly when available, eliminating reliance on external metadata for identity resolution.",
+  "files_to_edit": [
+    "src/pdm/models/repositories.py"
+  ],
+  "hypothesis": "When resolving candidates from the lockfile, the function `_identify_candidate` fails to generate identifiers for VCS-based candidates because their repositories lack `.egg-info` directories during initial fetching, causing KeyError lookups."
+}

@@ -1,0 +1,69 @@
+diff --git a/binderhub/builder.py b/binderhub/builder.py
+index 6aaad7a..1f1e2ec 100644
+--- a/binderhub/builder.py
++++ b/binderhub/builder.py
+@@ -296,23 +296,42 @@ class BuildHandler(BaseHandler):
+             return
+ 
+         if ref is None:
++            # Handle deleted default branches: if master doesn't resolve, try HEAD
++            if provider.name == "GitHub" and provider.unresolved_ref == "master":
++                self.log.info("Master branch not found, trying HEAD as fallback for %s", key)
++                # Temporarily switch to HEAD and retry
++                original_ref = provider.unresolved_ref
++                provider.unresolved_ref = "HEAD"
++                try:
++                    # Recursively call get_resolved_ref with HEAD
++                    ref = await provider.get_resolved_ref()
++                    if ref:
++                        self.log.info("Successfully resolved HEAD for %s", key)
++                        # Successfully resolved with HEAD, continue normally
++                    else:
++                        # HEAD also failed, fall through to error handling below
++                        provider.unresolved_ref = original_ref
++                except Exception:
++                    self.log.debug("HEAD resolution also failed for %s", key)
++                    provider.unresolved_ref = original_ref
++
+             error_message = [f"Could not resolve ref for {key}. Double check your URL."]
+ 
+             if provider.name == "GitHub":
+-                error_message.append(
+-                    'GitHub recently changed default branches from "master" to "main".'
+-                )
++                    error_message.append("""GitHub recently changed default branches from "master" to "main".""")
++
++                    if provider.unresolved_ref == "master":
++                    error_message.append("""Did you mean the "main" branch?""")
++                    elif provider.unresolved_ref == "main":
++                    error_message.append("""Did you mean the "master" branch?""")
+ 
+-                if provider.unresolved_ref == "master":
+-                    error_message.append('Did you mean the "main" branch?')
+-                elif provider.unresolved_ref == "main":
+-                    error_message.append('Did you mean the "master" branch?')
+ 
+             else:
+                 error_message.append("Is your repo public?")
+ 
+             await self.fail(" ".join(error_message))
+             return
++            return
+ 
+         self.ref_url = await provider.get_resolved_ref_url()
+         resolved_spec = await provider.get_resolved_spec()
+diff --git a/binderhub/repoproviders.py b/binderhub/repoproviders.py
+index 4169f34..940f62a 100644
+--- a/binderhub/repoproviders.py
++++ b/binderhub/repoproviders.py
+@@ -38,8 +38,8 @@ def tokenize_spec(spec):
+     spec_parts = spec.split("/", 2)  # allow ref to contain "/"
+     if len(spec_parts) != 3:
+         msg = f'Spec is not of the form "user/repo/ref", provided: "{spec}".'
+-        if len(spec_parts) == 2 and spec_parts[-1] not in ("main", "master"):
+-            msg += f' Did you mean "{spec}/main"?'
++        if len(spec_parts) == 2 and spec_parts[-1] not in ("HEAD", "main", "master"):
++            msg += f' Did you mean "{spec}/HEAD"?'
+         raise ValueError(msg)
+ 
+     return spec_parts

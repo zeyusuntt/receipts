@@ -1,0 +1,7 @@
+{
+  "approach": "Locate the iri_to_uri function in src/werkzeug/urls.py and modify the decoding step to use 'utf-8' as the default encoding when charset is None, ensuring bytes inputs are handled correctly.",
+  "files_to_edit": [
+    "src/werkzeug/urls.py"
+  ],
+  "hypothesis": "In src/werkzeug/urls.py, the function iri_to_uri attempts to decode its input with `.decode(charset)` where charset defaults to None. When passed a byte string, this raises a TypeError because decode requires the encoding argument to be a string. To fix this while preserving backward compatibility and issuing the proper deprecation warning, we should explicitly handle the case where charset is None by defaulting to UTF-8 before attempting to decode."
+}

@@ -1,0 +1,31 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "pyvo.io.vosi.vodataservice.DataType.__repr__ references attribute that doesn't exist\nWhen trying to do a simple iteration over tables and columns for a TAP service I am getting errors when printing the column datatype.\r\n\r\nHere is what I'm trying to do:\r\n```\r\nimport pyvo as vo\r\n\r\ntap_service = vo.dal.TAPService(\"http://vao.stsci.edu/zmast/tapservice.aspx\")\r\nprint(tap_service.describe())\r\nfor table in (tap_service.tables):\r\n    print(table.name, table.type, table.utype)\r\n    print(\"Table:\", table.description)\r\n    for column in table.columns:\r\n            print(\"Datatype:\", column.datatype)\r\n            print(\"Name:\", column.name)\r\n            if column.description is not None:\r\n                print(\"Description:\", column.description)\r\n            print(\"Unit:\", column.unit)\r\n\r\n```\r\n\r\nHere is the error:\r\n\r\n```\r\nTraceback (most recent call last):\r\n  File \"mast/z/scripts/schema_to_meta.py\", line 12, in <module>\r\n    print(column.datatype)\r\n  File \"/Users/sweissman/anaconda3/envs/z-mast/lib/python3.6/site-packages/pyvo/io/vosi/vodataservice.py\", line 714, in __repr__\r\n    self.arraysize, self.value)\r\nAttributeError: 'VOTableType' object has no attribute 'value'\r\n\r\n```\r\n\r\nThe issue appears to be with __repr__ referencing an attribute that doesn't exist:\r\nhttps://github.com/astropy/pyvo/blob/7dfc90da1c82702fdb37d05b69d8db25057c0ae2/pyvo/io/vosi/vodataservice.py#L715-L717\r\n\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/astropy-pyvo:204-7dfc90d",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-astropy__pyvo-204-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3B5dm8vaW8vdm9zaS90ZXN0cy90ZXN0X3RhYmxlcy5weSBiL3B5dm8vaW8vdm9zaS90ZXN0cy90ZXN0X3RhYmxlcy5weQppbmRleCBlOWJiNmVkLi5lOGY0ZmQ1IDEwMDY0NAotLS0gYS9weXZvL2lvL3Zvc2kvdGVzdHMvdGVzdF90YWJsZXMucHkKKysrIGIvcHl2by9pby92b3NpL3Rlc3RzL3Rlc3RfdGFibGVzLnB5CkBAIC0zNyw4ICszNyw5IEBAIGNsYXNzIFRlc3RUYWJsZXM6CiAgICAgICAgIGFzc2VydCBjb2wudXR5cGUgPT0gInV0eXBlIgogCiAgICAgICAgIGFzc2VydCB0eXBlKGNvbC5kYXRhdHlwZSkgPT0gdnMuVEFQVHlwZQorICAgICAgICBhc3NlcnQgc3RyKGNvbC5kYXRhdHlwZSkgPT0gIjxEYXRhVHlwZSBhcnJheXNpemU9Kj5WQVJDSEFSPC9EYXRhVHlwZT4iCiAgICAgICAgIGFzc2VydCBjb2wuZGF0YXR5cGUuYXJyYXlzaXplID09ICIqIgotICAgICAgICBhc3NlcnQgY29sLmRhdGF0eXBlLmRlbGltID09ICc7JworICAgICAgICBhc3NlcnQgY29sLmRhdGF0eXBlLmRlbGltID09ICI7IgogICAgICAgICBhc3NlcnQgY29sLmRhdGF0eXBlLnNpemUgPT0gIjQyIgogICAgICAgICBhc3NlcnQgY29sLmRhdGF0eXBlLmNvbnRlbnQgPT0gIlZBUkNIQVIiCiAK'\"'\"'))'",
+      "git apply /tmp/receipts-astropy__pyvo-204-test.patch"
+    ],
+    "workdir": "/pyvo"
+  },
+  "spec_paths": [
+    "pyvo/io/vosi/tests/test_tables.py"
+  ],
+  "spec_tests": [
+    "pyvo/io/vosi/tests/test_tables.py::TestTables::test_all"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning pyvo/io/vosi/tests/test_tables.py"
+}

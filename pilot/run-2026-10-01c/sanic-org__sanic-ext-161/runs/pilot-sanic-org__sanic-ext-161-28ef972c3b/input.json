@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "OpenAPI does not include properties to an embedded object\n**Describe the bug**\r\nIt was working nicely in sanic_openapi, but now as we attempt moving to sanic-ext it does not. \r\n\r\nWhen a schema embeds another in a field as an object, it's not embedded. Instead it embeds an object without properties. \r\n\r\n<img width=\"499\" alt=\"image\" src=\"https://user-images.githubusercontent.com/11650/208183840-b39fe311-b81b-4a25-97f0-ed7a8261add7.png\">\r\n\r\nWhen embedded as an array of objects it works as expected.\r\n\r\n<img width=\"622\" alt=\"image\" src=\"https://user-images.githubusercontent.com/11650/208183944-f6fe6144-6dea-42ae-8098-d1ad187e7326.png\">\r\n\r\n**Screenshots**\r\n\r\n`list_categories`:\r\n\r\n<img width=\"658\" alt=\"image\" src=\"https://user-images.githubusercontent.com/11650/208182721-18452639-0e65-4c59-8bfe-5eb63a0042a7.png\">\r\n\r\n`get_category`:\r\n\r\n<img width=\"171\" alt=\"image\" src=\"https://user-images.githubusercontent.com/11650/208183055-9aba10cd-2409-4b4e-87e5-c5670920d86c.png\">\r\n\r\n**To Reproduce**\r\n\r\n```python\r\nclass Category:\r\n    id = doc.Integer(required=True, example=\"1\")\r\n    name = doc.String(required=True, example=\"Full-time\")\r\n    instruction = doc.String(example=\"Category instruction template\")\r\n\r\nclass CategoryResponse:\r\n    data = Category\r\n\r\n\r\nclass CategoriesResponse:\r\n    data = [Category]\r\n\r\n\r\n@app.get(\"/api/categories\")\r\n@doc.response(200, {\"application/json\": CategoriesResponse}, \"Success\")\r\nasync def list_categories(_request):\r\n    ...\r\n\r\n@app.get(\"/api/categories/<category_id:int>\")\r\n@doc.response(200, {\"application/json\": CategoryResponse}, \"Success\")\r\nasync def get_category(_request, category_id: int):\r\n    ...\r\n```\r\n\r\n**Expected behavior**\r\n\r\nEmbedded schema appears as appropriate.\r\n\r\n**Environment (please complete the following information):**\r\n - OS: Mac OS X\r\n - Browser Firefox \r\n - Version 108b\r\n\r\n**Additional context**\r\n\r\nSanic version: 22.9.1\r\nPython 3.10.8\r\nsanic-routing==22.8.0, sanic-testing==22.9.0, sanic-ext==22.9.1\r\n",
+  "source": {
+    "image": "docker.io/swerebenchv2/sanic-org-sanic-ext:161-d98ebb0",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-sanic-org__sanic-ext-161-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3Rlc3RzL2V4dGVuc2lvbnMvb3BlbmFwaS90ZXN0X3NjaGVtYS5weSBiL3Rlc3RzL2V4dGVuc2lvbnMvb3BlbmFwaS90ZXN0X3NjaGVtYS5weQppbmRleCAwNzlmODZiLi4yZjBmZjkyIDEwMDY0NAotLS0gYS90ZXN0cy9leHRlbnNpb25zL29wZW5hcGkvdGVzdF9zY2hlbWEucHkKKysrIGIvdGVzdHMvZXh0ZW5zaW9ucy9vcGVuYXBpL3Rlc3Rfc2NoZW1hLnB5CkBAIC0zLDcgKzMsNyBAQCBmcm9tIHR5cGluZyBpbXBvcnQgTGlzdAogCiBpbXBvcnQgcHl0ZXN0CiAKLWZyb20gc2FuaWNfZXh0LmV4dGVuc2lvbnMub3BlbmFwaS50eXBlcyBpbXBvcnQgU2NoZW1hCitmcm9tIHNhbmljX2V4dC5leHRlbnNpb25zLm9wZW5hcGkudHlwZXMgaW1wb3J0IFNjaGVtYSwgU3RyaW5nCiAKIAogQHB5dGVzdC5tYXJrLnNraXBpZih2ZXJzaW9uX2luZm8gPCAoMywgOSksIHJlYXNvbj0iTm90IG5lZWRlZCBvbiAzLjgiKQpAQCAtMjksNiArMjksNyBAQCBkZWYgdGVzdF9zY2hlbWFfbGlzdCgpOgogCiAgICAgc2NoZW1hID0gU2NoZW1hLm1ha2UoRm9vKQogICAgIHNlcmlhbGl6ZWQgPSBzY2hlbWEuc2VyaWFsaXplKCkKKwogICAgIGFzc2VydCAibm9fc2hvd19tZXRob2QiIG5vdCBpbiBzZXJpYWxpemVkCiAgICAgYXNzZXJ0ICJub19zaG93X2NsYXNzbWV0aG9kIiBub3QgaW4gc2VyaWFsaXplZAogICAgIGFzc2VydCAibm9fc2hvd19zdGF0aWNtZXRob2QiIG5vdCBpbiBzZXJpYWxpemVkCkBAIC00NiwzICs0NywzNCBAQCBkZWYgdGVzdF9zY2hlbWFfbGlzdCgpOgogICAgICAgICAgICAgInNob3ciOiB7InR5cGUiOiAiYm9vbGVhbiJ9LAogICAgICAgICB9LAogICAgIH0KKworCitkZWYgdGVzdF9zY2hlbWFfZmllbGRzKCk6CisgICAgY2xhc3MgUGV0OgorICAgICAgICBuYW1lID0gU3RyaW5nKGV4YW1wbGU9IlNub29weSIpCisKKyAgICBjbGFzcyBTaW5nbGU6CisgICAgICAgIHBldCA9IFBldAorCisgICAgICAgIGNsYXNzIElnbm9yZToKKyAgICAgICAgICAgIC4uLgorCisgICAgY2xhc3MgTXVsdGlwbGU6CisgICAgICAgIHBldHMgPSBbUGV0XQorCisgICAgcGV0X3NjaGVtYSA9IFNjaGVtYS5tYWtlKFBldCkuc2VyaWFsaXplKCkKKyAgICBzaW5nbGVfc2NoZW1hID0gU2NoZW1hLm1ha2UoU2luZ2xlKS5zZXJpYWxpemUoKQorICAgIG11bHRpcGxlX3NjaGVtYSA9IFNjaGVtYS5tYWtlKE11bHRpcGxlKS5zZXJpYWxpemUoKQorCisgICAgYXNzZXJ0IHBldF9zY2hlbWEgPT0geworICAgICAgICAidHlwZSI6ICJvYmplY3QiLAorICAgICAgICAicHJvcGVydGllcyI6IHsibmFtZSI6IHsidHlwZSI6ICJzdHJpbmciLCAiZXhhbXBsZSI6ICJTbm9vcHkifX0sCisgICAgfQorICAgIGFzc2VydCBzaW5nbGVfc2NoZW1hID09IHsKKyAgICAgICAgInR5cGUiOiAib2JqZWN0IiwKKyAgICAgICAgInByb3BlcnRpZXMiOiB7InBldCI6IHBldF9zY2hlbWF9LAorICAgIH0KKyAgICBhc3NlcnQgbXVsdGlwbGVfc2NoZW1hID09IHsKKyAgICAgICAgInR5cGUiOiAib2JqZWN0IiwKKyAgICAgICAgInByb3BlcnRpZXMiOiB7InBldHMiOiB7InR5cGUiOiAiYXJyYXkiLCAiaXRlbXMiOiBwZXRfc2NoZW1hfX0sCisgICAgfQo='\"'\"'))'",
+      "git apply /tmp/receipts-sanic-org__sanic-ext-161-test.patch"
+    ],
+    "workdir": "/sanic-ext"
+  },
+  "spec_tests": [
+    "tests/extensions/openapi/test_schema.py::test_schema_fields"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/extensions/openapi/test_schema.py"
+}

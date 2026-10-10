@@ -1,0 +1,61 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+installed packages of interest: build==1.4.0 packaging==25.0 pathspec==1.0.4 pip==25.3 pybind11==3.0.2 pyproject_metadata==0.11.0 scikit_build_core==0.1.dev288+gbba6f7c2c.d20261001 setuptools==80.9.0 virtualenv==20.38.0 wheel==0.45.1
+rootdir: /scikit-build-core
+configfile: pyproject.toml
+plugins: subprocess-1.5.3
+collecting ... collected 1 item
+
+tests/test_process_scripts.py::test_script_dir FAILED                    [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_script_dir ________________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_script_dir0')
+
+    def test_script_dir(tmp_path: Path) -> None:
+        script_dir = tmp_path / "scripts"
+        script_dir.mkdir()
+        script_1 = script_dir / "script1"
+        script_1.write_text("#!/usr/bin/env python3\n\nprint('hello world')")
+        script_1.chmod(0o644)
+        orig_mode_1 = script_1.stat().st_mode
+    
+        script_2 = script_dir / "script2"
+        script_2.write_text("#!/usr/bin/env pypy3\n\nprint('hello world')")
+        script_2.chmod(0o755)
+        orig_mode_2 = script_2.stat().st_mode
+    
+        script_3 = script_dir / "script3"
+        script_3.write_text("#!/usr/bin/env pythonw3.11\n\nprint('hello world')")
+    
+        script_4 = script_dir / "script4"
+        script_4.write_text("#!/usr/bin/python3.11\n\nprint('hello world')")
+    
+        script_5 = script_dir / "script5"
+        script_5.write_text("#!/usr/bin/other\n\nprint('hello world')")
+    
+        script_6 = script_dir / "script6"
+        script_6.write_text("#!/usr/bin/env python3.11 other\n\nprint('hello world')")
+    
+        script_7 = script_dir / "script7"
+        script_7.write_text("#!/usr/bin/env other\n\nprint('hello world')")
+    
+        process_script_dir(script_dir)
+    
+        assert script_1.read_text() == "#!python\n\nprint('hello world')"
+        assert script_1.stat().st_mode == orig_mode_1
+    
+>       assert script_2.read_text() == "#!python\n\nprint('hello world')"
+E       assert "#!/usr/bin/e...hello world')" == "#!python\n\n...hello world')"
+E         
+E         - #!python
+E         + #!/usr/bin/env pypy3
+E           
+E           print('hello world')
+
+tests/test_process_scripts.py:39: AssertionError
+----------- generated xml file: /opt/receipts/reports/agent1-12.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_process_scripts.py::test_script_dir - assert "#!/usr/bin/e....
+============================== 1 failed in 0.05s ===============================

@@ -1,0 +1,39 @@
+============================= test session starts ==============================
+collecting ... collected 8 items
+
+tests/plugins/test_accounts.py::AccountUpdateTest::test_authentication_with_new_password_is_accepted_after_change PASSED [ 12%]
+tests/plugins/test_accounts.py::AccountUpdateTest::test_authentication_with_old_password_is_denied_after_change PASSED [ 25%]
+tests/plugins/test_accounts.py::AccountUpdateTest::test_cannot_patch_someone_else_account PASSED [ 37%]
+tests/plugins/test_accounts.py::AccountUpdateTest::test_cannot_patch_unknown_account PASSED [ 50%]
+tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password PASSED [ 62%]
+tests/plugins/test_accounts.py::AccountUpdateTest::test_metadata_can_be_changed PASSED [ 75%]
+tests/plugins/test_accounts.py::AccountUpdateTest::test_password_can_be_changed PASSED [ 87%]
+tests/plugins/test_accounts.py::AccountUpdateTest::test_username_and_account_id_must_match PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/plugins/test_accounts.py::AccountUpdateTest::test_authentication_with_new_password_is_accepted_after_change
+  /kinto/kinto/core/initialization.py:555: UserWarning: HTTPS is not enabled
+    warnings.warn("HTTPS is not enabled")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+_ AccountUpdateTest.test_authentication_with_old_password_is_denied_after_change _
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'read' on '/accounts/alice' not granted to 'system.Everyone'.
+___________ AccountUpdateTest.test_cannot_patch_someone_else_account ___________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'write' on '/accounts/bob' not granted to 'account:alice'.
+_____________ AccountUpdateTest.test_cannot_patch_unknown_account ______________
+------------------------------ Captured log call -------------------------------
+WARNING  kinto.core.authorization:authorization.py:108 Permission 'write' on '/accounts/bob' not granted to 'account:alice'.
+----------- generated xml file: /opt/receipts/reports/agent1-32.xml ------------
+=========================== short test summary info ============================
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_authentication_with_new_password_is_accepted_after_change
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_authentication_with_old_password_is_denied_after_change
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_cannot_patch_someone_else_account
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_cannot_patch_unknown_account
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_metadata_can_be_changed
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_password_can_be_changed
+PASSED tests/plugins/test_accounts.py::AccountUpdateTest::test_username_and_account_id_must_match
+========================= 8 passed, 1 warning in 5.63s =========================

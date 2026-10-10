@@ -1,0 +1,107 @@
+diff --git a/debug_test.py b/debug_test.py
+new file mode 100644
+index 0000000..53f19f5
+--- /dev/null
++++ b/debug_test.py
+@@ -0,0 +1,22 @@
++#!/usr/bin/env python3
++
++import sys
++sys.path.insert(0, '.')
++
++from robyn import Robyn
++
++print("Creating Robyn app...")
++app = Robyn(__file__)
++
++print("OpenAPI instance:", app.openapi)
++print("OpenAPI spec keys:", list(app.openapi.openapi_spec.keys()) if hasattr(app.openapi, 'openapi_spec') else "No openapi_spec")
++
++print("Testing path addition...")
++@app.get("/test")
++def test_endpoint():
++    return "test"
++
++print("After adding route:")
++print("Paths in spec:", list(app.openapi.openapi_spec.get('paths', {}).keys()))
++
++print("Done.")
+\ No newline at end of file
+diff --git a/robyn/__init__.py b/robyn/__init__.py
+index 09e9a20..48acbcd 100644
+--- a/robyn/__init__.py
++++ b/robyn/__init__.py
+@@ -43,13 +43,23 @@ class Robyn:
+         config: Config = Config(),
+         openapi: OpenAPI = OpenAPI(),
+         dependencies: DependencyMap = DependencyMap(),
++        openapi_file_path: Optional[str] = None,
+     ) -> None:
+         directory_path = os.path.dirname(os.path.abspath(file_object))
+         self.file_path = file_object
+         self.directory_path = directory_path
+         self.config = config
+         self.dependencies = dependencies
+-        self.openapi = openapi
++        
++        if openapi_file_path is not None:
++            # Resolve the openapi file path relative to the file_object's directory
++            if not os.path.isabs(openapi_file_path):
++                resolved_path = os.path.join(directory_path, openapi_file_path)
++            else:
++                resolved_path = openapi_file_path
++            self.openapi = OpenAPI(openapi_file_path=resolved_path)
++        else:
++            self.openapi = openapi
+ 
+         if not bool(os.environ.get("ROBYN_CLI", False)):
+             # the env variables are already set when are running through the cli
+diff --git a/robyn/openapi.py b/robyn/openapi.py
+index e04d2fa..ef9347a 100644
+--- a/robyn/openapi.py
++++ b/robyn/openapi.py
+@@ -1,4 +1,5 @@
+ import inspect
++import os
+ import typing
+ from dataclasses import asdict, dataclass, field
+ from importlib import resources
+@@ -134,23 +135,30 @@ class OpenAPI:
+ 
+     @param info: OpenAPIInfo Provides metadata about the API.
+     @param openapi_spec: dict The content of openapi.json as a dict
++    @param openapi_file_path: Optional[str] Path to a custom openapi json file
+     """
+ 
+     info: OpenAPIInfo = field(default_factory=OpenAPIInfo)
+     openapi_spec: dict = field(init=False)
++    openapi_file_path: Optional[str] = None
+ 
+     def __post_init__(self):
+         """
+         Initializes the openapi_spec dict
+         """
+-        self.openapi_spec = {
+-            "openapi": "3.1.0",
+-            "info": asdict(self.info),
+-            "paths": {},
+-            "components": asdict(self.info.components),
+-            "servers": [asdict(server) for server in self.info.servers],
+-            "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
+-        }
++        if self.openapi_file_path and os.path.exists(self.openapi_file_path):
++            import json
++            with open(self.openapi_file_path, "r") as f:
++                self.openapi_spec = json.load(f)
++        else:
++            self.openapi_spec = {
++                "openapi": "3.1.0",
++                "info": asdict(self.info),
++                "paths": {},
++                "components": asdict(self.info.components),
++                "servers": [asdict(server) for server in self.info.servers],
++                "externalDocs": asdict(self.info.externalDocs) if self.info.externalDocs.url else None,
++            }
+ 
+     def add_openapi_path_obj(self, route_type: str, endpoint: str, openapi_name: str, openapi_tags: List[str], handler: Callable):
+         """

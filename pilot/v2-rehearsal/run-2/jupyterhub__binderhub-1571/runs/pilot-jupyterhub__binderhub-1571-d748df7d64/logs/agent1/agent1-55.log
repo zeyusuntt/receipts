@@ -1,0 +1,21 @@
+            await self.fail(f"Error resolving ref for {key}: {e}")
+            return
+
+        if ref is None:
+            error_message = [f"Could not resolve ref for {key}. Double check your URL."]
+
+            if provider.name == "GitHub":
+                error_message.append(
+                    'GitHub recently changed default branches from "master" to "main".'
+                )
+
+                if provider.unresolved_ref == "master":
+                    error_message.append('Did you mean the "main" branch?')
+                elif provider.unresolved_ref == "main":
+                    error_message.append('Did you mean the "master" branch?')
+
+            else:
+                error_message.append("Is your repo public?")
+
+            await self.fail(" ".join(error_message))
+            return

@@ -1,0 +1,329 @@
+diff --git a/debug_test2.py b/debug_test2.py
+new file mode 100644
+index 00000000..685b07d6
+--- /dev/null
++++ b/debug_test2.py
+@@ -0,0 +1,37 @@
++#!/usr/bin/env python3
++
++import os
++import tempfile
++import shutil
++from dulwich import porcelain
++from dulwich.repo import Repo
++
++# Create a simple test case
++temp_dir = tempfile.mkdtemp()
++try:
++    os.chdir(temp_dir)
++    print(f"Working in: {temp_dir}")
++    os.system('git init')
++    
++    # Create untracked directory with files
++    os.makedirs('untracked_dir', exist_ok=True)
++    with open('untracked_dir/file1.txt', 'w') as f:
++        f.write('content1')
++    with open('untracked_dir/file2.txt', 'w') as f:
++        f.write('content2')
++        
++    print("Files created:")
++    os.system('find . -not -path "./.git/*" -not -path "./.git" | sort')
++    
++    print("\nGit status:")
++    os.system('git status --porcelain')
++    
++    print("\nDulwich status:")
++    repo = Repo('.')
++    staged, unstaged, untracked = porcelain.status(repo.path, untracked_files="normal")
++    print(f"Staged: {staged}")
++    print(f"Unstaged: {unstaged}") 
++    print(f"Untracked: {untracked}")
++finally:
++    os.chdir('/')
++    shutil.rmtree(temp_dir)
+\ No newline at end of file
+diff --git a/debug_test3.py b/debug_test3.py
+new file mode 100644
+index 00000000..d5df5490
+--- /dev/null
++++ b/debug_test3.py
+@@ -0,0 +1,43 @@
++#!/usr/bin/env python3
++
++import os
++import tempfile
++import shutil
++from dulwich import porcelain
++from dulwich.repo import Repo
++
++# Create a simple test case
++temp_dir = tempfile.mkdtemp()
++try:
++    os.chdir(temp_dir)
++    print(f"Working in: {temp_dir}")
++    os.system('git init')
++    
++    # Create untracked directory with files
++    os.makedirs('untracked_dir', exist_ok=True)
++    with open('untracked_dir/file1.txt', 'w') as f:
++        f.write('content1')
++    with open('untracked_dir/file2.txt', 'w') as f:
++        f.write('content2')
++        
++    print("Files created:")
++    os.system('find . -not -path "./.git/*" -not -path "./.git" | sort')
++    
++    print("\nGit status:")
++    os.system('git status --porcelain')
++    
++    print("\nDulwich status (default/all):")
++    repo = Repo('.')
++    staged, unstaged, untracked = porcelain.status(repo.path)  # default is "all"
++    print(f"Staged: {staged}")
++    print(f"Unstaged: {unstaged}") 
++    print(f"Untracked: {untracked}")
++    
++    print("\nDulwich status (normal):")
++    staged, unstaged, untracked = porcelain.status(repo.path, untracked_files="normal")
++    print(f"Staged: {staged}")
++    print(f"Unstaged: {unstaged}") 
++    print(f"Untracked: {untracked}")
++finally:
++    os.chdir('/')
++    shutil.rmtree(temp_dir)
+\ No newline at end of file
+diff --git a/debug_test4.py b/debug_test4.py
+new file mode 100644
+index 00000000..09be281a
+--- /dev/null
++++ b/debug_test4.py
+@@ -0,0 +1,40 @@
++#!/usr/bin/env python3
++
++import os
++import tempfile
++import shutil
++from dulwich.repo import Repo
++from dulwich.porcelain import get_untracked_paths, path_to_tree_path, open_repo_closing
++from dulwich.ignore import IgnoreFilterManager
++
++# Create a simple test case
++temp_dir = tempfile.mkdtemp()
++try:
++    os.chdir(temp_dir)
++    print(f"Working in: {temp_dir}")
++    os.system('git init >/dev/null 2>&1')
++    
++    # Create untracked directory with files
++    os.makedirs('untracked_dir', exist_ok=True)
++    with open('untracked_dir/file1.txt', 'w') as f:
++        f.write('content1')
++    with open('untracked_dir/file2.txt', 'w') as f:
++        f.write('content2')
++        
++    print("Files created:")
++    os.system('find . -not -path "./.git/*" -not -path "./.git" | sort')
++    
++    print("\nTesting get_untracked_paths directly:")
++    with open_repo_closing('.') as r:
++        index = r.open_index()
++        ignore_manager = IgnoreFilterManager.from_repo(r)
++        paths = list(get_untracked_paths(
++            '.', '.', index, exclude_ignored=False, untracked_files="normal"
++        ))
++        print(f"Untracked paths (normal): {paths}")
++        
++    print("\nGit status:")
++    os.system('git status --porcelain')
++finally:
++    os.chdir('/')
++    shutil.rmtree(temp_dir)
+\ No newline at end of file
+diff --git a/dulwich/porcelain.py b/dulwich/porcelain.py
+index 7dcdb7ca..dc4218ee 100644
+--- a/dulwich/porcelain.py
++++ b/dulwich/porcelain.py
+@@ -1731,17 +1731,15 @@ def get_untracked_paths(
+       untracked_files: How to handle untracked files:
+         - "no": return an empty list
+         - "all": return all files in untracked directories
+-        - "normal": Not implemented
++        - "normal": return directory paths for completely untracked directories,
++                   individual files for mixed directories
+ 
+     Note: ignored directories will never be walked for performance reasons.
+       If exclude_ignored is False, only the path to an ignored directory will
+       be yielded, no files inside the directory will be returned
+     """
+-    if untracked_files == "normal":
+-        raise NotImplementedError("normal is not yet supported")
+-
+-    if untracked_files not in ("no", "all"):
+-        raise ValueError("untracked_files must be one of (no, all)")
++    if untracked_files not in ("no", "all", "normal"):
++        raise ValueError("untracked_files must be one of (no, all, normal)")
+ 
+     if untracked_files == "no":
+         return
+@@ -1751,30 +1749,137 @@ def get_untracked_paths(
+ 
+     ignored_dirs = []
+ 
+-    def prune_dirnames(dirpath, dirnames):
+-        for i in range(len(dirnames) - 1, -1, -1):
+-            path = os.path.join(dirpath, dirnames[i])
+-            ip = os.path.join(os.path.relpath(path, basepath), "")
+-            if ignore_manager.is_ignored(ip):
+-                if not exclude_ignored:
+-                    ignored_dirs.append(
+-                        os.path.join(os.path.relpath(path, frompath), "")
+-                    )
+-                del dirnames[i]
+-        return dirnames
+-
+-    for ap, is_dir in _walk_working_dir_paths(
+-        frompath, basepath, prune_dirnames=prune_dirnames
+-    ):
+-        if not is_dir:
+-            ip = path_to_tree_path(basepath, ap)
+-            if ip not in index:
+-                if not exclude_ignored or not ignore_manager.is_ignored(
+-                    os.path.relpath(ap, basepath)
+-                ):
+-                    yield os.path.relpath(ap, frompath)
+-
+-    yield from ignored_dirs
++    if untracked_files == "all":
++        # Original behavior - walk all files and check individually
++        for ap, is_dir in _walk_working_dir_paths(
++            frompath, basepath, prune_dirnames=lambda dirpath, dirnames: _filter_ignored(dirpath, dirnames, basepath, frompath, ignore_manager, exclude_ignored, ignored_dirs)
++        ):
++            if not is_dir:
++                ip = path_to_tree_path(basepath, ap)
++                if ip not in index:
++                    if not exclude_ignored or not ignore_manager.is_ignored(
++                        os.path.relpath(ap, basepath)
++                    ):
++                        yield os.path.relpath(ap, frompath)
++        yield from ignored_dirs
++    else:  # untracked_files == "normal"
++        # Optimized behavior for normal mode
++        dirs_to_yield = set()
++        dirs_to_skip = set()
++        
++        def normal_prune_dirnames(dirpath, dirnames):
++            nonlocal dirs_to_yield, dirs_to_skip
++            
++            # Filter ignored directories first
++            dirnames[:] = _filter_ignored(dirpath, dirnames, basepath, frompath, ignore_manager, exclude_ignored, ignored_dirs)
++            
++            # Check each directory for yielding as whole
++            to_remove = []
++            for dirname in list(dirnames):
++                full_path = os.path.join(dirpath, dirname)
++                rel_path = os.path.relpath(full_path, frompath)
++                if rel_path == '.':
++                    rel_path = ''
++                
++                # Skip if parent should be skipped
++                parent_rel = os.path.relpath(dirpath, frompath)
++                if parent_rel == '.':
++                    parent_rel = ''
++                should_skip = False
++                for skip_dir in dirs_to_skip:
++                    if skip_dir == './':
++                        parent_prefix = ''
++                    else:
++                        parent_prefix = skip_dir.rstrip('/')
++                    if parent_rel.startswith(parent_prefix + '/'):
++                        should_skip = True
++                        break
++                if should_skip:
++                    to_remove.append(dirname)
++                    continue
++                
++                # Check if directory itself should be yielded as whole
++                dir_ip = path_to_tree_path(basepath, full_path)
++                rel_dir_for_ignore = os.path.relpath(full_path, basepath)
++                if not rel_dir_for_ignore.endswith('/'):
++                    rel_dir_for_ignore += '/'
++                dir_ignored = ignore_manager.is_ignored(rel_dir_for_ignore)
++                
++                if exclude_ignored and dir_ignored:
++                    to_remove.append(dirname)
++                    continue
++                
++                # Check if directory is completely untracked
++                is_dir_untracked = dir_ip not in index
++                
++                if is_dir_untracked and not dir_ignored:
++                    # Yield directory as whole and skip its contents
++                    if rel_path:
++                        yield_rel_path = rel_path + '/'
++                    else:
++                        yield_rel_path = './'
++                    dirs_to_yield.add(yield_rel_path)
++                    dirs_to_skip.add(yield_rel_path)
++                    to_remove.append(dirname)
++            
++            # Remove processed directories
++            for dirname in to_remove:
++                if dirname in dirnames:
++                    dirnames.remove(dirname)
++            
++            return dirnames
++
++        for ap, is_dir in _walk_working_dir_paths(
++            frompath, basepath, prune_dirnames=normal_prune_dirnames
++        ):
++            rel_path = os.path.relpath(ap, frompath)
++            
++            if is_dir:
++                # Yield directory if it's in our set
++                if rel_path in dirs_to_yield:
++                    yield rel_path
++                elif rel_path + '/' in dirs_to_yield:
++                    yield rel_path + '/'
++            else:
++                # Yield file if not skipped and is untracked
++                # Check if in skipped directory
++                rel_dir = os.path.dirname(rel_path)
++                if rel_dir == '.':
++                    rel_dir = ''
++                should_skip = False
++                for skip_dir in dirs_to_skip:
++                    if skip_dir == './':
++                        skip_prefix = ''
++                    else:
++                        skip_prefix = skip_dir.rstrip('/')
++                    if rel_dir.startswith(skip_prefix + '/'):
++                        should_skip = True
++                        break
++                if should_skip:
++                    continue
++                    
++                ip = path_to_tree_path(basepath, ap)
++                if ip not in index:
++                    rel_path_for_ignore = os.path.relpath(ap, basepath)
++                    is_ignored = ignore_manager.is_ignored(rel_path_for_ignore)
++                    if not exclude_ignored or not is_ignored:
++                        yield rel_path
++        
++        yield from ignored_dirs
++
++
++def _filter_ignored(dirpath, dirnames, basepath, frompath, ignore_manager, exclude_ignored, ignored_dirs):
++    """Helper to filter ignored directories and track them for ignored_dirs yield."""
++    for i in range(len(dirnames) - 1, -1, -1):
++        path = os.path.join(dirpath, dirnames[i])
++        ip = os.path.join(os.path.relpath(path, basepath), "")
++        if ignore_manager.is_ignored(ip):
++            if not exclude_ignored:
++                ignored_dirs.append(
++                    os.path.join(os.path.relpath(path, frompath), "")
++                )
++            del dirnames[i]
++    return dirnames
+ 
+ 
+ def get_tree_changes(repo):

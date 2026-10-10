@@ -1,0 +1,105 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /twine
+configfile: pytest.ini
+plugins: socket-0.7.0
+collecting ... collected 28 items
+
+tests/test_package.py::test_sign_file PASSED                             [  3%]
+tests/test_package.py::test_sign_file_with_identity PASSED               [  7%]
+tests/test_package.py::test_run_gpg_raises_exception_if_no_gpgs PASSED   [ 10%]
+tests/test_package.py::test_run_gpg_raises_exception_if_not_using_gpg PASSED [ 14%]
+tests/test_package.py::test_run_gpg_falls_back_to_gpg2 PASSED            [ 17%]
+tests/test_package.py::test_package_signed_name_is_correct PASSED        [ 21%]
+tests/test_package.py::test_package_safe_name_is_correct[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ] PASSED [ 25%]
+tests/test_package.py::test_package_safe_name_is_correct[0123456789-0123456789] PASSED [ 28%]
+tests/test_package.py::test_package_safe_name_is_correct[!"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~--.-] PASSED [ 32%]
+tests/test_package.py::test_package_safe_name_is_correct[mosaik.SimConfig-mosaik.SimConfig] PASSED [ 35%]
+tests/test_package.py::test_package_safe_name_is_correct[mosaik$$$$.SimConfig-mosaik-.SimConfig] PASSED [ 39%]
+tests/test_package.py::test_metadata_dictionary_keys PASSED              [ 42%]
+tests/test_package.py::test_metadata_dictionary_values[None] PASSED      [ 46%]
+tests/test_package.py::test_metadata_dictionary_values[gpg_signature1] PASSED [ 50%]
+tests/test_package.py::test_hash_manager PASSED                          [ 53%]
+tests/test_package.py::test_fips_hash_manager_md5 PASSED                 [ 57%]
+tests/test_package.py::test_fips_hash_manager_blake2[TypeError] PASSED   [ 60%]
+tests/test_package.py::test_fips_hash_manager_blake2[ValueError] PASSED  [ 64%]
+tests/test_package.py::test_fips_metadata_excludes_md5_and_blake2 PASSED [ 67%]
+tests/test_package.py::test_pkginfo_returns_no_metadata[unsupported Metadata-Version] FAILED [ 71%]
+tests/test_package.py::test_pkginfo_returns_no_metadata[missing Name and Version0] PASSED [ 75%]
+tests/test_package.py::test_pkginfo_returns_no_metadata[missing Name and Version1] PASSED [ 78%]
+tests/test_package.py::test_pkginfo_returns_no_metadata[missing Name0] PASSED [ 82%]
+tests/test_package.py::test_pkginfo_returns_no_metadata[missing Name1] PASSED [ 85%]
+tests/test_package.py::test_pkginfo_returns_no_metadata[missing Version0] PASSED [ 89%]
+tests/test_package.py::test_pkginfo_returns_no_metadata[missing Version1] PASSED [ 92%]
+tests/test_package.py::test_malformed_from_file PASSED                   [ 96%]
+tests/test_package.py::test_package_from_egg PASSED                      [100%]
+
+=================================== FAILURES ===================================
+________ test_pkginfo_returns_no_metadata[unsupported Metadata-Version] ________
+
+read_data = b'Metadata-Version: 102.3\nName: test-package\nVersion: 1.0.0\n'
+missing_fields = 'Name, Version'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffff77f47f0>
+
+    @pytest.mark.parametrize(
+        "read_data, missing_fields",
+        [
+            pytest.param(
+                b"Metadata-Version: 102.3\nName: test-package\nVersion: 1.0.0\n",
+                "Name, Version",
+                id="unsupported Metadata-Version",
+            ),
+            pytest.param(
+                b"Metadata-Version: 2.3\nName: UNKNOWN\nVersion: UNKNOWN\n",
+                "Name, Version",
+                id="missing Name and Version",
+            ),
+            pytest.param(
+                b"Metadata-Version: 2.2\nName: UNKNOWN\nVersion: UNKNOWN\n",
+                "Name, Version",
+                id="missing Name and Version",
+            ),
+            pytest.param(
+                b"Metadata-Version: 2.3\nName: UNKNOWN\nVersion: 1.0.0\n",
+                "Name",
+                id="missing Name",
+            ),
+            pytest.param(
+                b"Metadata-Version: 2.2\nName: UNKNOWN\nVersion: 1.0.0\n",
+                "Name",
+                id="missing Name",
+            ),
+            pytest.param(
+                b"Metadata-Version: 2.3\nName: test-package\nVersion: UNKNOWN\n",
+                "Version",
+                id="missing Version",
+            ),
+            pytest.param(
+                b"Metadata-Version: 2.2\nName: test-package\nVersion: UNKNOWN\n",
+                "Version",
+                id="missing Version",
+            ),
+        ],
+    )
+    def test_pkginfo_returns_no_metadata(read_data, missing_fields, monkeypatch):
+        """Raise an exception when pkginfo can't interpret the metadata.
+    
+        This could be caused by a version number or format it doesn't support yet.
+        """
+        monkeypatch.setattr(package_file.wheel.Wheel, "read", lambda _: read_data)
+        filename = "tests/fixtures/twine-1.5.0-py2.py3-none-any.whl"
+    
+>       with pytest.raises(exceptions.InvalidDistribution) as err:
+E       Failed: DID NOT RAISE <class 'twine.exceptions.InvalidDistribution'>
+
+tests/test_package.py:387: Failed
+=============================== warnings summary ===============================
+tests/test_package.py::test_pkginfo_returns_no_metadata[unsupported Metadata-Version]
+  /usr/local/lib/python3.10/site-packages/pkginfo/distribution.py:184: NewMetadataVersion: New metadata version (102.3) higher than latest supported version: parsing as 2.4
+    warnings.warn(NewMetadataVersion(self.metadata_version))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_package.py::test_pkginfo_returns_no_metadata[unsupported Metadata-Version]
+=================== 1 failed, 27 passed, 1 warning in 0.10s ====================

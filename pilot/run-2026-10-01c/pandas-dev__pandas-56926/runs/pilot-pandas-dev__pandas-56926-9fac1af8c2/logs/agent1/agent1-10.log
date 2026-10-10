@@ -1,0 +1,12 @@
+1596:    def quantile(self, q: float | list[float] | AnyArrayLike = 0.5, **kwargs):
+1598:        Return value at the given quantile.
+1602:        q : float or array-like, default 0.5 (50% quantile)
+1611:        Series.quantile
+1612:            Return a series, where the index is q and the values are the quantiles.
+1613:        DataFrame.quantile
+1615:            and the values are the quantiles.
+1616:        DataFrameGroupBy.quantile
+1618:            and the values are its quantiles.
+1630:        >>> ser.resample('MS').quantile()
+1635:        >>> ser.resample('MS').quantile(.25)
+1640:        return self._downsample("quantile", q=q, **kwargs)

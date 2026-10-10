@@ -1,0 +1,44 @@
+Testing header adjustment function:
+✓ Test 1: adjust('# Title', 0)
+    Expected: '# Title'
+    Got:      '# Title'
+
+✓ Test 2: adjust('# Title', 1)
+    Expected: '## Title'
+    Got:      '## Title'
+
+✗ Test 3: adjust('# Title', -1)
+    Expected: 'Title'
+    Got:      ' Title'
+    FAILED!
+
+✓ Test 4: adjust('## Title', 0)
+    Expected: '## Title'
+    Got:      '## Title'
+
+✓ Test 5: adjust('## Title', 1)
+    Expected: '### Title'
+    Got:      '### Title'
+
+✓ Test 6: adjust('## Title', -1)
+    Expected: '# Title'
+    Got:      '# Title'
+
+✗ Test 7: adjust('## Title', -2)
+    Expected: 'Title'
+    Got:      ' Title'
+    FAILED!
+
+✓ Test 8: adjust('### Title', -1)
+    Expected: '## Title'
+    Got:      '## Title'
+
+✓ Test 9: adjust('Regular paragraph', 2)
+    Expected: 'Regular paragraph'
+    Got:      'Regular paragraph'
+
+✓ Test 10: adjust('   ## Indented Title', 1)
+    Expected: '   ### Indented Title'
+    Got:      '   ### Indented Title'
+
+Some tests failed! ✗

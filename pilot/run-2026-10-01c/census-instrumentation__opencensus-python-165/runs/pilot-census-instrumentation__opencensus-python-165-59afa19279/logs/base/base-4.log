@@ -1,0 +1,33 @@
+============================= test session starts ==============================
+collected 15 items
+
+tests/unit/trace/test_span.py .F.............                            [100%]
+
+=================================== FAILURES ===================================
+/opencensus-python/tests/unit/trace/test_span.py:159: AttributeError: 'Span' object has no attribute 'add_annotation'
+==================================== PASSES ====================================
+___________________ TestSpan.test_finish_with_context_tracer ___________________
+----------------------------- Captured stdout call -----------------------------
+test
+_________ Test_format_span_json.test_format_span_json_with_parent_span _________
+----------------------------- Captured stdout call -----------------------------
+{'displayName': {'value': 'test span', 'truncated_byte_count': 0}, 'spanId': 1234, 'startTime': '2017-06-25', 'endTime': '2017-06-26', 'childSpanCount': 0, 'parentSpanId': 5678, 'attributes': {'attributeMap': {'/http/status_code': {'string_value': {'value': '200', 'truncated_byte_count': 0}}, '/component': {'string_value': {'value': 'HTTP load balancer', 'truncated_byte_count': 0}}}}, 'stackTrace': 'stack trace', 'timeEvents': {'timeEvent': ['time event']}, 'links': {'link': [{'trace_id': '3456', 'span_id': 1234, 'type': 0}]}, 'status': 'status', 'sameProcessAsParentSpan': True}
+{'spanId': 1234, 'parentSpanId': 5678, 'startTime': '2017-06-25', 'endTime': '2017-06-26', 'attributes': {'attributeMap': {'/component': {'string_value': {'truncated_byte_count': 0, 'value': 'HTTP load balancer'}}, '/http/status_code': {'string_value': {'truncated_byte_count': 0, 'value': '200'}}}}, 'links': {'link': [{'trace_id': '3456', 'span_id': 1234, 'type': 0}]}, 'stackTrace': 'stack trace', 'status': 'status', 'timeEvents': {'timeEvent': ['time event']}, 'displayName': {'truncated_byte_count': 0, 'value': 'test span'}, 'childSpanCount': 0, 'sameProcessAsParentSpan': True}
+------------- generated xml file: /opt/receipts/reports/base-4.xml -------------
+=========================== short test summary info ============================
+PASSED tests/unit/trace/test_span.py::TestSpan::test___iter__
+PASSED tests/unit/trace/test_span.py::TestSpan::test_add_attribute
+PASSED tests/unit/trace/test_span.py::TestSpan::test_add_link
+PASSED tests/unit/trace/test_span.py::TestSpan::test_add_time_event
+PASSED tests/unit/trace/test_span.py::TestSpan::test_constructor_defaults
+PASSED tests/unit/trace/test_span.py::TestSpan::test_constructor_explicit
+PASSED tests/unit/trace/test_span.py::TestSpan::test_exception_in_span
+PASSED tests/unit/trace/test_span.py::TestSpan::test_finish
+PASSED tests/unit/trace/test_span.py::TestSpan::test_finish_with_context_tracer
+PASSED tests/unit/trace/test_span.py::TestSpan::test_finish_without_context_tracer
+PASSED tests/unit/trace/test_span.py::TestSpan::test_span
+PASSED tests/unit/trace/test_span.py::TestSpan::test_start
+PASSED tests/unit/trace/test_span.py::Test_format_span_json::test_format_span_json_no_parent_span
+PASSED tests/unit/trace/test_span.py::Test_format_span_json::test_format_span_json_with_parent_span
+FAILED tests/unit/trace/test_span.py::TestSpan::test_add_annotation - Attribu...
+========================= 1 failed, 14 passed in 0.10s =========================

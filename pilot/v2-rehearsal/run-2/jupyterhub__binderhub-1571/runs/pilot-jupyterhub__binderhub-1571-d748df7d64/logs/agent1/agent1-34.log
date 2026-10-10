@@ -1,0 +1,21 @@
+        }
+
+        try:
+            ref = await provider.get_resolved_ref()
+        except Exception as e:
+            await self.fail(f"Error resolving ref for {key}: {e}")
+            return
+
+        if ref is None:
+            error_message = [f"Could not resolve ref for {key}. Double check your URL."]
+
+            if provider.name == "GitHub":
+                error_message.append(
+                    'GitHub recently changed default branches from "master" to "main".'
+                )
+
+                if provider.unresolved_ref == "master":
+                    error_message.append('Did you mean the "main" branch?')
+                elif provider.unresolved_ref == "main":
+                    error_message.append('Did you mean the "master" branch?')
+

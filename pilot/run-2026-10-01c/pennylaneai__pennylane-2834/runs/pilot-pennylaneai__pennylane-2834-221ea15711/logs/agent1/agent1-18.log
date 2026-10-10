@@ -1,0 +1,26 @@
+            unshifted_coeffs.append(0)
+            fns.append(None)
+            continue
+
+        op, _ = tape.get_operation(idx)
+
+        if op.name == "Hamiltonian":
+            # operation is a Hamiltonian
+--
+            fns.append(h_fn)
+            unshifted_coeffs.append(0)
+            continue
+
+        # get the gradient recipe for the trainable parameter
+        arg_idx = argnum.index(idx)
+        recipe = gradient_recipes[arg_idx]
+        if recipe is not None:
+--
+                g = qml.math.zeros_like(results[0])
+                grads.append(g)
+                continue
+
+            res = results[start : start + s]
+            start = start + s
+
+            if f is not None:

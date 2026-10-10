@@ -1,0 +1,31 @@
+        if resp.code == 304:
+            self.log.info("Using cached ref for %s: %s", api_url, cached["sha"])
+            self.resolved_ref = cached["sha"]
+            # refresh cache entry
+            self.cache.move_to_end(api_url)
+            return self.resolved_ref
+        elif cached:
+            self.log.debug("Cache outdated for %s", api_url)
+
+        ref_info = json.loads(resp.body.decode("utf-8"))
+        if "sha" not in ref_info:
+            # TODO: Figure out if we should raise an exception instead?
+            self.log.warning("No sha for %s in %s", api_url, ref_info)
+            self.resolved_ref = None
+            return None
+        # store resolved ref and cache for later
+        self.resolved_ref = ref_info["sha"]
+        self.cache.set(
+            api_url,
+            {
+                "etag": resp.headers.get("ETag"),
+                "sha": self.resolved_ref,
+            },
+        )
+        return self.resolved_ref
+
+    async def get_resolved_spec(self):
+        if not hasattr(self, "resolved_ref"):
+            self.resolved_ref = await self.get_resolved_ref()
+        return f"{self.user}/{self.repo}/{self.resolved_ref}"
+

@@ -1,0 +1,12 @@
+=== Issue Verification ===
+Stream name: tap_bigquery-weekly_fuel_prices
+Expected: table name based on full stream name (not split)
+
+Traceback (most recent call last):
+  File "/sdk/verify_fix.py", line 43, in <module>
+    sink1 = DummySink(target, "tap_bigquery-weekly_fuel_prices", schema, ["id"])
+  File "/sdk/./singer_sdk/sinks/sql.py", line 56, in __init__
+    super().__init__(target, stream_name, schema, key_properties)
+  File "/sdk/./singer_sdk/sinks/core.py", line 162, in __init__
+    self.logger = target.logger.getChild(stream_name)
+AttributeError: 'DummyTarget' object has no attribute 'logger'

@@ -1,0 +1,70 @@
+diff --git a/polyfactory/utils/helpers.py b/polyfactory/utils/helpers.py
+index 4cafc7d..bee3201 100644
+--- a/polyfactory/utils/helpers.py
++++ b/polyfactory/utils/helpers.py
+@@ -65,13 +65,17 @@ def unwrap_annotation(annotation: Any, random: Random) -> Any:
+     :returns: The unwrapped annotation.
+ 
+     """
+-    while is_optional(annotation) or is_union(annotation) or is_new_type(annotation) or is_annotated(annotation):
++    from polyfactory.utils.predicates import is_required, is_not_required
++    
++    while is_optional(annotation) or is_union(annotation) or is_new_type(annotation) or is_annotated(annotation) or is_required(annotation) or is_not_required(annotation):
+         if is_new_type(annotation):
+             annotation = unwrap_new_type(annotation)
+         elif is_optional(annotation):
+             annotation = unwrap_optional(annotation)
+         elif is_annotated(annotation):
+             annotation = unwrap_annotated(annotation, random=random)[0]
++        elif is_required(annotation) or is_not_required(annotation):
++            annotation = get_args(annotation)[0]
+         else:
+             annotation = unwrap_union(annotation, random=random)
+     return annotation
+@@ -128,6 +132,15 @@ def normalize_annotation(annotation: Any, random: Random) -> Any:
+ 
+     if args := get_args(annotation):
+         args = tuple(normalize_annotation(arg, random=random) for arg in args)
++        # Handle special cases like Required[...] and NotRequired[...] 
++        # which expect the argument directly, not as a single-element tuple
++        from typing_extensions import Required, NotRequired
++        if origin is Required or origin is NotRequired:
++            if len(args) == 1:
++                return origin[args[0]]
++            else:
++                # This should not happen for valid Required/NotRequired usage
++                return origin[args]
+         return origin[args] if origin is not type else annotation
+ 
+     return origin
+diff --git a/polyfactory/utils/predicates.py b/polyfactory/utils/predicates.py
+index 4ce4791..c33f585 100644
+--- a/polyfactory/utils/predicates.py
++++ b/polyfactory/utils/predicates.py
+@@ -125,6 +125,26 @@ def is_annotated(annotation: Any) -> bool:
+     )
+ 
+ 
++def is_required(annotation: Any) -> bool:
++    """Determine whether a given annotation is 'typing_extensions.Required'.
++
++    :param annotation: A type annotation.
++
++    :returns: A boolean.
++    """
++    return get_origin(annotation) is Required
++
++
++def is_not_required(annotation: Any) -> bool:
++    """Determine whether a given annotation is 'typing_extensions.NotRequired'.
++
++    :param annotation: A type annotation.
++
++    :returns: A boolean.
++    """
++    return get_origin(annotation) is NotRequired
++
++
+ def is_any_annotated(annotation: Any) -> bool:
+     """Determine whether any of the types in the given annotation is
+     `typing.Annotated`.

@@ -1,0 +1,17 @@
+diff --git a/PyPDF2/_reader.py b/PyPDF2/_reader.py
+index 558d386..bf94b96 100644
+--- a/PyPDF2/_reader.py
++++ b/PyPDF2/_reader.py
+@@ -1751,6 +1751,12 @@ class PdfReader:
+                     raise PdfReadError(f"Unknown xref type: {xref_type}")
+ 
+     def _zero_xref(self, generation: int) -> None:
++        # Check if already zeroized to prevent double zeroizing
++        if self.xref[generation]:
++            sample_key = next(iter(self.xref[generation]))
++            # If keys are already zeroized (less than reasonable starting point), skip
++            if sample_key < self.xref_index:
++                return
+         self.xref[generation] = {
+             k - self.xref_index: v for (k, v) in list(self.xref[generation].items())
+         }

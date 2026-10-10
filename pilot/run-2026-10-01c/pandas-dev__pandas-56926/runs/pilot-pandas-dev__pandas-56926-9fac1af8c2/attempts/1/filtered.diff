@@ -1,0 +1,26 @@
+diff --git a/debug_numpy.py b/debug_numpy.py
+new file mode 100644
+index 0000000000..315c090d77
+--- /dev/null
++++ b/debug_numpy.py
+@@ -0,0 +1,19 @@
++import numpy as np
++import pandas as pd
++
++# Test what numpy does with method='nearest' for even-sized arrays
++test_cases = [
++    [0, 1, 2, 3],      # n=4
++    [0, 1, 2, 3, 4, 5, 6, 7],  # n=8
++    list(range(12)),   # n=12
++    list(range(20)),   # n=20
++]
++
++for i, arr in enumerate(test_cases):
++    n = len(arr)
++    print(f"\nArray {i+1} (n={n}): {arr}")
++    print(f"  NumPy percentile 50th with method='nearest': {np.percentile(arr, 50, method='nearest')}")
++    print(f"  Lower middle (index {(n-1)//2}): {arr[(n-1)//2]}")  
++    print(f"  Upper middle (index {n//2}): {arr[n//2]}")
++    # What the apply method would do (Series.quantile)
++    print(f"  Series.quantile(0.5, interpolation='nearest'): {pd.Series(arr).quantile(0.5, interpolation='nearest')}")
+\ No newline at end of file

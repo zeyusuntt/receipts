@@ -1,0 +1,111 @@
+============================= test session starts ==============================
+platform linux -- Python 3.7.17, pytest-7.4.4, pluggy-1.2.0 -- /usr/local/bin/python
+rootdir: /flexx
+collecting ... collected 11 items
+
+flexx/app/tests/test_model.py::test_pairing1 PASSED                      [  9%]
+flexx/app/tests/test_model.py::test_no_clashes PASSED                    [ 18%]
+flexx/app/tests/test_model.py::test_overloading PASSED                   [ 27%]
+flexx/app/tests/test_model.py::test_init_args PASSED                     [ 36%]
+flexx/app/tests/test_model.py::test_both PASSED                          [ 45%]
+flexx/app/tests/test_model.py::test_emitters_in_JS PASSED                [ 54%]
+flexx/app/tests/test_model.py::test_no_duplicate_code PASSED             [ 63%]
+flexx/app/tests/test_model.py::test_get_instance_by_id PASSED            [ 72%]
+flexx/app/tests/test_model.py::test_active_models FAILED                 [ 81%]
+flexx/app/tests/test_model.py::test_can_emit_in_init PASSED              [ 90%]
+flexx/app/tests/test_model.py::test_keep_alive PASSED                    [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_active_models ______________________________
+
+    def test_active_models():
+    
+>       ioloop = app.create_server(port=0, new_loop=True).loop
+
+flexx/app/tests/test_model.py:232: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+flexx/app/funcs.py:63: in create_server
+    _current_server = TornadoServer(host, port, new_loop)
+flexx/app/tornadoserver.py:114: in __init__
+    super().__init__(host, port)
+flexx/app/tornadoserver.py:56: in __init__
+    self._open(host, port)
+flexx/app/tornadoserver.py:130: in _open
+    self._server = tornado.httpserver.HTTPServer(self._app, io_loop=self._loop)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'tornado.httpserver.HTTPServer'>
+args = (<tornado.web.Application object at 0x7d444a028950>,)
+kwargs = {'io_loop': <tornado.platform.asyncio.AsyncIOLoop object at 0x7d444a028c90>}
+base = <class 'tornado.httpserver.HTTPServer'>
+init_kwargs = {'io_loop': <tornado.platform.asyncio.AsyncIOLoop object at 0x7d444a028c90>}
+impl = <class 'tornado.httpserver.HTTPServer'>
+instance = <tornado.httpserver.HTTPServer object at 0x7d444a0286d0>
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> Any:
+        base = cls.configurable_base()
+        init_kwargs = {}  # type: Dict[str, Any]
+        if cls is base:
+            impl = cls.configured_class()
+            if base.__impl_kwargs:
+                init_kwargs.update(base.__impl_kwargs)
+        else:
+            impl = cls
+        init_kwargs.update(kwargs)
+        if impl.configurable_base() is not base:
+            # The impl class is itself configurable, so recurse.
+            return impl(*args, **init_kwargs)
+        instance = super(Configurable, cls).__new__(impl)
+        # initialize vs __init__ chosen for compatibility with AsyncHTTPClient
+        # singleton magic.  If we get rid of that we can switch to __init__
+        # here too.
+>       instance.initialize(*args, **init_kwargs)
+E       TypeError: initialize() got an unexpected keyword argument 'io_loop'
+
+/usr/local/lib/python3.7/site-packages/tornado/util.py:276: TypeError
+=============================== warnings summary ===============================
+flexx/pyscript/parser3.py:250
+  /flexx/flexx/pyscript/parser3.py:250: DeprecationWarning: invalid escape sequence \s
+    ").match(/\s([a-zA-Z]+)/)[1].toLowerCase() === ",
+
+flexx/event/_emitters.py:116: 12 warnings
+flexx/app/tests/test_model.py: 4 warnings
+  /flexx/flexx/event/_emitters.py:116: DeprecationWarning: inspect.getargspec() is deprecated since Python 3.0, use inspect.signature() or inspect.getfullargspec()
+    self._defaults = inspect.getargspec(self._func).defaults
+
+flexx/event/_handler.py:24
+flexx/event/_handler.py:24
+flexx/event/_handler.py:24
+  /flexx/flexx/event/_handler.py:24: DeprecationWarning: inspect.getargspec() is deprecated since Python 3.0, use inspect.signature() or inspect.getfullargspec()
+    return inspect.getargspec(func)[0][0] in ('self', 'this')
+
+flexx/app/tests/test_model.py::test_get_instance_by_id
+  /flexx/flexx/app/model.py:100: DeprecationWarning: The 'warn' method is deprecated, use 'warning' instead
+    logger.warn('Model instance %r does not exist in Python (anymore).' % id)
+
+flexx/app/tests/test_model.py::test_can_emit_in_init
+  /flexx/flexx/event/_hasevents.py:236: DeprecationWarning: The 'warn' method is deprecated, use 'warning' instead
+    logger.warn(msg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+___________________________ test_get_instance_by_id ____________________________
+----------------------------- Captured stderr call -----------------------------
+[W 23:41:04 flexx.app] Model instance 'blaaaa' does not exist in Python (anymore).
+____________________________ test_can_emit_in_init _____________________________
+----------------------------- Captured stderr call -----------------------------
+[W 23:41:04 flexx.event] Event type "foo" does not exist on EmitInInit8. Use "!foo" to suppress this warning.
+----------- generated xml file: /opt/receipts/reports/agent1-15.xml ------------
+=========================== short test summary info ============================
+PASSED flexx/app/tests/test_model.py::test_pairing1
+PASSED flexx/app/tests/test_model.py::test_no_clashes
+PASSED flexx/app/tests/test_model.py::test_overloading
+PASSED flexx/app/tests/test_model.py::test_init_args
+PASSED flexx/app/tests/test_model.py::test_both
+PASSED flexx/app/tests/test_model.py::test_emitters_in_JS
+PASSED flexx/app/tests/test_model.py::test_no_duplicate_code
+PASSED flexx/app/tests/test_model.py::test_get_instance_by_id
+PASSED flexx/app/tests/test_model.py::test_can_emit_in_init
+PASSED flexx/app/tests/test_model.py::test_keep_alive
+FAILED flexx/app/tests/test_model.py::test_active_models - TypeError: initial...
+================== 1 failed, 10 passed, 22 warnings in 0.27s ===================

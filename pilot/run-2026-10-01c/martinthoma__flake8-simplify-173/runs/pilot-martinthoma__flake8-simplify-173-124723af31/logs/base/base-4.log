@@ -1,0 +1,64 @@
+============================= test session starts ==============================
+collected 24 items
+
+tests/test_900_rules.py ..x..................FF.                         [100%]
+
+=================================== FAILURES ===================================
+/flake8-simplify/tests/test_900_rules.py:206: assert set() == {"1:0 SIM910 ...(key, None)'"}
+/flake8-simplify/tests/test_900_rules.py:206: assert set() == {"1:0 SIM910 ...key', None)'"}
+==================================== PASSES ====================================
+------------- generated xml file: /opt/receipts/reports/base-4.xml -------------
+
+---------- coverage: platform linux, python 3.10.19-final-0 ----------
+Name                                     Stmts   Miss Branch BrPart  Cover   Missing
+------------------------------------------------------------------------------------
+flake8_simplify/__init__.py                110     20     14      0    84%   80-81, 88-94, 107-110, 117-119, 130-133
+flake8_simplify/constants.py                 4      0      0      0   100%
+flake8_simplify/rules/__init__.py            0      0      0      0   100%
+flake8_simplify/rules/ast_assign.py         29      0     12      0   100%
+flake8_simplify/rules/ast_bool_op.py        88     77     56      0     8%   19-29, 52-85, 103-125, 143-165, 183-192, 210-219
+flake8_simplify/rules/ast_call.py           55      4     19      3    91%   49-50, 108, 166
+flake8_simplify/rules/ast_classdef.py        9      2      2      1    73%   21-24
+flake8_simplify/rules/ast_compare.py        29     12      8      2    57%   41-59, 85-90
+flake8_simplify/rules/ast_expr.py           42     29     16      3    28%   47-60, 74-80, 83-103
+flake8_simplify/rules/ast_for.py            65     58     40      0     7%   39-65, 95-138, 162-207
+flake8_simplify/rules/ast_if.py            160    106     68     10    29%   39-50, 98-100, 144-165, 202-205, 207, 246-313, 332, 343, 468-485, 487-500, 503-515
+flake8_simplify/rules/ast_ifexp.py          29     22      6      0    20%   12-23, 28-39, 55-68
+flake8_simplify/rules/ast_subscript.py      24      2     12      3    86%   34, 39, 50->59
+flake8_simplify/rules/ast_try.py            37     32     18      0     9%   43-61, 68-96
+flake8_simplify/rules/ast_unary_op.py       41     18      8      4    55%   28-35, 57-64, 84-91, 104-106
+flake8_simplify/rules/ast_with.py           14     10      4      0    22%   51-62
+flake8_simplify/utils.py                   137     57     60      5    51%   58-68, 91, 115, 122, 124, 130-139, 143-166, 177-178, 183, 190-192, 197-200, 225-239, 243
+------------------------------------------------------------------------------------
+TOTAL                                      873    449    343     31    43%
+Coverage HTML written to dir tests/reports/coverage-html
+
+============================= slowest 3 durations ==============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+PASSED tests/test_900_rules.py::test_sim901
+PASSED tests/test_900_rules.py::test_sim904[minimal]
+PASSED tests/test_900_rules.py::test_sim904_false_positives[issue-99]
+PASSED tests/test_900_rules.py::test_sim904_false_positives[issue-100-1]
+PASSED tests/test_900_rules.py::test_sim904_false_positives[issue-100-2]
+PASSED tests/test_900_rules.py::test_sim905
+PASSED tests/test_900_rules.py::test_sim906[base]
+PASSED tests/test_900_rules.py::test_sim906[str-arg]
+PASSED tests/test_900_rules.py::test_sim907
+PASSED tests/test_900_rules.py::test_sim908
+PASSED tests/test_900_rules.py::test_sim908_false_positive[issue-125]
+PASSED tests/test_900_rules.py::test_sim908_false_positive[issue-125-simplified]
+PASSED tests/test_900_rules.py::test_sim909[simple]
+PASSED tests/test_900_rules.py::test_sim909[double]
+PASSED tests/test_900_rules.py::test_sim909[multiple]
+PASSED tests/test_900_rules.py::test_sim909[tuple]
+PASSED tests/test_900_rules.py::test_sim909[dict]
+PASSED tests/test_900_rules.py::test_sim909_false_positives[tuple-switch]
+PASSED tests/test_900_rules.py::test_sim909_false_positives[variable]
+PASSED tests/test_900_rules.py::test_sim909_false_positives[class-attributes]
+PASSED tests/test_900_rules.py::test_sim910[d.get(key)-None]
+XFAIL tests/test_900_rules.py::test_sim904[contains-name]
+FAILED tests/test_900_rules.py::test_sim910[d.get(key, None)-1:0 SIM910 Use 'd.get(key)' instead of 'd.get(key, None)']
+FAILED tests/test_900_rules.py::test_sim910[d.get('key', None)-1:0 SIM910 Use 'd.get("key")' instead of 'd.get('key', None)']
+=================== 2 failed, 21 passed, 1 xfailed in 0.27s ====================

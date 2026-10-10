@@ -1,0 +1,99 @@
+diff --git a/debug_numpy.py b/debug_numpy.py
+new file mode 100644
+index 0000000000..315c090d77
+--- /dev/null
++++ b/debug_numpy.py
+@@ -0,0 +1,19 @@
++import numpy as np
++import pandas as pd
++
++# Test what numpy does with method='nearest' for even-sized arrays
++test_cases = [
++    [0, 1, 2, 3],      # n=4
++    [0, 1, 2, 3, 4, 5, 6, 7],  # n=8
++    list(range(12)),   # n=12
++    list(range(20)),   # n=20
++]
++
++for i, arr in enumerate(test_cases):
++    n = len(arr)
++    print(f"\nArray {i+1} (n={n}): {arr}")
++    print(f"  NumPy percentile 50th with method='nearest': {np.percentile(arr, 50, method='nearest')}")
++    print(f"  Lower middle (index {(n-1)//2}): {arr[(n-1)//2]}")  
++    print(f"  Upper middle (index {n//2}): {arr[n//2]}")
++    # What the apply method would do (Series.quantile)
++    print(f"  Series.quantile(0.5, interpolation='nearest'): {pd.Series(arr).quantile(0.5, interpolation='nearest')}")
+\ No newline at end of file
+diff --git a/test_issue.py b/test_issue.py
+new file mode 100644
+index 0000000000..e5e836db9d
+--- /dev/null
++++ b/test_issue.py
+@@ -0,0 +1,36 @@
++import pandas as pd
++import numpy as np
++
++# Reproduce the issue from the bug report
++df = pd.DataFrame({'x': [i for i in range(100)]})
++df.index = pd.to_datetime(df['x'], unit='s')
++
++# Test with n=2 second intervals to get groups of 2 elements each
++n = 2
++res1 = df.resample('{}S'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++res2 = df.resample('{}S'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
++
++print("First few groups:")
++print("Values:", df['x'][:10].tolist())
++print("Groups of 2:", [df['x'][i:i+n].tolist() for i in range(0, 10, n)])
++print()
++
++print("Result from Resample.apply(lambda x: x.quantile(0.5, interpolation='nearest')): {}".format(res1))
++print("Result from Resample.quantile(q=0.5, interpolation='nearest'): {}".format(res2))
++
++# Let's also check what numpy does directly
++test_group = np.array([0, 1])  # First group
++print("\nFor group [0, 1]:")
++print("NumPy percentile with method='nearest':", np.percentile(test_group, 50, method='nearest'))
++
++# Test with larger groups to see the pattern
++print("\nTesting with groups of 10:")
++df2 = pd.DataFrame({'x': [i for i in range(20)]})  # 0-19
++df2.index = pd.to_datetime(df2['x'], unit='s')
++n2 = 10
++res1_2 = df2.resample('{}S'.format(n2)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++res2_2 = df2.resample('{}S'.format(n2)).quantile(0.5, interpolation='nearest').iloc[0][0]
++print("First group values:", df2['x'][:10].tolist())
++print("Apply result:", res1_2)
++print("Direct quantile result:", res2_2)
++print("NumPy on [0,1,...,9]:", np.percentile(np.arange(10), 50, method='nearest'))
+\ No newline at end of file
+diff --git a/test_issue2.py b/test_issue2.py
+new file mode 100644
+index 0000000000..2c0bfa77f2
+--- /dev/null
++++ b/test_issue2.py
+@@ -0,0 +1,23 @@
++import pandas as pd
++import numpy as np
++
++# Try to reproduce the exact issue - let's test various group sizes
++df = pd.DataFrame({'x': [i for i in range(100)]})
++df.index = pd.to_datetime(df['x'], unit='s')
++
++print("Testing various group sizes to find where the discrepancy occurs:")
++print("Group Size | Apply Result | Direct Result | Expected (NumPy)")
++print("-----------|--------------|---------------|-----------------")
++
++for n in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 40, 50]:
++    try:
++        res1 = df.resample('{}s'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
++        res2 = df.resample('{}s'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
++        # What numpy says for the first group
++        first_group = list(range(n))
++        numpy_result = np.percentile(first_group, 50, method='nearest')
++        print(f"{n:10} | {res1:12} | {res2:13} | {numpy_result:15}")
++        if res1 != res2:
++            print(f"  ^^^ DISCREPANCY FOUND for n={n}")
++    except Exception as e:
++        print(f"{n:10} | ERROR: {e}")
+\ No newline at end of file

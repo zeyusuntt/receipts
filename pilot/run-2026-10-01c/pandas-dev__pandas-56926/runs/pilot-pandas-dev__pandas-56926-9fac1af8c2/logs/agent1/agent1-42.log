@@ -1,0 +1,16 @@
+/pandas/debug_original.py:9: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  res1 = df.resample('{}s'.format(n)).apply(lambda x: x.quantile(0.5, interpolation='nearest')).iloc[0][0]
+/pandas/debug_original.py:10: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  res2 = df.resample('{}s'.format(n)).quantile(0.5, interpolation='nearest').iloc[0][0]
+For n=4:
+Apply result: 2
+Direct quantile result: 2
+First group values: [0, 1, 2, 3]
+Series.quantile: 2
+NumPy percentile: 2
+Sorted values: [0 1 2 3]
+Position for q=0.5: 0.5 * (4-1) = 1.5
+Index: 1, Fraction: 0.5
+EXACTLY HALF-WAY - checking tie-breaker rule
+q_val = 0.5, so q_val > 0.5 is False
+According to current code: pick LOWER value

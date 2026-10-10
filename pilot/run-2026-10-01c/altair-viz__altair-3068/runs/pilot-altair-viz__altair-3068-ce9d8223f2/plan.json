@@ -1,0 +1,7 @@
+{
+  "approach": "Modify `_remove_layer_props` to safely check for property existence before comparison, using `.get()` with `Undefined` default.",
+  "files_to_edit": [
+    "altair/vegalite/v5/api.py"
+  ],
+  "hypothesis": "The KeyError for 'height' occurs during `_remove_layer_props` when trying to access properties missing from subcharts after deserialization. Likely fix: add default handling for missing keys like 'width' and 'height' in subchart property access."
+}

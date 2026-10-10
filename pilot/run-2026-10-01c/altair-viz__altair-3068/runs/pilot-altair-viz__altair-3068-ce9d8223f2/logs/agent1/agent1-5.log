@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/altair/test_issue.py", line 24, in <module>
+    json = chart.to_json()
+  File "/altair/altair/utils/schemapi.py", line 855, in to_json
+    dct = self.to_dict(validate=validate, ignore=ignore, context=context)
+  File "/altair/altair/vegalite/v5/api.py", line 836, in to_dict
+    copy = self.copy(deep=False)  # type: ignore[attr-defined]
+  File "/altair/altair/utils/schemapi.py", line 681, in copy
+    copy = self.__class__(*self._args, **self._kwds)
+  File "/altair/altair/vegalite/v5/api.py", line 2989, in __init__
+    combined_dict, self.layer = _remove_layer_props(self, self.layer, layer_props)
+  File "/altair/altair/vegalite/v5/api.py", line 3400, in _remove_layer_props
+    if all((c[prop] if prop in c else Undefined) is Undefined or (c[prop] if prop in c else Undefined) == chart[prop] for c in subcharts):
+  File "/altair/altair/vegalite/v5/api.py", line 3400, in <genexpr>
+    if all((c[prop] if prop in c else Undefined) is Undefined or (c[prop] if prop in c else Undefined) == chart[prop] for c in subcharts):
+  File "/altair/altair/utils/schemapi.py", line 711, in __getitem__
+    return self._kwds[item]
+KeyError: 0

@@ -1,0 +1,33 @@
+        )
+        template_extension = os.path.splitext(config.template[1])[1]
+    else:
+        template = Path(config.template).read_text(encoding="utf-8")
+        template_extension = os.path.splitext(config.template)[1]
+    is_markdown = template_extension.lower() == ".md"
+
+    click.echo("Finding news fragments...", err=to_err)
+
+    fragment_contents, fragment_files = find_fragments(
+        base_directory,
+        config,
+        # Fail if any fragment filenames are invalid only if ignore list is set
+        # (this maintains backward compatibility):
+        strict=(config.ignore is not None),
+    )
+--
+
+    if config.title_format:
+        top_line = config.title_format.format(
+            name=project_name, version=project_version, project_date=project_date
+        )
+        if is_markdown:
+            parts = [top_line]
+        else:
+            parts = [top_line, config.underlines[0] * len(top_line)]
+        parts.append(rendered)
+        content = "\n".join(parts)
+    else:
+        top_line = ""
+        content = rendered
+
+    if draft:

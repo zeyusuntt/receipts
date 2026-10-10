@@ -1,0 +1,25 @@
+Building FooFactory...
+Traceback (most recent call last):
+  File "/polyfactory/reproduce_issue.py", line 13, in <module>
+    result = FooFactory.build()
+  File "/polyfactory/polyfactory/factories/base.py", line 758, in build
+    return cast("T", cls.__model__(**cls.process_kwargs(**kwargs)))
+  File "/polyfactory/polyfactory/factories/base.py", line 719, in process_kwargs
+    for field_meta in cls.get_model_fields():
+  File "/polyfactory/polyfactory/factories/typed_dict_factory.py", line 38, in get_model_fields
+    fields_meta: list["FieldMeta"] = [
+  File "/polyfactory/polyfactory/factories/typed_dict_factory.py", line 39, in <listcomp>
+    FieldMeta.from_type(
+  File "/polyfactory/polyfactory/field_meta.py", line 134, in from_type
+    field_type = normalize_annotation(annotation, random=random)
+  File "/polyfactory/polyfactory/utils/helpers.py", line 131, in normalize_annotation
+    return origin[args] if origin is not type else annotation
+  File "/usr/local/lib/python3.10/typing.py", line 312, in inner
+    return func(*args, **kwds)
+  File "/usr/local/lib/python3.10/typing.py", line 403, in __getitem__
+    return self._getitem(self, parameters)
+  File "/usr/local/lib/python3.10/site-packages/typing_extensions.py", line 2393, in Required
+    item = typing._type_check(parameters, f'{self._name} accepts only a single type.')
+  File "/usr/local/lib/python3.10/typing.py", line 176, in _type_check
+    raise TypeError(f"{msg} Got {arg!r:.100}.")
+TypeError: Required accepts only a single type. Got (<class 'str'>,).

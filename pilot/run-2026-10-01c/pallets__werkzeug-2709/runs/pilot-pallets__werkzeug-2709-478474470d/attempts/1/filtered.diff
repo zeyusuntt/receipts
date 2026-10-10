@@ -1,0 +1,34 @@
+diff --git a/src/werkzeug/urls.py b/src/werkzeug/urls.py
+index 89ef2194..569a358c 100644
+--- a/src/werkzeug/urls.py
++++ b/src/werkzeug/urls.py
+@@ -974,14 +974,6 @@ def iri_to_uri(
+         )
+         iri = urlunsplit(iri)
+ 
+-    if isinstance(iri, bytes):
+-        warnings.warn(
+-            "Passing bytes is deprecated and will not be supported in Werkzeug 3.0.",
+-            DeprecationWarning,
+-            stacklevel=2,
+-        )
+-        iri = iri.decode(charset)
+-
+     if charset is not None:
+         warnings.warn(
+             "The 'charset' parameter is deprecated and will be removed"
+@@ -992,6 +984,14 @@ def iri_to_uri(
+     else:
+         charset = "utf-8"
+ 
++    if isinstance(iri, bytes):
++        warnings.warn(
++            "Passing bytes is deprecated and will not be supported in Werkzeug 3.0.",
++            DeprecationWarning,
++            stacklevel=2,
++        )
++        iri = iri.decode(charset)
++
+     if errors is not None:
+         warnings.warn(
+             "The 'errors' parameter is deprecated and will be removed in Werkzeug 3.0.",

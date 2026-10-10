@@ -1,0 +1,18 @@
+250:    b2 cancel_large_file <fileId>
+253:    REQUIRED = ['fileId']
+256:        self.api.cancel_large_file(args.fileId)
+257:        self._print(args.fileId, 'canceled')
+305:    b2 delete_file_version [<fileName>] <fileId>
+316:    REQUIRED = ['fileId']
+322:            file_name = self._get_file_name_from_file_id(args.fileId)
+323:        file_info = self.api.delete_file_version(args.fileId, file_name)
+334:    b2 download_file_by_id [--noProgress] <fileId> <localFileName>
+344:    REQUIRED = ['fileId', 'localFileName']
+349:        self.api.download_file_by_id(args.fileId, download_dest, progress_listener,
+377:    b2 get_file_info <fileId>
+382:    REQUIRED = ['fileId']
+385:        response = self.api.get_file_info(args.fileId)
+578:    b2 make_url <fileId>
+584:    REQUIRED = ['fileId']
+587:        self._print(self.api.get_download_url_for_fileid(args.fileId))
+822:                "URL by fileId: " + self.api.get_download_url_for_fileid(response['fileId'])

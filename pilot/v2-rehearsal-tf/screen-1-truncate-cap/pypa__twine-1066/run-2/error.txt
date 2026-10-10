@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/pilot/screen.py", line 122, in _screen_once
+    base = await executor.prepare(task.source)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory.py", line 772, in prepare
+    receipt = await self.run(branch, command, timeout_s=1800)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory.py", line 782, in run
+    execution = await self._execute(branch, cmd, timeout_s)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory.py", line 477, in _execute
+    result = await self.api.run(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory_api.py", line 560, in run
+    operation_id = await self._spawn(
+                   ^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory_api.py", line 447, in _spawn
+    response = await self._request(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/sandbox/tokenfactory_api.py", line 290, in _request
+    raise self._error(response)
+receipts.sandbox.tokenfactory_api.TokenFactoryApiError: Token Factory sandbox API POST /sandboxes/v1/instances returned 400: [{'type': 'value_error', 'loc': ['truncate_output_at'], 'msg': 'Value error, truncate_output_at must be less than 10MiB', 'input': 67108864}]

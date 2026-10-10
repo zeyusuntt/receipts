@@ -1,0 +1,290 @@
+diff --git a/debug_children_logic.py b/debug_children_logic.py
+new file mode 100644
+index 0000000..35a3911
+--- /dev/null
++++ b/debug_children_logic.py
+@@ -0,0 +1,44 @@
++from typing_extensions import TypedDict, Required, List, Dict, Set, Tuple
++from polyfactory.field_meta import FieldMeta
++from polyfactory.utils.predicates import is_safe_subclass
++from typing import Deque
++
++# Test what types should get children
++test_cases = [
++    Required[str],
++    str,
++    List[str],
++    Dict[str, int],
++    Set[str],
++    Tuple[str, int],
++    Deque[str],
++]
++
++for case in test_cases:
++    print(f"\nTesting {case!r}:")
++    try:
++        field_meta = FieldMeta.from_type(annotation=case, name="test")
++        print(f"  annotation: {field_meta.annotation!r}")
++        print(f"  type_args: {field_meta.type_args!r}")
++        print(f"  children: {field_meta.children}")
++        if field_meta.children:
++            print(f"  Number of children: {len(field_meta.children)}")
++            for i, child in enumerate(field_meta.children):
++                print(f"    Child {i}: {child.annotation!r}")
++    except Exception as e:
++        print(f"  ERROR: {e}")
++
++# Also test the is_safe_subclass checks
++from polyfactory.constants import TYPE_MAPPING
++print(f"\nTYPE_MAPPING: {list(TYPE_MAPPING.keys())}")
++
++print("\nChecking is_safe_subclass:")
++for case in [str, List[str]]:
++    print(f"{case}:")
++    for t in TYPE_MAPPING.keys():
++        try:
++            result = is_safe_subclass(case, t)
++            if result:
++                print(f"  IS SUBCLASS OF {t}: {result}")
++        except Exception as e:
++            print(f"  Error checking {t}: {e}")
+\ No newline at end of file
+diff --git a/debug_fieldmeta.py b/debug_fieldmeta.py
+new file mode 100644
+index 0000000..9d3127f
+--- /dev/null
++++ b/debug_fieldmeta.py
+@@ -0,0 +1,27 @@
++from typing_extensions import TypedDict, Required
++from polyfactory.factories import TypedDictFactory
++from polyfactory.field_meta import FieldMeta
++
++class Foo(TypedDict, total=False):
++    name: Required[str]
++    bar: str
++
++print("Creating FieldMeta for Required[str]...")
++field_meta = FieldMeta.from_type(
++    annotation=Required[str],
++    name="name"
++)
++
++print(f"FieldMeta annotation: {field_meta.annotation!r}")
++print(f"FieldMeta type_args: {field_meta.type_args!r}")
++print(f"FieldMeta children: {field_meta.children}")
++
++print("\nCreating FieldMeta for plain str...")
++field_meta2 = FieldMeta.from_type(
++    annotation=str,
++    name="bar"
++)
++
++print(f"FieldMeta annotation: {field_meta2.annotation!r}")
++print(f"FieldMeta type_args: {field_meta2.type_args!r}")
++print(f"FieldMeta children: {field_meta2.children}")
+\ No newline at end of file
+diff --git a/debug_list.py b/debug_list.py
+new file mode 100644
+index 0000000..d31f2a5
+--- /dev/null
++++ b/debug_list.py
+@@ -0,0 +1,42 @@
++from typing import List
++from typing_extensions import get_origin, get_args
++
++# Test how List[int] works
++list_int = List[int]
++print("List[int]:", list_int)
++print("type:", type(list_int))
++print("origin:", get_origin(list_int))
++print("args:", get_args(list_int))
++
++# Manual reconstruction
++origin = get_origin(list_int)
++args = get_args(list_int)
++print("\nReconstruction:")
++print("origin:", origin)
++print("args:", args)
++try:
++    reconstructed = origin[tuple(args)]
++    print("reconstructed:", reconstructed)
++    print("equal?", list_int == reconstructed)
++except Exception as e:
++    print("error:", e)
++
++# Test Required
++from typing_extensions import Required
++required_str = Required[str]
++print("\nRequired[str]:", required_str)
++print("type:", type(required_str))
++print("origin:", get_origin(required_str))
++print("args:", get_args(required_str))
++
++print("\nReconstruction Required:")
++origin_req = get_origin(required_str)
++args_req = get_args(required_str)
++print("origin:", origin_req)
++print("args:", args_req)
++try:
++    reconstructed_req = origin_req[tuple(args_req)]
++    print("reconstructed:", reconstructed_req)
++    print("equal?", required_str == reconstructed_req)
++except Exception as e:
++    print("error:", e)
+\ No newline at end of file
+diff --git a/debug_normalize.py b/debug_normalize.py
+new file mode 100644
+index 0000000..7a02001
+--- /dev/null
++++ b/debug_normalize.py
+@@ -0,0 +1,57 @@
++from typing_extensions import TypedDict, Required, get_type_hints
++from polyfactory.utils.helpers import normalize_annotation
++from random import Random
++
++class Foo(TypedDict, total=False):
++    name: Required[str]
++    bar: str
++
++print("Debugging normalize_annotation...")
++
++model_type_hints = get_type_hints(Foo, include_extras=True)
++for field_name, annotation in model_type_hints.items():
++    if field_name == "name":
++        print(f"Processing {field_name}: {annotation!r}")
++        print(f"  Type: {type(annotation)}")
++        
++        # Let's manually walk through normalize_annotation
++        from polyfactory.utils.predicates import is_new_type, is_annotated
++        import sys
++        
++        print(f"  is_new_type: {is_new_type(annotation)}")
++        print(f"  is_annotated: {is_annotated(annotation)}")
++        
++        # we have to maintain compatibility with the older non-subscriptable typings.
++        print(f"  sys.version_info <= (3, 9): {sys.version_info <= (3, 9)}")
++        
++        if sys.version_info <= (3, 9):  # pragma: no cover
++            result = annotation
++        else:
++            from typing_extensions import get_origin
++            origin = get_origin(annotation) or annotation
++            print(f"  origin: {origin!r} (type: {type(origin)})")
++            
++            from polyfactory.constants import TYPE_MAPPING
++            print(f"  TYPE_MAPPING keys: {list(TYPE_MAPPING.keys())[:5]}...")  # First few
++            print(f"  origin in TYPE_MAPPING: {origin in TYPE_MAPPING}")
++            
++            if origin in TYPE_MAPPING:
++                origin = TYPE_MAPPING[origin]
++                print(f"  origin after mapping: {origin!r}")
++                
++            from typing_extensions import get_args
++            if args := get_args(annotation):
++                print(f"  args: {args!r}")
++                normalized_args = tuple(normalize_annotation(arg, random=Random()) for arg in args)
++                print(f"  normalized args: {normalized_args!r}")
++                print(f"  Trying to create: {origin}[{normalized_args}]")
++                try:
++                    result = origin[normalized_args] if origin is not type else annotation
++                    print(f"  Success: {result!r}")
++                except Exception as e:
++                    print(f"  Error: {e}")
++                    raise
++            else:
++                result = origin
++                
++        print(f"  Final result: {result!r}")
+\ No newline at end of file
+diff --git a/debug_required.py b/debug_required.py
+new file mode 100644
+index 0000000..3ff48eb
+--- /dev/null
++++ b/debug_required.py
+@@ -0,0 +1,16 @@
++from typing_extensions import Required
++import typing_extensions
++
++print("Required:", Required)
++print("Required type:", type(Required))
++print("Required from typing_extensions:", typing_extensions.Required)
++print("Are they the same?", Required is typing_extensions.Required)
++
++# Let's also check what happens when we manually create Required[str]
++required_str = Required[str]
++print("Manual Required[str]:", required_str)
++print("Manual Required[str] type:", type(required_str))
++
++from typing_extensions import get_origin, get_args
++print("Manual origin:", get_origin(required_str))
++print("Manual args:", get_args(required_str))
+\ No newline at end of file
+diff --git a/debug_typing.py b/debug_typing.py
+new file mode 100644
+index 0000000..52991c1
+--- /dev/null
++++ b/debug_typing.py
+@@ -0,0 +1,21 @@
++from typing_extensions import TypedDict, Required, get_type_hints
++import sys
++
++class Foo(TypedDict, total=False):
++    name: Required[str]
++    bar: str
++
++print("Python version:", sys.version)
++print("Annotations:")
++model_type_hints = get_type_hints(Foo, include_extras=True)
++for field_name, annotation in model_type_hints.items():
++    print(f"  {field_name}: {annotation!r} (type: {type(annotation)})")
++    
++    from typing_extensions import get_origin, get_args
++    print(f"    origin: {get_origin(annotation)!r}")
++    print(f"    args: {get_args(annotation)!r}")
++    
++    # Check if it's Required
++    from typing_extensions import Required as RequiredType
++    print(f"    is Required Type: {annotation is RequiredType}")
++    print(f"    == Required: {annotation == RequiredType}")
+\ No newline at end of file
+diff --git a/polyfactory/utils/helpers.py b/polyfactory/utils/helpers.py
+index 4cafc7d..d90fcc5 100644
+--- a/polyfactory/utils/helpers.py
++++ b/polyfactory/utils/helpers.py
+@@ -128,6 +128,15 @@ def normalize_annotation(annotation: Any, random: Random) -> Any:
+ 
+     if args := get_args(annotation):
+         args = tuple(normalize_annotation(arg, random=random) for arg in args)
++        # Handle special cases like Required[...] and NotRequired[...] 
++        # which expect the argument directly, not as a single-element tuple
++        from typing_extensions import Required, NotRequired
++        if origin is Required or origin is NotRequired:
++            if len(args) == 1:
++                return origin[args[0]]
++            else:
++                # This should not happen for valid Required/NotRequired usage
++                return origin[args]
+         return origin[args] if origin is not type else annotation
+ 
+     return origin
+diff --git a/reproduce_issue.py b/reproduce_issue.py
+new file mode 100644
+index 0000000..9c0c20f
+--- /dev/null
++++ b/reproduce_issue.py
+@@ -0,0 +1,14 @@
++from typing_extensions import TypedDict, Required
++from polyfactory.factories import TypedDictFactory
++
++class Foo(TypedDict, total=False):
++    name: Required[str]
++    bar: str
++
++class FooFactory(TypedDictFactory[Foo]):
++    __model__ = Foo
++
++if __name__ == "__main__":
++    print("Building FooFactory...")
++    result = FooFactory.build()
++    print(f"Result: {result}")
+\ No newline at end of file

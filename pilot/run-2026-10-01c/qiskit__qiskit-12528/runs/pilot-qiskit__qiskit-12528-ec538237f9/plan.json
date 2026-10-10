@@ -1,0 +1,7 @@
+{
+  "approach": "Check if instruction.operation.name equals \"global_phase\" and skip processing or assign levels=[0].",
+  "files_to_edit": [
+    "qiskit/circuit/quantumcircuit.py"
+  ],
+  "hypothesis": "Depth calculation fails when encountering GlobalPhaseGate because it has no qubits, leading to an empty levels list when taking max(). Need to treat directives (like GlobalPhaseGate) similar to barriers."
+}

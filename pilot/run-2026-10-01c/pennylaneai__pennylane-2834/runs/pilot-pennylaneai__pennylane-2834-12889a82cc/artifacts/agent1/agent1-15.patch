@@ -1,0 +1,13 @@
+diff --git a/pennylane/gradients/parameter_shift.py b/pennylane/gradients/parameter_shift.py
+index 641eb3e3..0dccc88c 100644
+--- a/pennylane/gradients/parameter_shift.py
++++ b/pennylane/gradients/parameter_shift.py
+@@ -245,7 +245,7 @@ def expval_param_shift(tape, argnum=None, shifts=None, gradient_recipes=None, f0
+             results = [qml.math.squeeze(res) for res in results]
+ 
+         grads = []
+-        start = 1 if unshifted_coeffs and f0 is None else 0
++        start = 1 if f0 is None else 0
+         r0 = f0 or results[0]
+ 
+         for i, (s, f) in enumerate(zip(shapes, fns)):

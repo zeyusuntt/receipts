@@ -1,0 +1,56 @@
+Traceback (most recent call last):
+  File "<string>", line 11, in <module>
+  File "/hypothesis/hypothesis-python/tests/common/debug.py", line 79, in find_any
+    return minimal(
+  File "/hypothesis/hypothesis-python/tests/common/debug.py", line 64, in minimal
+    definition.validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 406, in validate
+    self.do_validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/lazy.py", line 131, in do_validate
+    w.validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 407, in validate
+    self.is_empty
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 134, in accept
+    recur(self)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 130, in recur
+    mapping[strat] = getattr(strat, calculation)(recur)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/deferred.py", line 65, in calc_is_empty
+    return recur(self.wrapped_strategy)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/deferred.py", line 35, in wrapped_strategy
+    result = self.__definition()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/core.py", line 987, in <lambda>
+    lambda thing: deferred(lambda: _from_type(thing)),
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/core.py", line 1037, in _from_type
+    raise InvalidArgument(f"thing={thing!r} must be a type")  # pragma: no cover
+hypothesis.errors.InvalidArgument: thing=int | list[str] must be a type
+Traceback (most recent call last):
+  File "<string>", line 20, in <module>
+  File "/hypothesis/hypothesis-python/tests/common/debug.py", line 79, in find_any
+    return minimal(
+  File "/hypothesis/hypothesis-python/tests/common/debug.py", line 64, in minimal
+    definition.validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 406, in validate
+    self.do_validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/lazy.py", line 131, in do_validate
+    w.validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 407, in validate
+    self.is_empty
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 134, in accept
+    recur(self)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 130, in recur
+    mapping[strat] = getattr(strat, calculation)(recur)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/deferred.py", line 65, in calc_is_empty
+    return recur(self.wrapped_strategy)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/deferred.py", line 35, in wrapped_strategy
+    result = self.__definition()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/core.py", line 987, in <lambda>
+    lambda thing: deferred(lambda: _from_type(thing)),
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/core.py", line 1037, in _from_type
+    raise InvalidArgument(f"thing={thing!r} must be a type")  # pragma: no cover
+hypothesis.errors.InvalidArgument: thing=int | list[str] must be a type
+Creating strategy...
+Strategy created: from_type(int | list[str])
+Finding any...
+Error finding int: thing=int | list[str] must be a type
+Finding any list...
+Error finding list: thing=int | list[str] must be a type

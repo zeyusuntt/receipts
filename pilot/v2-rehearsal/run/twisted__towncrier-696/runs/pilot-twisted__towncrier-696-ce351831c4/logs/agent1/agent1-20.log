@@ -1,0 +1,68 @@
+=== TEMPLATE CONTENT (relevant parts) ===
+11: ## {{section}}
+12: {% endif %}
+13: 
+14: {% if sections[section] %}
+15: {% for category, val in definitions.items() if category in sections[section] %}
+16: ##{% if section %}#{% endif %} {{ definitions[category]['name'] }}
+17: 
+18: {% for text, values in sections[section][category].items() %}
+19: - {{ text }}
+20: {%- if values %}
+=======================================
+
+=== INPUT DATA ANALYSIS ===
+render_title: False
+section key: ''
+section value: {'feature': {'Adds levitation': ['#123']}}
+bool(section_key): False  # Is the section name truthy?
+bool(section_value): True  # Is the section content truthy?
+section_key == '': True
+not section_key: True  # This is what the template checks
+===========================
+
+=== TEMPLATE LOGIC TRACE ===
+For section loop:
+  section = ''
+  {% if section %} → False → FALSE
+  Skipping ## {section} line
+
+For category loop:
+  sections[section] = {'feature': {'Adds levitation': ['#123']}}
+  {% if sections[section] %} → True → TRUE
+  Processing category: feature
+  {% if section %} → False → FALSE
+  Header level: ## → ## { definitions[feature]['name'] }
+  Result: ## Features
+============================
+
+=== ACTUAL RESULT ===
+'\n\n\n\n\n\n## Features\n\n\n- Adds levitation\n\n (\n#123\n)\n\n\n\n\n\n\n\n\n\n\n'
+--------------
+Formatted:
+
+
+
+
+
+
+## Features
+
+
+- Adds levitation
+
+ (
+#123
+)
+
+
+
+
+
+
+
+
+
+
+
+--------------

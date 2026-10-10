@@ -1,0 +1,74 @@
+============================= test session starts ==============================
+collected 28 items
+
+tests/test_package.py ...........FFF.....F........                       [100%]
+
+=================================== FAILURES ===================================
+E   AssertionError: assert {'author', 'a...ription', ...} == {'author', 'a...ription', ...}
+      
+      Extra items in the left set:
+      'provides_extras'
+      Extra items in the right set:
+      'provides_extra'
+      Use -v to get more diff
+/twine/tests/test_package.py:142: AssertionError: assert {'author', 'a...ription', ...} == {'author', 'a...ription', ...}
+E   KeyError: 'provides_extra'
+/twine/tests/test_package.py:271: KeyError: 'provides_extra'
+E   KeyError: 'provides_extra'
+/twine/tests/test_package.py:271: KeyError: 'provides_extra'
+E   Failed: DID NOT RAISE <class 'twine.exceptions.InvalidDistribution'>
+/twine/tests/test_package.py:387: Failed: DID NOT RAISE <class 'twine.exceptions.InvalidDistribution'>
+=============================== warnings summary ===============================
+tests/test_package.py::test_pkginfo_returns_no_metadata[unsupported Metadata-Version]
+  /usr/local/lib/python3.10/site-packages/pkginfo/distribution.py:184: NewMetadataVersion: New metadata version (102.3) higher than latest supported version: parsing as 2.4
+    warnings.warn(NewMetadataVersion(self.metadata_version))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+________________________________ test_sign_file ________________________________
+----------------------------- Captured stdout call -----------------------------
+Signing deprecated-pypirc
+_________________________ test_sign_file_with_identity _________________________
+----------------------------- Captured stdout call -----------------------------
+Signing deprecated-pypirc
+___________________ test_run_gpg_raises_exception_if_no_gpgs ___________________
+----------------------------- Captured stderr call -----------------------------
+gpg executable not available. Attempting fallback to gpg2.
+------------------------------ Captured log call -------------------------------
+WARNING  twine.package:package.py:230 gpg executable not available. Attempting fallback to gpg2.
+_______________________ test_run_gpg_falls_back_to_gpg2 ________________________
+----------------------------- Captured stderr call -----------------------------
+gpg executable not available. Attempting fallback to gpg2.
+------------------------------ Captured log call -------------------------------
+WARNING  twine.package:package.py:230 gpg executable not available. Attempting fallback to gpg2.
+------------- generated xml file: /opt/receipts/reports/base-4.xml -------------
+=========================== short test summary info ============================
+PASSED tests/test_package.py::test_sign_file
+PASSED tests/test_package.py::test_sign_file_with_identity
+PASSED tests/test_package.py::test_run_gpg_raises_exception_if_no_gpgs
+PASSED tests/test_package.py::test_run_gpg_raises_exception_if_not_using_gpg
+PASSED tests/test_package.py::test_run_gpg_falls_back_to_gpg2
+PASSED tests/test_package.py::test_package_signed_name_is_correct
+PASSED tests/test_package.py::test_package_safe_name_is_correct[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+PASSED tests/test_package.py::test_package_safe_name_is_correct[0123456789-0123456789]
+PASSED tests/test_package.py::test_package_safe_name_is_correct[!"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~--.-]
+PASSED tests/test_package.py::test_package_safe_name_is_correct[mosaik.SimConfig-mosaik.SimConfig]
+PASSED tests/test_package.py::test_package_safe_name_is_correct[mosaik$$$$.SimConfig-mosaik-.SimConfig]
+PASSED tests/test_package.py::test_hash_manager
+PASSED tests/test_package.py::test_fips_hash_manager_md5
+PASSED tests/test_package.py::test_fips_hash_manager_blake2[TypeError]
+PASSED tests/test_package.py::test_fips_hash_manager_blake2[ValueError]
+PASSED tests/test_package.py::test_fips_metadata_excludes_md5_and_blake2
+PASSED tests/test_package.py::test_pkginfo_returns_no_metadata[missing Name and Version0]
+PASSED tests/test_package.py::test_pkginfo_returns_no_metadata[missing Name and Version1]
+PASSED tests/test_package.py::test_pkginfo_returns_no_metadata[missing Name0]
+PASSED tests/test_package.py::test_pkginfo_returns_no_metadata[missing Name1]
+PASSED tests/test_package.py::test_pkginfo_returns_no_metadata[missing Version0]
+PASSED tests/test_package.py::test_pkginfo_returns_no_metadata[missing Version1]
+PASSED tests/test_package.py::test_malformed_from_file
+PASSED tests/test_package.py::test_package_from_egg
+FAILED tests/test_package.py::test_metadata_dictionary_keys - AssertionError:...
+FAILED tests/test_package.py::test_metadata_dictionary_values[None] - KeyErro...
+FAILED tests/test_package.py::test_metadata_dictionary_values[gpg_signature1]
+FAILED tests/test_package.py::test_pkginfo_returns_no_metadata[unsupported Metadata-Version]
+=================== 4 failed, 24 passed, 1 warning in 0.10s ====================

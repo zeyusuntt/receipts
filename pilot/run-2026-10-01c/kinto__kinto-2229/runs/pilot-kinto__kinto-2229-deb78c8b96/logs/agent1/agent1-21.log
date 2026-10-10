@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+collecting ... collected 1 item
+
+tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password [DEBUG] process_object called
+[DEBUG] new: {'password': '123456', 'id': 'alice'}
+[DEBUG] old: None
+[DEBUG] after super: {'password': '123456', 'id': 'alice'}
+[DEBUG] Hashing password: 123456
+[DEBUG] process_object called
+[DEBUG] new: {'password': '$2b$12$cPhviIZLmUwxZWn1dCw/eukxFKPWUtx0L0TB0UCq0gau8GbT8fziS', 'id': 'alice', 'last_modified': 1790902331566, '__permissions__': {'write': {'account:alice'}}, 'age': 'captain'}
+[DEBUG] old: {'password': '$2b$12$cPhviIZLmUwxZWn1dCw/eukxFKPWUtx0L0TB0UCq0gau8GbT8fziS', 'id': 'alice', 'last_modified': 1790902331566, '__permissions__': {'write': {'account:alice'}}}
+[DEBUG] after super: {'password': '$2b$12$cPhviIZLmUwxZWn1dCw/eukxFKPWUtx0L0TB0UCq0gau8GbT8fziS', 'id': 'alice', '__permissions__': {'write': {'account:alice'}}, 'age': 'captain'}
+[DEBUG] Hashing password: $2b$12$cPhviIZLmUwxZWn1dCw/eukxFKPWUtx0L0TB0UCq0gau8GbT8fziS
+FAILED
+
+=================================== FAILURES ===================================
+/usr/local/lib/python3.7/site-packages/webtest/app.py:686: webtest.app.AppError: Bad response: 401 Unauthorized (not 200 OK or 3xx redirect for http://localhost/v1/accounts/alice)
+=============================== warnings summary ===============================
+tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password
+  /kinto/kinto/core/initialization.py:555: UserWarning: HTTPS is not enabled
+    warnings.warn("HTTPS is not enabled")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-21.xml ------------
+=========================== short test summary info ============================
+FAILED tests/plugins/test_accounts.py::AccountUpdateTest::test_changing_metadata_does_not_change_password
+========================= 1 failed, 1 warning in 2.02s =========================

@@ -1,0 +1,15 @@
+diff --git a/pyvo/io/vosi/vodataservice.py b/pyvo/io/vosi/vodataservice.py
+index 28b3bf5..172523d 100644
+--- a/pyvo/io/vosi/vodataservice.py
++++ b/pyvo/io/vosi/vodataservice.py
+@@ -713,8 +713,8 @@ class DataType(ContentMixin, Element):
+         self.extendedschema = extendedSchema
+ 
+     def __repr__(self):
+-        return '<DataType arraysize={}>{}</DataType>'.format(
+-            self.arraysize, self.value)
++        v = getattr(self, '_content', '')
++        return '<DataType arraysize={}>{}</DataType>'.format(self.arraysize, v)
+ 
+     @xmlattribute
+     def arraysize(self):

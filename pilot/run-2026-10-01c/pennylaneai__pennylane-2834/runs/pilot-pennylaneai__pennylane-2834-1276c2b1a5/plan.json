@@ -1,0 +1,7 @@
+{
+  "approach": "Fix misalignment between loop index `i` over total parameters and `unshifted_coeffs`/`gradient_coeffs` which store data only for trainable parameters. Map `i` \u2192 actual position in `argnum` before indexing.",
+  "files_to_edit": [
+    "pennylane/gradients/parameter_shift.py"
+  ],
+  "hypothesis": "In `pennylane/gradients/parameter_shift.py`, inside `expval_param_shift`'s inner function `processing_fn`, replace `g = g + unshifted_coeffs[i] * r0` with `idx_arg = argnum.index(i); g = g + unshifted_coeffs[idx_arg] * r0`."
+}

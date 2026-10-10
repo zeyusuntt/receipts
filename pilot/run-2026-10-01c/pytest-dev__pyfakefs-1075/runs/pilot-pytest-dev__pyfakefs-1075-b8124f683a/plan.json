@@ -1,0 +1,7 @@
+{
+  "approach": "Ensure that when accessing attributes like LOCK_SH on FakeFcntlModule, if they don't exist as fake attributes, they are forwarded to the real fcntl module by modifying the __getattribute__ method to fall through to the real module for missing attributes after checking for skipped modules.",
+  "files_to_edit": [
+    "pyfakefs/fake_io.py"
+  ],
+  "hypothesis": "The FakeFcntlModule class lacks attributes LOCK_SH, LOCK_UN, and LOCK_EX which should be forwarded to the real fcntl module via __getattr__ but they're missing due to being intercepted by __getattribute__ logic."
+}

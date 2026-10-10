@@ -1,0 +1,21 @@
+                reset = Const.cast(orig_shape.const(reset))
+            except Exception:
+                raise TypeError("Reset value must be a constant initializer of {!r}"
+                                .format(orig_shape))
+            if reset.shape() != Shape.cast(orig_shape):
+                raise ValueError("Constant returned by {!r}.const() must have the shape that "
+                                 "it casts to, {!r}, and not {!r}"
+                                 .format(orig_shape, Shape.cast(orig_shape),
+                                         reset.shape()))
+        else:
+            try:
+                reset = Const.cast(reset or 0)
+            except TypeError:
+                raise TypeError("Reset value must be a constant-castable expression, not {!r}"
+                                .format(orig_reset))
+        if orig_reset not in (None, 0, -1): # Avoid false positives for all-zeroes and all-ones
+            if reset.shape().signed and not self.signed:
+                warnings.warn(
+                    message="Reset value {!r} is signed, but the signal shape is {!r}"
+                            .format(orig_reset, shape),
+                    category=SyntaxWarning,

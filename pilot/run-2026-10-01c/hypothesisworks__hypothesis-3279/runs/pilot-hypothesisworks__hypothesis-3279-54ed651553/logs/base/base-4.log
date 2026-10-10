@@ -1,0 +1,215 @@
+============================= test session starts ==============================
+collected 54 items
+
+hypothesis-python/tests/cover/test_lookup_py310.py F                     [  1%]
+hypothesis-python/tests/cover/test_testdecorators.py ................... [ 37%]
+..................................                                       [100%]
+
+=================================== FAILURES ===================================
+E   hypothesis.errors.InvalidArgument: thing=int | list[str] must be a type
+/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/core.py:1036: hypothesis.errors.InvalidArgument: thing=int | list[str] must be a type
+==================================== PASSES ====================================
+_______________________ test_str_addition_is_commutative _______________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_str_addition_is_commutative(
+    x='0', y='1',
+)
+______________________ test_bytes_addition_is_commutative ______________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_bytes_addition_is_commutative(
+    x=b'\x00', y=b'\x01',
+)
+______________________ test_float_addition_is_associative ______________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_float_addition_is_associative(
+    x=0.0, y=0.0, z=nan,  # Saw 1 signaling NaN
+)
+________________ test_still_minimizes_on_non_assertion_failures ________________
+----------------------------- Captured stdout call -----------------------------
+Falsifying example: is_not_too_large(
+    x=10,
+)
+____________________ TestCases.test_int_is_always_negative _____________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_int_is_always_negative(
+    x=0, self=<tests.cover.test_testdecorators.TestCases at 0x7ad2d4acbc70>,
+)
+____________________ TestCases.test_float_addition_cancels _____________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_float_addition_cancels(
+    x=1.0,
+    y=-0.5000000000000001,
+    self=<tests.cover.test_testdecorators.TestCases at 0x7ad2d2f66440>,
+)
+________________________ test_can_be_given_keyword_args ________________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_can_be_given_keyword_args(
+    x=1, name='0',
+)
+____________________ test_one_of_produces_different_values _____________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_one_of_produces_different_values(
+    x=0.0, y=False,
+)
+_________________ test_does_not_catch_interrupt_during_falsify _________________
+----------------------------- Captured stdout call -----------------------------
+You can add @seed(217654232891790309681526453078483917745) to this test or run pytest with --hypothesis-seed=217654232891790309681526453078483917745 to reproduce this failure.
+_______________ test_removing_an_element_from_a_non_unique_list ________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_removing_an_element_from_a_non_unique_list(
+    xs=[0, 0], data=data(...),
+)
+Draw 1: 0
+____________________ test_can_mix_sampling_with_generating _____________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_can_mix_sampling_with_generating(
+    x=1, y='',
+)
+______________________ test_can_find_large_sum_frozenset _______________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_can_find_large_sum_frozenset(
+    xs=frozenset({100}),
+)
+_____________________________ test_list_is_sorted ______________________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_list_is_sorted(
+    xs=[1, 0],
+)
+_____________________________ test_is_an_endpoint ______________________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_is_an_endpoint(
+    x=1.0000000000000002,
+)
+______________________________ test_breaks_bounds ______________________________
+----------------------------- Captured stdout call -----------------------------
+Falsifying example: test_is_bounded(
+    x=1, t=1,
+)
+Falsifying example: test_is_bounded(
+    x=10, t=10,
+)
+Falsifying example: test_is_bounded(
+    x=100, t=100,
+)
+Falsifying example: test_is_bounded(
+    x=1000, t=1000,
+)
+________________________________ test_is_ascii _________________________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_is_ascii(
+    x='Ā',
+)
+______________________________ test_is_not_ascii _______________________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_is_not_ascii(
+    x='',
+)
+_____________________ test_can_find_string_with_duplicates _____________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_can_find_string_with_duplicates(
+    s='00',
+)
+________________________________ test_has_ascii ________________________________
+---------------------------------- Hypothesis ----------------------------------
+Falsifying example: test_has_ascii(
+    x=':',
+)
+_____________________________ test_can_derandomize _____________________________
+----------------------------- Captured stdout call -----------------------------
+Falsifying example: test_blah(
+    x=0,
+)
+Falsifying example: test_blah(
+    x=0,
+)
+________________________ test_can_run_without_database _________________________
+----------------------------- Captured stdout call -----------------------------
+Falsifying example: test_blah(
+    x=0,
+)
+_____________________ test_can_run_with_database_in_thread _____________________
+----------------------------- Captured stdout call -----------------------------
+Falsifying example: test_blah(
+    x=0,
+)
+Falsifying example: test_blah(
+    x=0,
+)
+------------- generated xml file: /opt/receipts/reports/base-4.xml -------------
+============================= slowest 20 durations =============================
+0.60s call     hypothesis-python/tests/cover/test_testdecorators.py::TestCases::test_float_addition_cancels
+0.22s call     hypothesis-python/tests/cover/test_testdecorators.py::test_float_addition_is_associative
+0.10s call     hypothesis-python/tests/cover/test_testdecorators.py::test_breaks_bounds
+0.10s call     hypothesis-python/tests/cover/test_testdecorators.py::test_a_text
+0.10s call     hypothesis-python/tests/cover/test_testdecorators.py::test_removing_an_element_from_a_unique_list
+0.10s call     hypothesis-python/tests/cover/test_testdecorators.py::test_filtered_values_satisfy_condition
+0.09s call     hypothesis-python/tests/cover/test_testdecorators.py::test_reversing_preserves_integer_addition
+0.07s call     hypothesis-python/tests/cover/test_testdecorators.py::test_can_find_large_sum_frozenset
+0.07s call     hypothesis-python/tests/cover/test_testdecorators.py::test_mixed_text
+0.07s call     hypothesis-python/tests/cover/test_testdecorators.py::test_can_test_sets_sampled_from
+0.07s call     hypothesis-python/tests/cover/test_testdecorators.py::test_integer_division_shrinks_positive_integers
+0.06s call     hypothesis-python/tests/cover/test_testdecorators.py::test_str_addition_is_commutative
+0.05s call     hypothesis-python/tests/cover/test_testdecorators.py::test_int_addition_is_associative
+0.05s call     hypothesis-python/tests/cover/test_testdecorators.py::test_named_tuples_are_of_right_type
+0.05s call     hypothesis-python/tests/cover/test_testdecorators.py::test_int_addition_is_commutative
+0.05s call     hypothesis-python/tests/cover/test_testdecorators.py::test_list_is_sorted
+0.04s call     hypothesis-python/tests/cover/test_testdecorators.py::test_prints_on_failure_by_default
+0.04s call     hypothesis-python/tests/cover/test_testdecorators.py::test_can_be_given_keyword_args
+0.04s call     hypothesis-python/tests/cover/test_testdecorators.py::test_bytes_addition_is_commutative
+0.03s call     hypothesis-python/tests/cover/test_testdecorators.py::test_has_ascii
+=========================== short test summary info ============================
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_int_addition_is_commutative
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_str_addition_is_commutative
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_bytes_addition_is_commutative
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_int_addition_is_associative
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_float_addition_is_associative
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_reversing_preserves_integer_addition
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_still_minimizes_on_non_assertion_failures
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_integer_division_shrinks_positive_integers
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::TestCases::test_abs_non_negative
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::TestCases::test_abs_non_negative_varargs
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::TestCases::test_abs_non_negative_varargs_kwargs
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::TestCases::test_abs_non_negative_varargs_kwargs_only
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::TestCases::test_int_is_always_negative
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::TestCases::test_float_addition_cancels
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_be_given_keyword_args
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_one_of_produces_different_values
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_is_the_answer
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_integers_are_in_range
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_integers_from_are_from
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_does_not_catch_interrupt_during_falsify
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_removing_an_element_from_a_unique_list
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_removing_an_element_from_a_non_unique_list
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_test_sets_sampled_from
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_mix_sampling_with_generating
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_find_large_sum_frozenset
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_prints_on_failure_by_default
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_does_not_print_on_success
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_sample_from_single_element
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_list_is_sorted
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_is_an_endpoint
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_breaks_bounds
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_test_kwargs_only_methods
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_is_ascii
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_is_not_ascii
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_find_string_with_duplicates
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_has_ascii
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_derandomize
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_run_without_database
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_run_with_database_in_thread
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_call_an_argument_f
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_named_tuples_are_of_right_type
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_fails_in_reify
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_a_text
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_empty_text
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_mixed_text
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_when_set_to_no_simplifies_runs_failing_example_twice
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_filtered_values_satisfy_condition
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_map_nameless
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_flatmap_nameless
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_can_be_used_with_none_module
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_does_not_print_notes_if_all_succeed
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_prints_notes_once_on_failure
+PASSED hypothesis-python/tests/cover/test_testdecorators.py::test_empty_lists
+FAILED hypothesis-python/tests/cover/test_lookup_py310.py::test_native_unions
+========================= 1 failed, 53 passed in 3.24s =========================

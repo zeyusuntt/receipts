@@ -1,0 +1,46 @@
+diff --git a/upath/core.py b/upath/core.py
+index 3e11dfa..6f046a6 100644
+--- a/upath/core.py
++++ b/upath/core.py
+@@ -802,9 +802,6 @@ class UPath(PathlibPathShim, Path):
+     def is_socket(self) -> bool:
+         return False
+ 
+-    def samefile(self, other_path) -> bool:
+-        raise NotImplementedError
+-
+     @overload  # type: ignore[override]
+     def open(
+         self,
+@@ -1065,5 +1062,31 @@ class UPath(PathlibPathShim, Path):
+     ) -> None:
+         raise NotImplementedError
+ 
++    def samefile(self, other: os.PathLike[str] | UPath) -> bool:
++        """Test whether two path references point to the same file or directory.
++        
++        This method compares the device and inode number of the underlying files,
++        similar to os.path.samefile().
++        Raises FileNotFoundError if either path does not exist.
++        """
++        if not isinstance(other, (UPath, os.PathLike)):
++            return NotImplemented
++        other_path = UPath(other) if not isinstance(other, UPath) else other
++        
++        # Get stat info for both paths - this will raise FileNotFoundError if needed
++        try:
++            self_stat = self.stat()
++        except FileNotFoundError:
++            raise FileNotFoundError(f"[Errno 2] No such file or directory: {self!r}")
++        
++        try:
++            other_stat = other_path.stat()
++        except FileNotFoundError:
++            raise FileNotFoundError(f"[Errno 2] No such file or directory: {other_path!r}")
++        
++        # Compare device and inode numbers
++        return (self_stat.st_dev == other_stat.st_dev and 
++                self_stat.st_ino == other_stat.st_ino)
++
+     def expanduser(self) -> Self:
+         raise NotImplementedError

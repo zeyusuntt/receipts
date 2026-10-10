@@ -1,0 +1,67 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /pymdown-extensions
+configfile: tox.ini
+plugins: cov-7.0.0
+collecting ... collected 1 item
+
+tests/test_extensions/test_snippets.py::TestSnippets::test_inline FAILED [100%]
+
+=================================== FAILURES ===================================
+___________________________ TestSnippets.test_inline ___________________________
+
+self = <tests.test_extensions.test_snippets.TestSnippets testMethod=test_inline>
+
+    def test_inline(self):
+        """Test inline."""
+    
+>       self.check_markdown(
+            R'''
+            ---8<--- "loop.txt"
+            ---8<--- "a.txt"
+            ---8<--- "b.txt"
+            ;---8<--- "b.txt"
+    
+            - Testing indentation
+    
+                ---8<--- "b.txt"
+            ''',  # noqa: W291
+            R'''
+            <p>Snippet
+            Snippet
+            ---8&lt;--- "b.txt"</p>
+            <ul>
+            <li>
+            <p>Testing indentation</p>
+            <p>Snippet</p>
+            </li>
+            </ul>
+            ''',
+            True
+        )
+
+tests/test_extensions/test_snippets.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/util.py:91: in check_markdown
+    self.assertTrue(not diff)
+E   AssertionError: False is not true
+----------------------------- Captured stdout call -----------------------------
+--- Expected
++++ Actual
+@@ -1,9 +1,4 @@
+-<p>Snippet
+-Snippet
+----8&lt;--- "b.txt"</p>
+-<ul>
+-<li>
+-<p>Testing indentation</p>
+-<p>Snippet</p>
+-</li>
+-</ul>+<p>---8&lt;--- "a.txt"
++---8&lt;--- "b.txt"
++---8&lt;--- "b.txt"
++    ---8&lt;--- "b.txt"</p>
+----------- generated xml file: /opt/receipts/reports/agent1-29.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_extensions/test_snippets.py::TestSnippets::test_inline - As...
+============================== 1 failed in 0.25s ===============================

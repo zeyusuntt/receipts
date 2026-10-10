@@ -1,0 +1,395 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /altair
+configfile: pyproject.toml
+plugins: anyio-4.12.1, cov-7.0.0
+collecting ... collected 2 items
+
+tests/test_examples.py::test_from_and_to_json_roundtrip[tests.examples_arguments_syntax] FAILED [ 50%]
+tests/test_examples.py::test_from_and_to_json_roundtrip[tests.examples_methods_syntax] FAILED [100%]
+
+=================================== FAILURES ===================================
+_______ test_from_and_to_json_roundtrip[tests.examples_arguments_syntax] _______
+
+self = <urllib.request.HTTPSHandler object at 0x70f434f0ded0>
+http_class = <class 'http.client.HTTPSConnection'>
+req = <urllib.request.Request object at 0x70f3913a7910>
+http_conn_args = {'check_hostname': None, 'context': None}
+host = 'cdn.jsdelivr.net'
+h = <http.client.HTTPSConnection object at 0x70f434f0ece0>
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+>               h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+
+/usr/local/lib/python3.10/urllib/request.py:1348: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/http/client.py:1283: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+/usr/local/lib/python3.10/http/client.py:1329: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+/usr/local/lib/python3.10/http/client.py:1278: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+/usr/local/lib/python3.10/http/client.py:1038: in _send_output
+    self.send(msg)
+/usr/local/lib/python3.10/http/client.py:976: in send
+    self.connect()
+/usr/local/lib/python3.10/http/client.py:1455: in connect
+    self.sock = self._context.wrap_socket(self.sock,
+/usr/local/lib/python3.10/ssl.py:513: in wrap_socket
+    return self.sslsocket_class._create(
+/usr/local/lib/python3.10/ssl.py:1104: in _create
+    self.do_handshake()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ssl.SSLSocket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+block = False
+
+    @_sslcopydoc
+    def do_handshake(self, block=False):
+        self._check_connected()
+        timeout = self.gettimeout()
+        try:
+            if timeout == 0.0 and block:
+                self.settimeout(None)
+>           self._sslobj.do_handshake()
+E           ConnectionResetError: [Errno 104] Connection reset by peer
+
+/usr/local/lib/python3.10/ssl.py:1375: ConnectionResetError
+
+During handling of the above exception, another exception occurred:
+
+syntax_module = <module 'tests.examples_arguments_syntax' from '/altair/tests/examples_arguments_syntax/__init__.py'>
+
+    @pytest.mark.parametrize(
+        "syntax_module", [examples_arguments_syntax, examples_methods_syntax]
+    )
+    def test_from_and_to_json_roundtrip(syntax_module):
+        """Tests if the to_json and from_json (and by extension to_dict and from_dict)
+        work for all examples in the Example Gallery.
+        """
+        for filename in iter_examples_filenames(syntax_module):
+            source = pkgutil.get_data(syntax_module.__name__, filename)
+>           chart = eval_block(source)
+
+tests/test_examples.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+altair/utils/execeval.py:52: in eval_block
+    exec(compiled, namespace)
+<string>:13: in <module>
+    ???
+/usr/local/lib/python3.10/site-packages/vega_datasets/core.py:233: in __call__
+    datasource = BytesIO(self.raw(use_local=use_local))
+/usr/local/lib/python3.10/site-packages/vega_datasets/core.py:212: in raw
+    return urlopen(self.url).read()
+/usr/local/lib/python3.10/urllib/request.py:216: in urlopen
+    return opener.open(url, data, timeout)
+/usr/local/lib/python3.10/urllib/request.py:519: in open
+    response = self._open(req, data)
+/usr/local/lib/python3.10/urllib/request.py:536: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+/usr/local/lib/python3.10/urllib/request.py:496: in _call_chain
+    result = func(*args)
+/usr/local/lib/python3.10/urllib/request.py:1391: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <urllib.request.HTTPSHandler object at 0x70f434f0ded0>
+http_class = <class 'http.client.HTTPSConnection'>
+req = <urllib.request.Request object at 0x70f3913a7910>
+http_conn_args = {'check_hostname': None, 'context': None}
+host = 'cdn.jsdelivr.net'
+h = <http.client.HTTPSConnection object at 0x70f434f0ece0>
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+>               raise URLError(err)
+E               urllib.error.URLError: <urlopen error [Errno 104] Connection reset by peer>
+
+/usr/local/lib/python3.10/urllib/request.py:1351: URLError
+________ test_from_and_to_json_roundtrip[tests.examples_methods_syntax] ________
+
+self = <urllib.request.HTTPSHandler object at 0x70f434f0ded0>
+http_class = <class 'http.client.HTTPSConnection'>
+req = <urllib.request.Request object at 0x70f389b13b20>
+http_conn_args = {'check_hostname': None, 'context': None}
+host = 'cdn.jsdelivr.net'
+h = <http.client.HTTPSConnection object at 0x70f38fb64460>
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+>               h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+
+/usr/local/lib/python3.10/urllib/request.py:1348: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.10/http/client.py:1283: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+/usr/local/lib/python3.10/http/client.py:1329: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+/usr/local/lib/python3.10/http/client.py:1278: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+/usr/local/lib/python3.10/http/client.py:1038: in _send_output
+    self.send(msg)
+/usr/local/lib/python3.10/http/client.py:976: in send
+    self.connect()
+/usr/local/lib/python3.10/http/client.py:1455: in connect
+    self.sock = self._context.wrap_socket(self.sock,
+/usr/local/lib/python3.10/ssl.py:513: in wrap_socket
+    return self.sslsocket_class._create(
+/usr/local/lib/python3.10/ssl.py:1104: in _create
+    self.do_handshake()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ssl.SSLSocket [closed] fd=-1, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6>
+block = False
+
+    @_sslcopydoc
+    def do_handshake(self, block=False):
+        self._check_connected()
+        timeout = self.gettimeout()
+        try:
+            if timeout == 0.0 and block:
+                self.settimeout(None)
+>           self._sslobj.do_handshake()
+E           ConnectionResetError: [Errno 104] Connection reset by peer
+
+/usr/local/lib/python3.10/ssl.py:1375: ConnectionResetError
+
+During handling of the above exception, another exception occurred:
+
+syntax_module = <module 'tests.examples_methods_syntax' from '/altair/tests/examples_methods_syntax/__init__.py'>
+
+    @pytest.mark.parametrize(
+        "syntax_module", [examples_arguments_syntax, examples_methods_syntax]
+    )
+    def test_from_and_to_json_roundtrip(syntax_module):
+        """Tests if the to_json and from_json (and by extension to_dict and from_dict)
+        work for all examples in the Example Gallery.
+        """
+        for filename in iter_examples_filenames(syntax_module):
+            source = pkgutil.get_data(syntax_module.__name__, filename)
+>           chart = eval_block(source)
+
+tests/test_examples.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+altair/utils/execeval.py:52: in eval_block
+    exec(compiled, namespace)
+<string>:13: in <module>
+    ???
+/usr/local/lib/python3.10/site-packages/vega_datasets/core.py:233: in __call__
+    datasource = BytesIO(self.raw(use_local=use_local))
+/usr/local/lib/python3.10/site-packages/vega_datasets/core.py:212: in raw
+    return urlopen(self.url).read()
+/usr/local/lib/python3.10/urllib/request.py:216: in urlopen
+    return opener.open(url, data, timeout)
+/usr/local/lib/python3.10/urllib/request.py:519: in open
+    response = self._open(req, data)
+/usr/local/lib/python3.10/urllib/request.py:536: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+/usr/local/lib/python3.10/urllib/request.py:496: in _call_chain
+    result = func(*args)
+/usr/local/lib/python3.10/urllib/request.py:1391: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <urllib.request.HTTPSHandler object at 0x70f434f0ded0>
+http_class = <class 'http.client.HTTPSConnection'>
+req = <urllib.request.Request object at 0x70f389b13b20>
+http_conn_args = {'check_hostname': None, 'context': None}
+host = 'cdn.jsdelivr.net'
+h = <http.client.HTTPSConnection object at 0x70f38fb64460>
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update({k: v for k, v in req.headers.items()
+                        if k not in headers})
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = {name.title(): val for name, val in headers.items()}
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+>               raise URLError(err)
+E               urllib.error.URLError: <urlopen error [Errno 104] Connection reset by peer>
+
+/usr/local/lib/python3.10/urllib/request.py:1351: URLError
+=============================== warnings summary ===============================
+altair/utils/schemapi.py:353: 99 warnings
+tests/test_examples.py: 8833 warnings
+  /altair/altair/utils/schemapi.py:353: DeprecationWarning: jsonschema.RefResolver is deprecated as of v4.18.0, in favor of the https://github.com/python-jsonschema/referencing library, which provides more compliant referencing behavior as well as more flexible APIs for customization. A future release will remove RefResolver. Please file a feature request (on referencing) if you are missing an API for the kind of customization you need.
+    resolver = jsonschema.RefResolver.from_schema(root or schema)
+
+tests/test_examples.py: 10346 warnings
+  /altair/altair/utils/schemapi.py:118: DeprecationWarning: jsonschema.RefResolver is deprecated as of v4.18.0, in favor of the https://github.com/python-jsonschema/referencing library, which provides more compliant referencing behavior as well as more flexible APIs for customization. A future release will remove RefResolver. Please file a feature request (on referencing) if you are missing an API for the kind of customization you need.
+    resolver = jsonschema.RefResolver.from_schema(rootschema)
+
+tests/test_examples.py: 106 warnings
+  /altair/altair/utils/core.py:395: FutureWarning: the convert_dtype parameter is deprecated and will be removed in a future version.  Do ``ser.astype(object).apply()`` instead if you want ``convert_dtype=False``.
+    col = df[col_name].apply(to_list_if_array, convert_dtype=False)
+
+tests/test_examples.py::test_from_and_to_json_roundtrip[tests.examples_arguments_syntax]
+tests/test_examples.py::test_from_and_to_json_roundtrip[tests.examples_methods_syntax]
+  <string>:15: FutureWarning: 'M' is deprecated and will be removed in a future version, please use 'ME' instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-20.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_examples.py::test_from_and_to_json_roundtrip[tests.examples_arguments_syntax]
+FAILED tests/test_examples.py::test_from_and_to_json_roundtrip[tests.examples_methods_syntax]
+====================== 2 failed, 19386 warnings in 37.88s ======================

@@ -1,0 +1,62 @@
+diff --git a/pysmt/smtlib/parser/parser.py b/pysmt/smtlib/parser/parser.py
+index 40f5ec5..46797bc 100644
+--- a/pysmt/smtlib/parser/parser.py
++++ b/pysmt/smtlib/parser/parser.py
+@@ -773,20 +773,43 @@ class SmtLibParser(object):
+             keyword = tk[1:]
+             tk = tokens.consume()
+             value = None
+-            if tk == "(":
+-                counter = 1
+-                buff = [tk]
+-                while counter != 0:
+-                    tk = tokens.raw_read()
+-                    if tk == "(":
+-                        counter += 1
+-                    elif tk == ")":
+-                        counter -= 1
+-                    buff.append(tk)
+-                value = "".join(buff)
+-            else:
+-                value = tk
+-            tk = tokens.consume()
++            # Check if this attribute has a value or is just a keyword
++            # According to SMT-LIB spec: <attribute> ::= <keyword> | <keyword> <attribute_value>
++            # We need to look ahead to see if the current token starts an attribute value
++            # Lookahead token is tk (already consumed)
++            lookahead_is_attr_value = False
++            if tk is not None and tk != "" and tk != ")":
++                # Spec constant: quoted string or number
++                if tk.startswith('"') or tk[0].isdigit() or \
++                   (tk.startswith('-') and len(tk) > 1 and tk[1:].isdigit()):
++                    lookahead_is_attr_value = True
++                # Symbol: starts with letter, underscore, etc. but not colon (not a keyword)
++                elif (len(tk) > 0 and 
++                      (tk[0].isalpha() or tk[0] == '_' or tk[0] == '.') and 
++                      not tk.startswith(':')):
++                    lookahead_is_attr_value = True
++                # Parenthesized expression
++                elif tk == '(':
++                    lookahead_is_attr_value = True
++            
++            if lookahead_is_attr_value:
++                # Parse the attribute value
++                if tk == "(":
++                    counter = 1
++                    buff = [tk]
++                    while counter != 0:
++                        tk = tokens.raw_read()
++                        if tk == "(":
++                            counter += 1
++                        elif tk == ")":
++                            counter -= 1
++                        buff.append(tk)
++                    value = "".join(buff)
++                else:
++                    value = tk
++                tk = tokens.consume()
++            # Else: keep value as None (no value - this is a keyword-only attribute)
++            # tk already points to the next token to process
+             self.cache.annotations.add(term, keyword, value)
+ 
+         assert len(stack[-1]) == 0

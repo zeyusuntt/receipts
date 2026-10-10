@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+collected 93 items
+
+tests/test_reader.py .......F
+
+=================================== FAILURES ===================================
+E   pytest.PytestReturnNotNoneWarning: Test functions should return None, but tests/test_reader.py::test_get_attachments[src0] returned <class 'dict'>.
+    Did you mean to use `assert` instead of `return`?
+    See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+/usr/local/lib/python3.10/site-packages/_pytest/python.py:170: pytest.PytestReturnNotNoneWarning: Test functions should return None, but tests/test_reader.py::test_get_attachments[src0] returned <class 'dict'>.
+==================================== PASSES ====================================
+_______________________ test_broken_meta_data[pdf_path0] _______________________
+------------------------------ Captured log call -------------------------------
+WARNING  PyPDF2._reader:_utils.py:374 Invalid parent xref., rebuild xref
+WARNING  PyPDF2._reader:_utils.py:374 Object 174 0 not defined.
+----------- generated xml file: /opt/receipts/reports/agent1-11.xml ------------
+=========================== short test summary info ============================
+PASSED tests/test_reader.py::test_get_num_pages[selenium-PyPDF2-issue-177.pdf-1]
+PASSED tests/test_reader.py::test_get_num_pages[pdflatex-outline.pdf-4]
+PASSED tests/test_reader.py::test_read_metadata[crazyones]
+PASSED tests/test_reader.py::test_read_metadata[metadata]
+PASSED tests/test_reader.py::test_broken_meta_data[pdf_path0]
+PASSED tests/test_reader.py::test_get_annotations[src0]
+PASSED tests/test_reader.py::test_get_annotations[src1]
+FAILED tests/test_reader.py::test_get_attachments[src0] - pytest.PytestReturn...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================= 1 failed, 7 passed in 0.23s ==========================

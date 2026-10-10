@@ -1,0 +1,100 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase('/tmp/tmpmefjrcah/examples')
+rootdir: /hypothesis
+configfile: pytest.ini
+plugins: hypothesis-6.40.1, xdist-3.8.0
+collecting ... collected 1 item
+
+tests/cover/test_lookup_py310.py::test_native_unions FAILED              [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_native_unions ______________________________
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/_pytest/runner.py", line 353, in from_call
+    result: TResult | None = func()
+  File "/usr/local/lib/python3.10/site-packages/_pytest/runner.py", line 245, in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/usr/local/lib/python3.10/site-packages/_pytest/logging.py", line 850, in pytest_runtest_call
+    yield
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/usr/local/lib/python3.10/site-packages/_pytest/capture.py", line 900, in pytest_runtest_call
+    return (yield)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/usr/local/lib/python3.10/site-packages/_pytest/skipping.py", line 268, in pytest_runtest_call
+    return (yield)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/usr/local/lib/python3.10/site-packages/_pytest/runner.py", line 179, in pytest_runtest_call
+    item.runtest()
+  File "/usr/local/lib/python3.10/site-packages/_pytest/python.py", line 1720, in runtest
+    self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/usr/local/lib/python3.10/site-packages/_pytest/python.py", line 166, in pytest_pyfunc_call
+    result = testfunction(**testargs)
+  File "/hypothesis/hypothesis-python/tests/cover/test_lookup_py310.py", line 18, in test_native_unions
+    find_any(s, lambda x: isinstance(x, int))
+  File "/hypothesis/hypothesis-python/tests/common/debug.py", line 79, in find_any
+    return minimal(
+  File "/hypothesis/hypothesis-python/tests/common/debug.py", line 64, in minimal
+    definition.validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 406, in validate
+    self.do_validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/lazy.py", line 131, in do_validate
+    w.validate()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 407, in validate
+    self.is_empty
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 134, in accept
+    recur(self)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/strategies.py", line 130, in recur
+    mapping[strat] = getattr(strat, calculation)(recur)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/deferred.py", line 65, in calc_is_empty
+    return recur(self.wrapped_strategy)
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/deferred.py", line 35, in wrapped_strategy
+    result = self.__definition()
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/core.py", line 987, in <lambda>
+    lambda thing: deferred(lambda: _from_type(thing)),
+  File "/hypothesis/hypothesis-python/src/hypothesis/strategies/_internal/core.py", line 1037, in _from_type
+    raise InvalidArgument(f"thing={thing!r} must be a type")  # pragma: no cover
+hypothesis.errors.InvalidArgument: thing=int | list[str] must be a type
+============================= slowest 20 durations =============================
+0.01s setup    hypothesis-python/tests/cover/test_lookup_py310.py::test_native_unions
+
+(2 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/cover/test_lookup_py310.py::test_native_unions - hypothesis.erro...
+============================== 1 failed in 0.03s ===============================

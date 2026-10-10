@@ -1,0 +1,75 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /dulwich
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_porcelain.py::StatusTests::test_status_mixed_tracked_untracked FAILED
+
+=================================== FAILURES ===================================
+_______________ StatusTests.test_status_mixed_tracked_untracked ________________
+
+self = <tests.test_porcelain.StatusTests testMethod=test_status_mixed_tracked_untracked>
+
+    def test_status_mixed_tracked_untracked(self) -> None:
+        # Create a directory with both tracked and untracked files
+        mixed_dir = os.path.join(self.repo_path, "mixed_dir")
+        os.mkdir(mixed_dir)
+    
+        # Add a tracked file
+        tracked_file = os.path.join(mixed_dir, "tracked.txt")
+        with open(tracked_file, "w") as fh:
+            fh.write("tracked content")
+        porcelain.add(self.repo.path, paths=[tracked_file])
+        porcelain.commit(
+            repo=self.repo.path,
+            message=b"add tracked file",
+            author=b"author <email>",
+            committer=b"committer <email>",
+        )
+    
+        # Add untracked files to the same directory
+        untracked_file = os.path.join(mixed_dir, "untracked.txt")
+        with open(untracked_file, "w") as fh:
+            fh.write("untracked content")
+    
+        # In "normal" mode, should show individual untracked files in mixed dirs
+        _, _, untracked = porcelain.status(self.repo.path, untracked_files="normal")
+>       self.assertEqual(untracked, ["mixed_dir/untracked.txt"])
+E       AssertionError: Lists differ: ['mixed_dir/tracked.txt', 'mixed_dir/untracked.txt'] != ['mixed_dir/untracked.txt']
+E       
+E       First differing element 0:
+E       'mixed_dir/tracked.txt'
+E       'mixed_dir/untracked.txt'
+E       
+E       First list contains 1 additional elements.
+E       First extra element 1:
+E       'mixed_dir/untracked.txt'
+E       
+E       - ['mixed_dir/tracked.txt', 'mixed_dir/untracked.txt']
+E       + ['mixed_dir/untracked.txt']
+
+tests/test_porcelain.py:3783: AssertionError
+=============================== warnings summary ===============================
+dulwich/objects.py:1412
+  /dulwich/dulwich/objects.py:1412: DeprecationWarning: parse_commit is deprecated since 0.21.0 and will be removed in 0.24.0
+    def parse_commit(
+
+dulwich/objects.py:1762
+  /dulwich/dulwich/objects.py:1762: DeprecationWarning: _get_extra is deprecated since 0.21.0 and will be removed in 0.24.0
+    def _get_extra(self) -> list[tuple[bytes, Optional[bytes]]]:
+
+dulwich/pack.py:498
+  /dulwich/dulwich/pack.py:498: DeprecationWarning: object_index is deprecated since 0.21.0 and will be removed in 0.23.0
+    def object_index(self, sha: bytes) -> int:
+
+dulwich/porcelain.py:2568
+  /dulwich/dulwich/porcelain.py:2568: DeprecationWarning: checkout_branch is deprecated since 0.22.9 and will be removed in 0.24.0
+    def checkout_branch(repo, target: Union[bytes, str], force: bool = False) -> None:
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /opt/receipts/reports/agent1-11.xml ------------
+=========================== short test summary info ============================
+FAILED tests/test_porcelain.py::StatusTests::test_status_mixed_tracked_untracked
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+======================== 1 failed, 4 warnings in 0.35s =========================

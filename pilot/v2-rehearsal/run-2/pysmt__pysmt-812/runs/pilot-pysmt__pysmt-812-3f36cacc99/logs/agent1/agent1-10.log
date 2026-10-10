@@ -1,0 +1,103 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /pysmt
+configfile: pytest.ini
+collecting ... collected 1 item
+
+pysmt/test/smtlib/test_annotations.py::TestBasic::test_annotations_colon_values FAILED [100%]
+
+=================================== FAILURES ===================================
+___________________ TestBasic.test_annotations_colon_values ____________________
+
+self = <pysmt.test.smtlib.test_annotations.TestBasic testMethod=test_annotations_colon_values>
+
+        def test_annotations_colon_values(self):
+            source ="""\
+    (declare-fun |"v__AT0"| () Bool)
+    (define-fun .def_1 () Bool (! |"v__AT0"| :next :this_is_considered_a_value))
+    """
+            buf = StringIO(source)
+            parser = SmtLibParser()
+>           script = parser.get_script(buf)
+
+pysmt/test/smtlib/test_annotations.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pysmt/smtlib/parser/parser.py:881: in get_script
+    for cmd in self.get_command_generator(script):
+pysmt/smtlib/parser/parser.py:895: in get_command_generator
+    for cmd in self.get_command(tokens):
+pysmt/smtlib/parser/parser.py:1196: in get_command
+    yield fun(current, tokens)
+pysmt/smtlib/parser/parser.py:1304: in _cmd_define_fun
+    ebody = self.get_expression(tokens)
+pysmt/smtlib/parser/parser.py:841: in get_expression
+    fun(stack, tokens, tk)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pysmt.smtlib.parser.parser.SmtLibParser object at 0x734fe82a33a0>
+stack = [[]]
+tokens = <pysmt.smtlib.parser.parser.Tokenizer object at 0x734fe82a2b30>
+key = '!'
+
+    def _enter_annotation(self, stack, tokens, key):
+        """Deals with annotations"""
+        #pylint: disable=unused-argument
+    
+        term = self.get_expression(tokens)
+    
+        tk = tokens.consume()
+        while tk != ")":
+            if not tk.startswith(":"):
+                raise PysmtSyntaxError("Annotations keyword should start with"
+                                       " colon! Offending token: '%s'" % tk,
+                                       tokens.pos_info)
+            keyword = tk[1:]
+            # Check if this attribute has a value or is just a keyword
+            # According to SMT-LIB spec: <attribute> ::= <keyword> | <keyword> <attribute_value>
+            # Save current token to check if it starts an attribute value
+            saved_tk = tk
+    
+            # An attribute_value is: <spec_constant> | <symbol> | ( <s_expr>* )
+            # So it starts with: SPEC_CONSTANT, SYMBOL, or LPAREN
+            # Check if saved_tk is a valid start of an attribute_value
+            is_attr_value_start = False
+            if saved_tk is not None and saved_tk != "" and saved_tk != ")":
+                # Spec constant: quoted string or number
+                if saved_tk.startswith('"') or saved_tk[0].isdigit() or \
+                   (saved_tk.startswith('-') and len(saved_tk) > 1 and saved_tk[1:].isdigit()):
+                    is_attr_value_start = True
+                # Symbol: starts with letter, underscore, dot, but not colon (not a keyword)
+                elif (len(saved_tk) > 0 and
+                      (saved_tk[0].isalpha() or saved_tk[0] == '_' or saved_tk[0] == '.') and
+                      not saved_tk.startswith(':')):
+                    is_attr_value_start = True
+                # Parenthesized expression
+                elif saved_tk == '(':
+                    is_attr_value_start = True
+    
+            if is_attr_value_start:
+                # Parse the attribute value
+                tk = saved_tk
+                if tk == "(":
+                    counter = 1
+                    buff = [tk]
+                    while counter != 0:
+                        tk = tokens.raw_read()
+                        if tk == "(":
+                            counter += 1
+                        elif tk == ")":
+                            counter -= 1
+                        buff.append(tk)
+                    value = "".join(buff)
+                else:
+                    value = tk
+                tk = tokens.consume()
+            # Else: keep value as None (no value - this is a keyword-only attribute)
+>           self.cache.annotations.add(term, keyword, value)
+E           UnboundLocalError: local variable 'value' referenced before assignment
+
+pysmt/smtlib/parser/parser.py:815: UnboundLocalError
+=========================== short test summary info ============================
+FAILED pysmt/test/smtlib/test_annotations.py::TestBasic::test_annotations_colon_values
+============================== 1 failed in 0.22s ===============================

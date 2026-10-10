@@ -1,0 +1,138 @@
+diff --git a/src/towncrier/templates/default.md b/src/towncrier/templates/default.md
+index 4a5a07d..8b0b06f 100644
+--- a/src/towncrier/templates/default.md
++++ b/src/towncrier/templates/default.md
+@@ -13,7 +13,11 @@
+ 
+ {% if sections[section] %}
+ {% for category, val in definitions.items() if category in sections[section] %}
++{% if render_title %}
+ ##{% if section %}#{% endif %} {{ definitions[category]['name'] }}
++{% else %}
++#{% if section %}#{% endif %} {{ definitions[category]['name'] }}
++{% endif %}
+ 
+ {% for text, values in sections[section][category].items() %}
+ - {{ text }}
+diff --git a/src/towncrier/test_template_fix.py b/src/towncrier/test_template_fix.py
+new file mode 100644
+index 0000000..df65e8c
+--- /dev/null
++++ b/src/towncrier/test_template_fix.py
+@@ -0,0 +1,115 @@
++#!/usr/bin/env python3
++
++from jinja2 import Template
++
++# Read the modified template
++template_path = '/towncrier/src/towncrier/templates/default.md.test'
++with open(template_path, 'r') as f:
++    template_str = f.read()
++
++print("=== TESTING MODIFIED TEMPLATE ===")
++
++# Test case 1: render_title=False (custom title format) - should give us # Features
++template = Template(template_str)
++result1 = template.render(
++    render_title=False,
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "": {  # No section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("CASE 1 - render_title=False (custom title):")
++print(repr(result1))
++print("---")
++print(result1)
++
++# Test case 2: render_title=True (default/no custom title) - should give us ## Features  
++result2 = template.render(
++    render_title=True,
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "": {  # No section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("\nCASE 2 - render_title=True (default title):")
++print(repr(result2))
++print("---")
++print(result2)
++
++# Test case 3: With actual section - render_title=False
++result3 = template.render(
++    render_title=False,
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "Web": {  # Actual section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "Web": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("\nCASE 3 - render_title=False WITH SECTION:")
++print(repr(result3))
++print("---")
++print(result3)
++
++# Test case 4: With actual section - render_title=True
++result4 = template.render(
++    render_title=True,
++    versiondata={"name": "FooBarBaz", "version": "7.8.9", "date": "20-01-2001"},
++    sections={
++        "Web": {  # Actual section
++            "feature": {
++                "Adds levitation": ["#123"]
++            }
++        }
++    },
++    definitions={
++        "feature": {"name": "Features", "showcontent": True}
++    },
++    issues_by_category={
++        "Web": {
++            "feature": ["#123"]
++        }
++    }
++)
++
++print("\nCASE 4 - render_title=True WITH SECTION:")
++print(repr(result4))
++print("---")
++print(result4)
+\ No newline at end of file

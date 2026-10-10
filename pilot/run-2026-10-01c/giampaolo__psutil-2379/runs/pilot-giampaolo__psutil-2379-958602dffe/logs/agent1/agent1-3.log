@@ -1,0 +1,117 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /psutil
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+psutil/tests/test_misc.py::TestMisc::test_serialization 
+psutil/tests/test_misc.py::TestMisc::test_serialization FAILED           [100%]
+
+=================================== FAILURES ===================================
+_________________________ TestMisc.test_serialization __________________________
+
+self = <psutil.tests.test_misc.TestMisc testMethod=test_serialization>
+
+    def test_serialization(self):
+        def check(ret):
+            json.loads(json.dumps(ret))
+    
+            a = pickle.dumps(ret)
+            b = pickle.loads(a)
+            self.assertEqual(ret, b)
+    
+        # --- process APIs
+    
+        proc = psutil.Process()
+        check(psutil.Process().as_dict())
+    
+        ns = process_namespace(proc)
+        for fun, name in ns.iter(ns.getters, clear_cache=True):
+            with self.subTest(proc=proc, name=name):
+                try:
+                    ret = fun()
+                except psutil.Error:
+                    pass
+                else:
+                    check(ret)
+    
+        # --- system APIs
+    
+        ns = system_namespace()
+        for fun, name in ns.iter(ns.getters):
+            if name in {"win_service_iter", "win_service_get"}:
+                continue
+            with self.subTest(name=name):
+                try:
+                    ret = fun()
+                except psutil.AccessDenied:
+                    pass
+                else:
+                    check(ret)
+    
+        # --- exception classes
+    
+>       b = pickle.loads(
+            pickle.dumps(
+                psutil.NoSuchProcess(pid=4567, name='name', msg='msg')
+            )
+        )
+E       TypeError: NoSuchProcess.__init__() missing 1 required positional argument: 'pid'
+
+psutil/tests/test_misc.py:300: TypeError
+----------------------------- Captured stdout call -----------------------------
+SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='num_fds') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='cmdline') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='num_threads') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='cpu_affinity') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='exe') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='environ') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='name') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='memory_full_info') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='create_time') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='cpu_times') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='num_ctx_switches') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='memory_maps') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='terminal') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='gids') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='memory_info') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='cpu_num') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='status') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='ppid') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='io_counters') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='username') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='cwd') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='open_files') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='uids') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='rlimit') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='connections') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='nice') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='threads') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(proc=psutil.Process(pid=113, name='python', status='running', started='22:35:18'), name='ionice') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='disk_partitions') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='net_io_counters') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='net_connections') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='sensors_temperatures') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='pids') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='net_if_stats') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='getloadavg') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='boot_time') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='cpu_freq') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='cpu_times') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='pid_exists') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='virtual_memory') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='cpu_count') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='disk_usage') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='sensors_fans') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='sensors_battery') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='swap_memory') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='cpu_times') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='users') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='disk_io_counters') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='cpu_count') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='net_if_addrs') [100%]
+psutil/tests/test_misc.py::TestMisc::test_serialization SUBPASSED(name='cpu_stats') [100%]
+------------ generated xml file: /opt/receipts/reports/agent1-3.xml ------------
+=========================== short test summary info ============================
+FAILED psutil/tests/test_misc.py::TestMisc::test_serialization - TypeError: N...
+==================== 1 failed, 51 subtests passed in 0.20s =====================

@@ -1,0 +1,361 @@
+============================= test session starts ==============================
+collected 160 items
+
+tests/test_protocol.py ................................................. [ 30%]
+........................................................................ [ 75%]
+.......................................                                  [100%]
+
+==================================== PASSES ====================================
+_________________ ServerTests.test_acknowledge_previous_pings __________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+_______________________ ServerTests.test_connection_lost _______________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Exception in callback WebSocketCommonProtocol.connection_lost(None)
+handle: <Handle WebSocketCommonProtocol.connection_lost(None)>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/websockets/src/websockets/protocol.py", line 1126, in connection_lost
+    self.connection_lost_waiter.set_result(None)
+asyncio.base_futures.InvalidStateError: invalid state
+_______________________ ServerTests.test_duplicate_ping ________________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+______ ServerTests.test_keepalive_ping_not_acknowledged_closes_connection ______
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+_______________ ServerTests.test_keepalive_ping_unexpected_error _______________
+------------------------------ Captured log call -------------------------------
+WARNING  websockets.protocol:protocol.py:895 Unexpected exception in keepalive ping task
+Traceback (most recent call last):
+  File "/websockets/src/websockets/protocol.py", line 879, in keepalive_ping
+    ping_waiter = yield from self.ping()
+  File "/usr/local/lib/python3.7/asyncio/coroutines.py", line 120, in coro
+    res = func(*args, **kw)
+  File "/websockets/tests/test_protocol.py", line 876, in ping
+    raise Exception("BOOM")
+Exception: BOOM
+_____________ ServerTests.test_keepalive_ping_with_no_ping_timeout _____________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+_________________________ ServerTests.test_ping_binary _________________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+________________________ ServerTests.test_ping_default _________________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+______________ ServerTests.test_ping_on_closing_connection_remote ______________
+------------------------------ Captured log call -------------------------------
+ERROR    websockets.protocol:protocol.py:624 Error in data transfer
+Traceback (most recent call last):
+  File "/websockets/src/websockets/protocol.py", line 587, in transfer_data
+    msg = yield from self.read_message()
+  File "/websockets/src/websockets/protocol.py", line 639, in read_message
+    frame = yield from self.read_data_frame(max_size=self.max_size)
+  File "/websockets/src/websockets/protocol.py", line 722, in read_data_frame
+    yield from self.write_close_frame(frame.data)
+  File "/websockets/src/websockets/protocol.py", line 854, in write_close_frame
+    yield from self.write_frame(OP_CLOSE, data, State.CLOSING)
+  File "/websockets/src/websockets/protocol.py", line 816, in write_frame
+    yield from self.ensure_open()
+  File "/websockets/src/websockets/protocol.py", line 559, in ensure_open
+    ) from self.transfer_data_exc
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1000 (OK), reason = close
+__________________________ ServerTests.test_ping_text __________________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+______________ ServerTests.test_pong_on_closing_connection_remote ______________
+------------------------------ Captured log call -------------------------------
+ERROR    websockets.protocol:protocol.py:624 Error in data transfer
+Traceback (most recent call last):
+  File "/websockets/src/websockets/protocol.py", line 587, in transfer_data
+    msg = yield from self.read_message()
+  File "/websockets/src/websockets/protocol.py", line 639, in read_message
+    frame = yield from self.read_data_frame(max_size=self.max_size)
+  File "/websockets/src/websockets/protocol.py", line 722, in read_data_frame
+    yield from self.write_close_frame(frame.data)
+  File "/websockets/src/websockets/protocol.py", line 854, in write_close_frame
+    yield from self.write_frame(OP_CLOSE, data, State.CLOSING)
+  File "/websockets/src/websockets/protocol.py", line 816, in write_frame
+    yield from self.ensure_open()
+  File "/websockets/src/websockets/protocol.py", line 559, in ensure_open
+    ) from self.transfer_data_exc
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1000 (OK), reason = close
+______________________ ServerTests.test_recv_other_error _______________________
+------------------------------ Captured log call -------------------------------
+ERROR    websockets.protocol:protocol.py:624 Error in data transfer
+Traceback (most recent call last):
+  File "/websockets/src/websockets/protocol.py", line 587, in transfer_data
+    msg = yield from self.read_message()
+  File "/usr/local/lib/python3.7/asyncio/coroutines.py", line 120, in coro
+    res = func(*args, **kw)
+  File "/websockets/tests/test_protocol.py", line 433, in read_message
+    raise Exception("BOOM")
+Exception: BOOM
+______________ ServerTests.test_send_on_closing_connection_remote ______________
+------------------------------ Captured log call -------------------------------
+ERROR    websockets.protocol:protocol.py:624 Error in data transfer
+Traceback (most recent call last):
+  File "/websockets/src/websockets/protocol.py", line 587, in transfer_data
+    msg = yield from self.read_message()
+  File "/websockets/src/websockets/protocol.py", line 639, in read_message
+    frame = yield from self.read_data_frame(max_size=self.max_size)
+  File "/websockets/src/websockets/protocol.py", line 722, in read_data_frame
+    yield from self.write_close_frame(frame.data)
+  File "/websockets/src/websockets/protocol.py", line 854, in write_close_frame
+    yield from self.write_frame(OP_CLOSE, data, State.CLOSING)
+  File "/websockets/src/websockets/protocol.py", line 816, in write_frame
+    yield from self.ensure_open()
+  File "/websockets/src/websockets/protocol.py", line 559, in ensure_open
+    ) from self.transfer_data_exc
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1000 (OK), reason = close
+_________________ ClientTests.test_acknowledge_previous_pings __________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+_______________________ ClientTests.test_connection_lost _______________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Exception in callback WebSocketCommonProtocol.connection_lost(None)
+handle: <Handle WebSocketCommonProtocol.connection_lost(None)>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/websockets/src/websockets/protocol.py", line 1126, in connection_lost
+    self.connection_lost_waiter.set_result(None)
+asyncio.base_futures.InvalidStateError: invalid state
+_______________________ ClientTests.test_duplicate_ping ________________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+______ ClientTests.test_keepalive_ping_not_acknowledged_closes_connection ______
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+_______________ ClientTests.test_keepalive_ping_unexpected_error _______________
+------------------------------ Captured log call -------------------------------
+WARNING  websockets.protocol:protocol.py:895 Unexpected exception in keepalive ping task
+Traceback (most recent call last):
+  File "/websockets/src/websockets/protocol.py", line 879, in keepalive_ping
+    ping_waiter = yield from self.ping()
+  File "/usr/local/lib/python3.7/asyncio/coroutines.py", line 120, in coro
+    res = func(*args, **kw)
+  File "/websockets/tests/test_protocol.py", line 876, in ping
+    raise Exception("BOOM")
+Exception: BOOM
+_____________ ClientTests.test_keepalive_ping_with_no_ping_timeout _____________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+_________________________ ClientTests.test_ping_binary _________________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+________________________ ClientTests.test_ping_default _________________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+__________________________ ClientTests.test_ping_text __________________________
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1619 Future exception was never retrieved
+future: <Future finished exception=ConnectionClosed('WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason')>
+websockets.exceptions.ConnectionClosed: WebSocket connection is closed: code = 1006 (connection closed abnormally [internal]), no reason
+______________________ ClientTests.test_recv_other_error _______________________
+------------------------------ Captured log call -------------------------------
+ERROR    websockets.protocol:protocol.py:624 Error in data transfer
+Traceback (most recent call last):
+  File "/websockets/src/websockets/protocol.py", line 587, in transfer_data
+    msg = yield from self.read_message()
+  File "/usr/local/lib/python3.7/asyncio/coroutines.py", line 120, in coro
+    res = func(*args, **kw)
+  File "/websockets/tests/test_protocol.py", line 433, in read_message
+    raise Exception("BOOM")
+Exception: BOOM
+=========================== short test summary info ============================
+PASSED tests/test_protocol.py::ServerTests::test_abort_ping
+PASSED tests/test_protocol.py::ServerTests::test_acknowledge_ping
+PASSED tests/test_protocol.py::ServerTests::test_acknowledge_previous_pings
+PASSED tests/test_protocol.py::ServerTests::test_answer_ping
+PASSED tests/test_protocol.py::ServerTests::test_canceled_ping
+PASSED tests/test_protocol.py::ServerTests::test_close_connection_lost
+PASSED tests/test_protocol.py::ServerTests::test_close_handshake_in_fragmented_text
+PASSED tests/test_protocol.py::ServerTests::test_close_preserves_incoming_frames
+PASSED tests/test_protocol.py::ServerTests::test_close_protocol_error
+PASSED tests/test_protocol.py::ServerTests::test_closed
+PASSED tests/test_protocol.py::ServerTests::test_connection_close_in_fragmented_text
+PASSED tests/test_protocol.py::ServerTests::test_connection_closed_attributes
+PASSED tests/test_protocol.py::ServerTests::test_connection_lost
+PASSED tests/test_protocol.py::ServerTests::test_control_frame_within_fragmented_text
+PASSED tests/test_protocol.py::ServerTests::test_duplicate_ping
+PASSED tests/test_protocol.py::ServerTests::test_ensure_open_before_opening_handshake
+PASSED tests/test_protocol.py::ServerTests::test_ensure_open_during_unclean_close
+PASSED tests/test_protocol.py::ServerTests::test_fragmented_binary
+PASSED tests/test_protocol.py::ServerTests::test_fragmented_binary_no_max_size
+PASSED tests/test_protocol.py::ServerTests::test_fragmented_binary_payload_too_big
+PASSED tests/test_protocol.py::ServerTests::test_fragmented_text
+PASSED tests/test_protocol.py::ServerTests::test_fragmented_text_no_max_size
+PASSED tests/test_protocol.py::ServerTests::test_fragmented_text_payload_too_big
+PASSED tests/test_protocol.py::ServerTests::test_ignore_pong
+PASSED tests/test_protocol.py::ServerTests::test_keepalive_ping
+PASSED tests/test_protocol.py::ServerTests::test_keepalive_ping_not_acknowledged_closes_connection
+PASSED tests/test_protocol.py::ServerTests::test_keepalive_ping_stops_when_connection_closed
+PASSED tests/test_protocol.py::ServerTests::test_keepalive_ping_stops_when_connection_closing
+PASSED tests/test_protocol.py::ServerTests::test_keepalive_ping_unexpected_error
+PASSED tests/test_protocol.py::ServerTests::test_keepalive_ping_with_no_ping_interval
+PASSED tests/test_protocol.py::ServerTests::test_keepalive_ping_with_no_ping_timeout
+PASSED tests/test_protocol.py::ServerTests::test_legacy_recv
+PASSED tests/test_protocol.py::ServerTests::test_local_address
+PASSED tests/test_protocol.py::ServerTests::test_local_address_before_connection
+PASSED tests/test_protocol.py::ServerTests::test_local_close
+PASSED tests/test_protocol.py::ServerTests::test_local_close_connection_lost_timeout_after_close
+PASSED tests/test_protocol.py::ServerTests::test_local_close_connection_lost_timeout_after_write_eof
+PASSED tests/test_protocol.py::ServerTests::test_local_close_during_recv
+PASSED tests/test_protocol.py::ServerTests::test_local_close_receive_close_frame_timeout
+PASSED tests/test_protocol.py::ServerTests::test_local_close_send_close_frame_timeout
+PASSED tests/test_protocol.py::ServerTests::test_open
+PASSED tests/test_protocol.py::ServerTests::test_ping_binary
+PASSED tests/test_protocol.py::ServerTests::test_ping_default
+PASSED tests/test_protocol.py::ServerTests::test_ping_on_closed_connection
+PASSED tests/test_protocol.py::ServerTests::test_ping_on_closing_connection_local
+PASSED tests/test_protocol.py::ServerTests::test_ping_on_closing_connection_remote
+PASSED tests/test_protocol.py::ServerTests::test_ping_text
+PASSED tests/test_protocol.py::ServerTests::test_ping_type_error
+PASSED tests/test_protocol.py::ServerTests::test_pong_binary
+PASSED tests/test_protocol.py::ServerTests::test_pong_default
+PASSED tests/test_protocol.py::ServerTests::test_pong_on_closed_connection
+PASSED tests/test_protocol.py::ServerTests::test_pong_on_closing_connection_local
+PASSED tests/test_protocol.py::ServerTests::test_pong_on_closing_connection_remote
+PASSED tests/test_protocol.py::ServerTests::test_pong_text
+PASSED tests/test_protocol.py::ServerTests::test_pong_type_error
+PASSED tests/test_protocol.py::ServerTests::test_recv_binary
+PASSED tests/test_protocol.py::ServerTests::test_recv_binary_no_max_size
+PASSED tests/test_protocol.py::ServerTests::test_recv_binary_payload_too_big
+PASSED tests/test_protocol.py::ServerTests::test_recv_canceled
+PASSED tests/test_protocol.py::ServerTests::test_recv_on_closed_connection
+PASSED tests/test_protocol.py::ServerTests::test_recv_on_closing_connection_local
+PASSED tests/test_protocol.py::ServerTests::test_recv_on_closing_connection_remote
+PASSED tests/test_protocol.py::ServerTests::test_recv_other_error
+PASSED tests/test_protocol.py::ServerTests::test_recv_protocol_error
+PASSED tests/test_protocol.py::ServerTests::test_recv_text
+PASSED tests/test_protocol.py::ServerTests::test_recv_text_no_max_size
+PASSED tests/test_protocol.py::ServerTests::test_recv_text_payload_too_big
+PASSED tests/test_protocol.py::ServerTests::test_recv_unicode_error
+PASSED tests/test_protocol.py::ServerTests::test_remote_address
+PASSED tests/test_protocol.py::ServerTests::test_remote_address_before_connection
+PASSED tests/test_protocol.py::ServerTests::test_remote_close
+PASSED tests/test_protocol.py::ServerTests::test_remote_close_during_send
+PASSED tests/test_protocol.py::ServerTests::test_send_binary
+PASSED tests/test_protocol.py::ServerTests::test_send_on_closed_connection
+PASSED tests/test_protocol.py::ServerTests::test_send_on_closing_connection_local
+PASSED tests/test_protocol.py::ServerTests::test_send_on_closing_connection_remote
+PASSED tests/test_protocol.py::ServerTests::test_send_text
+PASSED tests/test_protocol.py::ServerTests::test_send_type_error
+PASSED tests/test_protocol.py::ServerTests::test_simultaneous_close
+PASSED tests/test_protocol.py::ServerTests::test_unterminated_fragmented_text
+PASSED tests/test_protocol.py::ClientTests::test_abort_ping
+PASSED tests/test_protocol.py::ClientTests::test_acknowledge_ping
+PASSED tests/test_protocol.py::ClientTests::test_acknowledge_previous_pings
+PASSED tests/test_protocol.py::ClientTests::test_answer_ping
+PASSED tests/test_protocol.py::ClientTests::test_canceled_ping
+PASSED tests/test_protocol.py::ClientTests::test_close_connection_lost
+PASSED tests/test_protocol.py::ClientTests::test_close_handshake_in_fragmented_text
+PASSED tests/test_protocol.py::ClientTests::test_close_preserves_incoming_frames
+PASSED tests/test_protocol.py::ClientTests::test_close_protocol_error
+PASSED tests/test_protocol.py::ClientTests::test_closed
+PASSED tests/test_protocol.py::ClientTests::test_connection_close_in_fragmented_text
+PASSED tests/test_protocol.py::ClientTests::test_connection_closed_attributes
+PASSED tests/test_protocol.py::ClientTests::test_connection_lost
+PASSED tests/test_protocol.py::ClientTests::test_control_frame_within_fragmented_text
+PASSED tests/test_protocol.py::ClientTests::test_duplicate_ping
+PASSED tests/test_protocol.py::ClientTests::test_ensure_open_before_opening_handshake
+PASSED tests/test_protocol.py::ClientTests::test_ensure_open_during_unclean_close
+PASSED tests/test_protocol.py::ClientTests::test_fragmented_binary
+PASSED tests/test_protocol.py::ClientTests::test_fragmented_binary_no_max_size
+PASSED tests/test_protocol.py::ClientTests::test_fragmented_binary_payload_too_big
+PASSED tests/test_protocol.py::ClientTests::test_fragmented_text
+PASSED tests/test_protocol.py::ClientTests::test_fragmented_text_no_max_size
+PASSED tests/test_protocol.py::ClientTests::test_fragmented_text_payload_too_big
+PASSED tests/test_protocol.py::ClientTests::test_ignore_pong
+PASSED tests/test_protocol.py::ClientTests::test_keepalive_ping
+PASSED tests/test_protocol.py::ClientTests::test_keepalive_ping_not_acknowledged_closes_connection
+PASSED tests/test_protocol.py::ClientTests::test_keepalive_ping_stops_when_connection_closed
+PASSED tests/test_protocol.py::ClientTests::test_keepalive_ping_stops_when_connection_closing
+PASSED tests/test_protocol.py::ClientTests::test_keepalive_ping_unexpected_error
+PASSED tests/test_protocol.py::ClientTests::test_keepalive_ping_with_no_ping_interval
+PASSED tests/test_protocol.py::ClientTests::test_keepalive_ping_with_no_ping_timeout
+PASSED tests/test_protocol.py::ClientTests::test_legacy_recv
+PASSED tests/test_protocol.py::ClientTests::test_local_address
+PASSED tests/test_protocol.py::ClientTests::test_local_address_before_connection
+PASSED tests/test_protocol.py::ClientTests::test_local_close
+PASSED tests/test_protocol.py::ClientTests::test_local_close_connection_lost_timeout_after_close
+PASSED tests/test_protocol.py::ClientTests::test_local_close_connection_lost_timeout_after_write_eof
+PASSED tests/test_protocol.py::ClientTests::test_local_close_during_recv
+PASSED tests/test_protocol.py::ClientTests::test_local_close_receive_close_frame_timeout
+PASSED tests/test_protocol.py::ClientTests::test_local_close_send_close_frame_timeout
+PASSED tests/test_protocol.py::ClientTests::test_open
+PASSED tests/test_protocol.py::ClientTests::test_ping_binary
+PASSED tests/test_protocol.py::ClientTests::test_ping_default
+PASSED tests/test_protocol.py::ClientTests::test_ping_on_closed_connection
+PASSED tests/test_protocol.py::ClientTests::test_ping_on_closing_connection_local
+PASSED tests/test_protocol.py::ClientTests::test_ping_on_closing_connection_remote
+PASSED tests/test_protocol.py::ClientTests::test_ping_text
+PASSED tests/test_protocol.py::ClientTests::test_ping_type_error
+PASSED tests/test_protocol.py::ClientTests::test_pong_binary
+PASSED tests/test_protocol.py::ClientTests::test_pong_default
+PASSED tests/test_protocol.py::ClientTests::test_pong_on_closed_connection
+PASSED tests/test_protocol.py::ClientTests::test_pong_on_closing_connection_local
+PASSED tests/test_protocol.py::ClientTests::test_pong_on_closing_connection_remote
+PASSED tests/test_protocol.py::ClientTests::test_pong_text
+PASSED tests/test_protocol.py::ClientTests::test_pong_type_error
+PASSED tests/test_protocol.py::ClientTests::test_recv_binary
+PASSED tests/test_protocol.py::ClientTests::test_recv_binary_no_max_size
+PASSED tests/test_protocol.py::ClientTests::test_recv_binary_payload_too_big
+PASSED tests/test_protocol.py::ClientTests::test_recv_canceled
+PASSED tests/test_protocol.py::ClientTests::test_recv_on_closed_connection
+PASSED tests/test_protocol.py::ClientTests::test_recv_on_closing_connection_local
+PASSED tests/test_protocol.py::ClientTests::test_recv_on_closing_connection_remote
+PASSED tests/test_protocol.py::ClientTests::test_recv_other_error
+PASSED tests/test_protocol.py::ClientTests::test_recv_protocol_error
+PASSED tests/test_protocol.py::ClientTests::test_recv_text
+PASSED tests/test_protocol.py::ClientTests::test_recv_text_no_max_size
+PASSED tests/test_protocol.py::ClientTests::test_recv_text_payload_too_big
+PASSED tests/test_protocol.py::ClientTests::test_recv_unicode_error
+PASSED tests/test_protocol.py::ClientTests::test_remote_address
+PASSED tests/test_protocol.py::ClientTests::test_remote_address_before_connection
+PASSED tests/test_protocol.py::ClientTests::test_remote_close
+PASSED tests/test_protocol.py::ClientTests::test_remote_close_during_send
+PASSED tests/test_protocol.py::ClientTests::test_send_binary
+PASSED tests/test_protocol.py::ClientTests::test_send_on_closed_connection
+PASSED tests/test_protocol.py::ClientTests::test_send_on_closing_connection_local
+PASSED tests/test_protocol.py::ClientTests::test_send_on_closing_connection_remote
+PASSED tests/test_protocol.py::ClientTests::test_send_text
+PASSED tests/test_protocol.py::ClientTests::test_send_type_error
+PASSED tests/test_protocol.py::ClientTests::test_simultaneous_close
+PASSED tests/test_protocol.py::ClientTests::test_unterminated_fragmented_text
+============================= 160 passed in 0.56s ==============================

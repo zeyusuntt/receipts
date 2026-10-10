@@ -1,0 +1,54 @@
+diff --git a/sceptre/config_reader.py b/sceptre/config_reader.py
+index 3acf006..d39d10b 100644
+--- a/sceptre/config_reader.py
++++ b/sceptre/config_reader.py
+@@ -319,25 +319,30 @@ class ConfigReader(object):
+                 stack_name, config
+             )
+ 
+-            stack = Stack(
+-                name=stack_name,
+-                project_code=config["project_code"],
+-                template_path=abs_template_path,
+-                region=config["region"],
+-                iam_role=config.get("iam_role"),
+-                profile=config.get("profile", ""),
+-                parameters=config.get("parameters", {}),
+-                sceptre_user_data=config.get("sceptre_user_data", {}),
+-                hooks=config.get("hooks", {}),
+-                s3_details=s3_details,
+-                dependencies=config.get("dependencies", []),
+-                role_arn=config.get("role_arn"),
+-                protected=config.get("protect", False),
+-                tags=config.get("stack_tags", {}),
+-                external_name=config.get("stack_name"),
+-                notifications=config.get("notifications"),
+-                on_failure=config.get("on_failure")
+-            )
++            stack_kwargs = {
++                "name": stack_name,
++                "project_code": config["project_code"],
++                "template_path": abs_template_path,
++                "region": config["region"],
++                "iam_role": config.get("iam_role"),
++                "parameters": config.get("parameters", {}),
++                "sceptre_user_data": config.get("sceptre_user_data", {}),
++                "hooks": config.get("hooks", {}),
++                "s3_details": s3_details,
++                "dependencies": config.get("dependencies", []),
++                "role_arn": config.get("role_arn"),
++                "protected": config.get("protect", False),
++                "tags": config.get("stack_tags", {}),
++                "external_name": config.get("stack_name"),
++                "notifications": config.get("notifications"),
++                "on_failure": config.get("on_failure")
++            }
++            
++            # Only add profile if it's present in config (not just defaulting to None)
++            if "profile" in config:
++                stack_kwargs["profile"] = config["profile"]
++                
++            stack = Stack(**stack_kwargs)
+ 
+             del self.templating_vars["environment_config"]
+             return stack

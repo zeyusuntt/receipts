@@ -1,0 +1,5 @@
+        msg = f'Spec is not of the form "user/repo/ref", provided: "{spec}".'
+        if len(spec_parts) == 2 and spec_parts[-1] not in ("main", "master"):
+            msg += f' Did you mean "{spec}/main"?'
+        raise ValueError(msg)
+

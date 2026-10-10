@@ -1,0 +1,17 @@
+diff --git a/pyfakefs/fake_io.py b/pyfakefs/fake_io.py
+index 0c756a5..44d522a 100644
+--- a/pyfakefs/fake_io.py
++++ b/pyfakefs/fake_io.py
+@@ -191,5 +191,10 @@ if sys.platform != "win32":
+                 ):
+                     # remove the `self` argument for FakeOsModule methods
+                     return getattr(fnctl_module, name)
+-
+-            return object.__getattribute__(self, name)
++            
++            # Try to get attribute from the fake module first
++            try:
++                return object.__getattribute__(self, name)
++            except AttributeError:
++                # If not found, forward to the real fcntl module
++                return getattr(fnctl_module, name)

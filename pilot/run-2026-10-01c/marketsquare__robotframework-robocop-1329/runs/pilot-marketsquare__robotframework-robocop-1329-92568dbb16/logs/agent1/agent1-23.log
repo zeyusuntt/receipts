@@ -1,0 +1,52 @@
+(like ``LengthChecker`` checks both for minimum and maximum length of a keyword). You can refer to
+specific rule reported by checkers by its name or id (for example ``too-long-keyword`` or ``LEN01``).
+
+Checkers have three basic types:
+
+- ``VisitorChecker`` uses Robot Framework parsing API and Python `ast` module for traversing Robot code as nodes,
+
+- ``ProjectChecker`` extends ``VisitorChecker`` and has ``scan_project`` method called after visiting all the files
+
+- ``RawFileChecker`` simply reads Robot file as normal file and scans every line.
+
+Each rule has a unique rule id (for example ``DOC01``) consisting of:
+
+- a alphanumeric group name (for example ``DOC``)
+- a 2-digit rule number (for example ``01``)
+
+Rule ID as well as rule name can be used to refer to the rule (e.g. in select/ignore statements, configurations etc.).
+You can optionally configure rule severity or other parameters.
+--
+            **kwargs,
+        )
+        self.issues.append(diagnostic)
+
+
+class VisitorChecker(BaseChecker, ModelVisitor):
+    def scan_file(
+        self, ast_model: File, filename: Path, in_memory_content: str | None, templated: bool = False
+    ) -> list[Diagnostic]:
+        self.issues: list[Diagnostic] = []
+        self.source = filename
+        self.ast_model = ast_model
+        self.templated_suite = templated
+        if in_memory_content is not None:
+            self.lines = in_memory_content.splitlines(keepends=True)
+        else:
+--
+    def visit_File(self, node: File) -> None:  # noqa: N802
+        """Perform generic ast visit on file node."""
+        self.generic_visit(node)
+
+
+class ProjectChecker(VisitorChecker):
+    def scan_project(self) -> list[Diagnostic]:
+        """
+        Perform checks on the whole project.
+
+        This method is called after visiting all files. Accumulating any necessary data for check depends on
+        the checker.
+        """
+        raise NotImplementedError
+
+

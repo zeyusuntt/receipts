@@ -1,0 +1,7 @@
+{
+  "approach": "Modify the _maybe_resolve function in reflection.py to properly handle objects of types UnionType (introduced in Python 3.10 for PEP 604 unions) by extracting their arguments via __args__ attribute and resolving them similar to how typing.Union is handled.",
+  "files_to_edit": [
+    "hypothesis-python/src/hypothesis/internal/reflection.py"
+  ],
+  "hypothesis": "Hypothesis fails to recognize Python 3.10+ PEP 604 union syntax (X | Y) due to its internal lookup mechanism treating these special union forms as invalid types instead of processing them through proper type resolution."
+}

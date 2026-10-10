@@ -1,0 +1,43 @@
+INTERNALERROR> Traceback (most recent call last):
+INTERNALERROR>   File "/redis-py/redis/connection.py", line 607, in connect
+INTERNALERROR>     sock = self._connect()
+INTERNALERROR>   File "/redis-py/redis/connection.py", line 671, in _connect
+INTERNALERROR>     raise err
+INTERNALERROR>   File "/redis-py/redis/connection.py", line 659, in _connect
+INTERNALERROR>     sock.connect(socket_address)
+INTERNALERROR> ConnectionRefusedError: [Errno 111] Connection refused
+INTERNALERROR> 
+INTERNALERROR> During handling of the above exception, another exception occurred:
+INTERNALERROR> 
+INTERNALERROR> Traceback (most recent call last):
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/_pytest/main.py", line 267, in wrap_session
+INTERNALERROR>     config.hook.pytest_sessionstart(session=session)
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/pluggy/_hooks.py", line 512, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+INTERNALERROR>     return result.get_result()
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/pluggy/_result.py", line 103, in get_result
+INTERNALERROR>     raise exc.with_traceback(tb)
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+INTERNALERROR>     res = yield
+INTERNALERROR>   File "/usr/local/lib/python3.10/site-packages/pluggy/_callers.py", line 121, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>   File "/redis-py/tests/conftest.py", line 81, in pytest_sessionstart
+INTERNALERROR>     info = _get_info(redis_url)
+INTERNALERROR>   File "/redis-py/tests/conftest.py", line 69, in _get_info
+INTERNALERROR>     info = client.info()
+INTERNALERROR>   File "/redis-py/redis/commands/core.py", line 803, in info
+INTERNALERROR>     return self.execute_command("INFO", **kwargs)
+INTERNALERROR>   File "/redis-py/redis/client.py", line 1173, in execute_command
+INTERNALERROR>     conn = self.connection or pool.get_connection(command_name, **options)
+INTERNALERROR>   File "/redis-py/redis/connection.py", line 1358, in get_connection
+INTERNALERROR>     connection.connect()
+INTERNALERROR>   File "/redis-py/redis/connection.py", line 611, in connect
+INTERNALERROR>     raise ConnectionError(self._error_message(e))
+INTERNALERROR> redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.

@@ -1,0 +1,23 @@
+diff --git a/src/pdm/models/repositories.py b/src/pdm/models/repositories.py
+index 7c7071df..d33b2273 100644
+--- a/src/pdm/models/repositories.py
++++ b/src/pdm/models/repositories.py
+@@ -485,7 +485,17 @@ class LockedRepository(BaseRepository):
+         )
+ 
+     def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
+-        return self.candidate_info[self._identify_candidate(candidate)]
++        key = self._identify_candidate(candidate)
++        info = self.candidate_info.get(key)
++        if info is None:
++            # Fallback: compare candidates directly
++            for k, cand in self.packages.items():
++                if cand == candidate:
++                    info = self.candidate_info[k]
++                    break
++        if info is None:
++            raise CandidateInfoNotFound(candidate)
++        return info
+ 
+     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+         return (

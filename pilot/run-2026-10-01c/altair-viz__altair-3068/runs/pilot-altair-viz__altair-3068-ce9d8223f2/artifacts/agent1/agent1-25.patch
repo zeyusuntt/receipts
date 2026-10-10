@@ -1,0 +1,42 @@
+diff --git a/altair/vegalite/v5/api.py b/altair/vegalite/v5/api.py
+index e9aa439c..66c8e9dd 100644
+--- a/altair/vegalite/v5/api.py
++++ b/altair/vegalite/v5/api.py
+@@ -3369,6 +3369,12 @@ def _remove_layer_props(chart, subcharts, layer_props):
+             pass
+         return subchart
+ 
++    def _get_prop_or_undefined(obj, prop):
++        try:
++            return obj[prop]
++        except KeyError:
++            return Undefined
++
+     output_dict = {}
+ 
+     if not subcharts:
+@@ -3382,12 +3388,9 @@ def _remove_layer_props(chart, subcharts, layer_props):
+             values = []
+             for c in subcharts:
+                 # If c is a UnitSpec, then c["height"] raises a KeyError.
+-                try:
+-                    val = c[prop]
+-                    if val is not Undefined:
+-                        values.append(val)
+-                except KeyError:
+-                    pass
++                val = _get_prop_or_undefined(c, prop)
++                if val is not Undefined:
++                    values.append(val)
+             if len(values) == 0:
+                 pass
+             elif all(v == values[0] for v in values[1:]):
+@@ -3397,7 +3400,7 @@ def _remove_layer_props(chart, subcharts, layer_props):
+         else:
+             # Top level has this prop; subchart props must be either
+             # Undefined or identical to proceed.
+-            if all(c[prop] is Undefined or c[prop] == chart[prop] for c in subcharts):
++            if all(_get_prop_or_undefined(c, prop) is Undefined or _get_prop_or_undefined(c, prop) == chart[prop] for c in subcharts):
+                 output_dict[prop] = chart[prop]
+             else:
+                 raise ValueError(f"There are inconsistent values {values} for {prop}")

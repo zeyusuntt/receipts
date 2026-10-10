@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 64000,
+      "max_turns": 40,
+      "max_wall_seconds": 1200.0
+    }
+  },
+  "issue": "samefile() is not implemented\nIs there a plan for implementing `UPath.samefile()`? I can see how such a method might be difficult to define universally, and that it isn't the same thing as `UPath.__eq__()`, which is implemented, but this broke some code of mine that was usually using `Path.samefile()` and then failed when I passed it a `UPath` instead of a `Path`.\r\n\r\nIf this is a TODO, then is there anything I can do to help?",
+  "source": {
+    "image": "docker.io/swerebenchv2/fsspec-universal-pathlib:261-bd5e5fa",
+    "platform": "linux/amd64",
+    "python": "python",
+    "setup": [
+      "python -c 'import base64; from pathlib import Path; Path('\"'\"'/tmp/receipts-fsspec__universal_pathlib-261-test.patch'\"'\"').write_bytes(base64.b64decode('\"'\"'ZGlmZiAtLWdpdCBhL3VwYXRoL3Rlc3RzL2Nhc2VzLnB5IGIvdXBhdGgvdGVzdHMvY2FzZXMucHkKaW5kZXggZDg2NWQ1My4uMWQ1MGFmNSAxMDA2NDQKLS0tIGEvdXBhdGgvdGVzdHMvY2FzZXMucHkKKysrIGIvdXBhdGgvdGVzdHMvY2FzZXMucHkKQEAgLTMxNyw5ICszMTcsNiBAQCBjbGFzcyBCYXNlVGVzdHM6CiAgICAgICAgIGV4cGVjdGVkID0gWypwYXRobGliX2Jhc2Uucmdsb2IocGF0dGVybildCiAgICAgICAgIGFzc2VydCBsZW4ocmVzdWx0KSA9PSBsZW4oZXhwZWN0ZWQpCiAKLSAgICBkZWYgdGVzdF9zYW1lZmlsZShzZWxmKToKLSAgICAgICAgcGFzcwotCiAgICAgZGVmIHRlc3Rfc3ltbGlua190byhzZWxmKToKICAgICAgICAgcGFzcwogCkBAIC01NDUsMyArNTQyLDEyIEBAIGNsYXNzIEJhc2VUZXN0czoKICAgICAgICAgYXNzZXJ0IHAwID09IHAxCiAgICAgICAgIGFzc2VydCBwMCAhPSBwMgogICAgICAgICBhc3NlcnQgcDEgIT0gcDIKKworICAgIGRlZiB0ZXN0X3NhbWVmaWxlKHNlbGYpOgorICAgICAgICBmMSA9IHNlbGYucGF0aC5qb2lucGF0aCgiZmlsZTEudHh0IikKKyAgICAgICAgZjIgPSBzZWxmLnBhdGguam9pbnBhdGgoImZpbGUyLnR4dCIpCisKKyAgICAgICAgYXNzZXJ0IGYxLnNhbWVmaWxlKGYyKSBpcyBGYWxzZQorICAgICAgICBhc3NlcnQgZjEuc2FtZWZpbGUoZjIucGF0aCkgaXMgRmFsc2UKKyAgICAgICAgYXNzZXJ0IGYxLnNhbWVmaWxlKGYxKSBpcyBUcnVlCisgICAgICAgIGFzc2VydCBmMS5zYW1lZmlsZShmMS5wYXRoKSBpcyBUcnVlCmRpZmYgLS1naXQgYS91cGF0aC90ZXN0cy9pbXBsZW1lbnRhdGlvbnMvdGVzdF9kYXRhLnB5IGIvdXBhdGgvdGVzdHMvaW1wbGVtZW50YXRpb25zL3Rlc3RfZGF0YS5weQppbmRleCA5MGUxZjhhLi42ZmIxMTMyIDEwMDY0NAotLS0gYS91cGF0aC90ZXN0cy9pbXBsZW1lbnRhdGlvbnMvdGVzdF9kYXRhLnB5CisrKyBiL3VwYXRoL3Rlc3RzL2ltcGxlbWVudGF0aW9ucy90ZXN0X2RhdGEucHkKQEAgLTE5OSwzICsxOTksOCBAQCBjbGFzcyBUZXN0VVBhdGhEYXRhUGF0aChCYXNlVGVzdHMpOgogICAgIGRlZiB0ZXN0X3JtZGlyX25vdF9lbXB0eShzZWxmKToKICAgICAgICAgd2l0aCBweXRlc3QucmFpc2VzKE5vdEFEaXJlY3RvcnlFcnJvcik6CiAgICAgICAgICAgICBzZWxmLnBhdGgucm1kaXIoKQorCisgICAgZGVmIHRlc3Rfc2FtZWZpbGUoc2VsZik6CisgICAgICAgIGYxID0gc2VsZi5wYXRoCisKKyAgICAgICAgYXNzZXJ0IGYxLnNhbWVmaWxlKGYxKSBpcyBUcnVlCg=='\"'\"'))'",
+      "git apply /tmp/receipts-fsspec__universal_pathlib-261-test.patch"
+    ],
+    "workdir": "/universal_pathlib"
+  },
+  "spec_tests": [
+    "upath/tests/implementations/test_data.py::TestUPathDataPath::test_samefile"
+  ],
+  "suite_scope": "--no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning upath/tests/cases.py upath/tests/implementations/test_data.py"
+}
