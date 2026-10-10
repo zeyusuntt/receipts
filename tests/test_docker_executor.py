@@ -1250,3 +1250,43 @@ def test_embedded_base_dockerfile_matches_the_test_image():
     docker_module = importlib.import_module("receipts.sandbox.docker")
     dockerfile = Path(__file__).parent / "docker" / "Dockerfile"
     assert docker_module._BASE_DOCKERFILE == dockerfile.read_text(encoding="utf-8")
+
+
+async def test_close_removes_the_snapshot_images_it_committed(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+    calls: list[tuple[str, ...]] = []
+    committed = "sha256:" + "b" * 64
+
+    async def fake(self, *args, input_data=None, timeout_s=120):
+        calls.append(args)
+        now = datetime.now(timezone.utc)
+        if args[0] == "commit":
+            return committed.encode() + b"\n", b"", 0, False, now, 0.0
+        return b"", b"", 0, False, now, 0.0
+
+    monkeypatch.setattr(docker_module.DockerExecutor, "_docker", fake)
+    executor = docker_module.DockerExecutor(tmp_path, MemorySink(), "run-cleanup")
+    assert await executor._commit("container-1") == committed
+    await executor.close()
+    assert ("rmi", committed) in calls
+
+
+async def test_close_does_not_fail_when_a_snapshot_image_is_still_in_use(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+
+    docker_module = importlib.import_module("receipts.sandbox.docker")
+
+    async def fake(self, *args, input_data=None, timeout_s=120):
+        now = datetime.now(timezone.utc)
+        if args[0] == "commit":
+            return b"sha256:" + b"c" * 64 + b"\n", b"", 0, False, now, 0.0
+        if args[0] == "rmi":
+            return b"", b"conflict: unable to delete (image is being used)", 1, False, now, 0.0
+        return b"", b"", 0, False, now, 0.0
+
+    monkeypatch.setattr(docker_module.DockerExecutor, "_docker", fake)
+    executor = docker_module.DockerExecutor(tmp_path, MemorySink(), "run-cleanup-busy")
+    await executor._commit("container-1")
+    await executor.close()

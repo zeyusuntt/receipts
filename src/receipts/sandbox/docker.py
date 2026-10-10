@@ -361,6 +361,7 @@ class DockerExecutor:
         self._fork_next: dict[str, int] = {}
         self._released_branches: set[str] = set()
         self._created_containers: list[str] = []
+        self._committed_images: list[str] = []  # snapshot images this run made, removed on close
         self._owner = uuid.uuid4().hex
         self._protected_modules = default_protected_modules()
         git_path = shutil.which("git")
@@ -541,6 +542,7 @@ class DockerExecutor:
         image_id = stdout.decode(errors="replace").strip()
         if not _IMAGE_ID.fullmatch(image_id):
             image_id = await self._image_id(image_id)
+        self._committed_images.append(image_id)
         return image_id
 
     async def _reject_image_volumes(self, image: str) -> None:
@@ -1374,5 +1376,10 @@ class DockerExecutor:
             self._containers.pop(branch_id, None)
             self._specs.pop(branch_id, None)
             self._anchors.pop(branch_id, None)
+        # Snapshot images are this run's own; removing them is best effort (one still in use by a
+        # container that could not be removed stays), and never hides a container failure.
+        for image in reversed(self._committed_images):
+            await self._docker("rmi", image, timeout_s=60)
+        self._committed_images = []
         if failures:
             raise RuntimeError("failed to remove Docker containers: " + "; ".join(failures))
