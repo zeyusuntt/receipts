@@ -67,3 +67,9 @@ One project, issues written by one person, eight tasks. This shows Receipts on r
 | 30 | `28bfa5e8fcec` | 2026-09-05 | Y.C. Fang | Fix Arena GLM canary truncation |
 | 31 | `4024666a788c` | 2026-09-07 | Chenyu | fix: label port-driven provider_call events with their attempt and action |
 | 32 | `6dcaf4db05e7` | 2026-09-09 | Y.C. Fang | fix(shared-runner): preserve unknown canary costs |
+
+## Amendment 1 (2026-10-16, before any task produced a verdict)
+
+Screening. Position 3 (`d4a6107bdab7`) was first screened by a script that did not count a test file that cannot be imported at the start state (it imports a name the fix adds) as failing. Re-screened with the corrected script, it qualifies. The eight included tasks are therefore positions 2, 3, 5, 6, 7, 8, 9 and 10. Position 11 (`d44d046e2122`) also qualifies but is the ninth and is not run. Positions 1 and 4 are excluded: no changed test fails at the start state.
+
+Regression suite. At these commits AERead's full `tests/` suite ran for more than 17 minutes in `python:3.12-slim` on this machine without finishing, and it includes tests tied to the maintainers' machines (a required directory name, local upstream checkouts). It cannot finish inside Receipts' 600-second baseline limit, the same limit the 100-task experiment used, where tasks with slower suites were excluded at screening. The first run of `9c72e635e2b6` ended on that limit; it is reported as an infrastructure error. From this amendment on, each task's regression suite is the test files its fix commit changed, instead of all of `tests/`. Target tests and every other check are unchanged. This is a narrower regression check than the 100-task experiment's, and the results say so.
