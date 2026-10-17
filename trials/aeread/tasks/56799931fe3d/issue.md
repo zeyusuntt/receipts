@@ -1,0 +1,3 @@
+The procurement risk-gate factorial campaign (v3) was sealed ineligible after three consecutive rate limits used up every attempt of one logical action. Each logical action gets three attempts, with a 15-second and then a capped 30-second backoff, which is not enough to outlast the provider's rate-limit window.
+
+The campaign needs a new version, v4, that supersedes v3 (v3's campaign id stays available as `V3_CAMPAIGN_ID`), allows four attempts per logical action with the same backoff schedule, and changes nothing else. The frozen plan's lineage should record why v3 was sealed ineligible, record the attempt-count change as the only operational change, and state that the scientific contract is unchanged from v1, v2 and v3.
