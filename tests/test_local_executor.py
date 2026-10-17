@@ -22,6 +22,41 @@ async def _executor(tmp_path, sink=None):
     return ex, base
 
 
+@pytest.mark.parametrize("helper,expected", [(True, ["uncalled_private_helper"]), (False, [])])
+async def test_patch_records_shortcuts_before_staging_is_removed(tmp_path, helper, expected):
+    sink = MemorySink()
+    ex, base = await _executor(tmp_path, sink)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    source = "def _helper():\n    return 1\n" if helper else "VALUE = 1\n"
+    await ex.write_file(agent, "calc/extra.py", source)
+
+    receipt = await ex.patch(agent, snapshot.snapshot_sha)
+
+    assert receipt.exit_code == 0
+    assert receipt.diff.shortcuts is not None
+    assert [f.kind for f in receipt.diff.shortcuts] == expected
+    assert sink.receipts[-1].diff.shortcuts == receipt.diff.shortcuts
+    assert not list((ex.root / "staging").iterdir())
+
+
+async def test_patch_survives_unexpected_shortcut_analysis_error(tmp_path, monkeypatch):
+    ex, base = await _executor(tmp_path)
+    snapshot = await ex.snapshot(base)
+    checkpoint = await ex.checkpoint(base)
+    (agent,) = await ex.fork(checkpoint, 1)
+    await ex.write_file(agent, "calc/extra.py", "VALUE = 1\n")
+
+    def broken(*args):
+        raise RuntimeError("analysis failed")
+
+    monkeypatch.setattr(local_sandbox, "find_shortcuts", broken)
+    receipt = await ex.patch(agent, snapshot.snapshot_sha)
+    assert receipt.exit_code == 0 and receipt.diff.shortcuts is None
+    assert not list((ex.root / "staging").iterdir())
+
+
 async def test_prepare_clones_and_runs_install(tmp_path):
     sink = MemorySink()
     ex, base = await _executor(tmp_path, sink)

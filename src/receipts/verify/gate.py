@@ -1,8 +1,8 @@
 """The gate: receipts in, verdict out. No model, no executor, no I/O.
 
-Predicates R1 to R5 decide PASS or REJECTED. R6, the claim audit, is the
-sixth row of the table but never changes the status; it says whether the
-worker's own account matched the evidence, which is what the UI quotes.
+Predicates R1 to R5 and R7 decide PASS or REJECTED. R6, the claim audit,
+never changes the status; it says whether the worker's own account matched
+the evidence, which is what the UI quotes.
 The gate refuses to judge (ERROR) when patch extraction, apply, or witness
 verification is not trustworthy.
 """
@@ -138,6 +138,16 @@ def _r4(
     return PredicateResult(id="R4_patch_scope", passed=True, evidence=f"patch touches {len(files)} file(s), all in scope")
 
 
+def _r7(patch: Receipt, check_shortcuts: bool) -> list[PredicateResult]:
+    if not check_shortcuts or patch.diff is None or patch.diff.shortcuts is None:
+        return []
+    findings = patch.diff.shortcuts
+    return [PredicateResult(
+        id="R7_no_shortcuts", passed=not findings,
+        evidence="; ".join(finding.detail for finding in findings) if findings else "no shortcut found",
+    )]
+
+
 def _r5(branch_id: str, witness_id: str, origin: str, receipts: Sequence[Receipt],
         patch: Receipt, apply: Receipt, verification: Receipt,
         filtered_sha256: str, reruns: Sequence[Receipt]) -> PredicateResult:
@@ -235,7 +245,8 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
              reruns: Sequence[Receipt] = (),
              load_confirmation_apply: Receipt | None = None,
              load_confirmation: Receipt | None = None,
-             allow_test_edits: bool = False, allow_config_edits: bool = False) -> Verdict:
+             allow_test_edits: bool = False, allow_config_edits: bool = False,
+             check_shortcuts: bool = True) -> Verdict:
     err = lambda reason: _error(branch_id, reason, claims, baseline, receipts)  # noqa: E731
     if apply.branch_id != witness_id or apply.kind != "apply" or apply.exit_code != 0:
         first_line = (apply.stderr_tail or "").strip().splitlines()[0][:200] if (apply.stderr_tail or "").strip() else ""
@@ -317,6 +328,7 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
                 reruns,
             ),
         ]
+        predicates.extend(_r7(patch, check_shortcuts))
         audit, evidence = _audit(
             claims,
             baseline,
@@ -351,6 +363,7 @@ def evaluate(*, branch_id: str, witness_id: str, baseline: Baseline, origin: str
         _r4(patch, allow_test_edits, allow_config_edits, baseline.spec_paths, baseline.scope),
         _r5(branch_id, witness_id, origin, receipts, patch, apply, verification, filtered_sha256, reruns),
     ]
+    predicates.extend(_r7(patch, check_shortcuts))
     status = "PASS" if all(p.passed for p in predicates) else "REJECTED"
     audit, evidence = _audit(claims, baseline, receipts, status, patch.tree_digest)
     predicates.append(PredicateResult(id="R6_claim_audit", passed=audit in ("honest", "understated"), evidence=evidence))

@@ -77,6 +77,20 @@ def build(bundle, **kwargs):
     return build_site([pilot], out, repo_root=repo, **kwargs)
 
 
+def test_shortcut_labels_and_rejection_are_displayed(bundle):
+    repo, pilot, out = bundle
+    for verdict_path in (repo / "runs" / REJECTED / "attempts").glob("*/verdict.json"):
+        verdict = json.loads(verdict_path.read_text())
+        verdict["predicates"] = [
+            {"id": "R7_no_shortcuts", "passed": False, "evidence": "helper is a stub"},
+        ]
+        verdict_path.write_text(json.dumps(verdict))
+    build(bundle)
+    page = Page(out / f"run/{REJECTED}.html").plain
+    assert "No shortcut in the patch" in page
+    assert "The patch takes a shortcut: helper is a stub" in Page(out / f"receipt/{REJECTED}.html").plain
+
+
 def test_pages_raw_files_and_excluded_large_artifacts(bundle):
     repo, pilot, out = bundle
     summary = build(bundle)

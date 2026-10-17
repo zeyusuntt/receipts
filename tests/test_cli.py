@@ -838,6 +838,7 @@ def test_fix_prints_live_progress_and_writes_full_receipt(
                     passed=True,
                 ),
             )
+        progress(event(kind="check", check_id="R7_no_shortcuts", message="no shortcut found", passed=True))
         progress(event(kind="verdict", message="VERIFIED", passed=True))
         return result
 
@@ -875,7 +876,7 @@ def test_fix_prints_live_progress_and_writes_full_receipt(
     assert all(f"  · {verb} " in output for verb in ("reads", "edits", "writes", "runs"))
     assert "pytest tests/test_calc.py" in output
     assert all(f"✓ {label}" in output for label in ("spec passes", "nothing breaks", "none removed",
-                                                     "tests untouched", "hash chain"))
+                                                     "tests untouched", "hash chain", "no shortcuts"))
     assert "verdict" not in output
     assert "VERIFIED in 3s · $0.01 of Nemotron tokens" in output
     assert "receipt: run/receipt.md" in output

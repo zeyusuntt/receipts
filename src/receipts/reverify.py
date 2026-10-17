@@ -335,6 +335,7 @@ async def _replay(bundle: Bundle, make_executor: Callable[[str], Executor], run_
             origin=checkpoint.id, receipts=[applied], patch=verified.patch,
             apply=verified.apply, verification=verified.verification,
             filtered_sha256=_sha(filtered), claims=None,
+            check_shortcuts=False,
             load_confirmation_apply=confirmation.apply if confirmation else None,
             load_confirmation=confirmation.verification if confirmation else None,
         )

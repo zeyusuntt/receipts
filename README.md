@@ -47,8 +47,9 @@ In our experiments a sixth step runs separately from Receipts: SWE-rebench's own
 | R4 | The patch stays in scope | it modifies no test, specification or configuration file, and adds nothing hazardous (such as a module that shadows an installed package) |
 | R5 | The record is unbroken | every receipt chains to the checkpoint, and the patch the witness applied has the shipped patch's digest |
 | R6 | The claim matches the record | advisory: whether what the agent said about its tests is what the record shows |
+| R7 | The patch takes no shortcut | it adds no private function that nothing outside the tests uses, and does not leave a function whose whole body only raises `NotImplementedError` or does nothing (abstract methods, overloads and base-class hooks that a subclass implements excepted) |
 
-R1 to R5 decide VERIFIED or REJECTED. R6 is reported on every receipt but does not change the verdict.
+R1 to R5 and R7 decide VERIFIED or REJECTED. R6 is reported on every receipt but does not change the verdict. R7 reads the patch and the patched code without running anything. It was added after the 100-task experiment, from patches that passed every other check on real bug fixes in [AERead](trials/aeread/PLAN.md), so the experiment's receipts do not include it and `receipts reverify` does not check it.
 
 ## Built on Nebius Token Factory and NVIDIA Nemotron
 

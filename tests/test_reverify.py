@@ -199,6 +199,28 @@ async def test_reverify_agrees_with_real_gate_and_official_grade(tmp_path, local
     assert all(patch == bundle()["shipped"]["patch"] for _, patch in local.applied)
 
 
+async def test_reverify_keeps_published_gate_without_shortcuts(tmp_path, local, monkeypatch):
+    values = bundle()
+    text = diff("calc/__init__.py", CALC, FIXED + "\ndef _unused():\n    return 1\n")
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    values["shipped"].update(patch=text, sha256=digest, filtered_sha256=digest,
+                              agent_patch=text, agent_patch_sha256=digest)
+    reverify = module()
+    evaluate = reverify.evaluate
+    verdicts = []
+
+    def record_gate(**kwargs):
+        assert [f.kind for f in kwargs["patch"].diff.shortcuts] == ["uncalled_private_helper"]
+        verdict = evaluate(**kwargs)
+        verdicts.append(verdict)
+        return verdict
+
+    monkeypatch.setattr(reverify, "evaluate", record_gate)
+    assert await reverify.reverify(write_bundle(tmp_path, values), make_executor=lambda run_id: local) == 0
+    assert len(verdicts) == 1 and verdicts[0].status == "PASS"
+    assert all(p.id != "R7_no_shortcuts" for p in verdicts[0].predicates)
+
+
 @pytest.mark.parametrize("field", ["sha256", "filtered_sha256"])
 async def test_tampered_digest_never_builds_executor(tmp_path, capsys, field):
     values = bundle()

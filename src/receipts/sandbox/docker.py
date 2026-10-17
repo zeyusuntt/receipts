@@ -43,6 +43,7 @@ from receipts.sandbox.protocol import (
 )
 from receipts.sandbox.sink import ReceiptSink
 from receipts.sandbox.staging import git_environment, mirror_worktree, patch_command, remove_path
+from receipts.verify.shortcuts import find_shortcuts
 
 TAIL = 6000
 _IMAGE_ID = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -1253,6 +1254,14 @@ class DockerExecutor:
             120,
             env_overrides=git_environment(self.root),
         )
+        shortcuts = None
+        if code == 0:
+            try:
+                shortcuts = await asyncio.to_thread(
+                    find_shortcuts, stdout.decode(errors="replace"), staging, self._protected_modules,
+                )
+            except Exception:
+                pass
         await asyncio.to_thread(remove_path, agent_tree)
         await asyncio.to_thread(remove_path, staging)
         if code != 0:
@@ -1275,7 +1284,7 @@ class DockerExecutor:
         patch_path = self.root / "patches" / f"{branch.id}-{seq}-full.diff"
         patch_path.write_text(patch_text)
         summary = summarize_patch(patch_text, self._protected_modules).model_copy(
-            update={"patch_path": str(patch_path)},
+            update={"patch_path": str(patch_path), "shortcuts": shortcuts},
         )
         _, dropped = filter_patch(patch_text, self._protected_modules)
         return self._emit(

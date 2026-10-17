@@ -60,13 +60,14 @@ _REQUIRED_ENV = ("OPENAI_API_KEY", "OPENAI_BASE_URL", "NEMOTRON_MODEL")
 _PILOT_ROWS_PATH = Path("data/rebench-v2-python.jsonl")
 _FIX_LINE_LIMIT = 100
 _FIX_LABEL_WIDTH = 16
-# The gate's five checks, named the way the receipt page and the video name them.
+# The gate's checks, named for the receipt page.
 _CHECK_LABELS = {
     "R1": "spec passes",
     "R2": "nothing breaks",
     "R3": "none removed",
     "R4": "tests untouched",
     "R5": "hash chain",
+    "R7": "no shortcuts",
 }
 _ANSI_ESCAPE = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 _LOCAL_ABSOLUTE_PATH = re.compile(r"(?<![:/\w.])/(?!/)[^\s;]+")
