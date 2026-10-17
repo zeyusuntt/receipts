@@ -9,7 +9,7 @@ import json
 import re
 import shlex
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any, Literal
 
@@ -34,6 +34,7 @@ from receipts.models import (
     Branch,
     Checkpoint,
     PatchScope,
+    PredicateResult,
     Receipt,
     Verdict,
     bounded_target_failure_text,
@@ -42,6 +43,7 @@ from receipts.patchscope import default_protected_modules
 from receipts.rundir import RunDirectory
 from receipts.sandbox.protocol import Executor, ImageSource, Source
 from receipts.verify.gate import evaluate
+from receipts.verify.review import ReviewResult, ReviewVotes, review_votes
 from receipts.verify.run import (
     Attempt,
     confirm_load_failure,
@@ -108,6 +110,7 @@ class RunInput(BaseModel):
     suite_scope: str
     appeals: int
     budgets: RunBudgets
+    review: bool = False
 
 
 class Disclosure(BaseModel):
@@ -566,6 +569,31 @@ def _patch_text(attempt: Attempt) -> str:
         return ""
 
 
+def _with_review(verdict: Verdict, result: ReviewVotes) -> Verdict:
+    """Add R8 to a verdict the gate passed. Only a unanimous objection rejects it; nothing can pass it."""
+    objecting = sum(1 for vote in result.votes if vote.objections)
+    if result.veto:
+        evidence = f"{objecting} of {len(result.votes)} independent reviews object: " + "; ".join(
+            f'"{objection.requirement}": {objection.problem} ({objection.location})'
+            for objection in result.votes[0].objections
+        )
+    else:
+        evidence = "no objection" if objecting == 0 else (
+            f"no veto ({objecting} of {len(result.votes)} independent reviews object)"
+        )
+        dropped = sum(len(vote.dropped) for vote in result.votes)
+        if dropped:
+            evidence += f" ({dropped} ungrounded objection(s) dropped)"
+        errors = [vote.error for vote in result.votes if vote.error]
+        if errors:
+            evidence += f" (review unavailable: {errors[0]})"
+    r8 = PredicateResult(id="R8_review", passed=not result.veto, evidence=evidence)
+    predicates = [p for p in verdict.predicates if p.id != "R6_claim_audit"]
+    predicates += [r8] + [p for p in verdict.predicates if p.id == "R6_claim_audit"]
+    status = "REJECTED" if result.veto else verdict.status
+    return verdict.model_copy(update={"predicates": predicates, "status": status})
+
+
 def _appeal_evidence(verdict: Verdict) -> str:
     failed = set(verdict.failed_predicate_ids())
     lines = [
@@ -583,6 +611,8 @@ def _cost_summary(
     collector: _ReceiptCollector,
     worker_log: Path,
     plan: Plan,
+    reviews: Sequence[ReviewResult] = (),
+    reviewer: ModelClient | None = None,
 ) -> dict[str, Any]:
     existing = getattr(model, "_meter", None)
     meter = existing if isinstance(existing, CostMeter) else CostMeter()
@@ -594,6 +624,14 @@ def _cost_summary(
             meter.add_usage(model_name, TokenUsage.model_validate(row["usage"]))
     if not isinstance(existing, CostMeter) and planner_usage is not None:
         meter.add_usage(model_name, planner_usage)
+    # Review calls are counted from their records unless the reviewer shares the agent's meter.
+    reviewer_meter = getattr(reviewer, "_meter", None)
+    if reviewer_meter is not meter or not isinstance(reviewer_meter, CostMeter):
+        reviewer_config = getattr(reviewer, "config", None)
+        reviewer_name = str(getattr(reviewer_config, "model", None) or model_name)
+        for review in reviews:
+            if review.usage is not None:
+                meter.add_usage(reviewer_name, review.usage)
     meter.add_sandbox_seconds(
         sum(receipt.duration_s for receipt in collector.receipts),
     )
@@ -601,6 +639,10 @@ def _cost_summary(
     planner_retries = getattr(plan, "retries", {})
     if isinstance(planner_retries, dict):
         for kind, count in planner_retries.items():
+            if isinstance(kind, str) and type(count) is int and count > 0:
+                model_retries[kind] = model_retries.get(kind, 0) + count
+    for review in reviews:
+        for kind, count in (review.retries or {}).items():
             if isinstance(kind, str) and type(count) is int and count > 0:
                 model_retries[kind] = model_retries.get(kind, 0) + count
     if worker_log.is_file():
@@ -640,6 +682,8 @@ async def fix(
     budgets: RunBudgets | None = None,
     spec_paths: list[str] | None = None,
     progress: ProgressCallback | None = None,
+    review: bool = False,
+    reviewer: ModelClient | None = None,
 ) -> RunResult:
     if appeals < 0:
         raise ValueError("appeals cannot be negative")
@@ -659,6 +703,7 @@ async def fix(
         suite_scope=suite_scope,
         appeals=appeals,
         budgets=budget,
+        review=review,
     )
     run_directory.write_json("input.json", run_input)
 
@@ -758,6 +803,7 @@ async def fix(
 
         attempt_results: list[AttemptResult] = []
         verdict_history: list[Verdict] = []
+        reviews: list[ReviewResult] = []
         selected_patch_path: str | None = None
         worker_log = run_directory.path("agent/worker.jsonl")
         with worker_log.open("a", encoding="utf-8") as writer:
@@ -890,6 +936,17 @@ async def fix(
                         else None
                     ),
                 )
+                review_result = None
+                if review and verdict.status == "PASS":
+                    review_result = await review_votes(
+                        reviewer or model,
+                        issue,
+                        spec_tests,
+                        verified.filtered_patch,
+                        default_protected_modules(),
+                    )
+                    reviews.extend(review_result.votes)
+                    verdict = _with_review(verdict, review_result)
                 verdict_history.append(verdict)
                 changed_files = len(changed_paths)
                 for predicate in verdict.predicates:
@@ -947,6 +1004,11 @@ async def fix(
                         collector.for_branch(load_confirmation.branch.id),
                     )
                 run_directory.write_json(f"{attempt_root}/verdict.json", verdict)
+                if review_result is not None:
+                    run_directory.write_json(
+                        f"{attempt_root}/review.json",
+                        {"veto": review_result.veto, **review_result.model_dump(mode="json")},
+                    )
                 attempt_results.append(
                     AttemptResult(
                         number=attempt_number,
@@ -1012,7 +1074,7 @@ async def fix(
                 attempt=len(verdict_history),
             ),
         )
-        cost = _cost_summary(model, disclosure, collector, worker_log, plan)
+        cost = _cost_summary(model, disclosure, collector, worker_log, plan, reviews, reviewer or model)
         run_directory.write_json("cost.json", cost)
         result = RunResult(
             input=run_input,

@@ -19,7 +19,7 @@ FileCategory = Literal[
 ]
 PredicateId = Literal[
     "R1_fail_to_pass", "R2_pass_to_pass", "R3_no_shrink", "R4_patch_scope", "R5_provenance", "R6_claim_audit",
-    "R7_no_shortcuts",
+    "R7_no_shortcuts", "R8_review",
 ]
 VerdictStatus = Literal["PASS", "REJECTED", "ERROR"]
 ClaimAudit = Literal["honest", "unsupported", "contradicted", "understated", "no_claim"]
@@ -250,5 +250,5 @@ class Verdict(BaseModel):
     error_kind: Literal["attempt", "infrastructure"] | None = None
 
     def failed_predicate_ids(self) -> list[str]:
-        """Failed gating predicates, R1 to R5 and R7. R6 is advisory."""
+        """Failed deciding predicates: R1 to R5, R7 and R8. R6 is advisory."""
         return [p.id for p in self.predicates if not p.passed and p.id != "R6_claim_audit"]

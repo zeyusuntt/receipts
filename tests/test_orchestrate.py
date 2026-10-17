@@ -226,6 +226,7 @@ async def _run(
     spec_tests: list[str] | None = None,
     extra_files: dict[str, str] | None = None,
     progress=None,
+    review: bool | None = None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
@@ -270,6 +271,8 @@ async def _run(
     extra = {} if spec_paths is None else {"spec_paths": spec_paths}
     if progress is not None:
         extra["progress"] = progress
+    if review is not None:
+        extra["review"] = review
     result = await orchestrate.fix(
         executor,
         model,
@@ -1135,3 +1138,148 @@ def sub(a, b):
         r1.evidence in (message.get("content") or "")
         for message in appeal_request["messages"]
     )
+
+
+# R8: the independent review that can only object.
+
+_PLAN = {
+    "hypothesis": "calc.sub adds instead of subtracting",
+    "files_to_edit": ["calc/__init__.py"],
+    "approach": "Change calc.sub to subtract and run the suite.",
+}
+_OBJECTION = {
+    "requirement": "calc.sub(5, 3) must return 2",
+    "location": "calc/__init__.py:6",
+    "problem": "the reviewer says the fix is incomplete",
+}
+
+
+def _fix_turns(suffix: str) -> list[AssistantTurn]:
+    return [
+        _turn(_call("write_file", {"path": "calc/__init__.py",
+                                   "content": CALC.replace("a + b  # bug: should be a - b", "a - b")},
+                    f"write-{suffix}")),
+        _turn(_call("run_command", {"command": "python -m pytest -q"}, f"run-{suffix}")),
+        _finish(f"finish-{suffix}", summary="Corrected subtraction.", changed=["calc/__init__.py"], green=True),
+    ]
+
+
+def _review_requests(model: FakeModel) -> list[dict]:
+    return [request for request in model.requests
+            if request["kind"] == "complete_json" and request["schema"].__name__ == "ReviewAnswer"]
+
+
+async def test_review_objection_rejects_a_passing_patch_and_reaches_the_appeal(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN, {"objections": [_OBJECTION]}, {"objections": [_OBJECTION]},
+                                    {"objections": []}, {"objections": []}],
+                      turns=_fix_turns("first") + _fix_turns("second"))
+
+    result, run_dir, _, _ = await _run(tmp_path, model, review=True)
+
+    first, second = result.verdict_history
+    assert first.status == "REJECTED"
+    r8 = next(p for p in first.predicates if p.id == "R8_review")
+    assert r8.passed is False
+    assert r8.evidence.startswith("2 of 2 independent reviews object: ")
+    assert "calc.sub(5, 3) must return 2" in r8.evidence and "calc/__init__.py:6" in r8.evidence
+    assert first.failed_predicate_ids() == ["R8_review"]
+    assert second.status == "PASS"
+    assert next(p for p in second.predicates if p.id == "R8_review").passed is True
+    assert result.final_verdict.status == "PASS" and result.verified_fix is True
+    appeal = next(request for request in reversed(model.requests) if request["kind"] == "chat")
+    assert any("the reviewer says the fix is incomplete" in str(message.get("content"))
+               for message in appeal["messages"])
+    review = json.loads((run_dir / "attempts" / "1" / "review.json").read_text())
+    assert review["veto"] is True and [vote["objections"] for vote in review["votes"]] == [[_OBJECTION]] * 2
+    assert json.loads((run_dir / "attempts" / "2" / "review.json").read_text())["veto"] is False
+    assert len(_review_requests(model)) == 4
+
+
+async def test_review_without_objection_keeps_the_pass_and_orders_the_checks(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN, {"objections": []}, {"objections": []}], turns=_fix_turns("only"))
+
+    result, _, _, _ = await _run(tmp_path, model, review=True)
+
+    assert result.final_verdict.status == "PASS"
+    assert [p.id for p in result.final_verdict.predicates] == [
+        "R1_fail_to_pass", "R2_pass_to_pass", "R3_no_shrink", "R4_patch_scope", "R5_provenance",
+        "R7_no_shortcuts", "R8_review", "R6_claim_audit",
+    ]
+    assert next(p for p in result.final_verdict.predicates if p.id == "R8_review").evidence == "no objection"
+
+
+async def test_ungrounded_objection_is_dropped_and_recorded(tmp_path: Path):
+    paraphrase = dict(_OBJECTION, requirement="subtraction should be right")
+    model = FakeModel(json_objects=[_PLAN, {"objections": [paraphrase]}, {"objections": []}],
+                      turns=_fix_turns("only"))
+
+    result, run_dir, _, _ = await _run(tmp_path, model, review=True)
+
+    assert result.final_verdict.status == "PASS"
+    r8 = next(p for p in result.final_verdict.predicates if p.id == "R8_review")
+    assert r8.evidence == "no objection (1 ungrounded objection(s) dropped)"
+    assert json.loads((run_dir / "attempts" / "1" / "review.json").read_text())["votes"][0]["dropped"] == [paraphrase]
+
+
+async def test_one_objecting_review_out_of_two_does_not_veto(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN, {"objections": [_OBJECTION]}, {"objections": []}],
+                      turns=_fix_turns("only"))
+
+    result, run_dir, _, _ = await _run(tmp_path, model, review=True)
+
+    assert result.final_verdict.status == "PASS"
+    r8 = next(p for p in result.final_verdict.predicates if p.id == "R8_review")
+    assert r8.passed is True and r8.evidence == "no veto (1 of 2 independent reviews object)"
+    assert json.loads((run_dir / "attempts" / "1" / "review.json").read_text())["veto"] is False
+
+
+async def test_a_failed_review_does_not_veto(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN], turns=_fix_turns("only"))  # no scripted review answer
+
+    result, _, _, _ = await _run(tmp_path, model, review=True)
+
+    assert result.final_verdict.status == "PASS"
+    r8 = next(p for p in result.final_verdict.predicates if p.id == "R8_review")
+    assert r8.passed is True and "review unavailable" in r8.evidence
+
+
+async def test_the_reviewer_never_sees_a_rejected_patch(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN], turns=[
+        _turn(_call("write_file", {"path": "calc/__init__.py", "content": CALC}, "same")),
+        _finish("finish", summary="Claimed a fix.", changed=["calc/__init__.py"], green=True),
+    ])
+
+    result, _, _, _ = await _run(tmp_path, model, appeals=0, review=True)
+
+    assert result.final_verdict.status == "REJECTED"
+    assert "R8_review" not in [p.id for p in result.final_verdict.predicates]
+    assert _review_requests(model) == []
+
+
+async def test_review_is_off_by_default_in_the_library(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN], turns=_fix_turns("only"))
+
+    result, run_dir, _, _ = await _run(tmp_path, model)
+
+    assert "R8_review" not in [p.id for p in result.final_verdict.predicates]
+    assert _review_requests(model) == []
+    assert not (run_dir / "attempts" / "1" / "review.json").exists()
+    assert json.loads((run_dir / "input.json").read_text())["review"] is False
+
+
+async def test_review_tokens_are_counted_in_the_run_cost(tmp_path: Path):
+    from receipts.cost import TokenUsage
+    from receipts.verify.review import ReviewAnswer
+
+    answer = ReviewAnswer(objections=[], usage=TokenUsage(prompt=100_000, completion=1_000))
+    with_review = FakeModel(json_objects=[_PLAN, answer, answer], turns=_fix_turns("only"))
+    without_review = FakeModel(json_objects=[_PLAN], turns=_fix_turns("only"))
+
+    _, reviewed_dir, _, _ = await _run(tmp_path / "with", with_review, review=True)
+    _, plain_dir, _, _ = await _run(tmp_path / "without", without_review)
+
+    reviewed = json.loads((reviewed_dir / "cost.json").read_text())
+    plain = json.loads((plain_dir / "cost.json").read_text())
+    (name, usage), = reviewed["models"].items()
+    assert usage["prompt_tokens"] - plain["models"][name]["prompt_tokens"] == 200_000
+    assert usage["completion_tokens"] - plain["models"][name]["completion_tokens"] == 2_000

@@ -54,6 +54,7 @@ from receipts.swerebench import (
     _spec_paths_from_test_patch,
     _test_patch_setup_commands,
 )
+from receipts.verify.review import REVIEWER_SETTINGS
 
 
 _REQUIRED_ENV = ("OPENAI_API_KEY", "OPENAI_BASE_URL", "NEMOTRON_MODEL")
@@ -68,6 +69,7 @@ _CHECK_LABELS = {
     "R4": "tests untouched",
     "R5": "hash chain",
     "R7": "no shortcuts",
+    "R8": "review",
 }
 _ANSI_ESCAPE = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 _LOCAL_ABSOLUTE_PATH = re.compile(r"(?<![:/\w.])/(?!/)[^\s;]+")
@@ -108,6 +110,12 @@ def _parser() -> argparse.ArgumentParser:
         default="local",
     )
     fix_parser.add_argument("--out", required=True, type=Path)
+    fix_parser.add_argument(
+        "--no-review",
+        dest="review",
+        action="store_false",
+        help="skip R8, the independent Nemotron review that can only object to a passing patch",
+    )
 
     doctor_parser = commands.add_parser("doctor", help="check local configuration")
     doctor_parser.add_argument(
@@ -529,6 +537,10 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
         load_config(env_path=Path(".env")),
         env_path=Path(".env"),
     )
+    reviewer = model or TokenFactoryClient(
+        load_config(env_path=Path(".env")).model_copy(update=REVIEWER_SETTINGS),
+        env_path=Path(".env"),
+    )
     progress = _FixProgressRenderer(issue, selected_model, args.executor)
     if args.executor in {"daytona", "tokenfactory"}:
         if not args.image or not args.workdir:
@@ -551,7 +563,12 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
         )
     run_id = f"receipts-{uuid.uuid4().hex[:12]}"
     budgets = _default_run_budgets()
-    fix_options: dict[str, Any] = {"budgets": budgets, "progress": progress}
+    fix_options: dict[str, Any] = {
+        "budgets": budgets,
+        "progress": progress,
+        "review": getattr(args, "review", True),
+        "reviewer": reviewer,
+    }
     if spec_paths is not None:
         fix_options["spec_paths"] = spec_paths
 

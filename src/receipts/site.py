@@ -34,6 +34,7 @@ _NAMES = {
     "R4_patch_scope": "Patch scope",
     "R5_provenance": "Witness chain and patch digest",
     "R7_no_shortcuts": "No shortcut in the patch",
+    "R8_review": "Independent review raised no grounded objection",
     "R6_claim_audit": "Agent claim audit (advisory)",
 }
 _CSS = """\
@@ -156,7 +157,7 @@ def _load_run(path: Path, root: Path) -> _Run:
         number = int(attempt["number"])
         if number < 1:
             raise ValueError("attempt number must be positive")
-        for name in ("verdict.json", "patch.diff", "filtered.diff", "witness/receipts.jsonl"):
+        for name in ("verdict.json", "review.json", "patch.diff", "filtered.diff", "witness/receipts.jsonl"):
             relative = f"attempts/{number}/{name}"
             candidate = _confined(directory / relative, root)
             if candidate.is_file():
@@ -659,7 +660,8 @@ def _pr_description(run: _Run) -> str:
         failures = {"R1_fail_to_pass": "Specification tests still fail", "R2_pass_to_pass": "Previously passing tests regressed",
                     "R3_no_shrink": "Tests removed or newly skipped", "R4_patch_scope": "Patch outside allowed scope",
                     "R5_provenance": "Witness provenance or patch digest mismatch",
-                    "R7_no_shortcuts": "The patch takes a shortcut"}
+                    "R7_no_shortcuts": "The patch takes a shortcut",
+                    "R8_review": "The independent review objects"}
         reason = (f"{failures.get(failed.get('id'), _NOT_RECORDED)}: {_text(failed.get('evidence'))}"
                   if failed else verdict.get("error") or run.record.get("reason") or "verification verdict not recorded")
         return "Not ready to submit: " + _text(reason)

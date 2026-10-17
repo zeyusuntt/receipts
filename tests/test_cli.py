@@ -317,7 +317,10 @@ def test_fix_builds_daytona_executor_for_an_image_source(
         *,
         budgets,
         progress,
+        review,
+        reviewer,
     ):
+        captured["review"] = review
         captured["source"] = source
         captured["issue"] = issue
         captured["tests"] = tests
@@ -355,6 +358,7 @@ def test_fix_builds_daytona_executor_for_an_image_source(
     )
 
     assert status == 0
+    assert captured["review"] is True
     assert captured["config"].api_key == "test-daytona-key"
     assert captured["source"] == ImageSource(
         image="swerebench/example:1",
@@ -411,6 +415,8 @@ def test_fix_persists_receipt_before_executor_cleanup(
         *,
         budgets,
         progress,
+        review,
+        reviewer,
     ):
         return _sample_result()
 
@@ -497,6 +503,8 @@ def test_fix_test_patch_configures_sandbox_setup_and_protects_test_files(
         budgets,
         spec_paths,
         progress,
+        review,
+        reviewer,
     ):
         captured["source"] = source
         captured["spec_paths"] = spec_paths
@@ -682,6 +690,8 @@ def test_fix_selects_tokenfactory_executor_and_closes_one_api_client(
         *,
         budgets,
         progress,
+        review,
+        reviewer,
     ):
         captured.update(source=source, issue=issue, tests=tests, suite=suite, out=out)
         return _sample_result()
@@ -772,6 +782,8 @@ def test_fix_prints_live_progress_and_writes_full_receipt(
         *,
         budgets,
         progress,
+        review,
+        reviewer,
     ):
         event = orchestrate.ProgressEvent
         progress(event(kind="baseline", message="1 specification test fails; 1 test passes", duration_s=1.2))
@@ -1570,3 +1582,9 @@ def test_fix_summary_shows_a_sub_cent_cost_instead_of_zero():
     assert cli._token_cost(0.0031) == "$0.003 of Nemotron tokens"
     assert cli._token_cost(0.0275) == "$0.03 of Nemotron tokens"
     assert cli._token_cost(None) == "token cost unavailable"
+
+
+def test_fix_reviews_by_default_and_no_review_turns_it_off():
+    base = ["fix", "--repo", "r", "--commit", "c", "--test", TARGET, "--issue-file", "i.md", "--out", "o"]
+    assert _parser().parse_args(base).review is True
+    assert _parser().parse_args(base + ["--no-review"]).review is False
