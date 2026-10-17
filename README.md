@@ -23,6 +23,8 @@ uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json
 
 It checks the patch digests, starts the task's public image (the first run downloads it, which can take a few minutes), rebuilds the original checkpoint, replays the agent's patch through the same filter and gate on a fresh witness, grades the shipped patch with SWE-rebench's official grader, and must agree with the receipt on every check (about two minutes per receipt on Token Factory). With a Nebius account, add `--executor tokenfactory` to run it on Token Factory Sandboxes instead of Docker. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
 
+Or re-verify all 100 on GitHub's machines, without installing anything: fork this repository, open the Actions tab, and run **Re-verify receipts** ([the workflow](.github/workflows/reverify.yml)). On October 17 the workflow re-verified all 100 receipts in 48 minutes, and every check agreed on every receipt.
+
 ## How it works
 
 ![Your failing test goes to Nemotron 3 Super on Nebius Token Factory, which works on an agent branch; a Token Factory Sandbox forked from the same checkpoint is the witness; plain-code gate; receipt. SWE-rebench's official grader runs separately.](docs/assets/architecture.png)
