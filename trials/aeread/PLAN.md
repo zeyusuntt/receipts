@@ -73,3 +73,52 @@ One project, issues written by one person, eight tasks. This shows Receipts on r
 Screening. Position 3 (`d4a6107bdab7`) was first screened by a script that did not count a test file that cannot be imported at the start state (it imports a name the fix adds) as failing. Re-screened with the corrected script, it qualifies. The eight included tasks are therefore positions 2, 3, 5, 6, 7, 8, 9 and 10. Position 11 (`d44d046e2122`) also qualifies but is the ninth and is not run. Positions 1 and 4 are excluded: no changed test fails at the start state.
 
 Regression suite. At these commits AERead's full `tests/` suite ran for more than 17 minutes in `python:3.12-slim` on this machine without finishing, and it includes tests tied to the maintainers' machines (a required directory name, local upstream checkouts). It cannot finish inside Receipts' 600-second baseline limit, the same limit the 100-task experiment used, where tasks with slower suites were excluded at screening. The first run of `9c72e635e2b6` ended on that limit; it is reported as an infrastructure error. From this amendment on, each task's regression suite is the test files its fix commit changed, instead of all of `tests/`. Target tests and every other check are unchanged. This is a narrower regression check than the 100-task experiment's, and the results say so.
+
+## Amendment 2 (2026-10-17, after the first eight verdicts, before any further task was screened or run)
+
+### What the first eight showed
+
+Seven of the eight were VERIFIED and one was REJECTED (`ff737a500485`, whose claim audit was honest). I read every shipped patch against the upstream fix. Three VERIFIED patches fix the bug (`a791090df23e`, `96dc5893c8a0`, `21d898f417d1`). Four do not:
+
+- `9c72e635e2b6` and `d4a6107bdab7` add the private helper that the target tests import and call directly, but nothing in the program calls it, so the behavior the issue describes does not change. The upstream fixes call the same helper where the failure is recorded and in the retry path.
+- `43670c88be2c` replaces the canary's real provider request with a call to a new function that only raises `NotImplementedError`; its docstring says it exists to be mocked by tests. The target tests mock it and pass. Outside the tests the canary cannot run.
+- `60a34999413f` refuses live execution of every plan that carries an implementation pin, without comparing the pin with the running implementation.
+
+Receipts passed those four because their target tests passed. AERead's full `tests/` suite, run afterwards against each shipped patch and each upstream fix, catches only `60a34999413f`, through `test_multiworld_generalization_preserves_v8_gate_digests`: a test in the fix's changed test file that fails at the start state, but was not a target because the fix did not edit that test function. `RESULTS.md` will report every task in full. Two changes follow.
+
+### Change 1: a new check, R7 "no shortcuts"
+
+R7 reads the patch and the patched code, without running anything, and rejects a patch that:
+
+- adds a private function that nothing outside the tests uses (a decorated function, and a private method that overrides an ancestor's method, count as used);
+- adds a function whose whole body only raises `NotImplementedError` or does nothing, or reduces an existing function to that. Exempt: abstract methods, typing overloads, a Protocol's methods, new methods of an abstract base class, and a base-class method that a subclass overrides (for an existing method, a subclass that existed before the patch).
+
+R7 compares each function with its version before the patch, which it rebuilds from the diff.
+
+A rejection by R7 goes to the agent's one appeal like any other. R7 is frozen at commit `8c93b3f` of this repository, and its rules do not change after this amendment. It runs inside Receipts from that commit on; `scripts/r7_check_aeread.py` and `scripts/r7_check_swe.py` apply the same code to patches made before it, and their output is in `records/`.
+
+R7 was designed after reading the four patches above, so on the first eight it is in-sample. There it flags `9c72e635e2b6`, `d4a6107bdab7` and `43670c88be2c`, and no correct patch and no upstream fix. It does not catch `60a34999413f`.
+
+Before freezing it, I ran R7 on all 141 agent attempts of the 100-task experiment and on the upstream pull request of each task (101 of 102, counting the two tasks replaced after infrastructure errors; one repository is now a mirror without its pull requests). R7 flags none of the 66 fixes Receipts shipped and none of the 101 upstream fixes. It flags 4 attempts on 2 tasks, all already rejected by another check: `pymor__pymor-810`, two attempts that add methods whose only statement is `raise NotImplementedError` (the official grader says unresolved), and `datalad__datalad-5603`, two attempts that add the helper the task's tests import, but do not use it where the source raises the exception, as the upstream fix does (the official grader says resolved).
+
+Three changes came out of that check, each because a rule flagged a correct fix:
+
+- an existing decorated function was taken for a new uncalled helper (`rochacbruno__dynaconf-191`);
+- a base-class hook that subclasses override, and a raise for one unsupported case beside working code, were taken for stubs (`pybamm-team__pybamm-4196`, both the agent's patch and the upstream fix);
+- a third rule, rejecting a patch that removes 25 or more lines of existing logic, was dropped: it flagged 3 upstream fixes that are refactors, and on the first eight everything it flagged, R7's other rules flag too.
+
+The numbers above are after those changes, so they are not a held-out measure of false positives either. Further changes came from code review rather than from these results (imports and references are read from the syntax tree, same-named classes are kept apart, overloads and abstract base classes are handled), and they did not change any number above.
+
+### Change 2: target tests
+
+A target test is now every test in the fix's changed test files that fails at the start state and passes at the fix, whether or not the fix edited that test: the same rule as SWE-bench's FAIL_TO_PASS. Under this rule `test_multiworld_generalization_preserves_v8_gate_digests` is a target of `60a34999413f`. The regression suite stays the fix's changed test files (Amendment 1).
+
+### The held-out set
+
+Screening continues in pool order from position 11 with this rule, until 8 more tasks are included or the pool runs out. Install, start state and exclusions are as before. Each included task is run once with `receipts fix --executor docker` at commit `8c93b3f`, with the same agent settings. Its issue text is written from the fix commit's message, describes the problem without the fix, and is committed to this repository before the task runs.
+
+The original eight are also run again at `8c93b3f`, with their targets recomputed by the new rule from their saved screening logs. They are reported separately and labeled in-sample.
+
+Reported for every task, as before: the verdict and attempts, each check's result including R7's findings, wall time, tokens and model cost, the shipped patch, AERead's full `tests/` suite against the shipped patch and against the upstream fix, and my reading of the shipped patch against the upstream fix. The headline is how many VERIFIED held-out patches my reading finds do not fix the bug, next to how many correct patches Receipts rejected. An infrastructure error is fixed and the task run once more; both runs are reported.
+
+The scripts that screen, run and compare are in `scripts/`; the screening records, including the original eight's recomputed targets, are in `records/`. Limits, as before: one project, issues written by one person, a small sample. This shows whether R7 and the new target rule help on tasks they were not designed on; it does not measure a rate.
