@@ -16,6 +16,7 @@ _CHECKS = (
     ("R4_patch_scope", "The patch stayed in scope"),
     ("R5_provenance", "Agent and witness provenance is intact"),
     ("R7_no_shortcuts", "The patch takes no shortcut (no uncalled private helper, no stub)"),
+    ("R8_review", "The independent Nemotron review raised no grounded objection"),
     ("R6_claim_audit", "The agent claim matches the record"),
 )
 

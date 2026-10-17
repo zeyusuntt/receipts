@@ -1,0 +1,37 @@
+diff --git a/src/aeread_families/econevals/campaign.py b/src/aeread_families/econevals/campaign.py
+index ff29b77..9c9393f 100644
+--- a/src/aeread_families/econevals/campaign.py
++++ b/src/aeread_families/econevals/campaign.py
+@@ -105,6 +105,32 @@ def _digest(value: Any) -> str:
+     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
+ 
+ 
++def _sealed_spend(root: Path) -> float:
++    """Sum all cost_usd numbers found in JSON files under root."""
++    def extract_cost(obj):
++        if isinstance(obj, dict):
++            cost = obj.get("cost_usd")
++            if type(cost) in (int, float):  # exclude bool which is subclass of int
++                yield float(cost)
++            for v in obj.values():
++                yield from extract_cost(v)
++        elif isinstance(obj, list):
++            for item in obj:
++                yield from extract_cost(item)
++
++    total = 0.0
++    if not root.exists():
++        return total
++    for path in root.rglob("*"):
++        if path.is_file():
++            try:
++                data = json.loads(path.read_text(encoding="utf-8"))
++                total += sum(extract_cost(data))
++            except (json.JSONDecodeError, OSError):
++                continue
++    return total
++
++
+ def _write_once_json(path: Path, value: Mapping[str, Any]) -> None:
+     payload = canonical_json_bytes(value) + b"\n"
+     if path.exists():

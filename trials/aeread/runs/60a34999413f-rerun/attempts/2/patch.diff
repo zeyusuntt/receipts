@@ -1,0 +1,111 @@
+diff --git a/src/aeread_families/housing/model_sensitivity.py b/src/aeread_families/housing/model_sensitivity.py
+index b436816..84448a0 100644
+--- a/src/aeread_families/housing/model_sensitivity.py
++++ b/src/aeread_families/housing/model_sensitivity.py
+@@ -11,6 +11,7 @@ import math
+ import os
+ import statistics
+ import time
++import urllib.request
+ from pathlib import Path
+ from typing import Any, Mapping, Sequence
+ 
+@@ -38,6 +39,50 @@ from .runner import (
+     finalize_housing_failure,
+     replay_housing_receipt,
+ )
++
++
++def _catalog_url(contract: Mapping[str, Any], model: str) -> str:
++    return contract["backend"]["catalog_source"].format(model=model)
++
++
++def _endpoint_snapshot(endpoint: Mapping[str, Any]) -> dict[str, Any]:
++    """Return the stable, decision-relevant portion of one endpoint record."""
++
++    return {
++        "name": endpoint.get("name"),
++        "provider_name": endpoint.get("provider_name"),
++        "quantization": endpoint.get("quantization"),
++        "pricing": endpoint.get("pricing"),
++        "supported_parameters": sorted(endpoint.get("supported_parameters", [])),
++        "status": endpoint.get("status"),
++        "max_completion_tokens": endpoint.get("max_completion_tokens"),
++    }
++
++
++def _endpoint_snapshot_sha256(endpoint: Mapping[str, Any]) -> str:
++    return _sha256(_endpoint_snapshot(endpoint))
++
++
++def _catalog_url(contract: Mapping[str, Any], model: str) -> str:
++    return contract["backend"]["catalog_source"].format(model=model)
++
++
++def _endpoint_snapshot(endpoint: Mapping[str, Any]) -> dict[str, Any]:
++    """Return the stable, decision-relevant portion of one endpoint record."""
++
++    return {
++        "name": endpoint.get("name"),
++        "provider_name": endpoint.get("provider_name"),
++        "quantization": endpoint.get("quantization"),
++        "pricing": endpoint.get("pricing"),
++        "supported_parameters": sorted(endpoint.get("supported_parameters", [])),
++        "status": endpoint.get("status"),
++        "max_completion_tokens": endpoint.get("max_completion_tokens"),
++    }
++
++
++def _endpoint_snapshot_sha256(endpoint: Mapping[str, Any]) -> str:
++    return _sha256(_endpoint_snapshot(endpoint))
+ from .population_campaign import (
+     DEEPSEEK_MODEL,
+     DEEPSEEK_REVISION,
+@@ -835,6 +880,47 @@ async def run_live(
+     if summary_path.exists():
+         return _read_sealed(summary_path)
+     setups = build_setups(contract, routes=routes)
++    
++    # Check for runtime drift from frozen implementation pins before allowing live execution
++    # Only perform this check for campaigns that specify endpoint snapshot verification
++    # Based on CAMPAIGN_SPECS, v8 and v9 campaigns have this enabled
++    campaign_id = contract["campaign_id"]
++    verify_endpoint_snapshot = (
++        campaign_id == "housing_model_sensitivity_openrouter_alt_v8" or
++        campaign_id == "housing_model_sensitivity_openrouter_alt_v9"
++    )
++    
++    if verify_endpoint_snapshot:
++        for model_id, model in contract["models"].items():
++            try:
++                with urllib.request.urlopen(
++                    _catalog_url(contract, model["requested_model"]), timeout=30
++                ) as response:
++                    payload = json.load(response)
++                endpoints = payload.get("data", {}).get("endpoints", [])
++                matches = [
++                    endpoint
++                    for endpoint in endpoints
++                    if endpoint.get("provider_name") == model["provider"]
++                    and endpoint.get("quantization") == model["quantization"]
++                    and model["canonical_model"] in str(endpoint.get("name"))
++                ]
++                if len(matches) != 1:
++                    raise EvidenceIntegrityError(
++                        "runtime differs from the frozen implementation pin"
++                    )
++                endpoint = matches[0]
++                endpoint_snapshot_sha256 = _endpoint_snapshot_sha256(endpoint)
++                if endpoint_snapshot_sha256 != model["endpoint_snapshot_sha256"]:
++                    raise EvidenceIntegrityError(
++                        "runtime differs from the frozen implementation pin"
++                    )
++            except Exception:
++                # Any error in fetching or matching indicates runtime drift
++                raise EvidenceIntegrityError(
++                    "runtime differs from the frozen implementation pin"
++                )
++    
+     client = OpenRouterChatClient()
+     conditions = list(contract["conditions"])
+     execution_contract = contract["execution"]

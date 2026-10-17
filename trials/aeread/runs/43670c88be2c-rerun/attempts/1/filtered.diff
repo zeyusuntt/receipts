@@ -1,0 +1,160 @@
+diff --git a/src/aeread_families/econevals/campaign.py b/src/aeread_families/econevals/campaign.py
+index d819ebc..7fa4ceb 100644
+--- a/src/aeread_families/econevals/campaign.py
++++ b/src/aeread_families/econevals/campaign.py
+@@ -90,6 +90,14 @@ MAX_CANARY_OUTPUT_TOKENS = 256
+ MAX_TRAJECTORY_COST_USD = 0.06
+ HARD_TOTAL_COST_CEILING_USD = 0.40
+ 
++# Canary reprobe settings
++MAX_CANARY_PROBES = 3
++CANARY_TRANSIENT_CONDITIONS = frozenset({
++    "rate_limit",      # HTTP 429
++    "provider_5xx",    # HTTP 5xx from provider
++    "timeout"          # Request timeout
++})
++
+ 
+ def _digest(value: Any) -> str:
+     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
+@@ -149,6 +157,9 @@ def build_campaign_plan() -> dict[str, Any]:
+             "scored": False,
+             "max_cost_usd": MAX_CANARY_COST_USD,
+             "max_output_tokens": MAX_CANARY_OUTPUT_TOKENS,
++            "max_probes": MAX_CANARY_PROBES,
++            "transient_conditions": list(CANARY_TRANSIENT_CONDITIONS),
++            "probes_are_recorded_individually": True,
+         },
+         "panel": [
+             {
+@@ -197,16 +208,21 @@ def _route_metadata() -> dict[str, str]:
+     return route_metadata()
+ 
+ 
+-async def run_canary(*, path: Path, plan_sha256: str) -> dict[str, Any]:
++async def _probe_canary(*, path: Path, plan_sha256: str, ordinal: int) -> dict[str, Any]:
++    """Perform a single canary probe attempt.
++    
++    Each probe is treated as a write-once record of that specific attempt.
++    """
+     if path.exists():
+         value = json.loads(path.read_text(encoding="utf-8"))
+         if value.get("plan_sha256") != plan_sha256 or value.get(
+-            "record_sha256"
+-        ) != _digest({k: v for k, v in value.items() if k != "record_sha256"}):
+-            raise ValueError("canary checkpoint does not match the frozen plan")
++            "probe_ordinal"
++        ) != ordinal:
++            raise ValueError("canary probe checkpoint does not match expected ordinal")
+         return value
++        
+     request = ProviderRequest(
+-        provider_call_id="econevals_first_light_canary",
++        provider_call_id=f"econevals_first_light_canary_probe_{ordinal}",
+         provider=PROVIDER,
+         base_url="https://openrouter.ai/api/v1",
+         model=MODEL,
+@@ -240,6 +256,7 @@ async def run_canary(*, path: Path, plan_sha256: str) -> dict[str, Any]:
+         "plan_sha256": plan_sha256,
+         "case_id": CANARY_CASE_ID,
+         "scored": False,
++        "probe_ordinal": ordinal,
+         "request_sha256": request.request_sha256,
+         "model": MODEL,
+         "revision": REVISION,
+@@ -278,10 +295,94 @@ async def run_canary(*, path: Path, plan_sha256: str) -> dict[str, Any]:
+             }
+         )
+     record["record_sha256"] = _digest(record)
+-    _write_once_json(path, record)
++    probe_path = path.with_name(f"canary_probe_{ordinal}.json")
++    _write_once_json(probe_path, record)
+     return record
+ 
+ 
++async def run_canary(*, run_root: Path, plan_sha256: str) -> dict[str, Any]:
++    path = run_root / "checkpoints" / "canary.json"
++    # Check for existing final canary record
++    if path.exists():
++        value = json.loads(path.read_text(encoding="utf-8"))
++        if value.get("plan_sha256") != plan_sha256 or value.get(
++            "record_sha256"
++        ) != _digest({k: v for k, v in value.items() if k != "record_sha256"}):
++            raise ValueError("canary checkpoint does not match the frozen plan")
++        return value
++
++    # Load plan to get canary configuration
++    plan_path = run_root / "campaign_plan.json"
++    if not plan_path.exists():
++        # Fallback to building plan if not found (should not happen in practice)
++        plan = build_campaign_plan()
++    else:
++        with plan_path.open("r", encoding="utf-8") as f:
++            plan = json.load(f)
++            
++    canary_config = plan["canary"]
++    max_probes = canary_config.get("max_probes", MAX_CANARY_PROBES)
++    transient_conditions = set(canary_config.get("transient_conditions", list(CANARY_TRANSIENT_CONDITIONS)))
++    
++    last_result = None
++    
++    # Attempt probes up to the budget
++    for ordinal in range(1, max_probes + 1):
++        probe_result = await _probe_canary(path=path, plan_sha256=plan_sha256, ordinal=ordinal)
++        last_result = probe_result
++        
++        # If admitted, we're done
++        if probe_result.get("status") == "admitted":
++            break
++            
++        # If rejected, check if it's transient
++        failure_condition = probe_result.get("failure_condition")
++        if failure_condition not in transient_conditions:
++            # Non-transient failure - stop immediately
++            break
++            
++        # Transient failure - continue to next probe if budget allows
++        # (loop will continue or exit if we've reached max_probes)
++    
++    # Create final aggregated record based on the last probe result
++    # This maintains backward compatibility with existing expectations
++    final_record: dict[str, Any] = {
++        "schema_version": "aeread.provider_admission_canary/0.1",
++        "campaign_id": CAMPAIGN_ID,
++        "plan_sha256": plan_sha256,
++        "case_id": CANARY_CASE_ID,
++        "scored": False,
++        "request_sha256": last_result.get("request_sha256", ""),
++        "model": MODEL,
++        "revision": REVISION,
++        "route_provider": ROUTE_PROVIDER,
++        "attempted_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
++    }
++    
++    if last_result and last_result.get("status") == "admitted":
++        final_record.update({
++            "status": "admitted",
++            "resolved_model": last_result.get("resolved_model"),
++            "finish_reason": last_result.get("finish_reason"),
++            "input_tokens": last_result.get("input_tokens"),
++            "cached_input_tokens": last_result.get("cached_input_tokens"),
++            "output_tokens": last_result.get("output_tokens"),
++            "cost_usd": last_result.get("cost_usd", 0.0),
++        })
++    else:
++        # Use the last rejected probe's information
++        final_record.update({
++            "status": "rejected",
++            "failure_type": last_result.get("failure_type", "unknown") if last_result else "unknown",
++            "failure_condition": last_result.get("failure_condition", "canary_rejected") if last_result else "canary_rejected",
++            "cost_usd": last_result.get("cost_usd", 0.0) if last_result else 0.0,
++        })
++        
++    final_record["record_sha256"] = _digest(final_record)
++    _write_once_json(path, final_record)
++    return final_record
++
++
+ async def execute_campaign(*, run_root: Path) -> None:
+     plan_path = run_root / "campaign_plan.json"
+     plan = build_campaign_plan()

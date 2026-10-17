@@ -1,0 +1,14 @@
+{
+  "approach": "\nIn run_adapter_canary when reading an existing checkpoint we now verify the stored family_id equals argument family_id otherwise we raise ValueError about mismatched families. When attempting the request, we examine the Client\u2019s finish_reason attribute \u2013 if it is exactly the string \"length\" we treat that as a truncated response and immediately construct a rejected record with failure_condition=\"truncated_response\" and do **not** persist anything (the function returns early). For all other exceptions inside the try block we keep the same behavior but differentiate between provider failures and internal bugs: ProviderFailure objects produce failure_type=\"provider_error\", failure_condition equal to their condition, and cost_usd preserved; everything else bubbles up uncaught so the caller sees the original traceback and no checkpoint gets written because control never reaches _write_once. Immediately after obtaining a result we compute cost = float(result.cost_usd or 0.0); if cost <= 0.0 or not math.isfinite(cost) we build a rejected record with failure_condition=\"invalid_provider_cost\", force cost_usd to 0.0, checkpoint that record, then return it. All other successful paths remain unchanged\u2014we still update admitted fields and write the checkpoint as before.",
+  "files_to_edit": [
+    "src/aeread/shared_runner/run/adapter_campaign.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "Update run_adapter_canary to check resuming checkpoint family_id matches given family_id, validate requests truncated responses via finish_reason length before parsing JSON, sanitize exceptions to ensure no exception propagates unless it raises UnexpectedInternalError implicitly, fail on invalid costs (<=0 or non-finite), and populate correct rejection fields.",
+  "retries": {},
+  "usage": {
+    "completion": 354,
+    "prompt": 12482,
+    "reasoning": 0
+  }
+}

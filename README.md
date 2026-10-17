@@ -23,7 +23,7 @@ uv run receipts reverify receipts/pyfilesystem__pyfilesystem2-462.json
 
 It checks the patch digests, starts the task's public image (the first run downloads it, which can take a few minutes), rebuilds the original checkpoint, replays the agent's patch through the same filter and gate on a fresh witness, grades the shipped patch with SWE-rebench's official grader, and must agree with the receipt on every check (about two minutes per receipt on Token Factory). With a Nebius account, add `--executor tokenfactory` to run it on Token Factory Sandboxes instead of Docker. Then read [the gate](src/receipts/verify/gate.py): plain code, and no model is asked whether the fix worked.
 
-Or re-verify all 100 on GitHub's machines, without installing anything: fork this repository, open the Actions tab, and run **Re-verify receipts** ([the workflow](.github/workflows/reverify.yml)). On October 17 the workflow re-verified all 100 receipts in 48 minutes, and every check agreed on every receipt.
+Or re-verify all 100 on GitHub's machines, without installing anything: fork this repository, open the Actions tab, and run **Re-verify receipts** ([the workflow](.github/workflows/reverify.yml)). On October 17 [a run of it on this repository](https://github.com/zeyusuntt/receipts/actions/runs/39019908268) re-verified all 100 receipts in 37 minutes, and every check agreed on every receipt.
 
 ## How it works
 
@@ -32,7 +32,7 @@ Or re-verify all 100 on GitHub's machines, without installing anything: fork thi
 1. **You write the failing test.** It is the specification. Receipts runs the suite twice on the original code to record what fails and what passes (the baseline).
 2. **The agent works on its own branch.** Nemotron 3 Super reads, edits and runs tests through five tools, in a Token Factory Sandbox forked from the checkpoint of your code. It finishes with a claim: what it changed and which tests it says pass.
 3. **A witness checks the work.** Receipts forks the original checkpoint again, a branch the agent never touched, and applies only the source part of the agent's patch. New test files the agent wrote are dropped; your test files are read-only.
-4. **A model-free gate decides.** Plain code compares the witness's test run with the baseline (table below). If the verdict is REJECTED, the evidence goes back to the agent once, verbatim, for one appeal on the same branch, and a fresh witness checks again.
+4. **A model-free gate decides.** Plain code compares the witness's test run with the baseline (table below). Only if it passes, two independent Nemotron reviews may object to it (R8); no model can make a patch pass. If the verdict is REJECTED, the evidence goes back to the agent once, verbatim, for one appeal on the same branch, and a fresh witness checks again.
 5. **You get a receipt.** Every command on every branch is recorded with its exit code, digests and the image it started from, so the chain from your code to the shipped patch can be checked and re-run.
 
 In our experiments a sixth step runs separately from Receipts: SWE-rebench's own grader grades every patch, which is how we measure whether the gate is right.
@@ -48,8 +48,9 @@ In our experiments a sixth step runs separately from Receipts: SWE-rebench's own
 | R5 | The record is unbroken | every receipt chains to the checkpoint, and the patch the witness applied has the shipped patch's digest |
 | R6 | The claim matches the record | advisory: whether what the agent said about its tests is what the record shows |
 | R7 | The patch takes no shortcut | it adds no private function that nothing outside the tests uses, and does not leave a function whose whole body only raises `NotImplementedError` or does nothing (abstract methods, overloads and base-class hooks that a subclass implements excepted) |
+| R8 | No independent review objects | two separate Nemotron 3 Super reviews, which never see the agent's reasoning, read the issue and the patch; a veto needs both, and plain code keeps an objection only if it quotes the issue word for word and points at a line of the patch |
 
-R1 to R5 and R7 decide VERIFIED or REJECTED. R6 is reported on every receipt but does not change the verdict. R7 reads the patch and the patched code without running anything. It was added after the 100-task experiment, from patches that passed every other check on real bug fixes in [AERead](trials/aeread/PLAN.md), so the experiment's receipts do not include it and `receipts reverify` does not check it.
+R1 to R5, R7 and R8 decide VERIFIED or REJECTED. R6 is reported on every receipt but does not change the verdict. R7 reads the patch and the patched code without running anything. R8 is the only check that calls a model, and it can only object: it runs after every other check has passed, and its veto goes to the agent's one appeal like any other failed check (`receipts fix --no-review` turns it off). R7 and R8 were added after the 100-task experiment, from patches that passed every other check on real bug fixes in [AERead](trials/aeread/RESULTS.md), so the experiment's receipts include neither and `receipts reverify` checks neither.
 
 ## Built on Nebius Token Factory and NVIDIA Nemotron
 
@@ -76,10 +77,11 @@ Several open-source tools now check a coding agent's "done". The ones we read (O
 
 ## The experiment
 
-We ran Receipts as a pre-registered experiment twice: the rules, the sample and the reporting were committed before each run, and every outcome is published.
+We ran Receipts in three pre-registered experiments: the rules, the sample and the reporting were committed before each run, and every outcome is published.
 
 - **v1 pilot (Oct 1):** 50 SWE-rebench tasks. Receipts shipped one false done because of a defect in Receipts: the agent hid a copy of the package at the repository root, where our test runner found it and the official grader did not. The pre-registration made us publish it, fix it, and start again. [REPORT.md](REPORT.md), [PREREGISTRATION.md](PREREGISTRATION.md), and a [cost erratum](docs/results/2026-10-02-v1-cost-erratum.md).
 - **v2 (Oct 2 to 3):** 100 tasks held out from development, chosen by a rule committed in advance, on Token Factory Sandboxes, with the gate hardened against what v1 found. [REPORT-v2.md](REPORT-v2.md), [PREREGISTRATION-v2.md](PREREGISTRATION-v2.md).
+- **AERead trial (Oct 16 to 17):** real bug fixes, written by other contributors, from a project outside any benchmark, pre-registered the same way. On the held-out set Receipts verified 7 of 8; by two independent readings 3 are correct, 2 partial and 2 wrong, and those 4 pass every one of AERead's tests that passes at the upstream fix. That measured gap led to R8. [PLAN.md](trials/aeread/PLAN.md), [RESULTS.md](trials/aeread/RESULTS.md).
 
 What we found along the way about the tools we built on: [FEEDBACK.md](FEEDBACK.md).
 

@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "A transient 429 on the econevals live campaign's unscored canary permanently seals the attempt root, because the canary is write-once.\n\nWrite-once is the right rule for a measurement and the wrong one for a probe that produces no measurement. It cost two attempt roots within an hour.\n\nThe canary should re-probe typed transient conditions (rate_limit, provider_5xx, timeout) up to a budget declared in the frozen plan, keeping a write-once record of each probe. A non-transient rejection should still stop the run on the first probe.",
+  "source": {
+    "commit": "9576b2687c8e97590ca5840f7f78fc5752a210f5",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal/aeread-43670c88be2c/start"
+  },
+  "spec_paths": [
+    "tests/test_econevals_live_campaign.py"
+  ],
+  "spec_tests": [
+    "tests/test_econevals_live_campaign.py::test_canary_reprobes_a_transient_rejection_then_admits",
+    "tests/test_econevals_live_campaign.py::test_canary_stops_immediately_on_a_non_transient_rejection",
+    "tests/test_econevals_live_campaign.py::test_plan_declares_the_canary_reprobe_budget"
+  ],
+  "suite_scope": "tests/test_econevals_live_campaign.py"
+}

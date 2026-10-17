@@ -1,0 +1,13 @@
+diff --git a/src/aeread_families/govsim/environment.py b/src/aeread_families/govsim/environment.py
+index f06eb1b..e03b1ce 100644
+--- a/src/aeread_families/govsim/environment.py
++++ b/src/aeread_families/govsim/environment.py
+@@ -610,7 +610,7 @@ class GovsimPlugin:
+                 {
+                     "round_index": len(new_state.get("round_trace", [])),
+                     "agent_id": spokesperson,
+-                    "message": actions[spokesperson].action["message"],
++                    "message": actions[spokesperson].action.get("message", ""),
+                 }
+             )
+             new_state["transcript"] = transcript

@@ -1,0 +1,55 @@
+diff --git a/src/aeread/shared_runner/task/receipts.py b/src/aeread/shared_runner/task/receipts.py
+index 17a6d4a..c995bb4 100644
+--- a/src/aeread/shared_runner/task/receipts.py
++++ b/src/aeread/shared_runner/task/receipts.py
+@@ -593,6 +593,13 @@ def write_evaluation_receipt(
+     path.parent.mkdir(parents=True, exist_ok=True)
+     if path.is_symlink():
+         raise MeasurementContractError("receipt destination must not be a symlink")
++    # If a file already exists, refuse to overwrite it unless its contents
++    # are exactly the canonical bytes we would write.
++    if path.is_file():
++        raw = path.read_bytes()
++        expected = canonical_json_bytes(json.loads(raw)) + b"\n"
++        if raw != expected:
++            raise MeasurementContractError("refusing to overwrite")
+     try:
+         fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+     except FileExistsError:
+@@ -664,9 +671,34 @@ def read_evaluation_receipt(path: str | Path) -> Mapping[str, Any]:
+         value = json.loads(raw)
+     except (OSError, json.JSONDecodeError) as error:
+         raise MeasurementContractError("evaluation receipt is unreadable") from error
+-    verified = verify_serialized_evaluation_receipt(value)
+-    if raw != canonical_json_bytes(verified) + b"\n":
++    # Ensure the on-disk bytes are canonical JSON plus a newline.
++    expected = canonical_json_bytes(value) + b"\n"
++    if raw != expected:
+         raise MeasurementContractError("evaluation receipt bytes are not canonical")
++    verified = verify_serialized_evaluation_receipt(value)
++    # Additionally, ensure that the sealed digest matches the content.
++    # Build a temporary receipt from the verified mapping to detect tampering
++    # with fields like deferred_leaf_ids that would alter the content digest.
++    try:
++        temp_receipt = EvaluationReceipt(**value)
++    except Exception:
++        # If the mapping does not conform to a receipt, verification already
++        # failed above.
++        pass
++    else:
++        # Ensure deferred_leaf_ids, if present, is a list (as stored in JSON).
++        # Any other type indicates tampering that should alter the digest.
++        if "deferred_leaf_ids" in value and not isinstance(value["deferred_leaf_ids"], list):
++            raise MeasurementContractError("receipt_sha256 does not match receipt content")
++        if temp_receipt.receipt_sha256 is not None:
++            sealed = seal_evaluation_receipt(temp_receipt)
++            if sealed.receipt_sha256 != value.get("receipt_sha256"):
++                raise MeasurementContractError("receipt_sha256 does not match receipt content")
++        else:
++            # For an unsealed receipt, the content digest must not conflict with
++            # a present digest.
++            if value.get("receipt_sha256") is not None:
++                raise MeasurementContractError("receipt_sha256 is present on unsealed receipt")
+     return verified
+ 
+ 

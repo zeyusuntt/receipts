@@ -122,3 +122,35 @@ The original eight are also run again at `8c93b3f`, with their targets recompute
 Reported for every task, as before: the verdict and attempts, each check's result including R7's findings, wall time, tokens and model cost, the shipped patch, AERead's full `tests/` suite against the shipped patch and against the upstream fix, and my reading of the shipped patch against the upstream fix. The headline is how many VERIFIED held-out patches my reading finds do not fix the bug, next to how many correct patches Receipts rejected. An infrastructure error is fixed and the task run once more; both runs are reported.
 
 The scripts that screen, run and compare are in `scripts/`; the screening records, including the original eight's recomputed targets, are in `records/`. Limits, as before: one project, issues written by one person, a small sample. This shows whether R7 and the new target rule help on tasks they were not designed on; it does not measure a rate.
+
+## Amendment 3 (2026-10-17, after the held-out results, before R8 was run on anything but the 18 patches already read)
+
+### Why
+
+[RESULTS.md](RESULTS.md): on the held-out set Receipts verified 7 of 8 tasks, and by two independent readings 4 of those 7 are not correct (2 partial, 2 wrong). All 4 pass every one of AERead's tests that passes at the upstream fix. A check that runs tests cannot see them.
+
+### Change: R8, an independent review that can only object
+
+After every other check has passed a patch, two separate reviews by Nemotron 3 Super on Token Factory (thinking on, temperature 0.2) read the issue text, the target test names and the source part of the patch with new-file line numbers. Neither sees the agent's reasoning, claims or the other review. Each may only return objections. Plain code keeps an objection only if it quotes the issue word for word (at least 15 characters) and points at a line of the patch the review was shown. A veto needs both reviews to keep an objection; it rejects the attempt, and its evidence goes to the agent's one appeal like any other failed check. A failed review call never vetoes, and no review can pass a patch the gate rejected. R8 is frozen at commit `b27cefa`.
+
+R8 was developed on the 18 verified patches read in RESULTS.md, so on those it is in-sample. Records are in `records/r8-dev-*.jsonl`. Of the 10 that are not correct and the 8 that are correct:
+
+| Setting | Not correct, vetoed (of 10) | Correct, vetoed (of 8) | Cost for 18 |
+| --- | ---: | ---: | ---: |
+| one review, thinking off | 2 | 2 | $0.01 |
+| one review, thinking on | 8 | 0 | $0.03 |
+| one review, Nemotron 3 Ultra, thinking on | 3 | 0 | $0.16 |
+| one review, thinking on, run again | 7 | 1 | $0.03 |
+| frozen: two reviews, both must object | 5 | 0 | $0.06 |
+
+The two-review rule was chosen because a single review's objections vary from run to run, and one of those variations rejected a correct patch. Records 1 to 4 come from the development code, before the grounding fixes a code review led to; record 5 is the frozen code.
+
+### Check before any new run: false vetoes on fixes known to be correct
+
+R8 at `b27cefa` is run once, with `scripts/r8_check.py`, on the 66 fixes Receipts shipped in the 100-task experiment, all of which SWE-rebench's official grader accepts. Each review gets the task's problem statement as the issue, the run's target tests and the shipped `filtered.diff`. The rule is fixed now: if R8 vetoes more than 3 of the 66, R8 is reported as advisory only (its objections are recorded but do not change the verdict), the held-out set below measures it that way, and R8 is not tuned on these results. Every veto is reported with its objections.
+
+### Held-out set 2
+
+Screening continues in pool order from position 19 with the Amendment 2 rule, until 8 tasks are included or the pool runs out. Issue texts are written from each fix commit's message as before and committed before the runs. Each task is run once with `receipts fix --executor docker` at `b27cefa`, with R8 on (the default) and the same agent settings.
+
+Reported for every task, as before, plus each review's objections. Each patch the gate passes is read by the two independent readings of RESULTS.md, whether or not R8 then vetoes it. The headline: of the patches the gate passed, how many are not correct, how many of those R8 vetoed, and how many correct patches R8 vetoed; then the final verdicts after appeal.

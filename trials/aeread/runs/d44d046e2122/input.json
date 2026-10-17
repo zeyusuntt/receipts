@@ -1,0 +1,26 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "`aeread.integrations.rllm_dataset` resolves its default case glob against the process's current working directory. `python -m aeread.integrations.rllm_dataset --register` therefore only works when it is run from inside a checkout of the repository; run from any other directory, `build_rows()` finds no case configs and raises `FileNotFoundError`.\n\nThe default case set should be found wherever the process is started. A glob the caller passes explicitly should keep working as it does now.",
+  "source": {
+    "commit": "a1a3eafb10c4ed95b977508b618fbfebb5ade318",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9419/aeread-d44d046e2122/start"
+  },
+  "spec_paths": [
+    "tests/test_rllm_integration.py"
+  ],
+  "spec_tests": [
+    "tests/test_rllm_integration.py::test_build_rows_does_not_depend_on_cwd"
+  ],
+  "suite_scope": "tests/test_rllm_integration.py"
+}

@@ -1,0 +1,52 @@
+diff --git a/src/aeread/housing_env.py b/src/aeread/housing_env.py
+index a318bd9..37e8e09 100644
+--- a/src/aeread/housing_env.py
++++ b/src/aeread/housing_env.py
+@@ -220,18 +220,42 @@ def make_bid_world(num_tenants: int, num_listings: int, seed: int,
+ 
+ 
+ def resolve_bids(world: BidWorld, bids: Dict[int, Tuple[int, float]]) -> Assignment:
+-    """Each listing goes to its highest bidder at or above ask; ties by tenant id."""
++    """Resolve sealed bids to maximize allocation welfare (sum of matched surpluses).
++    
++    Rent is a transfer payment, so extreme overbids do not lower joint surplus
++    even if they leave individual tenants with negative payoff. The score is
++    allocation welfare, not tenant payoff. Malformed bids are ignored: they win
++    nothing and leave other bids to resolve normally.
++    """
+     best: Dict[int, Tuple[float, int]] = {}
+-    for t in sorted(bids):
++    for t in bids:
++        # Skip non-integer tenant IDs (exact type check to reject booleans)
++        if type(t) is not int:
++            continue
++            
+         entry = bids.get(t)
+-        if not entry:
++        # Skip if no bid or malformed bid structure
++        if not entry or not isinstance(entry, tuple) or len(entry) != 2:
+             continue
++            
+         l, amount = entry
+-        if not (0 <= l < world.num_listings) or amount < world.ask[l]:
++        
++        # Validate listing index is exact integer (not bool) and in valid range
++        if type(l) is not int or not (0 <= l < world.num_listings):
++            continue
++            
++        # Validate bid amount is a real number (not NaN or infinite)
++        if not isinstance(amount, (int, float)) or not math.isfinite(amount):
++            continue
++            
++        # Check if bid meets asking price
++        if amount < world.ask[l]:
+             continue
++            
+         cur = best.get(l)
+-        if cur is None or amount > cur[0]:
++        if cur is None or amount > cur[0] or (amount == cur[0] and t < cur[1]):
+             best[l] = (float(amount), t)
++            
+     pairs = sorted((t, l) for l, (_, t) in best.items())
+     total = round(sum(world.values[t][l] - world.costs[l] for t, l in pairs), 2)
+     return Assignment(pairs=pairs, total=total, unhoused=world.num_tenants - len(pairs))

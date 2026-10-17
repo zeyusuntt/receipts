@@ -1,0 +1,26 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "In the govsim environment, a spokesperson who says nothing crashes the episode.\n\nIn the discuss branch of `step()`, a seat whose action is an empty object (a scripted policy, or a model that answered `{}`) raises KeyError.\n\nAn empty message should be recorded as an empty utterance: the episode must not crash, the turn must not be skipped, and no text should be invented in its place.",
+  "source": {
+    "commit": "3180c9b193bffacfc4d4dc7daeff24c40fd4cf26",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal/aeread-21d898f417d1/start"
+  },
+  "spec_paths": [
+    "tests/test_govsim_environment.py"
+  ],
+  "spec_tests": [
+    "tests/test_govsim_environment.py::test_discuss_records_silence_rather_than_inventing_an_utterance"
+  ],
+  "suite_scope": "tests/test_govsim_environment.py tests/test_govsim_replay.py"
+}

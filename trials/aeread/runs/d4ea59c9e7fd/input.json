@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "In the first development probe of the procurement strategy scaffold, a labeled trajectory reached an award in six actions, but it sampled and awarded suppliers whose claimed lead time already missed the deadline, and completed zero kits. The scaffold's treatment prompt ranks listings by price, lead time and variant together and asks for a sample after each quote, so nothing in it stops the model from pursuing offers that cannot meet the objective.\n\nThe treatment should be feasibility first: listings that already miss the deadline or are not the exact required variant should be ruled out before price is considered, and a sample should be requested only from an offer whose quote survives those hard checks. Because this changes the treatment after seeing a development run, the sealed plan should say that it is an adaptive development treatment and that a confirmatory claim needs a held-out panel.",
+  "source": {
+    "commit": "c6e05f6169173f798c42db14972d32533b342fbb",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9419/aeread-d4ea59c9e7fd/start"
+  },
+  "spec_paths": [
+    "tests/test_procurement_strategy_scaffold.py"
+  ],
+  "spec_tests": [
+    "tests/test_procurement_strategy_scaffold.py::test_strategy_canary_uses_treatment_prompt_and_is_unscored",
+    "tests/test_procurement_strategy_scaffold.py::test_strategy_plan_binds_prompt_and_declares_paired_analysis"
+  ],
+  "suite_scope": "tests/test_procurement_strategy_scaffold.py"
+}

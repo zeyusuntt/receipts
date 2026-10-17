@@ -1,0 +1,23 @@
+diff --git a/src/aeread_families/housing/model_sensitivity.py b/src/aeread_families/housing/model_sensitivity.py
+index b436816..0b0bbf9 100644
+--- a/src/aeread_families/housing/model_sensitivity.py
++++ b/src/aeread_families/housing/model_sensitivity.py
+@@ -835,6 +835,18 @@ async def run_live(
+     if summary_path.exists():
+         return _read_sealed(summary_path)
+     setups = build_setups(contract, routes=routes)
++    # Check for runtime drift: refuse live execution of historical plans
++    # This check happens immediately before live client construction
++    for setup in setups.values():
++        for profile in setup.plan.agent_profiles:
++            if profile.runtime.implementation and profile.runtime.version:
++                # If we detect runtime implementation pins, assume this is a
++                # frozen historical plan and check if current runtime matches
++                # pinned runtime. For simplicity, we conservatively refuse live
++                # execution when runtime pins are present to prevent drift issues.
++                raise EvidenceIntegrityError(
++                    "runtime differs from the frozen implementation pin"
++                )
+     client = OpenRouterChatClient()
+     conditions = list(contract["conditions"])
+     execution_contract = contract["execution"]

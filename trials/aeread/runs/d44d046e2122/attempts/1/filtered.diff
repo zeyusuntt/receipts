@@ -1,0 +1,24 @@
+diff --git a/src/aeread/integrations/rllm_dataset.py b/src/aeread/integrations/rllm_dataset.py
+index 8ac1025..7f9ad19 100644
+--- a/src/aeread/integrations/rllm_dataset.py
++++ b/src/aeread/integrations/rllm_dataset.py
+@@ -16,12 +16,18 @@ import glob
+ from pathlib import Path
+ from typing import Any
+ 
+-DEFAULT_CASES = "configs/exchange_economy/cases_v0/case0*.json"
++BASE_DIR = Path(__file__).resolve().parents[3]  # src/aeread/integrations -> repo root
++_DEFAULT_RELATIVE_CASES = "configs/exchange_economy/cases_v0/case0*.json"
++DEFAULT_CASES = str(BASE_DIR / _DEFAULT_RELATIVE_CASES)
+ DEFAULT_SEEDS = tuple(range(1200, 1210))
+ 
+ 
+ def build_rows(cases_glob: str = DEFAULT_CASES,
+                seeds: tuple[int, ...] = DEFAULT_SEEDS) -> list[dict[str, Any]]:
++    # If the caller passed a relative glob (not starting with '/' or drive letter),
++    # treat it relative to BASE_DIR, unless they explicitly gave an absolute path.
++    if not Path(cases_glob).is_absolute():
++        cases_glob = str(BASE_DIR / cases_glob)
+     case_paths = sorted(glob.glob(cases_glob))
+     if not case_paths:
+         raise FileNotFoundError(f"no case configs match {cases_glob!r} "

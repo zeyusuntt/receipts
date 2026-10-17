@@ -1,0 +1,32 @@
+diff --git a/src/aeread/housing_env.py b/src/aeread/housing_env.py
+index d0aed13..d0ec1a4 100644
+--- a/src/aeread/housing_env.py
++++ b/src/aeread/housing_env.py
+@@ -232,7 +232,7 @@ def resolve_bids(world: BidWorld, bids: Dict[int, Tuple[int, float]]) -> Assignm
+     resulting matching; it does not evaluate bid shading or individual rationality.
+     """
+     best: Dict[int, Tuple[float, int]] = {}
+-    for t in sorted(bids, key=lambda value: (type(value).__name__, repr(value))):
++    for t in sorted(bids, key=lambda value: (type(value).__name__, value)):
+         if not (isinstance(t, int) and not isinstance(t, bool)
+                 and 0 <= t < world.num_tenants):
+             continue
+@@ -243,10 +243,15 @@ def resolve_bids(world: BidWorld, bids: Dict[int, Tuple[int, float]]) -> Assignm
+         if not (isinstance(l, int) and not isinstance(l, bool)
+                 and 0 <= l < world.num_listings):
+             continue
+-        if not (isinstance(amount, (int, float)) and not isinstance(amount, bool)
+-                and math.isfinite(float(amount))):
++        if not (isinstance(amount, (int, float)) and not isinstance(amount, bool)):
+             continue
+-        amount = float(amount)
++        try:
++            amount_val = float(amount)
++            if not math.isfinite(amount_val):
++                continue
++        except (OverflowError, ValueError):
++            continue
++        amount = amount_val
+         if amount < world.ask[l]:
+             continue
+         cur = best.get(l)
