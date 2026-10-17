@@ -4,12 +4,58 @@ from pathlib import Path
 
 import pytest
 
-from receipts.models import Baseline, ChangedFile, DiffSummary, JunitSummary, PatchScope, Receipt, Verdict
+from receipts.models import Baseline, ChangedFile, DiffSummary, JunitSummary, PatchScope, Receipt, ShortcutFinding, Verdict
 from receipts.verify.gate import evaluate, needs_rerun
 from tests.fixtures import gate_cases
 
 
 QISKIT_FIXTURES = Path(__file__).parent / "fixtures" / "qiskit_ibm_runtime_452"
+
+
+@pytest.mark.parametrize("mode,status,has_row", [
+    ("clean", "PASS", True), ("shortcut", "REJECTED", True),
+    ("unchecked", "PASS", False), ("disabled", "PASS", False),
+])
+def test_shortcut_gate(mode, status, has_row):
+    kwargs, _ = gate_cases.honest_pass()
+    finding = ShortcutFinding(kind="stub", path="calc/core.py", name="helper", line=1,
+                              detail="helper is a stub")
+    findings = None if mode == "unchecked" else ([] if mode == "clean" else [finding])
+    kwargs["patch"].diff = kwargs["patch"].diff.model_copy(update={"shortcuts": findings})
+    if mode == "disabled":
+        kwargs["check_shortcuts"] = False
+    verdict = evaluate(**kwargs)
+    assert verdict.status == status
+    rows = [p for p in verdict.predicates if p.id == "R7_no_shortcuts"]
+    assert len(rows) == int(has_row)
+    if has_row:
+        assert rows[0].passed == (mode == "clean")
+        assert rows[0].evidence == ("no shortcut found" if mode == "clean" else finding.detail)
+        assert [p.id for p in verdict.predicates][-3:] == [
+            "R5_provenance", "R7_no_shortcuts", "R6_claim_audit",
+        ]
+    if mode == "shortcut":
+        from receipts.orchestrate import _appeal_evidence
+
+        assert verdict.failed_predicate_ids() == ["R7_no_shortcuts"]
+        assert "R7_no_shortcuts: helper is a stub" in _appeal_evidence(verdict)
+
+
+@pytest.mark.parametrize("findings,enabled,has_row", [([], True, True), (None, True, False),
+                                                          ([], False, False)])
+def test_shortcut_gate_on_confirmed_load_failure(findings, enabled, has_row):
+    kwargs, _ = gate_cases.honest_pass()
+    kwargs["patch"].diff = kwargs["patch"].diff.model_copy(update={"shortcuts": findings})
+    kwargs["verification"] = kwargs["verification"].model_copy(update={"exit_code": 4, "junit": None})
+    applied, verified = _load_confirmation()
+    verdict = evaluate(**kwargs, load_confirmation_apply=applied, load_confirmation=verified,
+                       check_shortcuts=enabled)
+    assert verdict.status == "REJECTED"
+    rows = [p for p in verdict.predicates if p.id == "R7_no_shortcuts"]
+    assert len(rows) == int(has_row)
+    if has_row:
+        assert rows[0].passed and rows[0].evidence == "no shortcut found"
+        assert verdict.predicates[-2] == rows[0]
 
 
 @pytest.mark.parametrize("case", gate_cases.CASES, ids=[c.__name__ for c in gate_cases.CASES])

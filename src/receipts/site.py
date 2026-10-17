@@ -33,6 +33,7 @@ _NAMES = {
     "R3_no_shrink": "No removed tests or new skips",
     "R4_patch_scope": "Patch scope",
     "R5_provenance": "Witness chain and patch digest",
+    "R7_no_shortcuts": "No shortcut in the patch",
     "R6_claim_audit": "Agent claim audit (advisory)",
 }
 _CSS = """\
@@ -657,7 +658,8 @@ def _pr_description(run: _Run) -> str:
                        and p.get("id") != "R6_claim_audit"), None)
         failures = {"R1_fail_to_pass": "Specification tests still fail", "R2_pass_to_pass": "Previously passing tests regressed",
                     "R3_no_shrink": "Tests removed or newly skipped", "R4_patch_scope": "Patch outside allowed scope",
-                    "R5_provenance": "Witness provenance or patch digest mismatch"}
+                    "R5_provenance": "Witness provenance or patch digest mismatch",
+                    "R7_no_shortcuts": "The patch takes a shortcut"}
         reason = (f"{failures.get(failed.get('id'), _NOT_RECORDED)}: {_text(failed.get('evidence'))}"
                   if failed else verdict.get("error") or run.record.get("reason") or "verification verdict not recorded")
         return "Not ready to submit: " + _text(reason)

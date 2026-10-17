@@ -46,6 +46,7 @@ from receipts.sandbox.tokenfactory_api import (
     UploadedFile,
 )
 from receipts.sandbox.tree import tree_digest as _tree_digest
+from receipts.verify.shortcuts import find_shortcuts
 
 
 TAIL = 6_000
@@ -1115,6 +1116,7 @@ class TokenFactoryExecutor:
 
         command = patch_command(self._git, snapshot_sha)
         display_command = f"compute patch in executor staging {staging.name}: {command}"
+        shortcuts = None
         try:
             stdout, stderr, code, timed_out, command_started, duration = (
                 await self._execute_host(
@@ -1124,6 +1126,13 @@ class TokenFactoryExecutor:
                     env_overrides=git_environment(self.root),
                 )
             )
+            if code == 0:
+                try:
+                    shortcuts = await asyncio.to_thread(
+                        find_shortcuts, stdout.decode(errors="replace"), staging, self._protected_modules,
+                    )
+                except Exception:
+                    pass
         finally:
             for path in (agent_tree, staging):
                 if os.path.lexists(path):
@@ -1156,7 +1165,7 @@ class TokenFactoryExecutor:
         )
         patch_path.write_text(patch_text)
         summary = summarize_patch(patch_text, self._protected_modules).model_copy(
-            update={"patch_path": str(patch_path)},
+            update={"patch_path": str(patch_path), "shortcuts": shortcuts},
         )
         _, dropped = filter_patch(patch_text, self._protected_modules)
         return self._emit(

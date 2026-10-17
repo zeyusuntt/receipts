@@ -929,7 +929,8 @@ async def test_run_pytest_rejects_stale_host_junit_when_container_report_is_miss
     assert not stale_report.exists()
 
 
-async def test_patch_uses_checkpoint_git_metadata_not_agent_config_offline(tmp_path):
+@pytest.mark.parametrize("helper", [False, True])
+async def test_patch_uses_checkpoint_git_metadata_not_agent_config_offline(tmp_path, helper):
     docker_module = importlib.import_module("receipts.sandbox.docker")
     source_repo = make_repo(tmp_path / "source")
     checkpoint_tree = tmp_path / "checkpoint"
@@ -946,6 +947,8 @@ async def test_patch_uses_checkpoint_git_metadata_not_agent_config_offline(tmp_p
         check=True,
     )
     (agent_tree / "notes.txt").write_text("real patch content\n")
+    if helper:
+        (agent_tree / "calc/extra.py").write_text("def _helper():\n    return 1\n")
     snapshot_sha = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=checkpoint_tree,
@@ -985,7 +988,11 @@ async def test_patch_uses_checkpoint_git_metadata_not_agent_config_offline(tmp_p
     receipt = await executor.patch(branch, snapshot_sha)
 
     assert receipt.exit_code == 0 and receipt.diff is not None
-    assert {item.path for item in receipt.diff.files} == {"fake-diff.sh", "notes.txt"}
+    assert {item.path for item in receipt.diff.files} == (
+        {"fake-diff.sh", "notes.txt", "calc/extra.py"} if helper else {"fake-diff.sh", "notes.txt"}
+    )
+    assert receipt.diff.shortcuts is not None
+    assert [f.kind for f in receipt.diff.shortcuts] == (["uncalled_private_helper"] if helper else [])
     assert "real patch content" in Path(receipt.diff.patch_path).read_text()
     assert not marker.exists()
     assert receipt.image_before == receipt.image_after == branch.head

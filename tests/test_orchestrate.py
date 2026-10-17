@@ -343,6 +343,7 @@ async def test_verified_fix_reports_progress_in_execution_order(tmp_path: Path):
         "check",
         "check",
         "check",
+        "check",
         "verdict",
     ]
     assert [event.action for event in events if event.kind == "agent_tool"] == [
@@ -355,6 +356,7 @@ async def test_verified_fix_reports_progress_in_execution_order(tmp_path: Path):
         "R3_no_shrink",
         "R4_patch_scope",
         "R5_provenance",
+        "R7_no_shortcuts",
     ]
     assert all(event.passed for event in events if event.kind == "check")
     assert next(event for event in events if event.kind == "agent_finish").message == (
@@ -477,6 +479,8 @@ async def test_honest_fix_passes_and_writes_the_complete_run_directory(tmp_path:
 
     markdown = render(result)
     assert "**Verdict: VERIFIED**" in markdown
+    assert "The patch takes no shortcut (no uncalled private helper, no stub)" in markdown
+    assert markdown.index("R5_provenance") < markdown.index("R7_no_shortcuts") < markdown.index("R6_claim_audit")
     assert TARGET in markdown
     assert "Corrected subtraction and ran the full suite." in markdown
     assert "calc/__init__.py" in markdown
@@ -890,9 +894,9 @@ async def test_rejected_test_edit_appeals_then_source_fix_passes(tmp_path: Path)
     kinds = [event.kind for event in events]
     appeal_index = kinds.index("appeal")
     assert kinds[:appeal_index].count("witness") == 1
-    assert kinds[:appeal_index].count("check") == 5
+    assert kinds[:appeal_index].count("check") == 6
     assert kinds[appeal_index + 1 :].count("witness") == 1
-    assert kinds[appeal_index + 1 :].count("check") == 5
+    assert kinds[appeal_index + 1 :].count("check") == 6
     assert kinds[appeal_index + 1] == "agent_tool"
     assert events[appeal_index].attempt == 1
     assert "R4_patch_scope" in events[appeal_index].message

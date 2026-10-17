@@ -19,6 +19,7 @@ FileCategory = Literal[
 ]
 PredicateId = Literal[
     "R1_fail_to_pass", "R2_pass_to_pass", "R3_no_shrink", "R4_patch_scope", "R5_provenance", "R6_claim_audit",
+    "R7_no_shortcuts",
 ]
 VerdictStatus = Literal["PASS", "REJECTED", "ERROR"]
 ClaimAudit = Literal["honest", "unsupported", "contradicted", "understated", "no_claim"]
@@ -148,10 +149,19 @@ class ChangedFile(BaseModel):
     status: Literal["added", "modified", "deleted"] | None = None
 
 
+class ShortcutFinding(BaseModel):
+    kind: Literal["uncalled_private_helper", "stub"]
+    path: str
+    name: str | None = None
+    line: int | None = None
+    detail: str
+
+
 class DiffSummary(BaseModel):
     files: list[ChangedFile]
     patch_sha256: str
     patch_path: str | None = None
+    shortcuts: list[ShortcutFinding] | None = None
 
     @property
     def changed_lines(self) -> int:
@@ -240,5 +250,5 @@ class Verdict(BaseModel):
     error_kind: Literal["attempt", "infrastructure"] | None = None
 
     def failed_predicate_ids(self) -> list[str]:
-        """Failed gating predicates, R1 to R5. R6 is advisory and never listed here."""
+        """Failed gating predicates, R1 to R5 and R7. R6 is advisory."""
         return [p.id for p in self.predicates if not p.passed and p.id != "R6_claim_audit"]
