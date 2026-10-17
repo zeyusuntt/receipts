@@ -1,0 +1,5 @@
+Procurement runs ignore the provider's Retry-After when they are rate limited.
+
+OpenRouter can report a rate limit inside a successful HTTP response, as an embedded error object with code 429 and a Retry-After value in its metadata (`metadata.retry_after_seconds`, or the `Retry-After` header in `metadata.headers`). The OpenRouter adapter does not surface that value on the `ProviderFailure` it raises, and the shared runner's declared retry waits only its own exponential backoff, so a retry can come back before the provider's window has passed and be rate limited again.
+
+An embedded 429 should raise a retryable `rate_limit` failure with status code 429 and the provider's retry-after seconds. When a declared runner retry follows a failure that carries a retry-after, the runner should wait at least that long, with the retry-after capped at a configured maximum (`retry_after_max_seconds`, 60 seconds for the procurement runs), and the procurement run plan and model campaign should declare that maximum in their retry configuration.
