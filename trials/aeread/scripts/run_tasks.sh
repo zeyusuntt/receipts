@@ -5,6 +5,7 @@
 #   REPO_URL_PREFIX  where a git daemon serves the start states, for example
 #                    git://host.docker.internal:9419 (each task is <prefix>/aeread-<id>/start)
 #   RUN_SUFFIX       appended to each run folder name, for example -rerun
+# FIX_ARGS in the environment adds arguments to every `receipts fix`, for example --no-review.
 # The regression suite is the fix's changed test files (Amendment 1). The issue text is
 # trials/aeread/tasks/<id>/issue.md and must exist before the task runs.
 set -uo pipefail
@@ -41,6 +42,7 @@ while read -r short start suite targets; do
     "${test_args[@]}" \
     --issue-file "$issue" \
     --executor docker \
+    ${FIX_ARGS:-} \
     --out "$out" > "$WORK/run-$short$SUFFIX.log" 2>&1
   code=$?
   echo "== $short$SUFFIX exit $code after $(( $(date +%s) - begin ))s"

@@ -1,0 +1,5 @@
+OpenRouter requests send an empty reasoning control when none is declared.
+
+When a request declares neither a reasoning effort nor a reasoning token budget, the OpenRouter adapters (the chat adapter and the native messages adapter in the shared runner) and the procurement grounding batch client (`OpenRouterBatchClient`) still send a `reasoning` field, as an empty object. OpenRouter's parameter filter then removes a pinned endpoint that does not support reasoning. The Qwen case-variance campaign (v1) was sealed after its admission canary was rejected this way, before any scored execution; its reported cost was zero, but its accounting is unavailable.
+
+The `reasoning` field should be omitted when neither control is declared, and sent with whichever of effort and token budget is declared otherwise; the provider preferences are still sent. The Qwen campaign needs a new version, v2, that supersedes v1 (v1's id stays available as `V1_CAMPAIGN_ID`), records why v1 was sealed and this one operational change in its lineage, and states that the scientific contract is unchanged from v1.
