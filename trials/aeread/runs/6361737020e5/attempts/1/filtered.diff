@@ -1,0 +1,38 @@
+diff --git a/src/aeread_families/econevals/live.py b/src/aeread_families/econevals/live.py
+index 19dca86..8a717aa 100644
+--- a/src/aeread_families/econevals/live.py
++++ b/src/aeread_families/econevals/live.py
+@@ -296,7 +296,7 @@ class EconevalsJsonHarness:
+         if not isinstance(calls, list) or not calls:
+             return None, False, "return a non-empty calls list"
+         normalized: list[dict[str, Any]] = []
+-        submit_index: int | None = None
++        submit_count = 0
+         for index, call in enumerate(calls):
+             if not isinstance(call, Mapping):
+                 return None, False, f"call {index} must be an object"
+@@ -310,15 +310,16 @@ class EconevalsJsonHarness:
+             if not isinstance(arguments, Mapping):
+                 return None, False, f"call {index} needs an arguments object"
+             if name == submit_tool:
+-                submit_index = index
++                submit_count += 1
++                # Submit must be the last call - if we see another submit after
++                # having already seen one, or if this isn't the last call, reject
++                if submit_count > 1 or index != len(calls) - 1:
++                    return None, False, (
++                        f"{submit_tool!r} must be called exactly once and "
++                        f"must be the last call"
++                    )
+             normalized.append({"id": call_id, "name": name, "arguments": arguments})
+-        if submit_index is not None and submit_index != len(normalized) - 1:
+-            # The environment's own rule, and the only one worth enforcing
+-            # here: anything after the submit would never run.
+-            return None, False, (
+-                f"{submit_tool!r} ends the period, so it must be the last call"
+-            )
+-        return tuple(normalized), submit_index is not None, ""
++        return tuple(normalized), submit_count == 1, ""
+ 
+     async def act(self, request: Any, ctx: AttemptContext) -> HarnessOutput:
+         """Run one period as an iterative tool loop, as upstream does.

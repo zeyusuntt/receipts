@@ -1,0 +1,26 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Housing bid resolution breaks ties the wrong way.\n\nWhen two tenants bid exactly the same amount for a listing, the tie should go to the tenant with the lower numeric id. It does not: for example, with tenants 10 and 2 bidding the same amount for listing 0, the listing should go to tenant 2.",
+  "source": {
+    "commit": "6fcea6b876bd5b645a3f4220ece7d670316b6252",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal/aeread-96dc5893c8a0/start"
+  },
+  "spec_paths": [
+    "tests/test_housing_bids.py"
+  ],
+  "spec_tests": [
+    "tests/test_housing_bids.py::test_equal_bids_use_numeric_tenant_id_as_the_tie_break"
+  ],
+  "suite_scope": "tests/__init__.py tests/test_exchange_v1_candidates.py tests/test_exchange_v1_pilot.py tests/test_exchange_v1_roles.py tests/test_exchange_v1_submit.py tests/test_housing_bids.py"
+}

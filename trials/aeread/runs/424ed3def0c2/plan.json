@@ -1,0 +1,15 @@
+{
+  "approach": "1. Add retry_after_seconds to ProviderFailure.\n2. Update OpenRouter adapter to populate retry_after_seconds from metadata or headers on 429 errors.\n3. Make retry logic in Execution honor retry_after_seconds via a helper.\n4. Propagate retry_after_max_seconds config through harness configs for procurement plans and campaigns.}], ",
+  "files_to_edit": [
+    "src/aeread/shared_runner/task/execution.py",
+    "src/aeread_families/procurement_grounding/__init__.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "The shared Runner needs to expose retry_after_seconds from rate-limit ProviderFailures coming from the OpenRouter adapter and use them to space retries appropriately.",
+  "retries": {},
+  "usage": {
+    "completion": 153,
+    "prompt": 28574,
+    "reasoning": 0
+  }
+}

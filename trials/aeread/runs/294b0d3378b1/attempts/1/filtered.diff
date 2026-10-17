@@ -1,0 +1,21 @@
+diff --git a/src/aeread/shared_runner/open_harnesses.py b/src/aeread/shared_runner/open_harnesses.py
+index e336ac6..fa889f7 100644
+--- a/src/aeread/shared_runner/open_harnesses.py
++++ b/src/aeread/shared_runner/open_harnesses.py
+@@ -145,13 +145,13 @@ def _route_body(request: ProviderRequest) -> dict[str, Any]:
+ 
+ def _capture_http_client(captured: list[dict[str, Any]]) -> Any:
+     openai_major = int(importlib.metadata.version("openai").split(".", 1)[0])
+-    if openai_major >= 2:
+-        import httpx
+-    else:
++    if openai_major >= 3:
+         try:
+             import httpx2 as httpx
+         except ImportError:
+             import httpx
++    else:
++        import httpx
+ 
+     def capture(response: Any) -> None:
+         response.read()

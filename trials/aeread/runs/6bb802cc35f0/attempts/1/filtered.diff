@@ -1,0 +1,114 @@
+diff --git a/src/aeread/shared_runner/run/adapter_campaign.py b/src/aeread/shared_runner/run/adapter_campaign.py
+index 8c505db..09da288 100644
+--- a/src/aeread/shared_runner/run/adapter_campaign.py
++++ b/src/aeread/shared_runner/run/adapter_campaign.py
+@@ -5,13 +5,14 @@ import argparse
+ import asyncio
+ import hashlib
+ import json
++import math
+ import os
+ from datetime import datetime, timezone
+ from pathlib import Path
+ from typing import Any, Mapping
+ 
+ from .resolver import canonical_json_bytes
+-from ..task.execution import ArenaChatClient, ProviderRequest
++from ..task.execution import ArenaChatClient, ProviderRequest, ProviderFailure
+ 
+ PROVIDER = "arena"
+ MODEL = "glm-5p2"
+@@ -56,6 +57,8 @@ async def run_adapter_canary(
+     """Run one unscored Arena route-admission probe and seal its result."""
+     if checkpoint_path.exists():
+         record = json.loads(checkpoint_path.read_text(encoding="utf-8"))
++        if record.get("family_id") != family_id:
++            raise ValueError("checkpoint belongs to a different family")
+         recorded = record.get("record_sha256")
+         if recorded != _digest({k: v for k, v in record.items() if k != "record_sha256"}):
+             raise ValueError("canary checkpoint digest mismatch")
+@@ -101,10 +104,40 @@ async def run_adapter_canary(
+     result = None
+     try:
+         result = await (client or ArenaChatClient()).complete(request)
++        # Truncated response detection
++        if getattr(result, "finish_reason", None) == "length":
++            return {
++                "schema_version": record["schema_version"],
++                "family_id": record["family_id"],
++                "scored": False,
++                "provider": record["provider"],
++                "model": record["model"],
++                "revision": record["revision"],
++                "route_provider": record["route_provider"],
++                "request_sha256": record["request_sha256"],
++                "attempted_at": record["attempted_at"],
++                "status": "rejected",
++                "failure_type": "MaxTokensExceeded",
++                "failure_condition": "truncated_response",
++                "cost_usd": 0.0,
++            }
++
+         payload = json.loads(result.output_text)
+         if payload != {"status": "ok"}:
+             raise ValueError("canary response did not match the sealed admission value")
+         cost = float(result.cost_usd or 0.0)
++        # Invalid cost detection
++        if cost <= 0.0 or not math.isfinite(cost):
++            rec = dict(record)
++            rec.update(
++                status="rejected",
++                failure_type="InvalidCost",
++                failure_condition="invalid_provider_cost",
++                cost_usd=0.0,
++            )
++            rec["record_sha256"] = _digest(rec)
++            _write_once(checkpoint_path, rec)
++            return rec
+         if cost > CANARY_MAX_COST_USD:
+             raise ValueError("canary exceeded its cost ceiling")
+         record.update(
+@@ -116,13 +149,32 @@ async def run_adapter_canary(
+             output_tokens=result.output_tokens,
+             cost_usd=cost,
+         )
+-    except Exception as error:  # typed checkpoint; caller decides whether to stop
++    except ProviderFailure as error:
++        # Sanitize provider failure
+         record.update(
+             status="rejected",
+-            failure_type=type(error).__name__,
+-            failure_condition=getattr(error, "condition", "canary_rejected"),
+-            cost_usd=float(result.cost_usd or 0.0) if result is not None else 0.0,
++            failure_type="provider_error",
++            failure_condition="provider_error",
++            cost_usd=0.0,
+         )
++        record["record_sha256"] = _digest(record)
++        _write_once(checkpoint_path, record)
++        return record
++    except ValueError as error:
++        # Other value errors (e.g., cost ceiling) become rejected checkpoints
++        record.update(
++            status="rejected",
++            failure_type="ValueError",
++            failure_condition=str(error),
++            cost_usd=0.0,
++        )
++        record["record_sha256"] = _digest(record)
++        _write_once(checkpoint_path, record)
++        return record
++    except Exception as error:
++        # Unexpected internal errors propagate without checkpoint
++        raise
++
+     record["record_sha256"] = _digest(record)
+     _write_once(checkpoint_path, record)
+     return record
+@@ -141,4 +193,4 @@ def main(argv: list[str] | None = None) -> int:
+ 
+ 
+ if __name__ == "__main__":
+-    raise SystemExit(main())
++    raise SystemExit(main())
+\ No newline at end of file

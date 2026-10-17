@@ -1,0 +1,35 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "The procurement risk-gate factorial campaign (v3) was sealed ineligible after three consecutive rate limits used up every attempt of one logical action. Each logical action gets three attempts, with a 15-second and then a capped 30-second backoff, which is not enough to outlast the provider's rate-limit window.\n\nThe campaign needs a new version, v4, that supersedes v3 (v3's campaign id stays available as `V3_CAMPAIGN_ID`), allows four attempts per logical action with the same backoff schedule, and changes nothing else. The frozen plan's lineage should record why v3 was sealed ineligible, record the attempt-count change as the only operational change, and state that the scientific contract is unchanged from v1, v2 and v3.",
+  "source": {
+    "commit": "324b80097270f4b602701b418831df6c6df0409c",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9419/aeread-56799931fe3d/start"
+  },
+  "spec_paths": [
+    "tests/test_procurement_risk_gate_campaign.py"
+  ],
+  "spec_tests": [
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_bootstrap_configuration_is_nontrivial",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_canaries_bind_each_prompt",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_canary_admits_malformed_output_without_selecting_on_behavior",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_canary_retries_rate_limit_with_v4_pacing",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_comparison_progresses_specialized_factorial_and_publishes",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_plan_freezes_factorial_distribution_and_budget",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_plan_rejects_parent_or_prompt_drift",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_prompts_are_additive_and_do_not_use_supplier_identity",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_runner_checkpoints_each_arm_evenly",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_unfavorable_result_remains_eligible"
+  ],
+  "suite_scope": "tests/test_procurement_risk_gate_campaign.py"
+}

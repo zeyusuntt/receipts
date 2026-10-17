@@ -1,0 +1,39 @@
+diff --git a/src/aeread_families/procurement_allocation/strategy_scaffold.py b/src/aeread_families/procurement_allocation/strategy_scaffold.py
+index 5f75b71..ffb5f57 100644
+--- a/src/aeread_families/procurement_allocation/strategy_scaffold.py
++++ b/src/aeread_families/procurement_allocation/strategy_scaffold.py
+@@ -48,20 +48,12 @@ STRATEGY_PROMPT = (
+     + """
+ 
+ Use this public-evidence decision procedure before choosing each action:
+-1. Ignore supplier IDs and names as quality signals. Rank only provisional listing
+-   price, claimed lead time, claimed variant, and the objective's requirements.
+-2. Preserve the ten-action budget. For each BOM component, qualify the smallest
+-   plausible supplier set: request a formal quote, then verify an exact-variant
+-   sample. Add another supplier only when verified capacity or service requires it.
+-3. Treat only current formal offers and verified samples as decision evidence.
+-   Check exact variant, MOQ/order step, capacity, landed cost, payment timing,
+-   deadline/on-time probability, yield, and return/refund terms.
+-4. Before an award, estimate component-complete kits from the weakest BOM component,
+-   confirm minimum service and cash budget, and prefer the feasible positive-margin
+-   allocation. Use quantities that satisfy each offer's MOQ, order step, and capacity.
+-5. Counter only when a current formal offer blocks an otherwise feasible allocation
+-   and enough actions remain. Defer only when no evidence-qualified, budget-feasible
+-   positive-utility award can be submitted.
++1. Ignore supplier IDs and names as quality signals. Before considering price, rule out listings that miss the deadline or are not the exact required variant.
++2. Among remaining listings, rank only provisional listing price, claimed lead time, claimed variant, and the objective's requirements.
++3. Preserve the ten-action budget. For each BOM component, qualify the smallest plausible supplier set: request a formal quote, then verify an exact-variant sample. Request a sample only from an offer that survives these feasibility checks.
++4. Treat only current formal offers and verified samples as decision evidence. Check exact variant, MOQ/order step, capacity, landed cost, payment timing, deadline/on-time probability, yield, and return/refund terms.
++5. Before an award, estimate component-complete kits from the weakest BOM component, confirm minimum service and cash budget, and prefer the feasible positive-margin allocation. Use quantities that satisfy each offer's MOQ, order step, and capacity.
++6. Counter only when a current formal offer blocks an otherwise feasible allocation and enough actions remain. Defer only when no evidence-qualified, budget-feasible positive-utility award can be submitted.
+ 
+ Return only the next JSON action, never this analysis.
+ """
+@@ -205,6 +197,7 @@ def build_plan(*, max_parallel_cells: int = 1) -> dict[str, Any]:
+         "max_parallel_cells": max_parallel_cells,
+         "abort_on_operational_failure": True,
+         "admission_canary_scored": False,
++        "development_status": "adaptive development treatment",
+         "conservative_scored_cost_ceiling_usd": sum(
+             float(panel_plan["conservative_cost_ceiling_usd"])
+             for panel_plan in panel_plans.values()

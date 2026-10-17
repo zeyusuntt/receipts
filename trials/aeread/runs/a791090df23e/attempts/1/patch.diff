@@ -1,0 +1,69 @@
+diff --git a/src/aeread/integrations/everos_memory.py b/src/aeread/integrations/everos_memory.py
+index 2b19b0f..6e5eead 100644
+--- a/src/aeread/integrations/everos_memory.py
++++ b/src/aeread/integrations/everos_memory.py
+@@ -289,9 +289,11 @@ class MemoryCandidate:
+ def build_openrouter_llm_fn(model: str, *, base_url: str | None = None,
+                             api_key: str | None = None,
+                             temperature: float = 0.7,
+-                            max_tokens: int = 1200) -> Callable[[str], str]:
++                            max_tokens: int = 4096,
++                            client: Any = None) -> Callable[[str], str]:
+     """Chat-completions policy fn for :class:`MemoryCandidate`.
+ 
++    Retries empty completions with escalated token budget.
+     Defaults to the ``OPENAI_BASE_URL`` / ``OPENAI_API_KEY`` environment
+     (OpenRouter in the AERead reference setup).
+     """
+@@ -299,24 +301,36 @@ def build_openrouter_llm_fn(model: str, *, base_url: str | None = None,
+ 
+     from openai import OpenAI
+ 
+-    client = OpenAI(
+-        base_url=base_url or os.environ.get(
+-            "OPENAI_BASE_URL", "https://openrouter.ai/api/v1"),
+-        api_key=api_key or os.environ.get("OPENAI_API_KEY", "EMPTY"))
++    if client is None:
++        client = OpenAI(
++            base_url=base_url or os.environ.get(
++                "OPENAI_BASE_URL", "https://openrouter.ai/api/v1"),
++            api_key=api_key or os.environ.get("OPENAI_API_KEY", "EMPTY"))
+ 
+-    usage = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0}
++    usage = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "empty_retries": 0}
+ 
+     def llm_fn(prompt: str) -> str:
+-        resp = client.chat.completions.create(
+-            model=model,
+-            messages=[{"role": "user", "content": prompt}],
+-            temperature=temperature,
+-            max_tokens=max_tokens)
+-        usage["calls"] += 1
+-        if resp.usage is not None:
+-            usage["prompt_tokens"] += resp.usage.prompt_tokens or 0
+-            usage["completion_tokens"] += resp.usage.completion_tokens or 0
+-        return (resp.choices[0].message.content or "").strip()
++        # Try with initial max_tokens, retry once with doubled budget if empty
++        tokens = max_tokens
++        for attempt in range(2):
++            resp = client.chat.completions.create(
++                model=model,
++                messages=[{"role": "user", "content": prompt}],
++                temperature=temperature,
++                max_tokens=tokens)
++            usage["calls"] += 1
++            if resp.usage is not None:
++                usage["prompt_tokens"] += resp.usage.prompt_tokens or 0
++                usage["completion_tokens"] += resp.usage.completion_tokens or 0
++            
++            content = (resp.choices[0].message.content or "").strip()
++            if content or attempt == 1:  # Return if not empty or this is second attempt
++                if attempt == 1:  # We retried due to empty
++                    usage["empty_retries"] += 1
++                return content
++            
++            # Empty content on first attempt, retry with more tokens
++            tokens = tokens * 2
+ 
+     llm_fn.usage = usage  # type: ignore[attr-defined] - cost reporting
+     return llm_fn

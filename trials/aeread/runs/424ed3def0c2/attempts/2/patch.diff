@@ -1,0 +1,182 @@
+diff --git a/src/aeread/shared_runner/task/execution.py b/src/aeread/shared_runner/task/execution.py
+index e38d46c..ed8125d 100644
+--- a/src/aeread/shared_runner/task/execution.py
++++ b/src/aeread/shared_runner/task/execution.py
+@@ -60,6 +60,7 @@ class ProviderFailure(RuntimeError):
+         *,
+         retryable: bool,
+         status_code: int | None = None,
++        retry_after_seconds: float | None = None,
+     ) -> None:
+         super().__init__(message)
+         if not isinstance(condition, str) or not condition:
+@@ -67,6 +68,7 @@ class ProviderFailure(RuntimeError):
+         self.condition = condition
+         self.retryable = bool(retryable)
+         self.status_code = status_code
++        self.retry_after_seconds = retry_after_seconds
+ 
+ 
+ class ToolFailure(RuntimeError):
+@@ -1423,7 +1425,15 @@ class OpenRouterChatClient:
+         if isinstance(top_level_error, Mapping):
+             status_code = top_level_error.get("code")
+             message = str(top_level_error.get("message") or "OpenRouter request failed")
+-            raise OpenRouterChatClient._provider_error(status_code, message)
++            metadata = top_level_error.get("metadata")
++            headers = metadata.get("headers") if isinstance(metadata, Mapping) else None
++            retry_after_metadata = metadata.get("retry_after_seconds") if isinstance(metadata, Mapping) else None
++            raise OpenRouterChatClient._provider_error(
++                status_code, 
++                message, 
++                headers=headers, 
++                metadata=metadata
++            )
+         choices = raw_response.get("choices")
+         if not isinstance(choices, list) or len(choices) != 1:
+             raise ProviderFailure(
+@@ -1436,7 +1446,15 @@ class OpenRouterChatClient:
+         if isinstance(choice_error, Mapping):
+             status_code = choice_error.get("code")
+             message = str(choice_error.get("message") or "OpenRouter choice failed")
+-            raise OpenRouterChatClient._provider_error(status_code, message)
++            metadata = choice_error.get("metadata")
++            headers = metadata.get("headers") if isinstance(metadata, Mapping) else None
++            retry_after_metadata = metadata.get("retry_after_seconds") if isinstance(metadata, Mapping) else None
++            raise OpenRouterChatClient._provider_error(
++                status_code, 
++                message, 
++                headers=headers, 
++                metadata=metadata
++            )
+         if isinstance(choice, Mapping) and choice.get("finish_reason") == "error":
+             raise ProviderFailure(
+                 "provider_rejected",
+@@ -1447,12 +1465,34 @@ class OpenRouterChatClient:
+         return raw_response, choice, message
+ 
+     @staticmethod
+-    def _provider_error(status_code: Any, message: str) -> ProviderFailure:
++    def _provider_error(status_code: Any, message: str, *, headers: Mapping[str, Any] | None = None, metadata: Mapping[str, Any] | None = None) -> ProviderFailure:
+         resolved_status = status_code if isinstance(status_code, int) else None
++        retry_after_seconds = None
++        
+         if resolved_status == 429:
++            # Check metadata for retry_after_seconds
++            if metadata and isinstance(metadata, Mapping):
++                retry_after_val = metadata.get("retry_after_seconds")
++                if isinstance(retry_after_val, (int, float)) and retry_after_val > 0:
++                    retry_after_seconds = float(retry_after_val)
++            
++            # Check headers for Retry-After
++            if retry_after_seconds is None and headers and isinstance(headers, Mapping):
++                retry_after_val = headers.get("Retry-After") or headers.get("retry-after")
++                if isinstance(retry_after_val, (int, float)) and retry_after_val > 0:
++                    retry_after_seconds = float(retry_after_val)
++                elif isinstance(retry_after_val, str):
++                    try:
++                        retry_after_seconds = float(retry_after_val)
++                        if retry_after_seconds <= 0:
++                            retry_after_seconds = None
++                    except ValueError:
++                        pass
++            
+             return ProviderFailure(
+-                "rate_limit", message, retryable=True, status_code=resolved_status
++                "rate_limit", message, retryable=True, status_code=resolved_status, retry_after_seconds=retry_after_seconds
+             )
++        
+         retryable = resolved_status is not None and resolved_status >= 500
+         return ProviderFailure(
+             "provider_5xx" if retryable else "provider_rejected",
+@@ -2197,6 +2237,7 @@ class MinimalChatExecutor:
+                         profile=profile,
+                         condition=failure.condition,
+                         ordinal=ordinal,
++                        failure=failure,
+                     )
+                     retry_reason = failure.condition
+                     continue
+@@ -2394,21 +2435,35 @@ class MinimalChatExecutor:
+         profile: AgentProfile,
+         condition: str,
+         ordinal: int,
++        failure: ProviderFailure | None = None,
+     ) -> None:
+         policy = profile.harness.config.get("retry_backoff")
+         if policy is None:
+             return
+         if policy != "exponential_jitter_v1":
+             raise EvidenceIntegrityError(f"unsupported retry backoff policy: {policy!r}")
+-        base_seconds = min(30.0, 2.0 * (2**ordinal))
+-        jitter_seconds = int(request.provider_call_id[-4:], 16) % 1000 / 1000.0
+-        delay_seconds = base_seconds + jitter_seconds
++        
++        # Use provider's retry_after_seconds if available, otherwise use exponential backoff
++        delay_seconds = None
++        if failure is not None and getattr(failure, 'retry_after_seconds', None) is not None:
++            retry_after = float(failure.retry_after_seconds)
++            # Cap at configured maximum
++            max_retry_after = profile.harness.config.get("retry_after_max_seconds", 60.0)
++            delay_seconds = min(retry_after, max_retry_after)
++        
++        if delay_seconds is None:
++            # Fall back to exponential backoff with jitter
++            base_seconds = min(30.0, 2.0 * (2**ordinal))
++            jitter_seconds = int(request.provider_call_id[-4:], 16) % 1000 / 1000.0
++            delay_seconds = base_seconds + jitter_seconds
++        
+         self.evidence.append_event(
+             "retry_backoff_started",
+             {
+                 "failure_condition": condition,
+                 "delay_seconds": delay_seconds,
+                 "attempt_ordinal": ordinal,
++                "provider_retry_after_seconds": getattr(failure, 'retry_after_seconds', None) if failure is not None else None,
+             },
+             phase_instance_id=decision.phase_instance_id,
+             logical_action_id=decision.logical_action_id,
+@@ -2435,6 +2490,7 @@ class MinimalChatExecutor:
+                 "failure_condition": condition,
+                 "delay_seconds": delay_seconds,
+                 "attempt_ordinal": ordinal,
++                "provider_retry_after_seconds": getattr(failure, 'retry_after_seconds', None) if failure is not None else None,
+             },
+             phase_instance_id=decision.phase_instance_id,
+             logical_action_id=decision.logical_action_id,
+diff --git a/src/aeread_families/procurement_allocation/model_campaign.py b/src/aeread_families/procurement_allocation/model_campaign.py
+index e8c40b3..5406828 100644
+--- a/src/aeread_families/procurement_allocation/model_campaign.py
++++ b/src/aeread_families/procurement_allocation/model_campaign.py
+@@ -220,6 +220,7 @@ def planned_model_qualification(
+                 "max_action_attempts": max_action_attempts,
+                 "retryable_conditions": list(resolved_retryable_conditions),
+                 "retry_backoff": retry_backoff,
++                "retry_after_max_seconds": 60.0,
+                 "session_mode": "restart",
+                 "sdk_retries": 0,
+                 "cost_boundary": "retry only known-zero-cost provider failures",
+diff --git a/src/aeread_families/procurement_allocation/runner.py b/src/aeread_families/procurement_allocation/runner.py
+index 91c8475..3e36415 100644
+--- a/src/aeread_families/procurement_allocation/runner.py
++++ b/src/aeread_families/procurement_allocation/runner.py
+@@ -526,6 +526,7 @@ def build_openrouter_setup(
+             "max_prompt_price_per_million": route.max_prompt_price_per_million,
+             "max_completion_price_per_million": route.max_completion_price_per_million,
+         },
++        "retry_after_max_seconds": 60.0,
+     }
+     if retry_backoff is not None:
+         harness_config["retry_backoff"] = retry_backoff
+diff --git a/src/aeread_families/procurement_grounding/runner.py b/src/aeread_families/procurement_grounding/runner.py
+index 1afa582..b71e2dd 100644
+--- a/src/aeread_families/procurement_grounding/runner.py
++++ b/src/aeread_families/procurement_grounding/runner.py
+@@ -473,6 +473,7 @@ def build_openrouter_setup(
+             "max_prompt_price_per_million": route.max_prompt_price_per_million,
+             "max_completion_price_per_million": route.max_completion_price_per_million,
+         },
++        "retry_after_max_seconds": 60.0,
+     }
+     if harness_config is not None:
+         resolved_harness_config.update(dict(harness_config))

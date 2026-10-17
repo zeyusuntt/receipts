@@ -1,0 +1,30 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Procurement runs ignore the provider's Retry-After when they are rate limited.\n\nOpenRouter can report a rate limit inside a successful HTTP response, as an embedded error object with code 429 and a Retry-After value in its metadata (`metadata.retry_after_seconds`, or the `Retry-After` header in `metadata.headers`). The OpenRouter adapter does not surface that value on the `ProviderFailure` it raises, and the shared runner's declared retry waits only its own exponential backoff, so a retry can come back before the provider's window has passed and be rate limited again.\n\nAn embedded 429 should raise a retryable `rate_limit` failure with status code 429 and the provider's retry-after seconds. When a declared runner retry follows a failure that carries a retry-after, the runner should wait at least that long, with the retry-after capped at a configured maximum (`retry_after_max_seconds`, 60 seconds for the procurement runs), and the procurement run plan and model campaign should declare that maximum in their retry configuration.",
+  "source": {
+    "commit": "70c02630ea3dddfd418d402d2e6c68a9b291a723",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9419/aeread-424ed3def0c2/start"
+  },
+  "spec_paths": [
+    "tests/test_procurement_allocation_case.py",
+    "tests/test_procurement_allocation_model_campaign.py",
+    "tests/test_shared_runner_execution.py"
+  ],
+  "spec_tests": [
+    "tests/test_procurement_allocation_case.py::test_run_plan_pins_sources_and_openrouter_route",
+    "tests/test_procurement_allocation_model_campaign.py::test_declared_runner_retry_recovers_429_and_remains_visible",
+    "tests/test_shared_runner_execution.py::test_openrouter_adapter_classifies_embedded_429_as_retryable_rate_limit"
+  ],
+  "suite_scope": "tests/test_procurement_allocation_case.py tests/test_procurement_allocation_model_campaign.py tests/test_shared_runner_execution.py"
+}

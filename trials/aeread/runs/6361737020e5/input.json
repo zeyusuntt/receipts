@@ -1,0 +1,26 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "An econevals live step that calls the submit tool twice is not caught by step validation.\n\nA model returned `['submit_purchase_plan', 'submit_purchase_plan']` in one step. `_validate_step` records only the last occurrence of the submit tool, so it sees the submit as the final call and the step passes. The first submit then sits in the middle of the accumulated action, which the environment rejects as a whole (`submit_tool_must_be_the_final_call`), and the case fails after 100 periods of work.\n\nA step that calls the submit tool more than once should be rejected by validation, with feedback to the model, before anything in it executes.",
+  "source": {
+    "commit": "be364b7c412f694973aeba111673cdc7527fa22d",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9419/aeread-6361737020e5/start"
+  },
+  "spec_paths": [
+    "tests/test_econevals_live_campaign.py"
+  ],
+  "spec_tests": [
+    "tests/test_econevals_live_campaign.py::test_a_step_may_not_submit_twice"
+  ],
+  "suite_scope": "tests/test_econevals_live_campaign.py"
+}

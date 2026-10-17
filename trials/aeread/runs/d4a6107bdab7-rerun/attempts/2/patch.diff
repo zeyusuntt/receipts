@@ -1,0 +1,66 @@
+diff --git a/src/aeread/shared_runner/task/execution.py b/src/aeread/shared_runner/task/execution.py
+index f108aad..d64352f 100644
+--- a/src/aeread/shared_runner/task/execution.py
++++ b/src/aeread/shared_runner/task/execution.py
+@@ -39,6 +39,9 @@ from .scheduler import (
+ )
+ from ..schemas import AgentProfile
+ 
++# Post-admission rejection constant for opt-in handling
++POST_ADMISSION_REJECTION = "provider_rejected_after_route_proven"
++
+ if TYPE_CHECKING:
+     # `harness.py` imports `ProviderRequest`/`ProviderResult` from this module,
+     # so the reverse reference is type-checking only; call sites that need the
+@@ -2181,6 +2184,7 @@ class MinimalChatExecutor:
+         self._logical_actions_by_profile: dict[str, int] = {}
+         self._cost_by_profile: dict[str, float] = {}
+         self._request_seed_by_profile = dict(request_seed_by_profile or {})
++        self._routes_proven: set[str] = set()
+         self.total_cost_usd = 0.0
+         for profile in profiles:
+             if not isinstance(profile, AgentProfile):
+@@ -3105,11 +3109,17 @@ class MinimalChatExecutor:
+             {"valid": valid, "failure_code": failure_code},
+             logical_action_id=logical_action_id,
+         )
+-        self._executions[logical_action_id] = dataclasses.replace(
++        updated_execution = dataclasses.replace(
+             execution,
+             status="succeeded" if valid else "agent_action_failure",
+             failure_code=failure_code,
+         )
++        
++        # Track successful routes for post-admission rejection handling
++        if valid:
++            self._routes_proven.add(execution.profile_id)
++            
++        self._executions[logical_action_id] = updated_execution
+ 
+     def finalize_action(self, record: Any) -> None:
+         """R3 callback after parsing and legality have produced an envelope."""
+@@ -3225,6 +3235,24 @@ class MinimalChatExecutor:
+             {"outcome": episode_result.outcome},
+         )
+ 
++    def _is_post_admission_rejection(self, profile: AgentProfile, failure: ProviderFailure) -> bool:
++        """
++        Determine if a provider rejection should be treated as a post-admission rejection.
++        
++        This occurs when:
++        1. The failure condition is "provider_rejected" (typically 4xx errors like 404)
++        2. The profile's route has already been proven successful in this run
++        
++        Such failures are treated as their own condition rather than immediate hard failures.
++        """
++        # Check if we're tracking proven routes and this profile's route is proven
++        if hasattr(self, '_routes_proven'):
++            return (
++                failure.condition == "provider_rejected" and
++                profile.profile_id in self._routes_proven
++            )
++        return False
++
+     def execution_for(self, logical_action_id: str) -> LogicalActionExecution:
+         try:
+             return self._executions[logical_action_id]

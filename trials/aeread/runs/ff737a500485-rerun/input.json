@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "The shared runner's evaluation receipts accept coerced preimages and noncanonical rewrites.\n\nReading a receipt whose bytes on disk are valid JSON but not canonical succeeds, and writing a receipt over such bytes overwrites them; both should be refused. A transitional receipt whose `deferred_leaf_ids` was changed (for example to None, False, 0, an empty string or an empty object) still reads as valid; it should fail its `receipt_sha256` check.",
+  "source": {
+    "commit": "c7e003ddd46ab6d1beaac079af08ae52e20030a1",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal/aeread-ff737a500485/start"
+  },
+  "spec_paths": [
+    "tests/test_shared_runner_receipts.py"
+  ],
+  "spec_tests": [
+    "tests/test_shared_runner_receipts.py::test_durable_write_rejects_noncanonical_existing_bytes[False]",
+    "tests/test_shared_runner_receipts.py::test_durable_write_rejects_noncanonical_existing_bytes[True]",
+    "tests/test_shared_runner_receipts.py::test_transitional_receipt_rejects_changed_deferred_leaf_ids[0]",
+    "tests/test_shared_runner_receipts.py::test_transitional_receipt_rejects_changed_deferred_leaf_ids[False]",
+    "tests/test_shared_runner_receipts.py::test_transitional_receipt_rejects_changed_deferred_leaf_ids[None]",
+    "tests/test_shared_runner_receipts.py::test_transitional_receipt_rejects_changed_deferred_leaf_ids[]",
+    "tests/test_shared_runner_receipts.py::test_transitional_receipt_rejects_changed_deferred_leaf_ids[value4]"
+  ],
+  "suite_scope": "tests/test_shared_runner_receipts.py"
+}

@@ -1,0 +1,125 @@
+diff --git a/debug_test.py b/debug_test.py
+new file mode 100644
+index 0000000..55be075
+--- /dev/null
++++ b/debug_test.py
+@@ -0,0 +1,73 @@
++#!/usr/bin/env python3
++
++import sys
++import os
++sys.path.insert(0, '/workspace')
++
++# Let's check what we're getting
++from tests.test_shared_runner_receipts import _receipt, _seal_with_the_transitional_preimage
++from src.aeread.shared_runner.task.receipts import canonical_json_bytes
++import json
++import tempfile
++from pathlib import Path
++
++def debug_write_behavior():
++    # Check what EvaluationReceipt each module thinks it is
++    import tests.test_shared_runner_receipts as test_mod
++    import src.aeread.shared_runner.task.receipts as receipt_mod
++    
++    print("Test module EvaluationReceipt:", test_mod.EvaluationReceipt)
++    print("Receipt module EvaluationReceipt:", receipt_mod.EvaluationReceipt)
++    print("Are they the same?", test_mod.EvaluationReceipt is receipt_mod.EvaluationReceipt)
++    
++    # Recreate the exact test scenario - TRANSITIONAL CASE
++    receipt = _seal_with_the_transitional_preimage(_receipt())  # This IS sealed
++    print(f"_seal_with_the_transitional_preimage returns type: {type(receipt)}")
++    print(f"Module of that type: {type(receipt).__module__}")
++    print(f"Is instance of test_mod.EvaluationReceipt: {isinstance(receipt, test_mod.EvaluationReceipt)}")
++    print(f"Is instance of receipt_mod.EvaluationReceipt: {isinstance(receipt, receipt_mod.EvaluationReceipt)}")
++    
++    payload = json.loads(canonical_json_bytes(receipt))
++    payload["deferred_leaf_ids"] = []  # Make it [] (already is [], but explicit)
++    raw = (json.dumps(payload, indent=2) + "\n").encode("utf-8")
++    
++    with tempfile.TemporaryDirectory() as tmpdir:
++        destination = Path(tmpdir) / "evaluation_receipt.json"
++        destination.write_bytes(raw)
++        
++        print(f"Wrote non-canonical bytes to: {destination}")
++        print(f"Byte length: {len(raw)}")
++        print(f"First 100 bytes: {repr(raw[:100])}")
++        print(f"Receipt SHA256: {receipt.receipt_sha256}")
++        
++        # Test 1: Try to read it (should fail with "not canonical")
++        try:
++            from src.aeread.shared_runner.task.receipts import read_evaluation_receipt
++            result = read_evaluation_receipt(destination)
++            print(f"ERROR: Read succeeded unexpectedly: {result}")
++        except Exception as e:
++            print(f"Read failed as expected: {e}")
++            
++        # Test 2: Try to write over it (should fail with "refusing to overwrite") 
++        try:
++            from src.aeread.shared_runner.task.receipts import write_evaluation_receipt
++            print(f"About to call write_evaluation_receipt with:")
++            print(f"  receipt type: {type(receipt)}")
++            print(f"  receipt is test_mod.EvaluationReceipt: {isinstance(receipt, test_mod.EvaluationReceipt)}")
++            print(f"  receipt is receipt_mod.EvaluationReceipt: {isinstance(receipt, receipt_mod.EvaluationReceipt)}")
++            print(f"  destination: {destination}")
++            # Use SAME receipt as what's on disk (should match and allow overwrite IF canonical)
++            # But since what's on disk is NON-CANONICAL, it should refuse
++            print(f"Attempting to write SAME receipt over existing NON-CANONICAL file...")
++            result_path = write_evaluation_receipt(receipt, destination)
++            print(f"ERROR: Write succeeded unexpectedly: {result_path}")
++        except Exception as e:
++            print(f"Write failed: {e}")
++            print(f"Exception type: {type(e)}")
++            if hasattr(e, '__cause__') and e.__cause__:
++                print(f"Cause: {e.__cause__}")
++            import traceback
++            traceback.print_exc()
++
++if __name__ == "__main__":
++    debug_write_behavior()
+\ No newline at end of file
+diff --git a/src/aeread/shared_runner/task/receipts.py b/src/aeread/shared_runner/task/receipts.py
+index 17a6d4a..285e442 100644
+--- a/src/aeread/shared_runner/task/receipts.py
++++ b/src/aeread/shared_runner/task/receipts.py
+@@ -519,7 +519,8 @@ def _accepted_content_digests(payload: Mapping[str, Any]) -> dict[str, str]:
+         canonical.pop("deferred_leaf_ids")
+     digests = {CANONICAL_PREIMAGE: _content_digest(canonical)}
+     transitional = dict(payload)
+-    if not transitional.get("deferred_leaf_ids"):
++    # Only the specific empty list case from the transitional window is accepted
++    if transitional.get("deferred_leaf_ids") == []:
+         transitional["deferred_leaf_ids"] = []
+         digests[TRANSITIONAL_PREIMAGE] = _content_digest(transitional)
+     return digests
+@@ -606,12 +607,16 @@ def write_evaluation_receipt(
+                 "refusing to overwrite a different evaluation receipt"
+             )
+         try:
++            raw_existing = path.read_bytes()
++            # Existing file must be canonical to be overwritable
++            if raw_existing != canonical_json_bytes(json.loads(raw_existing)) + b"\n":
++                raise MeasurementContractError("refusing to overwrite")
+             existing = verify_serialized_evaluation_receipt(
+-                json.loads(path.read_bytes())
++                json.loads(raw_existing)
+             )
+         except (json.JSONDecodeError, MeasurementContractError) as error:
+             raise MeasurementContractError(
+-                "refusing to overwrite a different evaluation receipt"
++                "refusing to overwrite"
+             ) from error
+         if existing.get("receipt_sha256") != receipt.receipt_sha256:
+             raise MeasurementContractError(
+@@ -664,9 +669,9 @@ def read_evaluation_receipt(path: str | Path) -> Mapping[str, Any]:
+         value = json.loads(raw)
+     except (OSError, json.JSONDecodeError) as error:
+         raise MeasurementContractError("evaluation receipt is unreadable") from error
+-    verified = verify_serialized_evaluation_receipt(value)
+-    if raw != canonical_json_bytes(verified) + b"\n":
++    if raw != canonical_json_bytes(value) + b"\n":
+         raise MeasurementContractError("evaluation receipt bytes are not canonical")
++    verified = verify_serialized_evaluation_receipt(value)
+     return verified
+ 
+ 

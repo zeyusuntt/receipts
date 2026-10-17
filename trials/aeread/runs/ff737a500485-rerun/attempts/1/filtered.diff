@@ -1,0 +1,45 @@
+diff --git a/src/aeread/shared_runner/task/receipts.py b/src/aeread/shared_runner/task/receipts.py
+index 17a6d4a..285e442 100644
+--- a/src/aeread/shared_runner/task/receipts.py
++++ b/src/aeread/shared_runner/task/receipts.py
+@@ -519,7 +519,8 @@ def _accepted_content_digests(payload: Mapping[str, Any]) -> dict[str, str]:
+         canonical.pop("deferred_leaf_ids")
+     digests = {CANONICAL_PREIMAGE: _content_digest(canonical)}
+     transitional = dict(payload)
+-    if not transitional.get("deferred_leaf_ids"):
++    # Only the specific empty list case from the transitional window is accepted
++    if transitional.get("deferred_leaf_ids") == []:
+         transitional["deferred_leaf_ids"] = []
+         digests[TRANSITIONAL_PREIMAGE] = _content_digest(transitional)
+     return digests
+@@ -606,12 +607,16 @@ def write_evaluation_receipt(
+                 "refusing to overwrite a different evaluation receipt"
+             )
+         try:
++            raw_existing = path.read_bytes()
++            # Existing file must be canonical to be overwritable
++            if raw_existing != canonical_json_bytes(json.loads(raw_existing)) + b"\n":
++                raise MeasurementContractError("refusing to overwrite")
+             existing = verify_serialized_evaluation_receipt(
+-                json.loads(path.read_bytes())
++                json.loads(raw_existing)
+             )
+         except (json.JSONDecodeError, MeasurementContractError) as error:
+             raise MeasurementContractError(
+-                "refusing to overwrite a different evaluation receipt"
++                "refusing to overwrite"
+             ) from error
+         if existing.get("receipt_sha256") != receipt.receipt_sha256:
+             raise MeasurementContractError(
+@@ -664,9 +669,9 @@ def read_evaluation_receipt(path: str | Path) -> Mapping[str, Any]:
+         value = json.loads(raw)
+     except (OSError, json.JSONDecodeError) as error:
+         raise MeasurementContractError("evaluation receipt is unreadable") from error
+-    verified = verify_serialized_evaluation_receipt(value)
+-    if raw != canonical_json_bytes(verified) + b"\n":
++    if raw != canonical_json_bytes(value) + b"\n":
+         raise MeasurementContractError("evaluation receipt bytes are not canonical")
++    verified = verify_serialized_evaluation_receipt(value)
+     return verified
+ 
+ 

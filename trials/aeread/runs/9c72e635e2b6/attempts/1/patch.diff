@@ -1,0 +1,56 @@
+diff --git a/src/aeread_families/econevals/campaign.py b/src/aeread_families/econevals/campaign.py
+index ff29b77..1c26849 100644
+--- a/src/aeread_families/econevals/campaign.py
++++ b/src/aeread_families/econevals/campaign.py
+@@ -594,5 +594,51 @@ def main(argv: list[str] | None = None) -> int:
+     return 0
+ 
+ 
++def _sealed_spend(run_root: Path) -> float:
++    """Summarize provider-call costs from completed executions under a run root.
++
++    Scans all execution subdirectories for provider call cost data encapsulated
++    in receipt-like artifacts, regardless of whether the enclosing case run
++    succeeded or failed. Returns 0.0 for missing or empty roots.
++    """
++    def extract_cost(obj):
++        """Recursively extract cost_usd values from nested JSON structures."""
++        if isinstance(obj, dict):
++            if "cost_usd" in obj:
++                cost = obj["cost_usd"]
++                if isinstance(cost, (int, float)) and not isinstance(cost, bool):
++                    return float(cost)
++            # Recursively check all values in the dictionary
++            total = 0.0
++            for value in obj.values():
++                total += extract_cost(value)
++            return total
++        elif isinstance(obj, list):
++            # Recursively check all items in the list
++            total = 0.0
++            for item in obj:
++                total += extract_cost(item)
++            return total
++        else:
++            # Primitive value that's not a cost_usd field
++            return 0.0
++    
++    total = 0.0
++    if not run_root.is_dir():
++        return 0.0
++    # Look for provider call artifacts in all files under the run root
++    for artifact_path in run_root.rglob("*"):
++        if not artifact_path.is_file():
++            continue
++        try:
++            content = artifact_path.read_text(encoding="utf-8")
++            data = json.loads(content)
++            total += extract_cost(data)
++        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
++            # Ignore non-JSON or unreadable files
++            continue
++    return total
++
++
+ if __name__ == "__main__":  # pragma: no cover
+     raise SystemExit(main())

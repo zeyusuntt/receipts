@@ -1,0 +1,63 @@
+diff --git a/src/aeread/shared_runner/task/execution.py b/src/aeread/shared_runner/task/execution.py
+index f108aad..31b680a 100644
+--- a/src/aeread/shared_runner/task/execution.py
++++ b/src/aeread/shared_runner/task/execution.py
+@@ -79,6 +79,12 @@ class ProviderFailure(RuntimeError):
+         self.retry_after_seconds = retry_after_seconds
+ 
+ 
++# A 4xx after the route has answered cannot mean the route does not exist.
++# This constant allows a profile to opt‑in to treating such rejections as
++# retryable via the named condition `provider_rejected_after_route_proven`.
++POST_ADMISSION_REJECTION = "provider_rejected_after_route_proven"
++
++
+ def _retry_after_value(value: Any) -> float | None:
+     if isinstance(value, bool):
+         return None
+@@ -2180,6 +2186,7 @@ class MinimalChatExecutor:
+         self._executions: dict[str, LogicalActionExecution] = {}
+         self._logical_actions_by_profile: dict[str, int] = {}
+         self._cost_by_profile: dict[str, float] = {}
++        self._routes_proven: set[str] = set()
+         self._request_seed_by_profile = dict(request_seed_by_profile or {})
+         self.total_cost_usd = 0.0
+         for profile in profiles:
+@@ -2606,6 +2613,7 @@ class MinimalChatExecutor:
+                     failure,
+                 )
+                 raise failure
++            self._routes_proven.add(profile.profile_id)
+             pricing = self._pricing[profile.model.model]
+             rounds = self._attempt_rounds(action_attempt_id)
+             if rounds:
+@@ -2666,6 +2674,7 @@ class MinimalChatExecutor:
+                     provider_call_id=request.provider_call_id,
+                     visibility=f"seat:{decision.seat_id}",
+                 )
++                self._routes_proven.add(profile.profile_id)
+             profile_cost = self._charge(profile, cost)
+             if (
+                 profile.budgets.max_cost_usd is not None
+@@ -3225,6 +3234,21 @@ class MinimalChatExecutor:
+             {"outcome": episode_result.outcome},
+         )
+ 
++    def _is_post_admission_rejection(
++        self,
++        profile: AgentProfile,
++        failure: ProviderFailure,
++    ) -> bool:
++        """True when a rejection arrives after the profile's pinned route has
++        answered successfully in this run. The family must opt‑in by naming
++        ``provider_rejected_after_route_proven`` in its retry policy.
++        """
++        if failure.condition != "provider_rejected":
++            return False
++        if profile.profile_id not in self._routes_proven:
++            return False
++        return True
++
+     def execution_for(self, logical_action_id: str) -> LogicalActionExecution:
+         try:
+             return self._executions[logical_action_id]

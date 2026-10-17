@@ -1,0 +1,33 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "`housing_env.resolve_bids` does not hold to a clear bid contract.\n\nMalformed bids are not reliably ignored: a boolean tenant key, a listing index that is a boolean or not an integer (such as `1.9`), and a bid amount that is NaN, infinite or a string such as `\"Infinity\"` can be accepted or make the resolver fail, instead of being skipped. A key that is not a tenant at all should not stop an independent valid bid from winning either. A malformed bid should simply be ignored: it wins nothing and leaves the other bids to resolve normally.\n\nThe resolver also does not say what its score measures. Rent is a transfer, so an extreme overbid can leave a tenant with negative payoff without lowering joint surplus: the score is allocation welfare, not tenant payoff. `resolve_bids`' docstring should state that contract.",
+  "source": {
+    "commit": "c35b52f5b46c27241e0ab19384de1d237cb981d5",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9419/aeread-9b37cc341a5d/start"
+  },
+  "spec_paths": [
+    "tests/test_housing_bids.py"
+  ],
+  "spec_tests": [
+    "tests/test_housing_bids.py::test_invalid_tenant_key_does_not_block_an_independent_valid_bid",
+    "tests/test_housing_bids.py::test_malformed_bid_is_ignored_without_winning[0-bad_bid1]",
+    "tests/test_housing_bids.py::test_malformed_bid_is_ignored_without_winning[0-bad_bid2]",
+    "tests/test_housing_bids.py::test_malformed_bid_is_ignored_without_winning[0-bad_bid4]",
+    "tests/test_housing_bids.py::test_malformed_bid_is_ignored_without_winning[0-bad_bid5]",
+    "tests/test_housing_bids.py::test_malformed_bid_is_ignored_without_winning[0-bad_bid6]",
+    "tests/test_housing_bids.py::test_malformed_bid_is_ignored_without_winning[True-bad_bid0]",
+    "tests/test_housing_bids.py::test_resolver_contract_names_allocation_welfare_not_tenant_payoff"
+  ],
+  "suite_scope": "tests/test_housing_bids.py"
+}

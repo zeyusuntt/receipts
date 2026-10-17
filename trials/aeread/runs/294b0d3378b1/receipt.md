@@ -1,0 +1,149 @@
+# Receipts verification
+
+**Verdict: VERIFIED**
+
+- Gate status: `PASS`
+- Issue: The open-harness capture client picks the wrong HTTP transport for the OpenAI SDK.<br><br>`_capture_http_client` in `aeread/shared_runner/open_harnesses.py` uses `httpx` for every OpenAI SDK from major version 2 up, and tries `httpx2` only for older majors. OpenAI SDK 3.x is built on `httpx2`, so with SDK 3 installed the capture client is built on the wrong library. The transport should follow the SDK major: `httpx2.Client` for OpenAI SDK 3.x, `httpx.Client` for 2.x.
+- Specification tests: tests/test_housing_harness_bakeoff.py::test_openai_v3_capture_client_uses_httpx2
+- Selected patch: `attempts/1/filtered.diff`
+- Wall time: 165.305 seconds
+
+## Verification checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| `R1_fail_to_pass` Failing specification tests now pass | **PASS** | target tests passed: tests/test_housing_harness_bakeoff.py::test_openai_v3_capture_client_uses_httpx2 |
+| `R2_pass_to_pass` Baseline-passing tests still pass | **PASS** | 12 baseline-passing tests still pass |
+| `R3_no_shrink` The collected suite did not shrink | **PASS** | all 14 baseline tests collected; skips unchanged (1) |
+| `R4_patch_scope` The patch stayed in scope | **PASS** | patch touches 1 file(s), all in scope |
+| `R5_provenance` Agent and witness provenance is intact | **PASS** | agent chain sha256:5d67646b3b06f7e0c8b77e90e05e5d7596120f003111dacdd85f2bef632c46f6 -> sha256:cef1b1e5fb004930baf882bd4c3aaf75a105bb74a3987717a42a4f54ae81d703 unbroken over 5 receipt(s); witness chain sha256:5d67646b3b06f7e0c8b77e90e05e5d7596120f003111dacdd85f2bef632c46f6 -> sha256:85902e1964ada57199ddede5d91efa91b2ced5a8efee930574d7d8fedc76ac6b unbroken over 2 receipt(s); applied digest matches |
+| `R7_no_shortcuts` The patch takes no shortcut (no uncalled private helper, no stub) | **PASS** | no shortcut found |
+| `R6_claim_audit` The agent claim matches the record | **PASS** | claimed green; own last run: 13 passed, 0 failed |
+
+## What the agent said and what the record shows
+
+| Attempt | What the agent said | Claims | Record |
+|---:|---|---|---|
+| 1 | Modified _capture_http_client in src/aeread/shared_runner/open_harnesses.py to select httpx2 for OpenAI SDK major version >=3 and httpx otherwise, fixing the transport mismatch for SDK 3.x. | tests_run=true, target_tests_pass=true, full_suite_pass=true | PASS; claim audit honest: claimed green; own last run: 13 passed, 0 failed |
+
+## Base and patched runs
+
+| Run | Branch | Result |
+|---|---|---|
+| Baseline 1 | `base` | 12 passed, 1 failed, 0 errors, 1 skipped, 14 collected |
+| Baseline 2 | `base` | 12 passed, 1 failed, 0 errors, 1 skipped, 14 collected |
+| Patched 1 | `w1` | PASS |
+
+## Files changed and dropped
+
+| Attempt | Agent-reported changes | Dropped from witness patch |
+|---:|---|---|
+| 1 | src/aeread/shared_runner/open_harnesses.py | none |
+
+## Frozen tests and environment
+
+| Artifact | SHA-256 |
+|---|---|
+| Test `tests/__init__.py` | `162d29fcf8dcf726f6fd288f1362f63a30970604a4122a98e796ccc190c43aa9` |
+| Test `tests/fixtures/procurement_grounding/invalid_bulk_ready.json` | `55ce0eea6fac5188c53afb2fb93b53df0958f27d315891873d8e9516453545d7` |
+| Test `tests/fixtures/procurement_grounding/strong.json` | `92aa2b21a95a36ef5425c57c7c5fd5ce6ea4e7efca55f3662c70b83ed738b5d5` |
+| Test `tests/fixtures/procurement_grounding/valid_but_poor.json` | `2ad727bede047e32ee564d185a53dbb82813ae73c76c74a04be0b0bc6f926ce1` |
+| Test `tests/test_adversarial_counterparty.py` | `ecfb565c95c9406acd4a153f7ca3dec2deed31a28e05ed5d38de0d8d1eff5cb0` |
+| Test `tests/test_aer_scorer.py` | `634bcd75b474742f5dbe5833d0855034df2dec0c05d72dc575597d509199b508` |
+| Test `tests/test_agentecon_oracle.py` | `daf5abf9cce37b4306ee91120770abcd26f76fcfdcb3c9769894d54406aedd34` |
+| Test `tests/test_bundle_bayes_oracle.py` | `13de1174d56499f4bd6a77f38097d16d5c904e39dac91ca6f5bd9a6415abbb35` |
+| Test `tests/test_capture_share.py` | `06e792135843be559f420b1c190bfe7b0b958b32c9d5114e18f2c4fea20dbcf3` |
+| Test `tests/test_case_catalog.py` | `da89e88feaadea0b262add070bb64de239884ce78433acc56d8a11640868888c` |
+| Test `tests/test_datacenter_cashflow.py` | `79ca6df2e5952d2db5984e59af11f3ae9de08306b1c7383475f55b310da39716` |
+| Test `tests/test_datacenter_contracts.py` | `81a606cc53020c609e6ee9a068e59e26304a207af84d5ab927fd571af489fb6c` |
+| Test `tests/test_datacenter_runner.py` | `ba928d9237e1a0994fbe4e9da5260a910e0dc926d9bb3075bc4a7389b772f5b7` |
+| Test `tests/test_datacenter_stack.py` | `47a3b2e9ffe21a0fbc708575bc0a917facf6e6c58778db43eac6d806d80215c1` |
+| Test `tests/test_delta_inf_oracle.py` | `db1066113250f16aa1b72d1ebe21c3d9d6ad441d52cd38aaa925df931fcfa96b` |
+| Test `tests/test_everos_memory.py` | `7872d4c9d0d48c52527c6cfc9971058b1fa35c31751827f9ddc36100c7aa05fb` |
+| Test `tests/test_exchange_bundle_world.py` | `1c6e5f031f5765f4ed8c410b0c8344efd7cdda72e82f7f82984381358365b096` |
+| Test `tests/test_exchange_config_catalog.py` | `ee01d60587ef62982ee97c656a9d32b3965893c9ef68a05445e741936f54750b` |
+| Test `tests/test_exchange_counterpart_frozen.py` | `919fb9fab2b25e6a51a53206d37b952cf2fd1d4b1503614dfe892195dc63dcc9` |
+| Test `tests/test_exchange_economy.py` | `c575976478b0305f14503b18a070303b7c162c65178293c450c05b184602c0ab` |
+| Test `tests/test_exchange_procurement.py` | `f8f94093042f8875e1c017af6175a01e10719a8967bae61b91ddfe428a99b8b3` |
+| Test `tests/test_exchange_rl_env.py` | `43b4a5d08d7813caf9136dc5a7cc499e176fd5273656d5e7d17c2854764f75e4` |
+| Test `tests/test_exchange_subgame_oracles.py` | `b78bac0626b0b4ff89e37c805738746589b549f901ba67c53b5d84544cbc429b` |
+| Test `tests/test_exchange_v1_baselines.py` | `bb81a28d60e9839f67c2889362e08a394362339950d96a19329d2bb4965232ef` |
+| Test `tests/test_exchange_v1_candidates.py` | `4f614b7c3ef7180977683efb2799771e5bc4f44a747922f47b6a0f4088739847` |
+| Test `tests/test_exchange_v1_filters.py` | `47d541ed40d6c0449f9b3bc5d8669e086bfbf2d938838dcf2e38943b24e17b44` |
+| Test `tests/test_exchange_v1_pilot.py` | `5ceec8ca4d6883ad207d5ec45d4688f4c83ced8c25fdb2e492b1571266b9e747` |
+| Test `tests/test_exchange_v1_roles.py` | `a5195034e608d3e159d9832fc25ceba3539e711e3a60dea6a3f14dd00a10c737` |
+| Test `tests/test_exchange_v1_runner.py` | `7fc430a5bcf5cb8cb935f8340961abbb0477da53ec7943e03b4439dbdcff37c9` |
+| Test `tests/test_exchange_v1_scoring.py` | `ef87b7471f71c81b9c13a395389fdbcdcbeda4d311cde64c23ffd0b5f7bd208d` |
+| Test `tests/test_exchange_v1_submit.py` | `5038a9907bb2b80958d449990d1a2635e406ee640bd0122005d3839597fd26b6` |
+| Test `tests/test_exchange_v1_sweep.py` | `3f78524af6e238f0beae04ed8aec27c51a2cee6c82fca96801266d94bc419e37` |
+| Test `tests/test_exchange_v1_validity.py` | `6d0f6a4c104b7856d984a42bc2f3f943b7833f03e15428d2b0a1d5c4659e4a8d` |
+| Test `tests/test_gemini_batch_pool.py` | `6895d95254bb235df0a56c271faaa95fff4d297fbde2110f629bdbc7c235abb9` |
+| Test `tests/test_gemini_llm.py` | `5f1cb3d29189b4ba7cfc46942a7ea17df2aaf9d770e0e5688dc3fcb3784f4de3` |
+| Test `tests/test_harness_end_to_end.py` | `55a94e142366482677ff4155ce3348fbd3d766a06a15d1e5e4abd26f0ad07710` |
+| Test `tests/test_housing_assignment.py` | `fca016f9ff818f4ca88ab743a6796aa65d474ad7da443f6c1c59f9a5e21c5d57` |
+| Test `tests/test_housing_attributes.py` | `7701dc947687321c8c77a0324f9606ec7ea1ca573746c154635bee853538653f` |
+| Test `tests/test_housing_bids.py` | `be552a1d618b8b3e56c7605d40c60159aa69f6780f23da27725aa39633ce4e2b` |
+| Test `tests/test_housing_harness_bakeoff.py` | `5eafb7baa2de0143bbab5af55206bf61618d0b244ea541d367d661f06e649663` |
+| Test `tests/test_housing_harness_leaderboard.py` | `d6f8c603a896fdd8a08456706c8056c4cb668c004ea1dd97f1351c563fbbf775` |
+| Test `tests/test_housing_market.py` | `88fb024e203d77887cd21536cd4c3afbe4d3a7499eacce481ce7c5dd62f87c65` |
+| Test `tests/test_llm_agent.py` | `b627a992f4edfaacd1401afce5193837fb6c8c7bc8ec00be792369a227e06ffc` |
+| Test `tests/test_money_numeraire.py` | `5823c7b4fb57b2602075688bf604dffdb63d9c53103eb322580f0178efb865ca` |
+| Test `tests/test_money_world.py` | `0bb9761315cc00bcb9ff0583e02cd4102d7e7f117cbf95b7178ad16b874ed962` |
+| Test `tests/test_nonir_classifier.py` | `6ff912696f49c21223702f94792a69e7b6deef1a1e8fb805a6663a61ac5c0245` |
+| Test `tests/test_procurement_allocation_case.py` | `9ee73768f919da27d1cf3d4dc737b0baef2caa3339e1655c00b1ee44f29464e9` |
+| Test `tests/test_procurement_grounding_bakeoff.py` | `5d769c66b1c7afb80d60c1afe2d22e71a1c3eeb4ceb93184d95417fdb38481e1` |
+| Test `tests/test_procurement_grounding_case.py` | `92300a67a7b6a0bfa73c7eb636020f31fd241d377476af6d03063bd6a57cc0d9` |
+| Test `tests/test_procurement_grounding_harness.py` | `f415b68b21f05a2743490cdea96f630da0dd670fc4d55275bf6e72c02f178d34` |
+| Test `tests/test_procurement_grounding_harness_bakeoff.py` | `ecf7b8e7ad576505d5f63f382dc048b3542d16049b8782c509a4c360313cb4ae` |
+| Test `tests/test_ring_cycle_world.py` | `d1997777d7bbb86394594a1ffbf158ced073b9b8eb315a8b4ecb69dd621b78a5` |
+| Test `tests/test_rllm_integration.py` | `6437f7a9c38f8fee15b87f445db1bf98547fc44c9f525a6067801ddc404efe29` |
+| Test `tests/test_shared_runner_design_contract.py` | `66ae6a1cef79581b9016dc845e5b591b97fc414d781008ea38d479006c5a93f0` |
+| Test `tests/test_shared_runner_execution.py` | `b52c47370655efa1e64023577b4182d6adea348589d53c5fee4860822caa8e3d` |
+| Test `tests/test_shared_runner_family_evaluation.py` | `25e3e0821b30713121852f626da7e209879665024ef9ea694547193e3c8cec6a` |
+| Test `tests/test_shared_runner_harness.py` | `83f5ae3aee9271d692a12690f8017b99fa3913d7c177d53d27f4c0c55d91832d` |
+| Test `tests/test_shared_runner_housing.py` | `dfbc90865d031f6b0b8b6e38cc503a370527eacdb792a54d929912b3a2b4b8b4` |
+| Test `tests/test_shared_runner_measurement.py` | `7cf37f9f1d7864ab7c8e91af70c02075feba3e04b31d620a6dc46b6c745646d3` |
+| Test `tests/test_shared_runner_parity.py` | `010b139eaaedfbf12aa2b2fdbaee6b48818ec7012b7ff9f8278f8358c34f0140` |
+| Test `tests/test_shared_runner_receipts.py` | `551f85479d9ca12887cb3844f820fa6cd454cf15d7b073046bce9ffff16a9738` |
+| Test `tests/test_shared_runner_research.py` | `38883a2be0e8b8fc60e5c85cff07209eec39752590fc426fa8377aa98a4d15a2` |
+| Test `tests/test_shared_runner_resolver.py` | `eb7ad54b3efbe4d850df34eae44801a9029ea815264fab1d696ea52bce0eef30` |
+| Test `tests/test_shared_runner_scheduler.py` | `9ccccd19da449efe5ef99de627f01f772707a43ad7d0e3c0157fe7b39b062dbf` |
+| Test `tests/test_shared_runner_schemas.py` | `2ebda6be459a0426a422a21a1113519d377fcd25cdb803e05a4f12985dbf8e60` |
+| Test `tests/test_shared_runner_smoke.py` | `a79448e74321b8c02ff3dc0500c180ae6ad3ef37fe7d82c338edf77222915174` |
+| Test `tests/test_shared_runner_tools.py` | `60f63a2dc0d86ca278b92ffb9bc611b9afb427816a5e6cfb6ef2aec9ba3ed118` |
+| Test `tests/test_source_layout.py` | `2dc47761ba32a1c92ad996e491fd1116dbd1c8198ec97b5d2678bbeaf6957506` |
+| Test `tests/test_tau3_retail_cases.py` | `e4f0033d8bf103a84ad1d974f8ad428e620040be346602d57b11c6f7fa4dca8b` |
+| Test `tests/test_tau3_retail_environment.py` | `e5152b44992a28b89dee952c9dee8a89c7a06bc055b213f2902b0ea8c9d2453f` |
+| Test `tests/test_tau3_retail_measurement.py` | `cb152d009e0b0c1ef21e741b22eb00f3fd70f0b9205260db6f87d9eff633d8fa` |
+| Test `tests/test_tau3_retail_parity.py` | `729896bb862e30bbe2df1fbae5976a1f5c07fea785f2c57f8d804971ce0436e8` |
+| Test `tests/test_tau3_retail_replay.py` | `5bb9243acf64620185cd4732d877a09462485e6028de94cd944d6799af7c644c` |
+| Test `tests/test_tau3_retail_tools.py` | `e710e884d9b99f2c3a5a1328df257bdadf92005a8fbd663f6e6cba447ad999c0` |
+| Pytest config `conftest.py` | `3f0f304151ee05b2ae9ab2fa6049675c1e2386fb23131e433cbeaf8da23ef252` |
+| Pytest config `pyproject.toml` | `f371e9754a2442bea67ba898f21b8b1efb9036f7b97c2daf31c4d19b1bca4d70` |
+| Dependency lock `lock.txt` | `7c70ca039304fbaad32c8316c1b3696156da45e4b0ffabadee0925d4d1ea569c` |
+
+## Model and settings
+
+- Receipts version: `0.0.1`
+- Executor: `docker`
+- base_url: `https://api.tokenfactory.nebius.com/v1/`
+- client: `TokenFactoryClient`
+- max_tokens: `not set`
+- model: `nvidia/nemotron-3-super-120b-a12b`
+- temperature: `1.0`
+- thinking: `false`
+- top_p: `0.95`
+
+## Lineage
+
+Snapshot receipt `base-7` -> checkpoint `sha256:5d67646b3b06f7e0c8b77e90e05e5d7596120f003111dacdd85f2bef632c46f6` -> agent branch `agent1`; witnesses: attempt 1 `w1`.
+
+## Cost
+
+- Estimated dollars: $0.019165
+- Sandbox seconds: 25.259
+- Pricing is an estimate: true
+
+| Model | Prompt tokens | Completion tokens | Reasoning tokens | Estimated dollars |
+|---|---:|---:|---:|---:|
+| `nvidia/nemotron-3-super-120b-a12b` | 60621 | 1088 | 0 | $0.019165 |

@@ -1,0 +1,26 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "When an econevals live case is killed after it has already run provider calls successfully, the spend of those calls is lost.\n\nA 429 rejection itself bills nothing, and the rejected canary probes correctly record `cost_usd` 0.0. But a case that ran for a while and then failed had paid for its earlier provider calls, and its failure checkpoint carries no cost field at all, so no ledger counts that spend. In one real attempt, 243 sealed provider calls worth $0.047 were invisible to every ledger.\n\nThe sealed spend of a failed case should include the provider calls that case already paid for.",
+  "source": {
+    "commit": "5c0c3bb2f6d26478562f331e22e4ffb8560aaca7",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal/aeread-9c72e635e2b6/start"
+  },
+  "spec_paths": [
+    "tests/test_econevals_live_campaign.py"
+  ],
+  "spec_tests": [
+    "tests/test_econevals_live_campaign.py::test_sealed_spend_counts_calls_a_failed_case_already_paid_for"
+  ],
+  "suite_scope": "tests/test_econevals_live_campaign.py"
+}

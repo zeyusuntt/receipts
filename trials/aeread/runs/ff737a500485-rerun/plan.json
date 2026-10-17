@@ -1,0 +1,14 @@
+{
+  "approach": "Let's examine src/aeread/shared_runner/task/receipts.py since that's imported in test file (from aeread.shared_runner import ... read_evaluation_receipt, seal_evaluation_receipt, etc.) and likely contains the relevant logic.",
+  "files_to_edit": [
+    "src/aeread/shared_runner/task/receipts.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "We need to fix two distinct problems.\n\n1. For reading/writing non-canonical JSON files: we must reject them during read_evaluation_receipt AND refuse to overwrite them during write_evaluation_receipt with error matching 'refusing to overwrite'.\n2. For transitional receipts with altered deferred_leaf_ids: we must make sure verification fails due to receipt_sha256 mismatch. Currently these pass incorrectly meaning our seal/receipt logic likely doesn't include deferred_leaf_ids in the hash calculation, OR transitional receipt sealing isn't adding the field properly.\n\nFirst let's look for the functions we need to modify based on imports and baselines:",
+  "retries": {},
+  "usage": {
+    "completion": 226,
+    "prompt": 16032,
+    "reasoning": 0
+  }
+}
