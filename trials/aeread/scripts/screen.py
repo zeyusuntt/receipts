@@ -27,6 +27,9 @@ import subprocess
 from pathlib import Path
 
 TEST_RE = re.compile(r"(^|/)tests?/|(^|/)test_[^/]*\.py$")
+# Without this, one changed test file that fails to collect stops pytest before any other
+# changed file runs, and their failing tests are never seen (Amendment 4). Set by --collection.
+COLLECTION = ""
 GIT_ID = ["-c", "user.name=Zeyu Sun", "-c", "user.email=sunzeyu06@gmail.com"]
 
 
@@ -126,9 +129,9 @@ def screen(clone, replays, c, rule):
     script = (
         "set -u; cp -r /start /w && cp -r /fixed /f && cd /w && "
         "pip install -q -e '.[dev]' > /tmp/pip.log 2>&1 || { echo INSTALL_FAILED; tail -20 /tmp/pip.log; exit 0; }; "
-        f"python -m pytest -p no:cacheprovider -rA -q {files} > /tmp/start.txt 2>&1; echo '@@START'; cat /tmp/start.txt; "
+        f"python -m pytest -p no:cacheprovider -rA -q {COLLECTION} {files} > /tmp/start.txt 2>&1; echo '@@START'; cat /tmp/start.txt; "
         "cd /f && pip install -q -e '.[dev]' > /tmp/pip2.log 2>&1 || { echo FIX_INSTALL_FAILED; exit 0; }; "
-        f"python -m pytest -p no:cacheprovider -rA -q {files} > /tmp/fix.txt 2>&1; echo '@@FIX'; cat /tmp/fix.txt"
+        f"python -m pytest -p no:cacheprovider -rA -q {COLLECTION} {files} > /tmp/fix.txt 2>&1; echo '@@FIX'; cat /tmp/fix.txt"
     )
     run = subprocess.run(
         ["docker", "run", "--rm", "-v", f"{start}:/start:ro", "-v", f"{fixed}:/fixed:ro", "python:3.12-slim", "sh", "-c", script],
@@ -169,7 +172,12 @@ def main():
     parser.add_argument("--start-position", type=int, default=1)
     parser.add_argument("--want", type=int, default=8)
     parser.add_argument("--retarget", help="a screening file whose included tasks get new targets from their logs")
+    parser.add_argument("--only", help="screen only these commits (comma-separated short ids), whatever their position")
+    parser.add_argument("--continue-on-collection-errors", dest="collection", action="store_true",
+                        help="keep running the other changed test files when one fails to collect (Amendment 4)")
     args = parser.parse_args()
+    global COLLECTION
+    COLLECTION = "--continue-on-collection-errors" if args.collection else ""
     clone, replays, out_path = args.work / "aeread-clone", args.work / args.replays, args.work / args.out
     if args.retarget:
         retarget(clone, replays, args.work / args.retarget, out_path, args.rule)
@@ -181,10 +189,14 @@ def main():
             r = json.loads(line)
             done[r["commit"]] = r
     included = sum(1 for r in done.values() if r.get("included"))
+    only = set(args.only.split(",")) if args.only else None
     for i, c in enumerate(order, 1):
-        if i < args.start_position or c["h"] in done:
+        if only is not None:
+            if c["h"][:12] not in only or c["h"] in done:
+                continue
+        elif i < args.start_position or c["h"] in done:
             continue
-        if included >= args.want:
+        elif included >= args.want:
             break
         print(f"[{i}] screening {c['h'][:12]} {c['s'][:60]}", flush=True)
         try:
