@@ -1,6 +1,6 @@
 # R8 review costs
 
-Each line is the cost meter summary that `scripts/r8_check.py` printed at the end of the run (Nemotron 3 Super, or Nemotron 3 Ultra for record 3, at Token Factory's listed prices). Records 1 to 4 come from development code that did not store usage per review, so these printed totals are the only cost record for them; records 5 to 7 also store usage in each review.
+Each line is the cost meter summary that `scripts/r8_check.py` printed at the end of the run (Nemotron 3 Super, or Nemotron 3 Ultra for record 3, at Token Factory's listed prices). Records 1 to 3 come from development code that did not store usage per review, so these printed totals are the only cost record for them; records 4 to 7 also store usage in each review.
 
 | Record | Reviews | Prompt tokens | Completion tokens (reasoning) | Cost |
 | --- | ---: | ---: | ---: | ---: |
