@@ -1,0 +1,13 @@
+diff --git a/src/aeread_families/negarena/environment.py b/src/aeread_families/negarena/environment.py
+index 14ad9d6..072011a 100644
+--- a/src/aeread_families/negarena/environment.py
++++ b/src/aeread_families/negarena/environment.py
+@@ -136,7 +136,7 @@ def register_plugin(
+         if upstream_root is None:
+             raise ValueError("upstream_root is required when plugin is not supplied")
+         plugin = NegarenaPlugin(upstream_root=upstream_root, bridge=bridge)
+-    registry.register(family_manifest(), plugin)
++    registry.register_trusted(family_manifest(), plugin)
+     return plugin
+ 
+ 

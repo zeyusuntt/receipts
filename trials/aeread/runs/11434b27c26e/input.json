@@ -1,0 +1,33 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "OpenRouter requests send an empty reasoning control when none is declared.\n\nWhen a request declares neither a reasoning effort nor a reasoning token budget, the OpenRouter adapters (the chat adapter and the native messages adapter in the shared runner) and the procurement grounding batch client (`OpenRouterBatchClient`) still send a `reasoning` field, as an empty object. OpenRouter's parameter filter then removes a pinned endpoint that does not support reasoning. The Qwen case-variance campaign (v1) was sealed after its admission canary was rejected this way, before any scored execution; its reported cost was zero, but its accounting is unavailable.\n\nThe `reasoning` field should be omitted when neither control is declared, and sent with whichever of effort and token budget is declared otherwise; the provider preferences are still sent. The Qwen campaign needs a new version, v2, that supersedes v1 (v1's id stays available as `V1_CAMPAIGN_ID`), records why v1 was sealed and this one operational change in its lineage, and states that the scientific contract is unchanged from v1.",
+  "review": false,
+  "source": {
+    "commit": "170a770ed63b4edc23463a91696ba3786356ce07",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9420/aeread-11434b27c26e/start"
+  },
+  "spec_paths": [
+    "tests/test_procurement_qwen_case_campaign.py"
+  ],
+  "spec_tests": [
+    "tests/test_procurement_qwen_case_campaign.py::test_qwen_batch_wire_omits_absent_reasoning_controls",
+    "tests/test_procurement_qwen_case_campaign.py::test_qwen_campaign_rejects_a_lower_runtime_budget",
+    "tests/test_procurement_qwen_case_campaign.py::test_qwen_campaign_writes_plan_before_rejected_canary",
+    "tests/test_procurement_qwen_case_campaign.py::test_qwen_canary_admits_nonempty_malformed_output",
+    "tests/test_procurement_qwen_case_campaign.py::test_qwen_canary_retries_declared_rate_limit",
+    "tests/test_procurement_qwen_case_campaign.py::test_qwen_candidate_reaches_exact_request_builder",
+    "tests/test_procurement_qwen_case_campaign.py::test_qwen_plan_freezes_matched_panel_route_and_budget"
+  ],
+  "suite_scope": "tests/test_procurement_qwen_case_campaign.py tests/test_shared_runner_execution.py"
+}

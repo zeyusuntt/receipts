@@ -1,0 +1,93 @@
+diff --git a/src/aeread_families/procurement_allocation/risk_gate_campaign.py b/src/aeread_families/procurement_allocation/risk_gate_campaign.py
+index 2c8639c..4e830a3 100644
+--- a/src/aeread_families/procurement_allocation/risk_gate_campaign.py
++++ b/src/aeread_families/procurement_allocation/risk_gate_campaign.py
+@@ -56,7 +56,8 @@ from .strategy_scaffold import (
+ 
+ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+ V1_CAMPAIGN_ID = "procurement_allocation_glm53_flash_parasail_risk_gate_factorial_v1"
+-CAMPAIGN_ID = "procurement_allocation_glm53_flash_parasail_risk_gate_factorial_v2"
++V2_CAMPAIGN_ID = "procurement_allocation_glm53_flash_parasail_risk_gate_factorial_v2"
++CAMPAIGN_ID = "procurement_allocation_glm53_flash_parasail_risk_gate_factorial_v3"
+ PARENT_EVIDENCE_PATH = (
+     REPOSITORY_ROOT
+     / "evidence"
+@@ -333,16 +334,19 @@ def build_plan() -> dict[str, Any]:
+         "campaign_id": CAMPAIGN_ID,
+         "freeze_status": "adaptive_mechanism_plan_frozen_before_live_execution",
+         "lineage": {
+-            "supersedes_campaign_id": V1_CAMPAIGN_ID,
+-            "v1_disposition": (
+-                "sealed_ineligible_after_rate_limit_failure; later fresh attempts "
+-                "rejected by admission canaries"
++            "supersedes_campaign_id": V2_CAMPAIGN_ID,
++            "v2_disposition": (
++                "sealed_ineligible_after_malformed_model_output_treated_as_operational_failure;"
++                " OpenRouter adapter now keeps nonempty malformed response on normal response path"
++                " with text, usage and cost so the family parser scores it as malformed_json"
+             ),
+-            "scientific_contract": "unchanged_from_v1",
++            "scientific_contract": "unchanged_from_v1_and_v2",
+             "operational_changes_only": [
+-                "increase missing-Retry-After backoff base from 2 to 15 seconds",
+-                "retry admission canaries under the declared bounded policy",
+-                "space new prompt-shape canaries by 10 seconds",
++                "OpenRouter adapter retains nonempty malformed JSON responses with text, usage, "
++                "and cost for scoring as malformed_json instead of raising provider_contract failure",
++                "Admission canary is transport-only: admits on any provider answer, records "
++                "output_contract_status (valid_action, malformed_json, invalid_action_shape) and "
++                "includes action only when valid (canary schema 0.4)",
+             ],
+             "parent_campaign_id": (
+                 "procurement_allocation_glm53_flash_parasail_strategy_confirmatory_v2"
+@@ -532,7 +536,7 @@ async def run_admission_canary(
+             raise ValueError("admission canary identity mismatch")
+         return value
+     record: dict[str, Any] = {
+-        "schema_version": "aeread.provider_admission_canary/0.3",
++        "schema_version": "aeread.provider_admission_canary/0.4",
+         "campaign_id": CAMPAIGN_ID,
+         "condition": condition,
+         "attempted_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+@@ -565,15 +569,38 @@ async def run_admission_canary(
+                     "admission canary received an empty completion",
+                     retryable=True,
+                 )
+-            action = json.loads(result.output_text)
++            try:
++                action = json.loads(result.output_text)
++            except json.JSONDecodeError:
++                record.update(
++                    {
++                        "status": "admitted",
++                        "output_contract_status": "malformed_json",
++                        "structured_action": None,
++                        "resolved_model": result.resolved_model,
++                        "finish_reason": result.finish_reason,
++                    }
++                )
++                break
+             if not isinstance(action, Mapping) or not isinstance(action.get("action"), str):
+-                raise ValueError("canary completion is not a structured action")
++                record.update(
++                    {
++                        "status": "admitted",
++                        "output_contract_status": "invalid_action_shape",
++                        "structured_action": None,
++                        "resolved_model": result.resolved_model,
++                        "finish_reason": result.finish_reason,
++                    }
++                )
++                break
++            # valid structured action
+             record.update(
+                 {
+                     "status": "admitted",
++                    "output_contract_status": "valid_structured_action",
++                    "structured_action": action["action"],
+                     "resolved_model": result.resolved_model,
+                     "finish_reason": result.finish_reason,
+-                    "structured_action": action["action"],
+                 }
+             )
+             break

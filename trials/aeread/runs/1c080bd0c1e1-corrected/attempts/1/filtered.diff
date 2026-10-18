@@ -1,0 +1,64 @@
+diff --git a/src/aeread/shared_runner/task/execution.py b/src/aeread/shared_runner/task/execution.py
+index 2e75742..132f93e 100644
+--- a/src/aeread/shared_runner/task/execution.py
++++ b/src/aeread/shared_runner/task/execution.py
+@@ -2194,7 +2194,7 @@ class MinimalChatExecutor:
+         # Profiles whose pinned route has already answered successfully in
+         # this run. A 4xx that arrives after a success cannot mean "this
+         # route does not exist"; see _is_post_admission_rejection.
+-        self._routes_proven: set[str] = set()
++        self._routes_proven: dict[str, set[tuple[str, str | None, str]]] = {}
+         self._logical_actions_by_profile: dict[str, int] = {}
+         self._cost_by_profile: dict[str, float] = {}
+         self._request_seed_by_profile = dict(request_seed_by_profile or {})
+@@ -2219,6 +2219,10 @@ class MinimalChatExecutor:
+                 f"{sorted(unknown_seed_profiles)}"
+             )
+ 
++    @staticmethod
++    def _route_key(provider: str, base_url: str | None, model: str) -> tuple[str, str | None, str]:
++        return (provider, base_url, model)
++
+     def _validate_harness_profile(self, profile: AgentProfile) -> None:
+         """Checks that belong to THIS executor's harness, not to every harness.
+ 
+@@ -2623,6 +2627,11 @@ class MinimalChatExecutor:
+                     failure,
+                 )
+                 raise failure
++
++            # Record that this route answered successfully for future 404 promotion
++            key = self._route_key(request.provider, request.base_url, request.model)
++            self._routes_proven.setdefault(profile.profile_id, set()).add(key)
++
+             pricing = self._pricing[profile.model.model]
+             rounds = self._attempt_rounds(action_attempt_id)
+             if rounds:
+@@ -2960,12 +2969,13 @@ class MinimalChatExecutor:
+     # POST_ADMISSION_REJECTION in retryable_conditions to get the retry, and a
+     # FIRST-call 404 keeps the old non-retryable behaviour whatever it lists.
+     def _is_post_admission_rejection(
+-        self, profile: AgentProfile, failure: ProviderFailure
++        self, profile: AgentProfile, request: ProviderRequest, failure: ProviderFailure
+     ) -> bool:
+-        return (
+-            failure.condition == "provider_rejected"
+-            and profile.profile_id in self._routes_proven
+-        )
++        if failure.condition != "provider_rejected" or failure.status_code != 404:
++            return False
++        key = self._route_key(request.provider, request.base_url, request.model)
++        proven_set = self._routes_proven.get(profile.profile_id)
++        return bool(proven_set and key in proven_set)
+ 
+     def _record_provider_failure(
+         self,
+@@ -3041,7 +3051,7 @@ class MinimalChatExecutor:
+         )
+         condition = failure.condition
+         retryable = failure.retryable
+-        if self._is_post_admission_rejection(profile, failure):
++        if self._is_post_admission_rejection(profile, failed_request, failure):
+             condition = POST_ADMISSION_REJECTION
+             retryable = True
+         should_retry = (

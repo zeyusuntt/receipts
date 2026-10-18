@@ -1,0 +1,19 @@
+diff --git a/src/aeread_families/termsbench/measurement.py b/src/aeread_families/termsbench/measurement.py
+index 0e50493..936f5b4 100644
+--- a/src/aeread_families/termsbench/measurement.py
++++ b/src/aeread_families/termsbench/measurement.py
+@@ -629,12 +629,8 @@ class TermsBenchScorer:
+             outcome=outcome, evidence_refs=evidence_refs
+         )
+         scores.append(compliance)
+-        primary = (
+-            self.surplus_efficiency_leaf
+-            or self.no_deal_agreement_leaf
+-            or self.protocol_compliance_leaf
+-        )
+-        admission = {compliance.leaf.leaf_id, primary.leaf_id}
++        primary = self.protocol_compliance_leaf
++        admission = {compliance.leaf.leaf_id}
+         return FamilyScoreSet(
+             primary_leaf_id=primary.leaf_id,
+             scores=tuple(scores),

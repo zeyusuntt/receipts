@@ -1,0 +1,78 @@
+diff --git a/src/aeread/shared_runner/task/execution.py b/src/aeread/shared_runner/task/execution.py
+index a24ede4..753b443 100644
+--- a/src/aeread/shared_runner/task/execution.py
++++ b/src/aeread/shared_runner/task/execution.py
+@@ -1180,7 +1180,7 @@ class OpenRouterChatClient:
+             "stream": False,
+             "extra_headers": {"X-OpenRouter-Metadata": "enabled"},
+             "extra_body": {
+-                "reasoning": _reasoning_block(request),
++                **({} if not _reasoning_block(request) else {"reasoning": _reasoning_block(request)}),
+                 "provider": provider_preferences,
+             },
+         }
+@@ -1282,7 +1282,7 @@ class OpenRouterChatClient:
+             "stream": False,
+             "extra_headers": {"X-OpenRouter-Metadata": "enabled"},
+             "extra_body": {
+-                "reasoning": _reasoning_block(request),
++                **({} if not _reasoning_block(request) else {"reasoning": _reasoning_block(request)}),
+                 "provider": provider_preferences,
+             },
+         }
+diff --git a/src/aeread_families/procurement_allocation/qwen_case_campaign.py b/src/aeread_families/procurement_allocation/qwen_case_campaign.py
+index 06da73e..127c734 100644
+--- a/src/aeread_families/procurement_allocation/qwen_case_campaign.py
++++ b/src/aeread_families/procurement_allocation/qwen_case_campaign.py
+@@ -44,6 +44,7 @@ from .runner import PROMPT, SequenceResponseProvider, build_openrouter_setup
+ 
+ 
+ CAMPAIGN_ID = "procurement_allocation_qwen3_30b_coreweave_case_variance_v1"
++V1_CAMPAIGN_ID = GLM_BASELINE_CAMPAIGN_ID
+ QWEN_CANDIDATE = next(
+     candidate
+     for candidate in OPEN_WEIGHT_CANDIDATES
+@@ -150,6 +151,10 @@ def build_plan() -> dict[str, Any]:
+             "matched model diagnostic on six curated procurement worlds; seeds are "
+             "within-world replicates and this is not a population model ranking"
+         ),
++        "lineage": {
++            "supersedes_campaign_id": V1_CAMPAIGN_ID,
++            "scientific_contract": "unchanged_from_v1",
++        },
+     }
+     plan["plan_sha256"] = hashlib.sha256(canonical_json_bytes(plan)).hexdigest()
+     return plan
+@@ -480,6 +485,7 @@ __all__ = [
+     "HARD_TOTAL_COST_CEILING_USD",
+     "PAIRED_INFERENCE_SEEDS",
+     "QWEN_CANDIDATE",
++    "V1_CAMPAIGN_ID",
+     "build_plan",
+     "run_admission_canary",
+     "run_campaign",
+diff --git a/src/aeread_families/procurement_grounding/bakeoff.py b/src/aeread_families/procurement_grounding/bakeoff.py
+index cf20db7..a46a6d8 100644
+--- a/src/aeread_families/procurement_grounding/bakeoff.py
++++ b/src/aeread_families/procurement_grounding/bakeoff.py
+@@ -23,6 +23,7 @@ from aeread.shared_runner.task.execution import (
+     ProviderRequest,
+     ProviderResult,
+     TokenPricing,
++    _reasoning_block,
+     execute_plan_cell,
+ )
+ from aeread.shared_runner.run.resolver import canonical_json_bytes
+@@ -461,11 +462,7 @@ class OpenRouterBatchClient:
+             },
+             "tools": [],
+             "stream": False,
+-            "reasoning": (
+-                {"effort": request.reasoning_effort}
+-                if request.reasoning_effort is not None
+-                else {}
+-            ),
++            **({} if not _reasoning_block(request) else {"reasoning": _reasoning_block(request)}),
+             "provider": provider_preferences,
+         }
+         if request.temperature is not None:

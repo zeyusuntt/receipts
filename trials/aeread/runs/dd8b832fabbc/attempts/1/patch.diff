@@ -1,0 +1,53 @@
+diff --git a/src/aeread/integrations/everos_memory.py b/src/aeread/integrations/everos_memory.py
+index 7c46080..a5ff256 100644
+--- a/src/aeread/integrations/everos_memory.py
++++ b/src/aeread/integrations/everos_memory.py
+@@ -42,7 +42,7 @@ MEMORY_HEADER = (
+     "PRIOR EXPERIENCE (from your persistent memory of past episodes "
+     "in this case family):")
+ 
+-_SNIPPET_FIELDS = ("summary", "content", "description", "title", "name")
++_SNIPPET_FIELDS = ("summary", "content", "description", "title", "name", "task_intent", "key_insight")
+ 
+ 
+ class EverOSMemoryError(RuntimeError):
+@@ -155,6 +155,7 @@ class MemoryCandidate:
+         self.memory_errors = 0
+         self._buffer: list[dict[str, Any]] = []
+         self._last_ts = 0
++        self._session_aers: dict[str, float] = {}  # session_id -> realized AER
+ 
+     def __repr__(self) -> str:  # keeps submission labels readable
+         return f"MemoryCandidate(agent_id={self.agent_id!r})"
+@@ -169,6 +170,15 @@ class MemoryCandidate:
+         self.turns = []
+ 
+     def end_episode(self, outcome: str) -> None:
++        # Extract and store realized AER for this session
++        aer_match = re.search(r"AER=([-\d.]+)", outcome)
++        if aer_match:
++            try:
++                aer_value = float(aer_match.group(1))
++                self._session_aers[self.session_id] = aer_value
++            except ValueError:
++                pass  # Ignore if AER cannot be parsed
++        
+         msgs = list(self._buffer)
+         reflection = (
+             f"Episode complete ({self.label}). Outcome: {outcome}. "
+@@ -257,6 +267,15 @@ class MemoryCandidate:
+                 for item in data.get(kind) or []:
+                     text = _snippet(item)
+                     if text:
++                        # Filter out snippets from failed episodes when better alternatives exist
++                        session_id = item.get("session_id")
++                        if session_id and session_id in self._session_aers:
++                            # Get the best (highest) AER from all sessions we know about
++                            best_aer = max(self._session_aers.values()) if self._session_aers else 0.0
++                            session_aer = self._session_aers[session_id]
++                            # Skip this snippet if it's from a failed/session and we have better
++                            if session_aer < best_aer and best_aer > 0:
++                                continue
+                         snippets.append(text)
+         return list(dict.fromkeys(snippets))[:self.memory_top_k]
+ 

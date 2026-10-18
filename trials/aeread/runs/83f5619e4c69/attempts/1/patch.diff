@@ -1,0 +1,35 @@
+diff --git a/src/aeread/shared_runner/task/execution.py b/src/aeread/shared_runner/task/execution.py
+index cdeeadd..9cff3c1 100644
+--- a/src/aeread/shared_runner/task/execution.py
++++ b/src/aeread/shared_runner/task/execution.py
+@@ -20,6 +20,9 @@ import os
+ import shutil
+ import stat
+ import uuid
++
++
++_LENGTH_RETRY_MAX_GROWTH = 8
+ from dataclasses import dataclass
+ from datetime import datetime, timezone
+ from pathlib import Path
+@@ -2487,6 +2490,7 @@ class MinimalChatExecutor:
+         )
+         retry_reason: str | None = None
+         max_output_tokens = profile.sampling.max_output_tokens
++        _base_output_tokens = max_output_tokens
+ 
+         for ordinal in range(profile.retry_policy.max_action_attempts):
+             action_attempt_id = _stable_id(
+@@ -2749,7 +2753,11 @@ class MinimalChatExecutor:
+                     canonical_response=canonical,
+                 )
+                 attempts.append(attempt)
+-                next_limit = max_output_tokens * 2 if retry_condition == "length" else max_output_tokens
++                if retry_condition == "length":
++                    _capped_limit = _base_output_tokens * _LENGTH_RETRY_MAX_GROWTH
++                    next_limit = min(max_output_tokens * 2, _capped_limit)
++                else:
++                    next_limit = max_output_tokens
+                 self.evidence.append_event(
+                     "action_attempt_failed",
+                     {

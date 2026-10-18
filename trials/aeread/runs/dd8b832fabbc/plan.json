@@ -1,0 +1,14 @@
+{
+  "approach": "Add extraction of AER value from outcome string during end_episode and store realized_aer attribute. Modify recall() to skip items whose session has lower realized_aer than current best session. Expand _SNIPPET_FIELDS to ['task_intent', 'key_insight'] plus original fields, ensuring non-empty strings for formatting.",
+  "files_to_edit": [
+    "src/aeread/integrations/everos_memory.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "Agent-case injection fails because `_snippet()` does not check task_intent/key_insight fields. Failed-episode filtering fails because AER values are not stored during end_episode(), so recalls cannot filter based on realized outcomes.",
+  "retries": {},
+  "usage": {
+    "completion": 156,
+    "prompt": 8922,
+    "reasoning": 0
+  }
+}
