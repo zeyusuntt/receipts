@@ -43,7 +43,7 @@ from receipts.patchscope import default_protected_modules
 from receipts.rundir import RunDirectory
 from receipts.sandbox.protocol import Executor, ImageSource, Source
 from receipts.verify.gate import evaluate
-from receipts.verify.review import ReviewResult, ReviewVotes, review_votes
+from receipts.verify.review import ReviewMode, ReviewResult, ReviewVotes, review_votes
 from receipts.verify.run import (
     Attempt,
     confirm_load_failure,
@@ -110,7 +110,7 @@ class RunInput(BaseModel):
     suite_scope: str
     appeals: int
     budgets: RunBudgets
-    review: bool = False
+    review: ReviewMode = "off"
 
 
 class Disclosure(BaseModel):
@@ -569,8 +569,11 @@ def _patch_text(attempt: Attempt) -> str:
         return ""
 
 
-def _with_review(verdict: Verdict, result: ReviewVotes) -> Verdict:
-    """Add R8 to a verdict the gate passed. Only a unanimous objection rejects it; nothing can pass it."""
+def _with_review(verdict: Verdict, result: ReviewVotes, *, advisory: bool = False) -> Verdict:
+    """Add R8 to a verdict the gate passed. Only a unanimous objection rejects it; nothing can pass it.
+
+    In advisory mode the review is recorded as R8_review_advisory and never changes the verdict.
+    """
     objecting = sum(1 for vote in result.votes if vote.objections)
     if result.veto:
         evidence = f"{objecting} of {len(result.votes)} independent reviews object: " + "; ".join(
@@ -587,10 +590,13 @@ def _with_review(verdict: Verdict, result: ReviewVotes) -> Verdict:
         errors = [vote.error for vote in result.votes if vote.error]
         if errors:
             evidence += f" (review unavailable: {errors[0]})"
-    r8 = PredicateResult(id="R8_review", passed=not result.veto, evidence=evidence)
+    if advisory:
+        r8 = PredicateResult(id="R8_review_advisory", passed=not result.veto, evidence=f"advisory: {evidence}")
+    else:
+        r8 = PredicateResult(id="R8_review", passed=not result.veto, evidence=evidence)
     predicates = [p for p in verdict.predicates if p.id != "R6_claim_audit"]
     predicates += [r8] + [p for p in verdict.predicates if p.id == "R6_claim_audit"]
-    status = "REJECTED" if result.veto else verdict.status
+    status = "REJECTED" if result.veto and not advisory else verdict.status
     return verdict.model_copy(update={"predicates": predicates, "status": status})
 
 
@@ -682,7 +688,7 @@ async def fix(
     budgets: RunBudgets | None = None,
     spec_paths: list[str] | None = None,
     progress: ProgressCallback | None = None,
-    review: bool = False,
+    review: ReviewMode = "off",
     reviewer: ModelClient | None = None,
 ) -> RunResult:
     if appeals < 0:
@@ -937,7 +943,7 @@ async def fix(
                     ),
                 )
                 review_result = None
-                if review and verdict.status == "PASS":
+                if review != "off" and verdict.status == "PASS":
                     review_result = await review_votes(
                         reviewer or model,
                         issue,
@@ -946,7 +952,7 @@ async def fix(
                         default_protected_modules(),
                     )
                     reviews.extend(review_result.votes)
-                    verdict = _with_review(verdict, review_result)
+                    verdict = _with_review(verdict, review_result, advisory=review == "advisory")
                 verdict_history.append(verdict)
                 changed_files = len(changed_paths)
                 for predicate in verdict.predicates:

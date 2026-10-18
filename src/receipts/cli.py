@@ -110,12 +110,22 @@ def _parser() -> argparse.ArgumentParser:
         default="local",
     )
     fix_parser.add_argument("--out", required=True, type=Path)
-    fix_parser.add_argument(
+    review = fix_parser.add_mutually_exclusive_group()
+    review.add_argument(
         "--no-review",
         dest="review",
-        action="store_false",
-        help="skip R8, the independent Nemotron review that can only object to a passing patch",
+        action="store_const",
+        const="off",
+        help="skip R8, the independent Nemotron review of a passing patch",
     )
+    review.add_argument(
+        "--review-veto",
+        dest="review",
+        action="store_const",
+        const="veto",
+        help="let R8 reject a passing patch when both reviews object (by default it is advisory)",
+    )
+    fix_parser.set_defaults(review="advisory")
 
     doctor_parser = commands.add_parser("doctor", help="check local configuration")
     doctor_parser.add_argument(
@@ -566,7 +576,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
     fix_options: dict[str, Any] = {
         "budgets": budgets,
         "progress": progress,
-        "review": getattr(args, "review", True),
+        "review": getattr(args, "review", "advisory"),
         "reviewer": reviewer,
     }
     if spec_paths is not None:
