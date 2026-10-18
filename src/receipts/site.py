@@ -34,7 +34,7 @@ _NAMES = {
     "R4_patch_scope": "Patch scope",
     "R5_provenance": "Witness chain and patch digest",
     "R7_no_shortcuts": "No shortcut in the patch",
-    "R8_review": "Independent review raised no grounded objection",
+    "R8_review": "Independent reviews did not both object",
     "R8_review_advisory": "Independent review, advisory",
     "R6_claim_audit": "Agent claim audit (advisory)",
 }

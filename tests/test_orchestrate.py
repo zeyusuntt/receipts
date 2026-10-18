@@ -227,6 +227,7 @@ async def _run(
     extra_files: dict[str, str] | None = None,
     progress=None,
     review: str | None = None,
+    reviewer=None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
@@ -273,6 +274,8 @@ async def _run(
         extra["progress"] = progress
     if review is not None:
         extra["review"] = review
+    if reviewer is not None:
+        extra["reviewer"] = reviewer
     result = await orchestrate.fix(
         executor,
         model,
@@ -1229,7 +1232,7 @@ async def test_one_objecting_review_out_of_two_does_not_veto(tmp_path: Path):
 
     assert result.final_verdict.status == "PASS"
     r8 = next(p for p in result.final_verdict.predicates if p.id == "R8_review")
-    assert r8.passed is True and r8.evidence == "no veto (1 of 2 independent reviews object)"
+    assert r8.passed is True and r8.evidence.startswith("no veto (1 of 2 independent reviews object): ")
     assert json.loads((run_dir / "attempts" / "1" / "review.json").read_text())["veto"] is False
 
 
@@ -1308,3 +1311,65 @@ async def test_advisory_review_without_objection(tmp_path: Path):
 
     advisory = next(p for p in result.final_verdict.predicates if p.id == "R8_review_advisory")
     assert advisory.passed is True and advisory.evidence == "advisory: no objection"
+
+
+def test_run_inputs_written_before_review_modes_still_load():
+    orchestrate = _orchestrate_module()
+    base = {"source": {}, "issue": "x", "spec_tests": [], "suite_scope": "tests", "appeals": 1,
+            "budgets": orchestrate.RunBudgets().model_dump()}
+    assert orchestrate.RunInput.model_validate({**base, "review": False}).review == "off"
+    assert orchestrate.RunInput.model_validate({**base, "review": True}).review == "veto"
+    assert orchestrate.RunInput.model_validate(base).review == "off"
+
+
+async def test_a_reviewer_with_its_own_meter_counts_every_call(tmp_path: Path):
+    from receipts.cost import CostMeter, TokenUsage
+
+    class MeteredReviewer(FakeModel):
+        config = {"model": SUPER_MODEL}
+
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self._meter = CostMeter()
+
+        async def complete_json(self, system, user, schema):
+            # Two paid calls behind one answer, as a retry after invalid JSON would be.
+            self._meter.add_usage(SUPER_MODEL, TokenUsage(prompt=50_000, completion=500))
+            self._meter.add_usage(SUPER_MODEL, TokenUsage(prompt=50_000, completion=500))
+            return await super().complete_json(system, user, schema)
+
+    reviewer = MeteredReviewer(json_objects=[{"objections": []}, {"objections": []}])
+    with_review = FakeModel(json_objects=[_PLAN], turns=_fix_turns("only"))
+    plain = FakeModel(json_objects=[_PLAN], turns=_fix_turns("only"))
+
+    _, reviewed_dir, _, _ = await _run(tmp_path / "with", with_review, review="advisory", reviewer=reviewer)
+    _, plain_dir, _, _ = await _run(tmp_path / "without", plain)
+
+    reviewed = json.loads((reviewed_dir / "cost.json").read_text())["models"]
+    base = json.loads((plain_dir / "cost.json").read_text())["models"]
+    name = next(iter(base))
+    assert reviewed[SUPER_MODEL]["prompt_tokens"] - (base[name]["prompt_tokens"] if name == SUPER_MODEL else 0) == 200_000
+
+
+async def test_the_receipt_lists_every_review_objection(tmp_path: Path):
+    other = dict(_OBJECTION, problem="the second reviewer names a different gap")
+    model = FakeModel(json_objects=[_PLAN, {"objections": [_OBJECTION]}, {"objections": [other]}],
+                      turns=_fix_turns("only"))
+
+    result, _, _, _ = await _run(tmp_path, model, review="advisory")
+
+    advisory = next(p for p in result.final_verdict.predicates if p.id == "R8_review_advisory")
+    assert "the reviewer says the fix is incomplete" in advisory.evidence
+    assert "the second reviewer names a different gap" in advisory.evidence
+
+
+async def test_one_objecting_review_is_shown_without_a_veto(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN, {"objections": [_OBJECTION]}, {"objections": []}],
+                      turns=_fix_turns("only"))
+
+    result, _, _, _ = await _run(tmp_path, model, review="advisory")
+
+    advisory = next(p for p in result.final_verdict.predicates if p.id == "R8_review_advisory")
+    assert advisory.passed is True
+    assert advisory.evidence.startswith("advisory: no veto (1 of 2 independent reviews object): ")
+    assert "the reviewer says the fix is incomplete" in advisory.evidence

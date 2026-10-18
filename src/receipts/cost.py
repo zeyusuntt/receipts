@@ -148,6 +148,11 @@ class CostMeter:
             reasoning=current.reasoning + usage.reasoning,
         )
 
+    def merge(self, other: "CostMeter") -> None:
+        """Add another meter's model usage to this one."""
+        for model, usage in other._usage.items():
+            self.add_usage(model, usage)
+
     def add_sandbox_seconds(self, seconds: float) -> None:
         if seconds < 0:
             raise ValueError("sandbox seconds cannot be negative")

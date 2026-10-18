@@ -13,7 +13,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from receipts.agent.planner import Plan, make_plan
 from receipts.agent.worker import (
@@ -111,6 +111,16 @@ class RunInput(BaseModel):
     appeals: int
     budgets: RunBudgets
     review: ReviewMode = "off"
+
+    @field_validator("review", mode="before")
+    @classmethod
+    def _review_written_as_a_flag(cls, value: Any) -> Any:
+        """Runs before review modes recorded review as true (a veto) or false (off)."""
+        if value is True:
+            return "veto"
+        if value is False:
+            return "off"
+        return value
 
 
 class Disclosure(BaseModel):
@@ -575,14 +585,16 @@ def _with_review(verdict: Verdict, result: ReviewVotes, *, advisory: bool = Fals
     In advisory mode the review is recorded as R8_review_advisory and never changes the verdict.
     """
     objecting = sum(1 for vote in result.votes if vote.objections)
+    listed = "; ".join(
+        f'review {number}: "{objection.requirement}": {objection.problem} ({objection.location})'
+        for number, vote in enumerate(result.votes, 1)
+        for objection in vote.objections
+    )
     if result.veto:
-        evidence = f"{objecting} of {len(result.votes)} independent reviews object: " + "; ".join(
-            f'"{objection.requirement}": {objection.problem} ({objection.location})'
-            for objection in result.votes[0].objections
-        )
+        evidence = f"{objecting} of {len(result.votes)} independent reviews object: {listed}"
     else:
         evidence = "no objection" if objecting == 0 else (
-            f"no veto ({objecting} of {len(result.votes)} independent reviews object)"
+            f"no veto ({objecting} of {len(result.votes)} independent reviews object): {listed}"
         )
         dropped = sum(len(vote.dropped) for vote in result.votes)
         if dropped:
@@ -630,11 +642,18 @@ def _cost_summary(
             meter.add_usage(model_name, TokenUsage.model_validate(row["usage"]))
     if not isinstance(existing, CostMeter) and planner_usage is not None:
         meter.add_usage(model_name, planner_usage)
-    # Review calls are counted from their records unless the reviewer shares the agent's meter.
+    # A reviewer with its own meter has counted every call it paid for, retries included; without
+    # one, review calls are counted from their records. A reviewer sharing the agent's meter is
+    # already in it.
     reviewer_meter = getattr(reviewer, "_meter", None)
-    if reviewer_meter is not meter or not isinstance(reviewer_meter, CostMeter):
+    if isinstance(reviewer_meter, CostMeter):
+        if reviewer_meter is not meter:
+            meter.merge(reviewer_meter)
+    else:
         reviewer_config = getattr(reviewer, "config", None)
-        reviewer_name = str(getattr(reviewer_config, "model", None) or model_name)
+        reviewer_name = str(getattr(reviewer_config, "model", None)
+                            or (reviewer_config.get("model") if isinstance(reviewer_config, dict) else None)
+                            or model_name)
         for review in reviews:
             if review.usage is not None:
                 meter.add_usage(reviewer_name, review.usage)
