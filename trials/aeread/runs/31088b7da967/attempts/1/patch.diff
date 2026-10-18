@@ -1,0 +1,36 @@
+diff --git a/src/aeread_families/datacenter_development/adoption_measurement.py b/src/aeread_families/datacenter_development/adoption_measurement.py
+index 9ee81fd..b5929a0 100644
+--- a/src/aeread_families/datacenter_development/adoption_measurement.py
++++ b/src/aeread_families/datacenter_development/adoption_measurement.py
+@@ -135,6 +135,13 @@ class CounterofferAdoptionScorer:
+         )
+ 
+     def __call__(
++        self, scoring_input, *, evidence_refs: tuple[str, ...]
++    ) -> FamilyScoreSet:
++        # Kernel scoring contract: extract outcome from FamilyScoringInput
++        outcome = scoring_input.outcome
++        return self.score_recorded_outcome(outcome, evidence_refs=evidence_refs)
++
++    def score_recorded_outcome(
+         self, outcome: Mapping[str, Any], *, evidence_refs: tuple[str, ...]
+     ) -> FamilyScoreSet:
+         required = len(self._case["adoption_stage"]["required_sequence"])
+diff --git a/src/aeread_families/datacenter_development/objective_measurement.py b/src/aeread_families/datacenter_development/objective_measurement.py
+index a128008..f5885d4 100644
+--- a/src/aeread_families/datacenter_development/objective_measurement.py
++++ b/src/aeread_families/datacenter_development/objective_measurement.py
+@@ -172,6 +172,13 @@ class ObjectiveAwareDataCenterScorer:
+         )
+ 
+     def __call__(
++        self, scoring_input, *, evidence_refs: tuple[str, ...]
++    ) -> FamilyScoreSet:
++        # Kernel scoring contract: extract outcome from FamilyScoringInput
++        outcome = scoring_input.outcome
++        return self.score_recorded_outcome(outcome, evidence_refs=evidence_refs)
++
++    def score_recorded_outcome(
+         self, outcome: Mapping[str, Any], *, evidence_refs: tuple[str, ...]
+     ) -> FamilyScoreSet:
+         outside = int(

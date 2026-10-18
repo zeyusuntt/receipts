@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Two defects in the EverOS memory candidate (`aeread/integrations/everos_memory.py`).\n\n1. Agent cases are never injected. Agent-case search items carry `task_intent` and `key_insight` fields, not `summary` or `content`, so every extracted case is retrieved but formatted into an empty snippet and silently dropped. Agent-case items should become snippets from those fields.\n\n2. Recall is blind to outcomes. In the v2 arm, 9 of 12 zero-value episodes filled the memory pool with recaps of failed episodes, and they compounded (v2 pooled +0.031, against +0.137 for v1 and +0.087 for the control). The candidate should record each session's realized AER when the episode ends, and drop recalled snippets from known-failed episodes when anything better survives. When nothing else survives, it should keep them rather than recall nothing.",
+  "review": false,
+  "source": {
+    "commit": "bf964471968fd40123df479b3651784bdb72ae29",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9420/aeread-dd8b832fabbc/start"
+  },
+  "spec_paths": [
+    "tests/test_everos_memory.py"
+  ],
+  "spec_tests": [
+    "tests/test_everos_memory.py::test_agent_case_items_format_into_snippets",
+    "tests/test_everos_memory.py::test_recall_drops_snippets_from_failed_episodes"
+  ],
+  "suite_scope": "tests/test_everos_memory.py"
+}

@@ -1,0 +1,28 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "The termsbench primary leaf changes by case, which ruling R13 (PR #112) forbids.\n\nThe termsbench finalizer makes the regime-conditional leaf the primary: `surplus_efficiency` for the overlap regime and `no_deal_agreement` for the nodeal regime. A primary whose identity changes by case cannot be aggregated across cases, and both the primary and the admission leaf must exist for every execution admitted under one static manifest.\n\n`protocol_compliance` is the only leaf both regimes declare. It should be both the primary and the admission leaf for every case. The conditional leaves should still be scored and reported; they should just never carry the primary role.",
+  "review": false,
+  "source": {
+    "commit": "9be6f9f2ff73036fba07c274b20c0831a6430ed0",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9420/aeread-9dac975e6ed0/start"
+  },
+  "spec_paths": [
+    "tests/test_termsbench_measurement.py"
+  ],
+  "spec_tests": [
+    "tests/test_termsbench_measurement.py::test_call_scores_exactly_the_leaves_the_regime_declares[nodeal]",
+    "tests/test_termsbench_measurement.py::test_call_scores_exactly_the_leaves_the_regime_declares[overlap]"
+  ],
+  "suite_scope": "tests/test_termsbench_measurement.py"
+}

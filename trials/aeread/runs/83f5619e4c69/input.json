@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "The executor's length-retry growth has no ceiling.\n\nOn every length retry the executor doubles `max_output_tokens`, without a limit. A 2,400-token budget under a ten-attempt policy reached 1,228,800 tokens, larger than the model's context window, and the provider refused the request outright, turning a recoverable truncation into a dead case. This also pushed families to drop `length` from their retryable conditions, which removed truncation recovery entirely, because the executor labels a response that is both truncated and empty as `length`.\n\nDoubling should stay the tactic, but the growth should be capped at eight times the budget the profile declared (exposed as `_LENGTH_RETRY_MAX_GROWTH`), and at half the provider's advertised context window when the provider declares one.",
+  "review": false,
+  "source": {
+    "commit": "432d6a754e8a5350bfdb695286b7c8831a61c0ca",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9420/aeread-83f5619e4c69/start"
+  },
+  "spec_paths": [
+    "tests/test_post_admission_rejection.py"
+  ],
+  "spec_tests": [
+    "tests/test_post_admission_rejection.py::test_length_retry_growth_is_capped_at_a_multiple_of_the_declared_budget"
+  ],
+  "suite_scope": "tests/test_post_admission_rejection.py"
+}

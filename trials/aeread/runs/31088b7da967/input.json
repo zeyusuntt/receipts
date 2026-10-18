@@ -1,0 +1,32 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Three datacenter scorers do not follow the kernel scoring contract, so every live cell is excluded.\n\n`DataCenterDevelopmentScorer` was migrated to the kernel scoring contract, but the other three were not: the scorers in `datacenter_development_terms`, `datacenter_development/objective_measurement.py` and `datacenter_development/adoption_measurement.py` still take the recorded-outcome mapping directly when called. The finalizer passes a `FamilyScoringInput`, so the terms validator receives a dataclass, reports \"data-center terms outcome must be an object\", and every live cell is excluded as an invalid measurement (21 failures).\n\nEach of the three scorers should, when called, take the scoring input and score `scoring_input.outcome` (the outcome from the verified re-execution, the same mapping they score today) through the existing recorded-outcome scoring (`score_recorded_outcome`), which should stay available under that name.",
+  "review": false,
+  "source": {
+    "commit": "1e44e22f2989365b2c7051f2e77dcd4a8acfd31f",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9420/aeread-31088b7da967/start"
+  },
+  "spec_paths": [
+    "tests/test_datacenter_objective.py"
+  ],
+  "spec_tests": [
+    "tests/test_datacenter_objective.py::test_invalid_action_gets_no_objective_credit_and_walk_is_distinct",
+    "tests/test_datacenter_objective.py::test_objective_campaign_passes_provider_free_and_admission_gates",
+    "tests/test_datacenter_objective.py::test_objective_campaign_v2_passes_provider_free_and_admission_gates",
+    "tests/test_datacenter_objective.py::test_objective_campaign_v3_passes_provider_free_and_admission_gates",
+    "tests/test_datacenter_objective.py::test_objective_provider_free_run_seals_seven_leaves_and_replays",
+    "tests/test_datacenter_objective.py::test_reference_dominance_violation_cannot_receive_objective_credit"
+  ],
+  "suite_scope": "tests/test_benchmark_qc_profiles.py tests/test_datacenter_objective.py"
+}

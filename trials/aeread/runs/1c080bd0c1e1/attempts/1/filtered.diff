@@ -1,0 +1,44 @@
+diff --git a/src/aeread/shared_runner/task/execution.py b/src/aeread/shared_runner/task/execution.py
+index 2e75742..4b52377 100644
+--- a/src/aeread/shared_runner/task/execution.py
++++ b/src/aeread/shared_runner/task/execution.py
+@@ -2194,7 +2194,7 @@ class MinimalChatExecutor:
+         # Profiles whose pinned route has already answered successfully in
+         # this run. A 4xx that arrives after a success cannot mean "this
+         # route does not exist"; see _is_post_admission_rejection.
+-        self._routes_proven: set[str] = set()
++        self._routes_proven: set[tuple[str, str | None, str]] = set()
+         self._logical_actions_by_profile: dict[str, int] = {}
+         self._cost_by_profile: dict[str, float] = {}
+         self._request_seed_by_profile = dict(request_seed_by_profile or {})
+@@ -2210,6 +2210,11 @@ class MinimalChatExecutor:
+                 source.decode("utf-8") if isinstance(source, bytes) else source
+             )
+             self._profiles[profile.profile_id] = profile
++
++    @staticmethod
++    def _route_key(profile: AgentProfile) -> tuple[str, str | None, str]:
++        """Return the (provider, base_url, model) tuple that identifies a route."""
++        return (profile.model.provider, profile.model.base_url, profile.model.model)
+         unknown_seed_profiles = set(self._request_seed_by_profile) - set(
+             self._profiles
+         )
+@@ -2685,7 +2690,7 @@ class MinimalChatExecutor:
+                 )
+             # Both branches above represent a route that has now answered, so the
+             # proof is recorded on the common path rather than in either arm.
+-            self._routes_proven.add(profile.profile_id)
++            self._routes_proven.add(self._route_key(profile))
+             profile_cost = self._charge(profile, cost)
+             if (
+                 profile.budgets.max_cost_usd is not None
+@@ -2964,7 +2969,8 @@ class MinimalChatExecutor:
+     ) -> bool:
+         return (
+             failure.condition == "provider_rejected"
+-            and profile.profile_id in self._routes_proven
++            and failure.status_code == 404
++            and self._route_key(profile) in self._routes_proven
+         )
+ 
+     def _record_provider_failure(

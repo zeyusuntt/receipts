@@ -1,0 +1,36 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "Malformed model output in procurement runs is recorded as an operational failure instead of being scored.\n\nWhen OpenRouter returns a completed, billable response whose structured output is not valid JSON (for example `{\"action\":`), the OpenRouter adapter raises a non-retryable `provider_contract` failure. The response's text, usage and cost are lost, and a trajectory that the model actually played is counted as operational missingness instead of as the model's behavior. The risk-gate factorial campaign (v2) was sealed ineligible because of this misclassification. Its admission canaries also reject a malformed answer, so a canary can select on model behavior.\n\nThe adapter should keep a nonempty malformed response on the normal response path, with its text, usage and cost, so the family parser scores it (as `malformed_json`, an invalid action). The admission canary should be transport-only: it admits whenever the provider answered, and records whether the answer was a valid structured action, malformed JSON or an invalid action shape (`output_contract_status`), with the action only when it is valid (canary schema 0.4). The campaign needs a new version, v3, that supersedes v2 (v2's id stays available as `V2_CAMPAIGN_ID`), records why v2 was sealed ineligible and these two operational changes in its lineage, and states that the scientific contract is unchanged from v1 and v2.",
+  "review": false,
+  "source": {
+    "commit": "3e006d3732406502d33c27092754a5aaea2459e8",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9420/aeread-0b9f4a28e3a7/start"
+  },
+  "spec_paths": [
+    "tests/test_procurement_risk_gate_campaign.py"
+  ],
+  "spec_tests": [
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_bootstrap_configuration_is_nontrivial",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_canaries_bind_each_prompt",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_canary_admits_malformed_output_without_selecting_on_behavior",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_canary_retries_rate_limit_with_v2_pacing_retained",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_comparison_progresses_specialized_factorial_and_publishes",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_plan_freezes_factorial_distribution_and_budget",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_plan_rejects_parent_or_prompt_drift",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_prompts_are_additive_and_do_not_use_supplier_identity",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_runner_checkpoints_each_arm_evenly",
+    "tests/test_procurement_risk_gate_campaign.py::test_risk_gate_unfavorable_result_remains_eligible"
+  ],
+  "suite_scope": "tests/test_procurement_allocation_model_campaign.py tests/test_procurement_risk_gate_campaign.py tests/test_shared_runner_execution.py"
+}

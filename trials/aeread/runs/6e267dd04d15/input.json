@@ -1,0 +1,27 @@
+{
+  "appeals": 1,
+  "budgets": {
+    "baseline_limit_s": 600,
+    "verification_timeout_s": 600,
+    "worker": {
+      "max_completion_tokens": 96000,
+      "max_turns": 60,
+      "max_wall_seconds": 1500.0,
+      "prompt_token_budget": 160000
+    }
+  },
+  "issue": "The negarena family cannot be registered against the real plugin registry.\n\nA maintainer ruling (PR #73) added this family's exact identity to `TRUSTED_BUILTIN_PLUGIN_KEYS`, so it should be registered the way the other in-tree families are, through the trusted in-tree path. `register_plugin` in `aeread_families/negarena/environment.py` still goes through the contribution admission gate, which no longer applies to it, and registering the plugin against a real `PluginRegistry` fails.",
+  "review": false,
+  "source": {
+    "commit": "f6f8c47ffd65d2529e119589b66a31ef28def61e",
+    "install_cmd": "pip install -e '.[dev]'",
+    "url": "git://host.docker.internal:9420/aeread-6e267dd04d15/start"
+  },
+  "spec_paths": [
+    "tests/test_negarena_environment.py"
+  ],
+  "spec_tests": [
+    "tests/test_negarena_environment.py::test_register_plugin_succeeds_against_the_real_registry"
+  ],
+  "suite_scope": "tests/test_negarena_environment.py"
+}

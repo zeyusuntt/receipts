@@ -1,0 +1,14 @@
+{
+  "approach": "Modify DurablePostAdmissionClassification to compute routing proofs dynamically based on individual provider results instead of relying solely on sealed effective conditions. Ensure that after a successful round, subsequent 404 responses trigger proper typed promotion to POST_ADMISSION_REJECTION only when they pertain to the exact same (provider, base_url, model) triplet established by prior success, keeping other HTTP codes like 401 non-retryable even after successes.\nThis addresses issues #1, #2, and #3 regarding multi-round proofs, narrow classification scope, and durability respectively.",
+  "files_to_edit": [
+    "src/aeread/shared_runner/task/execution.py"
+  ],
+  "finish_reason": "stop",
+  "hypothesis": "Implement durable condition logic separating classification decisions from durably stored conditions according to the route-based proofs.",
+  "retries": {},
+  "usage": {
+    "completion": 169,
+    "prompt": 26698,
+    "reasoning": 0
+  }
+}

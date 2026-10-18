@@ -1,0 +1,166 @@
+diff --git a/src/aeread/shared_runner/task/execution.py b/src/aeread/shared_runner/task/execution.py
+index 2e75742..8e7630e 100644
+--- a/src/aeread/shared_runner/task/execution.py
++++ b/src/aeread/shared_runner/task/execution.py
+@@ -2194,7 +2194,7 @@ class MinimalChatExecutor:
+         # Profiles whose pinned route has already answered successfully in
+         # this run. A 4xx that arrives after a success cannot mean "this
+         # route does not exist"; see _is_post_admission_rejection.
+-        self._routes_proven: set[str] = set()
++        self._routes_proven: set[tuple[str, str | None, str]] = set()
+         self._logical_actions_by_profile: dict[str, int] = {}
+         self._cost_by_profile: dict[str, float] = {}
+         self._request_seed_by_profile = dict(request_seed_by_profile or {})
+@@ -2219,6 +2219,10 @@ class MinimalChatExecutor:
+                 f"{sorted(unknown_seed_profiles)}"
+             )
+ 
++    @staticmethod
++    def _route_key(provider: str, base_url: str | None, model: str) -> tuple[str, str | None, str]:
++        return (provider, base_url, model)
++
+     def _validate_harness_profile(self, profile: AgentProfile) -> None:
+         """Checks that belong to THIS executor's harness, not to every harness.
+ 
+@@ -2576,6 +2580,18 @@ class MinimalChatExecutor:
+                     pending=self._attempt_pending_round(action_attempt_id),
+                 )
+                 if should_retry:
++                    if failure.condition == "length":
++                        declared = profile.sampling.max_output_tokens
++                        ceiling = declared * _LENGTH_RETRY_MAX_GROWTH
++                        context_window = getattr(
++                            self._provider_capabilities.get(profile.model.provider),
++                            "max_context_tokens",
++                            None,
++                        ) if hasattr(self, "_provider_capabilities") else None
++                        if isinstance(context_window, int) and context_window > 0:
++                            ceiling = min(ceiling, context_window // 2)
++                        next_limit = min(request.max_output_tokens * 2, ceiling)
++                        max_output_tokens = next_limit
+                     await self._wait_before_provider_retry(
+                         decision=decision,
+                         request=request,
+@@ -2623,6 +2639,11 @@ class MinimalChatExecutor:
+                     failure,
+                 )
+                 raise failure
++
++            # Record that this route answered successfully for future 404 promotion
++            key = self._route_key(request.provider, request.base_url, request.model)
++            self._routes_proven.add(key)
++
+             pricing = self._pricing[profile.model.model]
+             rounds = self._attempt_rounds(action_attempt_id)
+             if rounds:
+@@ -2777,7 +2798,7 @@ class MinimalChatExecutor:
+                         ceiling = min(ceiling, context_window // 2)
+                     next_limit = min(max_output_tokens * 2, ceiling)
+                 self.evidence.append_event(
+-                    "action_attempt_failed",
++                    "action_attempt_retry",
+                     {
+                         "failure_condition": retry_condition,
+                         "prior_max_output_tokens": max_output_tokens,
+@@ -2805,7 +2826,7 @@ class MinimalChatExecutor:
+                 )
+                 attempts.append(attempt)
+                 self.evidence.append_event(
+-                    "action_attempt_failed",
++                    "action_attempt_retry",
+                     {"failure_condition": retry_condition},
+                     phase_instance_id=decision.phase_instance_id,
+                     logical_action_id=decision.logical_action_id,
+@@ -2962,10 +2983,24 @@ class MinimalChatExecutor:
+     def _is_post_admission_rejection(
+         self, profile: AgentProfile, failure: ProviderFailure
+     ) -> bool:
+-        return (
+-            failure.condition == "provider_rejected"
+-            and profile.profile_id in self._routes_proven
+-        )
++        if failure.condition != "provider_rejected" or failure.status_code != 404:
++            return False
++        last_req = getattr(self, '_last_failed_request', None)
++        if last_req is not None:
++            key = self._route_key(
++                last_req.provider,
++                last_req.base_url,
++                last_req.model,
++            )
++        else:
++            # When we lack the failed request (e.g., in unit tests), fall back to
++            # the profile's expected route.
++            key = self._route_key(
++                profile.model.provider,
++                profile.model.base_url,
++                profile.model.model,
++            )
++        return key in self._routes_proven
+ 
+     def _record_provider_failure(
+         self,
+@@ -3032,25 +3067,61 @@ class MinimalChatExecutor:
+             canonical_response=None,
+         )
+         attempts.append(attempt)
++        event_payload: dict[str, Any] = {"failure_condition": failure.condition}
++        if failure.condition == "length":
++            declared = profile.sampling.max_output_tokens
++            ceiling = declared * _LENGTH_RETRY_MAX_GROWTH
++            context_window = getattr(
++                self._provider_capabilities.get(profile.model.provider),
++                "max_context_tokens",
++                None,
++            ) if hasattr(self, "_provider_capabilities") else None
++            if isinstance(context_window, int) and context_window > 0:
++                ceiling = min(ceiling, context_window // 2)
++            next_limit = min(request.max_output_tokens * 2, ceiling)
++            event_payload["prior_max_output_tokens"] = request.max_output_tokens
++            event_payload["next_max_output_tokens"] = next_limit
+         self.evidence.append_event(
+             "action_attempt_failed",
+-            {"failure_condition": failure.condition},
++            event_payload,
+             phase_instance_id=decision.phase_instance_id,
+             logical_action_id=decision.logical_action_id,
+             action_attempt_id=action_attempt_id,
+         )
+         condition = failure.condition
+         retryable = failure.retryable
++        self._last_failed_request = failed_request
+         if self._is_post_admission_rejection(profile, failure):
+             condition = POST_ADMISSION_REJECTION
+             retryable = True
++        event_payload: dict[str, Any] = {"failure_condition": condition}
++        if condition == "length":
++            declared = profile.sampling.max_output_tokens
++            ceiling = declared * _LENGTH_RETRY_MAX_GROWTH
++            context_window = getattr(
++                self._provider_capabilities.get(profile.model.provider),
++                "max_context_tokens",
++                None,
++            ) if hasattr(self, "_provider_capabilities") else None
++            if isinstance(context_window, int) and context_window > 0:
++                ceiling = min(ceiling, context_window // 2)
++            next_limit = min(request.max_output_tokens * 2, ceiling)
++            event_payload["prior_max_output_tokens"] = request.max_output_tokens
++            event_payload["next_max_output_tokens"] = next_limit
++        self.evidence.append_event(
++            "action_attempt_failed",
++            event_payload,
++            phase_instance_id=decision.phase_instance_id,
++            logical_action_id=decision.logical_action_id,
++            action_attempt_id=action_attempt_id,
++        )
+         should_retry = (
+             retryable
+             and condition in profile.retry_policy.retryable_conditions
+             and ordinal + 1 < profile.retry_policy.max_action_attempts
+         )
+         if not should_retry:
+-            self._finish_logical_failure(decision, attempts, failure.condition)
++            self._finish_logical_failure(decision, attempts, condition)
+         else:
+             self._executions[decision.logical_action_id] = LogicalActionExecution(
+                 logical_action_id=decision.logical_action_id,
