@@ -226,7 +226,7 @@ async def _run(
     spec_tests: list[str] | None = None,
     extra_files: dict[str, str] | None = None,
     progress=None,
-    review: bool | None = None,
+    review: str | None = None,
 ):
     orchestrate = _orchestrate_module()
     repo = make_repo(tmp_path / "source")
@@ -1174,7 +1174,7 @@ async def test_review_objection_rejects_a_passing_patch_and_reaches_the_appeal(t
                                     {"objections": []}, {"objections": []}],
                       turns=_fix_turns("first") + _fix_turns("second"))
 
-    result, run_dir, _, _ = await _run(tmp_path, model, review=True)
+    result, run_dir, _, _ = await _run(tmp_path, model, review="veto")
 
     first, second = result.verdict_history
     assert first.status == "REJECTED"
@@ -1198,7 +1198,7 @@ async def test_review_objection_rejects_a_passing_patch_and_reaches_the_appeal(t
 async def test_review_without_objection_keeps_the_pass_and_orders_the_checks(tmp_path: Path):
     model = FakeModel(json_objects=[_PLAN, {"objections": []}, {"objections": []}], turns=_fix_turns("only"))
 
-    result, _, _, _ = await _run(tmp_path, model, review=True)
+    result, _, _, _ = await _run(tmp_path, model, review="veto")
 
     assert result.final_verdict.status == "PASS"
     assert [p.id for p in result.final_verdict.predicates] == [
@@ -1213,7 +1213,7 @@ async def test_ungrounded_objection_is_dropped_and_recorded(tmp_path: Path):
     model = FakeModel(json_objects=[_PLAN, {"objections": [paraphrase]}, {"objections": []}],
                       turns=_fix_turns("only"))
 
-    result, run_dir, _, _ = await _run(tmp_path, model, review=True)
+    result, run_dir, _, _ = await _run(tmp_path, model, review="veto")
 
     assert result.final_verdict.status == "PASS"
     r8 = next(p for p in result.final_verdict.predicates if p.id == "R8_review")
@@ -1225,7 +1225,7 @@ async def test_one_objecting_review_out_of_two_does_not_veto(tmp_path: Path):
     model = FakeModel(json_objects=[_PLAN, {"objections": [_OBJECTION]}, {"objections": []}],
                       turns=_fix_turns("only"))
 
-    result, run_dir, _, _ = await _run(tmp_path, model, review=True)
+    result, run_dir, _, _ = await _run(tmp_path, model, review="veto")
 
     assert result.final_verdict.status == "PASS"
     r8 = next(p for p in result.final_verdict.predicates if p.id == "R8_review")
@@ -1236,7 +1236,7 @@ async def test_one_objecting_review_out_of_two_does_not_veto(tmp_path: Path):
 async def test_a_failed_review_does_not_veto(tmp_path: Path):
     model = FakeModel(json_objects=[_PLAN], turns=_fix_turns("only"))  # no scripted review answer
 
-    result, _, _, _ = await _run(tmp_path, model, review=True)
+    result, _, _, _ = await _run(tmp_path, model, review="veto")
 
     assert result.final_verdict.status == "PASS"
     r8 = next(p for p in result.final_verdict.predicates if p.id == "R8_review")
@@ -1249,7 +1249,7 @@ async def test_the_reviewer_never_sees_a_rejected_patch(tmp_path: Path):
         _finish("finish", summary="Claimed a fix.", changed=["calc/__init__.py"], green=True),
     ])
 
-    result, _, _, _ = await _run(tmp_path, model, appeals=0, review=True)
+    result, _, _, _ = await _run(tmp_path, model, appeals=0, review="veto")
 
     assert result.final_verdict.status == "REJECTED"
     assert "R8_review" not in [p.id for p in result.final_verdict.predicates]
@@ -1264,7 +1264,7 @@ async def test_review_is_off_by_default_in_the_library(tmp_path: Path):
     assert "R8_review" not in [p.id for p in result.final_verdict.predicates]
     assert _review_requests(model) == []
     assert not (run_dir / "attempts" / "1" / "review.json").exists()
-    assert json.loads((run_dir / "input.json").read_text())["review"] is False
+    assert json.loads((run_dir / "input.json").read_text())["review"] == "off"
 
 
 async def test_review_tokens_are_counted_in_the_run_cost(tmp_path: Path):
@@ -1275,7 +1275,7 @@ async def test_review_tokens_are_counted_in_the_run_cost(tmp_path: Path):
     with_review = FakeModel(json_objects=[_PLAN, answer, answer], turns=_fix_turns("only"))
     without_review = FakeModel(json_objects=[_PLAN], turns=_fix_turns("only"))
 
-    _, reviewed_dir, _, _ = await _run(tmp_path / "with", with_review, review=True)
+    _, reviewed_dir, _, _ = await _run(tmp_path / "with", with_review, review="veto")
     _, plain_dir, _, _ = await _run(tmp_path / "without", without_review)
 
     reviewed = json.loads((reviewed_dir / "cost.json").read_text())
@@ -1283,3 +1283,28 @@ async def test_review_tokens_are_counted_in_the_run_cost(tmp_path: Path):
     (name, usage), = reviewed["models"].items()
     assert usage["prompt_tokens"] - plain["models"][name]["prompt_tokens"] == 200_000
     assert usage["completion_tokens"] - plain["models"][name]["completion_tokens"] == 2_000
+
+
+async def test_advisory_review_records_objections_without_changing_the_verdict(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN, {"objections": [_OBJECTION]}, {"objections": [_OBJECTION]}],
+                      turns=_fix_turns("only"))
+
+    result, run_dir, _, _ = await _run(tmp_path, model, review="advisory")
+
+    assert [verdict.status for verdict in result.verdict_history] == ["PASS"]
+    assert result.final_verdict.status == "PASS" and result.verified_fix is True
+    advisory = next(p for p in result.final_verdict.predicates if p.id == "R8_review_advisory")
+    assert advisory.passed is False and advisory.evidence.startswith("advisory: 2 of 2 independent reviews object: ")
+    assert "R8_review" not in [p.id for p in result.final_verdict.predicates]
+    assert result.final_verdict.failed_predicate_ids() == []
+    assert json.loads((run_dir / "attempts" / "1" / "review.json").read_text())["veto"] is True
+    assert [p.id for p in result.final_verdict.predicates][-2:] == ["R8_review_advisory", "R6_claim_audit"]
+
+
+async def test_advisory_review_without_objection(tmp_path: Path):
+    model = FakeModel(json_objects=[_PLAN, {"objections": []}, {"objections": []}], turns=_fix_turns("only"))
+
+    result, _, _, _ = await _run(tmp_path, model, review="advisory")
+
+    advisory = next(p for p in result.final_verdict.predicates if p.id == "R8_review_advisory")
+    assert advisory.passed is True and advisory.evidence == "advisory: no objection"

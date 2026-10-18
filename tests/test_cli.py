@@ -358,7 +358,7 @@ def test_fix_builds_daytona_executor_for_an_image_source(
     )
 
     assert status == 0
-    assert captured["review"] is True
+    assert captured["review"] == "advisory"
     assert captured["config"].api_key == "test-daytona-key"
     assert captured["source"] == ImageSource(
         image="swerebench/example:1",
@@ -1584,7 +1584,8 @@ def test_fix_summary_shows_a_sub_cent_cost_instead_of_zero():
     assert cli._token_cost(None) == "token cost unavailable"
 
 
-def test_fix_reviews_by_default_and_no_review_turns_it_off():
+def test_fix_reviews_in_advisory_mode_by_default():
     base = ["fix", "--repo", "r", "--commit", "c", "--test", TARGET, "--issue-file", "i.md", "--out", "o"]
-    assert _parser().parse_args(base).review is True
-    assert _parser().parse_args(base + ["--no-review"]).review is False
+    assert _parser().parse_args(base).review == "advisory"
+    assert _parser().parse_args(base + ["--no-review"]).review == "off"
+    assert _parser().parse_args(base + ["--review-veto"]).review == "veto"

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -32,6 +32,10 @@ Answer with JSON only."""
 PATCH_LIMIT = 60_000
 # The reviewer's model settings: Nemotron 3 Super with thinking on, at a low temperature.
 REVIEWER_SETTINGS = {"thinking": True, "temperature": 0.2}
+# "off" skips R8; "advisory" records the reviews without changing the verdict (the default,
+# chosen by the pre-registered check in trials/aeread/PLAN.md, Amendment 3); "veto" lets a
+# unanimous objection reject the patch.
+ReviewMode = Literal["off", "advisory", "veto"]
 # Independent reviews per patch. A veto needs every one of them to raise a grounded objection,
 # so one review's sampling noise cannot reject a correct patch.
 REVIEW_VOTES = 2

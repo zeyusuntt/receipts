@@ -154,3 +154,22 @@ R8 at `b27cefa` is run once, with `scripts/r8_check.py`, on the 66 fixes Receipt
 Screening continues in pool order from position 19 with the Amendment 2 rule, until 8 tasks are included or the pool runs out. Issue texts are written from each fix commit's message as before and committed before the runs. Each task is run once with `receipts fix --executor docker` at `b27cefa`, with R8 on (the default) and the same agent settings.
 
 Reported for every task, as before, plus each review's objections. Each patch the gate passes is read by the two independent readings of RESULTS.md, whether or not R8 then vetoes it. The headline: of the patches the gate passed, how many are not correct, how many of those R8 vetoed, and how many correct patches R8 vetoed; then the final verdicts after appeal.
+
+## Amendment 4 (2026-10-17, after held-out set 2 ran, before its results were written up)
+
+### A defect in the screening
+
+The screening script ran each fix's changed test files in one pytest call without `--continue-on-collection-errors`. When one changed file cannot be imported at the start state (it imports a name the fix adds), pytest stops before it runs the other files, so a failing test in another changed file was never seen and never became a target. I found it while reading `1c080bd0c1e1`. The script now has the flag (`scripts/screen.py --continue-on-collection-errors`).
+
+Four included tasks have such a collection error and more than one changed test file. Re-screened with the flag (`records/screening-fixed.jsonl`):
+
+- `d4a6107bdab7` (the first eight, and its rerun): no change.
+- `0b9f4a28e3a7` (held-out set 2): one more target. It was rejected anyway.
+- `11434b27c26e` (held-out set 2): two more targets. It was rejected anyway.
+- `1c080bd0c1e1` (held-out set 2): four more targets, the tests for three of the four gaps its issue names. Its shipped patch fixes the other gap only, and AERead's full suite, run afterwards, fails three of those four tests against it. With the corrected screening this patch fails R1.
+
+The results of held-out set 2 are reported as pre-registered, with this effect stated next to `1c080bd0c1e1`.
+
+### One rerun
+
+`1c080bd0c1e1` is run once more with the corrected targets, at the commit that adds this amendment: the gate is unchanged since `b27cefa`, and R8 runs advisory, the default since `67c563c`. It is reported separately.
