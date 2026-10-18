@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from daytona import AsyncDaytona, DaytonaConfig
 
 from receipts.agent.worker import WorkerBudget
-from receipts.cost import price_table
+from receipts.cost import CostMeter, price_table
 from receipts.llm import (
     ModelClient,
     TokenFactoryClient,
@@ -550,6 +550,7 @@ async def _run_fix(args: argparse.Namespace, model: ModelClient | None) -> int:
     reviewer = model or TokenFactoryClient(
         load_config(env_path=Path(".env")).model_copy(update=REVIEWER_SETTINGS),
         env_path=Path(".env"),
+        meter=CostMeter(),  # counts every review call, including retries after invalid JSON
     )
     progress = _FixProgressRenderer(issue, selected_model, args.executor)
     if args.executor in {"daytona", "tokenfactory"}:

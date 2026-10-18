@@ -5,10 +5,10 @@ The plan, the pool and every rule change are in [PLAN.md](PLAN.md), each committ
 ## Summary
 
 - **Two held-out sets, 16 real bug fixes.** Receipts verified 13 and rejected 3. Two independent readings of each verified patch against its upstream fix, which agree on all 24 patches read in this trial, find 5 of the 13 correct, 3 partial and 5 wrong. Every one that is not correct passes its target tests, and most pass every test AERead has. Each problem is shown in the table, most by a probe script that runs the shipped patch and the upstream fix side by side.
-- **What fixes it.** The false "done" on real code are patches that satisfy narrow tests. Three things caught some of them, each on its own evidence: R7 (a helper nothing calls, a stub) and a stricter target rule turned 3 of the 4 false "done" of the first eight into rejections when rerun; AERead's full test suite, which Receipts' 600-second limit keeps out of the regression check, catches 2 of the 4 in held-out set 2; and R8, two independent Nemotron reviews, flags 2 of those 4 and no correct patch.
+- **What caught some of them.** The false "done" on real code are patches that satisfy narrow tests. Three things caught some, each measured separately: R7 (a helper nothing calls, a stub) and a stricter target rule turned 3 of the 4 false "done" of the first eight into rejections when rerun; AERead's full test suite, which Receipts' 600-second limit keeps out of the regression check, catches 2 of the 4 in held-out set 2; and R8, two independent Nemotron reviews, flags 2 of those 4 and no correct patch.
 - **R8 ships advisory, by a rule fixed in advance.** On the 66 fixes from the 100-task experiment that the official grader accepts, both reviews objected to 10, above the limit of 3. Most objections hold a patch to the wording of a SWE-rebench issue that the fix did not follow and the tests do not require. So R8 is recorded on every receipt and does not change the verdict.
 - **What remains.** Receipts makes sure the agent's tests really pass in a clean sandbox; it cannot make them sufficient. That is the limit the README states, now measured on real code.
-- **Cost.** $8.12 of Nemotron tokens for all 33 runs, and $0.48 for every R8 review.
+- **Cost.** $7.95 of Nemotron tokens for the 33 completed runs (one more launch stopped at the 600-second baseline limit; Amendment 1), and $0.48 for all 252 R8 reviews.
 
 ## How the readings were made
 
@@ -20,7 +20,7 @@ For every verified patch I read the issue text, the shipped patch and the upstre
 
 The two readings agree on all 18 patches of the first eight, held-out set 1 and the rerun, and on all 6 of held-out set 2. Contrived inputs are noted and not counted. Codex's readings are in `records/reading-codex-18.md` and `records/reading-codex-heldout2.md`.
 
-AERead's full `tests/` suite was then run on every shipped patch and on every upstream fix (`scripts/fullsuite.sh`, compared test by test with `scripts/compare.py`). It is a check made after the run, outside Receipts, because Receipts' regression suite is the fix's changed test files (Amendment 1).
+AERead's full `tests/` suite was then run on every shipped patch and on every upstream fix (`scripts/fullsuite.sh`, compared test by test with `scripts/compare.py`; the results and comparisons are in `records/fullsuite/`). It is a check made after the run, outside Receipts, because Receipts' regression suite is the fix's changed test files (Amendment 1).
 
 ## Held-out set 1: positions 11 to 18 (R7 and the Amendment 2 target rule)
 
@@ -70,7 +70,7 @@ R7 and the Amendment 2 target rule as before. R8 ran advisory, as the false-veto
 | `83f5619e4c69` | VERIFIED | 1 | none | both object | partial | Caps growth at eight times the declared budget, but omits the issue's second cap at half the provider's context window (upstream's version of that cap reads a field nothing sets, so in practice it does not apply either). |
 | `9dac975e6ed0` | VERIFIED | 1 | none | no objection | correct | Same behavior as upstream. |
 | `dd8b832fabbc` | VERIFIED | 1 | none | no objection | wrong | Drops recalled memories from every session below the best one, not only failed ones, and recalls nothing where the issue asks it to keep failed snippets as a fallback ([probe](scripts/probes/dd8b832fabbc.sh)). |
-| `31088b7da967` | VERIFIED | 1 | none | no objection | wrong | Migrates two of the three scorers the issue names; the terms scorer, whose error the issue quotes, still rejects the finalizer's input ([probe](scripts/probes/31088b7da967.sh)). AERead's full suite fails 8 terms live-cell tests against it, in test files the fix did not change, which Receipts' regression suite (the changed test files, Amendment 1) does not run. |
+| `31088b7da967` | VERIFIED | 1 | none | no objection | wrong | Migrates two of the three scorers the issue names; the terms scorer, whose error the issue quotes, still rejects the finalizer's input (a [source check](scripts/probes/31088b7da967.sh) of the three scorers). AERead's full suite fails 8 terms live-cell tests against it, in test files the fix did not change, which Receipts' regression suite (the changed test files, Amendment 1) does not run. |
 | `11434b27c26e` | REJECTED | 2 | R1, then R1 | | not read | A target pins a digest of upstream's exact plan text. |
 
 6 VERIFIED: 2 correct, 1 partial, 3 wrong, by the same two independent readings, which again agree on all six. Of the 4 that are not correct, R8 objected to 2 (`1c080bd0c1e1`, `83f5619e4c69`) and AERead's full suite fails 2 (`1c080bd0c1e1`, `31088b7da967`); together they find 3, and nothing finds `dd8b832fabbc`. R8 objected to neither correct patch.
@@ -91,18 +91,18 @@ The trial found two defects in my own screening script, both about test files th
 
 | Set | Tasks | Model cost | Tokens | Wall time |
 | --- | ---: | ---: | ---: | ---: |
-| First eight | 8 | $1.59 | 5.2 M | 39 min |
-| In-sample rerun | 8 | $2.14 | 7.0 M | 82 min |
-| Held-out set 1 | 8 | $1.05 | 3.4 M | 71 min |
-| Held-out set 2 | 8 | $2.14 | 7.0 M | 53 min |
-| Corrected-target rerun | 1 | $1.20 | 3.9 M | 13 min |
-| R8 reviews (development, false-veto check, set 2) | 252 reviews | $0.48 | 0.7 M | |
+| First eight | 8 | $1.56 | 5.1 M | 39 min |
+| In-sample rerun | 8 | $2.10 | 6.9 M | 82 min |
+| Held-out set 1 | 8 | $1.01 | 3.3 M | 71 min |
+| Held-out set 2 | 8 | $2.10 | 6.9 M | 53 min |
+| Corrected-target rerun | 1 | $1.19 | 3.9 M | 13 min |
+| R8 reviews (development, false-veto check, set 2) | 252 reviews | $0.48 | 0.66 M | |
 
-Model cost is Nemotron 3 Super on Token Factory at its listed prices (Nemotron 3 Ultra for one development setting), planner included. The rerun and held-out set 1 ran side by side on one machine, which lengthens both wall times.
+Model cost is Nemotron 3 Super on Token Factory at its listed prices (Nemotron 3 Ultra for one development setting), planner included, from each run's `cost.json`; R8's costs are in `records/r8-costs.md`. The launch of `9c72e635e2b6` that stopped at the baseline limit (`runs/9c72e635e2b6-run1-baseline-timeout`) is not in these totals. The rerun and held-out set 1 ran side by side on one machine, which lengthens both wall times.
 
 ## Limits
 
-One project, issues written by one person, 8 held-out tasks: this shows what happens on real code and does not measure a rate. The readings are human and model judgement, made reproducible where possible by the probes. AERead's own tests also run on the maintainers' machines, so a few fail in a container at the upstream fix too (`test_offline_run_dir_is_complete`, which needs a git checkout); the comparison is per test, so they do not affect it.
+One project, issues written by one person, 16 held-out tasks: this shows what happens on real code and does not measure a rate. The readings are human and model judgement, made reproducible where possible by the probes. AERead's own tests also run on the maintainers' machines, so a few fail in a container at the upstream fix too (`test_offline_run_dir_is_complete`, which needs a git checkout); the comparison is per test, so they do not affect it.
 
 ## Reproduce
 
