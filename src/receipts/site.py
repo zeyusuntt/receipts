@@ -23,10 +23,7 @@ _PILOT_TITLES = {
     "v2-P": "Primary sample: 100 held-out tasks, Nemotron 3 Super",
     "v2-arm-lightning": "Exploratory: the first 30 tasks again with Nemotron 3.5 Lightning",
 }
-_FOOTER = (
-    "Generated from the run records by receipts site. "
-    "No model was asked whether a fix worked."
-)
+_FOOTER = "Generated from the run records by receipts site."
 _NAMES = {
     "R1_fail_to_pass": "Failing specification tests now pass",
     "R2_pass_to_pass": "Previously passing tests kept",
@@ -39,22 +36,31 @@ _NAMES = {
     "R6_claim_audit": "Agent claim audit (advisory)",
 }
 _CSS = """\
-:root{--page:#F4F5F7;--ink:#12161C;--secondary:#4B5563;--border:#DADFE6;--accent:#2346C8;--verified:#0E6B47;--rejected:#B93D0B;--unknown:#5B6472;--paper:#FFFEFA}
-*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:15px/1.5 'IBM Plex Sans',system-ui,sans-serif}
-a{color:var(--accent);text-underline-offset:3px}a:hover{color:#1A3496}a:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
-header{background:#fff;border-bottom:1px solid var(--border)}.header,main,footer{max-width:1280px;margin:auto;padding:24px 48px}
-.header{display:flex;align-items:center;flex-wrap:wrap;gap:24px;padding-top:14px;padding-bottom:14px}.brand{font-size:18px;font-weight:600;color:var(--ink);text-decoration:none}.header nav{display:flex;gap:24px}.header .secondary{margin-left:auto}
-main{padding-top:36px;padding-bottom:64px;display:flex;flex-direction:column;gap:28px}footer{font-size:12px;color:var(--secondary);padding-top:0;padding-bottom:32px}
-h1,h2,h3,p{margin:0}h1{font-size:34px;line-height:1.2;letter-spacing:-.01em}h2{font-size:20px}h3{font-size:16px}h1,h2,h3{text-wrap:balance;overflow-wrap:anywhere}p{max-width:75ch}section{min-width:0}.secondary{color:var(--secondary)}
-.hero{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}.hero>div{min-width:0}.hero h1{margin:10px 0}.actions{display:flex;gap:12px;flex-wrap:wrap}.button{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--border);border-radius:6px;background:#fff;text-decoration:none}.button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.badge{display:inline-block;padding:4px 10px;border:1.5px solid currentColor;border-radius:4px;font:500 13px/1.5 'IBM Plex Mono',monospace;letter-spacing:.08em}.verified,.pass{color:var(--verified)}.rejected,.fail{color:var(--rejected)}.unknown{color:var(--unknown)}.badge.verified{background:#E7F4EE}.badge.rejected{background:#FCEDE5}.badge.unknown{background:var(--page)}
-.card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;min-width:0}.pad{padding:22px 24px}.card>h3,.lane-title{padding:14px 18px;border-bottom:1px solid var(--border)}.stack{display:flex;flex-direction:column;gap:16px;min-width:0}.lanes,.comparison,.receipt-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}.comparison{gap:0}.comparison>div{padding:24px 26px}.comparison>div+div{background:var(--paper);border-left:1px solid var(--border)}blockquote{margin:10px 0;font-size:22px;line-height:1.4;overflow-wrap:anywhere}
-.metrics{display:flex;gap:28px;flex-wrap:wrap;padding:22px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.metric{flex:1 1 220px}.metric strong{display:block;font-size:25px;font-weight:600}.metric span{display:block;color:var(--secondary)}
-.table-box{max-width:100%;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:8px}table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}th,td{padding:10px 14px;vertical-align:top;border-bottom:1px solid var(--border)}th{font-weight:500;background:#F8F9FB;color:var(--secondary)}tbody tr:last-child td{border-bottom:0}.instances{min-width:850px}.commands{min-width:520px}.commands td:nth-child(2){min-width:220px;max-width:440px;overflow-wrap:anywhere}.predicates{min-width:580px}.predicates td:last-child{min-width:250px;white-space:pre-wrap;overflow-wrap:anywhere}
-code,pre,.mono,.commands,.paper{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,monospace}pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7}code{font-size:.9em;overflow-wrap:anywhere}.inset{padding:14px 16px;background:var(--page);border-radius:6px}.appeal{padding:14px 18px;border:1px dashed #C7CDD6;background:#fff;border-radius:8px}.diff{white-space:pre;overflow:auto;padding:18px;background:#fff;border:1px solid var(--border);border-radius:8px}.diff span{display:block}.diff .added{background:#E7F4EE;color:var(--verified)}.diff .removed{background:#FCEDE5;color:var(--rejected)}
-dl{margin:0;display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 16px}dt{color:var(--secondary)}dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}ul{padding-left:20px;margin:8px 0}.bundle li{margin:6px 0;overflow-wrap:anywhere}.paper{background:var(--paper);padding:26px 32px 30px;font-size:13px;line-height:1.75;border-top:1px dashed #B9B4A8;border-bottom:1px dashed #B9B4A8;min-width:0}.paper h2{font:500 16px/1.75 'IBM Plex Mono',monospace;letter-spacing:.12em}.paper dl{grid-template-columns:100px minmax(0,1fr);gap:6px 12px}.paper hr{border:0;border-top:1px dashed #B9B4A8;margin:18px 0}.stamp{text-align:center;padding-top:24px}.stamp .badge{font-size:20px;padding:8px 18px;border-width:2.5px;transform:rotate(-3deg)}
-details{font-family:'IBM Plex Sans',system-ui,sans-serif;white-space:normal}summary{cursor:pointer;color:var(--accent);padding:6px 0}summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}details pre{padding:10px 0}.all-steps>summary{padding:12px 18px}.claims{font-size:14px}.comparison>div{display:flex;flex-direction:column;gap:12px}.files{margin:0}.index-lead{max-width:1000px}.index-lead h1{font-size:44px;line-height:1.18}.paper dt{font-size:12px}.paper dd{white-space:pre-line}
-@media(max-width:760px){.header,main,footer{padding-left:20px;padding-right:20px}.header .secondary{margin-left:0}.lanes,.comparison,.receipt-layout{grid-template-columns:minmax(0,1fr)}.comparison>div+div{border-left:0;border-top:1px solid var(--border)}h1,.index-lead h1{font-size:28px}.paper{padding:22px 20px}.pad{padding:18px}dl{grid-template-columns:100px minmax(0,1fr)}}
+:root{--bg:#fff;--panel:#f3f4f2;--ink:#1d2124;--muted:#565d63;--rule:#d5d8d4;--link:#1f4f7a;--ok:#0d6831;--bad:#b42318;--unknown:#565d63;--sans:'Red Hat Text',system-ui,sans-serif;--mono:'Red Hat Mono',ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+a{color:var(--link);text-decoration-color:#9fb3c8;text-underline-offset:3px}a:hover{text-decoration-color:currentColor}a:focus-visible,summary:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+header{border-bottom:1px solid var(--rule)}.header,main,footer{max-width:1280px;margin:auto;padding:14px 24px}
+.header{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 18px;padding-top:9px;padding-bottom:9px}.brand{font:600 15px/1.5 var(--mono);color:var(--ink);text-decoration:none}.header nav{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}.header .secondary{margin-left:auto;font-size:13px}
+main{padding-top:18px;padding-bottom:48px;display:flex;flex-direction:column;gap:30px}footer{font-size:12px;color:var(--muted);padding-top:0;padding-bottom:24px}
+h1,h2,h3,p{margin:0}h1{font-size:21px;line-height:1.3;font-weight:600}h2{font-size:16px;line-height:1.35;font-weight:600}h3{font-size:14px;font-weight:600}h1,h2,h3{overflow-wrap:anywhere}p{max-width:80ch}section{min-width:0}.secondary,.meta{color:var(--muted)}.meta{font-size:14px}
+.hero{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}.hero>div{min-width:0}.hero h1{margin:8px 0}.actions{display:flex;gap:10px;flex-wrap:wrap}
+.button{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);text-decoration:none;font-size:14px}.button:hover{border-color:var(--muted)}.button.primary{border-color:var(--link);color:var(--link);background:#fff}
+.badge{display:inline-block;padding:0 6px;border:1px solid currentColor;font:600 12px/1.7 var(--mono)}.verified,.pass,.ok{color:var(--ok)}.rejected,.fail,.bad{color:var(--bad)}.unknown{color:var(--unknown)}
+.card{background:#fff;border:1px solid var(--rule);min-width:0}.pad{padding:16px 18px}.card>h3,.lane-title{padding:10px 14px;border-bottom:1px solid var(--rule);background:var(--panel)}.stack{display:flex;flex-direction:column;gap:12px;min-width:0}.stack>.badge{align-self:flex-start}.lanes,.comparison,.receipt-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.comparison{gap:0}.comparison>div{padding:16px 18px;display:flex;flex-direction:column;gap:10px}.comparison>div+div{border-left:1px solid var(--rule)}blockquote{margin:8px 0;font-size:18px;line-height:1.4;overflow-wrap:anywhere}
+.metrics{display:flex;gap:24px;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}.metric{flex:1 1 200px}.metric strong{display:block;font:600 20px/1.4 var(--mono)}.metric span{display:block;color:var(--muted);font-size:14px}
+.table-box{max-width:100%;overflow:auto;border:1px solid var(--rule)}table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}th,td{padding:7px 10px;vertical-align:top;border-bottom:1px solid var(--rule)}th{font-weight:600;background:var(--panel);color:var(--muted)}tbody tr:last-child td{border-bottom:0}.instances{min-width:850px}.instances td:first-child{font-family:var(--mono)}.commands{min-width:520px}.commands td:nth-child(2){min-width:220px;max-width:440px;overflow-wrap:anywhere}.predicates{min-width:580px}.predicates td:last-child{min-width:250px;white-space:pre-wrap;overflow-wrap:anywhere}
+code,pre,.mono,.commands,.paper{font-family:var(--mono)}pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55}code{font-size:.92em;overflow-wrap:anywhere}.inset,.term{padding:10px 12px;background:var(--panel);border:1px solid var(--rule)}.appeal{padding:10px 12px;border:1px dashed var(--rule)}.diff{white-space:pre;overflow:auto;padding:12px;border:1px solid var(--rule)}.diff span{display:block}.diff .added{background:#e8f3ec;color:var(--ok)}.diff .removed{background:#fbeceb;color:var(--bad)}
+dl{margin:0;display:grid;grid-template-columns:130px minmax(0,1fr);gap:6px 14px}dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}ul{padding-left:20px;margin:6px 0}.bundle li{margin:4px 0;overflow-wrap:anywhere}
+.paper{background:var(--panel);border:1px solid var(--rule);padding:18px 22px;font-size:13px;line-height:1.65;min-width:0}.paper h2{font:600 14px/1.6 var(--mono)}.paper dl{grid-template-columns:100px minmax(0,1fr);gap:4px 12px}.paper hr{border:0;border-top:1px dashed var(--rule);margin:12px 0}.stamp{padding-top:16px}.stamp .badge{font-size:15px;padding:2px 10px}
+details{font-family:var(--sans);white-space:normal}summary{cursor:pointer;padding:4px 0;color:var(--link)}details pre{padding:8px 0}.all-steps>summary{padding:8px 14px}.claims{font-size:14px}.files{margin:0}.index-lead{max-width:1000px}.index-lead h1{font-size:28px;line-height:1.25}.paper dt{font-size:12px}.paper dd{white-space:pre-line}
+.intro{display:flex;flex-direction:column;gap:8px}.intro h1{font-size:27px;line-height:1.25;font-weight:700}.intro p{font-size:16px;max-width:68ch}.totals p,.roles p,.check p{font-size:14px}
+.lead-grid{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:28px;align-items:start}.run-log,.side,.totals,.roles,.check,.limits{display:flex;flex-direction:column;gap:8px;min-width:0}.side{gap:22px}
+.log{font:12.5px/1.5 var(--mono)}.log td{padding:2px 10px;border-bottom:0}.log td:first-child{color:var(--muted);white-space:nowrap;width:1%}.log td:nth-child(2){overflow-wrap:anywhere}.log td:last-child{white-space:nowrap;text-align:right;font-weight:600;width:1%}.log tr.group th{padding:5px 10px 3px;color:var(--ink);text-align:left;border-top:1px solid var(--rule);border-bottom:0}.log tr.group:first-child th{border-top:0}
+.kv{font-size:14px}.kv td{padding:6px 10px 6px 0;border-bottom:1px solid var(--rule)}.kv td:first-child{color:var(--muted);width:48%}.totals .kv td:last-child{font:600 14px/1.5 var(--mono);text-align:right;padding-right:0}.kv tbody tr:last-child td{border-bottom:1px solid var(--rule)}
+.check-grid{display:flex;flex-direction:column;gap:12px}.check-grid>div{display:flex;flex-direction:column;gap:8px;min-width:0}.term{white-space:pre;overflow-x:auto;overflow-wrap:normal}.check h3{margin-top:4px}
+.limits ul{margin:0;display:flex;flex-direction:column;gap:6px;max-width:90ch;font-size:14px}
+@media(max-width:900px){.lead-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){.header,main,footer{padding-left:16px;padding-right:16px}.header .secondary{margin-left:0}.lanes,.comparison,.receipt-layout{grid-template-columns:minmax(0,1fr)}.comparison>div+div{border-left:0;border-top:1px solid var(--rule)}.index-lead h1{font-size:22px}.paper{padding:14px}dl{grid-template-columns:100px minmax(0,1fr)}.log tr:not(.group){display:grid;grid-template-columns:auto minmax(0,1fr);padding:2px 0}.log td{padding:0 10px}.log td:first-child,.log td:last-child{grid-row:1;width:auto}.log td:last-child{grid-column:2}.log td:nth-child(2){grid-row:2;grid-column:1/-1;padding-left:18px}.log tr.detail:not(.group){display:none}.intro h1{font-size:20px}.term{font-size:11.5px}}
 """
 
 
@@ -214,12 +220,14 @@ def _page(page: str, title: str, site_title: str, body: str, nav: str = "") -> s
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         f'<title>{_e(title)} | {_e(site_title)}</title>'
         '<link rel="preconnect" href="https://fonts.googleapis.com">'
-        '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">'
+        '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@400;500;600&amp;family=Red+Hat+Text:wght@400;500;700&amp;display=swap">'
         f'<link rel="stylesheet" href="{_e(css)}">'
         '</head><body><header><div class="header">'
         + _link(page, "index.html", site_title, "brand")
-        + f'<nav aria-label="Main">{_link(page, "index.html", "All runs")}{nav}</nav>'
-        + '<span class="secondary">Recorded runs, model-free verdicts</span></div></header>'
+        + f'<nav aria-label="Main">{_link(page, "index.html", "All runs")}{nav}'
+        + f'<a href="{_REPO_URL}/blob/main/REPORT-v2.md" rel="noopener">Report</a>'
+        + f'<a href="{_REPO_URL}" rel="noopener">Code</a></nav>'
+        + '</div></header>'
         + f'<main>{body}</main><footer>{_FOOTER}</footer></body></html>\n'
     )
 
@@ -624,6 +632,13 @@ def _test_short_name(test: str) -> str:
     return "::".join(parts[-2:]) if len(parts) >= 3 else parts[-1]
 
 
+def _said(attempt: dict[str, Any]) -> str:
+    """The first sentence of the agent's finish summary, quoted."""
+    worker = attempt.get("worker") or {}
+    summary = worker.get("summary") or worker.get("end_summary")
+    return '"' + re.split(r"(?<=[.!?])\s+|\n", _text(summary), maxsplit=1)[0] + '"' if summary else _NOT_RECORDED
+
+
 def _paper_rows(run: _Run) -> list[tuple[str, Any]]:
     repo, commit = _repository(run)
     last = run.attempts[-1] if run.attempts else {}
@@ -638,9 +653,7 @@ def _paper_rows(run: _Run) -> list[tuple[str, Any]]:
                if r5.get("passed") is True else _short_ids(r5.get("evidence")))
     history = " · ".join(f"attempt {a['number']} " + {"PASS": "verified", "REJECTED": "rejected"}.get(
         _verdict(run, a).get("status"), "no verdict") for a in run.attempts) or _NOT_RECORDED
-    worker = last.get("worker") or {}
-    summary = worker.get("summary") or worker.get("end_summary")
-    said = '"' + re.split(r"(?<=[.!?])\s+|\n", _text(summary), maxsplit=1)[0] + '"' if summary else _NOT_RECORDED
+    said = _said(last)
     dropped = last.get("dropped_paths")
     dropped_text = "\n".join(_text(path) for path in dropped) if dropped else "none" if last else _NOT_RECORDED
     rows = [("instance", run.iid), ("repo", f"{repo} @ {commit}"), ("spec", spec),
@@ -727,6 +740,220 @@ def _pilot_section(label: str, report: Report, runs: Sequence[_Run]) -> str:
     return body + '</section>'
 
 
+_REPO_URL = "https://github.com/zeyusuntt/receipts"
+_DECISIVE = {"R1_fail_to_pass", "R2_pass_to_pass", "R3_no_shrink", "R4_patch_scope", "R5_provenance",
+             "R7_no_shortcuts", "R8_review"}
+
+
+def _featured_problem(run: _Run) -> str | None:
+    """Why this run cannot open the site; the headline claims all of these."""
+    records = run.record.get("attempts") or []
+    if len(run.attempts) < 2 or not records:
+        return "it has no appeal"
+    if records[0].get("claimed_done") is not True:
+        return "its first attempt did not claim done"
+    if _verdict(run, run.attempts[0]).get("status") != "REJECTED":
+        return "its first attempt was not rejected"
+    if _stamp(run) != "VERIFIED":
+        return "it did not end verified"
+    return None
+
+
+def _failed_lines(verdict: dict[str, Any]) -> list[str]:
+    """The decisive checks an attempt failed, with test ids shortened to Class::test."""
+    lines = []
+    for predicate in verdict.get("predicates") or []:
+        if predicate.get("passed") is True or predicate.get("id") not in _DECISIVE:
+            continue
+        evidence = _short_ids(predicate.get("evidence"))
+        if predicate.get("id") == "R1_fail_to_pass":
+            for item in evidence.split("; "):
+                test, _, outcome = item.rpartition(" ")
+                lines.append(f"{_test_short_name(test)} {outcome}" if test else item)
+        else:
+            lines.append(evidence)
+    return lines[:3] + ([f"and {len(lines) - 3} more"] if len(lines) > 3 else [])
+
+
+def _passed_lines(run: _Run, attempt: dict[str, Any], verdict: dict[str, Any]) -> list[str]:
+    predicates = {p.get("id"): p for p in verdict.get("predicates") or []}
+    spec = _spec_results(run)
+    lines = [f"{sum(after == 'passed' for _, _, after in spec)} of {len(spec)} target tests pass" if spec
+             else "target tests: " + _NOT_RECORDED,
+             _kept(predicates.get("R2_pass_to_pass", {}))]
+    if predicates.get("R3_no_shrink", {}).get("passed") is True:
+        lines.append("no test removed or newly skipped")
+    return lines
+
+
+def _still_failing(run: _Run, attempt: dict[str, Any]) -> int:
+    """Tests that failed before any patch and still fail: why a verified witness run can exit non-zero."""
+    before = ((run.artifact("baseline.json", "baseline").get("runs") or [{}])[0].get("failure_text") or {})
+    after = next((r["junit"] for r in reversed(_witness_receipts(run, attempt)) if r.get("junit")), {})
+    return len(set(after.get("failure_text") or {}) & set(before) - {test for test, _, _ in _spec_results(run)})
+
+
+def _junit_counts(junit: dict[str, Any]) -> str:
+    counts = []
+    for key in ("passed", "failed", "errors"):
+        value = junit.get(key)
+        n = len(value) if isinstance(value, list) else value if isinstance(value, int) else 0
+        if n:
+            counts.append(f"{n} {key}")
+    return ", ".join(counts) or "no tests"
+
+
+def _log_row(label: str, text: str, status: str = "", css: str = "", row: str = "") -> str:
+    # Long test ids and paths may break after "::" or "/" on narrow screens, never mid-name.
+    breakable = _e(text).replace("::", "::<wbr>").replace("/", "/<wbr>")
+    return (f'<tr class="{_e(row)}"><td>{_e(label)}</td><td>{breakable}</td>'
+            f'<td class="{_e(css)}">{_e(status)}</td></tr>')
+
+
+def _exit_css(code: Any) -> str:
+    return "ok" if code == 0 else "bad" if isinstance(code, int) else ""
+
+
+def _run_log(run: _Run, report: Report) -> str:
+    """The featured run as a dense log: what the agent said, what the witness ran, what decided."""
+    page = "index.html"
+    repo, commit = _repository(run)
+    issue = _text(run.artifact("input.json", "input").get("issue")).split("\n", 1)[0].strip() or _NOT_RECORDED
+    records = run.record.get("attempts") or []
+    agent = _agent_receipts(run)
+    rows = []
+    for position, attempt in enumerate(run.attempts):
+        number = int(attempt["number"])
+        verdict = _verdict(run, attempt)
+        if position:
+            recorded = attempt.get("appeal_evidence") or (attempt.get("worker") or {}).get("appeal_evidence")
+            appeal = recorded or _appeal_text(_verdict(run, run.attempts[position - 1]))
+            rows.append('<tr class="group"><th colspan="3">appeal: the gate\'s evidence goes back to the agent once</th></tr>')
+            rows.append(_log_row("sent", _text(appeal).split("\n", 1)[0]))
+        rows.append(f'<tr class="group"><th colspan="3">attempt {number}</th></tr>')
+        steps = len(agent.get(number, []))
+        rows.append(_log_row("agent", f"{steps} steps, then said {_said(attempt)}"))
+        for receipt in _witness_receipts(run, attempt):
+            code = receipt.get("exit_code")
+            if receipt.get("junit"):
+                rows.append(_log_row("witness", _display_command(receipt), _junit_counts(receipt["junit"]), row="detail"))
+            else:
+                rows.append(_log_row("witness", _display_command(receipt), f"exit {_text(code)}", _exit_css(code),
+                                     row="detail"))
+        passed = verdict.get("status") == "PASS"
+        for line in (_passed_lines(run, attempt, verdict) if passed else _failed_lines(verdict)):
+            rows.append(_log_row("gate", line, "pass" if passed else "fail", "ok" if passed else "bad"))
+        still = _still_failing(run, attempt) if passed else 0
+        if still:
+            rows.append(_log_row("note", f"{still} tests that already failed before any patch still fail; "
+                                         "the gate protects tests that passed"))
+        rows.append(_log_row("verdict", "R1 to R5 and R7 on the witness run",
+                             "VERIFIED" if passed else "REJECTED", "ok" if passed else "bad"))
+        official = records[position].get("official_resolved") if position < len(records) else None
+        rows.append(_log_row("grader", "SWE-rebench's official grader", _official(official),
+                             {True: "ok", False: "bad"}.get(official, "")))
+    cost = run.record.get("cost") or {}
+    tokens = cost.get("tokens")
+    total = (f"{int(tokens):,} tokens, " if tokens is not None else "")
+    total += f"{_dollars(cost.get('model_dollars', cost.get('dollars')))} of model tokens, "
+    total += f"{_duration(run.record.get('wall_time_s'))} wall time"
+    rows.append('<tr class="group"><th colspan="3">total</th></tr>' + _log_row("cost", total))
+    return ('<section class="run-log" aria-labelledby="featured-run">'
+            f'<h2 id="featured-run">One of the {report.ran_tasks:,} runs: {_e(run.iid)}</h2>'
+            f'<p class="meta">{_e(repo)} at {_e(commit)}. Issue: {_e(issue)}. Model: {_e(_model_name(run))}. '
+            + _link(page, f"receipt/{run.key}.html", "receipt") + ", "
+            + _link(page, f"run/{run.key}.html", "every command") + "</p>"
+            '<div class="table-box"><table class="log"><tbody>' + "".join(rows) + '</tbody></table></div></section>')
+
+
+def _totals(report: Report) -> str:
+    a, b = report.configuration_a, report.configuration_b
+    rate = a.false_done_rate
+    comparison = (f"Without Receipts, the same agent said \"done\" on {a.claimed_dones} tasks, and SWE-rebench's grader "
+                  f"found {a.false_dones} of its {a.claimed_dones} claims false ({_percent(rate.value)}, 95% interval "
+                  f"{_percent(rate.lower_95)} to {_percent(rate.upper_95)}). With Receipts it shipped {b.verified_fixes} "
+                  f"fixes, {b.appeal} of them after the appeal, and {b.shipped_false_dones} of "
+                  f"{b.verified_fixes + b.shipped_false_dones} shipped fixes were false.")
+    method = (f"Model tokens cost {_dollars(b.cost_per_verified_fix.model_dollars, decimals=2)} per verified fix. "
+              "The tasks were chosen by a rule committed before the first run.")
+    return ('<section class="totals"><h2>' + _e(f"All {report.ran_tasks:,} held-out tasks") + '</h2>'
+            f'<p>{_e(comparison)}</p><p>{_e(method)} '
+            f'<a href="{_REPO_URL}/blob/main/REPORT-v2.md" rel="noopener">The pre-registered report</a></p></section>')
+
+
+_ROLES = """\
+<section class="roles"><h2>Models</h2>
+<p>NVIDIA Nemotron 3 Super 120B-A12B writes the fix on Nebius Token Factory, with five tools, in a Token Factory Sandbox of its own. A second sandbox, forked from the checkpoint taken before the agent started, runs your tests again, and the gate decides from that run.</p>
+<p>Two more Nemotron 3 Super calls then review a passing patch, and the receipt records their objections as advice. That review was added on October 16, after the 100-task run, so the receipts here do not have it.</p><p>In the experiments, SWE-rebench's own grader graded every patch again.</p>
+</section>"""
+
+# Output of `receipts reverify` recorded from a fresh clone, shown next to the command for that receipt.
+_RECORDED_REVERIFY = {
+    "pyfilesystem__pyfilesystem2-462": ("on a fresh clone, Docker on a Mac, October 26, 2026", """\
+Re-verifying pyfilesystem__pyfilesystem2-462 on Docker
+
+  ✓ Digests          3 digests, all 6166a7470cf2...  AGREES  (0.0s)
+  · Checkpoint       rebuilt from docker.io/swerebenchv2/pyfilesystem-pyfilesystem2:462-ac8a91a  (302.8s)
+  ✓ Filter           6166a7470cf2...  AGREES  (0.4s)
+  ✓ Witness patch    6166a7470cf2...  AGREES  (48.8s)
+  ✓ Gate verdict     PASS  AGREES  (48.8s)
+  ✓ Failed checks    none  AGREES  (48.8s)
+  ✓ Official grade   resolved  AGREES  (45.3s)
+
+Every check agrees with the receipt. (424s)"""),
+}
+
+
+def _check(run: _Run) -> str:
+    reverify = ("git clone https://github.com/zeyusuntt/receipts\ncd receipts\nuv sync\n"
+                f"uv run receipts reverify \\\n  receipts/{run.iid}.json")
+    fix = ("uv run receipts fix \\\n  --repo https://github.com/you/your-repo \\\n"
+           "  --commit <commit with your failing test> \\\n  --install \"pip install -e .\" \\\n"
+           "  --test tests/test_parse.py::test_empty_string \\\n  --issue-file issue.md \\\n"
+           "  --executor docker --out runs/my-fix")
+    recorded = _RECORDED_REVERIFY.get(run.iid)
+    output = (f'<div><h3>Its output {_e(recorded[0])}</h3><pre class="term">{_e(recorded[1])}</pre></div>'
+              if recorded else "")
+    return ('<section class="check" id="check"><h2>Reproduce</h2>'
+            '<p>Re-verifying needs Docker and no account or key. It rebuilds the checkpoint, replays the '
+            "patch through the same gate in a fresh container, runs SWE-rebench's grader, and must agree with the "
+            "receipt on every check. The first run downloads the task's image.</p>"
+            '<div class="check-grid"><div><h3>Re-verify this receipt</h3>'
+            f'<pre class="term">{_e(reverify)}</pre>'
+            f'<p>All 100 on GitHub\'s machines: fork the repository and run the '
+            f'<a href="{_REPO_URL}/blob/main/.github/workflows/reverify.yml" rel="noopener">Re-verify receipts</a> workflow '
+            f'(<a href="{_REPO_URL}/actions/runs/39019908268" rel="noopener">October 17 run</a>: every check agreed, '
+            '37 minutes).</p></div>' + output + '</div>'
+            '<h3>Run it on your repository</h3><p>Python with pytest. Commit a failing test, then point '
+            'Receipts at that commit. This calls Nemotron, so it needs a Nebius Token Factory key '
+            f'(<a href="{_REPO_URL}#use-it-on-a-repository" rel="noopener">setup</a>).</p>'
+            f'<pre class="term">{_e(fix)}</pre></section>')
+
+
+_LIMITS = f"""\
+<section class="limits"><h2>What it does not prove</h2><ul>
+<li>A fix is only as good as the failing test. On bug fixes from AERead, a project outside any benchmark, Receipts verified 13 patches; two independent readings found 5 correct, 3 partial and 5 wrong, and all 8 that are not correct pass their target tests (<a href="{_REPO_URL}/blob/main/trials/aeread/RESULTS.md" rel="noopener">results</a>).</li>
+<li>The independent review was built to veto. A rule fixed in advance allowed it to reject at most 3 of the 66 fixes the official grader accepts; it rejected 10, so it only advises.</li>
+<li>Code that detects it is under test can pass any test-based gate, including the official grader.</li>
+<li>Python repositories tested with pytest only. Tests that need the network cannot pass in the sandbox; in the experiments those tasks were excluded before any agent ran, and listed.</li>
+</ul></section>"""
+
+
+def _lead(run: _Run, report: Report) -> str:
+    model = _model_name(run)
+    b = report.configuration_b
+    shipped = b.verified_fixes + b.shipped_false_dones
+    accepted = f"all {shipped}" if not b.shipped_false_dones else f"{b.verified_fixes} of the {shipped}"
+    headline = (f"SWE-rebench's grader accepted {accepted} fixes this coding agent shipped "
+                f"on {report.ran_tasks:,} held-out tasks")
+    intro = (f'<section class="intro"><h1>{_e(headline)}</h1>'
+             f'<p>You write a failing test and {_e(model)} writes the fix. The tests then run again in a fresh '
+             'sandbox forked from before the agent started, and plain Python decides whether the fix ships. Below is '
+             'one run, step by step, as recorded.</p></section>')
+    return (intro + '<div class="lead-grid">' + _run_log(run, report)
+            + '<div class="side">' + _totals(report) + _ROLES + _check(run) + '</div></div>' + _LIMITS)
+
+
 def _ordered(runs: Sequence[_Run], pilot: Path) -> list[_Run]:
     progress = pilot / "progress.jsonl"
     if not progress.is_file():
@@ -761,7 +988,7 @@ def _without_checkout_path(source: Path, prefixes: Sequence[str]) -> bytes:
 
 def build_site(
     pilot_dirs: Sequence[Path], out_dir: Path, *, repo_root: Path, title: str = "Receipts",
-    strip_prefixes: Sequence[Path] = (),
+    strip_prefixes: Sequence[Path] = (), featured: str | None = None,
 ) -> SiteSummary:
     """Write static HTML and a small raw bundle; return generated file counts.
 
@@ -769,6 +996,8 @@ def build_site(
     get deterministic pilot subdirectories; unique ids retain the short URLs.
     Output must be separate from the inputs. Rebuilding overwrites generated
     files without deleting unrelated files from the output directory.
+    With `featured`, the index opens on that run of the first pilot, which must be
+    a claimed done that was rejected and then verified on appeal.
     """
     root = repo_root.resolve()
     if not pilot_dirs:
@@ -806,6 +1035,7 @@ def build_site(
     raw_files: dict[str, Path] = {}
     claimed: set[str] = set()
     lead = ""
+    first_report: Report | None = None
     for pilot, runs in groups:
         report = build_report_from_directory(pilot)
         namespace = _safe_component(pilot.name, "pilot directory")
@@ -817,6 +1047,8 @@ def build_site(
             for name, source in sorted(run.raw.items()):
                 raw_files[f"raw/{run.key}/{name}"] = source
             raw_count += len(run.raw)
+        if first_report is None:
+            first_report = report
         if not lead:
             models = list(dict.fromkeys(_model_name(run) for run in runs
                                         if run.record.get("status") == "ran" and _model_name(run) != _NOT_RECORDED))
@@ -833,6 +1065,12 @@ def build_site(
         label = _PILOT_TITLES.get(pilot.name, pilot.name)
         sections.append(_pilot_section(label, report, runs))
         total += len(runs)
+    if featured is not None:
+        run = next((r for r in groups[0][1] if r.iid == featured), None)
+        problem = "it is not in the first pilot" if run is None else _featured_problem(run)
+        if problem:
+            raise ValueError(f"featured run {featured!r} cannot open the site: {problem}")
+        lead = _lead(run, first_report)
     body = lead + "".join(sections)
     pages["index.html"] = _page("index.html", "All runs", title, body)
     for relative in [*pages, "assets/site.css", *raw_files]:

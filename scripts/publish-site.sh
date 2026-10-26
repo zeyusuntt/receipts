@@ -9,7 +9,7 @@ ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
 OUT=$(mktemp -d)
 PYTHONPATH=src .venv/bin/python -m receipts.cli site pilot/v2-P pilot/v2-arm-lightning \
-  --out "$OUT/site" --title "Receipts"
+  --out "$OUT/site" --title "Receipts" --featured pyfilesystem__pyfilesystem2-462
 if grep -rlq "$HOME" "$OUT/site"; then
   echo "refusing to publish: the built site contains $HOME" >&2
   exit 1

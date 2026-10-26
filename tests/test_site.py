@@ -22,7 +22,7 @@ FIXTURE = Path(__file__).parent / "fixtures" / "site"
 VERIFIED = "pypa__twine-1066"
 REJECTED = "twisted__towncrier-696"
 APPEAL = "synthetic__appeal-1"
-FOOTER = "Generated from the run records by receipts site. No model was asked whether a fix worked."
+FOOTER = "Generated from the run records by receipts site."
 
 
 class Page(HTMLParser):
@@ -678,3 +678,96 @@ def test_spec_short_names_keep_the_class_so_same_named_tests_differ():
     assert _test_short_name("tests/test_ftpfs.py::TestFTPFS::test_getinfo_modified") == "TestFTPFS::test_getinfo_modified"
     assert _test_short_name("tests/test_ftpfs.py::TestFTPFSNoMLSD::test_getinfo_modified") == "TestFTPFSNoMLSD::test_getinfo_modified"
     assert _test_short_name("tests/test_x.py::test_metadata_dictionary_keys") == "test_metadata_dictionary_keys"
+
+
+def _claimed_then_rejected(bundle, summary="Fixed the header levels <b>now</b>. All tests pass."):
+    """The appeal fixture as a featured run: attempt 1 claims done, is rejected, attempt 2 is verified."""
+    repo, pilot, _ = bundle
+    path = pilot / APPEAL / "record.json"
+    record = json.loads(path.read_text())
+    record["attempts"][0]["claimed_done"] = True
+    path.write_text(json.dumps(record))
+    path = repo / f"runs/{APPEAL}/result.json"
+    result = json.loads(path.read_text())
+    result["attempts"][0]["worker"].update(summary=summary, end="finished")
+    path.write_text(json.dumps(result))
+
+
+def test_featured_run_opens_the_index_from_its_record(bundle):
+    _claimed_then_rejected(bundle)
+    build(bundle, featured=APPEAL)
+    source = (bundle[2] / "index.html").read_text()
+    page = Page(bundle[2] / "index.html").plain
+    # Break hints after "::" and "/" are layout only.
+    log = source.split('<section class="run-log"')[1].split("</section>")[0].replace("<wbr>", "")
+    assert f"One of the 3 runs: {APPEAL}" in log
+    # The agent's own words, first sentence only, escaped.
+    assert "Fixed the header levels &lt;b&gt;now&lt;/b&gt;." in log and "All tests pass" not in log
+    # What the witness ran and showed, the verdict and the official grade of each attempt.
+    assert "TestCli::test_title_format_custom_markdown failed" in log
+    assert "patch touches pyproject.toml (pytest config)" in log
+    assert "branch ended without a finish call" not in log
+    assert "pytest (witness)" in log
+    assert log.index("REJECTED") < log.index("R1_fail_to_pass: target test failed") < log.index("VERIFIED")
+    assert log.count(">not resolved<") == 1 and log.count(">resolved<") == 1
+    assert "Fixed the source and ran the suite." in log
+    assert f'href="receipt/{APPEAL}.html"' in log and f'href="run/{APPEAL}.html"' in log
+    assert "PyFilesystem" not in log and "towncrier" in log.lower()
+    # Order on the page: what it is, the run, the totals, who does what, how to check, the limits, every run.
+    order = ['<section class="intro">', '<section class="run-log"', '<section class="totals">',
+             '<section class="roles">', '<section class="check" id="check">', '<section class="limits">',
+             "How to read this"]
+    positions = [source.index(text) for text in order]
+    assert positions == sorted(positions)
+    report = build_report_from_directory(bundle[1])
+    a, b = report.configuration_a, report.configuration_b
+    totals = source.split('<section class="totals">')[1].split("</section>")[0]
+    assert f"{a.false_dones} of its {a.claimed_dones}" in totals
+    assert f"{b.shipped_false_dones} of {b.verified_fixes} shipped fixes were false" in totals
+    assert f"${b.cost_per_verified_fix.model_dollars:.2f}" in totals
+    assert "<table" not in totals
+    check = source.split('<section class="check" id="check">')[1].split("</section>")[0]
+    assert f"uv run receipts reverify \\\n  receipts/{APPEAL}.json" in check
+    assert "the gate decides from that run" in source.split('<section class="roles">')[1].split("</section>")[0]
+    assert report.headline not in page
+    intro = source.split('<section class="intro">')[1].split("</section>")[0]
+    assert b.shipped_false_dones == 0
+    assert (f"<h1>SWE-rebench&#x27;s grader accepted all {b.verified_fixes} fixes this coding agent shipped "
+            "on 3 held-out tasks</h1>") in intro
+
+
+def test_featured_run_must_be_a_claimed_done_rejected_then_verified(bundle):
+    with pytest.raises(ValueError, match="featured"):
+        build(bundle, featured="nobody__nothing-1")
+    with pytest.raises(ValueError, match="featured"):
+        build(bundle, featured=VERIFIED)
+    with pytest.raises(ValueError, match="featured"):
+        build(bundle, featured=REJECTED)
+    # The fixture's first attempt ran out of turns without claiming done.
+    with pytest.raises(ValueError, match="featured"):
+        build(bundle, featured=APPEAL)
+    assert not (bundle[2] / "index.html").exists()
+
+
+def test_featured_index_keeps_every_run_and_every_link_resolves(bundle):
+    _claimed_then_rejected(bundle)
+    build(bundle, featured=APPEAL)
+    page = Page(bundle[2] / "index.html")
+    for iid in (VERIFIED, REJECTED, APPEAL):
+        assert any(iid in row for row in page.rows)
+    for p in bundle[2].rglob("*.html"):
+        for link in Page(p).links:
+            url = urlsplit(link)
+            if url.netloc in ALLOWED_EXTERNAL and url.scheme == "https":
+                continue
+            assert not url.scheme and not url.netloc, (p, link)
+            target = (p.parent / unquote(url.path)).resolve()
+            assert target.is_relative_to(bundle[2]) and target.is_file(), (p, link)
+
+
+def test_cli_featured_option(bundle, monkeypatch):
+    _claimed_then_rejected(bundle)
+    repo, pilot, out = bundle
+    monkeypatch.chdir(repo)
+    assert main(["site", str(pilot), "--out", str(out), "--featured", APPEAL]) == 0
+    assert '<section class="run-log"' in (out / "index.html").read_text()
