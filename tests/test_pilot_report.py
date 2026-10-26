@@ -705,7 +705,7 @@ def test_harness_keeps_good_rows_counts_bad_ones_and_maps_old_paths(
     log.write_text(
         "".join(json.dumps(row) + "\n" for row in rows) + '{"results": [{"id": "trunc',
     )
-    old_absolute = "/Users/sunzeyu/Documents/nebius-hackathon/pilot/run-x/task/runs/r1"
+    old_absolute = "/Users/example/Documents/nebius-hackathon/pilot/run-x/task/runs/r1"
 
     report = report_module.build_report([_record("old-path", [_attempt()], run_dir=old_absolute)])
 

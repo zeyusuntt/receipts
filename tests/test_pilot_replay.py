@@ -511,7 +511,7 @@ def test_absolute_old_record_run_dir_resolves_from_pilot_under_repo_root(
     monkeypatch,
 ):
     old_run_dir = (
-        "/Users/sunzeyu/Documents/nebius-hackathon/"
+        "/Users/example/Documents/nebius-hackathon/"
         "pilot/absolute/fixture__project-1/runs/run-1"
     )
     report = _build_fixture_replay(

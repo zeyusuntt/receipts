@@ -2,33 +2,33 @@ Fixing: When an econevals live case is killed after it has already run provider 
 with nvidia/nemotron-3-super-120b-a12b on Docker
 
 Traceback (most recent call last):
-  File "/Users/sunzeyu/dev/nebius-hackathon/.venv/bin/receipts", line 10, in <module>
+  File ".venv/bin/receipts", line 10, in <module>
     sys.exit(main())
              ^^^^^^
-  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/cli.py", line 1062, in main
+  File "src/receipts/cli.py", line 1062, in main
     return asyncio.run(_dispatch(args, model))
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/sunzeyu/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+  File "~/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
-  File "/Users/sunzeyu/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+  File "~/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
     return self._loop.run_until_complete(task)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/sunzeyu/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+  File "~/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/cli.py", line 1021, in _dispatch
+  File "src/receipts/cli.py", line 1021, in _dispatch
     return await _run_fix(args, model)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/cli.py", line 582, in _run_fix
+  File "src/receipts/cli.py", line 582, in _run_fix
     result = await run_and_persist(executor)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/cli.py", line 558, in run_and_persist
+  File "src/receipts/cli.py", line 558, in run_and_persist
     result = await fix(
              ^^^^^^^^^^
-  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/orchestrate.py", line 689, in fix
+  File "src/receipts/orchestrate.py", line 689, in fix
     baseline = await establish_baseline(
                ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/sunzeyu/dev/nebius-hackathon/src/receipts/verify/run.py", line 129, in establish_baseline
+  File "src/receipts/verify/run.py", line 129, in establish_baseline
     raise BaselineTooSlow(
 receipts.verify.run.BaselineTooSlow: baseline suite timed out after 600s
