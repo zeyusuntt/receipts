@@ -1,0 +1,30 @@
+name: Live page health
+
+# Once a day through judging, wake the live judge page and fail visibly if it does not answer.
+on:
+  schedule:
+    - cron: "23 14 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check /health
+        env:
+          URL: https://receipts-live-683278413320.us-central1.run.app/health
+        run: |
+          # A cold start takes a few seconds, and Cloud Build may be redeploying; retry for up to ten minutes.
+          for attempt in $(seq 1 20); do
+            if curl -fsS --max-time 30 "$URL" -o health.json; then
+              cat health.json
+              python3 -c "import json, sys; d = json.load(open('health.json')); sys.exit(0 if d.get('ok') else 1)"
+              exit $?
+            fi
+            sleep 30
+          done
+          echo "the live page did not answer at $URL" >&2
+          exit 1

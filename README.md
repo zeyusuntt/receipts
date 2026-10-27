@@ -1,7 +1,7 @@
 <h1 align="center">Receipts</h1>
 <p align="center">A coding agent that is not allowed to grade its own homework.<br>
 You write the failing test. Receipts writes the fix with NVIDIA Nemotron 3 Super on Nebius Token Factory, re-runs your tests itself in a clean Token Factory Sandbox the agent never touched, and hands you a receipt of every command it ran. Anyone can re-verify the 100 receipts from the experiment.</p>
-<p align="center"><a href="https://zeyusuntt.github.io/receipts/">Receipt viewer</a> · <a href="https://youtu.be/tSJwtfb1-T8">Video (2:57)</a> · <a href="REPORT-v2.md">False-Done Report</a> · <a href="#re-verify-it-yourself">Re-verify it yourself</a> · <a href="#for-judges">For judges</a></p>
+<p align="center"><a href="https://receipts-live-683278413320.us-central1.run.app">Run it live</a> · <a href="https://zeyusuntt.github.io/receipts/">Receipt viewer</a> · <a href="https://youtu.be/tSJwtfb1-T8">Video (2:57)</a> · <a href="REPORT-v2.md">False-Done Report</a> · <a href="#re-verify-it-yourself">Re-verify it yourself</a> · <a href="#for-judges">For judges</a></p>
 
 | | On 100 SWE-rebench tasks held out from development, chosen by a rule fixed in advance | Proof |
 |---:|---|---|
@@ -12,6 +12,8 @@ You write the failing test. Receipts writes the fix with NVIDIA Nemotron 3 Super
 <sub>Tasks chosen by a rule committed before the first run (<a href="PREREGISTRATION-v2.md">PREREGISTRATION-v2.md</a>). Every outcome is published, including our own pilot's false done.</sub>
 
 ## For judges
+
+To try it without installing anything, the [live page](https://receipts-live-683278413320.us-central1.run.app) runs Receipts on one of five preset tasks from the experiment, with the judge code from the Devpost testing notes. Each step is labelled with the model or tool that did it.
 
 | Criterion | Look at | What it shows |
 | --- | --- | --- |
@@ -27,7 +29,7 @@ You write the failing test. Receipts writes the fix with NVIDIA Nemotron 3 Super
 - Code that detects it is running under test can pass any test-based gate, including the official grader.
 - Python repositories tested with pytest only. Tests that need the network or host features cannot pass in a sandbox, before or after any patch; in the experiments those tasks were excluded before any agent ran, and listed.
 - The gate rejects a fix that also modifies an existing test file, even when the source change is right; the appeal tells the agent why. This cost one correct fix in the 100-task run.
-- There is no hosted demo. Trying it takes a clone: re-verifying a receipt needs Docker and no key, and `receipts fix` needs a Token Factory key.
+- The live page runs only five preset tasks, one at a time, with a daily limit and a spending cap. On your own repository, re-verifying a receipt needs Docker and no key, and `receipts fix` needs a Token Factory key.
 - The headline numbers come from one model on one benchmark: Nemotron 3 Super on 100 SWE-rebench-V2 tasks. An exploratory arm ran Nemotron 3.5 Lightning on 30 of them ([REPORT-v2.md](REPORT-v2.md)).
 
 ## Re-verify it yourself

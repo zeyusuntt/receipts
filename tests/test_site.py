@@ -771,3 +771,13 @@ def test_cli_featured_option(bundle, monkeypatch):
     monkeypatch.chdir(repo)
     assert main(["site", str(pilot), "--out", str(out), "--featured", APPEAL]) == 0
     assert '<section class="run-log"' in (out / "index.html").read_text()
+
+
+def test_live_url_adds_a_run_it_live_link_only_when_given(bundle):
+    _claimed_then_rejected(bundle)
+    build(bundle, featured=APPEAL)
+    assert "Run it live" not in (bundle[2] / "index.html").read_text()
+    build(bundle, featured=APPEAL, live_url="https://example.run.app/")
+    check = (bundle[2] / "index.html").read_text().split('<section class="check" id="check">')[1].split("</section>")[0]
+    assert '<a href="https://example.run.app/" rel="noopener">Run it live</a>' in check
+    assert "judge code" in check

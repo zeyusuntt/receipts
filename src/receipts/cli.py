@@ -164,6 +164,7 @@ def _parser() -> argparse.ArgumentParser:
         "--featured",
         help="instance id of a run in the first pilot to open the index with: a claimed done, rejected, then verified",
     )
+    site_parser.add_argument("--live-url", help="address of the live judge page, linked from the index")
 
     export_parser = commands.add_parser("export", help="export portable final-attempt receipt bundles")
     export_parser.add_argument("pilot_dir", type=Path)
@@ -1059,7 +1060,7 @@ async def _dispatch(args: argparse.Namespace, model: ModelClient | None) -> int:
 
         summary = build_site(
             args.pilot_dirs, args.out, repo_root=Path.cwd(), title=args.title,
-            strip_prefixes=args.strip_prefixes, featured=args.featured,
+            strip_prefixes=args.strip_prefixes, featured=args.featured, live_url=args.live_url,
         )
         print(f"SITE {summary.out_dir / 'index.html'} pilots={summary.pilots} instances={summary.instances}")
         return 0

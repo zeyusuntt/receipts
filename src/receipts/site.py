@@ -904,7 +904,7 @@ Every check agrees with the receipt. (424s)"""),
 }
 
 
-def _check(run: _Run) -> str:
+def _check(run: _Run, live_url: str | None = None) -> str:
     reverify = ("git clone https://github.com/zeyusuntt/receipts\ncd receipts\nuv sync\n"
                 f"uv run receipts reverify \\\n  receipts/{run.iid}.json")
     fix = ("uv run receipts fix \\\n  --repo https://github.com/you/your-repo \\\n"
@@ -914,7 +914,10 @@ def _check(run: _Run) -> str:
     recorded = _RECORDED_REVERIFY.get(run.iid)
     output = (f'<div><h3>Its output {_e(recorded[0])}</h3><pre class="term">{_e(recorded[1])}</pre></div>'
               if recorded else "")
-    return ('<section class="check" id="check"><h2>Reproduce</h2>'
+    live = (f'<h3>Run it live</h3><p><a href="{_e(live_url)}" rel="noopener">Run it live</a> on one of five preset '
+            'tasks from the experiment, with the judge code from the Devpost testing notes. One run at a time, under '
+            'a spending cap; each step shows the model or tool that did it.</p>') if live_url else ""
+    return ('<section class="check" id="check"><h2>Reproduce</h2>' + live +
             '<p>Re-verifying needs Docker and no account or key. It rebuilds the checkpoint, replays the '
             "patch through the same gate in a fresh container, runs SWE-rebench's grader, and must agree with the "
             "receipt on every check. The first run downloads the task's image.</p>"
@@ -939,7 +942,7 @@ _LIMITS = f"""\
 </ul></section>"""
 
 
-def _lead(run: _Run, report: Report) -> str:
+def _lead(run: _Run, report: Report, live_url: str | None = None) -> str:
     model = _model_name(run)
     b = report.configuration_b
     shipped = b.verified_fixes + b.shipped_false_dones
@@ -951,7 +954,7 @@ def _lead(run: _Run, report: Report) -> str:
              'sandbox forked from before the agent started, and plain Python decides whether the fix ships. Below is '
              'one run, step by step, as recorded.</p></section>')
     return (intro + '<div class="lead-grid">' + _run_log(run, report)
-            + '<div class="side">' + _totals(report) + _ROLES + _check(run) + '</div></div>' + _LIMITS)
+            + '<div class="side">' + _totals(report) + _ROLES + _check(run, live_url) + '</div></div>' + _LIMITS)
 
 
 def _ordered(runs: Sequence[_Run], pilot: Path) -> list[_Run]:
@@ -988,7 +991,7 @@ def _without_checkout_path(source: Path, prefixes: Sequence[str]) -> bytes:
 
 def build_site(
     pilot_dirs: Sequence[Path], out_dir: Path, *, repo_root: Path, title: str = "Receipts",
-    strip_prefixes: Sequence[Path] = (), featured: str | None = None,
+    strip_prefixes: Sequence[Path] = (), featured: str | None = None, live_url: str | None = None,
 ) -> SiteSummary:
     """Write static HTML and a small raw bundle; return generated file counts.
 
@@ -1070,7 +1073,7 @@ def build_site(
         problem = "it is not in the first pilot" if run is None else _featured_problem(run)
         if problem:
             raise ValueError(f"featured run {featured!r} cannot open the site: {problem}")
-        lead = _lead(run, first_report)
+        lead = _lead(run, first_report, live_url)
     body = lead + "".join(sections)
     pages["index.html"] = _page("index.html", "All runs", title, body)
     for relative in [*pages, "assets/site.css", *raw_files]:
