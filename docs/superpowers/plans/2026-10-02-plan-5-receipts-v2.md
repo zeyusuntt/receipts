@@ -246,7 +246,7 @@ The soundness invariant behind B1 is that the witness and the official grader ap
 
 ### Workstream E: what the judges see
 
-E runs alongside D. Judges score design, impact and idea as much as implementation, and in an online event with 14,000 registrants they judge from the write-up, the diagram and the video (playbook, EcoLafaek lesson). Read `~/Documents/beta fund/playbook/winning-playbook.md` before positioning, video or submission decisions.
+E runs alongside D. Judges score design, impact and idea as much as implementation, and in an online event with 14,000 registrants they judge from the write-up, the diagram and the video (playbook, EcoLafaek lesson).
 
 - **E0. Script first (new, starts Oct 2, no code).** Write the video script and the README first screen before the run (playbook law 1), with placeholders for v2's numbers, so the run's receipts are chosen to serve the story rather than found afterwards.
 - **E1. Receipt site (the demo URL).**

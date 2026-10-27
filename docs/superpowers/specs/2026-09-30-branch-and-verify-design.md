@@ -10,7 +10,7 @@ Status: draft v3 for Zeyu's review. Plan 1 needs revision 4 for the witness bran
 
 ## 0. Decision log
 
-Each line is a decision and where it came from. Research notes: `docs/research/2026-09-30-*.md`; playbook: `~/Documents/beta fund/playbook/winning-playbook.md`.
+Each line is a decision and where it came from. Research notes: `docs/research/2026-09-30-*.md` (internal, not published).
 
 | # | Decision | Source |
 |---|---|---|
