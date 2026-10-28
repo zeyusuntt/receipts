@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import html
 import http.client
 import json
+import re
 import shutil
+import socket
 import subprocess
 import threading
 import time
@@ -16,6 +19,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 
 from receipts.live import (
+    PRESET_IDS,
     SITE_URL,
     BucketLedger,
     FileLedger,
@@ -506,3 +510,96 @@ def test_the_page_fills_the_code_box_from_the_address_and_shows_it_nowhere_else(
     assert made.get("code", {}).get("value", "") == expected
     others = {key: value for key, value in made.items() if key != "code"}
     assert PROBE not in json.dumps(others)
+
+
+def _raw(port, method, path):
+    """The bytes the server sends back, read to the end, so a body after a HEAD answer would show."""
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as connection:
+        connection.sendall(f"{method} {path} HTTP/1.0\r\n\r\n".encode())
+        answer = b""
+        while chunk := connection.recv(65536):
+            answer += chunk
+    head, _, body = answer.partition(b"\r\n\r\n")
+    status, *lines = head.decode().split("\r\n")
+    headers = dict(line.split(": ", 1) for line in lines)
+    headers.pop("Date")
+    return status, headers, body
+
+
+def test_head_answers_with_the_status_and_headers_of_get_and_no_body(repo, tmp_path):
+    # Link checkers ask with HEAD; without a handler the server answered 501.
+    live = service(repo, tmp_path)
+    server, port = _serve(live)
+    try:
+        for path in ("/", "/health", "/api/jobs/nope", "/elsewhere"):
+            status, headers, body = _raw(port, "GET", path)
+            assert body and _raw(port, "HEAD", path) == (status, headers, b"")
+    finally:
+        server.shutdown()
+        server.server_close()
+        live.close()
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _chrome():
+    for name in ("google-chrome", "chromium", "chromium-browser", "chrome"):
+        if found := shutil.which(name):
+            return found
+    mac = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+    return str(mac) if mac.exists() else None
+
+
+# The longest unbroken words in the steps of the live runs on Oct 27 (a pytest node id and a task image),
+# and the longest name of who did a step, with a check mark.
+_LONG_STEPS = [
+    ("Nemotron 3 Super on Token Factory", "python -m pytest tests/unit/test_sql_analyser.py::"
+     "PostgresqlAnalyserTestCase::test_create_index_concurrently_where -v", None),
+    ("Token Factory Sandbox", "built from docker.io/swerebenchv2/3yourmind-django-migration-linter:258-366d16b", None),
+    ("Nemotron 3 Super review (advisory)", "no shortcuts", True),
+]
+
+# Runs after the page's script: shows a run with those steps, then lists every element that reaches past
+# the box it is in (or the page), and the page's own width.
+_MEASURE = r"""<script>
+$('out').hidden=false;show({id:'x',title:'A run',state:'running',position:0,events:%s});
+const main=document.querySelector('main');
+const wide=[...main.querySelectorAll('*')].filter(el=>el.getBoundingClientRect().right>
+  (el.parentElement.closest('.box')||main).getBoundingClientRect().right+0.5).map(el=>el.id||el.tagName);
+const steps=[...document.querySelectorAll('#events td:nth-child(2)')].map(td=>td.getBoundingClientRect().width);
+const lines=td=>{const r=document.createRange();r.selectNodeContents(td);
+  return new Set([...r.getClientRects()].map(rect=>Math.round(rect.top))).size};
+const split=[...document.querySelectorAll('#events td:not(:nth-child(2))')]
+  .filter(td=>lines(td)>td.textContent.trim().split(/\s+/).length).map(td=>td.textContent);
+document.title=JSON.stringify({width:innerWidth,page:document.documentElement.scrollWidth,wide,split,
+  step:Math.min(...steps),table:document.querySelector('table').getBoundingClientRect().width});
+</script>"""
+
+# Headless Chrome keeps a window at least 500px wide, so the page gets a 375px viewport in a frame,
+# tall enough that no scroll bar takes any of the width.
+_FRAME = """<!doctype html><title></title><iframe id="f" width="375" height="3000" style="border:0"></iframe>
+<script>const f=document.getElementById('f');f.onload=()=>{document.title=f.contentDocument.title};f.srcdoc=%s</script>"""
+
+
+@pytest.mark.skipif(_chrome() is None, reason="needs Chrome to lay out the page")
+def test_nothing_on_the_page_reaches_past_its_box_on_a_375px_phone(tmp_path):
+    live = LiveService(load_presets(ROOT, ROOT / "pilot" / "v2-P", PRESET_IDS), FileLedger(tmp_path / "ledger.jsonl"),
+                       Limits(), FakeRunner(), codes=[CODE])
+    events = [{"who": who, "message": message, "passed": passed, "exit_code": None}
+              for who, message, passed in _LONG_STEPS]
+    # Without the web fonts, so the test needs no network; the fallback font is about as wide.
+    page = re.sub(r'<link rel="stylesheet"[^>]*>', "", render_page(live))
+    page = page.replace("</body>", _MEASURE % json.dumps(events) + "</body>")
+    (tmp_path / "frame.html").write_text(_FRAME % json.dumps(page).replace("</", "<\\/"))
+    chrome = subprocess.run([_chrome(), "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
+                             f"--user-data-dir={tmp_path / 'profile'}", "--window-size=800,3100",
+                             "--virtual-time-budget=5000", "--dump-dom", (tmp_path / "frame.html").as_uri()],
+                            capture_output=True, text=True, timeout=120)
+    title = re.search(r"<title>(\{.*?)</title>", chrome.stdout, re.S)
+    assert title, chrome.stderr[-2000:]
+    layout = json.loads(html.unescape(title.group(1)))
+    assert layout["width"] == 375
+    assert layout["wide"] == [] and layout["page"] <= 375, layout
+    assert layout["step"] >= layout["table"] / 3, layout  # the steps keep room to be read
+    assert layout["split"] == [], layout  # and only a step's own long words break

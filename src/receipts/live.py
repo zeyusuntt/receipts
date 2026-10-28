@@ -501,6 +501,9 @@ button{border-color:var(--ink);cursor:pointer}button:disabled{opacity:.5;cursor:
 .muted{color:var(--muted)}table{width:100%;border-collapse:collapse;font:12.5px/1.5 'Red Hat Mono',monospace}td{padding:2px 8px;vertical-align:top;border-bottom:1px solid var(--panel)}
 td:first-child{color:var(--muted);white-space:nowrap}.ok{color:var(--ok)}.bad{color:var(--bad)}pre{background:var(--panel);padding:10px;overflow:auto;font:12px/1.5 'Red Hat Mono',monospace}
 .box{border:1px solid var(--rule);padding:12px}
+/* On a phone the longest task title and the longest words in a step must not widen the page. */
+.row>div{min-width:0;max-width:100%}select{max-width:100%}td:nth-child(2){overflow-wrap:anywhere}
+@media (max-width:480px){td:first-child{white-space:normal}}
 </style></head><body><main>
 <h1>Run Receipts live on a preset task</h1>
 <p>Nemotron 3 Super writes a fix on Nebius Token Factory; a Token Factory Sandbox forked from before the agent started runs the tests again; the gate, plain Python, decides. Each run takes one to five minutes. Live runs can come out differently from the recording. Keep this page open until the run finishes: closing it stops the run.</p>
@@ -567,7 +570,8 @@ def make_server(service: LiveService, host: str, port: int, tick: float = 1.0) -
             self.send_header("Cache-Control", "no-store")
             self.send_header("Referrer-Policy", "no-referrer")  # a page address may carry ?code=
             self.end_headers()
-            self.wfile.write(data)
+            if self.command != "HEAD":
+                self.wfile.write(data)
 
         def _stream(self, job: Job) -> None:
             """One JSON line per tick with the steps since the last line, until the run finishes."""
@@ -617,6 +621,9 @@ def make_server(service: LiveService, host: str, port: int, tick: float = 1.0) -
                 self._send(200 if view else 404, view or {"reason": "job", "message": "No such run."})
             else:
                 self._send(404, {"reason": "path", "message": "Not found."})
+
+        def do_HEAD(self) -> None:  # link checkers ask with HEAD: the answer GET gives, without its body
+            self.do_GET()
 
         def do_POST(self) -> None:
             path, body = self.path.split("?", 1)[0], self._body()
